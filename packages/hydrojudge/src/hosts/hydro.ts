@@ -64,7 +64,7 @@ export default class Hydro {
         if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
-            etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
+            etags = JSON.parse(await fs.readFile(path.join(filePath, 'etags'), 'utf-8'));
         } catch (e) { /* ignore */ }
         const version = {};
         const filenames = [];
@@ -102,10 +102,10 @@ export default class Hydro {
             }
             queue.start();
             await Promise.all(tasks);
-            fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
+            await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
             await processTestdata(filePath);
         }
-        fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
+        await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
     }
 

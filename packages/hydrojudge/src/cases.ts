@@ -49,7 +49,7 @@ export async function processTestdata(folder: string) {
     }
     const ini = files.filter((i) => i.toLowerCase() === 'config.ini')[0];
     if (!ini) return;
-    const t = fs.readFileSync(path.resolve(folder, ini), 'utf8');
+    const t = await fs.readFile(path.resolve(folder, ini), 'utf8');
     await fs.writeFile(path.resolve(folder, 'config.ini'), t.toLowerCase());
     for (const i of files) {
         if (i.toLowerCase() === 'input') await fs.rename(`${folder}/${i}`, `${folder}/input`);
@@ -84,11 +84,11 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
     };
     try {
         if (fs.existsSync(yamlConfig)) {
-            Object.assign(config, yaml.load(fs.readFileSync(yamlConfig).toString()));
+            Object.assign(config, yaml.load(await fs.readFile(yamlConfig, 'utf-8')));
         } else if (fs.existsSync(ymlConfig)) {
-            Object.assign(config, yaml.load(fs.readFileSync(ymlConfig).toString()));
+            Object.assign(config, yaml.load(await fs.readFile(ymlConfig, 'utf-8')));
         } else if (fs.existsSync(iniConfig)) {
-            Object.assign(config, convertIniConfig(fs.readFileSync(iniConfig).toString()));
+            Object.assign(config, convertIniConfig(await fs.readFile(iniConfig, 'utf-8')));
         }
     } catch (e) {
         throw changeErrorType(e, FormatError);
