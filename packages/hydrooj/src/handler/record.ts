@@ -1,7 +1,7 @@
 import { debounce, omit } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ContestNotAttendedError, ContestNotFoundError, PermissionError,
+    ContestNotAttendedError, ContestNotFoundError, ForbiddenError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -173,6 +173,9 @@ class RecordDetailHandler extends Handler {
     @param('rid', Types.ObjectID)
     async postRejudge(domainId: string, rid: ObjectID) {
         this.checkPerm(PERM.PERM_REJUDGE);
+        if ([STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL].find((i) => i === this.rdoc.status)) {
+            throw new ForbiddenError('Cannot rejudge hack record.');
+        }
         const priority = await record.submissionPriority(this.user._id, -20);
         const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         await record.reset(domainId, rid, true);
