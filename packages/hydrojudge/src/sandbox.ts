@@ -1,5 +1,4 @@
 import cac from 'cac';
-import fs from 'fs-extra';
 import PQueue from 'p-queue';
 import { ParseEntry } from 'shell-quote';
 import { STATUS } from '@hydrooj/utils/lib/status';
@@ -31,8 +30,6 @@ const statusMap: Map<SandboxStatus, number> = new Map([
 interface Parameter {
     time?: number;
     stdin?: CopyInFile;
-    stdout?: string;
-    stderr?: string;
     execute?: string;
     memory?: number;
     processLimit?: number;
@@ -78,7 +75,7 @@ function proc(params: Parameter): Cmd {
     const size = parseMemoryMB(getConfig('stdio_size'));
     const rate = getConfig('rate');
     const copyOutCached = [...(params.copyOutCached || [])];
-    if (params.cacheStdoutAndStderr) copyOutCached.push(params.filename ? `${params.filename}.out` : 'stdout', 'stderr');
+    if (params.cacheStdoutAndStderr) copyOutCached.push(params.filename ? `${params.filename}.out?` : 'stdout', 'stderr');
     const copyIn = { ...(params.copyIn || {}) };
     const stdin = params.stdin || { content: '' };
     if (params.filename) copyIn[`${params.filename}.in`] = stdin;
@@ -121,10 +118,8 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     ret.files = result.files || {};
     ret.fileIds = result.fileIds || {};
     if (ret.fileIds[outname]) ret.fileIds.stdout = ret.fileIds[outname];
-    if (params.stdout) await fs.writeFile(params.stdout, ret.files[outname] || '');
-    else ret.stdout = ret.files[outname] || '';
-    if (params.stderr) await fs.writeFile(params.stderr, ret.files.stderr || result.error || '');
-    else ret.stderr = ret.files.stderr || result.error || '';
+    ret.stdout = ret.files[outname] || '';
+    ret.stderr = ret.files.stderr || result.error || '';
     if (result.error) ret.error = result.error;
     return ret;
 }

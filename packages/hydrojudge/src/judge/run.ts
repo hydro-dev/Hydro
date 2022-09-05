@@ -68,8 +68,7 @@ export const judge = async (ctx: Context) => {
         if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
     }
-    message.push(res.stdout);
-    message.push(res.stderr);
+    message.push(res.stdout, res.stderr);
     ctx.next({
         status,
         case: {

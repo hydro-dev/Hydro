@@ -53,7 +53,7 @@ const session = {
         if (!files?.length) throw new FormatError('Problem data not found.');
         let etags: Record<string, string> = {};
         try {
-            etags = JSON.parse(fs.readFileSync(path.join(filePath, 'etags')).toString());
+            etags = JSON.parse(await fs.readFile(path.join(filePath, 'etags'), 'utf-8'));
         } catch (e) { /* ignore */ }
         const version = {};
         const filenames = new Set<string>();
@@ -67,8 +67,10 @@ const session = {
         for (const name in etags) {
             if (!filenames.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
         }
-        fs.writeFileSync(path.join(filePath, 'etags'), JSON.stringify(version));
-        fs.writeFileSync(path.join(filePath, 'lastUsage'), Date.now().toString());
+        await Promise.all([
+            fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version)),
+            fs.writeFile(path.join(filePath, 'lastUsage'), Date.now().toString()),
+        ]);
         await processTestdata(filePath);
         return filePath;
     },
