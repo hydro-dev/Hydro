@@ -1,5 +1,3 @@
-import path from 'path';
-import fs from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { CompileError } from '../error';
@@ -48,18 +46,11 @@ export const judge = async (ctx: Context) => {
     }
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const copyIn = { ...ctx.execute.copyIn };
-    const { filename } = ctx.config;
-    if (filename) copyIn[`${filename}.in`] = { content: ctx.input };
-    const copyOut = filename ? [`${filename}.out?`] : [];
-    const stdout = path.resolve(ctx.tmpdir, '0.out');
     const res = await run(
         ctx.execute.execute,
         {
-            stdin: filename ? null : { content: ctx.input },
-            stdout: filename ? null : stdout,
-            copyIn,
-            copyOut,
+            stdin: { content: ctx.input },
+            copyIn: ctx.execute.copyIn,
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * ctx.execute.time * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
@@ -67,7 +58,6 @@ export const judge = async (ctx: Context) => {
     );
     const { code, time, memory } = res;
     let { status } = res;
-    if (!fs.existsSync(stdout)) fs.writeFileSync(stdout, '');
     const message: string[] = [];
     if (time > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
         status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -78,7 +68,7 @@ export const judge = async (ctx: Context) => {
         if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
     }
-    message.push(fs.readFileSync(stdout).toString());
+    message.push(res.stdout);
     message.push(res.stderr);
     ctx.next({
         status,
@@ -98,7 +88,7 @@ export const judge = async (ctx: Context) => {
                 ctx.analysis = true;
                 const r = await run(langConfig.analysis, {
                     copyIn: {
-                        ...copyIn,
+                        ...ctx.execute.copyIn,
                         input: { content: ctx.input },
                         [langConfig.code_file || 'foo']: ctx.code,
                         compile: { content: langConfig.compile || '' },

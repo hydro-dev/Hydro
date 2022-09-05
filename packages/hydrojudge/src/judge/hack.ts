@@ -4,7 +4,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import compile, { compileChecker, compileValidator } from '../compile';
 import { Execute } from '../interface';
-import { CmdFile, del, run } from '../sandbox';
+import { del, run } from '../sandbox';
 import signals from '../signals';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
@@ -35,29 +35,22 @@ export async function judge(ctx: Context) {
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
     );
-    console.log(validateResult);
     if (validateResult.status !== STATUS.STATUS_ACCEPTED) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
-    const copyIn = { ...execute.copyIn };
-    const { filename } = ctx.config;
-    if (filename) copyIn[`${filename}.in`] = { src: input };
     const res = await run(
         execute.execute,
         {
-            stdin: filename ? null : { src: input },
-            copyIn,
-            copyOutCached: [filename ? `${filename}.out?` : 'stdout', 'stderr'],
+            stdin: { src: input },
+            copyIn: execute.copyIn,
             time: parseTimeMS(ctx.config.time || '1s') * execute.time,
             memory: parseMemoryMB(ctx.config.memory || '256m'),
+            cacheStdoutAndStderr: true,
         },
     );
     const { code, time, memory } = res;
     let { status } = res;
-    let stdout: CmdFile = { fileId: res.fileIds[filename ? `${filename}.out` : 'stdout'] };
-    console.log(res);
-    if (!stdout.fileId) stdout = { content: '' };
     let message: any = '';
     if (status === STATUS.STATUS_ACCEPTED) {
         if (time > ctx.config.time * execute.time) {
@@ -70,8 +63,8 @@ export async function judge(ctx: Context) {
                 copyIn: checker.copyIn || {},
                 input: { src: input },
                 output: { content: '' },
-                user_stdout: stdout,
-                user_stderr: { fileId: res.fileIds['stderr'] },
+                user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
+                user_stderr: { fileId: res.fileIds.stderr },
                 score: 100,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: '0' },
