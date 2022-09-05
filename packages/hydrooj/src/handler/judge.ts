@@ -85,7 +85,7 @@ export async function postJudge(rdoc: RecordDoc) {
             try {
                 const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
                 assert(config.subtasks instanceof Array);
-                const file = await storage.get(`submission/${rdoc.files.hack}`);
+                const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
                 assert(file);
                 const hackSubtask = config.subtasks[config.subtasks.length - 1];
                 hackSubtask.cases ||= [];
