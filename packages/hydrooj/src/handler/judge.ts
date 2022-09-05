@@ -67,14 +67,20 @@ export async function postJudge(rdoc: RecordDoc) {
             rdoc.pid, rdoc.status, rdoc.score,
         );
     } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
+    const isNormalSubmission = ![
+        STATUS.STATUS_ETC, STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL,
+        STATUS.STATUS_FORMAT_ERROR, STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_CANCELED,
+    ].includes(rdoc.status);
     const pdoc = (accept && updated)
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid, undefined, true);
     if (pdoc) {
-        await Promise.all([
-            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
-        ]);
+        if (isNormalSubmission) {
+            await Promise.all([
+                problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
+                problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
+            ]);
+        }
         if (rdoc.status === STATUS.STATUS_HACK_SUCCESSFUL) {
             try {
                 const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
