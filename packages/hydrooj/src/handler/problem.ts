@@ -564,6 +564,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
+            rid: this.rdoc._id,
             title: this.pdoc.title,
             page_name: this.tdoc ? 'contest_detail_problem_hack' : 'problem_hack',
         };
