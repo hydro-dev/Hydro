@@ -89,10 +89,13 @@ export const runFlow = async (ctx: Context, task: Task) => {
         const runner = task.judgeCase(subtask.cases.find((i) => i.input === ctx.meta.hackRejudge));
         const res = await runner(ctx, ctxSubtask, runner);
         if (res) ctx.next({ case: res });
-        ctx.end({
-            status: ctxSubtask.status === STATUS.STATUS_ACCEPTED ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_HACKED,
-            score: 97,
-        });
+        const totalScore = Math.sum(ctx.config.subtasks.map((i) => i.score));
+        if (ctxSubtask.status !== STATUS.STATUS_ACCEPTED) {
+            ctx.end({
+                status: STATUS.STATUS_HACKED,
+                score: totalScore - subtask.score,
+            });
+        } else ctx.end({ nop: true });
     } else {
         const tasks = [];
         for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid, task.judgeCase)(ctx));
