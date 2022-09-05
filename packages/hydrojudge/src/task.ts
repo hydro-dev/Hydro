@@ -6,12 +6,12 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
     FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody,
 } from 'hydrooj';
-import { Logger } from 'hydrooj/src/logger';
 import readCases from './cases';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
 import { NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
+import { Logger } from './log';
 import { CopyInFile } from './sandbox';
 import * as tmpfs from './tmpfs';
 import { compilerText, Lock, md5 } from './utils';
