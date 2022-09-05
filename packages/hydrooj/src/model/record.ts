@@ -62,12 +62,12 @@ class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}) {
+    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         const rdoc = await RecordModel.get(domainId, rid);
         if (!rdoc) return null;
         let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
-        const meta: JudgeMeta = { problemOwner: 1 };
+        meta = { ...meta, problemOwner: 1 };
         if (rdoc.pid) {
             let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
             if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);

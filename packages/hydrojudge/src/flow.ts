@@ -72,7 +72,6 @@ export const runFlow = async (ctx: Context, task: Task) => {
     ctx.next({ status: STATUS.STATUS_COMPILING });
     await task.compile();
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const tasks = [];
     ctx.total_status = 0;
     ctx.total_score = 0;
     ctx.total_memory = 0;
@@ -80,21 +79,38 @@ export const runFlow = async (ctx: Context, task: Task) => {
     ctx.rerun = getConfig('rerun') || 0;
     ctx.queue = new Queue({ concurrency: getConfig('singleTaskParallelism') });
     ctx.failed = {};
-    for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid, task.judgeCase)(ctx));
-    const scores = await Promise.all(tasks);
-    for (const sid in ctx.config.subtasks) {
-        let effective = true;
-        for (const required of ctx.config.subtasks[sid].if || []) {
-            if (ctx.failed[required.toString()]) effective = false;
+    if (ctx.meta.hackRejudge) {
+        const subtask = ctx.config.subtasks.find((i) => i.cases.find((j) => j.input === ctx.meta.hackRejudge));
+        const ctxSubtask = {
+            subtask,
+            status: STATUS.STATUS_ACCEPTED,
+            score: subtask.type === 'min' ? subtask.score : 0,
+        };
+        const runner = task.judgeCase(subtask.cases.find((i) => i.input === ctx.meta.hackRejudge));
+        const res = await runner(ctx, ctxSubtask, runner);
+        if (res) ctx.next({ case: res });
+        ctx.end({
+            status: ctxSubtask.status === STATUS.STATUS_ACCEPTED ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_HACKED,
+            score: 97,
+        });
+    } else {
+        const tasks = [];
+        for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid, task.judgeCase)(ctx));
+        const scores = await Promise.all(tasks);
+        for (const sid in ctx.config.subtasks) {
+            let effective = true;
+            for (const required of ctx.config.subtasks[sid].if || []) {
+                if (ctx.failed[required.toString()]) effective = false;
+            }
+            if (effective) ctx.total_score += scores[sid];
         }
-        if (effective) ctx.total_score += scores[sid];
+        ctx.end({
+            status: ctx.total_status,
+            score: ctx.total_score,
+            time: Math.floor(ctx.total_time * 1000000) / 1000000,
+            memory: ctx.total_memory,
+        });
     }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({
-        status: ctx.total_status,
-        score: ctx.total_score,
-        time: Math.floor(ctx.total_time * 1000000) / 1000000,
-        memory: ctx.total_memory,
-    });
 };

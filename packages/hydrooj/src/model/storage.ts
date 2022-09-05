@@ -90,6 +90,29 @@ export class StorageModel {
         );
         return await storage.signDownloadLink(res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
+
+    static async copy(src: string, dst: string) {
+        const { value } = await StorageModel.coll.findOneAndUpdate(
+            { path: src, autoDelete: null },
+            { $set: { lastUsage: new Date() } },
+            { returnDocument: 'after' },
+        );
+        const meta = {};
+        await StorageModel.del([dst]);
+        meta['Content-Type'] = (dst.endsWith('.ans') || dst.endsWith('.out'))
+            ? 'text/plain'
+            : lookup(dst) || 'application/octet-stream';
+        let _id = `${nanoid(3)}/${nanoid()}${extname(dst)}`;
+        // Make sure id is not used
+        // eslint-disable-next-line no-await-in-loop
+        while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(dst)}`;
+        const result = await storage.copy(value._id, dst);
+        const { metaData, size, etag } = await storage.getMeta(_id);
+        await StorageModel.coll.insertOne({
+            _id, meta: metaData, path: dst, size, etag, lastModified: new Date(), owner: value.owner || 1,
+        });
+        return result;
+    }
 }
 
 async function cleanFiles() {
