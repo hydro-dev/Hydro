@@ -5,7 +5,7 @@ import compile, { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { Execute } from '../interface';
 import { Logger } from '../log';
-import { CmdFile, del, run } from '../sandbox';
+import { del, run } from '../sandbox';
 import signals from '../signals';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
@@ -14,27 +14,21 @@ const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
-        const { filename } = ctx.config;
-        const copyIn = { ...ctx.execute.copyIn };
-        if (filename) copyIn[`${filename}.in`] = c.input ? { src: c.input } : { content: '' };
-        const copyOutCached = filename ? [`${filename}.out?`] : [];
-        const stdin = filename ? null : { src: c.input };
         const res = await run(
             ctx.execute.execute,
             {
-                stdin,
-                copyIn,
-                copyOutCached,
+                stdin: { src: c.input },
+                copyIn: ctx.execute.copyIn,
+                filename: ctx.config.filename,
                 time: c.time * ctx.execute.time,
                 memory: c.memory,
                 cacheStdoutAndStderr: true,
             },
         );
-        const { code, time, memory } = res;
+        const {
+            code, time, memory, fileIds,
+        } = res;
         let { status } = res;
-        let stdout: CmdFile = { fileId: res.fileIds[filename ? `${filename}.out` : 'stdout'] };
-        const stderr = { fileId: res.fileIds['stderr'] };
-        if (!stdout.fileId) stdout = { content: '' };
         let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
@@ -48,8 +42,8 @@ function judgeCase(c: NormalizedCase) {
                     copyIn: ctx.checker.copyIn || {},
                     input: { src: c.input },
                     output: { src: c.output },
-                    user_stdout: stdout,
-                    user_stderr: stderr,
+                    user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
+                    user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
                     score: c.score,
                     detail: ctx.config.detail ?? true,
                     env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
@@ -73,8 +67,8 @@ function judgeCase(c: NormalizedCase) {
                 try {
                     const r = await run(langConfig.analysis, {
                         copyIn: {
-                            ...copyIn,
-                            input: stdin || { content: '' },
+                            ...ctx.execute.copyIn,
+                            input: { src: c.input },
                             [langConfig.code_file || 'foo']: ctx.code,
                             compile: { content: langConfig.compile || '' },
                             execute: { content: langConfig.execute || '' },
