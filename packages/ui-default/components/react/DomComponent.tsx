@@ -9,6 +9,6 @@ export default function DomComponent(props: React.HTMLAttributes<HTMLDivElement>
     return () => {
       $(ref.current).empty();
     };
-  });
+  }, []);
   return <div {...omit(props, 'childDom')} ref={ref}></div>;
 }

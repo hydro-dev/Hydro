@@ -37,6 +37,24 @@ function buildSequence(pages, type) {
     }));
 }
 
+async function animate() {
+  if (UserContext.skipAnimate) return;
+  const style = document.createElement('style');
+  style.innerHTML = `.section {
+    transition: transform .5s, opacity .5s;
+    transition-timing-function: ease-out-cubic;
+  }`;
+  document.head.append(style);
+  const sections = _.map($('.section').get(), (section, idx) => ({
+    shouldDelay: idx < 5, // only animate first 5 sections
+    $element: $(section),
+  }));
+  for (const { $element, shouldDelay } of sections) {
+    $element.addClass('visible');
+    if (shouldDelay) await delay(50);
+  }
+}
+
 async function load() {
   for (const page of window.Hydro.preload) await eval(page); // eslint-disable-line no-eval
 
@@ -78,18 +96,12 @@ async function load() {
       console.log(`${page.name}: ${type}Loading took ${time}ms`);
     }
   }
-  const sections = _.map($('.section').get(), (section, idx) => ({
-    shouldDelay: idx < 5, // only animate first 5 sections
-    $element: $(section),
-  }));
-  $('.page-loader').hide();
   console.log('done! %d ms', Date.now() - start.getTime());
-  for (const { $element, shouldDelay } of sections) {
-    $element.addClass('visible');
-    if (shouldDelay) await delay(50);
-  }
+  $('.page-loader').hide();
+  await animate();
+  $('.section').addClass('visible');
   await delay(500);
-  for (const { $element } of sections) $element.trigger('vjLayout');
+  $('.section').trigger('vjLayout');
   $(document).trigger('vjPageFullyInitialized');
 }
 

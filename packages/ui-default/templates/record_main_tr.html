@@ -21,7 +21,7 @@
     *
   {% endif %}
   {% if rdoc.files.hack %}<span class="text-orange">({{ _('Hack') }})</span>{% endif %}
-  {% if rdoc.contest and rdoc.contest.toHexString() == '000000000000000000000000' %}<span class="text-orange">(({{ _('Pretest') }})</span>{% endif %}
+  {% elif rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}<span class="text-orange">({{ _('Pretest') }})</span>{% endif %}
   </td>
   <td class="col--submit-by">
     <a href="{{ url('user_detail', uid=rdoc.uid) }}">
