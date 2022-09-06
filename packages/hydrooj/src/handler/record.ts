@@ -171,11 +171,13 @@ class RecordDetailHandler extends Handler {
     }
 
     @param('rid', Types.ObjectID)
-    async postRejudge(domainId: string, rid: ObjectID) {
+    async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
-        if ([STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL].includes(this.rdoc.status)) {
-            throw new ForbiddenError('Cannot rejudge a hack record.');
-        }
+        if (this.rdoc.files?.hack) throw new ForbiddenError('Cannot rejudge a hack record.');
+    }
+
+    @param('rid', Types.ObjectID)
+    async postRejudge(domainId: string, rid: ObjectID) {
         const priority = await record.submissionPriority(this.user._id, -20);
         const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         await record.reset(domainId, rid, true);
