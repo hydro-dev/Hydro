@@ -28,7 +28,7 @@ const statusDict = {
     3: 'JUDGING',
 };
 
-export default class POJProvider implements IBasicProvider {
+export default class CSPOJProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
     }
