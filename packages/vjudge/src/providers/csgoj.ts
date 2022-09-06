@@ -178,7 +178,7 @@ export default class POJProvider implements IBasicProvider {
             const status = VERDICT[res] || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
             const memory = parseMemoryMB(`${result.body.rows[0].memory}K`) * 1024;
-            const time = parseTimeMS(`${result.body.rows[0].time}MS` || 0);
+            const time = parseTimeMS(`${result.body.rows[0].time}MS`);
             return await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
