@@ -101,7 +101,7 @@ export async function postJudge(rdoc: RecordDoc) {
                     status: STATUS.STATUS_ACCEPTED,
                     contest: { $ne: new ObjectID('0'.repeat(24)) },
                 }).project({ _id: 1, contest: 1 }).toArray();
-                const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
+                const priority = await record.submissionPriority(rdoc.uid, -rdocs.length * 5 - 50);
                 await Promise.all(rdocs.map(
                     (r) => record.judge(rdoc.domainId, r._id, priority, r.contest ? { detail: false } : {}, { hackRejudge: input }),
                 ));
