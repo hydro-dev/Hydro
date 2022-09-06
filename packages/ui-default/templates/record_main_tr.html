@@ -3,7 +3,7 @@
 <tr data-rid="{{ rdoc['_id'] }}">
   {{ record.render_status_td(rdoc, allDomain = all) }}
   <td class="col--problem col--problem-name">
-  {% if handler.user.hasPerm(perm.PERM_REJUDGE) and rdoc['status'] == STATUS.STATUS_HACK_SUCCESSFUL and rdoc['status'] == STATUS.STATUS_HACK_UNSUCCESSFUL %}
+  {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack %}
     <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
       <input type="hidden" name="operation" value="rejudge">
       <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
@@ -20,7 +20,8 @@
   {% else %}
     *
   {% endif %}
-  {% if rdoc.input %}({{ _('Pretest') }}){% endif %}
+  {% if rdoc.files.hack %}<span class="text-orange">({{ _('Hack') }})</span>{% endif %}
+  {% if rdoc.contest and rdoc.contest.toHexString() == '000000000000000000000000' %}<span class="text-orange">(({{ _('Pretest') }})</span>{% endif %}
   </td>
   <td class="col--submit-by">
     <a href="{{ url('user_detail', uid=rdoc.uid) }}">

@@ -24,6 +24,7 @@ class RecordModel {
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
         'contest', 'judger', 'judgeAt', 'status', 'source',
+        'files',
     ];
 
     static async submissionPriority(uid: number, base: number = 0) {

@@ -24,7 +24,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Information') }}</h1>
       </div>
-    {% if handler.user.hasPerm(perm.PERM_REJUDGE) %}
+    {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack %}
       <div class="section__body no-padding">
         <ol class="menu">
           <li class="menu__item">
@@ -48,7 +48,7 @@
         </ol>
       </div>
     {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_SUBMIT_PROBLEM) and pdoc.config.hackable and rdoc.status === STATUS.STATUS_ACCEPTED %}
+    {% if handler.user.hasPerm(perm.PERM_SUBMIT_PROBLEM) and pdoc.config.hackable and rdoc.status === STATUS.STATUS_ACCEPTED and rdoc.uid !== handler.user._id %}
       <div class="section__body no-padding">
         <ol class="menu">
           <li class="menu__item">

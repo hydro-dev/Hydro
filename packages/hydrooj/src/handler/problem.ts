@@ -434,7 +434,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         const rdocs = await record.getMulti(domainId, {
             pid,
             contest: { $ne: new ObjectID('0'.repeat(24)) },
-            status: { $ne: [STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL] },
+            'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
         const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
         await Promise.all(rdocs.map(
