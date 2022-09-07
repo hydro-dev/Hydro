@@ -67,8 +67,7 @@ export default class CSGOJProvider implements IBasicProvider {
         if (!url.includes('//')) url = `${this.account.endpoint || 'https://cpc.csgrandeur.cn'}${url}`;
         const req = superagent.get(url)
             .set('Cookie', this.cookie)
-            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
-            .set('Host', 'cpc.csgrandeur.cn');
+            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0');
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
     }
@@ -80,7 +79,6 @@ export default class CSGOJProvider implements IBasicProvider {
             .set('Cookie', this.cookie)
             .set('X-Requested-With', 'XMLHttpRequest')
             .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
-            .set('Host', 'cpc.csgrandeur.cn')
             .type('form');
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
@@ -179,7 +177,6 @@ export default class CSGOJProvider implements IBasicProvider {
     async submitProblem(id: string, lang: string, code: string) {
         await this.ensureLogin();
         const language = lang.includes('csgoj.') ? lang.split('csgoj.')[1] : '0';
-        code = Buffer.from(code).toString('utf-8');
         const result = await this.post('/csgoj/Problemset/submit_ajax')
             .set('referer', `https://cpc.csgrandeur.cn/csgoj/problemset/submit?pid=${id.split('P')[1]}`)
             .send({
@@ -200,8 +197,8 @@ export default class CSGOJProvider implements IBasicProvider {
             const stat = result.body.rows[0].result;
             const status = statusDict[stat] || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
-            const memory = parseMemoryMB(`${result.body.rows[0].memory}k`) * 1024;
-            const time = parseTimeMS(`${result.body.rows[0].time}ms`);
+            const memory = parseMemoryMB(result.body.rows[0].memory);
+            const time = parseTimeMS(result.body.rows[0].time);
             return await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
