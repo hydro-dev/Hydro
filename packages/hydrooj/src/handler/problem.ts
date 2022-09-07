@@ -550,6 +550,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     @param('rid', Types.ObjectID)
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, rid: ObjectID, tid?: ObjectID) {
+        if (typeof this.pdoc.config !== 'object' || !this.pdoc.config?.hackable) throw new ForbiddenError('This problem is not hackable.');
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc || this.rdoc.pid !== this.pdoc.docId
             || this.rdoc.contest?.toString() !== tid?.toString()) throw new RecordNotFoundError(domainId, rid);
