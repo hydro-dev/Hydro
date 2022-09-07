@@ -1,7 +1,7 @@
-{%- macro nav_item(target_page_name, target_page_args, target_page_prefix) -%}
+{%- macro nav_item(target_name, target_args, target_prefix) -%}
 <li class="nav__list-item">
-  <a href="{{ url(target_page_name, target_page_args) }}" class="nav__item{% if page_name.startsWith(target_page_prefix) %} nav--active{% endif %}">
-    {{ _(target_page_name) }}
+  <a href="{{ url(target_name, query=target_args.query(handler) if typeof(target_args.query) == 'function' else target_args.query or {}) }}" class="nav__item{% if page_name.startsWith(target_prefix) %} nav--active{% endif %}">
+    {{ _(target_name) }}
   </a>
 </li>
 {%- endmacro -%}
@@ -10,8 +10,8 @@
   <div class="row"><div class="columns clearfix">
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item"><a href="/" class="nav__logo" style="background-size: 100% 100%;">&nbsp;</a></li>
-      {%- for item in ui.nodes.nav -%}{% if item.checker(handler) %}
-        {{ nav_item(item.name, item.args(handler), item.prefix) }}
+      {%- for item in ui.getNodes('Nav') -%}{% if item.checker(handler) %}
+        {{ nav_item(item.name, item.args, item.args.prefix) }}
       {% endif %}{%- endfor -%}
     </ol>
     <ol class="nav__list nav__list--secondary clearfix">

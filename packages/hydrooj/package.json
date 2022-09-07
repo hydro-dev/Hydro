@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "3.17.2",
+    "version": "3.17.3",
     "bin": "bin/hydrooj.js",
     "main": "src/loader",
     "module": "src/loader",
@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "engines": {
-        "node": ">=10.4"
+        "node": ">=12"
     },
     "preferUnplugged": true,
     "dependencies": {

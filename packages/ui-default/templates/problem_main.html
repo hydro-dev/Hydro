@@ -65,10 +65,10 @@
             <h1 class="section__title">{{ _('Create Problem') }}</h1>
           </div>
           <ol class="menu">
-            {%- for item in ui.nodes.problem_add -%}
+            {%- for item in ui.getNodes('ProblemAdd') -%}
               <a href="{{ url(item.name, item.args) }}" class="menu__link">
-                <span class="icon icon-{{ item.icon|default('add') }}"></span>
-                {{ _(item.text) }}
+                <span class="icon icon-{{ item.args.icon|default('add') }}"></span>
+                {{ _(item.args.text) }}
               </a>
             {%- endfor -%}
           </ol>

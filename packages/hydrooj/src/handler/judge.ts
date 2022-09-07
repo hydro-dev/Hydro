@@ -131,7 +131,7 @@ export async function end(body: Partial<JudgeResultBody>) {
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
-    if (Number.isSafeInteger(body.score)) $set.score = body.score;
+    if (Number.isFinite(body.score)) $set.score = Math.floor(body.score * 100) / 100;
     if (Number.isFinite(body.time)) $set.time = body.time;
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     $set.judgeAt = new Date();

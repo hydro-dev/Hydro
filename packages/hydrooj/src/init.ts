@@ -1,5 +1,5 @@
 const versionNum = +process.version.replace(/v/gim, '').split('.')[0];
-if (versionNum < 10) throw new Error('NodeJS >=10.4 required');
+if (versionNum < 12) throw new Error('NodeJS >=12 required');
 else if (versionNum < 14 && process.env.NODE_APP_INSTANCE === '0') {
     console.warn('NodeJS version <14, startup performance will be impacted.');
 }

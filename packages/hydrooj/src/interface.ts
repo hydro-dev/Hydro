@@ -694,17 +694,15 @@ export interface Lib extends Record<string, any> {
     problemSearch: ProblemSearch;
 }
 
+export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown';
 export interface UI {
     manifest: Dictionary<string>,
     template: Dictionary<string>,
-    nodes: {
-        nav: any[],
-        problem_add: any[],
-        user_dropdown: any[],
-    },
+    nodes: Record<UIInjectableFields, any[]>,
+    getNodes: typeof import('./lib/ui').getNodes,
     Nav: typeof import('./lib/ui').Nav,
     ProblemAdd: typeof import('./lib/ui').ProblemAdd,
-    UserDropdown: typeof import('./lib/ui').UserDropdown,
+    inject: typeof import('./lib/ui').inject,
 }
 
 export interface HydroGlobal {
