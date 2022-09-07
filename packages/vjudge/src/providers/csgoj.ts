@@ -9,23 +9,22 @@ import {
 } from '@hydrooj/utils/lib/utils';
 import { Logger } from 'hydrooj/src/logger';
 import { IBasicProvider, RemoteAccount } from '../interface';
-import { VERDICT } from '../verdict';
 
 proxy(superagent as any);
 const logger = new Logger('remote/csgoj');
 const statusDict = {
-    4: 'Accepted',
-    5: 'PRESENTATION ERROR',
-    6: 'WRONG ANSWER',
-    7: 'TIME LIMIT EXCEEDED',
-    8: 'MEMORY LIMIT EXCEEDED',
-    9: 'OUTPUT LIMIT EXCEEDED',
-    10: 'RUNTIME ERROR',
-    11: 'COMPILE ERROR',
-    0: 'PENDING',
-    1: 'PENDING',
-    2: 'SUBMITTED',
-    3: 'JUDGING',
+    0: STATUS.STATUS_COMPILING,
+    1: STATUS.STATUS_COMPILING,
+    2: STATUS.STATUS_COMPILING,
+    3: STATUS.STATUS_JUDGING,
+    4: STATUS.STATUS_ACCEPTED,
+    5: STATUS.STATUS_WRONG_ANSWER,
+    6: STATUS.STATUS_WRONG_ANSWER,
+    7: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+    8: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    9: STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
+    10: STATUS.STATUS_RUNTIME_ERROR,
+    11: STATUS.STATUS_COMPILE_ERROR,
 };
 
 export default class CSGOJProvider implements IBasicProvider {
@@ -38,7 +37,10 @@ export default class CSGOJProvider implements IBasicProvider {
     get(url: string) {
         logger.debug('get', url);
         if (!url.includes('//')) url = `${this.account.endpoint || 'https://cpc.csgrandeur.cn'}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
+        const req = superagent.get(url)
+            .set('Cookie', this.cookie)
+            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
+            .set('Host', 'cpc.csgrandeur.cn');
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
     }
@@ -46,7 +48,12 @@ export default class CSGOJProvider implements IBasicProvider {
     post(url: string) {
         logger.debug('post', url, this.cookie);
         if (!url.includes('//')) url = `${this.account.endpoint || 'https://cpc.csgrandeur.cn'}${url}`;
-        const req = superagent.post(url).set('Cookie', this.cookie).type('form');
+        const req = superagent.post(url)
+            .set('Cookie', this.cookie)
+            .set('X-Requested-With', 'XMLHttpRequest')
+            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
+            .set('Host', 'cpc.csgrandeur.cn')
+            .type('form');
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
     }
@@ -71,9 +78,6 @@ export default class CSGOJProvider implements IBasicProvider {
         await this.getCsrfToken('/');
         await this.post('/csgoj/user/login_ajax')
             .set('referer', 'https://cpc.csgrandeur.cn/')
-            .set('X-Requested-With', 'XMLHttpRequest')
-            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
-            .set('Host', 'cpc.csgrandeur.cn')
             .send({
                 user_id: this.account.handle,
                 password: this.account.password,
@@ -118,7 +122,7 @@ export default class CSGOJProvider implements IBasicProvider {
         contents['zh'] = content;
         const tag = document.querySelector('div[name="Source"]>a').textContent;
         const limit = document.querySelectorAll('span[class="inline_span"]');
-        const time = limit[0].textContent.split(' ')[6];
+        const time = `${+limit[0].textContent.split(' ')[6] * 1000}`;
         const memory = limit[1].textContent.split(' ')[2];
         return {
             title,
@@ -137,9 +141,7 @@ export default class CSGOJProvider implements IBasicProvider {
         const result = await this
             .get(`https://cpc.csgrandeur.cn/csgoj/problemset/problemset_ajax?search=&sort=problem_id&order=asc&offset=${offset}&limit=100`)
             .set('referer', 'https://cpc.csgrandeur.cn/csgoj/problemset')
-            .set('X-Requested-With', 'XMLHttpRequest')
-            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0')
-            .set('Host', 'cpc.csgrandeur.cn');
+            .set('X-Requested-With', 'XMLHttpRequest');
         const res = result.body.rows;
         if (res.length === 0) return [];
         const pli: string[] = Array.from(res.map((i) => `P${+i.problem_id}`));
@@ -151,7 +153,6 @@ export default class CSGOJProvider implements IBasicProvider {
         const language = lang.includes('csgoj.') ? lang.split('csgoj.')[1] : '0';
         code = Buffer.from(code).toString('utf-8');
         const result = await this.post('/csgoj/Problemset/submit_ajax')
-            .set('X-Requested-With', 'XMLHttpRequest')
             .set('referer', `https://cpc.csgrandeur.cn/csgoj/problemset/submit?pid=${id.split('P')[1]}`)
             .send({
                 pid: id.split('P')[1],
@@ -169,16 +170,14 @@ export default class CSGOJProvider implements IBasicProvider {
             count++;
             await sleep(3000);
             const result = await this
-                // eslint-disable-next-line max-len
+            // eslint-disable-next-line max-len
                 .get(`/csgoj/Status/status_ajax?sort=solution_id_show&order=desc&offset=0&limit=20&problem_id=&user_id=&solution_id=${id}&language=-1&result=-1`)
-                .set('X-Requested-With', 'XMLHttpRequest')
-                .set('referer', 'https://cpc.csgrandeur.cn/csgoj/status');
+                .set('X-Requested-With', 'XMLHttpRequest');
             const stat = result.body.rows[0].result;
-            const res = statusDict[stat];
-            const status = VERDICT[res] || STATUS.STATUS_SYSTEM_ERROR;
+            const status = statusDict[stat] || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
-            const memory = parseMemoryMB(`${result.body.rows[0].memory}K`) * 1024;
-            const time = parseTimeMS(`${result.body.rows[0].time}MS`);
+            const memory = parseMemoryMB(`${result.body.rows[0].memory}k`) * 1024;
+            const time = parseTimeMS(`${result.body.rows[0].time}ms`);
             return await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
