@@ -27,6 +27,34 @@ const statusDict = {
     11: STATUS.STATUS_COMPILE_ERROR,
 };
 
+/* langs
+csgoj:
+  display: CsgOJ
+  execute: /bin/echo Invalid
+  domain:
+  - csgoj
+csgoj.0:
+  display: C
+  monaco: c
+  highlight: c astyle-c
+  comment: //
+csgoj.1:
+  display: C++
+  monaco: cpp
+  highlight: cpp astyle-c
+  comment: //
+csgoj.2:
+  display: Pascal
+  monaco: pascal
+  highlight: pascal
+  comment: //
+csgoj.3:
+  display: Java
+  monaco: java
+  highlight: java astyle-java
+  comment: //
+*/
+
 export default class CSGOJProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
@@ -97,7 +125,7 @@ export default class CSGOJProvider implements IBasicProvider {
         const images = {};
         pDescription.querySelectorAll('img[src]').forEach((ele) => {
             let src = ele.getAttribute('src').replace('.svg', '.png');
-            if (!src.startsWith('https')) src = `https://cpc.csgrandeur.cn${src}`;
+            src = new URL(src, 'https://cpc.csgrandeur.cn').toString();
             if (images[src]) {
                 ele.setAttribute('src', `/d/csgoj/p/${id}/file/${images[src]}.png`);
                 return;
@@ -168,10 +196,7 @@ export default class CSGOJProvider implements IBasicProvider {
         while (count < 60) {
             count++;
             await sleep(3000);
-            const result = await this
-                // eslint-disable-next-line max-len
-                .get(`/csgoj/Status/status_ajax?sort=solution_id_show&order=desc&offset=0&limit=20&problem_id=&user_id=&solution_id=${id}&language=-1&result=-1`)
-                .set('X-Requested-With', 'XMLHttpRequest');
+            const result = await this.get(`/csgoj/Status/status_ajax?solution_id=${id}`).set('X-Requested-With', 'XMLHttpRequest');
             const stat = result.body.rows[0].result;
             const status = statusDict[stat] || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
