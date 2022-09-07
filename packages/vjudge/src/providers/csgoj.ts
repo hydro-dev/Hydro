@@ -192,7 +192,7 @@ export default class CSGOJProvider implements IBasicProvider {
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
                 time: body.rows[0].time,
-                memory: body.rows[0].memory * 1024,
+                memory: body.rows[0].memory,
             });
             return;
         }
