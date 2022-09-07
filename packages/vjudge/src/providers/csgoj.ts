@@ -4,9 +4,7 @@ import { JSDOM } from 'jsdom';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import {
-    parseMemoryMB, parseTimeMS, sleep,
-} from '@hydrooj/utils/lib/utils';
+import { sleep } from '@hydrooj/utils/lib/utils';
 import { Logger } from 'hydrooj/src/logger';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
@@ -31,8 +29,8 @@ const statusDict = {
 csgoj:
   display: CsgOJ
   execute: /bin/echo Invalid
-  domain:
-  - csgoj
+  hidden: true
+  remote: csgoj
 csgoj.0:
   display: C
   monaco: c
@@ -84,15 +82,6 @@ export default class CSGOJProvider implements IBasicProvider {
         return req;
     }
 
-    async getCsrfToken(url: string) {
-        const { header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
-        return '';
-    }
-
     get loggedIn() {
         return this.get('/').then(({ text: html }) => !html
             .includes('<form id="login_form" class="form-signin" method="post" action="/csgoj/user/login_ajax">'));
@@ -101,7 +90,11 @@ export default class CSGOJProvider implements IBasicProvider {
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry login');
-        await this.getCsrfToken('/');
+        const { header } = await this.get('/csgoj/user/login_ajax');
+        if (header['set-cookie']) {
+            await this.save({ cookie: header['set-cookie'] });
+            this.cookie = header['set-cookie'];
+        }
         await this.post('/csgoj/user/login_ajax')
             .set('referer', 'https://cpc.csgrandeur.cn/')
             .send({
@@ -115,17 +108,15 @@ export default class CSGOJProvider implements IBasicProvider {
         logger.info(id);
         const res = await this.get(`/csgoj/problemset/problem?pid=${id.split('P')[1]}`);
         const { window: { document } } = new JSDOM(res.text);
-        const files = {};
-        const contents = {};
-        let content = '';
         const title = document.getElementsByTagName('title')[0].innerHTML.replace(`${id.split('P')[1]}:`, '');
         const pDescription = document.querySelector('div[name="Description"]');
+        const files = {};
         const images = {};
         pDescription.querySelectorAll('img[src]').forEach((ele) => {
             let src = ele.getAttribute('src').replace('.svg', '.png');
             src = new URL(src, 'https://cpc.csgrandeur.cn').toString();
             if (images[src]) {
-                ele.setAttribute('src', `/d/csgoj/p/${id}/file/${images[src]}.png`);
+                ele.setAttribute('src', `file://${images[src]}.png`);
                 return;
             }
             const file = new PassThrough();
@@ -133,20 +124,19 @@ export default class CSGOJProvider implements IBasicProvider {
             const fid = String.random(8);
             images[src] = fid;
             files[`${fid}.png`] = file;
-            ele.setAttribute('src', `/d/csgoj/p/${id}/file/${fid}.png`);
+            ele.setAttribute('src', `file://${fid}.png`);
         });
         const description = [...pDescription.children].map((i) => i.outerHTML).join('');
         const input = [...document.querySelector('div[name="Input"]').children].map((i) => i.outerHTML).join('');
         const output = [...document.querySelector('div[name="Output"]').children].map((i) => i.outerHTML).join('');
-        const sampleInput = `\n\n\`\`\`input1\n${document.querySelector('div[name="Sample Input"]>pre').innerHTML.trim()}\n\`\`\``;
-        const sampleOutput = `\n\n\`\`\`output1\n${document.querySelector('div[name="Sample Output"]>pre').innerHTML.trim()}\n\`\`\``;
-        content += `${description}\n\n${input}\n\n${output}\n\n${sampleInput}\n\n${sampleOutput}`;
+        const sampleInput = `\`\`\`input1\n${document.querySelector('div[name="Sample Input"]>pre').innerHTML.trim()}\n\`\`\``;
+        const sampleOutput = `\`\`\`output1\n${document.querySelector('div[name="Sample Output"]>pre').innerHTML.trim()}\n\`\`\``;
+        const contents = [description, input, output, sampleInput, sampleOutput];
         const hint = document.querySelector('div[name="Hint"]');
         if (hint.textContent.trim().length > 4) {
-            content += `\n\n${[...document.querySelector('div[name="Hint"]').children].map((i) => i.outerHTML).join('')}`;
+            contents.push([...hint.children].map((i) => i.outerHTML).join(''));
         }
-        contents['zh'] = content;
-        const tag = document.querySelector('div[name="Source"]>a').textContent;
+        const tag = document.querySelector('div[name="Source"]>a').textContent.trim();
         const limit = document.querySelectorAll('span[class="inline_span"]');
         const time = `${+limit[0].textContent.split(' ')[6] * 1000}`;
         const memory = limit[1].textContent.split(' ')[2];
@@ -157,7 +147,7 @@ export default class CSGOJProvider implements IBasicProvider {
             },
             files,
             tag: [tag],
-            content: JSON.stringify(contents),
+            content: JSON.stringify({ zh: contents.join('\n\n') }),
         };
     }
 
@@ -165,7 +155,7 @@ export default class CSGOJProvider implements IBasicProvider {
         if (resync && page > 1) return [];
         const offset = (page - 1) * 100;
         const result = await this
-            .get(`https://cpc.csgrandeur.cn/csgoj/problemset/problemset_ajax?search=&sort=problem_id&order=asc&offset=${offset}&limit=100`)
+            .get(`/csgoj/problemset/problemset_ajax?search=&sort=problem_id&order=asc&offset=${offset}&limit=100`)
             .set('referer', 'https://cpc.csgrandeur.cn/csgoj/problemset')
             .set('X-Requested-With', 'XMLHttpRequest');
         const res = result.body.rows;
@@ -174,37 +164,37 @@ export default class CSGOJProvider implements IBasicProvider {
         return pli;
     }
 
-    async submitProblem(id: string, lang: string, code: string) {
+    async submitProblem(id: string, lang: string, source: string, info, next, end) {
         await this.ensureLogin();
-        const language = lang.includes('csgoj.') ? lang.split('csgoj.')[1] : '0';
+        if (!lang.includes('csgoj')) {
+            end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
+            return null;
+        }
         const result = await this.post('/csgoj/Problemset/submit_ajax')
             .set('referer', `https://cpc.csgrandeur.cn/csgoj/problemset/submit?pid=${id.split('P')[1]}`)
             .send({
                 pid: id.split('P')[1],
-                language,
-                source: code,
+                language: lang.split('csgoj.')[1],
+                source,
             });
         return result.body.data.solution_id;
     }
 
-    // eslint-disable-next-line consistent-return
-    async waitForSubmission(id: string, end) {
+    async waitForSubmission(id: string, next, end) {
         let count = 0;
         while (count < 60) {
             count++;
             await sleep(3000);
-            const result = await this.get(`/csgoj/Status/status_ajax?solution_id=${id}`).set('X-Requested-With', 'XMLHttpRequest');
-            const stat = result.body.rows[0].result;
-            const status = statusDict[stat] || STATUS.STATUS_SYSTEM_ERROR;
+            const { body } = await this.get(`/csgoj/Status/status_ajax?solution_id=${id}`).set('X-Requested-With', 'XMLHttpRequest');
+            const status = statusDict[body.rows[0].result] || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
-            const memory = parseMemoryMB(result.body.rows[0].memory);
-            const time = parseTimeMS(result.body.rows[0].time);
-            return await end({
+            await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-                time,
-                memory,
+                time: body.rows[0].time,
+                memory: body.rows[0].memory * 1024,
             });
+            return;
         }
     }
 }
