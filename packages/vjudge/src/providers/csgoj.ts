@@ -109,15 +109,15 @@ export default class CSGOJProvider implements IBasicProvider {
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `/d/csgoj/p/${id}/file/${fid}.png`);
         });
-        const description = pDescription.innerHTML.trim().replace('                        ', '');
-        const input = document.querySelector('div[name="Input"]').innerHTML.trim().replace('                        ', '');
-        const output = document.querySelector('div[name="Output"]').innerHTML.trim().replace('                        ', '');
+        const description = [...pDescription.children].map((i) => i.outerHTML).join('');
+        const input = [...document.querySelector('div[name="Input"]').children].map((i) => i.outerHTML).join('');
+        const output = [...document.querySelector('div[name="Output"]').children].map((i) => i.outerHTML).join('');
         const sampleInput = `\n\n\`\`\`input1\n${document.querySelector('div[name="Sample Input"]>pre').innerHTML.trim()}\n\`\`\``;
         const sampleOutput = `\n\n\`\`\`output1\n${document.querySelector('div[name="Sample Output"]>pre').innerHTML.trim()}\n\`\`\``;
         content += `${description}\n\n${input}\n\n${output}\n\n${sampleInput}\n\n${sampleOutput}`;
         const hint = document.querySelector('div[name="Hint"]');
         if (hint.textContent.trim().length > 4) {
-            content += `\n\n${document.querySelector('div[name="Hint"]').innerHTML.trim().replace('                        ', '')}`;
+            content += `\n\n${[...document.querySelector('div[name="Hint"]').children].map((i) => i.outerHTML).join('')}`;
         }
         contents['zh'] = content;
         const tag = document.querySelector('div[name="Source"]>a').textContent;
@@ -165,12 +165,11 @@ export default class CSGOJProvider implements IBasicProvider {
     // eslint-disable-next-line consistent-return
     async waitForSubmission(id: string, end) {
         let count = 0;
-        // eslint-disable-next-line no-constant-condition
         while (count < 60) {
             count++;
             await sleep(3000);
             const result = await this
-            // eslint-disable-next-line max-len
+                // eslint-disable-next-line max-len
                 .get(`/csgoj/Status/status_ajax?sort=solution_id_show&order=desc&offset=0&limit=20&problem_id=&user_id=&solution_id=${id}&language=-1&result=-1`)
                 .set('X-Requested-With', 'XMLHttpRequest');
             const stat = result.body.rows[0].result;
