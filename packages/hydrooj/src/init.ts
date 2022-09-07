@@ -22,11 +22,6 @@ if (!global.Hydro) {
         // @ts-ignore
         ui: {
             manifest: {},
-            nodes: {
-                nav: [],
-                problem_add: [],
-                user_dropdown: [],
-            },
             template: {},
         },
         // @ts-ignore
