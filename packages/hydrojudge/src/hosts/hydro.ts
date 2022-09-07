@@ -28,6 +28,7 @@ export default class Hydro {
         this.config.cookie = this.config.cookie || '';
         this.config.last_update_at = this.config.last_update_at || 0;
         if (!this.config.server_url.startsWith('http')) this.config.server_url = `http://${this.config.server_url}`;
+        if (!this.config.server_url.endsWith('/')) this.config.server_url = `${this.config.server_url}/`;
         this.getLang = this.getLang.bind(this);
     }
 
