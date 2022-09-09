@@ -73,7 +73,7 @@ export default class POJProvider implements IBasicProvider {
 
     get(url: string) {
         logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'http://poj.org'}${url}`;
+        if (!url.startsWith('http')) url = new URL(url, this.account.endpoint || 'http://poj.org').toString();
         const req = superagent.get(url).set('Cookie', this.cookie);
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
@@ -138,10 +138,7 @@ export default class POJProvider implements IBasicProvider {
             content.children[0].remove();
             content.children[0].remove();
             content.querySelectorAll('img[src]').forEach((ele) => {
-                let src = ele.getAttribute('src');
-                if (!src.startsWith('http')) {
-                    src = new URL(src, 'http://poj.org/').toString();
-                }
+                const src = ele.getAttribute('src');
                 if (images[src]) {
                     ele.setAttribute('src', `file://${images[src]}.png`);
                     return;
