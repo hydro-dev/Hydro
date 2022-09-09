@@ -172,7 +172,7 @@ export default class POJProvider implements IBasicProvider {
                     for (const item of node.innerHTML.split('\n<br>\n<br>')) {
                         const p = page.createElement('p');
                         p.innerHTML = item.trim();
-                        html += p.outerHTML; 
+                        html += p.outerHTML;
                     }
                 } else html += node.innerHTML;
             }
