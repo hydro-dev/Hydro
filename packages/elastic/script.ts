@@ -16,10 +16,10 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     }
     if (doc.title) {
         doc.title = doc.title.replace(/[[\]【】()（）]/g, ' ')
-            .replace(/([a-zA-Z]{2,})/, (a) => `${a} `);
+            .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
     }
     if (doc.pid) {
-        doc.pid = doc.pid.replace(/([a-zA-Z]{2,})/, (a) => `${a} `);
+        doc.pid = doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
     }
     return omit(doc, indexOmit);
 };
