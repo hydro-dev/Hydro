@@ -97,7 +97,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             this.puppeteer = await puppeteer.launch({ headless: true, executablePath, args });
             logger.success('Successfully launched browser');
         } catch (e) {
-            logger.error(e);
+            logger.error(e.message);
             logger.error('Failed to launch browser, using fallback mode');
             return false;
         }
