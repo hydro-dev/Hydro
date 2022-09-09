@@ -138,8 +138,10 @@ export default class POJProvider implements IBasicProvider {
             content.children[0].remove();
             content.children[0].remove();
             content.querySelectorAll('img[src]').forEach((ele) => {
-                const src = ele.getAttribute('src');
-                if (!src.startsWith('http')) return;
+                let src = ele.getAttribute('src');
+                if (!src.startsWith('http')) {
+                    src = new URL(src, 'http://poj.org/').toString();
+                }
                 if (images[src]) {
                     ele.setAttribute('src', `file://${images[src]}.png`);
                     return;
@@ -167,15 +169,11 @@ export default class POJProvider implements IBasicProvider {
                 } else if (node.className.includes('sio')) {
                     html += `<pre><code class="language-${markNext}${lastId}">${htmlEncode(node.innerHTML)}</code></pre>`;
                 } else if (node.className.includes('ptx')) {
-                    for (const item of node.childNodes) {
-                        if (item.nodeType === 3) {
-                            const p = page.createElement('p');
-                            p.innerHTML = htmlEncode(item.textContent);
-                            item.replaceWith(p);
-                        }
-                        if (item.nodeName.includes('BR')) item.remove();
+                    for (const item of node.innerHTML.split('\n<br>\n<br>')) {
+                        const p = page.createElement('p');
+                        p.innerHTML = item.trim();
+                        html += p.outerHTML; 
                     }
-                    html += node.innerHTML;
                 } else html += node.innerHTML;
             }
             contents[langs[lang]] = html;
