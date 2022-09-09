@@ -73,7 +73,7 @@ export default class POJProvider implements IBasicProvider {
 
     get(url: string) {
         logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'http://poj.org'}${url}`;
+        if (!url.startsWith('http')) url = new URL(url, this.account.endpoint || 'http://poj.org').toString();
         const req = superagent.get(url).set('Cookie', this.cookie);
         if (this.account.proxy) return req.proxy(this.account.proxy);
         return req;
@@ -139,7 +139,6 @@ export default class POJProvider implements IBasicProvider {
             content.children[0].remove();
             content.querySelectorAll('img[src]').forEach((ele) => {
                 const src = ele.getAttribute('src');
-                if (!src.startsWith('http')) return;
                 if (images[src]) {
                     ele.setAttribute('src', `file://${images[src]}.png`);
                     return;
@@ -167,15 +166,11 @@ export default class POJProvider implements IBasicProvider {
                 } else if (node.className.includes('sio')) {
                     html += `<pre><code class="language-${markNext}${lastId}">${htmlEncode(node.innerHTML)}</code></pre>`;
                 } else if (node.className.includes('ptx')) {
-                    for (const item of node.childNodes) {
-                        if (item.nodeType === 3) {
-                            const p = page.createElement('p');
-                            p.innerHTML = htmlEncode(item.textContent);
-                            item.replaceWith(p);
-                        }
-                        if (item.nodeName.includes('BR')) item.remove();
+                    for (const item of node.innerHTML.split('\n<br>\n<br>')) {
+                        const p = page.createElement('p');
+                        p.innerHTML = item.trim();
+                        html += p.outerHTML;
                     }
-                    html += node.innerHTML;
                 } else html += node.innerHTML;
             }
             contents[langs[lang]] = html;
