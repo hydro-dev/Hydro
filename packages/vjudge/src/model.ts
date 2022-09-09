@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import os from 'os';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import * as Judge from 'hydrooj/src/handler/judge';
 import { Logger } from 'hydrooj/src/logger';
@@ -131,6 +132,7 @@ async function loadAccounts() {
     const accounts = await coll.find().toArray();
     for (const account of accounts) {
         if (!providers[account.type]) continue;
+        if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
         Pool[`${account.type}/${account.handle}`] = new Service(providers[account.type], account);
     }
 }
