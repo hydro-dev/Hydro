@@ -145,7 +145,7 @@ Worker.addHandler('task.daily', async () => {
     await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
     await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
     await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
-    if (global.Hydro.model.system.get('server.checkUpdate')) {
+    if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
         await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
     }
     await bus.serial('task/daily');
