@@ -2,7 +2,7 @@ import { Client } from '@elastic/elasticsearch';
 import { omit } from 'lodash';
 import { addScript, Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
-import ProblemModel from 'hydrooj/src/model/problem';
+import ProblemModel, { ProblemDoc } from 'hydrooj/src/model/problem';
 import * as system from 'hydrooj/src/model/system';
 import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
 import * as bus from 'hydrooj/src/service/bus';
@@ -10,19 +10,32 @@ import * as bus from 'hydrooj/src/service/bus';
 const client = new Client({ node: system.get('elastic-search.url') || 'http://127.0.0.1:9200' });
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
+const processDocument = (doc: Partial<ProblemDoc>) => {
+    if (doc.content) {
+        doc.content = doc.content.replace(/[[\]【】()（）]/g, ' ');
+    }
+    if (doc.title) {
+        doc.title = doc.title.replace(/[[\]【】()（）]/g, ' ')
+            .replace(/([a-zA-Z]{2,})/, (a) => `${a} `);
+    }
+    if (doc.pid) {
+        doc.pid = doc.pid.replace(/([a-zA-Z]{2,})/, (a) => `${a} `);
+    }
+    return omit(doc, indexOmit);
+};
 
 bus.on('problem/add', async (doc, docId) => {
     await client.index({
         index: 'problem',
         id: `${doc.domainId}/${docId}`,
-        document: omit(doc, indexOmit),
+        document: processDocument(doc),
     });
 });
 bus.on('problem/edit', async (pdoc) => {
     await client.index({
         index: 'problem',
         id: `${pdoc.domainId}/${pdoc.docId}`,
-        document: omit(pdoc, indexOmit),
+        document: processDocument(pdoc),
     });
 });
 bus.on('problem/del', async (domainId, docId) => {
@@ -45,7 +58,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         query: {
             simple_query_string: {
                 query: q,
-                fields: ['tag^5', 'title^3', 'content'],
+                fields: ['tag^5', 'pid^4', 'title^3', 'content'],
             },
         },
         post_filter: {
@@ -76,7 +89,7 @@ async function run({ domainId }, report) {
         await client.index({
             index: 'problem',
             id: `${pdoc.domainId}/${pdoc.docId}`,
-            document: omit(pdoc, indexOmit),
+            document: processDocument(pdoc),
         });
     };
     if (domainId) await iterateAllProblemInDomain(domainId, ProblemModel.PROJECTION_PUBLIC, cb);
