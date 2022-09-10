@@ -5,6 +5,10 @@ import getAvailableLangs from 'vj/utils/availableLangs';
 
 const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', 'homework_detail_problem_submit'], async () => {
   const { config } = UiContext.pdoc;
+  if (config.type === 'submit_answer') {
+    $('[name="lang"]').val('_');
+    return;
+  }
   const availableLangs = getAvailableLangs(config.langs);
   const mainLangs = {};
   const preferences = [($('[name="lang"]').val() as string) || ''];

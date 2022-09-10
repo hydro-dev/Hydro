@@ -12,7 +12,7 @@
           <div class="hasjs--hide">
             {{ form.form_select({
                 label:'Code language',
-                options:model.setting.SETTINGS_BY_KEY['codeLang'].range,
+                options:langRange,
                 name:'lang',
                 value:handler.user.codeLang
               }) }}

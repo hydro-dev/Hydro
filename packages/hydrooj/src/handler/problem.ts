@@ -349,6 +349,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 const p = this.pdoc.config.subType;
                 const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
                 baseLangs = dl;
+            } else if (['objective', 'submit_answer'].includes(this.pdoc.config.type)) {
+                baseLangs = ['_'];
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
             }
@@ -478,7 +480,11 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
 
     async get() {
         this.response.template = 'problem_submit.html';
+        const langRange = (typeof this.pdoc.config === 'object' && this.pdoc.config.langs)
+            ? Object.fromEntries(this.pdoc.config.langs.map((i) => [i, setting.langs[i]?.display || i]))
+            : setting.SETTINGS_BY_KEY.codeLang.range;
         this.response.body = {
+            langRange,
             pdoc: this.pdoc,
             udoc: this.udoc,
             title: this.pdoc.title,

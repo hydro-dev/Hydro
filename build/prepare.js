@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
-const files = fs.readdirSync(dir);
 
 const compilerOptionsBase = {
     target: 'es2020',
@@ -17,7 +16,7 @@ const compilerOptionsBase = {
     // emitDecoratorMetadata: true,
     noEmit: true,
     incremental: true,
-    types: files.filter((i) => !['sharedworker', 'serviceworker'].includes(i)),
+    types: fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i)),
 };
 const config = {
     compilerOptions: compilerOptionsBase,
@@ -69,24 +68,27 @@ fs.writeFileSync(path.resolve(process.cwd(), 'packages', 'ui-default', 'tsconfig
     },
 }));
 
-const packages = fs.readdirSync(path.resolve(process.cwd(), 'packages'));
-for (const package of packages) {
-    if (package === 'ui-default') continue;
-    const basedir = path.resolve(process.cwd(), 'packages', package);
-    const files = fs.readdirSync(basedir);
-    if (!files.includes('src') && !files.map((n) => n.split('.')[1]).includes('ts') && package !== 'utils') continue;
-    if (package !== 'hydrooj') config.references.push({ path: `packages/${package}` });
-    fs.writeFileSync(
-        path.resolve(basedir, 'tsconfig.json'),
-        files.includes('src') ? JSON.stringify(configSrc) : JSON.stringify(configFlat),
-    );
-    if (files.includes('src')) {
-        const inner = fs.readdirSync(path.resolve(basedir, 'src'));
-        for (const file of inner) {
-            if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
-            const name = file.split('.')[0];
-            if (['handler', 'service', 'lib', 'model', 'script'].includes(name)) {
-                fs.writeFileSync(path.resolve(basedir, `${name}.js`), `module.exports = require('./src/${name}');\n`);
+for (const type of ['packages', 'plugins']) {
+    const packages = fs.readdirSync(path.resolve(process.cwd(), type));
+    for (const package of packages) {
+        if (package === 'ui-default') continue;
+        const basedir = path.resolve(process.cwd(), type, package);
+        if (!fs.statSync(basedir).isDirectory()) continue;
+        const files = fs.readdirSync(basedir);
+        if (!files.includes('src') && !files.map((n) => n.split('.')[1]).includes('ts') && package !== 'utils') continue;
+        if (package !== 'hydrooj') config.references.push({ path: `${type}/${package}` });
+        fs.writeFileSync(
+            path.resolve(basedir, 'tsconfig.json'),
+            files.includes('src') ? JSON.stringify(configSrc) : JSON.stringify(configFlat),
+        );
+        if (files.includes('src')) {
+            const inner = fs.readdirSync(path.resolve(basedir, 'src'));
+            for (const file of inner) {
+                if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
+                const name = file.split('.')[0];
+                if (['handler', 'service', 'lib', 'model', 'script'].includes(name)) {
+                    fs.writeFileSync(path.resolve(basedir, `${name}.js`), `module.exports = require('./src/${name}');\n`);
+                }
             }
         }
     }
