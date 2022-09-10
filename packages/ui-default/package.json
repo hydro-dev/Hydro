@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.40.4",
+  "version": "4.40.5",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "hydro.js",
@@ -102,7 +102,6 @@
     "stylus-loader": "^7.0.0",
     "tether": "1.4.7",
     "tether-drop": "^1.4.2",
-    "thirty-two": "^1.0.2",
     "through2": "^4.0.2",
     "timeago-react": "^3.0.5",
     "timeago.js": "^4.0.2",

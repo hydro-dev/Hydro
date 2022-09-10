@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import QRCode from 'qrcode';
-import b32 from 'thirty-two';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
@@ -34,8 +33,7 @@ export default new NamedPage('home_security', () => {
         return true;
       },
     }).open();
-    const secret = b32.encode(crypto.getRandomValues(new Uint8Array(8)))
-      .toString('utf8').replace(/=/g, '').toUpperCase();
+    const secret = String.random(13, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567');
     $('#secret').on('click', () => $('#secret').html(secret));
     const uri = `otpauth://totp/Hydro:${UserContext.uname}?secret=${secret}&issuer=Hydro`;
     const canvas = document.getElementById('qrcode');
