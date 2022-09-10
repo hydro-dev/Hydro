@@ -68,6 +68,10 @@ fs.writeFileSync(path.resolve(process.cwd(), 'packages', 'ui-default', 'tsconfig
     },
 }));
 
+if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
+    fs.mkdirSync(path.resolve(process.cwd(), 'plugins'));
+}
+
 for (const type of ['packages', 'plugins']) {
     const packages = fs.readdirSync(path.resolve(process.cwd(), type));
     for (const package of packages) {
@@ -94,6 +98,3 @@ for (const type of ['packages', 'plugins']) {
     }
 }
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
-if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
-    fs.mkdirSync(path.resolve(process.cwd(), 'plugins'));
-}
