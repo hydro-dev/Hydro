@@ -59,9 +59,7 @@ poj.6:
 
 const langs = {
     default: 'en',
-    'zh-CN': 'zh_CN',
-    es: 'es',
-    ja: 'ja',
+    'zh-CN': 'zh',
 };
 
 export default class POJProvider implements IBasicProvider {
@@ -129,6 +127,7 @@ export default class POJProvider implements IBasicProvider {
         const memory = info.children[2].innerHTML.split('</b> ')[1].toLowerCase().trim();
         const contents = {};
         const images = {};
+        let tag = '';
         for (const lang of languages) {
             await sleep(1000);
             const { text } = await this.get(`/problem?id=${id.split('P')[1]}&lang=${lang}&change=true`);
@@ -157,6 +156,10 @@ export default class POJProvider implements IBasicProvider {
                 if (node.className.includes('pst')) {
                     if (!node.innerHTML.startsWith('Sample ')) {
                         html += `<h2>${htmlEncode(node.innerHTML)}</h2>`;
+                        if (node.textContent === 'Source') {
+                            tag = node.nextElementSibling.textContent.trim();
+                            node.nextElementSibling.innerHTML = tag;
+                        }
                     } else if (node.innerHTML.startsWith('Sample Input')) {
                         lastId++;
                         markNext = 'input';
@@ -164,16 +167,37 @@ export default class POJProvider implements IBasicProvider {
                         markNext = 'output';
                     }
                 } else if (node.className.includes('sio')) {
-                    html += `<pre><code class="language-${markNext}${lastId}">${htmlEncode(node.innerHTML)}</code></pre>`;
+                    html += `\n\n<pre><code class="language-${markNext}${lastId}">${node.innerHTML}</code></pre>\n\n`;
                 } else if (node.className.includes('ptx')) {
-                    for (const item of node.innerHTML.split('\n<br>\n<br>')) {
-                        const p = page.createElement('p');
-                        p.innerHTML = item.trim();
-                        html += p.outerHTML;
+                    for (const primaryTd of node.querySelectorAll('td')) {
+                        const td = page.createElement('td');
+                        td.textContent = primaryTd.textContent;
+                        if (primaryTd.colSpan > 1) td.colSpan = primaryTd.colSpan;
+                        primaryTd.replaceWith(td);
+                    }
+                    for (const primaryPre of node.querySelectorAll('pre')) {
+                        const pre = page.createElement('pre');
+                        for (const inner of primaryPre.innerHTML.split('<br>')) {
+                            if (inner !== '') {
+                                const preP = page.createElement('p');
+                                preP.innerHTML = inner;
+                                pre.append(preP);
+                            }
+                        }
+                        primaryPre.replaceWith(pre);
+                    }
+                    for (const item of node.innerHTML.split('\n<br>')) {
+                        if (item !== '') {
+                            const p = page.createElement('p');
+                            p.innerHTML = item.trim().replace(/\$/g, '<span>$</span>');
+                            html += p.outerHTML;
+                        }
                     }
                 } else html += node.innerHTML;
             }
-            contents[langs[lang]] = html;
+            if (lang in langs) {
+                contents[langs[lang]] = html;
+            }
         }
         return {
             title: main.getElementsByClassName('ptt')[0].innerHTML,
@@ -181,7 +205,7 @@ export default class POJProvider implements IBasicProvider {
                 'config.yaml': Buffer.from(`time: ${time}\nmemory: ${memory}\ntype: remote_judge\nsubType: poj\ntarget: ${id}`),
             },
             files,
-            tag: [],
+            tag: [tag],
             content: JSON.stringify(contents),
         };
     }
