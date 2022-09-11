@@ -59,9 +59,7 @@ poj.6:
 
 const langs = {
     default: 'en',
-    'zh-CN': 'zh_CN',
-    es: 'es',
-    ja: 'ja',
+    'zh-CN': 'zh',
 };
 
 export default class POJProvider implements IBasicProvider {
@@ -191,13 +189,15 @@ export default class POJProvider implements IBasicProvider {
                     for (const item of node.innerHTML.split('\n<br>')) {
                         if (item !== '') {
                             const p = page.createElement('p');
-                            p.innerHTML = item.trim().replace(/\$/g, '\\$');
+                            p.innerHTML = item.trim().replace(/\$/g, '<span>$</span>');
                             html += p.outerHTML;
                         }
                     }
                 } else html += node.innerHTML;
             }
-            contents[langs[lang]] = html;
+            if (lang in langs) {
+                contents[langs[lang]] = html;
+            }
         }
         return {
             title: main.getElementsByClassName('ptt')[0].innerHTML,
