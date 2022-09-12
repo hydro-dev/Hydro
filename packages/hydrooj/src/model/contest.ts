@@ -1,3 +1,4 @@
+import { sumBy } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
@@ -79,10 +80,7 @@ const acm = buildContestRule({
         }
         return { accept, time, detail };
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time, page);
-        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getList(tdoc.domainId, uids);
+    async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardRow = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
@@ -110,7 +108,12 @@ const acm = buildContestRule({
                 });
             }
         }
-
+        return columns;
+    },
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
         // Find first accept
         const first = {};
         const data = await document.collStatus.aggregate([
@@ -130,6 +133,7 @@ const acm = buildContestRule({
         ]).toArray();
         for (const t of data) first[t._id] = t.first.generationTime;
 
+        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict: Record<number, AcmDetail> = {};
@@ -197,10 +201,7 @@ const oi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: (tdoc, now) => now > tdoc.endAt,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
-        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getList(tdoc.domainId, uids);
+    async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
@@ -221,6 +222,12 @@ const oi = buildContestRule({
                 });
             }
         }
+        return columns;
+    },
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
         const psdict = {};
         const first = {};
         for (const pid of tdoc.pids) {
@@ -243,6 +250,7 @@ const oi = buildContestRule({
                 }
             }
         }
+        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
         const rows: ScoreboardNode[][] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
@@ -250,7 +258,7 @@ const oi = buildContestRule({
                 if (!tsddict[item.pid] || tsddict[item.pid].score < item.score || this.submitAfterAccept) tsddict[item.pid] = item;
             }
             const row: ScoreboardNode[] = [
-                { type: 'string', value: rank.toString() },
+                { type: 'rank', value: rank.toString() },
                 { type: 'user', value: udict[tsdoc.uid].uname, raw: tsdoc.uid },
             ];
             if (isExport) row.push({ type: 'email', value: udict[tsdoc.uid].mail });
@@ -337,8 +345,8 @@ const homework = buildContestRule({
             });
         }
         return {
-            score: Math.sum(detail.map((d) => d.score)),
-            penaltyScore: Math.sum(detail.map((d) => d.penaltyScore)),
+            score: sumBy(detail, 'score'),
+            penaltyScore: sumBy(detail, 'penaltyScore'),
             time: Math.sum(detail.map((d) => d.time)),
             detail,
         };
@@ -346,10 +354,7 @@ const homework = buildContestRule({
     showScoreboard: () => true,
     showSelfRecord: () => true,
     showRecord: () => true,
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
-        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getList(tdoc.domainId, uids);
+    async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
@@ -384,6 +389,13 @@ const homework = buildContestRule({
                 });
             }
         }
+        return columns;
+    },
+    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
+        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getList(tdoc.domainId, uids);
+        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [columns];
         for (const [rank, tsdoc] of rankedTsdocs) {
             const tsddict = {};
@@ -391,7 +403,7 @@ const homework = buildContestRule({
                 if (!tsddict[item.pid] || tsddict[item.pid].score <= item.score) tsddict[item.pid] = item;
             }
             const row: ScoreboardRow = [
-                { type: 'string', value: rank },
+                { type: 'rank', value: rank.toString() },
                 {
                     type: 'user',
                     value: udict[tsdoc.uid].uname,

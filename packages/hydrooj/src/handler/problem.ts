@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
 import {
-    escapeRegExp, flattenDeep, intersection, isSafeInteger,
+    escapeRegExp, flattenDeep, intersection, isSafeInteger, pick,
 } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
@@ -372,12 +372,12 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.response.body = {
             pdoc: this.pdoc,
             udoc: this.udoc,
-            psdoc: this.psdoc,
+            psdoc: tid ? null : this.psdoc,
             title: this.pdoc.title,
             solutionCount: scnt,
             discussionCount: dcnt,
             tdoc: this.tdoc,
-            tsdoc: this.tsdoc,
+            tsdoc: pick(this.tsdoc, ['attend', 'startAt']),
         };
         this.response.template = 'problem_detail.html';
         this.UiContext.extraTitleContent = this.pdoc.title;
@@ -429,8 +429,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            this.response.body.ctdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
-            this.response.body.htdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework');
+            [this.response.body.ctdocs, this.response.body.htdocs] = await Promise.all([
+                contest.getRelated(this.args.domainId, this.pdoc.docId),
+                contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework'),
+            ]);
         }
     }
 

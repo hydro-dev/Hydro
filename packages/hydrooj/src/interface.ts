@@ -495,12 +495,16 @@ export interface ContestRule<T = any> {
     TEXT: string;
     hidden?: boolean;
     check: (args: any) => any;
-    statusSort: any;
+    statusSort: Record<string, 1 | -1>;
     submitAfterAccept: boolean;
     showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
     showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[], ignoreLock?: boolean) => ContestStat & T;
+    scoreboardHeader: (
+        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        tdoc: Tdoc<30>, pdict: ProblemDict,
+    ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>, page: number,

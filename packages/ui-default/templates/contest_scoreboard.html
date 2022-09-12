@@ -30,7 +30,7 @@
           <tr>
           {%- for column in rows[0] -%}
             <th class="col--{{ column.type }}">
-            {% if column.type == 'problem' %}
+            {% if column.type == 'problem' and column.raw %}
               <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">
                 {{ column.value }}<br />{{ pdict[column.raw].nAccept }}/{{ pdict[column.raw].nSubmit }}
               </a>

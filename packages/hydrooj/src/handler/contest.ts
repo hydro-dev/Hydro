@@ -119,7 +119,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
         this.response.template = 'contest_detail.html';
         const udict = await user.getList(domainId, [this.tdoc.owner]);
         this.response.body = {
-            tdoc: this.tdoc, tsdoc: this.tsdoc, udict,
+            tdoc: this.tdoc, tsdoc: pick(this.tsdoc, ['attend', 'startAt']), udict,
         };
         if (!this.request.json) {
             this.response.body.tdoc.content = this.response.body.tdoc.content

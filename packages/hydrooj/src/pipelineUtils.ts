@@ -2,8 +2,9 @@
 import { FilterQuery } from 'mongodb';
 import type {
     DomainDoc, ProblemStatusDoc, RecordDoc,
-    Udoc,
+    Tdoc, Udoc,
 } from './interface';
+import * as contest from './model/contest';
 import * as document from './model/document';
 import domain from './model/domain';
 import problem, { Field, ProblemDoc } from './model/problem';
@@ -18,6 +19,15 @@ export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, t
 export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
     const udocs = await user.getMulti().toArray();
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
+}
+
+export async function iterateAllContest(cb: (tdoc: Tdoc) => Promise<any>) {
+    await iterateAllDomain(async (ddoc) => {
+        const tdocs = await contest.getMulti(ddoc._id, {}).toArray();
+        for (const tdoc of tdocs) {
+            await cb(tdoc);
+        }
+    });
 }
 
 export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
