@@ -9,7 +9,7 @@ import {
 import { OAuthUserResponse, Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
-import { isEmail, isPassword, isUname } from '../lib/validator';
+import { isEmail, isPassword } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -109,7 +109,7 @@ class UserLoginHandler extends Handler {
         this.response.template = 'user_login.html';
     }
 
-    @param('uname', Types.String)
+    @param('uname', Types.Username)
     @param('password', Types.String)
     @param('rememberme', Types.Boolean)
     @param('redirect', Types.String, true)
@@ -211,7 +211,7 @@ class UserRegisterWithCodeHandler extends Handler {
 
     @param('password', Types.String, isPassword)
     @param('verifyPassword', Types.String)
-    @param('uname', Types.Name, isUname)
+    @param('uname', Types.Username)
     @param('code', Types.String)
     async post(
         domainId: string, password: string, verify: string,

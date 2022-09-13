@@ -3,8 +3,9 @@ import emojiRegex from 'emoji-regex';
 import { isSafeInteger } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
+import saslprep from 'saslprep';
 import { ValidationError } from '../error';
-import { isContent, isName, isTitle } from '../lib/validator';
+import { isContent, isTitle } from '../lib/validator';
 import type { Handler } from './server';
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
@@ -23,6 +24,7 @@ type Type = [Converter, Validator, boolean?];
 export interface Types {
     Content: Type,
     Name: Type,
+    Username: Type,
     Title: Type,
     String: Type,
     Int: Type,
@@ -43,7 +45,8 @@ export interface Types {
 
 export const Types: Types = {
     Content: [(v) => v.toString().trim(), isContent],
-    Name: [(v) => v.toString().trim(), isName],
+    Name: [(v) => saslprep(v.toString().trim()), (v) => /^.{1,255}$/.test(saslprep(v.toString().trim()))],
+    Username: [(v) => saslprep(v.toString().trim()), (v) => /^.{3,31}$/.test(saslprep(v.toString().trim()))],
     Title: [(v) => v.toString().trim(), isTitle],
     String: [(v) => v.toString(), null],
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
