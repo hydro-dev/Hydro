@@ -505,6 +505,11 @@ export interface ContestRule<T = any> {
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
+    scoreboardRow: (
+        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        tdoc: Tdoc<30>, pdict: ProblemDict, udoc: Udoc | User, rank: number, tsdoc: ContestStat & T,
+        meta?: any,
+    ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>, page: number,
