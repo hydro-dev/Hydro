@@ -105,7 +105,16 @@ export async function pdoc(report) {
         },
     ];
     for (let i = 0; i <= 100; i++) {
-        pipeline[1].$group[`s${i}`] = { $sum: { $cond: [{ $eq: ['$score', i] }, 1, 0] } };
+        pipeline[1].$group[`s${i}`] = {
+            $sum: {
+                $cond: [{
+                    $and: [
+                        { $gte: ['$score', i] },
+                        { $lt: ['$score', i + 1] },
+                    ],
+                }, 1, 0],
+            },
+        };
         pipeline[2].$group[`s${i}`] = { $sum: `$s${i}` };
     }
     let bulk = db.collection('document').initializeUnorderedBulkOp();

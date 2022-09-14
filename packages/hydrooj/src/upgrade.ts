@@ -830,7 +830,7 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
-    async function _67_78() {
+    async function _67_68() {
         const _FRESH_INSTALL_IGNORE = 1;
         const rdocs = RecordModel.coll.find({ code: /^@@hydro_submission_file@@/ });
         let rdoc;

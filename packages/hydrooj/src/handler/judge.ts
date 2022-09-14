@@ -78,7 +78,7 @@ export async function postJudge(rdoc: RecordDoc) {
         if (isNormalSubmission) {
             await Promise.all([
                 problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-                problem.inc(pdoc.domainId, pdoc.docId, `stats.s${rdoc.score}`, 1),
+                problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
             ]);
         }
         if (rdoc.status === STATUS.STATUS_HACK_SUCCESSFUL) {
