@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import { dump } from 'js-yaml';
 import superagent from 'superagent';
 import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
@@ -9,13 +8,6 @@ import db from './db';
 
 const coll = db.collection('status');
 const logger = new Logger('monitor');
-
-function crypt(str: string) {
-    const cipher = crypto.createCipheriv('des-ecb', 'hydro-oj', ''); // lgtm [js/hardcoded-credentials]
-    let encrypted = cipher.update(str, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return encrypted;
-}
 
 export async function feedback(): Promise<[string, StatusUpdate]> {
     const {
@@ -56,12 +48,12 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         const status = await db.db.admin().serverStatus();
         info.dbVersion = status.version;
     } catch (e) { }
-    const payload = crypt(dump(info, {
+    const payload = dump(info, {
         replacer: (key, value) => {
             if (typeof value === 'function') return '';
             return value;
         },
-    }));
+    });
     if (process.env.CI) return [mid, $update];
     superagent.post(`${system.get('server.center')}/report`)
         .send({ installId, payload })

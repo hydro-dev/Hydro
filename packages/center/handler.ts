@@ -1,3 +1,4 @@
+import assert from 'assert';
 import crypto from 'crypto';
 import yaml from 'js-yaml';
 import * as bus from 'hydrooj/src/service/bus';
@@ -28,7 +29,13 @@ class DataReportHandler extends Handler {
     @post('installId', Types.String)
     @post('payload', Types.String)
     async post(domainId: string, installId: string, _payload: string) {
-        const payload: any = yaml.load(decrypt(_payload));
+        let payload: any;
+        try {
+            payload = yaml.load(decrypt(_payload));
+        } catch (e) {
+            payload = yaml.load(_payload);
+        }
+        assert(payload.url);
         const old = await coll.findOne({ _id: installId });
         await coll.updateOne({ _id: installId }, {
             $set: {
