@@ -23,7 +23,7 @@ export class StorageModel {
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
-        await storage.put(_id, file);
+        await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path, size, etag, lastModified: new Date(), owner,
