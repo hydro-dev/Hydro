@@ -189,7 +189,7 @@ const acm = buildContestRule({
         return [rows, udict, nPages];
     },
     async ranked(tdoc, cursor) {
-        return await ranked.all(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
+        return await ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
     },
 });
 
@@ -310,7 +310,7 @@ const oi = buildContestRule({
         return [rows, udict, nPages];
     },
     async ranked(tdoc, cursor) {
-        return await ranked.all(cursor, (a, b) => a.score === b.score);
+        return await ranked(cursor, (a, b) => a.score === b.score);
     },
 });
 
@@ -467,7 +467,7 @@ const homework = buildContestRule({
         return [rows, udict, nPages];
     },
     async ranked(tdoc, cursor) {
-        return await ranked.all(cursor, (a, b) => a.score === b.score);
+        return await ranked(cursor, (a, b) => a.score === b.score);
     },
 });
 
