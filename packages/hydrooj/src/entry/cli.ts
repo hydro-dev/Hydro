@@ -104,6 +104,6 @@ export async function load() {
     require('../model/index');
     await model(pending, fail);
     require('../script/index');
-    await script(pending, fail, []);
+    await script(pending, fail);
     await cli();
 }

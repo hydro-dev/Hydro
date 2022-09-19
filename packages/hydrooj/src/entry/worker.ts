@@ -28,7 +28,6 @@ export async function load() {
     }
     const pending = global.addons;
     const fail = [];
-    const active = [];
     if (detail) logger.info('start');
     await Promise.all([
         locale(pending, fail),
@@ -73,7 +72,7 @@ export async function load() {
     await notfound.apply();
     require('../script/index');
     if (detail) logger.info('finish: script.builtin');
-    await script(pending, fail, active);
+    await script(pending, fail);
     if (detail) logger.info('finish: script.extra');
     await bus.serial('app/started');
     if (detail) logger.info('finish: bus.serial(start)');
@@ -98,6 +97,6 @@ export async function load() {
         }
     }
     logger.success('Server started');
-    if (process.send) process.send('ready');
-    return { active, fail };
+    process.send?.('ready');
+    return { fail };
 }
