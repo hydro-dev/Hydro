@@ -33,7 +33,7 @@ async function executeCommand(input: string) {
 }
 
 process.stdin.setEncoding('utf-8');
-if (process.stdin.setRawMode) process.stdin.setRawMode(false);
+process.stdin.setRawMode?.(false);
 process.stdin.on('data', (buf) => {
     const input = buf.toString();
     executeCommand(input);

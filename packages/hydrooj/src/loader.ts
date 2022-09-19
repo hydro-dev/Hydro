@@ -70,7 +70,7 @@ export async function load() {
     addon(path.resolve(__dirname, '..'), true);
     Error.stackTraceLimit = 50;
     require('./entry/worker').load();
-    if (global.gc) global.gc();
+    global.gc?.();
 }
 
 export async function loadCli() {

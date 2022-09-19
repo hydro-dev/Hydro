@@ -990,17 +990,15 @@ export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
         const pdocs = await problem.getPrefixList(domainId, prefix);
-        if (!Number.isNaN(+prefix)) {
+        if (!Number.isNaN(+prefix) && !pdocs.filter((i) => i.docId === +prefix)) {
             const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
             if (pdoc) pdocs.unshift(pdoc);
         }
-        const search = global.Hydro.lib.problemSearch;
         if (pdocs.length < 20) {
-            if (search) {
-                const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
-                const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } }).toArray();
-                pdocs.push(...docs);
-            }
+            const search = global.Hydro.lib.problemSearch || defaultSearch;
+            const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
+            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } }).toArray();
+            pdocs.push(...docs);
         }
         this.response.body = pdocs;
     }

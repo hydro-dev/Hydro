@@ -842,6 +842,11 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _68_69() {
+        const _FRESH_INSTALL_IGNORE = 1;
+        await db.collection('cache' as any).deleteMany({});
+        return true;
+    },
 ];
 
 export default scripts;
