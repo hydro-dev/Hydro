@@ -2,7 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    addScript, DiscussionTailReplyDoc, MessageDoc,
+    DiscussionTailReplyDoc, MessageDoc,
     RecordDoc, Schema, TestCase, TrainingNode,
 } from 'hydrooj';
 
@@ -507,11 +507,14 @@ export async function run({
     return true;
 }
 
-addScript('migrateVijos', 'migrate from vijos')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'migrateVijos', 'migrate from vijos',
+    Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
         username: Schema.string().required(),
         password: Schema.string().required(),
-    })).action(run);
+    }),
+    run,
+);

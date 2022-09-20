@@ -5,7 +5,7 @@ import mariadb from 'mariadb';
 import { ObjectID } from 'mongodb';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { noop, Time } from '@hydrooj/utils/lib/utils';
-import { addScript, Schema } from 'hydrooj';
+import { Schema } from 'hydrooj';
 import { NotFoundError } from 'hydrooj/src/error';
 import { postJudge } from 'hydrooj/src/handler/judge';
 import { DiscussionDoc, DiscussionReplyDoc, RecordDoc } from 'hydrooj/src/interface';
@@ -227,7 +227,7 @@ export async function run({
                     hint: pdoc.limit_and_hint,
                 });
                 for (const match of content.matchAll(fileReg)) {
-                    const [,origialPath, pid, filename] = match;
+                    const [, origialPath, pid, filename] = match;
                     if (!problemAdditionalFile[`P${pdoc.id}`]) problemAdditionalFile[`P${pdoc.id}`] = [{ fromPid: pid, filename }];
                     else problemAdditionalFile[`P${pdoc.id}`].push({ fromPid: pid, filename });
                     content = content.replace(origialPath, `file://${filename}`);
@@ -508,8 +508,9 @@ export async function run({
     return true;
 }
 
-addScript('migrateSyzoj', 'migrate from syzoj')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'migrateSyzoj', 'migrate from syzoj',
+    Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
@@ -517,4 +518,6 @@ addScript('migrateSyzoj', 'migrate from syzoj')
         password: Schema.string().required(),
         domainId: Schema.string().default('system'),
         dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
-    })).action(run);
+    }),
+    run,
+);

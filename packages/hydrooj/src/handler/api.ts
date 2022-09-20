@@ -2,7 +2,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql, GraphQLSchema } from 'graphql';
 import { resolvers, typeDefs } from 'graphql-scalars';
 import * as bus from '../service/bus';
-import { Handler, Route } from '../service/server';
+import { Handler } from '../service/server';
 
 const types: Record<string, Record<string, string>> = {};
 const unions: Record<string, string> = {};
@@ -123,8 +123,7 @@ class ApiHandler extends Handler {
     }
 }
 
-export function apply() {
-    Route('api', '/api', ApiHandler);
+export const sideEffect = true;
+export function apply(ctx) {
+    ctx.Route('api', '/api', ApiHandler);
 }
-
-global.Hydro.handler.api = apply;

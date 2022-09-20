@@ -1,0 +1,235 @@
+/* eslint-disable consistent-return */
+/* eslint-disable import/no-dynamic-require */
+/* eslint-disable @typescript-eslint/no-shadow */
+import { relative, resolve } from 'path';
+import { FSWatcher, watch } from 'chokidar';
+import { debounce } from 'lodash';
+import { Logger } from '../logger';
+import * as bus from './bus';
+import { Runtime, runtimes } from './module';
+
+function loadDependencies(filename: string, ignored: Set<string>) {
+    const dependencies = new Set<string>();
+    function traverse({ filename, children }: NodeJS.Module) {
+        if (ignored.has(filename) || dependencies.has(filename) || filename.includes('/node_modules/')) return;
+        dependencies.add(filename);
+        children.forEach(traverse);
+    }
+    traverse(require.cache[filename]);
+    return dependencies;
+}
+
+export function unwrapExports(module: any) {
+    return module?.default || module;
+}
+
+const logger = new Logger('watch');
+
+export function coerce(val: any) {
+    // resolve error when stack is undefined, e.g. axios error with status code 401
+    const { message, stack } = val instanceof Error && val.stack ? val : new Error(val as any);
+    const lines = stack.split('\n');
+    const index = lines.findIndex((line) => line.endsWith(message));
+    return lines.slice(index).join('\n');
+}
+
+class Watcher {
+    private root: string;
+    private watcher: FSWatcher;
+    private externals: Set<string>;
+    private accepted: Set<string>;
+    private declined: Set<string>;
+    private stashed = new Set<string>();
+
+    constructor(private config: any) {
+        this.externals = new Set(Object.keys(require.cache));
+        bus.on('app/ready', () => this.start());
+    }
+
+    start() {
+        this.root = resolve(process.cwd());
+        this.watcher = watch(this.root, {
+            ...this.config,
+            ignored: ['**/node_modules/**', '**/.git/**', '**/logs/**', '**/.cache/**'],
+        });
+        logger.info(`Start watching changes in ${this.root}`);
+
+        // files independent from any plugins will trigger a full reload
+        const triggerLocalReload = debounce(() => this.triggerLocalReload(), 1000);
+
+        this.watcher.on('change', (path) => {
+            logger.debug('change detected:', relative(this.root, path));
+
+            if (this.externals.has(path)) {
+                logger.warn('Require full reload');
+            } else if (require.cache[path]) {
+                this.stashed.add(path);
+                triggerLocalReload();
+            }
+        });
+    }
+
+    stop() {
+        return this.watcher.close();
+    }
+
+    private analyzeChanges() {
+        /** files pending classification */
+        const pending: string[] = [];
+
+        this.accepted = new Set(this.stashed);
+        this.declined = new Set(this.externals);
+
+        this.stashed.forEach((filename) => {
+            const { children } = require.cache[filename];
+            for (const { filename } of children) {
+                if (this.accepted.has(filename) || this.declined.has(filename) || filename.includes('/node_modules/')) continue;
+                pending.push(filename);
+            }
+        });
+
+        while (pending.length) {
+            let index = 0;
+            let hasUpdate = false;
+            while (index < pending.length) {
+                const filename = pending[index];
+                const { children } = require.cache[filename];
+                let isDeclined = true;
+                let isAccepted = false;
+                for (const { filename } of children) {
+                    if (this.declined.has(filename) || filename.includes('/node_modules/')) continue;
+                    if (this.accepted.has(filename)) {
+                        isAccepted = true;
+                        break;
+                    } else {
+                        isDeclined = false;
+                        if (!pending.includes(filename)) {
+                            hasUpdate = true;
+                            pending.push(filename);
+                        }
+                    }
+                }
+                if (isAccepted || isDeclined) {
+                    hasUpdate = true;
+                    pending.splice(index, 1);
+                    if (isAccepted) {
+                        this.accepted.add(filename);
+                    } else {
+                        this.declined.add(filename);
+                    }
+                } else {
+                    index++;
+                }
+            }
+            // infinite loop
+            if (!hasUpdate) break;
+        }
+
+        for (const filename of pending) {
+            this.declined.add(filename);
+        }
+    }
+
+    private triggerLocalReload() {
+        const start = Date.now();
+        this.analyzeChanges();
+        console.log(this.accepted);
+
+        /** plugins pending classification */
+        const pending = new Map<string, Runtime>();
+
+        /** plugins that should be reloaded */
+        const reloads = new Map<Runtime, string>();
+
+        // we assume that plugin entry files are "atomic"
+        // that is, reloading them will not cause any other reloads
+        for (const filename in require.cache) {
+            const module = require.cache[filename];
+            const plugin = unwrapExports(module.exports);
+            const runtime = runtimes[filename];
+            if (!runtime || this.declined.has(filename)) continue;
+            pending.set(filename, runtime);
+            if (!runtimes[filename]?.sideEffect && !plugin?.['sideEffect']) this.declined.add(filename);
+        }
+
+        for (const [filename, runtime] of pending) {
+            // check if it is a dependent of the changed file
+            this.declined.delete(filename);
+            const dependencies = [...loadDependencies(filename, this.declined)];
+
+            // we only detect reloads at plugin level
+            // a plugin will be reloaded if any of its dependencies are accepted
+            if (!dependencies.some((dep) => this.accepted.has(dep))) continue;
+            dependencies.forEach((dep) => this.accepted.add(dep));
+
+            // prepare for reload
+            let isMarked = false;
+            const visited = new Set<Runtime>();
+            const queued = [runtime];
+            while (queued.length) {
+                const runtime = queued.shift();
+                if (visited.has(runtime)) continue;
+                visited.add(runtime);
+                if (reloads.has(runtime)) {
+                    isMarked = true;
+                    break;
+                }
+            }
+            if (!isMarked) reloads.set(runtime, filename);
+        }
+
+        const backup: Record<string, NodeJS.Module> = {};
+        for (const filename of this.accepted) {
+            backup[filename] = require.cache[filename];
+            delete require.cache[filename];
+        }
+
+        function rollback() {
+            for (const filename in backup) {
+                require.cache[filename] = backup[filename];
+            }
+        }
+
+        logger.debug('Will reload the following file(s): %o', this.accepted.keys());
+        const attempts = {};
+        try {
+            for (const [, filename] of reloads) {
+                attempts[filename] = unwrapExports(require(filename));
+            }
+        } catch (err) {
+            logger.warn(err);
+            return rollback();
+        }
+
+        try {
+            for (const [runtime, filename] of reloads) {
+                const path = relative(this.root, filename);
+
+                try {
+                    runtime.dispose();
+                } catch (err) {
+                    logger.warn(`failed to dispose plugin at %c\n${coerce(err)}`, path);
+                }
+
+                try {
+                    runtime.load(attempts[filename]);
+                    logger.info('reload plugin at %c', path);
+                } catch (err) {
+                    logger.warn(`failed to reload plugin at %c\n${coerce(err)}`, path);
+                    throw err;
+                }
+            }
+        } catch {
+            // rollback require.cache and plugin states
+            rollback();
+            logger.warn('Rolling back changes');
+            return;
+        }
+
+        // reset stashed files
+        this.stashed = new Set();
+        logger.success('Reload done in %d ms', Date.now() - start);
+    }
+}
+
+export default new Watcher({});

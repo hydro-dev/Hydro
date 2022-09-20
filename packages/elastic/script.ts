@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import { omit } from 'lodash';
-import { addScript, Schema } from 'hydrooj';
+import { Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
 import ProblemModel, { ProblemDoc } from 'hydrooj/src/model/problem';
 import * as system from 'hydrooj/src/model/system';
@@ -23,27 +23,6 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     }
     return omit(doc, indexOmit);
 };
-
-bus.on('problem/add', async (doc, docId) => {
-    await client.index({
-        index: 'problem',
-        id: `${doc.domainId}/${docId}`,
-        document: processDocument(doc),
-    });
-});
-bus.on('problem/edit', async (pdoc) => {
-    await client.index({
-        index: 'problem',
-        id: `${pdoc.domainId}/${pdoc.docId}`,
-        document: processDocument(pdoc),
-    });
-});
-bus.on('problem/del', async (domainId, docId) => {
-    await client.delete({
-        index: 'problem',
-        id: `${domainId}/${docId}`,
-    });
-});
 
 global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     const allowedSize = system.get('elasic-search.indexSize') || 10000;
@@ -98,8 +77,32 @@ async function run({ domainId }, report) {
     return true;
 }
 
-addScript('ensureElasticSearch', 'Elastic problem search re-index')
-    .args(Schema.object({
-        domainId: Schema.string(),
-    }))
-    .action(run);
+export const apply = (ctx) => {
+    bus.on('problem/add', async (doc, docId) => {
+        await client.index({
+            index: 'problem',
+            id: `${doc.domainId}/${docId}`,
+            document: processDocument(doc),
+        });
+    });
+    bus.on('problem/edit', async (pdoc) => {
+        await client.index({
+            index: 'problem',
+            id: `${pdoc.domainId}/${pdoc.docId}`,
+            document: processDocument(pdoc),
+        });
+    });
+    bus.on('problem/del', async (domainId, docId) => {
+        await client.delete({
+            index: 'problem',
+            id: `${domainId}/${docId}`,
+        });
+    });
+    ctx.addScript(
+        'ensureElasticSearch', 'Elastic problem search re-index',
+        Schema.object({
+            domainId: Schema.string(),
+        }),
+        run,
+    );
+};

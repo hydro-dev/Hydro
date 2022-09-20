@@ -1,4 +1,4 @@
-import { addScript, Schema } from 'hydrooj';
+import { Schema } from 'hydrooj';
 import DomainModel from 'hydrooj/src/model/domain';
 import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
 import sonic from './service';
@@ -28,8 +28,10 @@ async function run({ domainId }, report) {
     return true;
 }
 
-addScript('ensureSonicSearch', 'Sonic problem search re-index')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'ensureSonicSearch', 'Sonic problem search re-index',
+    Schema.object({
         domainId: Schema.string(),
-    }))
-    .action(run);
+    }),
+    run,
+);

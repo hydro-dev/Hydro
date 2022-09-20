@@ -6,7 +6,6 @@ import Schema from 'schemastery';
 import { Tdoc, Udoc } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
 import rating from '../lib/rating';
-import { addScript } from '../loader';
 import { PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
@@ -184,8 +183,7 @@ export async function run({ domainId }, report: Function) {
     return true;
 }
 
-addScript('rp', 'Calculate rp of a domain, or all domains')
-    .args(Schema.object({
-        domainId: Schema.string(),
-    }))
-    .action(run);
+export const apply = (ctx) => ctx.addScript(
+    'rp', 'Calculate rp of a domain, or all domains',
+    Schema.object({ domainId: Schema.string() }), run,
+);

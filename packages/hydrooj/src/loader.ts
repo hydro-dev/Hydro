@@ -51,6 +51,7 @@ export function addon(addonPath: string, prepend = false) {
     }
 }
 
+/** @deprecated */
 export function addScript(name: string, description: string) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
     return {

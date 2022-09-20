@@ -363,6 +363,7 @@ const Checker = (permPrivChecker) => {
 
 export function Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
     router.all(name, path, (ctx) => handle(ctx as any, RouteHandler, Checker(permPrivChecker)));
+    return router.disposeLastOp;
 }
 
 export class ConnectionHandler extends HandlerCommon {
@@ -429,11 +430,16 @@ export function Connection(
 
 let started = false;
 
+class NotFoundHandler extends Handler {
+    prepare() { throw new NotFoundError(this.request.path); }
+    all() { }
+}
+
 // TODO use postInit?
 export async function start() {
     if (started) return;
     const port = system.get('server.port');
-    app.use(router.routes()).use(router.allowedMethods());
+    app.use(router.routes()).use(router.allowedMethods()).use((ctx) => handle(ctx, NotFoundHandler, () => true));
     await new Promise((resolve) => {
         httpServer.listen(argv.options.port || port, () => {
             logger.success('Server listening at: %d', argv.options.port || port);

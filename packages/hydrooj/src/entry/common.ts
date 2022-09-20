@@ -8,6 +8,7 @@ import yaml from 'js-yaml';
 import i18n from '../lib/i18n';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
+import { Runtime } from '../service/module';
 
 const logger = new Logger('common');
 
@@ -36,7 +37,11 @@ const getLoader = (type: string, filename: string) => async function loader(pend
         if (p && !fail.includes(i)) {
             try {
                 logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} init: %s`, i);
-                require(p);
+                const res = require(p);
+                if (res.apply) {
+                    const runtime = new Runtime(p);
+                    runtime.load(res);
+                }
             } catch (e) {
                 fail.push(i);
                 logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} load fail: %s`, i);

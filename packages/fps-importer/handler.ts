@@ -129,9 +129,8 @@ class FpsProblemImportHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
+export const sideEffect = true;
+export async function apply(ctx) {
+    ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     ProblemAdd('problem_import_fps', {}, 'copy', 'From FPS File');
 }
-
-global.Hydro.handler.fpsImport = apply;

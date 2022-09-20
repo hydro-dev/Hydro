@@ -1,4 +1,4 @@
-import { Handler, Route } from '../service/server';
+import { Handler } from '../service/server';
 
 class ProblemCategoryCompatHandler extends Handler {
     async get({ category }) {
@@ -6,6 +6,6 @@ class ProblemCategoryCompatHandler extends Handler {
     }
 }
 
-global.Hydro.handler.compat = () => {
-    Route('problem_category_compat', '/p/category/:category', ProblemCategoryCompatHandler);
+export const apply = (ctx) => {
+    ctx.Route('problem_category_compat', '/p/category/:category', ProblemCategoryCompatHandler);
 };

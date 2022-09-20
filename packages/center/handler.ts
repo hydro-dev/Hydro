@@ -63,8 +63,6 @@ class DataReportHandler extends Handler {
     }
 }
 
-export function apply() {
-    Route('data_report', '/center/report', DataReportHandler);
+export function apply(ctx) {
+    ctx.Route('data_report', '/center/report', DataReportHandler);
 }
-
-global.Hydro.handler.center = apply;

@@ -8,12 +8,13 @@ import { Logger } from '../logger';
 import options from '../options';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import { Runtime } from '../service/module';
 import {
     handler, lib, locale, model, script, service, setting, template,
 } from './common';
 
 const logger = new Logger('worker');
-const detail = cac().parse().options.loaderDetail;
+const { loaderDetail: detail, watch } = cac().parse().options;
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 
 export async function load() {
@@ -53,11 +54,18 @@ export async function load() {
     const server = require('../service/server');
     await server.prepare();
     if (detail) logger.info('finish: server');
+    if (watch) require('../service/watcher');
     await service(pending, fail);
     if (detail) logger.info('finish: service.extra');
     require('../model/index');
     if (detail) logger.info('finish: model.builtin');
-    require('../handler/index');
+    const handlerDir = path.resolve(__dirname, '..', 'handler');
+    const handlers = await fs.readdir(handlerDir);
+    for (const h of handlers) {
+        const f = path.resolve(handlerDir, h);
+        const m = require(f);
+        if (m.apply) new Runtime(f).load(m);
+    }
     if (detail) logger.info('finish: handler.builtin');
     await model(pending, fail);
     if (detail) logger.info('finish: model.extra');
@@ -68,8 +76,6 @@ export async function load() {
     if (detail) logger.info('finish: handler.extra');
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     if (detail) logger.info('finish: handler.apply');
-    const notfound = require('../handler/notfound');
-    await notfound.apply();
     require('../script/index');
     if (detail) logger.info('finish: script.builtin');
     await script(pending, fail);
@@ -98,5 +104,6 @@ export async function load() {
     }
     logger.success('Server started');
     process.send?.('ready');
+    await bus.serial('app/ready');
     return { fail };
 }

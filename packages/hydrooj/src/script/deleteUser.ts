@@ -1,5 +1,4 @@
 import Schema from 'schemastery';
-import { addScript } from '../loader';
 import { PRIV } from '../model/builtin';
 import user from '../model/user';
 import db from '../service/db';
@@ -9,7 +8,7 @@ const collDomainUser = db.collection('domain.user');
 const collRecord = db.collection('record');
 const collMessage = db.collection('message');
 
-addScript('deleteUser', 'Delete a user')
+export const apply = (ctx) => ctx.addScript('deleteUser', 'Delete a user')
     .args(Schema.object({
         uid: Schema.number(),
     }))
