@@ -16,7 +16,7 @@ import TaskModel from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param, Route, Types,
+    ConnectionHandler, Handler, param, Types,
 } from '../service/server';
 import { buildProjection } from '../utils';
 import { postJudge } from './judge';
@@ -359,11 +359,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply() {
-    Route('record_main', '/record', RecordListHandler);
-    Route('record_detail', '/record/:rid', RecordDetailHandler);
-    Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
-    Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
+export async function apply(ctx) {
+    ctx.Route('record_main', '/record', RecordListHandler);
+    ctx.Route('record_detail', '/record/:rid', RecordDetailHandler);
+    ctx.Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
+    ctx.Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }
-
-global.Hydro.handler.record = apply;

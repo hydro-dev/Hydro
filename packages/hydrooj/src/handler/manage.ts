@@ -16,8 +16,8 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler,
-    param, Route, Types,
+    ConnectionHandler, Handler,
+    param, Types,
 } from '../service/server';
 import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
@@ -263,14 +263,12 @@ class SystemUserImportHandler extends SystemHandler {
     }
 }
 
-async function apply() {
-    Route('manage', '/manage', SystemMainHandler);
-    Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
-    Route('manage_script', '/manage/script', SystemScriptHandler);
-    Route('manage_setting', '/manage/setting', SystemSettingHandler);
-    Route('manage_config', '/manage/config', SystemConfigHandler);
-    Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
-    Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
+export async function apply(ctx) {
+    ctx.Route('manage', '/manage', SystemMainHandler);
+    ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
+    ctx.Route('manage_script', '/manage/script', SystemScriptHandler);
+    ctx.Route('manage_setting', '/manage/setting', SystemSettingHandler);
+    ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
+    ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
+    ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
-
-global.Hydro.handler.manage = apply;

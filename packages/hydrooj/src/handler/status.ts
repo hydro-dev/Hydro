@@ -5,7 +5,7 @@ import RecordModel from '../model/record';
 import UserModel from '../model/user';
 import * as bus from '../service/bus';
 import db from '../service/db';
-import { Handler, Route } from '../service/server';
+import { Handler } from '../service/server';
 
 const coll = db.collection('status');
 
@@ -72,10 +72,8 @@ class StatusUpdateHandler extends Handler {
 
 bus.once('app/started', () => coll.createIndex('updateAt', { expireAfterSeconds: 24 * 3600 }));
 
-export async function apply() {
-    Route('status', '/status', StatusHandler);
-    Route('status_admin', '/.status', AdminStatusHandler);
-    Route('status_update', '/status/update', StatusUpdateHandler);
+export async function apply(ctx) {
+    ctx.Route('status', '/status', StatusHandler);
+    ctx.Route('status_admin', '/.status', AdminStatusHandler);
+    ctx.Route('status_update', '/status/update', StatusUpdateHandler);
 }
-
-global.Hydro.handler.status = apply;

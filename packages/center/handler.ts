@@ -3,9 +3,7 @@ import crypto from 'crypto';
 import yaml from 'js-yaml';
 import * as bus from 'hydrooj/src/service/bus';
 import db from 'hydrooj/src/service/db';
-import {
-    Handler, post, Route, Types,
-} from 'hydrooj/src/service/server';
+import { Handler, post, Types } from 'hydrooj/src/service/server';
 
 function decrypt(encrypted: string) {
     if (!encrypted) throw new Error();

@@ -11,7 +11,7 @@ import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import { PERM } from 'hydrooj/src/model/builtin';
 import problem from 'hydrooj/src/model/problem';
 import solution from 'hydrooj/src/model/solution';
-import { Handler, Route } from 'hydrooj/src/service/server';
+import { Handler } from 'hydrooj/src/service/server';
 
 class FpsProblemImportHandler extends Handler {
     async get() {

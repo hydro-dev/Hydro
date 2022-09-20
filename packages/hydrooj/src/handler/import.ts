@@ -8,7 +8,7 @@ import { ValidationError } from '../error';
 import { ProblemAdd } from '../lib/ui';
 import { PERM, PRIV } from '../model/builtin';
 import problem, { ProblemDoc } from '../model/problem';
-import { Handler, Route } from '../service/server';
+import { Handler } from '../service/server';
 
 function findOverrideContent(dir: string) {
     let files = fs.readdirSync(dir);
@@ -93,9 +93,7 @@ class ProblemImportHydroHandler extends Handler {
     }
 }
 
-export async function apply() {
+export async function apply(ctx) {
     ProblemAdd('problem_import_hydro', {}, 'copy', 'Import From Hydro');
-    Route('problem_import_hydro', '/problem/import/hydro', ProblemImportHydroHandler, PERM.PERM_CREATE_PROBLEM);
+    ctx.Route('problem_import_hydro', '/problem/import/hydro', ProblemImportHydroHandler, PERM.PERM_CREATE_PROBLEM);
 }
-
-global.Hydro.handler.import = apply;

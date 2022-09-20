@@ -13,9 +13,7 @@ import message from '../model/message';
 import * as oplog from '../model/oplog';
 import * as system from '../model/system';
 import user from '../model/user';
-import {
-    Handler, param, Route, Types,
-} from '../service/server';
+import { Handler, param, Types } from '../service/server';
 
 export const typeMapper = {
     problem: document.TYPE_PROBLEM,
@@ -425,15 +423,13 @@ class DiscussionEditHandler extends DiscussionHandler {
     }
 }
 
-export async function apply() {
-    Route('discussion_main', '/discuss', DiscussionMainHandler);
-    Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
-    Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
-    Route('discussion_detail', '/discuss/:did/raw', DiscussionRawHandler);
-    Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionRawHandler);
-    Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionRawHandler);
-    Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
-    Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler, PRIV.PRIV_USER_PROFILE, PERM.PERM_CREATE_DISCUSSION);
+export async function apply(ctx) {
+    ctx.Route('discussion_main', '/discuss', DiscussionMainHandler);
+    ctx.Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
+    ctx.Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
+    ctx.Route('discussion_detail', '/discuss/:did/raw', DiscussionRawHandler);
+    ctx.Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionRawHandler);
+    ctx.Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionRawHandler);
+    ctx.Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
+    ctx.Route('discussion_create', '/discuss/:type/:name/create', DiscussionCreateHandler, PRIV.PRIV_USER_PROFILE, PERM.PERM_CREATE_DISCUSSION);
 }
-
-global.Hydro.handler.discussion = apply;

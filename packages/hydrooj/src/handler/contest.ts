@@ -22,7 +22,7 @@ import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
 import {
-    Handler, param, post, Route, Types,
+    Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
@@ -458,17 +458,15 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     }
 }
 
-export async function apply() {
-    Route('contest_create', '/contest/create', ContestEditHandler);
-    Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_broadcast', '/contest/:tid/broadcast', ContestBroadcastHandler);
-    Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_files', '/contest/:tid/file', ContestFilesHandler, PERM.PERM_VIEW_CONTEST);
-    Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
+export async function apply(ctx) {
+    ctx.Route('contest_create', '/contest/create', ContestEditHandler);
+    ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_broadcast', '/contest/:tid/broadcast', ContestBroadcastHandler);
+    ctx.Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_files', '/contest/:tid/file', ContestFilesHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
 }
-
-global.Hydro.handler.contest = apply;

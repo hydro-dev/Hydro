@@ -10,7 +10,7 @@ import { buildContent } from 'hydrooj/src/lib/content';
 import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import { PERM } from 'hydrooj/src/model/builtin';
 import problem from 'hydrooj/src/model/problem';
-import { Handler, Route } from 'hydrooj/src/service/server';
+import { Handler } from 'hydrooj/src/service/server';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
@@ -126,9 +126,7 @@ class ImportQduojHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
+export async function apply(ctx) {
+    ctx.Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
     ProblemAdd('problem_import_qduoj', {}, 'copy', 'From QDUOJ Export');
 }
-
-global.Hydro.handler.qduImport = apply;

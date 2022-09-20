@@ -22,7 +22,7 @@ import task from '../model/task';
 import token from '../model/token';
 import user from '../model/user';
 import {
-    Handler, param, post, Route, Types,
+    Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
@@ -422,17 +422,15 @@ class OauthCallbackHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('user_login', '/login', UserLoginHandler);
-    Route('user_oauth', '/oauth/:type', OauthHandler);
-    Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
-    Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
-    Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
-    Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
-    Route('user_lostpass', '/lostpass', UserLostPassHandler);
-    Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
-    Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
-    Route('user_detail', '/user/:uid', UserDetailHandler);
+export async function apply(ctx) {
+    ctx.Route('user_login', '/login', UserLoginHandler);
+    ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
+    ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
+    ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
+    ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
+    ctx.Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_lostpass', '/lostpass', UserLostPassHandler);
+    ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
+    ctx.Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_detail', '/user/:uid', UserDetailHandler);
 }
-
-global.Hydro.handler.user = apply;

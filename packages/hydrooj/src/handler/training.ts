@@ -10,9 +10,7 @@ import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
-import {
-    Handler, param, Route, Types,
-} from '../service/server';
+import { Handler, param, Types } from '../service/server';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];
@@ -208,11 +206,9 @@ class TrainingEditHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
-    Route('training_create', '/training/create', TrainingEditHandler);
-    Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
-    Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
+export async function apply(ctx) {
+    ctx.Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
+    ctx.Route('training_create', '/training/create', TrainingEditHandler);
+    ctx.Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
+    ctx.Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
 }
-
-global.Hydro.handler.training = apply;

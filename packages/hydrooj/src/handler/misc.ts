@@ -11,7 +11,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, Route, Types,
+    Handler, param, post, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
@@ -129,12 +129,10 @@ export class SwitchAccountHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('switch_language', '/language/:lang', SwitchLanguageHandler);
-    Route('home_files', '/file', FilesHandler);
-    Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
-    Route('storage', '/storage', StorageHandler);
-    Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
+export async function apply(ctx) {
+    ctx.Route('switch_language', '/language/:lang', SwitchLanguageHandler);
+    ctx.Route('home_files', '/file', FilesHandler);
+    ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
+    ctx.Route('storage', '/storage', StorageHandler);
+    ctx.Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
-
-global.Hydro.handler.misc = apply;
