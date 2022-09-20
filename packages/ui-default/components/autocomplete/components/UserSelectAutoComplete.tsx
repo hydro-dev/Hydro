@@ -14,6 +14,7 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
       users(search: ${query}) {
         _id
         uname
+        displayName
         avatarUrl
       }
     `, ['data', 'users'])}
@@ -21,9 +22,10 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
       users(ids: ${ids.map((i) => +i)}) {
         _id
         uname
+        displayName
       }
     `, ['data', 'users'])}
-    itemText={(user) => user.uname}
+    itemText={(user) => user.uname + (user.displayName ? ` (${ user.displayName })` : '')}
     itemKey={(user) => (props.multi ? user._id.toString() : user.uname)}
     renderItem={(user) => (
       <div className="media">
@@ -31,7 +33,7 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
           <img className="small user-profile-avatar" alt="" src={user.avatarUrl} width="30" height="30" />
         </div>
         <div className="media__body medium">
-          <div className="user-select__uname">{user.uname}</div>
+          <div className="user-select__uname">{user.uname}{user.displayName && ` (${user.displayName})`}</div>
           <div className="user-select__uid">UID = {user._id}</div>
         </div>
       </div>
