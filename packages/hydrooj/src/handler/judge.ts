@@ -241,5 +241,3 @@ export async function apply(ctx) {
 
 apply.next = next;
 apply.end = end;
-
-global.Hydro.handler.judge = apply;
