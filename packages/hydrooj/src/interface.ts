@@ -705,7 +705,6 @@ export interface Lib extends Record<string, any> {
 
 export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown';
 export interface UI {
-    manifest: Dictionary<string>,
     template: Dictionary<string>,
     nodes: Record<UIInjectableFields, any[]>,
     getNodes: typeof import('./lib/ui').getNodes,

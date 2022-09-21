@@ -32,18 +32,6 @@ export function addon(addonPath: string, prepend = false) {
         const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
         global.Hydro.version[name] = payload.version;
         const modulePath = path.dirname(packagejson);
-        const publicPath = path.resolve(modulePath, 'public');
-        if (fs.existsSync(publicPath)) {
-            global.publicDirs[prepend ? 'push' : 'unshift'](publicPath);
-            const targets = fs.readdirSync(publicPath);
-            for (const target of targets) {
-                if (global.Hydro.ui.manifest[target] && !prepend) {
-                    global.Hydro.ui.manifest[target] = publicPath;
-                } else if (!global.Hydro.ui.manifest[target]) {
-                    global.Hydro.ui.manifest[target] = publicPath;
-                }
-            }
-        }
         global.addons[prepend ? 'unshift' : 'push'](modulePath);
     } catch (e) {
         logger.error(`Addon not found: ${addonPath}`);

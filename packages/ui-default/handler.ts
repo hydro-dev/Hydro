@@ -2,19 +2,20 @@
 /* eslint-disable camelcase */
 import crypto from 'crypto';
 import esbuild from 'esbuild';
+import fs from 'fs-extra';
+import { Logger } from 'hydrooj/src/logger';
 import { PERM, PRIV } from 'hydrooj/src/model/builtin';
 import * as contest from 'hydrooj/src/model/contest';
 import problem from 'hydrooj/src/model/problem';
 import * as setting from 'hydrooj/src/model/setting';
 import * as system from 'hydrooj/src/model/system';
 import user from 'hydrooj/src/model/user';
-import * as bus from 'hydrooj/src/service/bus';
 import { UiContextBase } from 'hydrooj/src/service/layers/base';
-import { Handler, Route } from 'hydrooj/src/service/server';
+import { Handler } from 'hydrooj/src/service/server';
 import { SystemSettings } from 'hydrooj/src/settings';
 import { ObjectID } from 'mongodb';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import Schema from 'schemastery';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
@@ -38,12 +39,23 @@ declare module 'hydrooj/src/service/layers/base' {
 
 let constant = '';
 let hash = '';
+const logger = new Logger('ui');
 
-async function buildUI() {
-  const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
+export async function buildUI() {
+  const start = Date.now();
+  const entryPoints: string[] = [];
+  for (const addon of global.addons) {
+    const publicPath = resolve(addon, 'public');
+    if (fs.existsSync(publicPath)) {
+      const targets = fs.readdirSync(publicPath);
+      for (const target of targets) {
+        if (/\.page\.[jt]sx?$/.test(target)) entryPoints.push(join(publicPath, target));
+      }
+    }
+  }
   const build = await esbuild.build({
     format: 'iife',
-    entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
+    entryPoints,
     bundle: true,
     outdir: tmpdir(),
     splitting: false,
@@ -64,15 +76,13 @@ async function buildUI() {
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
+  logger.success('UI addons built in %d ms', Date.now() - start);
 }
 function updateLogo() {
   [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
 }
-bus.on('app/started', buildUI);
-bus.on('app/started', updateLogo);
-bus.on('system/setting', updateLogo);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -217,13 +227,20 @@ class RichMediaHandler extends Handler {
   }
 }
 
-global.Hydro.handler.ui = async () => {
-  Route('wiki_help', '/wiki/help', WikiHelpHandler);
-  Route('wiki_about', '/wiki/about', WikiAboutHandler);
-  Route('set_theme', '/set_theme/:theme', SetThemeHandler);
-  Route('constant', '/constant/:version', UiConstantsHandler);
-  Route('markdown', '/markdown', MarkdownHandler);
-  Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
-  Route('lang', '/l/:lang', LanguageHandler);
-  Route('media', '/media', RichMediaHandler);
-};
+export function apply(ctx) {
+  ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
+  ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
+  ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
+  ctx.Route('constant', '/constant/:version', UiConstantsHandler);
+  ctx.Route('markdown', '/markdown', MarkdownHandler);
+  ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
+  ctx.Route('lang', '/l/:lang', LanguageHandler);
+  ctx.Route('media', '/media', RichMediaHandler);
+  ctx.on('app/started', buildUI);
+  ctx.on('app/watch/change', buildUI);
+  ctx.on('app/watch/unlink', buildUI);
+  ctx.on('app/started', updateLogo);
+  ctx.on('system/setting', updateLogo);
+  buildUI();
+  updateLogo();
+}

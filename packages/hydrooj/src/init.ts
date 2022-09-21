@@ -21,7 +21,6 @@ if (!global.Hydro) {
         lib: {},
         // @ts-ignore
         ui: {
-            manifest: {},
             template: {},
         },
         // @ts-ignore

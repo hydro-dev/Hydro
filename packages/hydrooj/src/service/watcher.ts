@@ -59,13 +59,20 @@ class Watcher {
 
         this.watcher.on('change', (path) => {
             logger.debug('change detected:', relative(this.root, path));
+            bus.emit('app/watch/change', path);
 
             if (this.externals.has(path)) {
                 logger.warn('Require full reload');
             } else if (require.cache[path]) {
                 this.stashed.add(path);
+                bus.emit('app/before-reload', this.stashed);
                 triggerLocalReload();
+                bus.emit('app/reload', this.stashed);
             }
+        });
+        this.watcher.on('unlink', (path) => {
+            logger.debug('change detected: ', `-${relative(this.root, path)}`);
+            bus.emit('app/watch/unlink', path);
         });
     }
 
@@ -133,7 +140,6 @@ class Watcher {
     private triggerLocalReload() {
         const start = Date.now();
         this.analyzeChanges();
-        console.log(this.accepted);
 
         /** plugins pending classification */
         const pending = new Map<string, Runtime>();
