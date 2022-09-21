@@ -5,7 +5,6 @@ import './init';
 import './interface';
 import Schema from 'schemastery';
 import path from 'path';
-import fs from 'fs-extra';
 import './utils';
 import cac from 'cac';
 import { Logger } from './logger';
