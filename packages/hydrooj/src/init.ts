@@ -28,5 +28,4 @@ if (!global.Hydro) {
         locales: {},
     };
     global.addons = [];
-    global.publicDirs = [];
 }

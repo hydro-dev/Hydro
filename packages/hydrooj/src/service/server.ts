@@ -1,5 +1,7 @@
 import http from 'http';
+import path from 'path';
 import cac from 'cac';
+import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
@@ -117,7 +119,9 @@ export async function prepare() {
         return await next();
     });
     app.use(Compress());
-    for (const dir of global.publicDirs) {
+    for (const addon of global.addons) {
+        const dir = path.resolve(addon, 'public');
+        if (!fs.existsSync(dir)) continue;
         app.use(cache(dir, {
             maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
         }));
@@ -143,7 +147,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     }));
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
-    layers.forEach((layer) => router.use(layer as any));
+    layers.forEach((layer) => app.use(layer as any));
     wsServer.on('connection', async (socket, request) => {
         const ctx: any = app.createContext(request, {} as any);
         await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
