@@ -10,7 +10,8 @@ import * as bus from '../service/bus';
 import db from '../service/db';
 import { Runtime } from '../service/module';
 import {
-    handler, lib, locale, model, script, service, setting, template,
+    addon, handler, lib, locale, model,
+    script, service, setting, template,
 } from './common';
 
 const logger = new Logger('worker');
@@ -73,6 +74,7 @@ export async function load() {
     await setting(pending, fail, modelSetting);
     if (detail) logger.info('finish: setting');
     await handler(pending, fail);
+    await addon(pending, fail);
     if (detail) logger.info('finish: handler.extra');
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     if (detail) logger.info('finish: handler.apply');

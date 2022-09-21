@@ -1,5 +1,5 @@
 import http from 'http';
-import path from 'path';
+import { resolve } from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
@@ -88,6 +88,7 @@ export const app = new Koa<Koa.DefaultState, KoaContext>({
 export const router = new Router();
 export const httpServer = http.createServer(app.callback());
 export const wsServer = new WebSocket.Server({ server: httpServer });
+export const captureAllRoutes = {};
 app.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
@@ -104,59 +105,6 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
     if (v instanceof User && !showDisplayName) delete v.displayName;
     return v;
 };
-
-export async function prepare() {
-    app.keys = system.get('session.keys') as unknown as string[];
-    const proxyMiddleware = proxy('/fs', {
-        target: builtinConfig.file.endPoint,
-        changeOrigin: true,
-        rewrite: (p) => p.replace('/fs', ''),
-    });
-    app.use(async (ctx, next) => {
-        if (!ctx.path.startsWith('/fs/')) return await next();
-        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
-        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
-        return await next();
-    });
-    app.use(Compress());
-    for (const addon of global.addons) {
-        const dir = path.resolve(addon, 'public');
-        if (!fs.existsSync(dir)) continue;
-        app.use(cache(dir, {
-            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
-        }));
-    }
-    if (process.env.DEV) {
-        app.use(async (ctx: Context, next: Function) => {
-            const startTime = Date.now();
-            await next();
-            const endTime = Date.now();
-            if (ctx.nolog || ctx.response.headers.nolog) return;
-            ctx._remoteAddress = ctx.request.ip;
-            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
-${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
-        });
-    }
-    app.use(Body({
-        multipart: true,
-        jsonLimit: '8mb',
-        formLimit: '8mb',
-        formidable: {
-            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
-        },
-    }));
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
-    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
-    layers.forEach((layer) => app.use(layer as any));
-    wsServer.on('connection', async (socket, request) => {
-        const ctx: any = app.createContext(request, {} as any);
-        await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
-        for (const manager of router.wsStack) {
-            if (manager.accept(socket, request, ctx)) return;
-        }
-        socket.close();
-    });
-}
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
@@ -439,16 +387,77 @@ class NotFoundHandler extends Handler {
     all() { }
 }
 
+export async function prepare() {
+    app.keys = system.get('session.keys') as unknown as string[];
+    const proxyMiddleware = proxy('/fs', {
+        target: builtinConfig.file.endPoint,
+        changeOrigin: true,
+        rewrite: (p) => p.replace('/fs', ''),
+    });
+    app.use(async (ctx, next) => {
+        if (!ctx.path.startsWith('/fs/')) return await next();
+        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
+        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
+        return await next();
+    });
+    app.use(Compress());
+    app.use(async (ctx, next) => {
+        for (const key in captureAllRoutes) {
+            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
+        }
+        return next();
+    });
+    for (const addon of global.addons) {
+        const dir = resolve(addon, 'public');
+        if (!fs.existsSync(dir)) continue;
+        app.use(cache(dir, {
+            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
+        }));
+    }
+    if (process.env.DEV) {
+        app.use(async (ctx: Context, next: Function) => {
+            const startTime = Date.now();
+            await next();
+            const endTime = Date.now();
+            if (ctx.nolog || ctx.response.headers.nolog) return;
+            ctx._remoteAddress = ctx.request.ip;
+            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
+${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+        });
+    }
+    app.use(Body({
+        multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
+        formidable: {
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
+        },
+    }));
+    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
+    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
+    app.use(router.routes()).use(router.allowedMethods());
+    layers.forEach((layer) => router.use(layer as any));
+    layers.forEach((layer) => app.use(layer as any));
+    app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
+    wsServer.on('connection', async (socket, request) => {
+        const ctx: any = app.createContext(request, {} as any);
+        await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
+        for (const manager of router.wsStack) {
+            if (manager.accept(socket, request, ctx)) return;
+        }
+        socket.close();
+    });
+}
+
 // TODO use postInit?
 export async function start() {
     if (started) return;
     const port = system.get('server.port');
-    app.use(router.routes()).use(router.allowedMethods()).use((ctx) => handle(ctx, NotFoundHandler, () => true));
-    await new Promise((resolve) => {
+    await new Promise((r) => {
         httpServer.listen(argv.options.port || port, () => {
             logger.success('Server listening at: %d', argv.options.port || port);
             started = true;
-            resolve(true);
+            r(true);
         });
     });
 }
@@ -459,6 +468,7 @@ global.Hydro.service.server = {
     httpServer,
     wsServer,
     router,
+    captureAllRoutes,
     HandlerCommon,
     Handler,
     ConnectionHandler,

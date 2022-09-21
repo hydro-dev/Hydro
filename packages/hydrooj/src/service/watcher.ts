@@ -48,7 +48,9 @@ class Watcher {
 
     start() {
         this.root = resolve(process.cwd());
-        this.watcher = watch(this.root, {
+        const roots = [this.root];
+        if (process.env.WATCH_ROOT) roots.push(process.env.WATCH_ROOT);
+        this.watcher = watch(roots, {
             ...this.config,
             ignored: ['**/node_modules/**', '**/.git/**', '**/logs/**', '**/.cache/**'],
         });
