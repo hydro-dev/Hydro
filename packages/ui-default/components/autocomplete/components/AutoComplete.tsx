@@ -130,7 +130,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   const dispatchChange = () => {
     if (!multi) onChange(inputRef.current?.value);
-    else onChange(selectedKeys.join(','));
+    else onChange([...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0).join(','))
   };
 
   let first = !multi;
@@ -231,8 +231,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
-    getSelectedItemKeys: () => selectedKeys,
-    getSelectedItemsAsString: () => selectedKeys.join(','),
+    getSelectedItemKeys: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0),
+    getSelectedItemsAsString: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0).join(','),
     setSelectedItems: (items) => {
       setSelected(items);
       setSelectedKeys(items.map((i) => itemKey(i)));
