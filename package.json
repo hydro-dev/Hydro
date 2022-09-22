@@ -8,6 +8,7 @@
     "main": "package.json",
     "scripts": {
         "build": "node build/prepare.js && tsc -b --verbose",
+        "build:installer": "esbuild ./install/install.js --minify --format=cjs | base64",
         "build:watch": "node build/prepare.js && tsc -b --watch",
         "build:ui": "yarn build:ui:gulp && node packages/ui-default/build",
         "build:ui:gulp": "node packages/ui-default/build --gulp",
