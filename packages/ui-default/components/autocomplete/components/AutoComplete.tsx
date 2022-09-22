@@ -130,7 +130,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   const dispatchChange = () => {
     if (!multi) onChange(inputRef.current?.value);
-    else onChange([...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0).join(','))
+    else onChange([...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0).join(','));
   };
 
   let first = !multi;
