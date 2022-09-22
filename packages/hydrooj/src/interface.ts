@@ -3,6 +3,7 @@ import type { Dictionary, NumericDictionary } from 'lodash';
 import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
 import type { ProblemDoc } from './model/problem';
+import type { Handler } from './service/server';
 
 type document = typeof import('./model/document');
 
@@ -686,10 +687,11 @@ export interface ProblemSearchOptions {
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
+export { Context as PluginContext } from './service/module';
+
 export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty'),
     buildContent: typeof import('./lib/content').buildContent,
-    'hash.hydro': typeof import('./lib/hash.hydro'),
     i18n: typeof import('./lib/i18n'),
     mail: typeof import('./lib/mail'),
     paginate: typeof import('./lib/paginate'),
@@ -705,27 +707,36 @@ export interface Lib extends Record<string, any> {
 
 export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown';
 export interface UI {
-    template: Dictionary<string>,
+    template: Record<string, string>,
     nodes: Record<UIInjectableFields, any[]>,
     getNodes: typeof import('./lib/ui').getNodes,
-    Nav: typeof import('./lib/ui').Nav,
-    ProblemAdd: typeof import('./lib/ui').ProblemAdd,
     inject: typeof import('./lib/ui').inject,
 }
 
+export interface ModuleInterfaces {
+    oauth: {
+        text: string;
+        icon?: string;
+        get: (this: Handler) => Promise<void>;
+        callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+    };
+    hash: (password: string, salt: string, user: User) => boolean | string;
+}
+
 export interface HydroGlobal {
-    version: Record<string, string>,
-    model: Model,
+    version: Record<string, string>;
+    model: Model;
     /** @deprecated */
-    handler: Record<string, Function>,
-    script: Record<string, Script>,
-    service: Service,
-    lib: Lib,
-    ui: UI,
-    error: typeof import('./error'),
-    Logger: typeof import('./logger').Logger,
-    logger: typeof import('./logger').logger,
-    locales: Record<string, Record<string, string>>,
+    handler: Record<string, Function>;
+    script: Record<string, Script>;
+    service: Service;
+    lib: Lib;
+    module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
+    ui: UI;
+    error: typeof import('./error');
+    Logger: typeof import('./logger').Logger;
+    logger: typeof import('./logger').logger;
+    locales: Record<string, Record<string, string>>;
 }
 
 declare global {

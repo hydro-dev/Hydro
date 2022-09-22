@@ -52,7 +52,8 @@ class Watcher {
         if (process.env.WATCH_ROOT) roots.push(process.env.WATCH_ROOT);
         this.watcher = watch(roots, {
             ...this.config,
-            ignored: ['**/node_modules/**', '**/.git/**', '**/logs/**', '**/.cache/**'],
+            ignored: ['node_modules', '.git', 'logs', '.cache']
+                .map((i) => `**/${i}/**`).concat('**/tsconfig.tsbuildinfo'),
         });
         logger.info(`Start watching changes in ${this.root}`);
 

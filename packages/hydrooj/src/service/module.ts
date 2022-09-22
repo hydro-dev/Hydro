@@ -1,4 +1,6 @@
 import Schema from 'schemastery';
+import { inject } from '../lib/ui';
+import { ModuleInterfaces } from '../loader';
 import * as bus from './bus';
 
 export const runtimes: Record<string, Runtime> = Object.create(null);
@@ -9,6 +11,12 @@ function addScript<K>(name: string, description: string, validate: Schema<K>, ru
     return () => delete global.Hydro.script[name];
 }
 
+function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, module: ModuleInterfaces[T]) {
+    if (global.Hydro.module[type][id]) throw new Error(`duplicate script ${type}/${id} registered.`);
+    global.Hydro.module[type as any][id] = module;
+    return () => delete global.Hydro.module[type][id];
+}
+
 export interface Context {
     Route: typeof import('./server').Route;
     Connection: typeof import('./server').Connection;
@@ -16,6 +24,8 @@ export interface Context {
     once: typeof bus['once'];
     off: typeof bus['off'];
     addScript: typeof addScript;
+    provideModule: typeof provideModule;
+    inject: typeof inject;
 }
 
 export class Runtime {
@@ -46,6 +56,8 @@ export class Runtime {
             setInterval: T(setInterval, clearInterval),
             setTimeout: T(setTimeout, clearTimeout),
             setImmediate: T(setImmediate, clearImmediate),
+            provideModule: T(provideModule),
+            inject: T(inject),
         } as Context);
         if (module.sideEffect) this.sideEffect = true;
         this.loaded = true;

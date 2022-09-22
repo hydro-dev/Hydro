@@ -1,6 +1,5 @@
-import 'hydrooj';
-
 import superagent from 'superagent';
+import { PluginContext } from 'hydrooj';
 import { ForbiddenError } from 'hydrooj/src/error';
 
 declare module 'hydrooj' {
@@ -8,9 +7,6 @@ declare module 'hydrooj' {
         'login-with-github.id': string;
         'login-with-github.secret': string;
         'login-with-github.endpoint': string;
-    }
-    interface Lib {
-        oauth_github: typeof import('./lib');
     }
 }
 
@@ -75,8 +71,10 @@ async function callback({ state, code }) {
     return ret;
 }
 
-global.Hydro.lib.oauth_github = {
-    text: 'Login with Github',
-    callback,
-    get,
-};
+export function apply(ctx:PluginContext) {
+    ctx.provideModule('oauth', 'github', {
+        text: 'Login with Github',
+        callback,
+        get,
+    });
+}

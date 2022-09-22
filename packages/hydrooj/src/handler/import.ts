@@ -5,7 +5,7 @@ import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { ValidationError } from '../error';
-import { ProblemAdd } from '../lib/ui';
+import { PluginContext } from '../loader';
 import { PERM, PRIV } from '../model/builtin';
 import problem, { ProblemDoc } from '../model/problem';
 import { Handler } from '../service/server';
@@ -93,7 +93,7 @@ class ProblemImportHydroHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
-    ProblemAdd('problem_import_hydro', {}, 'copy', 'Import From Hydro');
+export async function apply(ctx: PluginContext) {
     ctx.Route('problem_import_hydro', '/problem/import/hydro', ProblemImportHydroHandler, PERM.PERM_CREATE_PROBLEM);
+    ctx.inject('ProblemAdd', 'problem_import_hydro', { icon: 'copy', text: 'Import From Hydro' });
 }

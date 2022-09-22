@@ -4,10 +4,9 @@ import decodeHTML from 'decode-html';
 import fs from 'fs-extra';
 import { filter } from 'lodash';
 import xml2js from 'xml2js';
-import type { ContentNode, ProblemConfigFile } from 'hydrooj';
+import type { ContentNode, PluginContext, ProblemConfigFile } from 'hydrooj';
 import { FileTooLargeError, ValidationError } from 'hydrooj/src/error';
 import { buildContent } from 'hydrooj/src/lib/content';
-import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import { PERM } from 'hydrooj/src/model/builtin';
 import problem from 'hydrooj/src/model/problem';
 import solution from 'hydrooj/src/model/solution';
@@ -130,7 +129,7 @@ class FpsProblemImportHandler extends Handler {
 }
 
 export const sideEffect = true;
-export async function apply(ctx) {
+export async function apply(ctx: PluginContext) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
-    ProblemAdd('problem_import_fps', {}, 'copy', 'From FPS File');
+    ctx.inject('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
 }

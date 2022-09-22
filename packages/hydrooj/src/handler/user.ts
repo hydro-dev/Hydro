@@ -6,7 +6,7 @@ import {
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { OAuthUserResponse, Udoc, User } from '../interface';
+import { Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
@@ -359,7 +359,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.String)
     async get(domainId: string, type: string) {
-        await global.Hydro.lib[`oauth_${type}`]?.get?.call(this);
+        await global.Hydro.module.oauth[type]?.get.call(this);
     }
 }
 
@@ -367,8 +367,8 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        if (!global.Hydro.lib[`oauth_${args.type}`]) throw new UserFacingError('Oauth type');
-        const r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args) as OAuthUserResponse;
+        if (!global.Hydro.module.oauth[args.type]) throw new UserFacingError('Oauth type');
+        const r = await global.Hydro.module.oauth[args.type].callback.call(this, args);
         const uid = await oauth.get(r._id);
         if (uid) {
             await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });

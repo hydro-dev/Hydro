@@ -132,7 +132,7 @@ export class User {
     }
 
     checkPassword(password: string) {
-        const h = global.Hydro.lib[`hash.${this.hashType}`];
+        const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
         const result = h(password, this._salt, this);
         if (result !== true && result !== this._hash) {

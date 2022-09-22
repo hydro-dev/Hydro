@@ -1,14 +1,10 @@
-import 'hydrooj';
-
 import * as superagent from 'superagent';
+import { PluginContext } from 'hydrooj';
 
 declare module 'hydrooj' {
     interface SystemKeys {
         'login-with-google.id': string,
         'login-with-google.secret': string,
-    }
-    interface Lib {
-        oauth_google: typeof import('./lib'),
     }
 }
 
@@ -81,8 +77,10 @@ async function callback({
     };
 }
 
-global.Hydro.lib.oauth_google = {
-    text: 'Login with Google',
-    callback,
-    get,
-};
+export function apply(ctx: PluginContext) {
+    ctx.provideModule('oauth', 'google', {
+        text: 'Login with Google',
+        callback,
+        get,
+    });
+}

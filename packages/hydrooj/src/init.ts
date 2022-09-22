@@ -19,6 +19,12 @@ if (!global.Hydro) {
         script: {},
         // @ts-ignore
         lib: {},
+        module: new Proxy({} as any, {
+            get(self, key) {
+                if (!self[key]) self[key] = {};
+                return self[key];
+            },
+        }),
         // @ts-ignore
         ui: {
             template: {},

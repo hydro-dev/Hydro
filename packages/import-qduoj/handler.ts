@@ -4,10 +4,9 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import type { ContentNode, ProblemConfigFile } from 'hydrooj';
+import type { ContentNode, PluginContext, ProblemConfigFile } from 'hydrooj';
 import { ValidationError } from 'hydrooj/src/error';
 import { buildContent } from 'hydrooj/src/lib/content';
-import { ProblemAdd } from 'hydrooj/src/lib/ui';
 import { PERM } from 'hydrooj/src/model/builtin';
 import problem from 'hydrooj/src/model/problem';
 import { Handler } from 'hydrooj/src/service/server';
@@ -126,7 +125,7 @@ class ImportQduojHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: PluginContext) {
     ctx.Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
-    ProblemAdd('problem_import_qduoj', {}, 'copy', 'From QDUOJ Export');
+    ctx.inject('ProblemAdd', 'problem_import_qduoj', { icon: 'copy', text: 'From QDUOJ Export' });
 }
