@@ -148,7 +148,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   const handleInputChange = debounce((e?) => queryList(e ? e.target.value : ''), 300);
 
-  const toggleItem = (item: T, key = itemKey(item)) => {
+  const toggleItem = (item: T, key = itemKey(item), preserve = false) => {
     const shouldKeepOpen = allowEmptyQuery && inputRef.current.value === '' && !multi;
     if (multi) {
       const idx = selectedKeys.indexOf(key);
@@ -167,14 +167,14 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
         setSelected((s) => [...s, item]);
         setSelectedKeys((s) => [...s, key]);
       }
-      inputRef.current.value = '';
+      if (!preserve) inputRef.current.value = '';
       inputRef.current.focus();
     } else {
       setSelected([item]);
       setSelectedKeys([key]);
       inputRef.current.value = key;
-      dispatchChange();
     }
+    dispatchChange();
     if (!shouldKeepOpen) {
       setItemList([]);
       setCurrentItem(null);
@@ -285,7 +285,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
             return (
               <DraggableSelection type={draggableId} id={key} move={move} className="autocomplete-tag" key={item ? key : `draft-${key}`}>
                 <div>{item ? itemText(item) : key}</div>
-                <Icon name="close" onClick={() => toggleItem(item, key)} />
+                <Icon name="close" onClick={() => toggleItem(item, key, true)} />
               </DraggableSelection>
             );
           })}
