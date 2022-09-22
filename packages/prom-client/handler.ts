@@ -1,7 +1,7 @@
 import { AggregatorRegistry, metric } from 'prom-client';
 import * as system from 'hydrooj/src/model/system';
 import * as bus from 'hydrooj/src/service/bus';
-import { Handler, Route } from 'hydrooj/src/service/server';
+import { Handler } from 'hydrooj/src/service/server';
 import { registry } from './metrics';
 
 declare module 'hydrooj/src/service/bus' {
@@ -42,11 +42,10 @@ class MetricsHandler extends Handler {
     }
 }
 
-bus.on('metrics', (id, metrics) => { instances[id] = metrics; });
-setInterval(async () => {
-    bus.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());
-}, 5000 * (+system.get('prom-client.collect_rate') || 1));
-
-global.Hydro.handler.prom = () => {
-    Route('metrics', '/metrics', MetricsHandler);
-};
+export function apply(ctx) {
+    ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
+    ctx.setInterval(async () => {
+        bus.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());
+    }, 5000 * (+system.get('prom-client.collect_rate') || 1));
+    ctx.Route('metrics', '/metrics', MetricsHandler);
+}

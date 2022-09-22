@@ -31,9 +31,9 @@ export class Runtime {
         if (this.loaded) throw new Error(`Module ${this.filename} was already loaded`);
         this.sideEffect = false;
         if (typeof module.dispose === 'function') this.disposables.push(module.dispose);
-        const T = (origFunc) => (origFunc ? (...args) => {
+        const T = (origFunc, disposeFunc?) => (origFunc ? (...args) => {
             const res = origFunc(...args);
-            this.disposables.push(res);
+            this.disposables.push(disposeFunc ? () => disposeFunc(res) : res);
             return res;
         } : null);
         module.apply({
@@ -43,6 +43,9 @@ export class Runtime {
             once: T(bus.once),
             off: bus.off,
             addScript: T(addScript),
+            setInterval: T(setInterval, clearInterval),
+            setTimeout: T(setTimeout, clearTimeout),
+            setImmediate: T(setImmediate, clearImmediate),
         } as Context);
         if (module.sideEffect) this.sideEffect = true;
         this.loaded = true;
