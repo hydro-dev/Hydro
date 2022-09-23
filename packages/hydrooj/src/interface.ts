@@ -2,6 +2,7 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
+import { Context } from './context';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
@@ -663,7 +664,8 @@ export interface Model {
 }
 
 export interface Service {
-    bus: typeof import('./service/bus'),
+    /** @deprecated */
+    bus: Context,
     db: typeof import('./service/db'),
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
@@ -687,7 +689,7 @@ export interface ProblemSearchOptions {
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
-export { Context as PluginContext } from './service/module';
+export { Context as PluginContext } from './context';
 
 export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty'),
@@ -746,6 +748,7 @@ declare global {
             addons: string[],
         }
     }
+    var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line
 }

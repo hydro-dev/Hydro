@@ -1,8 +1,8 @@
 import yaml from 'js-yaml';
 import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
-import * as bus from 'hydrooj/src/service/bus';
 import { Logger } from './logger';
+import * as bus from './service/bus';
 import { NestKeys } from './typeutils';
 
 const defaultPath = process.env.CI ? '/tmp/file'

@@ -4,6 +4,7 @@ import {
 } from 'mongodb';
 import { BaseService, Collections } from '../interface';
 import { Logger } from '../logger';
+import options from '../options';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');
@@ -33,8 +34,8 @@ class MongoService implements BaseService {
         return mongourl;
     }
 
-    async start(opts: MongoConfig) {
-        opts ||= {};
+    async start() {
+        const opts = options() || {};
         let mongourl = MongoService.buildUrl(opts);
         if (process.env.CI) {
             const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -82,6 +83,11 @@ class MongoService implements BaseService {
                 await coll.createIndexes([index]);
             }
         }
+    }
+
+    public async apply(ctx) {
+        await this.start();
+        ctx.on('dispose', () => this.client.close());
     }
 }
 

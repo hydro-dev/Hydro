@@ -35,3 +35,4 @@ if (!global.Hydro) {
     };
     global.addons = [];
 }
+global.app = new (require('./context').Context)();

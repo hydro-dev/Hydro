@@ -16,4 +16,8 @@ export function ArgMethod(target: any, funcName: string, obj: any) {
     return obj;
 }
 
+export function unwrapExports(module: any) {
+    return module?.default || module;
+}
+
 export * from '@hydrooj/utils/lib/utils';

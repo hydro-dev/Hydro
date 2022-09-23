@@ -4,9 +4,7 @@ import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
 import { BadRequestError, ValidationError } from '../error';
-import {
-    isEmail, isPassword, isUname, validate,
-} from '../lib/validator';
+import { isEmail, isPassword, isUname } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -106,9 +104,6 @@ class SystemScriptHandler extends SystemHandler {
         let args = JSON.parse(raw);
         if (typeof global.Hydro.script[id].validate === 'function') {
             args = global.Hydro.script[id].validate(args);
-        } else {
-            logger.warn('You are using the legacy script validation API, which will be dropped in the future.');
-            validate(global.Hydro.script[id].validate, args);
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
         const report = (data) => judge.next({ domainId, rid, ...data });

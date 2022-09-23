@@ -4,9 +4,10 @@
 import { relative, resolve } from 'path';
 import { FSWatcher, watch } from 'chokidar';
 import { debounce } from 'lodash';
+import { Context, Runtime, Service } from '../context';
 import { Logger } from '../logger';
+import { unwrapExports } from '../utils';
 import * as bus from './bus';
-import { Runtime, runtimes } from './module';
 
 function loadDependencies(filename: string, ignored: Set<string>) {
     const dependencies = new Set<string>();
@@ -19,13 +20,9 @@ function loadDependencies(filename: string, ignored: Set<string>) {
     return dependencies;
 }
 
-export function unwrapExports(module: any) {
-    return module?.default || module;
-}
-
 const logger = new Logger('watch');
 
-export function coerce(val: any) {
+function coerce(val: any) {
     // resolve error when stack is undefined, e.g. axios error with status code 401
     const { message, stack } = val instanceof Error && val.stack ? val : new Error(val as any);
     const lines = stack.split('\n');
@@ -33,7 +30,7 @@ export function coerce(val: any) {
     return lines.slice(index).join('\n');
 }
 
-class Watcher {
+export default class Watcher extends Service {
     private root: string;
     private watcher: FSWatcher;
     private externals: Set<string>;
@@ -41,9 +38,10 @@ class Watcher {
     private declined: Set<string>;
     private stashed = new Set<string>();
 
-    constructor(private config: any) {
+    constructor(public ctx, private config: any) {
+        super(ctx, 'watcher', true);
         this.externals = new Set(Object.keys(require.cache));
-        bus.on('app/ready', () => this.start());
+        Context.service('watcher');
     }
 
     start() {
@@ -155,16 +153,17 @@ class Watcher {
         for (const filename in require.cache) {
             const module = require.cache[filename];
             const plugin = unwrapExports(module.exports);
-            const runtime = runtimes[filename];
+            const runtime = this.ctx.registry.get(plugin);
             if (!runtime || this.declined.has(filename)) continue;
             pending.set(filename, runtime);
-            if (!runtimes[filename]?.sideEffect && !plugin?.['sideEffect']) this.declined.add(filename);
+            if (!plugin?.['sideEffect']) this.declined.add(filename);
         }
 
         for (const [filename, runtime] of pending) {
             // check if it is a dependent of the changed file
             this.declined.delete(filename);
             const dependencies = [...loadDependencies(filename, this.declined)];
+            if (!runtime.plugin['sideEffect']) this.declined.add(filename);
 
             // we only detect reloads at plugin level
             // a plugin will be reloaded if any of its dependencies are accepted
@@ -182,6 +181,9 @@ class Watcher {
                 if (reloads.has(runtime)) {
                     isMarked = true;
                     break;
+                }
+                for (const state of runtime.children) {
+                    queued.push(state.runtime);
                 }
             }
             if (!isMarked) reloads.set(runtime, filename);
@@ -213,16 +215,19 @@ class Watcher {
         try {
             for (const [runtime, filename] of reloads) {
                 const path = relative(this.root, filename);
+                const states = runtime.children.slice();
 
                 try {
-                    runtime.dispose();
+                    this.ctx.registry.delete(runtime.plugin);
                 } catch (err) {
                     logger.warn(`failed to dispose plugin at %c\n${coerce(err)}`, path);
                 }
 
                 try {
-                    runtime.load(attempts[filename]);
-                    logger.info('reload plugin at %c', path);
+                    const plugin = attempts[filename];
+                    for (const state of states) {
+                        state.parent.plugin(plugin, state.config);
+                    }
                 } catch (err) {
                     logger.warn(`failed to reload plugin at %c\n${coerce(err)}`, path);
                     throw err;
@@ -231,6 +236,14 @@ class Watcher {
         } catch {
             // rollback require.cache and plugin states
             rollback();
+            for (const [runtime, filename] of reloads) {
+                try {
+                    this.ctx.registry.delete(attempts[filename]);
+                    runtime.parent.plugin(runtime.plugin, runtime.config);
+                } catch (err) {
+                    logger.warn(err);
+                }
+            }
             logger.warn('Rolling back changes');
             return;
         }
@@ -240,5 +253,3 @@ class Watcher {
         logger.success('Reload done in %d ms', Date.now() - start);
     }
 }
-
-export default new Watcher({});

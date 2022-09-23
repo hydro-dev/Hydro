@@ -2,13 +2,14 @@ import http from 'http';
 import { resolve } from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
-import Koa, { Context } from 'koa';
+import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import WebSocket from 'ws';
 import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import { Context, Service } from '../context';
 import {
     HydroError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, PermissionError, PrivilegeError,
@@ -377,16 +378,36 @@ export function Connection(
             await h.onerror(e);
         }
     });
+    return router.disposeLastOp;
 }
-
-let started = false;
 
 class NotFoundHandler extends Handler {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
 
-export async function prepare() {
+class RouteService extends Service {
+    static readonly methods = ['Route', 'Connection'];
+    constructor(ctx) {
+        super(ctx, 'server', true);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Route(...args: Parameters<typeof Route>) {
+        const res = Route(...args);
+        this.caller?.on('dispose', () => res());
+    }
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Connection(...args: Parameters<typeof Connection>) {
+        const res = Connection(...args);
+        this.caller?.on('dispose', () => res());
+    }
+}
+
+export async function apply(pluginContext) {
+    Context.service('server', RouteService);
+    pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
     const proxyMiddleware = proxy('/fs', {
         target: builtinConfig.file.endPoint,
@@ -414,7 +435,7 @@ export async function prepare() {
         }));
     }
     if (process.env.DEV) {
-        app.use(async (ctx: Context, next: Function) => {
+        app.use(async (ctx: Koa.Context, next: Function) => {
             const startTime = Date.now();
             await next();
             const endTime = Date.now();
@@ -446,17 +467,17 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         }
         socket.close();
     });
-}
-
-// TODO use postInit?
-export async function start() {
-    if (started) return;
     const port = system.get('server.port');
-    await new Promise((r) => {
-        httpServer.listen(argv.options.port || port, () => {
-            logger.success('Server listening at: %d', argv.options.port || port);
-            started = true;
-            r(true);
+    pluginContext.on('ready', async () => {
+        await new Promise((r) => {
+            httpServer.listen(argv.options.port || port, () => {
+                logger.success('Server listening at: %d', argv.options.port || port);
+                r(true);
+            });
+        });
+        pluginContext.on('dispose', () => {
+            httpServer.close();
+            wsServer.close();
         });
     });
 }
@@ -473,6 +494,5 @@ global.Hydro.service.server = {
     ConnectionHandler,
     Route,
     Connection,
-    prepare,
-    start,
+    apply,
 };

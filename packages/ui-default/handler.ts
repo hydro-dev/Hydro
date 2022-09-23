@@ -237,10 +237,16 @@ export function apply(ctx) {
   ctx.Route('lang', '/l/:lang', LanguageHandler);
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.on('app/started', buildUI);
-  ctx.on('app/watch/change', buildUI);
-  ctx.on('app/watch/unlink', buildUI);
   ctx.on('app/started', updateLogo);
   ctx.on('system/setting', updateLogo);
+  ctx.on('app/watch/change', (path) => {
+    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
+    buildUI();
+  });
+  ctx.on('app/watch/unlink', (path) => {
+    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
+    buildUI();
+  });
   buildUI();
   updateLogo();
 }
