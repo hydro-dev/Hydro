@@ -171,7 +171,7 @@ export class ProblemMainHandler extends Handler {
             });
             sort = result.hits;
         }
-        await bus.serial('problem/list', query, this);
+        await bus.parallel('problem/list', query, this);
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
@@ -304,7 +304,7 @@ export class ProblemRandomHandler extends Handler {
             .map((i) => i.split('category:')[1]?.split(',')));
         const q = buildQuery(this.user);
         if (category.length) q.$and = category.map((tag) => ({ tag }));
-        await bus.serial('problem/list', q, this);
+        await bus.parallel('problem/list', q, this);
         const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
@@ -360,7 +360,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             this.pdoc.config.langs = intersection(baseLangs, ...t);
         }
-        await bus.serial('problem/get', this.pdoc, this);
+        await bus.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
             problem.getStatus(domainId, this.pdoc.docId, this.user._id),
             user.getById(domainId, this.pdoc.owner),
@@ -846,7 +846,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.response.body = {
             psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc, sid,
         };
-        await bus.serial('handler/solution/get', this);
+        await bus.parallel('handler/solution/get', this);
     }
 
     @param('content', Types.Content)

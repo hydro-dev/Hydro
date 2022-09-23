@@ -240,7 +240,7 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export let langs = {};
 
-bus.once('app/started', async () => {
+bus.on('app/started', async () => {
     logger.debug('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {

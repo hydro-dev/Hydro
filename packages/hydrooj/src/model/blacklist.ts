@@ -32,7 +32,7 @@ class BlackListModel {
     }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
+bus.on('app/started', () => db.ensureIndexes(
     coll,
     { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
 ));

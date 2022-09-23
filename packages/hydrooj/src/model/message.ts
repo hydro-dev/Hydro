@@ -77,7 +77,7 @@ class MessageModel {
     }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
+bus.on('app/started', () => db.ensureIndexes(
     coll,
     { key: { to: 1, _id: -1 }, name: 'to' },
     { key: { from: 1, _id: -1 }, name: 'from' },

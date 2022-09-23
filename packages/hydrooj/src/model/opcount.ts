@@ -21,7 +21,7 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
     }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
+bus.on('app/started', () => db.ensureIndexes(
     coll,
     { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
     { key: { op: 1, ident: 1, expireAt: 1 }, name: 'unique', unique: true },

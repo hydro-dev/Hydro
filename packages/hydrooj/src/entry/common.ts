@@ -46,7 +46,7 @@ const getLoader = (type: string, filename: string) => async function loader(pend
             }
         }
     }
-    await bus.serial(`app/load/${type}`);
+    await bus.parallel(`app/load/${type}`);
 };
 
 export const handler = getLoader('handler', 'handler');
@@ -76,7 +76,7 @@ export async function locale(pending: string[], fail: string[]) {
             }
         }
     }));
-    await bus.serial('app/load/locale');
+    await bus.parallel('app/load/locale');
 }
 
 export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
@@ -117,7 +117,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             }
         }
     }
-    await bus.serial('app/load/setting');
+    await bus.parallel('app/load/setting');
 }
 
 export async function template(pending: string[], fail: string[]) {
@@ -138,5 +138,5 @@ export async function template(pending: string[], fail: string[]) {
             }
         }
     }
-    await bus.serial('app/load/template');
+    await bus.parallel('app/load/template');
 }

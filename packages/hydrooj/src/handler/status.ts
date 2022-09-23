@@ -70,7 +70,7 @@ class StatusUpdateHandler extends Handler {
     }
 }
 
-bus.once('app/started', () => coll.createIndex('updateAt', { expireAfterSeconds: 24 * 3600 }));
+bus.on('app/started', () => coll.createIndex('updateAt', { expireAfterSeconds: 24 * 3600 }));
 
 export async function apply(ctx) {
     ctx.Route('status', '/status', StatusHandler);

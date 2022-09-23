@@ -148,10 +148,10 @@ Worker.addHandler('task.daily', async () => {
     if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
         await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
     }
-    await bus.serial('task/daily');
+    await bus.parallel('task/daily');
 });
 bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
-bus.once('app/started', async () => {
+bus.on('app/started', async () => {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (!await TaskModel.count({ type: 'schedule', subType: 'task.daily' })) {
         await TaskModel.add({

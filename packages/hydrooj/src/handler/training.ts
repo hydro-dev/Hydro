@@ -56,7 +56,7 @@ class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const query: FilterQuery<TrainingDoc> = {};
-        await bus.serial('training/list', query, this);
+        await bus.parallel('training/list', query, this);
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
@@ -93,7 +93,7 @@ class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
-        await bus.serial('training/get', tdoc, this);
+        await bus.parallel('training/get', tdoc, this);
         const pids = training.getPids(tdoc.dag);
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [owner, pdict] = await Promise.all([

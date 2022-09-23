@@ -1,6 +1,8 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { graphql, GraphQLSchema } from 'graphql';
 import { resolvers, typeDefs } from 'graphql-scalars';
+import { debounce } from 'lodash';
+import { Context as PluginContext } from '../context';
 import * as bus from '../service/bus';
 import { Handler } from '../service/server';
 
@@ -90,10 +92,6 @@ export function rebuild() {
         console.error(e);
     }
 }
-bus.on('app/started', () => {
-    rebuild();
-    bus.on('api/update', rebuild);
-});
 
 class ApiHandler extends Handler {
     query(q: string, variables: any) {
@@ -124,6 +122,8 @@ class ApiHandler extends Handler {
 }
 
 export const sideEffect = true;
-export function apply(ctx) {
+export function apply(ctx: PluginContext) {
     ctx.Route('api', '/api', ApiHandler);
+    ctx.on('ready', rebuild);
+    ctx.on('api/update', debounce(rebuild));
 }

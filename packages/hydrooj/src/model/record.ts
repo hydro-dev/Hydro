@@ -234,7 +234,7 @@ class RecordModel {
 bus.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ domainId, pid: docId }, { $set: { pid: -1 } }));
 bus.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
 
-bus.once('app/started', () => db.ensureIndexes(
+bus.on('app/started', () => db.ensureIndexes(
     RecordModel.coll,
     { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
     { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },

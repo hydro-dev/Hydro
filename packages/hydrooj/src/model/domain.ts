@@ -52,7 +52,7 @@ class DomainModel {
             roles: {},
             avatar: '',
         };
-        await bus.serial('domain/create', ddoc);
+        await bus.parallel('domain/create', ddoc);
         await coll.insertOne(ddoc);
         await DomainModel.setUserRole(domainId, owner, 'root');
         return domainId;
@@ -61,18 +61,18 @@ class DomainModel {
     @ArgMethod
     static async get(domainId: string): Promise<DomainDoc | null> {
         const query: FilterQuery<DomainDoc> = { lower: domainId.toLowerCase() };
-        await bus.serial('domain/before-get', query);
+        await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
-        if (result) await bus.serial('domain/get', result);
+        if (result) await bus.parallel('domain/get', result);
         return result;
     }
 
     @ArgMethod
     static async getByHost(host: string): Promise<DomainDoc | null> {
         const query: FilterQuery<DomainDoc> = { host };
-        await bus.serial('domain/before-get', query);
+        await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
-        if (result) await bus.serial('domain/get', result);
+        if (result) await bus.parallel('domain/get', result);
         return result;
     }
 
@@ -81,9 +81,9 @@ class DomainModel {
     }
 
     static async edit(domainId: string, $set: Partial<DomainDoc>) {
-        await bus.serial('domain/before-update', domainId, $set);
+        await bus.parallel('domain/before-update', domainId, $set);
         const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnDocument: 'after' });
-        if (result.value) await bus.serial('domain/update', domainId, $set, result.value);
+        if (result.value) await bus.parallel('domain/update', domainId, $set, result.value);
         return result.value;
     }
 
@@ -274,7 +274,7 @@ class DomainModel {
     }
 }
 
-bus.once('app/started', async () => {
+bus.on('app/started', async () => {
     await db.ensureIndexes(
         coll,
         { key: { lower: 1 }, name: 'lower', unique: true },

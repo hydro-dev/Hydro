@@ -80,7 +80,7 @@ export async function add(
         doc.parentType = parentType;
         doc.parentId = parentId;
     }
-    await bus.serial('document/add', doc);
+    await bus.parallel('document/add', doc);
     const res = await coll.insertOne(doc);
     return docId || res.insertedId;
 }
@@ -405,7 +405,7 @@ export async function revSetStatus<T extends keyof DocStatusType>(
     return res.value;
 }
 
-bus.once('app/started', async () => {
+bus.on('app/started', async () => {
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },

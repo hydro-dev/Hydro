@@ -72,7 +72,7 @@ export async function update() {
         updateAt: new Date(),
         reqCount: 0,
     };
-    await bus.serial('monitor/update', 'server', $set);
+    await bus.parallel('monitor/update', 'server', $set);
     await coll.updateOne(
         { mid, type: 'server' },
         { $set },
@@ -82,7 +82,7 @@ export async function update() {
 
 export async function updateJudge(args) {
     const $set = { ...args, updateAt: new Date() };
-    await bus.serial('monitor/update', 'judge', $set);
+    await bus.parallel('monitor/update', 'judge', $set);
     return await coll.updateOne(
         { mid: args.mid, type: 'judge' },
         { $set },

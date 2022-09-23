@@ -6,7 +6,6 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import {
     addon, handler, lib, locale, model,
@@ -61,7 +60,7 @@ export async function apply(ctx: Context) {
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     require('../script/index');
     await script(pending, fail, ctx);
-    await bus.serial('app/started');
+    await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         const scripts = require('../upgrade').default;
         let dbVer = (await modelSystem.get('db.ver')) ?? 0;
@@ -82,6 +81,6 @@ export async function apply(ctx: Context) {
     }
     logger.success('Server started');
     process.send?.('ready');
-    await bus.serial('app/ready');
+    await ctx.parallel('app/ready');
     return { fail };
 }

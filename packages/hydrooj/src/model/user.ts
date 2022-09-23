@@ -102,7 +102,7 @@ export class User {
     }
 
     async init() {
-        await bus.serial('user/get', this);
+        await bus.parallel('user/get', this);
         return this;
     }
 
@@ -403,7 +403,7 @@ class UserModel {
     }
 }
 
-bus.once('app/started', () => Promise.all([
+bus.on('app/started', () => Promise.all([
     db.ensureIndexes(
         coll,
         { key: { unameLower: 1 }, name: 'uname', unique: true },

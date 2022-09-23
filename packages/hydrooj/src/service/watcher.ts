@@ -7,7 +7,6 @@ import { debounce } from 'lodash';
 import { Context, Runtime, Service } from '../context';
 import { Logger } from '../logger';
 import { unwrapExports } from '../utils';
-import * as bus from './bus';
 
 function loadDependencies(filename: string, ignored: Set<string>) {
     const dependencies = new Set<string>();
@@ -60,20 +59,20 @@ export default class Watcher extends Service {
 
         this.watcher.on('change', (path) => {
             logger.debug('change detected:', relative(this.root, path));
-            bus.emit('app/watch/change', path);
+            this.ctx.emit('app/watch/change', path);
 
             if (this.externals.has(path)) {
                 logger.warn('Require full reload');
             } else if (require.cache[path]) {
                 this.stashed.add(path);
-                bus.emit('app/before-reload', this.stashed);
+                this.ctx.emit('app/before-reload', this.stashed);
                 triggerLocalReload();
-                bus.emit('app/reload', this.stashed);
+                this.ctx.emit('app/reload', this.stashed);
             }
         });
         this.watcher.on('unlink', (path) => {
             logger.debug('change detected:', `-${relative(this.root, path)}`);
-            bus.emit('app/watch/unlink', path);
+            this.ctx.emit('app/watch/unlink', path);
         });
     }
 

@@ -228,7 +228,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
 
-        await bus.serial('handler/create', h);
+        await bus.parallel('handler/create', h);
 
         if (checker) checker.call(h);
         if (method === 'post') {
@@ -357,7 +357,7 @@ export function Connection(
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
         const h = new RouteConnHandler(ctx, args, request, response, user, domain, UiContext);
-        await bus.emit('connection/create', h);
+        await bus.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
         try {
@@ -373,7 +373,7 @@ export function Connection(
                 bus.emit('connection/close', h);
                 h.cleanup?.(args);
             };
-            bus.emit('connection/active', h);
+            await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
         }
@@ -468,7 +468,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         socket.close();
     });
     const port = system.get('server.port');
-    pluginContext.on('ready', async () => {
+    pluginContext.on('app/ready', async () => {
         await new Promise((r) => {
             httpServer.listen(argv.options.port || port, () => {
                 logger.success('Server listening at: %d', argv.options.port || port);

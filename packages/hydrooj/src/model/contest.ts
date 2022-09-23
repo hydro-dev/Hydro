@@ -490,11 +490,11 @@ export async function add(
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     RULES[rule].check(data);
-    await bus.serial('contest/before-add', data);
+    await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
-    await bus.serial('contest/add', data, res);
+    await bus.parallel('contest/add', data, res);
     return res;
 }
 

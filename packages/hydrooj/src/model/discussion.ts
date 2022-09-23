@@ -53,13 +53,13 @@ export async function add(
         views: 0,
         sort: 100,
     };
-    await bus.serial('discussion/before-add', payload);
+    await bus.parallel('discussion/before-add', payload);
     const res = await document.add(
         payload.domainId!, payload.content!, payload.owner!, document.TYPE_DISCUSSION,
         null, payload.parentType, payload.parentId, omit(payload, ['domainId', 'content', 'owner', 'parentType', 'parentId']),
     );
     payload.docId = res;
-    await bus.emit('discussion/add', payload);
+    await bus.parallel('discussion/add', payload);
     return payload.docId;
 }
 
@@ -291,7 +291,7 @@ async function updateSort() {
 }
 TaskModel.Worker.addHandler('discussion.sort', updateSort);
 
-bus.once('app/started', async () => {
+bus.on('app/ready', async () => {
     if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
         await TaskModel.add({
             type: 'schedule',

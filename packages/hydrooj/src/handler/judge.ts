@@ -112,7 +112,7 @@ export async function postJudge(rdoc: RecordDoc) {
             }
         }
     }
-    await bus.serial('record/judge', rdoc, updated);
+    await bus.parallel('record/judge', rdoc, updated);
 }
 
 export async function end(body: Partial<JudgeResultBody>) {

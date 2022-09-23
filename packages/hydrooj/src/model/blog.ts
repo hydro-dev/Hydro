@@ -18,7 +18,7 @@ export async function add(
         updateAt: new Date(),
         views: 0,
     };
-    await bus.serial('blog/before-add', payload);
+    await bus.parallel('blog/before-add', payload);
     const res = await document.add(
         'system', payload.content!, payload.owner!, document.TYPE_BLOG,
         null, null, null, omit(payload, ['domainId', 'content', 'owner']),

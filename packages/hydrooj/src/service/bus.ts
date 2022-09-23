@@ -119,9 +119,10 @@ export const on = (a, b, c?) => app.on(a, b, c);
 export const off = (a, b) => app.off(a, b);
 export const once = (a, b, c?) => app.once(a, b, c);
 export const parallel = (a, ...b) => app.parallel(a, ...b);
-export const emit = (a, ...b) => app.emit(a, ...b);
+export const emit = (a, ...b) => app.parallel(a, ...b);
 export const bail = (a, ...b) => app.bail(a, ...b);
-export const serial: any = (a, ...b) => app.serial(a, ...b);
+// For backward compatibility
+export const serial: any = (a, ...b) => app.parallel(a, ...b);
 export const broadcast = (a, ...b) => app.broadcast(a, ...b);
 
 global.Hydro.service.bus = app as any;
