@@ -13,7 +13,7 @@ import cac from 'cac';
 import './ui';
 
 import { Logger } from './logger';
-import { ApiMixin, Context } from './context';
+import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { unwrapExports } from './utils';
 // This is the main entry. So let's re-export some modules.
@@ -118,7 +118,6 @@ export function addScript(name: string, description: string) {
 }
 
 Context.service('loader');
-app.api = new ApiMixin(app);
 const loader = new Loader();
 app.loader = loader;
 loader.app = app;

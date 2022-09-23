@@ -72,7 +72,7 @@ export default class Watcher extends Service {
             }
         });
         this.watcher.on('unlink', (path) => {
-            logger.debug('change detected: ', `-${relative(this.root, path)}`);
+            logger.debug('change detected:', `-${relative(this.root, path)}`);
             bus.emit('app/watch/unlink', path);
         });
     }

@@ -7,6 +7,11 @@ import fs from 'fs-extra';
 import type { Moment } from 'moment-timezone';
 import { isMoment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
+import Logger from 'reggol';
+
+Logger.levels.base = process.env.DEV ? 3 : 2;
+
+export { Logger };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
