@@ -32,7 +32,12 @@ interface AcmDetail extends AcmJournal {
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
-    const _originalRule = { scoreboard: def.scoreboard, stat: def.stat };
+    const _originalRule = {
+        scoreboard: def.scoreboard,
+        scoreboardRow: def.scoreboardRow,
+        scoreboardHeader: def.scoreboardHeader,
+        stat: def.stat,
+    };
     def.scoreboard = (def._originalRule?.scoreboard || def.scoreboard).bind(def);
     def.scoreboardHeader = (def._originalRule?.scoreboardHeader || def.scoreboardHeader).bind(def);
     def.scoreboardRow = (def._originalRule?.scoreboardRow || def.scoreboardRow).bind(def);
@@ -234,10 +239,7 @@ const oi = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict = {};
-        for (const item of tsdoc.journal || []) {
-            if (!tsddict[item.pid] || tsddict[item.pid].score < item.score || this.submitAfterAccept) tsddict[item.pid] = item;
-        }
+        const tsddict = tsdoc.detail;
         const row: ScoreboardNode[] = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
