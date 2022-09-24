@@ -71,7 +71,7 @@ function parseArgs(execute: string): string[] {
 function proc(params: Parameter): Cmd {
     const copyOut = supportOptional
         ? params.copyOut
-        : params.copyOut.map((i) => (i.endsWith('?') ? i.substring(0, i.length - 1) : i));
+        : (params.copyOut || []).map((i) => (i.endsWith('?') ? i.substring(0, i.length - 1) : i));
     const size = parseMemoryMB(getConfig('stdio_size'));
     const rate = getConfig('rate');
     const copyOutCached = [...(params.copyOutCached || [])];
