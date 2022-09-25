@@ -239,7 +239,7 @@ const oi = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict = tsdoc.detail;
+        const tsddict = tsdoc.detail || {};
         const row: ScoreboardNode[] = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
