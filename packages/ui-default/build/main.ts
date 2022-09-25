@@ -122,9 +122,9 @@ async function main() {
       fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
     }
     if (argv.options.production) {
-      fs.removeSync('public/vditor/dist/js/echarts');
-      fs.removeSync('public/vditor/dist/js/graphviz');
-      fs.removeSync('public/vditor/dist/js/mermaid');
+      for (const f of ['echarts', 'graphviz', 'mermaid', 'mathjax']) {
+        fs.removeSync(`public/vditor/dist/js/${f}`);
+      }
       const files = fs.readdirSync('public');
       files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }
