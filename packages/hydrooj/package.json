@@ -49,7 +49,8 @@
         "semver": "^7.3.7",
         "serialize-javascript": "^6.0.0",
         "superagent": "^8.0.0",
-        "thirty-two": "^1.0.2"
+        "thirty-two": "^1.0.2",
+        "ws": "^8.9.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",

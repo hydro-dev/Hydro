@@ -13,6 +13,7 @@ import user from 'hydrooj/src/model/user';
 import { UiContextBase } from 'hydrooj/src/service/layers/base';
 import { Handler } from 'hydrooj/src/service/server';
 import { SystemSettings } from 'hydrooj/src/settings';
+import { debounce } from 'lodash';
 import { ObjectID } from 'mongodb';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -239,14 +240,13 @@ export function apply(ctx) {
   ctx.on('app/started', buildUI);
   ctx.on('app/started', updateLogo);
   ctx.on('system/setting', updateLogo);
-  ctx.on('app/watch/change', (path) => {
+  const debouncedBuildUI = debounce(buildUI, 1000);
+  const triggerHotUpdate = (path) => {
     if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
-    buildUI();
-  });
-  ctx.on('app/watch/unlink', (path) => {
-    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
-    buildUI();
-  });
+    debouncedBuildUI();
+  };
+  ctx.on('app/watch/change', triggerHotUpdate);
+  ctx.on('app/watch/unlink', triggerHotUpdate);
   buildUI();
   updateLogo();
 }

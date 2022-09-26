@@ -38,8 +38,7 @@ export function resolveConfig(plugin: any, config: any) {
 Context.service('loader');
 
 export class Loader {
-    static readonly kUpdate = Symbol.for('koishi.loader.update');
-    static readonly kRecord = Symbol.for('koishi.loader.record');
+    static readonly Record = Symbol.for('loader.record');
 
     public app: Context;
     public config: Context.Config;
@@ -47,19 +46,18 @@ export class Loader {
     public cache: Record<string, string> = Object.create(null);
 
     unloadPlugin(ctx: Context, key: string) {
-        const fork = ctx.state[Loader.kRecord][key];
+        const fork = ctx.state[Loader.Record][key];
         if (fork) {
             fork.dispose();
-            delete ctx.state[Loader.kRecord][key];
+            delete ctx.state[Loader.Record][key];
             logger.info('unload plugin %c', key);
         }
     }
 
     async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
-        let fork = parent.state[Loader.kRecord]?.[key];
+        let fork = parent.state[Loader.Record]?.[key];
         if (fork) {
             logger.info('reload plugin %c', key);
-            fork[Loader.kUpdate] = true;
             fork.update(config);
         } else {
             logger.info('apply plugin %c', key);
@@ -70,8 +68,8 @@ export class Loader {
             // fork = parent.plugin(plugin, this.interpolate(config));
             fork = parent.plugin(plugin, config);
             if (!fork) return;
-            parent.state[Loader.kRecord] ||= Object.create(null);
-            parent.state[Loader.kRecord][key] = fork;
+            parent.state[Loader.Record] ||= Object.create(null);
+            parent.state[Loader.Record][key] = fork;
         }
         return fork;
     }
@@ -121,7 +119,7 @@ Context.service('loader');
 const loader = new Loader();
 app.loader = loader;
 loader.app = app;
-app.state[Loader.kRecord] = Object.create(null);
+app.state[Loader.Record] = Object.create(null);
 
 export async function load() {
     addon(path.resolve(__dirname, '..'), true);

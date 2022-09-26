@@ -49,7 +49,7 @@ export default class Watcher extends Service {
         if (process.env.WATCH_ROOT) roots.push(process.env.WATCH_ROOT);
         this.watcher = watch(roots, {
             ...this.config,
-            ignored: ['node_modules', '.git', 'logs', '.cache']
+            ignored: ['node_modules', '.git', 'logs', '.cache', '.yarn']
                 .map((i) => `**/${i}/**`).concat('**/tsconfig.tsbuildinfo'),
         });
         logger.info(`Start watching changes in ${this.root}`);
