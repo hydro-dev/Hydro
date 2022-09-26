@@ -1,6 +1,5 @@
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
-import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
 import { Context } from './context';
 import type { ProblemDoc } from './model/problem';
@@ -583,7 +582,7 @@ export interface FileNode {
     autoDelete?: Date;
     owner?: number;
     operator?: number[];
-    meta?: ItemBucketMetadata;
+    meta?: Record<string, string | number>;
 }
 
 export interface EventDoc {

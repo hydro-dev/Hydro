@@ -26,6 +26,7 @@ rules:
   '@typescript-eslint/no-throw-literal': 0
   '@typescript-eslint/return-await': 0
 
+  no-multi-str: 0
   '@typescript-eslint/indent':
     - warn
     - 4
