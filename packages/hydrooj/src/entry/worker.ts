@@ -58,7 +58,10 @@ export async function apply(ctx: Context) {
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
-    require('../script/index');
+    const scriptDir = path.resolve(__dirname, '..', 'script');
+    for (const h of await fs.readdir(scriptDir)) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+    }
     await script(pending, fail, ctx);
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {

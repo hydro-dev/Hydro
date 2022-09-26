@@ -1,6 +1,8 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
+import path from 'path';
 import cac from 'cac';
+import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
 import db from '../service/db';
 import {
@@ -94,7 +96,10 @@ export async function load(ctx) {
     await service(pending, fail, ctx);
     require('../model/index');
     await model(pending, fail, ctx);
-    require('../script/index');
+    const scriptDir = path.resolve(__dirname, '..', 'script');
+    for (const h of await fs.readdir(scriptDir)) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+    }
     await script(pending, fail, ctx);
     await cli();
 }
