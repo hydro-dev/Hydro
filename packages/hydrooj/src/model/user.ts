@@ -1,4 +1,4 @@
-import { escapeRegExp, pick } from 'lodash';
+import { escapeRegExp, pick, uniq } from 'lodash';
 import LRU from 'lru-cache';
 import { Collection, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
@@ -21,7 +21,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
-const cache = new LRU<string, User>({ max: 500, ttl: 300 * 1000 });
+const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
     if (!udoc) return;
@@ -192,10 +192,10 @@ class UserModel {
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
-        const _uids = new Set(uids);
         const r: Udict = {};
-        // eslint-disable-next-line no-await-in-loop
-        for (const uid of _uids) r[uid] = (await UserModel.getById(domainId, uid)) || new User(UserModel.defaultUser, {});
+        await Promise.all(uniq(uids).map(async (uid) => {
+            r[uid] = (await UserModel.getById(domainId, uid)) || new User(UserModel.defaultUser, {});
+        }));
         return r;
     }
 

@@ -193,10 +193,9 @@ export class ContestBroadcastHandler extends ContestDetailBaseHandler {
 
 export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
-    @param('page', Types.PositiveInt, true)
     @param('ext', Types.Range(['csv', 'html']), true)
     @param('ignoreLock', Types.Boolean, true)
-    async get(domainId: string, tid: ObjectID, page = 1, ext = '', ignoreLock = false) {
+    async get(domainId: string, tid: ObjectID, ext = '', ignoreLock = false) {
         if (ignoreLock && !this.user.own(this.tdoc)) {
             this.checkPerm(this.tdoc.rule === 'homework'
                 ? PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD
@@ -210,14 +209,14 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             // Problem statistics display is allowed as we can view submission info in scoreboard.
             ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
         ]);
-        const [, rows, udict, , nPages] = await contest.getScoreboard.call(this, domainId, tid, false, page, ignoreLock);
+        const [, rows, udict] = await contest.getScoreboard.call(this, domainId, tid, false, ignoreLock);
         this.response.template = 'contest_scoreboard.html';
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
             : 'contest_scoreboard';
         this.response.body = {
-            tdoc: this.tdoc, rows, udict, nPages, page, pdict, page_name,
+            tdoc: this.tdoc, rows, udict, pdict, page_name,
         };
     }
 
@@ -227,7 +226,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
-        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true, 0, ignoreLock);
+        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true, ignoreLock);
         this.binary(await getContent[ext](rows, this.tdoc), `${this.tdoc.title}.${ext}`);
     }
 }

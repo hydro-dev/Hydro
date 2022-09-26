@@ -514,9 +514,9 @@ export interface ContestRule<T = any> {
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>, page: number,
-    ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
-    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[Array<[number, ContestStat & T]>, number]>;
+        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>,
+    ) => Promise<[board: ScoreboardRow[], udict: Udict]>;
+    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
