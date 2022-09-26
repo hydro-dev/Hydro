@@ -186,21 +186,15 @@ class RemoteStorageService {
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            const url = await getSignedUrl(this.client, new GetObjectCommand({
-                Bucket: this.opts.bucket,
-                Key: target,
-                ResponseContentDisposition: filename ? `attachment; filename="${encodeRFC5987ValueChars(filename)}"` : '',
-            }), {
-                expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
-            });
-            console.log(url);
-            if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
-            return url;
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+        const url = await getSignedUrl(this.client, new GetObjectCommand({
+            Bucket: this.opts.bucket,
+            Key: target,
+            ResponseContentDisposition: filename ? `attachment; filename="${encodeRFC5987ValueChars(filename)}"` : '',
+        }), {
+            expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
+        });
+        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+        return url;
     }
 
     async signUpload(target: string, size: number) {

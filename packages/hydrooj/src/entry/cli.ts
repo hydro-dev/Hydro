@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
 import db from '../service/db';
 import {
-    lib, model, script, service,
+    addon, lib, model, script, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -87,15 +87,20 @@ export async function load(ctx) {
     require('../error');
     await db.start();
     await require('../settings').loadConfig();
-    const storage = require('../service/storage');
-    await storage.loadStorageService();
+    await require('../model/system').runConfig();
+    await require('../service/storage').loadStorageService();
+    await ctx.root.start();
     require('../lib/index');
-    await lib(pending, fail, ctx);
-    const systemModel = require('../model/system');
-    await systemModel.runConfig();
-    await service(pending, fail, ctx);
+    await Promise.all([
+        lib(pending, fail, ctx),
+        service(pending, fail, ctx),
+    ]);
     require('../model/index');
-    await model(pending, fail, ctx);
+    await Promise.all([
+        model(pending, fail, ctx),
+        setting(pending, fail, require('../model/setting')),
+    ]);
+    await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
