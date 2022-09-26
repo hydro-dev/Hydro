@@ -15,7 +15,12 @@ fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
-        const zip = new AdmZip(zipfile);
+        let zip: AdmZip;
+        try {
+            zip = new AdmZip(zipfile);
+        } catch (e) {
+            throw new ValidationError('zip', null, e.message);
+        }
         const tmp = path.resolve(os.tmpdir(), 'hydro', 'import-qduoj', String.random(32));
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));

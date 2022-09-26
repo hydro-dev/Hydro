@@ -111,7 +111,12 @@ class FpsProblemImportHandler extends Handler {
         } catch (e) {
             if (e instanceof FileTooLargeError) throw e;
             console.log(e);
-            const zip = new AdmZip(this.request.files.file.filepath);
+            let zip: AdmZip;
+            try {
+                zip = new AdmZip(this.request.files.file.filepath);
+            } catch (e) {
+                throw new ValidationError('zip', null, e.message);
+            }
             for (const entry of zip.getEntries()) {
                 try {
                     const buf = entry.getData();

@@ -727,7 +727,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
-            const zip = new AdmZip(this.request.files.file.filepath);
+            let zip: AdmZip;
+            try {
+                zip = new AdmZip(this.request.files.file.filepath);
+            } catch (e) {
+                throw new ValidationError('zip', null, e.message);
+            }
             const entries = zip.getEntries();
             for (const entry of entries) {
                 if (!entry.name) continue;
