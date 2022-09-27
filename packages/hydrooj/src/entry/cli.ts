@@ -4,6 +4,7 @@ import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
+import { Context } from '../context';
 import db from '../service/db';
 import {
     addon, lib, model, script, service, setting,
@@ -79,7 +80,7 @@ async function cli() {
     return console.log(result);
 }
 
-export async function load(ctx) {
+export async function load(ctx: Context) {
     const pending = global.addons;
     const fail = [];
     require('../lib/i18n');
@@ -100,6 +101,7 @@ export async function load(ctx) {
         model(pending, fail, ctx),
         setting(pending, fail, require('../model/setting')),
     ]);
+    await require('hydrooj/src/service/server').apply(ctx);
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {

@@ -2,7 +2,7 @@
     "name": "@hydrooj/utils",
     "version": "1.4.0",
     "description": "hydrooj utils",
-    "main": "package.json",
+    "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
