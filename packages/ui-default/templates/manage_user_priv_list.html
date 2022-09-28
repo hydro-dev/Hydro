@@ -1,0 +1,41 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Users') }}</h1>
+        <div class="section__tools">
+          <a class="primary rounded button"><span class="icon icon-add"></span> {{ _("Add User") }}</a>
+        </div>
+      </div>
+      <div class="section__body no-padding domain-users">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col--uid" style="width:100px">{{ _('UID') }}</th>
+              <th class="col--user" style="width:150px">{{ _('Username') }}</th>
+              <th class="col--mail" style="width:150px">{{ _('Email') }}</th>
+              <th class="col--role" style="width:200px">{{ _('Priv') }}</th>
+              <th class="col--role" style="width:50px">{{ _('Ban') }}</th>
+              <th class="col--edit" style="width:50px">{{ _('Actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for udoc in udocs -%}
+            <tr data-uid="{{ udoc._id }}">
+              <td class="col--uid" style="width:100px">{{ udoc._id }}</td>
+              <td class="col--user" style="width:150px">{{ udoc.uname }}</td>
+              <td class="col--mail" style="width:150px" title="{{ udoc.mail }}">{{ udoc.mail }}</td>
+              <td class="col--role" style="width:200px" title="{{ udoc.priv }}">{{ udoc.priv }}</td>
+              <td class="col--ban" style="width:50px">
+                {{ '已封禁' if current.priv==0 else '未封禁' }}
+              </td>
+              <td class="col--edit" style="width:50px">
+                <a href="{{url('manage_user_priv_edit',uid=udoc._id)}}">{{ _('Edit') }}</a>
+              </td>
+            </tr>
+            {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<form method="post">
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Edit User Priv') }}</h1>
+  </div>
+  <div class="section__body no-padding domain-users">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--description">
+        {%- for priv in PRIV -%}
+          <col class="col--p">
+        {%- endfor -%}
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--description">{{ _('Priv') }}</th>
+          <th class="col--p"><span data-tooltip="default">default</span></th>
+          <th class="col--p"><span data-tooltip="{{ udoc.uname }}">{{ udoc.uname }}</span></th>
+        </tr>
+      </thead>
+      {%- for name, priv in PRIV -%}
+        <tbody>
+          <tr>
+            <td class="col--description">{{ _(name) }}</td>
+            <td class="col--p">
+              <label class="compact checkbox">
+                <input name="{{ name }}" data-checkbox-group="default" data-checkbox-range value="{{ priv }}" type="checkbox"{% if defaultPriv|bitand(priv) %} checked{% endif %} disabled>
+              </label>
+            </td>
+            <td class="col--p">
+              <label class="compact checkbox">
+                <input name="{{ name }}" data-checkbox-group="{{ udoc._id }}" data-checkbox-range value="{{ priv }}" type="checkbox"{% if udoc.priv|bitand(priv) %} checked{% endif %}>
+              </label>
+            </td>
+          </tr>
+        </tbody>
+      {%- endfor -%}
+    </table>
+  </div>
+  <div class="section__body">
+    <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+    <button class="rounded primary button" role="submit">
+      {{ _('Update Permission') }}
+    </button>
+    <button type="button" class="rounded button" onclick="window.history.go(-1)">
+      {{ _('Cancel') }}
+    </button>
+  </div>
+</div>
+</form>
+{% endblock %}
