@@ -66,7 +66,7 @@ export async function load(features = ['markdown']) {
   }
   await res.loadThemePromise;
   resolve();
-  return { monaco: res.default, registerAction: res.registerAction };
+  return { monaco: res.default, registerAction: res.registerAction, customOptions: {} };
 }
 
 export default load;
