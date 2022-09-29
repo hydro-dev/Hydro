@@ -1,6 +1,6 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import LRU from 'lru-cache';
-import { Collection, ObjectID } from 'mongodb';
+import { Collection, FilterQuery, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     FileInfo, GDoc, ownerInfo,
@@ -336,7 +336,7 @@ class UserModel {
         return uid;
     }
 
-    static getMulti(params: any = {}) {
+    static getMulti(params: FilterQuery<Udoc> = {}) {
         return coll.find(params);
     }
 

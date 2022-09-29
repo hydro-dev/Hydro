@@ -306,7 +306,7 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
 ): Promise<DocStatusType[T]> {
-    const current = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
+    const current: Partial<DocStatusType[T]> = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
     if (typeof key === 'string' && key.includes('.')) {
         const acc = key.split('.');
         let c = current;

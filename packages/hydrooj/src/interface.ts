@@ -246,7 +246,7 @@ declare module './model/problem' {
 export type { ProblemDoc } from './model/problem';
 export type ProblemDict = NumericDictionary<ProblemDoc>;
 
-export interface StatusDoc {
+export interface StatusDocBase {
     _id: ObjectID,
     docId: any,
     docType: number,
@@ -254,7 +254,7 @@ export interface StatusDoc {
     uid: number,
 }
 
-export interface ProblemStatusDoc extends StatusDoc {
+export interface ProblemStatusDoc extends StatusDocBase {
     docId: number;
     docType: 10;
     rid?: ObjectID;
@@ -609,14 +609,12 @@ export interface OauthMap {
 
 export interface Collections {
     'blacklist': BlacklistDoc;
-    'contest': Tdoc;
     'domain': DomainDoc;
     'domain.user': any;
     'domain.union': DomainUnion;
     'record': RecordDoc;
     'document': any;
-    'document.status': any;
-    'problem': ProblemDoc;
+    'document.status': StatusDocBase;
     'user': Udoc;
     'user.preference': UserPreferenceDoc;
     'vuser': VUdoc;
@@ -632,9 +630,6 @@ export interface Collections {
     'oplog': OplogDoc;
     'event': EventDoc;
     'opcount': OpCountDoc;
-    'log': any;
-    'fs.chunks': any;
-    'fs.files': any;
 }
 
 export interface Model {

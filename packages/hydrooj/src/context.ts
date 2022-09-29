@@ -21,7 +21,6 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
 
 export interface Context {
     [Context.events]: Events<this>;
-    options: Context.Config;
     loader: Loader;
     Route: typeof import('./service/server').Route;
     Connection: typeof import('./service/server').Connection;

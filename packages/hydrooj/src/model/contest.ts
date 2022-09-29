@@ -179,7 +179,7 @@ const acm = buildContestRule({
             { $match: { 'detail.status': STATUS.STATUS_ACCEPTED } },
             { $sort: { 'detail.rid': 1 } },
             { $group: { _id: '$detail.pid', first: { $first: '$detail.rid' } } },
-        ]).toArray();
+        ]).toArray() as any[];
         for (const t of data) first[t._id] = t.first.generationTime;
 
         const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
