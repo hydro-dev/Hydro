@@ -37,7 +37,7 @@ export default connect((state: any) => ({
     const { language } = this.props;
     const { monaco, registerAction, customOptions } = await load([language]);
     const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
-    this.model = monaco.editor.createModel(value, language, uri);
+    this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(value, language, uri);
     if (this.containerElement) {
       const config: monaco.editor.IStandaloneEditorConstructionOptions = {
         theme: 'vs-light',
