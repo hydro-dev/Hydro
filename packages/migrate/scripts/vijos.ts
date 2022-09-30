@@ -2,13 +2,12 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    DiscussionModel, DiscussionTailReplyDoc, MessageDoc,
-    RecordDoc, Schema, TestCase, TrainingNode,
+    db as dst,
+    DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
+    MessageDoc, RecordDoc, Schema, TestCase, TrainingNode,
 } from 'hydrooj';
 
-const dst = global.Hydro.service.db;
 const map = {};
-
 const pid = (id) => {
     if (map[id.toString()]) return map[id.toString()];
     return id;
@@ -74,7 +73,7 @@ const tasks = {
         parent_doc_id: {
             field: 'parentId',
             processer: (parentId, doc) => {
-                if (doc.parent_doc_type === global.Hydro.model.document.TYPE_PROBLEM) {
+                if (doc.parent_doc_type === DocumentModel.TYPE_PROBLEM) {
                     return pid(parentId);
                 }
                 return parentId;

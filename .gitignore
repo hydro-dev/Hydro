@@ -29,6 +29,7 @@ globalConfig.json
 /config.json
 yarn.lock
 tsconfig.json
+tsconfig.*.json
 
 # Project Rules
 ## Core

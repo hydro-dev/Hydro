@@ -42,6 +42,7 @@ export { default as paginate } from './lib/paginate';
 export * from './service/decorators';
 export { Handler, ConnectionHandler } from './service/server';
 export { UiContextBase } from './service/layers/base';
+export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export {
     db, Schema, yaml, fs, AdmZip, superagent,

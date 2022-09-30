@@ -631,7 +631,7 @@ export interface Model {
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     DiscussionModel: typeof import('./model/discussion'),
-    document: typeof import('./model/document'),
+    document: Omit<typeof import('./model/document'), 'apply'>,
     domain: typeof import('./model/domain').default,
     message: typeof import('./model/message').default,
     opcount: typeof import('./model/opcount'),

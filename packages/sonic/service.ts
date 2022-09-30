@@ -13,7 +13,7 @@ declare module 'hydrooj' {
         'sonic.auth': string;
     }
     interface Context {
-        sonic: SonicService;
+        sonic?: SonicService;
     }
 }
 

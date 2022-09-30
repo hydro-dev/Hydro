@@ -20,7 +20,9 @@ const compilerOptionsBase = {
 const baseOutDir = path.resolve(__dirname, '../.cache/ts-out');
 const config = {
     compilerOptions: compilerOptionsBase,
-    references: [],
+    references: [
+        { path: 'tsconfig.ui.json' },
+    ],
     files: [],
 };
 const configSrc = (name) => ({
@@ -36,37 +38,14 @@ const configSrc = (name) => ({
         'dist',
     ],
 });
-const configFlat = (name) => (name === 'packages/ui-default' ? {
-    exclude: [
-        './public',
-    ],
-    include: ['**/*.ts'],
-    compilerOptions: {
-        experimentalDecorators: true,
-        resolveJsonModule: true,
-        jsx: 'react',
-        module: 'commonjs',
-        skipLibCheck: true,
-        allowSyntheticDefaultImports: true,
-        target: 'es2020',
-        baseUrl: '.',
-        outDir: path.join(baseOutDir, name),
-        moduleResolution: 'node',
-        types,
-        paths: {
-            'vj/*': [
-                './*',
-            ],
-        },
-    },
-} : {
+const configFlat = (name) => ({
     compilerOptions: {
         ...compilerOptionsBase,
         outDir: path.join(baseOutDir, name),
         rootDir: '.',
     },
     include: ['**/*.ts'],
-    exclude: [],
+    exclude: ['public'],
 });
 
 if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
@@ -77,7 +56,36 @@ const modules = [
     'packages/hydrooj',
     ...fs.readdirSync(path.resolve(process.cwd(), 'packages')).map((i) => `packages/${i}`),
     ...fs.readdirSync(path.resolve(process.cwd(), 'plugins')).map((i) => `plugins/${i}`),
-].filter((i) => !i.includes('/.')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
+].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
+
+const UIConfig = {
+    exclude: [
+        'packages/ui-default/public',
+    ],
+    include: [
+        'packages/ui-default/**/*.ts',
+        'packages/**/public/**/*.ts',
+        'plugins/**/public/**/*.ts',
+    ],
+    compilerOptions: {
+        experimentalDecorators: true,
+        resolveJsonModule: true,
+        jsx: 'react',
+        module: 'commonjs',
+        skipLibCheck: true,
+        allowSyntheticDefaultImports: true,
+        target: 'es2020',
+        baseUrl: '.',
+        outDir: path.join(baseOutDir, 'ui'),
+        moduleResolution: 'node',
+        types,
+        paths: {
+            'vj/*': [
+                './packages/ui-default/*',
+            ],
+        },
+    },
+};
 
 for (const package of modules) {
     config.references.push({ path: package });
@@ -99,4 +107,5 @@ for (const package of modules) {
         }
     }
 }
+fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.ui.json'), JSON.stringify(UIConfig));
 fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
