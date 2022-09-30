@@ -3,12 +3,9 @@ import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import * as superagent from 'superagent';
 import proxy from 'superagent-proxy';
-import { STATUS } from '@hydrooj/utils/lib/status';
 import {
-    htmlEncode, parseMemoryMB, parseTimeMS, sleep,
-} from '@hydrooj/utils/lib/utils';
-import { Logger } from 'hydrooj/src/logger';
-import * as setting from 'hydrooj/src/model/setting';
+    htmlEncode, Logger, parseMemoryMB, parseTimeMS, SettingModel, sleep, STATUS,
+} from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
 
@@ -221,7 +218,7 @@ export default class POJProvider implements IBasicProvider {
     async submitProblem(id: string, lang: string, code: string, info) {
         await this.ensureLogin();
         const language = lang.includes('poj.') ? lang.split('poj.')[1] : '0';
-        const comment = setting.langs[lang].comment;
+        const comment = SettingModel.langs[lang].comment;
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;

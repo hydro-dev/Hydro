@@ -1,7 +1,8 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
+import { ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
-import { Loader, ModuleInterfaces } from './loader';
+import { Loader } from './loader';
 import { EventMap } from './service/bus';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap {

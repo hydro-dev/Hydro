@@ -6,13 +6,6 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
-    "dependencies": {
-        "js-yaml": "^4.1.0",
-        "superagent": "^8.0.0"
-    },
-    "devDependencies": {
-        "@types/js-yaml": "^4.0.5"
-    },
     "peerDependencies": {
         "hydrooj": "*"
     }

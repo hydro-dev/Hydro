@@ -8,8 +8,6 @@
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "dependencies": {
-        "adm-zip": "0.5.5",
-        "decode-html": "^2.0.0",
-        "fs-extra": "^10.1.0"
+        "decode-html": "^2.0.0"
     }
 }

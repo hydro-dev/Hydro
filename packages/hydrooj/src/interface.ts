@@ -1,7 +1,7 @@
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Cursor, ObjectID } from 'mongodb';
-import { Context } from './context';
+import type { Context } from './context';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
@@ -637,7 +637,7 @@ export interface Model {
     blog: typeof import('./model/blog'),
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
-    discussion: typeof import('./model/discussion'),
+    DiscussionModel: typeof import('./model/discussion'),
     document: typeof import('./model/document'),
     domain: typeof import('./model/domain').default,
     message: typeof import('./model/message').default,
@@ -657,7 +657,7 @@ export interface Model {
     rp: typeof import('./script/rating').RpTypes,
 }
 
-export interface Service {
+export interface HydroService {
     /** @deprecated */
     bus: Context,
     db: typeof import('./service/db'),
@@ -682,8 +682,6 @@ export interface ProblemSearchOptions {
 }
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
-
-export { Context as PluginContext } from './context';
 
 export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty'),
@@ -725,7 +723,7 @@ export interface HydroGlobal {
     /** @deprecated */
     handler: Record<string, Function>;
     script: Record<string, Script>;
-    service: Service;
+    service: HydroService;
     lib: Lib;
     module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
     ui: UI;
@@ -742,6 +740,7 @@ declare global {
             addons: string[],
         }
     }
+    var bus: any; // eslint-disable-line
     var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line

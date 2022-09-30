@@ -302,7 +302,7 @@ bus.on('app/ready', async () => {
     }
 });
 
-global.Hydro.model.discussion = {
+global.Hydro.model.DiscussionModel = {
     typeDisplay,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,

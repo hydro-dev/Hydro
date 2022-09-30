@@ -1,15 +1,13 @@
 import { AggregatorRegistry, metric } from 'prom-client';
-import * as system from 'hydrooj/src/model/system';
-import * as bus from 'hydrooj/src/service/bus';
-import { Handler } from 'hydrooj/src/service/server';
+import { Context, Handler, SystemModel } from 'hydrooj';
 import { registry } from './metrics';
 
-declare module 'hydrooj/src/service/bus' {
+declare module 'hydrooj' {
     interface EventMap {
         metrics: (id: string, metrics: any) => void;
     }
 }
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface SystemKeys {
         'prom-client.name': string;
         'prom-client.password': string;
@@ -30,7 +28,7 @@ class MetricsHandler extends Handler {
             this.response.addHeader('WWW-Authenticate', 'Basic');
             return;
         }
-        const [name, password] = system.getMany(['prom-client.name', 'prom-client.password']);
+        const [name, password] = SystemModel.getMany(['prom-client.name', 'prom-client.password']);
         const key = this.request.headers.authorization?.split('Basic ')?.[1];
         if (!key || key !== Buffer.from(`${name}:${password}`).toString('base64')) {
             this.response.status = 403;
@@ -42,10 +40,10 @@ class MetricsHandler extends Handler {
     }
 }
 
-export function apply(ctx) {
+export function apply(ctx: Context) {
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
     ctx.setInterval(async () => {
-        bus.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());
-    }, 5000 * (+system.get('prom-client.collect_rate') || 1));
+        ctx.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());
+    }, 5000 * (+SystemModel.get('prom-client.collect_rate') || 1));
     ctx.Route('metrics', '/metrics', MetricsHandler);
 }

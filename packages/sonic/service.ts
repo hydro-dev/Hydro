@@ -2,28 +2,29 @@ import {
     Ingest, PushOptions, QueryOptions,
     Search, SuggestOptions,
 } from 'sonic-channel';
-import { BaseService } from 'hydrooj';
-import { Logger } from 'hydrooj/src/logger';
-import * as system from 'hydrooj/src/model/system';
+import {
+    Context, Logger, Service, SystemModel,
+} from 'hydrooj';
 
-const logger = new Logger('sonic');
-
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface SystemKeys {
         'sonic.host': string;
         'sonic.port': number;
         'sonic.auth': string;
     }
+    interface Context {
+        sonic: SonicService;
+    }
 }
+
+const logger = new Logger('sonic');
 
 function getHandler(type: string, that: any) {
     return {
         connected() {
-            that.started = true;
             logger.info(`Sonic Channel succeeded to connect to host (${type}).`);
         },
         disconnected() {
-            that.started = false;
             logger.error(`Sonic Channel is now disconnected (${type}).`);
         },
         timeout() {
@@ -39,14 +40,13 @@ function getHandler(type: string, that: any) {
     };
 }
 
-class SonicService implements BaseService {
+class SonicService extends Service {
     public search: Search;
     public ingest: Ingest;
-    public started = false;
     public error = '';
 
     async start() {
-        const [host, port, auth] = system.getMany(['sonic.host', 'sonic.port', 'sonic.auth']);
+        const [host, port, auth] = SystemModel.getMany(['sonic.host', 'sonic.port', 'sonic.auth']);
         const cfg = {
             host: host || '::1',
             port: port || 1491,
@@ -108,11 +108,6 @@ class SonicService implements BaseService {
     }
 }
 
-const service = new SonicService();
-global.Hydro.service.sonic = service;
-export = service;
-declare module 'hydrooj/src/interface' {
-    interface Service {
-        sonic: typeof service
-    }
+export function apply() {
+    Context.service('sonic', SonicService);
 }

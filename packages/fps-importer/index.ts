@@ -1,16 +1,11 @@
 /* eslint-disable no-await-in-loop */
-import AdmZip from 'adm-zip';
 import decodeHTML from 'decode-html';
-import fs from 'fs-extra';
 import { filter } from 'lodash';
 import xml2js from 'xml2js';
-import type { ContentNode, PluginContext, ProblemConfigFile } from 'hydrooj';
-import { FileTooLargeError, ValidationError } from 'hydrooj/src/error';
-import { buildContent } from 'hydrooj/src/lib/content';
-import { PERM } from 'hydrooj/src/model/builtin';
-import problem from 'hydrooj/src/model/problem';
-import solution from 'hydrooj/src/model/solution';
-import { Handler } from 'hydrooj/src/service/server';
+import {
+    AdmZip, buildContent, ContentNode, Context, FileTooLargeError, fs,
+    Handler, PERM, ProblemConfigFile, ProblemModel, SolutionModel, ValidationError,
+} from 'hydrooj';
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -65,8 +60,8 @@ class FpsProblemImportHandler extends Handler {
             };
             const title = decodeHTML(p.title.join(' '));
             const tags = filter(p.source, (i: string) => i.trim());
-            const pid = await problem.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
-            await problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
+            const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
+            await ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
                     const input = typeof p.test_input[i]?._ === 'string'
@@ -79,22 +74,22 @@ class FpsProblemImportHandler extends Handler {
                         : typeof p.test_output[i] === 'string'
                             ? p.test_output[i]
                             : '';
-                    await problem.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(input));
-                    await problem.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(output));
+                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(input));
+                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(output));
                 }
             } else if (p.test_input) {
                 for (let i = 0; i < p.test_input.length / 2; i++) {
-                    await problem.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(p.test_input[2 * i]));
-                    await problem.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(p.test_input[2 * i + 1]));
+                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(p.test_input[2 * i]));
+                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(p.test_input[2 * i + 1]));
                 }
             }
-            await problem.edit(domainId, pid, { html: true });
+            await ProblemModel.edit(domainId, pid, { html: true });
             if (p.solution) {
                 let s = '';
                 for (const sol of p.solution) {
                     s += `**${sol.$.language}** :  \n\`\`\`\n${sol._}\n\`\`\`\n`;
                 }
-                await solution.add(domainId, pid, this.user._id, s);
+                await SolutionModel.add(domainId, pid, this.user._id, s);
             }
         }
     }
@@ -114,8 +109,8 @@ class FpsProblemImportHandler extends Handler {
             let zip: AdmZip;
             try {
                 zip = new AdmZip(this.request.files.file.filepath);
-            } catch (e) {
-                throw new ValidationError('zip', null, e.message);
+            } catch (err) {
+                throw new ValidationError('zip', null, err.message);
             }
             for (const entry of zip.getEntries()) {
                 try {
@@ -134,7 +129,7 @@ class FpsProblemImportHandler extends Handler {
 }
 
 export const sideEffect = true;
-export async function apply(ctx: PluginContext) {
+export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.inject('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
 }

@@ -101,7 +101,7 @@ export async function load(ctx: Context) {
         model(pending, fail, ctx),
         setting(pending, fail, require('../model/setting')),
     ]);
-    await require('hydrooj/src/service/server').apply(ctx);
+    await require('../service/server').apply(ctx);
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {

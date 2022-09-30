@@ -1,6 +1,6 @@
-import * as bus from 'hydrooj/src/service/bus';
+import { Context } from 'hydrooj';
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface SystemKeys {
         'hydrojudge.cache_dir': string;
         'hydrojudge.tmp_dir': string;
@@ -15,6 +15,8 @@ declare module 'hydrooj/src/interface' {
     }
 }
 
-if (process.env.NODE_APP_INSTANCE === '0') {
-    bus.once('app/started', () => require('./hosts/builtin').postInit());
+export function apply(ctx: Context) {
+    if (process.env.NODE_APP_INSTANCE === '0') {
+        ctx.once('app/started', () => require('./hosts/builtin').postInit());
+    }
 }

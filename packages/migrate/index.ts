@@ -1,12 +1,11 @@
-import { md5, sha1 } from '@hydrooj/utils/lib/utils';
-import { PluginContext } from 'hydrooj';
+import { Context, md5, sha1 } from 'hydrooj';
 import { apply as hustoj } from './scripts/hustoj';
 import { apply as syzoj } from './scripts/syzoj';
 import { apply as vijos } from './scripts/vijos';
 
 const RE_MD5 = /^[\da-f]{32}$/;
 
-export function apply(ctx: PluginContext) {
+export function apply(ctx: Context) {
     hustoj(ctx);
     vijos(ctx);
     syzoj(ctx);

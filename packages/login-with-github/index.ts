@@ -1,8 +1,7 @@
-import superagent from 'superagent';
-import { PluginContext } from 'hydrooj';
-import { ForbiddenError, UserFacingError, ValidationError } from 'hydrooj/src/error';
-import * as system from 'hydrooj/src/model/system';
-import token from 'hydrooj/src/model/token';
+import {
+    Context, ForbiddenError, superagent, SystemModel,
+    TokenModel, UserFacingError, ValidationError,
+} from 'hydrooj';
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -14,21 +13,21 @@ declare module 'hydrooj' {
 
 async function get() {
     const [appid, [state]] = await Promise.all([
-        system.get('login-with-github.id'),
-        token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+        SystemModel.get('login-with-github.id'),
+        TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
     this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}&scope=read:user,user:email`;
 }
 
 async function callback({ state, code }) {
     const [[appid, secret, endpoint, url], s] = await Promise.all([
-        system.getMany([
+        SystemModel.getMany([
             'login-with-github.id',
             'login-with-github.secret',
             'login-with-github.endpoint',
             'server.url',
         ]),
-        token.get(state, token.TYPE_OAUTH),
+        TokenModel.get(state, TokenModel.TYPE_OAUTH),
     ]);
     if (!s) throw new ValidationError('token');
     const res = await superagent.post(`${endpoint || 'https://github.com'}/login/oauth/access_token`)
@@ -66,12 +65,12 @@ async function callback({ state, code }) {
             ret.email = emailInfo.body.find((e) => e.primary && e.verified).email;
         }
     }
-    await token.del(s._id, token.TYPE_OAUTH);
+    await TokenModel.del(s._id, TokenModel.TYPE_OAUTH);
     if (!ret.email) throw new ForbiddenError("You don't have a verified email.");
     return ret;
 }
 
-export function apply(ctx: PluginContext) {
+export function apply(ctx: Context) {
     ctx.provideModule('oauth', 'github', {
         text: 'Login with Github',
         callback,

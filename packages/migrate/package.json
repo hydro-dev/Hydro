@@ -11,8 +11,6 @@
         "@types/turndown": "^5.0.1"
     },
     "dependencies": {
-        "@hydrooj/utils": "workspace:*",
-        "js-yaml": "^4.1.0",
         "mariadb": "^3.0.1",
         "mongodb": "^3.7.3",
         "mysql": "^2.18.1",

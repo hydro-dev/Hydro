@@ -1,14 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
-import { sleep } from '@hydrooj/utils/lib/utils';
-import * as Judge from 'hydrooj/src/handler/judge';
-import { Logger } from 'hydrooj/src/logger';
-import { STATUS } from 'hydrooj/src/model/builtin';
-import DomainModel from 'hydrooj/src/model/domain';
-import ProblemModel from 'hydrooj/src/model/problem';
-import TaskModel from 'hydrooj/src/model/task';
-import * as bus from 'hydrooj/src/service/bus';
-import db from 'hydrooj/src/service/db';
+import {
+    Context, db, DomainModel, JudgeHandler, Logger,
+    ProblemModel, sleep, STATUS, TaskModel,
+} from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import { getDifficulty } from './providers/codeforces';
 import providers from './providers/index';
@@ -40,8 +35,8 @@ class Service {
     }
 
     async judge(task) {
-        const next = (payload) => Judge.next({ ...payload, rid: task.rid });
-        const end = (payload) => Judge.end({ ...payload, rid: task.rid });
+        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid });
+        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid });
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
@@ -137,7 +132,7 @@ async function loadAccounts() {
     }
 }
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface Model {
         vjudge: VJudgeModel;
     }
@@ -155,4 +150,6 @@ class VJudgeModel {
 
 global.Hydro.model.vjudge = VJudgeModel;
 
-bus.on('app/started', loadAccounts);
+export function apply(ctx: Context) {
+    ctx.on('ready', loadAccounts);
+}

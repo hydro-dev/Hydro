@@ -1,5 +1,6 @@
-import * as superagent from 'superagent';
-import { PluginContext } from 'hydrooj';
+import {
+    Context, superagent, SystemModel, TokenModel, UserFacingError,
+} from 'hydrooj';
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -9,11 +10,10 @@ declare module 'hydrooj' {
 }
 
 async function get() {
-    const { system, token } = global.Hydro.model;
     const [appid, url, [state]] = await Promise.all([
-        system.get('login-with-google.id'),
-        system.get('server.url'),
-        token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+        SystemModel.get('login-with-google.id'),
+        SystemModel.get('server.url'),
+        TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
     // eslint-disable-next-line max-len
     this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&state=${state}`;
@@ -45,17 +45,12 @@ function decodeJWT(idToken: string) {
 async function callback({
     state, code, error,
 }) {
-    const { system, token } = global.Hydro.model;
-    const { UserFacingError } = global.Hydro.error;
     if (error) throw new UserFacingError(error);
-    const [
-        [appid, secret, url],
-        s,
-    ] = await Promise.all([
-        system.getMany([
+    const [[appid, secret, url], s] = await Promise.all([
+        SystemModel.getMany([
             'login-with-google.id', 'login-with-google.secret', 'server.url',
         ]),
-        token.get(state, token.TYPE_OAUTH),
+        TokenModel.get(state, TokenModel.TYPE_OAUTH),
     ]);
     const res = await superagent.post('https://oauth2.googleapis.com/token')
         .send({
@@ -66,7 +61,7 @@ async function callback({
             redirect_uri: `${url}oauth/google/callback`,
         });
     const payload = decodeJWT(res.body.id_token).payload;
-    await token.del(state, token.TYPE_OAUTH);
+    await TokenModel.del(state, TokenModel.TYPE_OAUTH);
     this.response.redirect = s.redirect;
     return {
         // TODO use openid
@@ -77,7 +72,7 @@ async function callback({
     };
 }
 
-export function apply(ctx: PluginContext) {
+export function apply(ctx: Context) {
     ctx.provideModule('oauth', 'google', {
         text: 'Login with Google',
         callback,

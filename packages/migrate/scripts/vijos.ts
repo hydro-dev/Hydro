@@ -2,12 +2,11 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    DiscussionTailReplyDoc, MessageDoc,
+    DiscussionModel, DiscussionTailReplyDoc, MessageDoc,
     RecordDoc, Schema, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const dst = global.Hydro.service.db;
-const { discussion } = global.Hydro.model;
 const map = {};
 
 const pid = (id) => {
@@ -300,11 +299,11 @@ async function discussionNode(src: Db, report: Function) {
                 const nodes = item[1];
                 for (const node of nodes || []) {
                     if (node.pic) {
-                        t.push(discussion.addNode(
+                        t.push(DiscussionModel.addNode(
                             doc.domain_id, node.name, category, { pic: node.pic },
                         ));
                     } else {
-                        t.push(discussion.addNode(doc.domain_id, node.name, category, {}));
+                        t.push(DiscussionModel.addNode(doc.domain_id, node.name, category, {}));
                     }
                 }
             }

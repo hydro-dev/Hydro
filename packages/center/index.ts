@@ -1,9 +1,8 @@
 import assert from 'assert';
 import crypto from 'crypto';
-import yaml from 'js-yaml';
-import * as bus from 'hydrooj/src/service/bus';
-import db from 'hydrooj/src/service/db';
-import { Handler, post, Types } from 'hydrooj/src/service/server';
+import {
+    Context, db, Handler, post, Types, yaml,
+} from 'hydrooj';
 
 function decrypt(encrypted: string) {
     if (!encrypted) throw new Error();
@@ -13,7 +12,7 @@ function decrypt(encrypted: string) {
     return decrypted;
 }
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface Collections {
         dataReport: any;
     }
@@ -61,6 +60,6 @@ class DataReportHandler extends Handler {
     }
 }
 
-export function apply(ctx) {
+export function apply(ctx: Context) {
     ctx.Route('data_report', '/center/report', DataReportHandler);
 }

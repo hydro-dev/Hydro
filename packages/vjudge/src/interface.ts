@@ -13,7 +13,7 @@ export interface RemoteAccount {
     problemLists?: string[];
     enableOn?: string[];
 }
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface Collections {
         vjudge: RemoteAccount;
     }

@@ -1,13 +1,11 @@
 import { Client } from '@elastic/elasticsearch';
 import { omit } from 'lodash';
-import { Schema } from 'hydrooj';
-import DomainModel from 'hydrooj/src/model/domain';
-import ProblemModel, { ProblemDoc } from 'hydrooj/src/model/problem';
-import * as system from 'hydrooj/src/model/system';
-import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
-import * as bus from 'hydrooj/src/service/bus';
+import {
+    Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
+    ProblemDoc, ProblemModel, Schema, SystemModel,
+} from 'hydrooj';
 
-const client = new Client({ node: system.get('elastic-search.url') || 'http://127.0.0.1:9200' });
+const client = new Client({ node: SystemModel.get('elastic-search.url') || 'http://127.0.0.1:9200' });
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
 const processDocument = (doc: Partial<ProblemDoc>) => {
@@ -25,8 +23,8 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
 };
 
 global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
-    const allowedSize = system.get('elasic-search.indexSize') || 10000;
-    const size = opts?.limit || system.get('pagination.problem');
+    const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
+    const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
     const union = await DomainModel.getUnion(domainId);
     const domainIds = [domainId, ...(union?.union || [])];
@@ -77,22 +75,22 @@ async function run({ domainId }, report) {
     return true;
 }
 
-export const apply = (ctx) => {
-    bus.on('problem/add', async (doc, docId) => {
+export const apply = (ctx: Context) => {
+    ctx.on('problem/add', async (doc, docId) => {
         await client.index({
             index: 'problem',
             id: `${doc.domainId}/${docId}`,
             document: processDocument(doc),
         });
     });
-    bus.on('problem/edit', async (pdoc) => {
+    ctx.on('problem/edit', async (pdoc) => {
         await client.index({
             index: 'problem',
             id: `${pdoc.domainId}/${pdoc.docId}`,
             document: processDocument(pdoc),
         });
     });
-    bus.on('problem/del', async (domainId, docId) => {
+    ctx.on('problem/del', async (domainId, docId) => {
         await client.delete({
             index: 'problem',
             id: `${domainId}/${docId}`,

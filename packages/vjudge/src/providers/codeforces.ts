@@ -9,11 +9,9 @@ import PortalPlugin from 'puppeteer-extra-plugin-portal';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import { sleep } from '@hydrooj/utils/lib/utils';
-import { buildContent } from 'hydrooj/src/lib/content';
-import { Logger } from 'hydrooj/src/logger';
-import * as setting from 'hydrooj/src/model/setting';
+import {
+    buildContent, Logger, SettingModel, sleep, STATUS,
+} from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
 
@@ -386,7 +384,7 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
-        const comment = setting.langs[lang].comment;
+        const comment = SettingModel.langs[lang].comment;
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;

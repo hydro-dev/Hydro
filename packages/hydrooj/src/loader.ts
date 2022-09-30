@@ -16,9 +16,6 @@ import { Logger } from './logger';
 import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { unwrapExports } from './utils';
-// This is the main entry. So let's re-export some modules.
-export * from './interface';
-export { Schema, Logger };
 
 const argv = cac().parse();
 const logger = new Logger('loader');

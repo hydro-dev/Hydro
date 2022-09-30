@@ -1,9 +1,8 @@
-import * as system from 'hydrooj/src/model/system';
-import { UiContextBase } from 'hydrooj/src/service/layers/base';
+import { SystemModel, UiContextBase } from 'hydrooj';
 
-declare module 'hydrooj/src/service/layers/base' {
+declare module 'hydrooj' {
     interface UiContextBase {
         onlyofficeApi?: string;
     }
 }
-UiContextBase.onlyofficeApi = system.get('onlyoffice.api');
+UiContextBase.onlyofficeApi = SystemModel.get('onlyoffice.api');

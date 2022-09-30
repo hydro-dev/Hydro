@@ -1,8 +1,8 @@
 import {
     collectDefaultMetrics, Counter, Gauge, Metric, Registry,
 } from 'prom-client';
+import { db } from 'hydrooj';
 import * as bus from 'hydrooj/src/service/bus';
-import * as db from 'hydrooj/src/service/db';
 
 export const registry = new Registry();
 registry.setDefaultLabels({ instanceid: process.env.NODE_APP_INSTANCE });

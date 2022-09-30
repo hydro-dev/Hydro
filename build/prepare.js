@@ -9,7 +9,6 @@ const compilerOptionsBase = {
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',
-    // declaration: true,
     sourceMap: false,
     composite: true,
     strictBindCallApply: true,
@@ -48,6 +47,7 @@ const configFlat = (name) => (name === 'packages/ui-default' ? {
         allowSyntheticDefaultImports: true,
         target: 'es2020',
         baseUrl: '.',
+        outDir: path.join(baseOutDir, name),
         moduleResolution: 'node',
         types,
         paths: {

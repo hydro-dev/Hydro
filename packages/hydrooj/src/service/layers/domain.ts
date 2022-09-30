@@ -1,7 +1,7 @@
-import BlackListModel from 'hydrooj/src/model/blacklist';
-import DomainModel from 'hydrooj/src/model/domain';
-import * as system from 'hydrooj/src/model/system';
-import token from 'hydrooj/src/model/token';
+import BlackListModel from '../../model/blacklist';
+import DomainModel from '../../model/domain';
+import * as system from '../../model/system';
+import token from '../../model/token';
 
 export default async (ctx, next) => {
     const forceDomain = /^\/d\/([^/]+)\//.exec(ctx.request.path);
