@@ -77,10 +77,12 @@ class MessageModel {
     }
 }
 
-bus.on('app/started', () => db.ensureIndexes(
-    coll,
-    { key: { to: 1, _id: -1 }, name: 'to' },
-    { key: { from: 1, _id: -1 }, name: 'from' },
-));
+export async function apply() {
+    return db.ensureIndexes(
+        coll,
+        { key: { to: 1, _id: -1 }, name: 'to' },
+        { key: { from: 1, _id: -1 }, name: 'from' },
+    );
+}
 export default MessageModel;
 global.Hydro.model.message = MessageModel;

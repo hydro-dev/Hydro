@@ -136,7 +136,7 @@ async function cleanFiles() {
     }
 }
 TaskModel.Worker.addHandler('storage.prune', cleanFiles);
-bus.on('app/started', async () => {
+bus.on('ready', async () => {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     await db.ensureIndexes(
         StorageModel.coll,

@@ -3,6 +3,7 @@ import assert from 'assert';
 import {
     Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, UpdateQuery,
 } from 'mongodb';
+import { Context } from '../context';
 import {
     BlogDoc, Content, DiscussionDoc,
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
@@ -405,7 +406,11 @@ export async function revSetStatus<T extends keyof DocStatusType>(
     return res.value;
 }
 
-bus.on('app/started', async () => {
+export async function apply(ctx: Context) {
+    ctx.on('domain/delete', (domainId) => Promise.all([
+        coll.deleteMany({ domainId }),
+        collStatus.deleteMany({ domainId }),
+    ]));
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
@@ -436,11 +441,7 @@ bus.on('app/started', async () => {
         { key: { domainId: 1, docType: 1, docId: 1, accept: -1, time: 1 }, name: 'contestRuleACM', sparse: true },
         { key: { domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, name: 'training', sparse: true },
     );
-});
-bus.on('domain/delete', (domainId) => Promise.all([
-    coll.deleteMany({ domainId }),
-    collStatus.deleteMany({ domainId }),
-]));
+}
 
 global.Hydro.model.document = {
     coll,

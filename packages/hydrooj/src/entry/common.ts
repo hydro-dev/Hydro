@@ -56,6 +56,14 @@ export const lib = getLoader('lib', 'lib');
 export const script = getLoader('script', 'script');
 export const service = getLoader('service', 'service');
 
+export async function builtinModel(ctx: Context) {
+    const modelDir = path.resolve(__dirname, '..', 'model');
+    const models = ['task', 'blacklist', 'discussion', 'document'];
+    for (const t of models) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(modelDir, t), {}, `hydrooj/model/${t}`);
+    }
+}
+
 export async function locale(pending: string[], fail: string[]) {
     await Promise.all(pending.map(async (i) => {
         const p = locateFile(i, ['locale', 'locales']);

@@ -2,7 +2,7 @@
 import {
     Collection, Db, IndexSpecification, MongoClient,
 } from 'mongodb';
-import { BaseService, Collections } from '../interface';
+import { Collections } from '../interface';
 import { Logger } from '../logger';
 import options from '../options';
 import * as bus from './bus';
@@ -20,10 +20,9 @@ interface MongoConfig {
     prefix?: string,
 }
 
-class MongoService implements BaseService {
+class MongoService {
     public client: MongoClient;
     public db: Db;
-    public started = false;
     private opts: MongoConfig;
 
     static buildUrl(opts: MongoConfig) {
@@ -46,7 +45,6 @@ class MongoService implements BaseService {
         this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
         this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
-        this.started = true;
     }
 
     public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {

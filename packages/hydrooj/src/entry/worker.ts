@@ -8,7 +8,7 @@ import { Context } from '../context';
 import { Logger } from '../logger';
 import db from '../service/db';
 import {
-    addon, handler, lib, locale, model,
+    addon, builtinModel, handler, lib, locale, model,
     script, service, setting, template,
 } from './common';
 
@@ -46,15 +46,17 @@ export async function apply(ctx: Context) {
     await lib(pending, fail, ctx);
     require('../service/monitor');
     await service(pending, fail, ctx);
-    require('../model/index');
+    await builtinModel(ctx);
+    await model(pending, fail, ctx);
+    await ctx.lifecycle.flush();
+
+    const modelSetting = require('../model/setting');
+    await setting(pending, fail, modelSetting);
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
     for (const h of handlers) {
         ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
-    await model(pending, fail, ctx);
-    const modelSetting = require('../model/setting');
-    await setting(pending, fail, modelSetting);
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
@@ -62,7 +64,9 @@ export async function apply(ctx: Context) {
     for (const h of await fs.readdir(scriptDir)) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
+    await ctx.lifecycle.flush();
     await script(pending, fail, ctx);
+    await ctx.lifecycle.flush();
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         const scripts = require('../upgrade').default;

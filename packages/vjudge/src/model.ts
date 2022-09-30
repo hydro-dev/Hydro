@@ -2,7 +2,7 @@
 import os from 'os';
 import {
     Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, sleep, STATUS, TaskModel,
+    ProblemModel, sleep, STATUS, TaskModel, Time,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import { getDifficulty } from './providers/codeforces';
@@ -99,7 +99,7 @@ class Service {
     async main() {
         const res = await this.login();
         if (!res) return;
-        setInterval(() => this.login(), 1 * 3600 * 1000);
+        setInterval(() => this.login(), Time.hour);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this), false);
         const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
         do {

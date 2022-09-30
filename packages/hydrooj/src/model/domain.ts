@@ -274,16 +274,16 @@ class DomainModel {
     }
 }
 
-bus.on('app/started', async () => {
-    await db.ensureIndexes(
+bus.on('ready', () => Promise.all([
+    db.ensureIndexes(
         coll,
         { key: { lower: 1 }, name: 'lower', unique: true },
-    );
-    await db.ensureIndexes(
+    ),
+    db.ensureIndexes(
         collUser,
         { key: { domainId: 1, uid: 1 }, name: 'uid', unique: true },
         { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
-    );
-});
+    ),
+]));
 export default DomainModel;
 global.Hydro.model.domain = DomainModel;

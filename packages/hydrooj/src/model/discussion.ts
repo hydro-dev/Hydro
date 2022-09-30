@@ -1,6 +1,7 @@
 import { omit } from 'lodash';
 import moment from 'moment';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
 import * as bus from '../service/bus';
@@ -289,24 +290,27 @@ async function updateSort() {
         await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
     }
 }
-TaskModel.Worker.addHandler('discussion.sort', updateSort);
 
-bus.on('app/ready', async () => {
-    if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
-        await TaskModel.add({
-            type: 'schedule',
-            subType: 'discussion.sort',
-            executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
-            interval: [1, 'hour'],
-        });
-    }
-});
+export async function apply(ctx: Context) {
+    ctx.using(['worker'], async ({ worker }) => {
+        worker.addHandler('discussion.sort', updateSort);
+        if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
+            await TaskModel.add({
+                type: 'schedule',
+                subType: 'discussion.sort',
+                executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
+                interval: [1, 'hour'],
+            });
+        }
+    });
+}
 
 global.Hydro.model.DiscussionModel = {
     typeDisplay,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
 
+    apply,
     add,
     get,
     inc,

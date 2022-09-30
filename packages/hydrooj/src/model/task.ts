@@ -3,7 +3,8 @@ import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
-import { BaseService, EventDoc, Task } from '../interface';
+import { Context, Service } from '../context';
+import { EventDoc, Task } from '../interface';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -62,10 +63,8 @@ class Consumer {
     }
 }
 
-class WorkerService implements BaseService {
+class WorkerService extends Service {
     private handlers: Record<string, Function> = {};
-    public started = true;
-    public start = () => { };
     public consumer = new Consumer(
         { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
         async (doc) => {
@@ -89,10 +88,13 @@ class WorkerService implements BaseService {
     public addHandler(type: string, handler: Function) {
         this.handlers[type] = handler;
         this.consumer.filter = { type: 'schedule', subType: { $in: Object.keys(this.handlers) } };
+        this.caller?.on('dispose', () => {
+            delete this.handlers[type];
+        });
     }
 }
 
-const Worker = new WorkerService();
+const Worker = new WorkerService(app, 'worker', false);
 
 class TaskModel {
     static async add(task: Partial<Task> & { type: string }) {
@@ -141,17 +143,36 @@ class TaskModel {
 }
 
 const id = process.env.exec_mode === 'cluster_mode' ? hostname() : nanoid();
-Worker.addHandler('task.daily', async () => {
-    await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
-    await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
-    await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
-    if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
-        await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
+
+declare module '../context' {
+    interface Context {
+        worker: WorkerService;
     }
-    await bus.parallel('task/daily');
-});
-bus.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
-bus.on('app/started', async () => {
+}
+
+export async function apply(ctx: Context) {
+    Context.service('worker', WorkerService);
+    ctx.worker = Worker;
+
+    Worker.addHandler('task.daily', async () => {
+        await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
+        await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
+        await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
+        if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
+            await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
+        }
+        await ctx.parallel('task/daily');
+    });
+    ctx.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
+    ctx.on('bus/broadcast', (event, payload) => {
+        collEvent.insertOne({
+            ack: [id],
+            event,
+            payload: JSON.stringify(payload),
+            expire: new Date(Date.now() + 10000),
+        });
+    });
+
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (!await TaskModel.count({ type: 'schedule', subType: 'task.daily' })) {
         await TaskModel.add({
@@ -187,15 +208,7 @@ bus.on('app/started', async () => {
             await (res.value ? handleEvent(res.value) : sleep(500));
         }
     });
-});
-bus.on('bus/broadcast', (event, payload) => {
-    collEvent.insertOne({
-        ack: [id],
-        event,
-        payload: JSON.stringify(payload),
-        expire: new Date(Date.now() + 10000),
-    });
-});
+}
 
 export default TaskModel;
 global.Hydro.model.task = TaskModel;

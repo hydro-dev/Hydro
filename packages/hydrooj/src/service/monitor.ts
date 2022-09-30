@@ -91,7 +91,7 @@ export async function updateJudge(args) {
 }
 
 if (process.env.NODE_APP_INSTANCE === '0') {
-    bus.on('app/started', async () => {
+    bus.on('ready', async () => {
         sysinfo.get().then((info) => {
             coll.updateOne(
                 { mid: info.mid, type: 'server' },

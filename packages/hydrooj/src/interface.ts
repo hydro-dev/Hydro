@@ -561,13 +561,6 @@ export interface Task {
     [key: string]: any;
 }
 
-export interface BaseService {
-    started: boolean;
-    error?: Error | string;
-    start: Function;
-    stop?: Function;
-}
-
 export interface FileNode {
     /** File Path In MinIO */
     _id: string;

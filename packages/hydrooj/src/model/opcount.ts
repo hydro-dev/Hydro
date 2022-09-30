@@ -21,9 +21,9 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
     }
 }
 
-bus.on('app/started', () => db.ensureIndexes(
+export const apply = () => db.ensureIndexes(
     coll,
     { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
     { key: { op: 1, ident: 1, expireAt: 1 }, name: 'unique', unique: true },
-));
-global.Hydro.model.opcount = { inc };
+);
+global.Hydro.model.opcount = { inc, apply };
