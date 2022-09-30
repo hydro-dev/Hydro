@@ -1,6 +1,8 @@
 import superagent from 'superagent';
 import { PluginContext } from 'hydrooj';
-import { ForbiddenError } from 'hydrooj/src/error';
+import { ForbiddenError, UserFacingError, ValidationError } from 'hydrooj/src/error';
+import * as system from 'hydrooj/src/model/system';
+import token from 'hydrooj/src/model/token';
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -11,7 +13,6 @@ declare module 'hydrooj' {
 }
 
 async function get() {
-    const { system, token } = global.Hydro.model;
     const [appid, [state]] = await Promise.all([
         system.get('login-with-github.id'),
         token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
@@ -20,8 +21,6 @@ async function get() {
 }
 
 async function callback({ state, code }) {
-    const { system, token } = global.Hydro.model;
-    const { UserFacingError } = global.Hydro.error;
     const [[appid, secret, endpoint, url], s] = await Promise.all([
         system.getMany([
             'login-with-github.id',
@@ -31,6 +30,7 @@ async function callback({ state, code }) {
         ]),
         token.get(state, token.TYPE_OAUTH),
     ]);
+    if (!s) throw new ValidationError('token');
     const res = await superagent.post(`${endpoint || 'https://github.com'}/login/oauth/access_token`)
         .send({
             client_id: appid,
@@ -71,7 +71,7 @@ async function callback({ state, code }) {
     return ret;
 }
 
-export function apply(ctx:PluginContext) {
+export function apply(ctx: PluginContext) {
     ctx.provideModule('oauth', 'github', {
         text: 'Login with Github',
         callback,
