@@ -12,7 +12,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import WebpackBar from 'webpackbar';
 import root from '../utils/root';
 
-export default function (env: { production?: boolean, measure?: boolean } = {}) {
+export default function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
   function esbuildLoader() {
     return {
       loader: 'esbuild-loader',

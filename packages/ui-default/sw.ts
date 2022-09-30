@@ -4,7 +4,7 @@ const target = [
   'https://us.hydro.ac',
 ];
 
-this.addEventListener('install', () => {
+(this as any).addEventListener('install', () => {
   console.log('Service Worker installing');
 });
 async function get(url) {
@@ -23,7 +23,7 @@ async function get(url) {
   }
   return response;
 }
-this.addEventListener('fetch', (event) => {
+(this as any).addEventListener('fetch', (event) => {
   // eslint-disable-next-line no-restricted-globals
   if (new URL(event.request.url).origin !== location.origin) return;
   event.respondWith(get(event.request.url));

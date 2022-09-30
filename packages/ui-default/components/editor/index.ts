@@ -29,6 +29,7 @@ export const config = {
     theme: {
       // eslint-disable-next-line no-template-curly-in-string
       path: `${UiContext.cdn_prefix}vditor/dist/css/content-theme`,
+      current: 'light',
     },
   },
 };

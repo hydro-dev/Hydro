@@ -22,9 +22,9 @@ declare module 'hydrooj' {
     'ui-default.nav_logo_dark_2x': string;
   }
   interface UiContextBase {
-    nav_logo_dark: string;
-    nav_logo_dark_2x: string;
-    constantVersion: string;
+    nav_logo_dark?: string;
+    nav_logo_dark_2x?: string;
+    constantVersion?: string;
   }
 }
 

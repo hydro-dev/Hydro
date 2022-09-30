@@ -33,6 +33,7 @@
     "@types/redux-logger": "^3.0.9",
     "@types/serviceworker": "^0.0.51",
     "@types/sharedworker": "^0.0.80",
+    "@types/webpack-env": "^1.18.0",
     "@vscode/codicons": "^0.0.32",
     "autoprefixer": "^10.4.8",
     "browser-update": "^3.3.40",

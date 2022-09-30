@@ -40,10 +40,13 @@ const configFlat = (name) => (name === 'packages/ui-default' ? {
     exclude: [
         './public',
     ],
+    include: ['**/*.ts'],
     compilerOptions: {
+        experimentalDecorators: true,
         resolveJsonModule: true,
         jsx: 'react',
-        module: 'es2020',
+        module: 'commonjs',
+        skipLibCheck: true,
         allowSyntheticDefaultImports: true,
         target: 'es2020',
         baseUrl: '.',
