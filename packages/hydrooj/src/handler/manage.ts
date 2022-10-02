@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
-import { BadRequestError, UserNotFoundError, ValidationError } from '../error';
+import { BadRequestError, NotFoundError, ValidationError } from '../error';
 import {
     isEmail, isPassword, isUname, validate,
 } from '../lib/validator';
@@ -263,30 +263,20 @@ class SystemUserImportHandler extends SystemHandler {
     }
 }
 
-class SystemUserPrivListHandler extends SystemHandler {
+class SystemUserPrivHandler extends SystemHandler {
     async get() {
         const defaultPriv = system.get('default.priv');
         const udocs = await user.getMulti({ priv: { $ne: defaultPriv } }).limit(1000).sort({ _id: 1 }).toArray();
-        this.response.body.udocs = udocs;
-        this.response.template = 'manage_user_priv_list.html';
-    }
-}
-
-class SystemUserPrivHandler extends SystemHandler {
-    @param('uid', Types.PositiveInt)
-    async get(domainId: string, uid: number) {
-        if (uid === 0) throw new UserNotFoundError(0);
-        const udoc = await user.getById(domainId, uid);
-        if (!udoc) throw new UserNotFoundError(uid);
-        const defaultPriv = system.get('default.priv');
-        this.response.body = { udoc, defaultPriv, PRIV };
+        this.response.body = { udocs, PRIV };
         this.response.template = 'manage_user_priv.html';
     }
 
-    async post() {
-        // const priv = {};
-        delete this.request.body.csrfToken;
-        // TODO
+    @param('uid', Types.Int)
+    @param('priv', Types.Int)
+    async post(domainId: string, uid: number, priv: number) {
+        const udoc = await user.getById(domainId, uid);
+        if (!udoc) throw new NotFoundError('uid');
+        await user.setPriv(uid, priv);
         this.back();
     }
 }
@@ -298,8 +288,7 @@ async function apply() {
     Route('manage_setting', '/manage/setting', SystemSettingHandler);
     Route('manage_config', '/manage/config', SystemConfigHandler);
     Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
-    Route('manage_user_priv', '/manage/userpriv', SystemUserPrivListHandler);
-    Route('manage_user_priv_edit', '/manage/userpriv/:uid', SystemUserPrivHandler);
+    Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
     Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
 

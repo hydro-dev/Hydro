@@ -1,53 +1,103 @@
 {% extends "manage_base.html" %}
 {% block manage_content %}
-<form method="post">
+<div style="display: none" class="dialog__body--add-user">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Add User') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label>
+          {{ _('Username / UID') }}
+          <input name="user" type="text" class="textbox" autocomplete="off" data-autofocus>
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div style="display: none" class="dialog__body--set-priv">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Set Priv') }}</h1>
+    </div></div>
+    <div class="row">
+      <div class="medium-12 columns">
+        <table class="data-table priv_table">
+          <colgroup>
+            <col class="col--description">
+            <col class="col--p">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--description">{{ _('Name') }}</th>
+              <th class="col--p">{{ _('Priv') }}</th>
+            </tr>
+          </thead>
+          {%- for name, priv in PRIV -%}
+            <tbody>
+              <tr>
+                <td class="col--description">{{ _(name) }}</td>
+                <td class="col--p">
+                  <label class="compact checkbox">
+                    <input class="priv" name="{{ name }}" data-checkbox-group="priv" data-checkbox-range value="{{ priv }}" type="checkbox">
+                  </label>
+                </td>
+              </tr>
+            </tbody>
+          {%- endfor -%}
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('Edit User Priv') }}</h1>
+    <h1 class="section__title">{{ _('User Priv') }}</h1>
+    <div class="section__tools">
+      <button class="primary rounded button" name="add_user"><span class="icon icon-add"></span>{{ _('Add User') }}</button>
+    </div>
   </div>
-  <div class="section__body no-padding domain-users">
+  {{ noscript_note.render() }}
+  <div class="section__body no-padding">
     <table class="data-table">
       <colgroup>
-        <col class="col--description">
-        {%- for priv in PRIV -%}
-          <col class="col--p">
-        {%- endfor -%}
+        <col class="col--uid">
+        <col class="col--user">
+        <col class="col--priv">
+        <col class="col--ban">
+        <col class="col--actions">
       </colgroup>
       <thead>
         <tr>
-          <th class="col--description">{{ _('Priv') }}</th>
-          <th class="col--p"><span data-tooltip="default">default</span></th>
-          <th class="col--p"><span data-tooltip="{{ udoc.uname }}">{{ udoc.uname }}</span></th>
+          <th class="col--uid">{{ _('User ID') }}</th>
+          <th class="col--user">{{ _('Username') }}</th>
+          <th class="col--priv">{{ _('Priv') }}</th>
+          <th class="col--ban">{{ _('Ban') }}</th>
+          <th class="col--actions">{{ _('Actions') }}</th>
         </tr>
       </thead>
-      {%- for name, priv in PRIV -%}
-        <tbody>
-          <tr>
-            <td class="col--description">{{ _(name) }}</td>
-            <td class="col--p">
-              <label class="compact checkbox">
-                <input name="{{ name }}" data-checkbox-group="default" data-checkbox-range value="{{ priv }}" type="checkbox"{% if defaultPriv|bitand(priv) %} checked{% endif %} disabled>
-              </label>
-            </td>
-            <td class="col--p">
-              <label class="compact checkbox">
-                <input name="{{ name }}" data-checkbox-group="{{ udoc._id }}" data-checkbox-range value="{{ priv }}" type="checkbox"{% if udoc.priv|bitand(priv) %} checked{% endif %}>
-              </label>
-            </td>
-          </tr>
-        </tbody>
-      {%- endfor -%}
+      <tbody>
+        {%- for udoc in udocs -%}
+        <tr data-uid="{{ udoc._id }}">
+          <td class="col--uid">
+            {{ udoc._id }}
+          </td>
+          <td class="col--user">
+            {{ user.render_inline(udoc, badge=false) }}
+          </td>
+          <td class="col--priv" title="{{ udoc.priv }}">
+            {{ udoc.priv }}
+          </td>
+          <td class="col--ban">
+            {{ '已封禁' if current.priv==0 else '未封禁' }}
+          </td>
+          <td class="col--actions">
+            <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
     </table>
   </div>
-  <div class="section__body">
-    <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-    <button class="rounded primary button" role="submit">
-      {{ _('Update Permission') }}
-    </button>
-    <button type="button" class="rounded button" onclick="window.history.go(-1)">
-      {{ _('Cancel') }}
-    </button>
-  </div>
 </div>
-</form>
 {% endblock %}
