@@ -28,8 +28,13 @@ const loaders = {
   },
 };
 
+let loadPromise = Promise.resolve();
+
 export async function load(features = ['markdown']) {
   let s = Date.now();
+  await loadPromise;
+  let resolve;
+  loadPromise = new Promise((r) => { resolve = r; });
   if (!loaded) {
     await loaders.i18n();
     console.log('Loading monaco editor');
@@ -60,7 +65,8 @@ export async function load(features = ['markdown']) {
     }
   }
   await res.loadThemePromise;
-  return { monaco: res.default, registerAction: res.registerAction };
+  resolve();
+  return { monaco: res.default, registerAction: res.registerAction, customOptions: {} };
 }
 
 export default load;

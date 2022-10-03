@@ -1,39 +1,49 @@
+import type * as monaco from 'monaco-editor';
 import React from 'react';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
 
-const mapStateToProps = (state) => ({
+interface ScratchpadOptions {
+  value?: string;
+  language?: string;
+  handleUpdateCode?: (str: string, event: monaco.editor.IModelContentChangedEvent) => void;
+  mainSize?: number;
+  recordSize?: number;
+  pretestSize?: number;
+}
+
+export default connect((state: any) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
   mainSize: state.ui.main.size,
   pretestSize: state.ui.pretest.size,
   recordSize: state.ui.records.size,
-});
-const mapDispatchToProps = (dispatch) => ({
-  handleUpdateCode: (code) => {
+}), (dispatch) => ({
+  handleUpdateCode: (code: string) => {
     dispatch({
       type: 'SCRATCHPAD_EDITOR_UPDATE_CODE',
       payload: code,
     });
   },
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent {
+}))(class MonacoEditor extends React.PureComponent<ScratchpadOptions> {
   disposable = [];
+  __prevent_trigger_change_event = false;
+  model: monaco.editor.ITextModel;
+  editor: monaco.editor.IStandaloneCodeEditor;
+  containerElement: HTMLElement;
 
   async componentDidMount() {
     const value = this.props.value || '';
     const { language } = this.props;
     const { monaco, registerAction, customOptions } = await load([language]);
     const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
-    this.model = monaco.editor.createModel(value, language, uri);
+    this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(value, language, uri);
     if (this.containerElement) {
-      /** @type {monaco.editor.IStandaloneEditorConstructionOptions} */
-      const config = {
+      const config: monaco.editor.IStandaloneEditorConstructionOptions = {
         theme: 'vs-light',
         ...customOptions,
         fontFamily: UserContext.codeFontFamily,
-        lineNumbers: true,
+        lineNumbers: 'on',
         glyphMargin: true,
         lightbulb: { enabled: true },
         model: this.model,
@@ -43,12 +53,12 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       this.disposable.push(
         this.editor.onDidChangeModelContent((event) => {
           if (!this.__prevent_trigger_change_event) {
-            this.props.handleUpdateCode(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
+            this.props.handleUpdateCode?.(this.editor.getValue({ lineEnding: '\n', preserveBOM: false }), event);
           }
         }),
       );
-      window.editor = this.editor;
-      window.monaco = monaco;
+      (window as any).editor = this.editor;
+      (window as any).monaco = monaco;
       window.Hydro.bus.emit('scratchpadEditorCreate', this.editor, monaco);
     }
   }
@@ -71,6 +81,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
             text: value,
           },
         ],
+        () => null,
       );
       editor.pushUndoStop();
       this.__prevent_trigger_change_event = false;
@@ -79,7 +90,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
       const val = model.getValue(LF, false);
       model.dispose();
       const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
-      this.model = monaco.editor.createModel(val, language, uri);
+      this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(val, language, uri);
       editor.setModel(this.model);
     }
     if (editor) {
