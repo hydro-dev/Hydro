@@ -219,6 +219,7 @@ class RichMediaHandler extends Handler {
 }
 
 export function apply(ctx) {
+  if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);

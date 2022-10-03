@@ -18,7 +18,7 @@ export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 
 /* eslint-disable @typescript-eslint/naming-convention */
-export interface EventMap extends Record<string, any> {
+export interface EventMap {
     'app/started': () => void
     'app/load/lib': () => VoidReturn
     'app/load/locale': () => VoidReturn

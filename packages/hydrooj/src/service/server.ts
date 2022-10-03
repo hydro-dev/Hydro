@@ -409,6 +409,7 @@ export async function apply(pluginContext) {
     Context.service('server', RouteService);
     pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
+    if (process.env.HYDRO_CLI) return;
     const proxyMiddleware = proxy('/fs', {
         target: builtinConfig.file.endPoint,
         changeOrigin: true,
