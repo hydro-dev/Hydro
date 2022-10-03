@@ -37,10 +37,10 @@ const page = new NamedPage('manage_user_priv', () => {
 
   async function changeUserPriv(uid, priv) {
     try {
-      await request.post('', {
+      await request.post('', uid !== 'default' ? {
         uid,
         priv,
-      });
+      } : { priv });
       Notification.success(i18n('Priv has been updated to {0}.', priv));
       window.location.reload();
     } catch (error) {
@@ -56,7 +56,6 @@ const page = new NamedPage('manage_user_priv', () => {
     if (action !== 'ok') return;
     let userPriv = 0;
     setPrivDialog.$dom.find('input.priv[type=checkbox]').each((i, e) => {
-      console.log(e.name, e.checked, e.value, userPriv);
       if (e.checked) userPriv |= e.value;
     });
     changeUserPriv(uid, userPriv);
@@ -67,11 +66,7 @@ const page = new NamedPage('manage_user_priv', () => {
     if (action !== 'ok') {
       return;
     }
-    const user = await fetch(`/user/${selectUserSelector.value()._id}`, {
-      headers: {
-        accept: 'application/json',
-      },
-    }).then((res) => res.json());
+    const user = await request(`/user/${selectUserSelector.value()._id}`);
     handleOpenUserPrivDialog(user.udoc);
   }
 

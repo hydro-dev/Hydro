@@ -18,7 +18,7 @@
 <div style="display: none" class="dialog__body--set-priv">
   <div>
     <div class="row"><div class="columns">
-      <h1>{{ _('Set Priv') }}</h1>
+      <h1>{{ _('Set Privilege') }}</h1>
     </div></div>
     <div class="row">
       <div class="medium-12 columns">
@@ -30,7 +30,7 @@
           <thead>
             <tr>
               <th class="col--description">{{ _('Name') }}</th>
-              <th class="col--p">{{ _('Priv') }}</th>
+              <th class="col--p">{{ _('Privilege') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -54,7 +54,7 @@
 </div>
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title">{{ _('User Priv') }}</h1>
+    <h1 class="section__title">{{ _('User Privilege') }}</h1>
     <div class="section__tools">
       <button class="primary rounded button" name="select_user"><span class="icon icon-search"></span>{{ _('Select User') }}</button>
     </div>
@@ -72,11 +72,25 @@
         <tr>
           <th class="col--uid">{{ _('User ID') }}</th>
           <th class="col--user">{{ _('Username') }}</th>
-          <th class="col--priv">{{ _('Priv') }}</th>
+          <th class="col--priv">{{ _('Privilege') }}</th>
           <th class="col--actions">{{ _('Actions') }}</th>
         </tr>
       </thead>
       <tbody>
+        <tr data-uid="{{ udoc._id }}">
+          <td class="col--uid">
+            #
+          </td>
+          <td class="col--user">
+            Default Privilege
+          </td>
+          <td class="col--priv" title="{{ defaultPriv }}">
+            {{ defaultPriv }}
+          </td>
+          <td class="col--actions">
+            <a name="set_priv" data-uid="default" data-priv="{{ defaultPriv }}">{{ _('Edit') }}</a>
+          </td>
+        </tr>
         {%- for udoc in udocs -%}
         <tr data-uid="{{ udoc._id }}">
           <td class="col--uid">
