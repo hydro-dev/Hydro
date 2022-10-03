@@ -623,7 +623,7 @@ export interface Model {
     blog: typeof import('./model/blog'),
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
-    DiscussionModel: typeof import('./model/discussion'),
+    discussion: typeof import('./model/discussion'),
     document: Omit<typeof import('./model/document'), 'apply'>,
     domain: typeof import('./model/domain').default,
     message: typeof import('./model/message').default,

@@ -1,15 +1,18 @@
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
+import _ from 'lodash';
+import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import superagent from 'superagent';
 import * as db from './service/db';
-export { ObjectID, ObjectId } from 'mongodb';
+export { ObjectID, ObjectId, FilterQuery } from 'mongodb';
 export * from './utils';
 export * from './interface';
 export * from './pipelineUtils';
 export * from './error';
 export * from './settings';
+export * from './typeutils';
 export * as SystemModel from './model/system';
 export * as TrainingModel from './model/training';
 export * as OpcountModel from './model/opcount';
@@ -40,10 +43,10 @@ export * as validator from './lib/validator';
 export { default as rank } from './lib/rank';
 export { default as paginate } from './lib/paginate';
 export * from './service/decorators';
-export { Handler, ConnectionHandler } from './service/server';
+export { Handler, ConnectionHandler, captureAllRoutes } from './service/server';
 export { UiContextBase } from './service/layers/base';
 export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export {
-    db, Schema, yaml, fs, AdmZip, superagent,
+    db, Schema, yaml, fs, AdmZip, superagent, _, moment,
 };
