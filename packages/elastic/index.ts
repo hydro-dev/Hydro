@@ -26,7 +26,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
     const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
-    const union = await DomainModel.getUnion(domainId);
+    const union = await DomainModel.get(domainId);
     const domainIds = [domainId, ...(union?.union || [])];
     const res = await client.search({
         index: 'problem',

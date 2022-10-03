@@ -385,12 +385,6 @@ export interface DomainDoc extends Record<string, any> {
     host?: string[],
 }
 
-export interface DomainUnion {
-    _id: string;
-    union: string[];
-    problem: boolean;
-}
-
 // Message
 export interface MessageDoc {
     _id: ObjectID,
@@ -604,7 +598,6 @@ export interface Collections {
     'blacklist': BlacklistDoc;
     'domain': DomainDoc;
     'domain.user': any;
-    'domain.union': DomainUnion;
     'record': RecordDoc;
     'document': any;
     'document.status': StatusDocBase;

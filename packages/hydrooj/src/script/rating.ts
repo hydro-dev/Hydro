@@ -137,9 +137,8 @@ export async function calcLevel(domainId: string, report: Function) {
 }
 
 async function runInDomain(id: string, report: Function) {
-    const info = await domain.getUnion(id);
-    if (info) info.union.unshift(id);
-    const domainIds = info ? info.union : [id];
+    const info = await domain.get(id);
+    const domainIds = [id, ...(info.union || [])];
     const results: Record<keyof typeof RpTypes, ND> = {};
     const udict = new Proxy({}, { get: (self, key) => self[key] || 0 });
     for (const type in RpTypes) {

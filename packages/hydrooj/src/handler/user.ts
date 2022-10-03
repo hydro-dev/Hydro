@@ -298,7 +298,7 @@ class UserDetailHandler extends Handler {
         const [udoc, sdoc, union] = await Promise.all([
             user.getById(domainId, uid),
             token.getMostRecentSessionByUid(uid, ['createAt', 'updateAt']),
-            domain.getUnion(domainId),
+            domain.get(domainId),
         ]);
         if (!udoc) throw new UserNotFoundError(uid);
         const pdocs: ProblemDoc[] = [];

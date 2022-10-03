@@ -152,9 +152,8 @@ export class ProblemModel {
         page: number, pageSize: number,
         projection = ProblemModel.PROJECTION_LIST, uid?: number,
     ): Promise<[ProblemDoc[], number, number]> {
-        const union = await DomainModel.getUnion(domainId);
-        const domainIds = [domainId];
-        if (union?.problem) domainIds.push(...union.union);
+        const union = await DomainModel.get(domainId);
+        const domainIds = [domainId, ...(union.union || [])];
         let count = 0;
         const pdocs = [];
         for (const id of domainIds) {

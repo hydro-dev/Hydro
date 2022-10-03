@@ -10,7 +10,6 @@ import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
-const collUnion = db.collection('domain.union');
 
 interface DomainUserArg {
     _id: number,
@@ -254,23 +253,9 @@ class DomainModel {
     }
 
     @ArgMethod
-    static async addUnion(domainId: string, union: string[]) {
-        return await collUnion.updateOne({ _id: domainId }, { $set: { union } }, { upsert: true });
-    }
-
-    @ArgMethod
-    static async removeUnion(domainId: string) {
-        return await collUnion.deleteOne({ _id: domainId });
-    }
-
-    @ArgMethod
+    /** @deprecated */
     static async getUnion(domainId: string) {
-        return await collUnion.findOne({ _id: domainId });
-    }
-
-    @ArgMethod
-    static async searchUnion(query) {
-        return await collUnion.find(query).toArray();
+        return await coll.findOne({ _id: domainId });
     }
 }
 

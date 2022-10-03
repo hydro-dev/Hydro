@@ -27,7 +27,7 @@ export function apply(ctx: Context) {
         const cb = async (pdoc) => {
             i++;
             if (!(i % 1000)) report({ message: `${i} problems indexed` });
-            const union = await DomainModel.searchUnion({ union: pdoc.domainId, problem: true });
+            const union = await DomainModel.getMulti({ union: pdoc.domainId }).toArray();
             const tasks = [];
             for (const did of [pdoc.domainId, ...union.map((j) => j._id)]) {
                 tasks.push(
@@ -46,7 +46,7 @@ export function apply(ctx: Context) {
     }
 
     ctx.on('problem/add', async (doc, docId) => {
-        const union = await DomainModel.searchUnion({ union: doc.domainId, problem: true });
+        const union = await DomainModel.getMulti({ union: doc.domainId }).toArray();
         const tasks = [];
         for (const domainId of [doc.domainId, ...union.map((i) => i._id)]) {
             tasks.push(
@@ -58,7 +58,7 @@ export function apply(ctx: Context) {
     });
 
     ctx.on('problem/edit', async (pdoc) => {
-        const union = await DomainModel.searchUnion({ union: pdoc.domainId, problem: true });
+        const union = await DomainModel.getMulti({ union: pdoc.domainId }).toArray();
         const tasks = [];
         const id = `${pdoc.domainId}/${pdoc.docId}`;
         for (const domainId of [pdoc.domainId, ...union.map((i) => i._id)]) {
@@ -73,7 +73,7 @@ export function apply(ctx: Context) {
     });
 
     ctx.on('problem/del', async (domainId, docId) => {
-        const union = await DomainModel.searchUnion({ union: domainId, problem: true });
+        const union = await DomainModel.getMulti({ union: domainId }).toArray();
         const tasks = [];
         const id = `${domainId}/${docId}`;
         for (const domain of [domainId, ...union.map((i) => i._id)]) {
