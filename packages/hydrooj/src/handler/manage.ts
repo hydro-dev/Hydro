@@ -279,7 +279,12 @@ class SystemUserPrivHandler extends SystemHandler {
             if (!udoc) throw new UserNotFoundError(uid);
             await user.setPriv(uid, priv);
         } else {
-            await system.set('default.priv', priv);
+            const defaultPriv = system.get('default.priv');
+            const udocs = await user.getMulti({ priv: defaultPriv }).toArray();
+            await Promise.all([
+                ...udocs.map((i) => user.setPriv(i._id, priv)),
+                system.set('default.priv', priv),
+            ]);
         }
         this.back();
     }
