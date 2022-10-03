@@ -851,7 +851,6 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.response.body = {
             psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc, sid,
         };
-        await bus.parallel('handler/solution/get', this);
     }
 
     @param('content', Types.Content)

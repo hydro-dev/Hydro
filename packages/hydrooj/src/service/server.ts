@@ -210,7 +210,7 @@ export class Handler extends HandlerCommon {
 }
 
 async function bail(name: string, ...args: any[]) {
-    const r = await bus.bail(name, ...args);
+    const r = await (bus.bail as any)(name, ...args);
     if (r instanceof Error) throw r;
     return r;
 }

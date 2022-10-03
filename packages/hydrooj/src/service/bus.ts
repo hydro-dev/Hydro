@@ -12,22 +12,26 @@ import type {
     Tdoc, TrainingDoc, User,
 } from '../interface';
 import type { DocType } from '../model/document';
-import type { Handler } from './server';
+import type { ConnectionHandler, Handler } from './server';
 
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
+type HookType = 'before-prepare' | 'before' | 'after' | 'finish';
+type ModuleCategories = 'lib' | 'locale' | 'template' | 'script' | 'model' | 'setting' | 'handler' | 'service' | 'addon';
+type LifecycleEvents = Record<`app/load/${ModuleCategories}`, () => VoidReturn>;
+type MapHandlerEvents<N extends string, H extends Handler> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;
+type KnownHandlerEvents =
+    MapHandlerEvents<'UserRegister', UserRegisterHandler>
+    & MapHandlerEvents<'ProblemSolution', ProblemSolutionHandler>;
+type HandlerEvents =
+    KnownHandlerEvents
+    & Record<`handler/${HookType}/${string}`, (thisArg: Handler & Record<string, any>) => VoidReturn>
+    & Record<`handler/${HookType}`, (thisArg: Handler) => VoidReturn>
+    & Record<`connection/${'create' | 'active' | 'close'}`, (thisArg: ConnectionHandler) => VoidReturn>;
 
 /* eslint-disable @typescript-eslint/naming-convention */
-export interface EventMap {
+export interface EventMap extends LifecycleEvents, HandlerEvents {
     'app/started': () => void
-    'app/load/lib': () => VoidReturn
-    'app/load/locale': () => VoidReturn
-    'app/load/template': () => VoidReturn
-    'app/load/script': () => VoidReturn
-    'app/load/setting': () => VoidReturn
-    'app/load/model': () => VoidReturn
-    'app/load/handler': () => VoidReturn
-    'app/load/service': () => VoidReturn
     'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn
 
@@ -59,16 +63,7 @@ export interface EventMap {
 
     'handler/create': (thisArg: Handler) => VoidReturn
     'handler/init': (thisArg: Handler) => VoidReturn
-    'handler/before-prepare/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
-    'handler/before-prepare': (thisArg: Handler) => VoidReturn
-    'handler/before/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
-    'handler/before': (thisArg: Handler) => VoidReturn
-    'handler/after/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
-    'handler/after': (thisArg: Handler) => VoidReturn
-    'handler/finish/UserRegister': (thisArg: UserRegisterHandler) => VoidReturn
-    'handler/finish': (thisArg: Handler) => VoidReturn
     'handler/error': (thisArg: Handler, e: Error) => VoidReturn
-    'handler/solution/get': (thisArg: ProblemSolutionHandler) => VoidReturn
 
     'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn
     'discussion/add': (payload: Partial<DiscussionDoc>) => VoidReturn
@@ -90,6 +85,8 @@ export interface EventMap {
     'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
     'contest/add': (payload: Partial<Tdoc>, id: ObjectID) => VoidReturn
 
+    'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
+
     'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
@@ -104,7 +101,7 @@ export function apply(ctx: Context) {
         pm2.launchBus((err, bus) => {
             if (err) throw new Error();
             bus.on('hydro:broadcast', (packet) => {
-                ctx.parallel(packet.data.event, ...packet.data.payload);
+                (ctx.parallel as any)(packet.data.event, ...packet.data.payload);
             });
             ctx.on('bus/broadcast', (event, payload) => {
                 process.send({ type: 'hydro:broadcast', data: { event, payload } });
@@ -121,11 +118,11 @@ export default app;
 export const on = (a, b, c?) => app.on(a, b, c);
 export const off = (a, b) => app.off(a, b);
 export const once = (a, b, c?) => app.once(a, b, c);
-export const parallel = (a, ...b) => app.parallel(a, ...b);
-export const emit = (a, ...b) => app.parallel(a, ...b);
-export const bail = (a, ...b) => app.bail(a, ...b);
+export const parallel = app.parallel.bind(app);
+export const emit = app.parallel.bind(app);
+export const bail = app.bail.bind(app);
 // For backward compatibility
-export const serial: any = (a, ...b) => app.parallel(a, ...b);
-export const broadcast = (a, ...b) => app.broadcast(a, ...b);
+export const serial: any = app.parallel.bind(app);
+export const broadcast = app.broadcast.bind(app);
 
 global.Hydro.service.bus = app as any;

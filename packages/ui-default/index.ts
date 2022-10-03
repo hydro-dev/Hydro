@@ -13,7 +13,7 @@ import { join, resolve } from 'path';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
 
-declare module 'hydrooj' {
+declare module 'hydrooj/src/interface' {
   interface UI {
     esbuildPlugins?: esbuild.Plugin[]
   }

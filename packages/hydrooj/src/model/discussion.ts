@@ -291,7 +291,7 @@ async function updateSort() {
     }
 }
 
-export async function apply(ctx: Context) {
+export function apply(ctx: Context) {
     ctx.using(['worker'], async ({ worker }) => {
         worker.addHandler('discussion.sort', updateSort);
         if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
@@ -305,7 +305,7 @@ export async function apply(ctx: Context) {
     });
 }
 
-global.Hydro.model.DiscussionModel = {
+global.Hydro.model.discussion = {
     typeDisplay,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,

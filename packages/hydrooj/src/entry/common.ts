@@ -31,7 +31,8 @@ function locateFile(basePath: string, filenames: string[]) {
     return null;
 }
 
-const getLoader = (type: string, filename: string) => async function loader(pending: string[], fail: string[], ctx: Context) {
+type LoadTask = 'handler' | 'model' | 'addon' | 'lib' | 'script' | 'service';
+const getLoader = (type: LoadTask, filename: string) => async function loader(pending: string[], fail: string[], ctx: Context) {
     for (const i of pending) {
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {

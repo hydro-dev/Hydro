@@ -2,9 +2,10 @@
 import {
     Collection, Db, IndexSpecification, MongoClient,
 } from 'mongodb';
-import { Collections } from '../interface';
 import { Logger } from '../logger';
 import options from '../options';
+// Note: this might be re-declared so we have to use Collections here
+import type { Collections } from '../plugin-api';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');

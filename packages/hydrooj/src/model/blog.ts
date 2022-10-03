@@ -1,7 +1,6 @@
 import { omit } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { BlogDoc } from '../interface';
-import * as bus from '../service/bus';
 import { NumberKeys } from '../typeutils';
 import * as document from './document';
 
@@ -18,13 +17,11 @@ export async function add(
         updateAt: new Date(),
         views: 0,
     };
-    await bus.parallel('blog/before-add', payload);
     const res = await document.add(
         'system', payload.content!, payload.owner!, document.TYPE_BLOG,
         null, null, null, omit(payload, ['domainId', 'content', 'owner']),
     );
     payload.docId = res;
-    await bus.emit('blog/add', payload);
     return payload.docId;
 }
 
