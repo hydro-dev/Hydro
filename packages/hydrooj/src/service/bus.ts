@@ -48,7 +48,7 @@ export interface EventMap extends Record<string, any> {
 
     'user/message': (uid: number, mdoc: MessageDoc) => void
     'user/get': (udoc: User) => void
-    'user/delcache': (content: string) => void
+    'user/delcache': (content: string | true) => void
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn
     'domain/before-get': (query: FilterQuery<DomainDoc>) => VoidReturn

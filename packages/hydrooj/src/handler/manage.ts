@@ -280,11 +280,9 @@ class SystemUserPrivHandler extends SystemHandler {
             await user.setPriv(uid, priv);
         } else {
             const defaultPriv = system.get('default.priv');
-            const udocs = await user.getMulti({ priv: defaultPriv }).toArray();
-            await Promise.all([
-                ...udocs.map((i) => user.setPriv(i._id, priv)),
-                system.set('default.priv', priv),
-            ]);
+            await user.coll.updateMany({ priv: defaultPriv }, { $set: { priv } });
+            await bus.broadcast('user/delcache', true);
+            await system.set('default.priv', priv);
         }
         this.back();
     }

@@ -66,7 +66,7 @@ const page = new NamedPage('manage_user_priv', () => {
     if (action !== 'ok') {
       return;
     }
-    const user = await request(`/user/${selectUserSelector.value()._id}`);
+    const user = await request.get(`/user/${selectUserSelector.value()._id}`);
     handleOpenUserPrivDialog(user.udoc);
   }
 
