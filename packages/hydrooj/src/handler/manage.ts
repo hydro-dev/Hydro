@@ -3,7 +3,7 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
-import { BadRequestError, NotFoundError, ValidationError } from '../error';
+import { BadRequestError, UserNotFoundError, ValidationError } from '../error';
 import {
     isEmail, isPassword, isUname, validate,
 } from '../lib/validator';
@@ -266,16 +266,16 @@ class SystemUserImportHandler extends SystemHandler {
 class SystemUserPrivHandler extends SystemHandler {
     async get() {
         const defaultPriv = system.get('default.priv');
-        const udocs = await user.getMulti({ priv: { $ne: defaultPriv } }).limit(1000).sort({ _id: 1 }).toArray();
+        const udocs = await user.getMulti({ _id: { $gte: -1000 }, priv: { $ne: defaultPriv } }).limit(1000).sort({ _id: 1 }).toArray();
         this.response.body = { udocs, PRIV };
         this.response.template = 'manage_user_priv.html';
     }
 
     @param('uid', Types.Int)
-    @param('priv', Types.Int)
+    @param('priv', Types.PositiveInt)
     async post(domainId: string, uid: number, priv: number) {
         const udoc = await user.getById(domainId, uid);
-        if (!udoc) throw new NotFoundError('uid');
+        if (!udoc) throw new UserNotFoundError(uid);
         await user.setPriv(uid, priv);
         this.back();
     }

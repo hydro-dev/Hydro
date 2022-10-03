@@ -475,6 +475,7 @@ manage_join_applications: 加域申请
 manage_module: 管理模块
 manage_script: 脚本管理
 manage_setting: 系统设置
+manage_user_priv: 用户权限
 manage: 管理
 Manage: 管理
 Manager: 管理
@@ -594,6 +595,7 @@ Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试
 Pretest: 自测
 Pretest?: 自测?
+Priv: 权限
 Privacy: 隐私
 Problem {1} not found.: 题目 {1} 不存在。
 Problem Data: 题目数据
@@ -881,6 +883,7 @@ User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID
 Username: 用户名
+User Priv: 用户权限
 Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此域中移除。
 Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户

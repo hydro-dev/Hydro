@@ -1,9 +1,9 @@
 {% extends "manage_base.html" %}
 {% block manage_content %}
-<div style="display: none" class="dialog__body--add-user">
+<div style="display: none" class="dialog__body--select-user">
   <div>
     <div class="row"><div class="columns">
-      <h1>{{ _('Add User') }}</h1>
+      <h1>{{ _('Select User') }}</h1>
     </div></div>
     <div class="row">
       <div class="medium-6 columns">
@@ -33,18 +33,20 @@
               <th class="col--p">{{ _('Priv') }}</th>
             </tr>
           </thead>
-          {%- for name, priv in PRIV -%}
-            <tbody>
-              <tr>
-                <td class="col--description">{{ _(name) }}</td>
-                <td class="col--p">
+          <tbody>
+            {%- for name, priv in PRIV -%}
+            {%- if priv !== -1 -%}
+            <tr>
+              <td class="col--description">{{ _(name) }}</td>
+              <td class="col--p">
                   <label class="compact checkbox">
                     <input class="priv" name="{{ name }}" data-checkbox-group="priv" data-checkbox-range value="{{ priv }}" type="checkbox">
                   </label>
                 </td>
-              </tr>
-            </tbody>
-          {%- endfor -%}
+            </tr>
+            {%- endif -%}
+            {%- endfor -%}
+          </tbody>
         </table>
       </div>
     </div>
@@ -54,7 +56,7 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('User Priv') }}</h1>
     <div class="section__tools">
-      <button class="primary rounded button" name="add_user"><span class="icon icon-add"></span>{{ _('Add User') }}</button>
+      <button class="primary rounded button" name="select_user"><span class="icon icon-search"></span>{{ _('Select User') }}</button>
     </div>
   </div>
   {{ noscript_note.render() }}
@@ -64,7 +66,6 @@
         <col class="col--uid">
         <col class="col--user">
         <col class="col--priv">
-        <col class="col--ban">
         <col class="col--actions">
       </colgroup>
       <thead>
@@ -72,7 +73,6 @@
           <th class="col--uid">{{ _('User ID') }}</th>
           <th class="col--user">{{ _('Username') }}</th>
           <th class="col--priv">{{ _('Priv') }}</th>
-          <th class="col--ban">{{ _('Ban') }}</th>
           <th class="col--actions">{{ _('Actions') }}</th>
         </tr>
       </thead>
@@ -87,9 +87,6 @@
           </td>
           <td class="col--priv" title="{{ udoc.priv }}">
             {{ udoc.priv }}
-          </td>
-          <td class="col--ban">
-            {{ '已封禁' if current.priv==0 else '未封禁' }}
           </td>
           <td class="col--actions">
             <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>

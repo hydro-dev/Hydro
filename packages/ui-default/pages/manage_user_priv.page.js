@@ -7,19 +7,19 @@ import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 
 const page = new NamedPage('manage_user_priv', () => {
-  const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));
-  const addUserDialog = new ActionDialog({
-    $body: $('.dialog__body--add-user > div'),
+  const selectUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--select-user [name="user"]'));
+  const selectUserDialog = new ActionDialog({
+    $body: $('.dialog__body--select-user > div'),
     onDispatch(action) {
-      if (action === 'ok' && addUserSelector.value() === null) {
-        addUserSelector.focus();
+      if (action === 'ok' && selectUserSelector.value() === null) {
+        selectUserSelector.focus();
         return false;
       }
       return true;
     },
   });
-  addUserDialog.clear = function () {
-    addUserSelector.clear();
+  selectUserDialog.clear = function () {
+    selectUserSelector.clear();
     return this;
   };
 
@@ -32,6 +32,7 @@ const page = new NamedPage('manage_user_priv', () => {
     this.$dom.find('input.priv[type=checkbox]:hidden').each((i, e) => {
       e.checked = priv & e.value;
     });
+    return this;
   };
 
   async function changeUserPriv(uid, priv) {
@@ -55,21 +56,26 @@ const page = new NamedPage('manage_user_priv', () => {
     if (action !== 'ok') return;
     let userPriv = 0;
     setPrivDialog.$dom.find('input.priv[type=checkbox]').each((i, e) => {
-      if (e.checked) userPriv |= 1 << e.value;
+      console.log(e.name, e.checked, e.value, userPriv);
+      if (e.checked) userPriv |= e.value;
     });
     changeUserPriv(uid, userPriv);
   }
 
-  async function handleClickAddUser() {
-    const action = await addUserDialog.clear().open();
+  async function handleClickSelectUser() {
+    const action = await selectUserDialog.clear().open();
     if (action !== 'ok') {
       return;
     }
-    const user = addUserSelector.value();
-    handleOpenUserPrivDialog(user);
+    const user = await fetch(`/user/${selectUserSelector.value()._id}`, {
+      headers: {
+        accept: 'application/json',
+      },
+    }).then((res) => res.json());
+    handleOpenUserPrivDialog(user.udoc);
   }
 
-  $('[name="add_user"]').on('click', () => handleClickAddUser());
+  $('[name="select_user"]').on('click', () => handleClickSelectUser());
   $('[name="set_priv"]').on('click', (ev) => handleOpenUserPrivDialog(ev));
 });
 
