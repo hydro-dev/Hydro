@@ -28,6 +28,7 @@ export interface EventMap {
     'app/load/model': () => VoidReturn
     'app/load/handler': () => VoidReturn
     'app/load/service': () => VoidReturn
+    'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn
 
     'database/connect': (db: Db) => void
@@ -36,6 +37,8 @@ export interface EventMap {
     'system/setting': (args: Record<string, any>) => VoidReturn
     'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
+    'api/update': () => void;
+    'task/daily': () => void;
 
     'user/message': (uid: number, mdoc: MessageDoc) => void
     'user/get': (udoc: User) => void
