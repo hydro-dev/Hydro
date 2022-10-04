@@ -88,10 +88,10 @@ const UIConfig = {
 };
 
 for (const package of modules) {
-    config.references.push({ path: package });
     const basedir = path.resolve(process.cwd(), package);
     const files = fs.readdirSync(basedir);
     if (!files.includes('src') && !files.filter((i) => i.endsWith('.ts')).length && package !== 'packages/utils') continue;
+    config.references.push({ path: package });
     const expectedConfig = JSON.stringify((files.includes('src') ? configSrc : configFlat)(package));
     const configPath = path.resolve(basedir, 'tsconfig.json');
     const currentConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf-8') : '';
