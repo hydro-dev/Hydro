@@ -24,12 +24,6 @@ jobs:
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
-    - name: skip-cache
-      id: skip-cache
-      uses: saulmaldonado/skip-workflow@v1
-      with:
-        phrase: 'skip-cache'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/cache@v3
       with:
         path: |
@@ -42,7 +36,7 @@ jobs:
           cache-${{ github.ref }}-
           cache-
     - name: Clear Cache
-      if: ${{ steps.skip-cache.outputs.skip }}
+      if: "contains(github.event.head_commit.message, 'skip-cache')"
       run: |
         rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
     - name: Config And Install
