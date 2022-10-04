@@ -32,7 +32,7 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/cache@v3
       if: ${{ steps.skip-cache.outputs.skip }}
-      with: &cacheWith
+      with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
           yarn.lock
@@ -42,7 +42,12 @@ jobs:
     - uses: actions/cache@v3
       if: ${{ !steps.skip-cache.outputs.skip }}
       with:
-        <<: *cacheWith
+        path: |
+          ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          yarn.lock
+          .cache
+          **/tsconfig.tsbuildinfo
+        key: cache-${{ github.ref }}-${{ github.sha }}
         restore-keys: |
           cache-${{ github.ref }}-
           cache-
