@@ -44,7 +44,7 @@ export async function apply(ctx: Context) {
     await ctx.root.start();
     require('../lib/index');
     await lib(pending, fail, ctx);
-    require('../service/monitor');
+    ctx.plugin(require('../service/monitor'));
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);

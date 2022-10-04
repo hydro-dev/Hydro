@@ -649,7 +649,6 @@ export interface HydroService {
     /** @deprecated */
     bus: Context,
     db: typeof import('./service/db').default,
-    monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
     storage: typeof import('./service/storage').default,
 }
