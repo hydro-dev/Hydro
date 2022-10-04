@@ -13,22 +13,24 @@ export interface Result {
     display: string
 }
 
-export function apply() {
-    Context.service('geoip', class GeoIPService extends Service {
-        provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';
-        lookup(ip: string, locale: string): Result {
-            const res: any = reader.get(ip);
-            if (!res) return { display: 'Unknown address'.translate(locale) };
-            const ret: Result = { display: '' };
-            if (res.location) ret.location = res.location;
-            if (res.continent) ret.continent = res.continent.names[locale] || res.continent.names.en;
-            if (res.country || res.registered_country) {
-                ret.country = (res.country || res.registered_country).names[locale]
-                    || (res.country || res.registered_country).names.en;
-            }
-            if (res.city) ret.city = res.city.names[locale] || res.city.names.en;
-            ret.display = `${ret.continent} ${ret.country}${ret.city ? ` ${ret.city}` : ''}`;
-            return ret;
+class GeoIPService extends Service {
+    provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';
+    lookup(ip: string, locale: string): Result {
+        const res: any = reader.get(ip);
+        if (!res) return { display: 'Unknown address'.translate(locale) };
+        const ret: Result = { display: '' };
+        if (res.location) ret.location = res.location;
+        if (res.continent) ret.continent = res.continent.names[locale] || res.continent.names.en;
+        if (res.country || res.registered_country) {
+            ret.country = (res.country || res.registered_country).names[locale]
+                || (res.country || res.registered_country).names.en;
         }
-    });
+        if (res.city) ret.city = res.city.names[locale] || res.city.names.en;
+        ret.display = `${ret.continent} ${ret.country}${ret.city ? ` ${ret.city}` : ''}`;
+        return ret;
+    }
+}
+export function apply(ctx: Context) {
+    Context.service('geoip', GeoIPService);
+    ctx.geoip = new GeoIPService(ctx, 'geoip', true);
 }
