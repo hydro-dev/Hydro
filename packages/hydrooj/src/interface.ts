@@ -671,18 +671,17 @@ export interface ProblemSearchOptions {
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty'),
-    buildContent: typeof import('./lib/content').buildContent,
-    i18n: typeof import('./lib/i18n'),
-    mail: typeof import('./lib/mail'),
-    paginate: typeof import('./lib/paginate'),
-    rank: typeof import('./lib/rank'),
-    rating: typeof import('./lib/rating'),
-    testdataConfig: typeof import('./lib/testdataConfig'),
-    useragent: typeof import('./lib/useragent'),
-    validator: typeof import('./lib/validator'),
-    template?: any,
-    geoip?: GeoIP,
+    difficulty: typeof import('./lib/difficulty');
+    buildContent: typeof import('./lib/content').buildContent;
+    i18n: typeof import('./lib/i18n');
+    mail: typeof import('./lib/mail');
+    paginate: typeof import('./lib/paginate');
+    rank: typeof import('./lib/rank');
+    rating: typeof import('./lib/rating');
+    testdataConfig: typeof import('./lib/testdataConfig');
+    useragent: typeof import('./lib/useragent');
+    validator: typeof import('./lib/validator');
+    template?: any;
     problemSearch: ProblemSearch;
 }
 

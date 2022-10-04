@@ -1,6 +1,6 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
-import { ModuleInterfaces } from './interface';
+import { GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import { EventMap } from './service/bus';
@@ -33,6 +33,7 @@ export interface Context {
     inject: typeof inject;
     api: ApiMixin;
     broadcast: Context['emit'];
+    geoip?: GeoIP;
 }
 
 export class Context extends cordis.Context {
