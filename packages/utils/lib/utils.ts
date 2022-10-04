@@ -4,12 +4,17 @@ import path from 'path';
 import { Duplex } from 'stream';
 import { inspect } from 'util';
 import fs from 'fs-extra';
-import type { Moment } from 'moment-timezone';
-import { isMoment } from 'moment-timezone';
+import { isMoment, Moment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import Logger from 'reggol';
 
 Logger.levels.base = process.env.DEV ? 3 : 2;
+Logger.targets[0].showTime = 'MM/dd hh:mm:ss';
+Logger.targets[0].label = {
+    align: 'right',
+    width: 10,
+    margin: 2,
+};
 
 export { Logger };
 

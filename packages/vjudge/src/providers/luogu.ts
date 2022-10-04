@@ -1,10 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
-import { flattenDeep } from 'lodash';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import {
-    Logger, SettingModel, sleep, STATUS,
+    _, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
@@ -151,7 +150,7 @@ export default class LuoguProvider implements IBasicProvider {
                     });
                 }
                 logger.info('Fetched with length', JSON.stringify(body).length);
-                const total = flattenDeep(body.currentData.testCaseGroup).length;
+                const total = _.flattenDeep(body.currentData.testCaseGroup).length;
                 // TODO sorted
                 if (!data.detail.judgeResult?.subtasks) continue;
                 for (const key in data.detail.judgeResult.subtasks) {

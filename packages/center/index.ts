@@ -1,7 +1,7 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import {
-    Context, db, Handler, post, Types, yaml,
+    Context, db, ForbiddenError, Handler, post, Types, yaml,
 } from 'hydrooj';
 
 function decrypt(encrypted: string) {
@@ -15,6 +15,9 @@ function decrypt(encrypted: string) {
 declare module 'hydrooj' {
     interface Collections {
         dataReport: any;
+    }
+    interface EventMap {
+        'center/report': (thisArg: DataReportHandler, installId: string, old: any, payload: any) => void;
     }
 }
 
@@ -32,7 +35,11 @@ class DataReportHandler extends Handler {
         } catch (e) {
             payload = yaml.load(_payload);
         }
-        assert(payload.url);
+        try {
+            assert(typeof payload.url === 'string');
+        } catch (e) {
+            throw new ForbiddenError();
+        }
         const old = await coll.findOne({ _id: installId });
         await coll.updateOne({ _id: installId }, {
             $set: {

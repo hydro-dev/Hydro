@@ -1,9 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import decodeHTML from 'decode-html';
-import { filter } from 'lodash';
 import xml2js from 'xml2js';
 import {
-    AdmZip, buildContent, ContentNode, Context, FileTooLargeError, fs,
+    _, AdmZip, buildContent, ContentNode, Context, FileTooLargeError, fs,
     Handler, PERM, ProblemConfigFile, ProblemModel, SolutionModel, ValidationError,
 } from 'hydrooj';
 
@@ -59,7 +58,7 @@ class FpsProblemImportHandler extends Handler {
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
             const title = decodeHTML(p.title.join(' '));
-            const tags = filter(p.source, (i: string) => i.trim());
+            const tags = _.filter(p.source, (i: string) => i.trim());
             const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
             await ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
             if (p.test_output) {

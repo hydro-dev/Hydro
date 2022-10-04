@@ -4,11 +4,10 @@ import {
 } from 'mongodb';
 import { Logger } from '../logger';
 import options from '../options';
-// Note: this might be re-declared so we have to use Collections here
-import type { Collections } from '../plugin-api';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');
+export interface Collections { }
 
 interface MongoConfig {
     protocol?: string,
@@ -92,4 +91,5 @@ class MongoService {
 
 const service = new MongoService();
 global.Hydro.service.db = service;
-export = service;
+export default service;
+export const collection = service.collection.bind(service);

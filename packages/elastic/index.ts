@@ -1,7 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
-import { omit } from 'lodash';
 import {
-    Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
+    _, Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
     ProblemDoc, ProblemModel, Schema, SystemModel,
 } from 'hydrooj';
 
@@ -19,7 +18,7 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     if (doc.pid) {
         doc.pid = doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
     }
-    return omit(doc, indexOmit);
+    return _.omit(doc, indexOmit);
 };
 
 global.Hydro.lib.problemSearch = async (domainId, q, opts) => {

@@ -594,28 +594,30 @@ export interface OauthMap {
     uid: number;
 }
 
-export interface Collections {
-    'blacklist': BlacklistDoc;
-    'domain': DomainDoc;
-    'domain.user': any;
-    'record': RecordDoc;
-    'document': any;
-    'document.status': StatusDocBase;
-    'user': Udoc;
-    'user.preference': UserPreferenceDoc;
-    'vuser': VUdoc;
-    'user.group': GDoc;
-    'check': System;
-    'message': MessageDoc;
-    'token': TokenDoc;
-    'status': any;
-    'oauth': OauthMap;
-    'system': System;
-    'task': Task;
-    'storage': FileNode;
-    'oplog': OplogDoc;
-    'event': EventDoc;
-    'opcount': OpCountDoc;
+declare module './service/db' {
+    interface Collections {
+        'blacklist': BlacklistDoc;
+        'domain': DomainDoc;
+        'domain.user': any;
+        'record': RecordDoc;
+        'document': any;
+        'document.status': StatusDocBase;
+        'user': Udoc;
+        'user.preference': UserPreferenceDoc;
+        'vuser': VUdoc;
+        'user.group': GDoc;
+        'check': System;
+        'message': MessageDoc;
+        'token': TokenDoc;
+        'status': any;
+        'oauth': OauthMap;
+        'system': System;
+        'task': Task;
+        'storage': FileNode;
+        'oplog': OplogDoc;
+        'event': EventDoc;
+        'opcount': OpCountDoc;
+    }
 }
 
 export interface Model {
@@ -646,7 +648,7 @@ export interface Model {
 export interface HydroService {
     /** @deprecated */
     bus: Context,
-    db: typeof import('./service/db'),
+    db: typeof import('./service/db').default,
     monitor: typeof import('./service/monitor'),
     server: typeof import('./service/server'),
     storage: typeof import('./service/storage').default,
@@ -726,7 +728,7 @@ declare global {
             addons: string[],
         }
     }
-    var bus: any; // eslint-disable-line
+    var bus: typeof import('./service/bus'); // eslint-disable-line
     var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line
