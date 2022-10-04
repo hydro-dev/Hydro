@@ -31,16 +31,6 @@ jobs:
         phrase: 'skip-cache'
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/cache@v3
-      if: ${{ steps.skip-cache.outputs.skip }}
-      with:
-        path: |
-          ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          yarn.lock
-          .cache
-          **/tsconfig.tsbuildinfo
-        key: cache-${{ github.ref }}-${{ github.sha }}
-    - uses: actions/cache@v3
-      if: ${{ !steps.skip-cache.outputs.skip }}
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -51,6 +41,10 @@ jobs:
         restore-keys: |
           cache-${{ github.ref }}-
           cache-
+    - name: Clear Cache
+      if: ${{ steps.skip-cache.outputs.skip }}
+      run: |
+        rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
     - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
