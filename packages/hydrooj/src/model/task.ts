@@ -186,7 +186,7 @@ export async function apply(ctx: Context) {
     const stream = collEvent.watch();
     const handleEvent = async (doc: EventDoc) => {
         const payload = JSON.parse(doc.payload);
-        if (process.send) process.send({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
+        process.send?.({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
         await (bus.parallel as any)(doc.event, ...payload);
     };
     stream.on('change', async (change) => {

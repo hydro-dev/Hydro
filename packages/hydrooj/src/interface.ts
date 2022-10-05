@@ -556,7 +556,7 @@ export interface Task {
 }
 
 export interface FileNode {
-    /** File Path In MinIO */
+    /** File Path In S3 */
     _id: string;
     /** Actual File Path */
     path: string;

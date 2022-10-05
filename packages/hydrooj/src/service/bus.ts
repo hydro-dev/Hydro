@@ -3,7 +3,6 @@ import type {
     Db, FilterQuery, ObjectID, OnlyFieldsOfType,
 } from 'mongodb';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
-import { Context } from '../context';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
@@ -100,23 +99,21 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-export function apply(ctx: Context) {
-    try {
-        if (!process.send || !pm2 || process.env.exec_mode !== 'cluster_mode') throw new Error();
-        pm2.launchBus((err, bus) => {
-            if (err) throw new Error();
-            bus.on('hydro:broadcast', (packet) => {
-                (ctx.parallel as any)(packet.data.event, ...packet.data.payload);
-            });
-            ctx.on('bus/broadcast', (event, payload) => {
-                process.send({ type: 'hydro:broadcast', data: { event, payload } });
-            });
-            console.debug('Using pm2 event bus');
+try {
+    if (!process.send || !pm2 || process.env.exec_mode !== 'cluster_mode') throw new Error();
+    pm2.launchBus((err, bus) => {
+        if (err) throw new Error();
+        bus.on('hydro:broadcast', (packet) => {
+            (app.parallel as any)(packet.data.event, ...packet.data.payload);
         });
-    } catch (e) {
-        ctx.on('bus/broadcast', (event, payload) => ctx.parallel(event, ...payload));
-        console.debug('Using mongodb external event bus');
-    }
+        app.on('bus/broadcast', (event, payload) => {
+            process.send({ type: 'hydro:broadcast', data: { event, payload } });
+        });
+        console.debug('Using pm2 event bus');
+    });
+} catch (e) {
+    app.on('bus/broadcast', (event, payload) => app.parallel(event, ...payload));
+    console.debug('Using mongodb external event bus');
 }
 
 export default app;

@@ -60,6 +60,7 @@ export async function apply(ctx: Context) {
     }
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
+    await ctx.lifecycle.flush();
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
@@ -68,7 +69,6 @@ export async function apply(ctx: Context) {
     await ctx.lifecycle.flush();
     await script(pending, fail, ctx);
     await ctx.lifecycle.flush();
-    await sleep(1000); // lifecycle.flush won't wait for async function
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         const scripts = require('../upgrade').default;
