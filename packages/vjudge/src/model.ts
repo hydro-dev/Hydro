@@ -121,17 +121,6 @@ class Service {
     }
 }
 
-async function loadAccounts() {
-    // Only start a single daemon
-    if (process.env.NODE_APP_INSTANCE !== '0') return;
-    const accounts = await coll.find().toArray();
-    for (const account of accounts) {
-        if (!providers[account.type]) continue;
-        if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
-        Pool[`${account.type}/${account.handle}`] = new Service(providers[account.type], account);
-    }
-}
-
 declare module 'hydrooj' {
     interface Model {
         vjudge: VJudgeModel;
@@ -151,5 +140,13 @@ class VJudgeModel {
 global.Hydro.model.vjudge = VJudgeModel;
 
 export function apply(ctx: Context) {
-    ctx.on('ready', loadAccounts);
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
+    ctx.on('ready', async () => {
+        const accounts = await coll.find().toArray();
+        for (const account of accounts) {
+            if (!providers[account.type]) continue;
+            if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
+            Pool[`${account.type}/${account.handle}`] = new Service(providers[account.type], account);
+        }
+    });
 }

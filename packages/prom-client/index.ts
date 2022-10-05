@@ -1,13 +1,11 @@
 import { AggregatorRegistry, metric } from 'prom-client';
 import { Context, Handler, SystemModel } from 'hydrooj';
-import { registry } from './metrics';
+import { createRegistry } from './metrics';
 
 declare module 'hydrooj' {
     interface EventMap {
         metrics: (id: string, metrics: any) => void;
     }
-}
-declare module 'hydrooj' {
     interface SystemKeys {
         'prom-client.name': string;
         'prom-client.password': string;
@@ -41,6 +39,7 @@ class MetricsHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
+    const registry = createRegistry(ctx);
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
     ctx.setInterval(async () => {
         ctx.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());

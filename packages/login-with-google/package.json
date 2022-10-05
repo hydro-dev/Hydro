@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/login-with-google",
     "version": "0.1.1",
-    "main": "package.json",
+    "main": "index.ts",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
