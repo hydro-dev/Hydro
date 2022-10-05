@@ -15,9 +15,7 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as system from '../model/system';
 import user from '../model/user';
-import {
-    Handler, param, Route, Types,
-} from '../service/server';
+import { Handler, param, Types } from '../service/server';
 import { ContestCodeHandler, ContestScoreboardHandler } from './contest';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
@@ -209,17 +207,15 @@ class HomeworkEditHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_create', '/homework/create', HomeworkEditHandler);
-    Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_scoreboard', '/homework/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
-    Route(
+export async function apply(ctx) {
+    ctx.Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_create', '/homework/create', HomeworkEditHandler);
+    ctx.Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_scoreboard', '/homework/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
+    ctx.Route(
         'homework_scoreboard_download', '/homework/:tid/scoreboard/download/:ext',
         ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD,
     );
-    Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
-    Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
+    ctx.Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
 }
-
-global.Hydro.handler.homework = apply;

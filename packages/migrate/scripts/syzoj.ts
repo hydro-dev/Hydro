@@ -1,23 +1,10 @@
 /* eslint-disable no-await-in-loop */
-import fs from 'fs-extra';
-import yaml from 'js-yaml';
 import mariadb from 'mariadb';
-import { ObjectID } from 'mongodb';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import { noop, Time } from '@hydrooj/utils/lib/utils';
-import { addScript, Schema } from 'hydrooj';
-import { NotFoundError } from 'hydrooj/src/error';
-import { postJudge } from 'hydrooj/src/handler/judge';
-import { DiscussionDoc, DiscussionReplyDoc, RecordDoc } from 'hydrooj/src/interface';
-import { buildContent } from 'hydrooj/src/lib/content';
-import { PERM } from 'hydrooj/src/model/builtin';
-import * as contest from 'hydrooj/src/model/contest';
-import * as document from 'hydrooj/src/model/document';
-import domain from 'hydrooj/src/model/domain';
-import problem from 'hydrooj/src/model/problem';
-import record from 'hydrooj/src/model/record';
-import * as system from 'hydrooj/src/model/system';
-import user from 'hydrooj/src/model/user';
+import {
+    buildContent, ContestModel, DiscussionDoc, DiscussionReplyDoc, DocumentModel, DomainModel,
+    fs, noop, NotFoundError, ObjectID, PERM, postJudge, ProblemModel, RecordDoc, RecordModel,
+    Schema, STATUS, SystemModel, Time, UserModel, yaml,
+} from 'hydrooj';
 
 const contentTypeMap = {
     noi: 'oi',
@@ -99,7 +86,7 @@ export async function run({
     const query = (q: string) => new Promise<any[]>((res, rej) => {
         src.query(q).then((r) => res(r)).catch((e) => rej(e));
     });
-    const target = await domain.get(domainId);
+    const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
     /*
@@ -124,24 +111,24 @@ export async function run({
     const superAdmin = [];
     const udocs = await query('SELECT * FROM `user`');
     report({ message: udocs.map((u) => u.username.toLowerCase()) });
-    const precheck = await user.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
+    const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
         if (randomMail) delete udoc.email;
-        let current = await user.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
-        if (!current) current = await user.getByUname(domainId, udoc.username);
+        let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
+        if (!current) current = await UserModel.getByUname(domainId, udoc.username);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
             uidMap[udoc.id] = current._id;
         } else {
-            const uid = await user.create(
+            const uid = await UserModel.create(
                 udoc.email || `${udoc.username}@syzoj.local`, udoc.username, '',
-                null, udoc.ip, system.get('default.priv'),
+                null, udoc.ip, SystemModel.get('default.priv'),
             );
-            if (udoc.is_admin) await user.setSuperAdmin(uid);
+            if (udoc.is_admin) await UserModel.setSuperAdmin(uid);
             superAdmin.push(uid);
             uidMap[udoc.id] = uid;
-            await user.setById(uid, {
+            await UserModel.setById(uid, {
                 regat: new Date(udoc.register_time * 1000),
                 hash: udoc.password,
                 salt: udoc.password,
@@ -149,7 +136,7 @@ export async function run({
                 bio: udoc.information || '',
                 gender: sexMap[udoc.sex] || 3,
             });
-            await domain.setUserInDomain(domainId, uid, {
+            await DomainModel.setUserInDomain(domainId, uid, {
                 displayName: udoc.nickname || '',
                 nSubmit: udoc.submit_num,
                 nAccept: udoc.ac_num,
@@ -158,19 +145,19 @@ export async function run({
     }
 
     // I think manage_problem_tag is a useless role
-    await domain.addRole(domainId, 'manage_problem',
+    await DomainModel.addRole(domainId, 'manage_problem',
         PERM.PERM_DEFAULT | PERM.PERM_CREATE_PROBLEM | PERM.PERM_EDIT_PROBLEM | PERM.PERM_VIEW_PROBLEM_HIDDEN | PERM.PERM_READ_PROBLEM_DATA
         | PERM.PERM_EDIT_PROBLEM_SOLUTION | PERM.PERM_DELETE_PROBLEM_SOLUTION | PERM.PERM_DELETE_PROBLEM_SOLUTION_REPLY);
-    await domain.addRole(domainId, 'manage_user', PERM.PERM_DEFAULT | PERM.PERM_EDIT_DOMAIN);
+    await DomainModel.addRole(domainId, 'manage_user', PERM.PERM_DEFAULT | PERM.PERM_EDIT_DOMAIN);
     const privileges = await query('SELECT user_id,group_concat(privilege) as privilege FROM `user_privilege` group by user_id');
     for (const privilege of privileges) {
         if (!superAdmin.includes(privilege.user_id)) {
             if (privilege.privilege.split(',').includes('manage_problem') && privilege.privilege.split(',').includes('manage_user')) {
-                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'root');
+                await DomainModel.setUserRole(domainId, uidMap[privilege.user_id], 'root');
             } else if (privilege.privilege.split(',').includes('manage_problem')) {
-                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'manage_problem');
+                await DomainModel.setUserRole(domainId, uidMap[privilege.user_id], 'manage_problem');
             } else if (privilege.privilege.split(',').includes('manage_user')) {
-                await domain.setUserRole(domainId, uidMap[privilege.user_id], 'manage_user');
+                await DomainModel.setUserRole(domainId, uidMap[privilege.user_id], 'manage_user');
             }
         }
     }
@@ -215,7 +202,7 @@ export async function run({
         const pdocs = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
         for (const pdoc of pdocs) {
             if (rerun) {
-                const opdoc = await problem.get(domainId, `P${pdoc.id}`);
+                const opdoc = await ProblemModel.get(domainId, `P${pdoc.id}`);
                 if (opdoc) pidMap[pdoc.id] = opdoc.docId;
             }
             if (!pidMap[pdoc.id]) {
@@ -227,18 +214,18 @@ export async function run({
                     hint: pdoc.limit_and_hint,
                 });
                 for (const match of content.matchAll(fileReg)) {
-                    const [,origialPath, pid, filename] = match;
+                    const [, origialPath, pid, filename] = match;
                     if (!problemAdditionalFile[`P${pdoc.id}`]) problemAdditionalFile[`P${pdoc.id}`] = [{ fromPid: pid, filename }];
                     else problemAdditionalFile[`P${pdoc.id}`].push({ fromPid: pid, filename });
                     content = content.replace(origialPath, `file://${filename}`);
                 }
-                const pid = await problem.add(domainId, `P${pdoc.id}`, pdoc.title, content, uidMap[pdoc.user_id] || 1);
+                const pid = await ProblemModel.add(domainId, `P${pdoc.id}`, pdoc.title, content, uidMap[pdoc.user_id] || 1);
                 pidMap[pdoc.id] = pid;
             }
             const tags = await query(`SELECT * FROM \`problem_tag_map\` WHERE \`problem_id\` = ${pdoc.id}`);
             const tagList = [];
             for (const tag of tags) tagList.push(tagMap[tag.tag_id]);
-            await problem.edit(domainId, pidMap[pdoc.id], {
+            await ProblemModel.edit(domainId, pidMap[pdoc.id], {
                 nAccept: pdoc.ac_num || 0,
                 nSubmit: pdoc.submit_num || 0,
                 hidden: pdoc.is_public !== 1,
@@ -250,7 +237,7 @@ export async function run({
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
                     const [afdoc] = additionalFile;
-                    await problem.addAdditionalFile(domainId, pdoc.docId,
+                    await ProblemModel.addAdditionalFile(domainId, pdoc.docId,
                         `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }
@@ -282,7 +269,7 @@ export async function run({
         const pdocs = tdoc.problems.split('|').map((i) => i.trim());
         const pids = pdocs.map((i) => pidMap[i]).filter((i) => i);
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
-        const tid = await contest.add(
+        const tid = await ContestModel.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
             admin, contentTypeMap[tdoc.type], new Date(tdoc.start_time * 1000), new Date(tdoc.end_time * 1000),
             pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]) },
@@ -359,9 +346,9 @@ export async function run({
             }
             if (rdoc.type) {
                 data.contest = new ObjectID(tidMap[rdoc.type_info]);
-                await contest.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
-            await record.coll.insertOne(data);
+            await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
     }
@@ -383,10 +370,11 @@ export async function run({
     const ddocs = await query('SELECT * FROM `article`');
     const didMap = {};
     for (const ddoc of ddocs) {
+        const _id = Time.getObjectID(new Date(ddoc.public_time * 1000), false);
         const data: Partial<DiscussionDoc> = {
-            _id: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
-            docType: document.TYPE_DISCUSSION,
-            docId: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
+            _id,
+            docType: DocumentModel.TYPE_DISCUSSION,
+            docId: _id,
             owner: uidMap[ddoc.user_id] || 0,
             title: ddoc.title,
             content: ddoc.content,
@@ -397,11 +385,11 @@ export async function run({
             lock: ddoc.allow_comment === 0,
             pin: ddoc.is_notice === 1,
             highlight: ddoc.is_notice === 1,
-            parentType: ddoc.problem_id ? document.TYPE_PROBLEM : document.TYPE_DISCUSSION_NODE,
+            parentType: ddoc.problem_id ? DocumentModel.TYPE_PROBLEM : DocumentModel.TYPE_DISCUSSION_NODE,
             parentId: pidMap[ddoc.problem_id] || 'Hydro',
             ip: '127.0.0.1',
         };
-        await document.coll.insertOne(data);
+        await DocumentModel.coll.insertOne(data);
         didMap[ddoc.id] = data._id;
     }
 
@@ -414,18 +402,19 @@ export async function run({
     */
     const drdocs = await query('SELECT * FROM `article_comment`');
     for (const drdoc of drdocs) {
+        const _id = Time.getObjectID(new Date(drdoc.public_time * 1000), false);
         const data: Partial<DiscussionReplyDoc> = {
-            _id: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
+            _id,
             domainId,
-            docId: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
-            docType: document.TYPE_DISCUSSION_REPLY,
+            docId: _id,
+            docType: DocumentModel.TYPE_DISCUSSION_REPLY,
             content: drdoc.content,
             owner: uidMap[drdoc.user_id],
-            parentType: document.TYPE_DISCUSSION,
+            parentType: DocumentModel.TYPE_DISCUSSION,
             parentId: didMap[drdoc.article_id],
             ip: '127.0.0.1',
         };
-        await document.coll.insertOne(data);
+        await DocumentModel.coll.insertOne(data);
     }
     report({ message: 'article finished' });
 
@@ -437,21 +426,21 @@ export async function run({
     for (const file of files) {
         if (!file.isDirectory()) continue;
         const datas = await fs.readdir(`${dataDir}/testdata/${file.name}`, { withFileTypes: true });
-        const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
+        const pdoc = await ProblemModel.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            await problem.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/testdata/${file.name}/${data.name}`);
+            await ProblemModel.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/testdata/${file.name}/${data.name}`);
             if (data.name.startsWith('spj_')) {
                 report({ message: `Syncing spj for ${file.name}` });
-                await problem.addTestdata(domainId, pdoc.docId,
+                await ProblemModel.addTestdata(domainId, pdoc.docId,
                     `spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`, `${dataDir}/testdata/${file.name}/${data.name}`);
                 pdoc.config += `\nchecker_type: syzoj\nchecker: spj.${langMap[data.name.split('spj_')[1].split('.')[0]]}`;
             }
         }
         if (!(datas.find((i) => i.name === 'data.yml'))) {
-            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(configMap[`P${file.name}`]));
+            await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(configMap[`P${file.name}`]));
         } else {
             report({ message: `Transfering data.yml for ${file.name}` });
             const config = yaml.load(configMap[`P${file.name}`]) as any;
@@ -459,7 +448,7 @@ export async function run({
             if (syzojConfig.specialJudge) {
                 report({ message: `Syncing spj config for ${file.name}` });
                 config.checker_type = 'syzoj';
-                await problem.addTestdata(domainId, pdoc.docId,
+                await ProblemModel.addTestdata(domainId, pdoc.docId,
                     `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.specialJudge.fileName}`);
                 config.checker = `spj.${langMap[syzojConfig.specialJudge.language]}`;
             }
@@ -476,7 +465,7 @@ export async function run({
             }
             if (syzojConfig.extraSourceFiles?.length === 1) {
                 for (const { name: sourceName, dest } of syzojConfig.extraSourceFiles[0].files) {
-                    await problem.addTestdata(domainId, pdoc.docId, dest,
+                    await ProblemModel.addTestdata(domainId, pdoc.docId, dest,
                         `${dataDir}/testdata/${file.name}/${sourceName}`);
                 }
                 config.user_extra_files = syzojConfig.extraSourceFiles[0].files.map((x) => x.dest);
@@ -490,17 +479,17 @@ export async function run({
             if (syzojConfig.interactor) {
                 report({ message: `Syncing interactor config for ${file.name}` });
                 config.type = 'interactive';
-                await problem.addTestdata(domainId, pdoc.docId,
+                await ProblemModel.addTestdata(domainId, pdoc.docId,
                     `spj.${langMap[syzojConfig.interactor.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.interactor.fileName}`);
                 config.interactor = `spj.${langMap[syzojConfig.interactor.language]}`;
             }
-            await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+            await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
         }
         if (problemAdditionalFile[`P${file.name}`]) {
             report({ message: `Syncing additional_file for ${file.name}` });
             for (const data of problemAdditionalFile[`P${file.name}`]) {
                 if (!fs.existsSync(`${dataDir}/testdata/${data.fromPid}/${decodeURIComponent(data.filename)}`)) continue;
-                await problem.addAdditionalFile(domainId, pdoc.docId, data.filename,
+                await ProblemModel.addAdditionalFile(domainId, pdoc.docId, data.filename,
                     `${dataDir}/testdata/${data.fromPid}/${decodeURIComponent(data.filename)}`);
             }
         }
@@ -508,8 +497,9 @@ export async function run({
     return true;
 }
 
-addScript('migrateSyzoj', 'migrate from syzoj')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'migrateSyzoj', 'migrate from syzoj',
+    Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
@@ -517,4 +507,6 @@ addScript('migrateSyzoj', 'migrate from syzoj')
         password: Schema.string().required(),
         domainId: Schema.string().default('system'),
         dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
-    })).action(run);
+    }),
+    run,
+);

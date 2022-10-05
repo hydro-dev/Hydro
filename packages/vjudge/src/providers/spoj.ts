@@ -3,10 +3,9 @@ import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import { parseMemoryMB, sleep } from '@hydrooj/utils/lib/utils';
-import { Logger } from 'hydrooj/src/logger';
-import * as setting from 'hydrooj/src/model/setting';
+import {
+    Logger, parseMemoryMB, SettingModel, sleep, STATUS,
+} from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
 proxy(superagent);
@@ -118,7 +117,7 @@ langs: ${JSON.stringify(langs)}`),
     }
 
     async submitProblem(problemcode: string, lang: string, code: string, info, next, end) {
-        const comment = setting.langs[lang]?.comment;
+        const comment = SettingModel.langs[lang]?.comment;
         if (comment) {
             const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;

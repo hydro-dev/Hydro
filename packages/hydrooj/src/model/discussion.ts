@@ -1,6 +1,7 @@
 import { omit } from 'lodash';
 import moment from 'moment';
 import { FilterQuery, ObjectID } from 'mongodb';
+import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
 import * as bus from '../service/bus';
@@ -53,13 +54,13 @@ export async function add(
         views: 0,
         sort: 100,
     };
-    await bus.serial('discussion/before-add', payload);
+    await bus.parallel('discussion/before-add', payload);
     const res = await document.add(
         payload.domainId!, payload.content!, payload.owner!, document.TYPE_DISCUSSION,
         null, payload.parentType, payload.parentId, omit(payload, ['domainId', 'content', 'owner', 'parentType', 'parentId']),
     );
     payload.docId = res;
-    await bus.emit('discussion/add', payload);
+    await bus.parallel('discussion/add', payload);
     return payload.docId;
 }
 
@@ -289,24 +290,27 @@ async function updateSort() {
         await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
     }
 }
-TaskModel.Worker.addHandler('discussion.sort', updateSort);
 
-bus.once('app/started', async () => {
-    if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
-        await TaskModel.add({
-            type: 'schedule',
-            subType: 'discussion.sort',
-            executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
-            interval: [1, 'hour'],
-        });
-    }
-});
+export function apply(ctx: Context) {
+    ctx.using(['worker'], async ({ worker }) => {
+        worker.addHandler('discussion.sort', updateSort);
+        if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
+            await TaskModel.add({
+                type: 'schedule',
+                subType: 'discussion.sort',
+                executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
+                interval: [1, 'hour'],
+            });
+        }
+    });
+}
 
 global.Hydro.model.discussion = {
     typeDisplay,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
 
+    apply,
     add,
     get,
     inc,

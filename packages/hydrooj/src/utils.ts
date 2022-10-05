@@ -16,4 +16,10 @@ export function ArgMethod(target: any, funcName: string, obj: any) {
     return obj;
 }
 
+export function unwrapExports(module: any) {
+    return (!module || typeof module !== 'object') ? module
+        : 'apply' in module && typeof module.apply === 'function' ? module
+            : 'default' in module ? module.default : module;
+}
+
 export * from '@hydrooj/utils/lib/utils';

@@ -2,14 +2,12 @@
 /* eslint-disable no-await-in-loop */
 import mongodb, { Cursor, Db } from 'mongodb';
 import {
-    addScript, DiscussionTailReplyDoc, MessageDoc,
-    RecordDoc, Schema, TestCase, TrainingNode,
+    db as dst,
+    DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
+    MessageDoc, RecordDoc, Schema, TestCase, TrainingNode,
 } from 'hydrooj';
 
-const dst = global.Hydro.service.db;
-const { discussion } = global.Hydro.model;
 const map = {};
-
 const pid = (id) => {
     if (map[id.toString()]) return map[id.toString()];
     return id;
@@ -75,7 +73,7 @@ const tasks = {
         parent_doc_id: {
             field: 'parentId',
             processer: (parentId, doc) => {
-                if (doc.parent_doc_type === global.Hydro.model.document.TYPE_PROBLEM) {
+                if (doc.parent_doc_type === DocumentModel.TYPE_PROBLEM) {
                     return pid(parentId);
                 }
                 return parentId;
@@ -300,11 +298,11 @@ async function discussionNode(src: Db, report: Function) {
                 const nodes = item[1];
                 for (const node of nodes || []) {
                     if (node.pic) {
-                        t.push(discussion.addNode(
+                        t.push(DiscussionModel.addNode(
                             doc.domain_id, node.name, category, { pic: node.pic },
                         ));
                     } else {
-                        t.push(discussion.addNode(doc.domain_id, node.name, category, {}));
+                        t.push(DiscussionModel.addNode(doc.domain_id, node.name, category, {}));
                     }
                 }
             }
@@ -507,11 +505,14 @@ export async function run({
     return true;
 }
 
-addScript('migrateVijos', 'migrate from vijos')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'migrateVijos', 'migrate from vijos',
+    Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
         username: Schema.string().required(),
         password: Schema.string().required(),
-    })).action(run);
+    }),
+    run,
+);

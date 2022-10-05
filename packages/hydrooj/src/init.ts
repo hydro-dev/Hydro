@@ -19,9 +19,14 @@ if (!global.Hydro) {
         script: {},
         // @ts-ignore
         lib: {},
+        module: new Proxy({} as any, {
+            get(self, key) {
+                if (!self[key]) self[key] = {};
+                return self[key];
+            },
+        }),
         // @ts-ignore
         ui: {
-            manifest: {},
             template: {},
         },
         // @ts-ignore
@@ -29,5 +34,5 @@ if (!global.Hydro) {
         locales: {},
     };
     global.addons = [];
-    global.publicDirs = [];
 }
+global.app = new (require('./context').Context)();

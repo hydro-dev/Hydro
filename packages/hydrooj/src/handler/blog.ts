@@ -7,9 +7,7 @@ import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import * as system from '../model/system';
 import user from '../model/user';
-import {
-    Handler, param, Route, Types,
-} from '../service/server';
+import { Handler, param, Types } from '../service/server';
 
 class BlogHandler extends Handler {
     ddoc?: BlogDoc;
@@ -119,11 +117,9 @@ class BlogEditHandler extends BlogHandler {
     }
 }
 
-export async function apply() {
-    Route('blog_main', '/blog/:uid', BlogUserHandler);
-    Route('blog_create', '/blog/:uid/create', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
-    Route('blog_detail', '/blog/:uid/:did', BlogDetailHandler);
-    Route('blog_edit', '/blog/:uid/:did/edit', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
+export async function apply(ctx) {
+    ctx.Route('blog_main', '/blog/:uid', BlogUserHandler);
+    ctx.Route('blog_create', '/blog/:uid/create', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('blog_detail', '/blog/:uid/:did', BlogDetailHandler);
+    ctx.Route('blog_edit', '/blog/:uid/:did/edit', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
 }
-
-global.Hydro.handler.blog = apply;

@@ -1,11 +1,8 @@
 import assert from 'assert';
 import crypto from 'crypto';
-import yaml from 'js-yaml';
-import * as bus from 'hydrooj/src/service/bus';
-import db from 'hydrooj/src/service/db';
 import {
-    Handler, post, Route, Types,
-} from 'hydrooj/src/service/server';
+    db, definePlugin, ForbiddenError, Handler, post, Types, yaml,
+} from 'hydrooj';
 
 function decrypt(encrypted: string) {
     if (!encrypted) throw new Error();
@@ -15,9 +12,12 @@ function decrypt(encrypted: string) {
     return decrypted;
 }
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface Collections {
         dataReport: any;
+    }
+    interface EventMap {
+        'center/report': (thisArg: DataReportHandler, installId: string, old: any, payload: any) => void;
     }
 }
 
@@ -35,7 +35,11 @@ class DataReportHandler extends Handler {
         } catch (e) {
             payload = yaml.load(_payload);
         }
-        assert(payload.url);
+        try {
+            assert(typeof payload.url === 'string');
+        } catch (e) {
+            throw new ForbiddenError();
+        }
         const old = await coll.findOne({ _id: installId });
         await coll.updateOne({ _id: installId }, {
             $set: {
@@ -63,8 +67,8 @@ class DataReportHandler extends Handler {
     }
 }
 
-export function apply() {
-    Route('data_report', '/center/report', DataReportHandler);
-}
-
-global.Hydro.handler.center = apply;
+export default definePlugin({
+    apply(ctx) {
+        ctx.Route('data_report', '/center/report', DataReportHandler);
+    },
+});

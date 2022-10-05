@@ -1,6 +1,6 @@
-import { escapeRegExp, pick } from 'lodash';
+import { escapeRegExp, pick, uniq } from 'lodash';
 import LRU from 'lru-cache';
-import { Collection, ObjectID } from 'mongodb';
+import { Collection, FilterQuery, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     FileInfo, GDoc, ownerInfo,
@@ -21,7 +21,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
-const cache = new LRU<string, User>({ max: 500, ttl: 300 * 1000 });
+const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: User | Udoc | string | true | undefined | null, receiver = false) {
     if (!udoc) return false;
@@ -104,7 +104,7 @@ export class User {
     }
 
     async init() {
-        await bus.serial('user/get', this);
+        await bus.parallel('user/get', this);
         return this;
     }
 
@@ -134,7 +134,7 @@ export class User {
     }
 
     checkPassword(password: string) {
-        const h = global.Hydro.lib[`hash.${this.hashType}`];
+        const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
         const result = h(password, this._salt, this);
         if (result !== true && result !== this._hash) {
@@ -195,10 +195,10 @@ class UserModel {
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
-        const _uids = new Set(uids);
         const r: Udict = {};
-        // eslint-disable-next-line no-await-in-loop
-        for (const uid of _uids) r[uid] = (await UserModel.getById(domainId, uid)) || new User(UserModel.defaultUser, {});
+        await Promise.all(uniq(uids).map(async (uid) => {
+            r[uid] = (await UserModel.getById(domainId, uid)) || new User(UserModel.defaultUser, {});
+        }));
         return r;
     }
 
@@ -339,7 +339,7 @@ class UserModel {
         return uid;
     }
 
-    static getMulti(params: any = {}) {
+    static getMulti(params: FilterQuery<Udoc> = {}) {
         return coll.find(params);
     }
 
@@ -406,7 +406,7 @@ class UserModel {
     }
 }
 
-bus.once('app/started', () => Promise.all([
+bus.on('ready', () => Promise.all([
     db.ensureIndexes(
         coll,
         { key: { unameLower: 1 }, name: 'uname', unique: true },

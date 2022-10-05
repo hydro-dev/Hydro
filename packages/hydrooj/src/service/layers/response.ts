@@ -1,7 +1,7 @@
 import { errorMessage } from '@hydrooj/utils/lib/utils';
-import { SystemError, UserFacingError } from 'hydrooj/src/error';
-import { PERM } from 'hydrooj/src/model/builtin';
-import { User } from 'hydrooj/src/model/user';
+import { SystemError, UserFacingError } from '../../error';
+import { PERM } from '../../model/builtin';
+import { User } from '../../model/user';
 import type { KoaContext } from '../server';
 
 const serializer = (showDisplayName = false) => (k: string, v: any) => {

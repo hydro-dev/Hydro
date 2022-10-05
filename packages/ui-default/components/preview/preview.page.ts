@@ -162,4 +162,5 @@ const dataPreviewPage = new AutoloadPage('dataPreview', () => {
   $(document).on('click', '[data-preview]', previewFile);
 });
 
+window.Hydro.components.preview = { startEdit, previewFile };
 export default dataPreviewPage;

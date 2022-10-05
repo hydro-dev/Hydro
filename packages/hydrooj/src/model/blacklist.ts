@@ -1,9 +1,9 @@
 import moment from 'moment-timezone';
-import * as bus from '../service/bus';
+import { Context } from '../context';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 
-const coll = db.collection('blacklist');
+let coll = db.collection('blacklist');
 
 class BlackListModel {
     @ArgMethod
@@ -32,9 +32,12 @@ class BlackListModel {
     }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
-    coll,
-    { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
-));
+export function apply(ctx: Context) {
+    coll = db.collection('blacklist');
+    ctx.on('ready', () => db.ensureIndexes(
+        coll,
+        { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
+    ));
+}
 export default BlackListModel;
 global.Hydro.model.blacklist = BlackListModel;

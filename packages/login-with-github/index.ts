@@ -1,7 +1,7 @@
-import 'hydrooj';
-
-import superagent from 'superagent';
-import { ForbiddenError } from 'hydrooj/src/error';
+import {
+    Context, ForbiddenError, superagent, SystemModel,
+    TokenModel, UserFacingError, ValidationError,
+} from 'hydrooj';
 
 declare module 'hydrooj' {
     interface SystemKeys {
@@ -9,32 +9,27 @@ declare module 'hydrooj' {
         'login-with-github.secret': string;
         'login-with-github.endpoint': string;
     }
-    interface Lib {
-        oauth_github: typeof import('./lib');
-    }
 }
 
 async function get() {
-    const { system, token } = global.Hydro.model;
     const [appid, [state]] = await Promise.all([
-        system.get('login-with-github.id'),
-        token.add(token.TYPE_OAUTH, 600, { redirect: this.request.referer }),
+        SystemModel.get('login-with-github.id'),
+        TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer }),
     ]);
     this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${appid}&state=${state}&scope=read:user,user:email`;
 }
 
 async function callback({ state, code }) {
-    const { system, token } = global.Hydro.model;
-    const { UserFacingError } = global.Hydro.error;
     const [[appid, secret, endpoint, url], s] = await Promise.all([
-        system.getMany([
+        SystemModel.getMany([
             'login-with-github.id',
             'login-with-github.secret',
             'login-with-github.endpoint',
             'server.url',
         ]),
-        token.get(state, token.TYPE_OAUTH),
+        TokenModel.get(state, TokenModel.TYPE_OAUTH),
     ]);
+    if (!s) throw new ValidationError('token');
     const res = await superagent.post(`${endpoint || 'https://github.com'}/login/oauth/access_token`)
         .send({
             client_id: appid,
@@ -70,13 +65,15 @@ async function callback({ state, code }) {
             ret.email = emailInfo.body.find((e) => e.primary && e.verified).email;
         }
     }
-    await token.del(s._id, token.TYPE_OAUTH);
+    await TokenModel.del(s._id, TokenModel.TYPE_OAUTH);
     if (!ret.email) throw new ForbiddenError("You don't have a verified email.");
     return ret;
 }
 
-global.Hydro.lib.oauth_github = {
-    text: 'Login with Github',
-    callback,
-    get,
-};
+export function apply(ctx: Context) {
+    ctx.provideModule('oauth', 'github', {
+        text: 'Login with Github',
+        callback,
+        get,
+    });
+}

@@ -10,9 +10,7 @@ import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
-import {
-    Handler, param, Route, Types,
-} from '../service/server';
+import { Handler, param, Types } from '../service/server';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];
@@ -58,7 +56,7 @@ class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const query: FilterQuery<TrainingDoc> = {};
-        await bus.serial('training/list', query, this);
+        await bus.parallel('training/list', query, this);
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
@@ -95,7 +93,7 @@ class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
         const tdoc = await training.get(domainId, tid);
-        await bus.serial('training/get', tdoc, this);
+        await bus.parallel('training/get', tdoc, this);
         const pids = training.getPids(tdoc.dag);
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [owner, pdict] = await Promise.all([
@@ -208,11 +206,9 @@ class TrainingEditHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
-    Route('training_create', '/training/create', TrainingEditHandler);
-    Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
-    Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
+export async function apply(ctx) {
+    ctx.Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
+    ctx.Route('training_create', '/training/create', TrainingEditHandler);
+    ctx.Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
+    ctx.Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
 }
-
-global.Hydro.handler.training = apply;

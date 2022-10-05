@@ -1,8 +1,8 @@
 import { ObjectID } from 'mongodb';
-import avatar from 'hydrooj/src/lib/avatar';
-import { PERM } from 'hydrooj/src/model/builtin';
-import * as system from 'hydrooj/src/model/system';
-import { User } from 'hydrooj/src/model/user';
+import avatar from '../../lib/avatar';
+import { PERM } from '../../model/builtin';
+import * as system from '../../model/system';
+import { User } from '../../model/user';
 import type { KoaContext } from '../server';
 
 const serializer = (showDisplayName = false) => (k: string, v: any) => {

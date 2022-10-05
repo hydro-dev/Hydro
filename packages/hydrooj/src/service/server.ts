@@ -1,13 +1,15 @@
 import http from 'http';
+import { resolve } from 'path';
 import cac from 'cac';
-import Koa, { Context } from 'koa';
+import fs from 'fs-extra';
+import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
-import { filter } from 'lodash';
 import WebSocket from 'ws';
 import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import { Context, Service } from '../context';
 import {
     HydroError, InvalidOperationError, MethodNotAllowedError,
     NotFoundError, PermissionError, PrivilegeError,
@@ -86,6 +88,7 @@ export const app = new Koa<Koa.DefaultState, KoaContext>({
 export const router = new Router();
 export const httpServer = http.createServer(app.callback());
 export const wsServer = new WebSocket.Server({ server: httpServer });
+export const captureAllRoutes = {};
 app.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
@@ -102,57 +105,6 @@ const serializer = (showDisplayName = false) => (k: string, v: any) => {
     if (v instanceof User && !showDisplayName) delete v.displayName;
     return v;
 };
-
-export async function prepare() {
-    app.keys = system.get('session.keys') as unknown as string[];
-    const proxyMiddleware = proxy('/fs', {
-        target: builtinConfig.file.endPoint,
-        changeOrigin: true,
-        rewrite: (p) => p.replace('/fs', ''),
-    });
-    app.use(async (ctx, next) => {
-        if (!ctx.path.startsWith('/fs/')) return await next();
-        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
-        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
-        return await next();
-    });
-    app.use(Compress());
-    for (const dir of global.publicDirs) {
-        app.use(cache(dir, {
-            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
-        }));
-    }
-    if (process.env.DEV) {
-        app.use(async (ctx: Context, next: Function) => {
-            const startTime = Date.now();
-            await next();
-            const endTime = Date.now();
-            if (ctx.nolog || ctx.response.headers.nolog) return;
-            ctx._remoteAddress = ctx.request.ip;
-            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
-${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
-        });
-    }
-    app.use(Body({
-        multipart: true,
-        jsonLimit: '8mb',
-        formLimit: '8mb',
-        formidable: {
-            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
-        },
-    }));
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
-    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
-    layers.forEach((layer) => router.use(layer as any));
-    wsServer.on('connection', async (socket, request) => {
-        const ctx: any = app.createContext(request, {} as any);
-        await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
-        for (const manager of router.wsStack) {
-            if (manager.accept(socket, request, ctx)) return;
-        }
-        socket.close();
-    });
-}
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
@@ -224,11 +176,11 @@ export class Handler extends HandlerCommon {
     async init() {
         if (!argv.options.benchmark) await this.limitRate('global', 5, 88);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
-        this.loginMethods = filter(Object.keys(global.Hydro.lib), (str) => str.startsWith('oauth_'))
+        this.loginMethods = Object.keys(global.Hydro.module.oauth)
             .map((key) => ({
-                id: key.split('_')[1],
-                icon: global.Hydro.lib[key].icon,
-                text: global.Hydro.lib[key].text,
+                id: key,
+                icon: global.Hydro.module.oauth[key].icon,
+                text: global.Hydro.module.oauth[key].text,
             }));
     }
 
@@ -258,7 +210,7 @@ export class Handler extends HandlerCommon {
 }
 
 async function bail(name: string, ...args: any[]) {
-    const r = await bus.bail(name, ...args);
+    const r = await (bus.bail as any)(name, ...args);
     if (r instanceof Error) throw r;
     return r;
 }
@@ -276,7 +228,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
 
-        await bus.serial('handler/create', h);
+        await bus.parallel('handler/create', h);
 
         if (checker) checker.call(h);
         if (method === 'post') {
@@ -363,6 +315,7 @@ const Checker = (permPrivChecker) => {
 
 export function Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
     router.all(name, path, (ctx) => handle(ctx as any, RouteHandler, Checker(permPrivChecker)));
+    return router.disposeLastOp;
 }
 
 export class ConnectionHandler extends HandlerCommon {
@@ -404,7 +357,7 @@ export function Connection(
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
         const h = new RouteConnHandler(ctx, args, request, response, user, domain, UiContext);
-        await bus.emit('connection/create', h);
+        await bus.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
         try {
@@ -420,25 +373,112 @@ export function Connection(
                 bus.emit('connection/close', h);
                 h.cleanup?.(args);
             };
-            bus.emit('connection/active', h);
+            await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
         }
     });
+    return router.disposeLastOp;
 }
 
-let started = false;
+class NotFoundHandler extends Handler {
+    prepare() { throw new NotFoundError(this.request.path); }
+    all() { }
+}
 
-// TODO use postInit?
-export async function start() {
-    if (started) return;
-    const port = system.get('server.port');
+class RouteService extends Service {
+    static readonly methods = ['Route', 'Connection'];
+    constructor(ctx) {
+        super(ctx, 'server', true);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Route(...args: Parameters<typeof Route>) {
+        const res = Route(...args);
+        this.caller?.on('dispose', () => res());
+    }
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    Connection(...args: Parameters<typeof Connection>) {
+        const res = Connection(...args);
+        this.caller?.on('dispose', () => res());
+    }
+}
+
+export async function apply(pluginContext) {
+    Context.service('server', RouteService);
+    pluginContext.server = new RouteService(pluginContext);
+    app.keys = system.get('session.keys') as unknown as string[];
+    if (process.env.HYDRO_CLI) return;
+    const proxyMiddleware = proxy('/fs', {
+        target: builtinConfig.file.endPoint,
+        changeOrigin: true,
+        rewrite: (p) => p.replace('/fs', ''),
+    });
+    app.use(async (ctx, next) => {
+        if (!ctx.path.startsWith('/fs/')) return await next();
+        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
+        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
+        return await next();
+    });
+    app.use(Compress());
+    app.use(async (ctx, next) => {
+        for (const key in captureAllRoutes) {
+            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
+        }
+        return next();
+    });
+    for (const addon of global.addons) {
+        const dir = resolve(addon, 'public');
+        if (!fs.existsSync(dir)) continue;
+        app.use(cache(dir, {
+            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
+        }));
+    }
+    if (process.env.DEV) {
+        app.use(async (ctx: Koa.Context, next: Function) => {
+            const startTime = Date.now();
+            await next();
+            const endTime = Date.now();
+            if (ctx.nolog || ctx.response.headers.nolog) return;
+            ctx._remoteAddress = ctx.request.ip;
+            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
+${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+        });
+    }
+    app.use(Body({
+        multipart: true,
+        jsonLimit: '8mb',
+        formLimit: '8mb',
+        formidable: {
+            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
+        },
+    }));
+    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
+    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     app.use(router.routes()).use(router.allowedMethods());
-    await new Promise((resolve) => {
-        httpServer.listen(argv.options.port || port, () => {
-            logger.success('Server listening at: %d', argv.options.port || port);
-            started = true;
-            resolve(true);
+    layers.forEach((layer) => router.use(layer as any));
+    layers.forEach((layer) => app.use(layer as any));
+    app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
+    wsServer.on('connection', async (socket, request) => {
+        const ctx: any = app.createContext(request, {} as any);
+        await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
+        for (const manager of router.wsStack) {
+            if (manager.accept(socket, request, ctx)) return;
+        }
+        socket.close();
+    });
+    const port = system.get('server.port');
+    pluginContext.on('app/ready', async () => {
+        await new Promise((r) => {
+            httpServer.listen(argv.options.port || port, () => {
+                logger.success('Server listening at: %d', argv.options.port || port);
+                r(true);
+            });
+        });
+        pluginContext.on('dispose', () => {
+            httpServer.close();
+            wsServer.close();
         });
     });
 }
@@ -449,11 +489,11 @@ global.Hydro.service.server = {
     httpServer,
     wsServer,
     router,
+    captureAllRoutes,
     HandlerCommon,
     Handler,
     ConnectionHandler,
     Route,
     Connection,
-    prepare,
-    start,
+    apply,
 };

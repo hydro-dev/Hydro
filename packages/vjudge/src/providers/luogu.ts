@@ -1,12 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
-import { flattenDeep } from 'lodash';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import { sleep } from '@hydrooj/utils/lib/utils';
-import { Logger } from 'hydrooj/src/logger';
-import * as setting from 'hydrooj/src/model/setting';
+import {
+    _, Logger, SettingModel, sleep, STATUS,
+} from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
 proxy(superagent);
@@ -104,7 +102,7 @@ export default class LuoguProvider implements IBasicProvider {
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         let enableO2 = 0;
-        const comment = setting.langs[lang]?.comment;
+        const comment = SettingModel.langs[lang]?.comment;
         if (code.length < 10) {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message: 'Code too short' });
             return null;
@@ -152,7 +150,7 @@ export default class LuoguProvider implements IBasicProvider {
                     });
                 }
                 logger.info('Fetched with length', JSON.stringify(body).length);
-                const total = flattenDeep(body.currentData.testCaseGroup).length;
+                const total = _.flattenDeep(body.currentData.testCaseGroup).length;
                 // TODO sorted
                 if (!data.detail.judgeResult?.subtasks) continue;
                 for (const key in data.detail.judgeResult.subtasks) {

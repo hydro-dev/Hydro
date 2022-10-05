@@ -4,9 +4,7 @@ import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
 import { BadRequestError, UserNotFoundError, ValidationError } from '../error';
-import {
-    isEmail, isPassword, isUname, validate,
-} from '../lib/validator';
+import { isEmail, isPassword, isUname } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -16,8 +14,8 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler,
-    param, Route, Types,
+    ConnectionHandler, Handler,
+    param, Types,
 } from '../service/server';
 import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
@@ -106,9 +104,6 @@ class SystemScriptHandler extends SystemHandler {
         let args = JSON.parse(raw);
         if (typeof global.Hydro.script[id].validate === 'function') {
             args = global.Hydro.script[id].validate(args);
-        } else {
-            logger.warn('You are using the legacy script validation API, which will be dropped in the future.');
-            validate(global.Hydro.script[id].validate, args);
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
         const report = (data) => judge.next({ domainId, rid, ...data });
@@ -281,22 +276,20 @@ class SystemUserPrivHandler extends SystemHandler {
         } else {
             const defaultPriv = system.get('default.priv');
             await user.coll.updateMany({ priv: defaultPriv }, { $set: { priv } });
-            await bus.broadcast('user/delcache', true);
+            await ctx.broadcast('user/delcache', true);
             await system.set('default.priv', priv);
         }
         this.back();
     }
 }
 
-async function apply() {
-    Route('manage', '/manage', SystemMainHandler);
-    Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
-    Route('manage_script', '/manage/script', SystemScriptHandler);
-    Route('manage_setting', '/manage/setting', SystemSettingHandler);
-    Route('manage_config', '/manage/config', SystemConfigHandler);
-    Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
-    Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
-    Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
+export async function apply(ctx) {
+    ctx.Route('manage', '/manage', SystemMainHandler);
+    ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
+    ctx.Route('manage_script', '/manage/script', SystemScriptHandler);
+    ctx.Route('manage_setting', '/manage/setting', SystemSettingHandler);
+    ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
+    ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
+    ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
-
-global.Hydro.handler.manage = apply;

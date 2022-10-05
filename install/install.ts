@@ -86,12 +86,12 @@ let migration;
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-String.random = function random(digit = 32, dict = defaultDict) {
+function randomstring(digit = 32, dict = defaultDict) {
     let str = '';
     for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
     return str;
-};
-let DATABASE_PASSWORD = String.random(32);
+}
+let password = randomstring(32);
 // TODO read from args
 const CN = true;
 
@@ -128,9 +128,14 @@ function removeOptionalEsbuildDeps() {
     data.resolutions = data.resolutions || {};
     Object.assign(data.resolutions, Object.fromEntries([
         '@esbuild/linux-loong64',
-        ...['android', 'windows', 'darwin', 'freebsd'].flatMap((i) => [`${i}-64`, `${i}-arm64`, `${i}-32`]),
-        ...['32', 'arm', 'mips64', 'ppc64', 'riscv64', 's390x'].map((i) => `esbuild-linux-${i}`),
-        ...['netbsd', 'openbsd', 'sunos'].map((i) => `esbuild-${i}-64`),
+        'esbuild-windows-32',
+        ...['android', 'darwin', 'freebsd', 'windows']
+            .flatMap((i) => [`${i}-64`, `${i}-arm64`])
+            .map((i) => `esbuild-${i}`),
+        ...['32', 'arm', 'mips64', 'ppc64', 'riscv64', 's390x']
+            .map((i) => `esbuild-linux-${i}`),
+        ...['netbsd', 'openbsd', 'sunos']
+            .map((i) => `esbuild-${i}-64`),
     ].map((i) => [i, 'link:/dev/null'])));
     exec(`mkdir -p ${yarnGlobalPath}`);
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
@@ -195,7 +200,7 @@ const steps = [
             () => sleep(3000),
             () => writeFileSync('/tmp/createUser.js', `db.createUser(${JSON.stringify({
                 user: 'hydro',
-                pwd: DATABASE_PASSWORD,
+                pwd: password,
                 roles: [{ role: 'readWrite', db: 'hydro' }],
             })})`),
             ['mongo 127.0.0.1:27017/hydro /tmp/createUser.js', { retry: true }],
@@ -204,7 +209,7 @@ const steps = [
                 port: 27017,
                 name: 'hydro',
                 username: 'hydro',
-                password: DATABASE_PASSWORD,
+                password,
             })),
             'pm2 stop mongod',
             'pm2 del mongod',
@@ -250,10 +255,10 @@ const steps = [
         init: 'install.done',
         operations: [
             () => {
-                DATABASE_PASSWORD = require(`${process.env.HOME}/.hydro/config.json`).password;
+                password = require(`${process.env.HOME}/.hydro/config.json`).password;
             },
             () => log.info('extra.dbUser'),
-            () => log.info('extra.dbPassword', DATABASE_PASSWORD),
+            () => log.info('extra.dbPassword', password),
         ],
     },
 ];

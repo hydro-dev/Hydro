@@ -5,6 +5,7 @@ import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
+import { Context } from '../context';
 import i18n from '../lib/i18n';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
@@ -30,13 +31,15 @@ function locateFile(basePath: string, filenames: string[]) {
     return null;
 }
 
-const getLoader = (type: string, filename: string) => async function loader(pending: string[], fail: string[]) {
+type LoadTask = 'handler' | 'model' | 'addon' | 'lib' | 'script' | 'service';
+const getLoader = (type: LoadTask, filename: string) => async function loader(pending: string[], fail: string[], ctx: Context) {
     for (const i of pending) {
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {
             try {
-                logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} init: %s`, i);
-                require(p);
+                const m = require(p);
+                if (m.apply) ctx.loader.reloadPlugin(ctx, p, {});
+                else logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} init: %s`, i);
             } catch (e) {
                 fail.push(i);
                 logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} load fail: %s`, i);
@@ -44,7 +47,7 @@ const getLoader = (type: string, filename: string) => async function loader(pend
             }
         }
     }
-    await bus.serial(`app/load/${type}`);
+    await bus.parallel(`app/load/${type}`);
 };
 
 export const handler = getLoader('handler', 'handler');
@@ -52,6 +55,15 @@ export const addon = getLoader('addon', 'index');
 export const model = getLoader('model', 'model');
 export const lib = getLoader('lib', 'lib');
 export const script = getLoader('script', 'script');
+export const service = getLoader('service', 'service');
+
+export async function builtinModel(ctx: Context) {
+    const modelDir = path.resolve(__dirname, '..', 'model');
+    const models = ['task', 'blacklist', 'discussion', 'document'];
+    for (const t of models) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(modelDir, t), {}, `hydrooj/model/${t}`);
+    }
+}
 
 export async function locale(pending: string[], fail: string[]) {
     await Promise.all(pending.map(async (i) => {
@@ -73,7 +85,7 @@ export async function locale(pending: string[], fail: string[]) {
             }
         }
     }));
-    await bus.serial('app/load/locale');
+    await bus.parallel('app/load/locale');
 }
 
 export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
@@ -114,7 +126,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             }
         }
     }
-    await bus.serial('app/load/setting');
+    await bus.parallel('app/load/setting');
 }
 
 export async function template(pending: string[], fail: string[]) {
@@ -135,27 +147,5 @@ export async function template(pending: string[], fail: string[]) {
             }
         }
     }
-    await bus.serial('app/load/template');
-}
-
-export async function service(pending: string[], fail: string[]) {
-    for (const i of pending) {
-        const p = locateFile(i, ['service.ts', 'service.js']);
-        if (p && !fail.includes(i)) {
-            try {
-                logger.info('Service init: %s', i);
-                require(p);
-            } catch (e) {
-                fail.push(i);
-                logger.error('Service Load Fail: %s', i);
-                logger.error(e);
-            }
-        }
-    }
-    for (const key in global.Hydro.service) {
-        if (key === 'server') continue;
-        const srv = global.Hydro.service[key];
-        if (!srv.started && srv.start) await srv.start();
-    }
-    await bus.serial('app/load/service');
+    await bus.parallel('app/load/template');
 }

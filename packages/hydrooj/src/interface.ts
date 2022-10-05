@@ -1,8 +1,9 @@
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
-import type { ItemBucketMetadata } from 'minio';
 import type { Cursor, ObjectID } from 'mongodb';
+import type { Context } from './context';
 import type { ProblemDoc } from './model/problem';
+import type { Handler } from './service/server';
 
 type document = typeof import('./model/document');
 
@@ -245,7 +246,7 @@ declare module './model/problem' {
 export type { ProblemDoc } from './model/problem';
 export type ProblemDict = NumericDictionary<ProblemDoc>;
 
-export interface StatusDoc {
+export interface StatusDocBase {
     _id: ObjectID,
     docId: any,
     docType: number,
@@ -253,7 +254,7 @@ export interface StatusDoc {
     uid: number,
 }
 
-export interface ProblemStatusDoc extends StatusDoc {
+export interface ProblemStatusDoc extends StatusDocBase {
     docId: number;
     docType: 10;
     rid?: ObjectID;
@@ -384,12 +385,6 @@ export interface DomainDoc extends Record<string, any> {
     host?: string[],
 }
 
-export interface DomainUnion {
-    _id: string;
-    union: string[];
-    problem: boolean;
-}
-
 // Message
 export interface MessageDoc {
     _id: ObjectID,
@@ -512,9 +507,9 @@ export interface ContestRule<T = any> {
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>, page: number,
-    ) => Promise<[board: ScoreboardRow[], udict: Udict, nPages: number]>;
-    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[Array<[number, ContestStat & T]>, number]>;
+        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>,
+    ) => Promise<[board: ScoreboardRow[], udict: Udict]>;
+    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
@@ -560,13 +555,6 @@ export interface Task {
     [key: string]: any;
 }
 
-export interface BaseService {
-    started: boolean;
-    error?: Error | string;
-    start: Function;
-    stop?: Function;
-}
-
 export interface FileNode {
     /** File Path In MinIO */
     _id: string;
@@ -581,7 +569,7 @@ export interface FileNode {
     autoDelete?: Date;
     owner?: number;
     operator?: number[];
-    meta?: ItemBucketMetadata;
+    meta?: Record<string, string | number>;
 }
 
 export interface EventDoc {
@@ -606,34 +594,30 @@ export interface OauthMap {
     uid: number;
 }
 
-export interface Collections {
-    'blacklist': BlacklistDoc;
-    'contest': Tdoc;
-    'domain': DomainDoc;
-    'domain.user': any;
-    'domain.union': DomainUnion;
-    'record': RecordDoc;
-    'document': any;
-    'document.status': any;
-    'problem': ProblemDoc;
-    'user': Udoc;
-    'user.preference': UserPreferenceDoc;
-    'vuser': VUdoc;
-    'user.group': GDoc;
-    'check': System;
-    'message': MessageDoc;
-    'token': TokenDoc;
-    'status': any;
-    'oauth': OauthMap;
-    'system': System;
-    'task': Task;
-    'storage': FileNode;
-    'oplog': OplogDoc;
-    'event': EventDoc;
-    'opcount': OpCountDoc;
-    'log': any;
-    'fs.chunks': any;
-    'fs.files': any;
+declare module './service/db' {
+    interface Collections {
+        'blacklist': BlacklistDoc;
+        'domain': DomainDoc;
+        'domain.user': any;
+        'record': RecordDoc;
+        'document': any;
+        'document.status': StatusDocBase;
+        'user': Udoc;
+        'user.preference': UserPreferenceDoc;
+        'vuser': VUdoc;
+        'user.group': GDoc;
+        'check': System;
+        'message': MessageDoc;
+        'token': TokenDoc;
+        'status': any;
+        'oauth': OauthMap;
+        'system': System;
+        'task': Task;
+        'storage': FileNode;
+        'oplog': OplogDoc;
+        'event': EventDoc;
+        'opcount': OpCountDoc;
+    }
 }
 
 export interface Model {
@@ -642,7 +626,7 @@ export interface Model {
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     discussion: typeof import('./model/discussion'),
-    document: typeof import('./model/document'),
+    document: Omit<typeof import('./model/document'), 'apply'>,
     domain: typeof import('./model/domain').default,
     message: typeof import('./model/message').default,
     opcount: typeof import('./model/opcount'),
@@ -661,10 +645,10 @@ export interface Model {
     rp: typeof import('./script/rating').RpTypes,
 }
 
-export interface Service {
-    bus: typeof import('./service/bus'),
-    db: typeof import('./service/db'),
-    monitor: typeof import('./service/monitor'),
+export interface HydroService {
+    /** @deprecated */
+    bus: Context,
+    db: typeof import('./service/db').default,
     server: typeof import('./service/server'),
     storage: typeof import('./service/storage').default,
 }
@@ -687,45 +671,52 @@ export interface ProblemSearchOptions {
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty'),
-    buildContent: typeof import('./lib/content').buildContent,
-    'hash.hydro': typeof import('./lib/hash.hydro'),
-    i18n: typeof import('./lib/i18n'),
-    mail: typeof import('./lib/mail'),
-    paginate: typeof import('./lib/paginate'),
-    rank: typeof import('./lib/rank'),
-    rating: typeof import('./lib/rating'),
-    testdataConfig: typeof import('./lib/testdataConfig'),
-    useragent: typeof import('./lib/useragent'),
-    validator: typeof import('./lib/validator'),
-    template?: any,
-    geoip?: GeoIP,
+    difficulty: typeof import('./lib/difficulty');
+    buildContent: typeof import('./lib/content').buildContent;
+    i18n: typeof import('./lib/i18n');
+    mail: typeof import('./lib/mail');
+    paginate: typeof import('./lib/paginate');
+    rank: typeof import('./lib/rank');
+    rating: typeof import('./lib/rating');
+    testdataConfig: typeof import('./lib/testdataConfig');
+    useragent: typeof import('./lib/useragent');
+    validator: typeof import('./lib/validator');
+    template?: any;
     problemSearch: ProblemSearch;
 }
 
 export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown';
 export interface UI {
-    manifest: Dictionary<string>,
-    template: Dictionary<string>,
+    template: Record<string, string>,
     nodes: Record<UIInjectableFields, any[]>,
     getNodes: typeof import('./lib/ui').getNodes,
-    Nav: typeof import('./lib/ui').Nav,
-    ProblemAdd: typeof import('./lib/ui').ProblemAdd,
     inject: typeof import('./lib/ui').inject,
 }
 
+export interface ModuleInterfaces {
+    oauth: {
+        text: string;
+        icon?: string;
+        get: (this: Handler) => Promise<void>;
+        callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+    };
+    hash: (password: string, salt: string, user: User) => boolean | string;
+}
+
 export interface HydroGlobal {
-    version: Record<string, string>,
-    model: Model,
-    handler: Record<string, Function>,
-    script: Record<string, Script>,
-    service: Service,
-    lib: Lib,
-    ui: UI,
-    error: typeof import('./error'),
-    Logger: typeof import('./logger').Logger,
-    logger: typeof import('./logger').logger,
-    locales: Record<string, Record<string, string>>,
+    version: Record<string, string>;
+    model: Model;
+    /** @deprecated */
+    handler: Record<string, Function>;
+    script: Record<string, Script>;
+    service: HydroService;
+    lib: Lib;
+    module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
+    ui: UI;
+    error: typeof import('./error');
+    Logger: typeof import('./logger').Logger;
+    logger: typeof import('./logger').logger;
+    locales: Record<string, Record<string, string>>;
 }
 
 declare global {
@@ -735,6 +726,9 @@ declare global {
             addons: string[],
         }
     }
+    /** @deprecated */
+    var bus: Context; // eslint-disable-line
+    var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
     var addons: string[]; // eslint-disable-line
 }

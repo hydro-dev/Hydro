@@ -1,7 +1,7 @@
-import { CsrfTokenError, NotFoundError } from 'hydrooj/src/error';
-import avatar from 'hydrooj/src/lib/avatar';
-import { PERM } from 'hydrooj/src/model/builtin';
-import UserModel from 'hydrooj/src/model/user';
+import { CsrfTokenError, NotFoundError } from '../../error';
+import avatar from '../../lib/avatar';
+import { PERM } from '../../model/builtin';
+import UserModel from '../../model/user';
 import type { KoaContext } from '../server';
 
 export default async (ctx: KoaContext, next) => {

@@ -17,7 +17,7 @@ import task from '../model/task';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
-    Connection, ConnectionHandler, Handler, post, Route, Types,
+    ConnectionHandler, Handler, post, Types,
 } from '../service/server';
 import { sleep } from '../utils';
 
@@ -112,7 +112,7 @@ export async function postJudge(rdoc: RecordDoc) {
             }
         }
     }
-    await bus.serial('record/judge', rdoc, updated);
+    await bus.parallel('record/judge', rdoc, updated);
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
@@ -233,13 +233,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply() {
-    Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
-    Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
-    Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
+export async function apply(ctx) {
+    ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
+    ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
+    ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 
 apply.next = next;
 apply.end = end;
-
-global.Hydro.handler.judge = apply;

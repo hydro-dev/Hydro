@@ -70,7 +70,7 @@ export const Setting = (
 
 export const PreferenceSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
-        if (PREFERENCE_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
+        if (PREFERENCE_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         PREFERENCE_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
@@ -78,7 +78,7 @@ export const PreferenceSetting = (...settings: _Setting[]) => {
 };
 export const AccountSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
-        if (ACCOUNT_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
+        if (ACCOUNT_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         ACCOUNT_SETTINGS.push(setting);
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
@@ -86,21 +86,21 @@ export const AccountSetting = (...settings: _Setting[]) => {
 };
 export const DomainUserSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
-        if (DOMAIN_USER_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
+        if (DOMAIN_USER_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         DOMAIN_USER_SETTINGS.push(setting);
         DOMAIN_USER_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
 export const DomainSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
-        if (DOMAIN_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
+        if (DOMAIN_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         DOMAIN_SETTINGS.push(setting);
         DOMAIN_SETTINGS_BY_KEY[setting.key] = setting;
     }
 };
 export const SystemSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
-        if (SYSTEM_SETTINGS.find((s) => s.key === setting.key)) throw new Error(`Duplicate setting key: ${setting.key}`);
+        if (SYSTEM_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         SYSTEM_SETTINGS.push(setting);
         SYSTEM_SETTINGS_BY_KEY[setting.key] = setting;
     }
@@ -240,7 +240,7 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export let langs = {};
 
-bus.once('app/started', async () => {
+bus.on('app/started', async () => {
     logger.debug('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {

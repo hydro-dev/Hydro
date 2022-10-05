@@ -2,15 +2,15 @@
 import { omit, sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    Collection, FilterQuery, MatchKeysAndValues,
+    FilterQuery, MatchKeysAndValues,
     ObjectID, OnlyFieldsOfType, PushOperator,
     UpdateQuery,
 } from 'mongodb';
+import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import {
     FileInfo, JudgeMeta, JudgeRequest, ProblemConfigFile, RecordDoc,
 } from '../interface';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
@@ -18,8 +18,8 @@ import { STATUS } from './builtin';
 import problem from './problem';
 import task from './task';
 
-class RecordModel {
-    static coll: Collection<RecordDoc> = db.collection('record');
+export default class RecordModel {
+    static coll = db.collection('record');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -230,16 +230,16 @@ class RecordModel {
     }
 }
 
-// Mark problem as deleted
-bus.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ domainId, pid: docId }, { $set: { pid: -1 } }));
-bus.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
+export function apply(ctx: Context) {
+    // Mark problem as deleted
+    ctx.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ domainId, pid: docId }, { $set: { pid: -1 } }));
+    ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
+    ctx.on('ready', () => db.ensureIndexes(
+        RecordModel.coll,
+        { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
+        { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
+        { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+    ));
+}
 
-bus.once('app/started', () => db.ensureIndexes(
-    RecordModel.coll,
-    { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
-    { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
-    { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
-));
-
-export default RecordModel;
 global.Hydro.model.record = RecordModel;

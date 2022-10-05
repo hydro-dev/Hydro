@@ -115,7 +115,7 @@ export class ProblemModel {
             title, tag, hidden, assign, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
-        await bus.serial('problem/before-add', domainId, content, owner, docId, args);
+        await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
         const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
         args.content = content;
         args.owner = owner;
@@ -152,9 +152,8 @@ export class ProblemModel {
         page: number, pageSize: number,
         projection = ProblemModel.PROJECTION_LIST, uid?: number,
     ): Promise<[ProblemDoc[], number, number]> {
-        const union = await DomainModel.getUnion(domainId);
-        const domainIds = [domainId];
-        if (union?.problem) domainIds.push(...union.union);
+        const union = await DomainModel.get(domainId);
+        const domainIds = [domainId, ...(union.union || [])];
         let count = 0;
         const pdocs = [];
         for (const id of domainIds) {
@@ -193,7 +192,7 @@ export class ProblemModel {
         } else if ($set.pid) {
             $set.sort = sortable($set.pid);
         }
-        await bus.serial('problem/before-edit', $set);
+        await bus.parallel('problem/before-edit', $set);
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
         await bus.emit('problem/edit', result);
         return result;
@@ -230,7 +229,7 @@ export class ProblemModel {
     }
 
     static async del(domainId: string, docId: number) {
-        await bus.serial('problem/before-del', domainId, docId);
+        await bus.parallel('problem/before-del', domainId, docId);
         const res = await Promise.all([
             document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
             document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),

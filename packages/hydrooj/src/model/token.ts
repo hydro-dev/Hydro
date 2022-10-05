@@ -95,7 +95,7 @@ class TokenModel {
     }
 }
 
-bus.once('app/started', () => db.ensureIndexes(
+bus.on('ready', () => db.ensureIndexes(
     TokenModel.coll,
     { key: { uid: 1, tokenType: 1, updateAt: -1 }, name: 'basic', sparse: true },
     { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },

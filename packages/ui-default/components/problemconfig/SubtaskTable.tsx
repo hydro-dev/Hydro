@@ -1,6 +1,6 @@
 import { Card, NumericInput, Tag } from '@blueprintjs/core';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
-import { SubtaskConfig } from 'hydrooj/src/interface';
+import type { SubtaskConfig } from 'hydrooj/src/interface';
 import { isEqual, pick } from 'lodash';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';

@@ -7,58 +7,6 @@ const RE_UNAME = /^.{3,31}$/i;
 const RE_ROLE = /^[_0-9A-Za-z]{1,31}$/i;
 const RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;
 
-// eslint-disable-next-line consistent-return
-function _validate(scheme: any, arg: any, base: string): void {
-    if (!(scheme instanceof Object)) return _validate({ $type: scheme }, arg, base);
-    if (scheme.$validate) {
-        const result = scheme.$validate(arg);
-        if (result === false) throw new ValidationError(base);
-    }
-    if (scheme.$group) _validate(scheme.$group, arg, base);
-    if (scheme.$or) {
-        for (const s of scheme.$or) {
-            let success = false;
-            try {
-                _validate(s, arg, base);
-                success = true;
-            } catch { }
-            // TODO beautify output
-            if (!success) throw new ValidationError(scheme.$or);
-        }
-    }
-    if (scheme.$and) for (const s of scheme.$and) _validate(s, arg, base);
-    if (scheme.$type) {
-        if (typeof scheme.$type === 'string') {
-            if (!scheme.$type.endsWith('?')) {
-                if (!typeof arg === scheme.$type) {
-                    throw new ValidationError(base);
-                }
-            } else if (arg && !scheme.$type.includes(typeof arg)) {
-                throw new ValidationError(base);
-            }
-        } else if (!(arg instanceof scheme.$type)) {
-            throw new ValidationError(base);
-        }
-    }
-    if (scheme.$eq && scheme.$eq !== arg) throw new ValidationError(base);
-    if (scheme.$not && scheme.$not === arg) throw new ValidationError(base);
-    if (scheme.$in && !(scheme.$in.includes(arg))) throw new ValidationError(base);
-    if (scheme.$nin && scheme.$nin.includes(arg)) throw new ValidationError(base);
-    for (const key in scheme) {
-        if (key[0] !== '$') {
-            if (arg instanceof Object) {
-                _validate(scheme[key], arg[key], `${base}.${key}`);
-            } else {
-                throw new ValidationError(base);
-            }
-        }
-    }
-}
-
-export function validate(scheme: any, arg: any) {
-    return _validate(scheme, arg, '');
-}
-
 export const isTitle = (s) => typeof s === 'string' && s.trim().length && s.trim().length < 64;
 export const checkTitle = (s) => { if (!(s?.trim()?.length && s.trim().length < 64)) throw new ValidationError('title'); else return s; };
 export const isDomainId = (s) => RE_DOMAINID.test(s);
@@ -83,7 +31,6 @@ export const checkIntro = (s) => { if (!isIntro()) throw new ValidationError('in
 export const parsePid = (s) => (Number.isNaN(+s) ? s : `P${s}`);
 
 global.Hydro.lib.validator = {
-    validate,
     isTitle,
     checkTitle,
     isDomainId,

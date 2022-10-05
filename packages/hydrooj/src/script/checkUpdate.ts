@@ -2,7 +2,6 @@
 import Schema from 'schemastery';
 import * as semver from 'semver';
 import superagent from 'superagent';
-import { addScript } from '../loader';
 import MessageModel from '../model/message';
 import * as system from '../model/system';
 
@@ -38,4 +37,4 @@ export async function run(_: {}, report: Function) {
     return true;
 }
 
-addScript('checkUpdate', 'Daily update check').args(Schema.any()).action(run);
+export const apply = (ctx) => ctx.addScript('checkUpdate', 'Daily update check', Schema.any(), run);

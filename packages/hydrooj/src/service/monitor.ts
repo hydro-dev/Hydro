@@ -2,6 +2,7 @@ import { dump } from 'js-yaml';
 import superagent from 'superagent';
 import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
+import { Context } from '../context';
 import { Logger } from '../logger';
 import * as bus from './bus';
 import db from './db';
@@ -72,7 +73,7 @@ export async function update() {
         updateAt: new Date(),
         reqCount: 0,
     };
-    await bus.serial('monitor/update', 'server', $set);
+    await bus.parallel('monitor/update', 'server', $set);
     await coll.updateOne(
         { mid, type: 'server' },
         { $set },
@@ -82,7 +83,7 @@ export async function update() {
 
 export async function updateJudge(args) {
     const $set = { ...args, updateAt: new Date() };
-    await bus.serial('monitor/update', 'judge', $set);
+    await bus.parallel('monitor/update', 'judge', $set);
     return await coll.updateOne(
         { mid: args.mid, type: 'judge' },
         { $set },
@@ -90,8 +91,9 @@ export async function updateJudge(args) {
     );
 }
 
-if (process.env.NODE_APP_INSTANCE === '0') {
-    bus.on('app/started', async () => {
+export function apply(ctx: Context) {
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
+    ctx.on('app/started', async () => {
         sysinfo.get().then((info) => {
             coll.updateOne(
                 { mid: info.mid, type: 'server' },
@@ -103,5 +105,3 @@ if (process.env.NODE_APP_INSTANCE === '0') {
         });
     });
 }
-
-global.Hydro.service.monitor = { feedback, update, updateJudge };

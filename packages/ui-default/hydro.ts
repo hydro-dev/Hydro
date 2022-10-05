@@ -26,8 +26,6 @@ function buildSequence(pages, type) {
       throw new Error("'type' should be one of 'before' or 'after'");
     }
   }
-  // eslint bug
-  // eslint-disable-next-line react/jsx-indent
   return pages
     .filter((p) => p && p[`${type}Loading`])
     .map((p) => ({
