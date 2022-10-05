@@ -370,10 +370,11 @@ export async function run({
     const ddocs = await query('SELECT * FROM `article`');
     const didMap = {};
     for (const ddoc of ddocs) {
+        const _id = Time.getObjectID(new Date(ddoc.public_time * 1000), false);
         const data: Partial<DiscussionDoc> = {
-            _id: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
+            _id,
             docType: DocumentModel.TYPE_DISCUSSION,
-            docId: Time.getObjectID(new Date(ddoc.public_time * 1000), false),
+            docId: _id,
             owner: uidMap[ddoc.user_id] || 0,
             title: ddoc.title,
             content: ddoc.content,
@@ -401,10 +402,11 @@ export async function run({
     */
     const drdocs = await query('SELECT * FROM `article_comment`');
     for (const drdoc of drdocs) {
+        const _id = Time.getObjectID(new Date(drdoc.public_time * 1000), false);
         const data: Partial<DiscussionReplyDoc> = {
-            _id: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
+            _id,
             domainId,
-            docId: Time.getObjectID(new Date(drdoc.public_time * 1000), false),
+            docId: _id,
             docType: DocumentModel.TYPE_DISCUSSION_REPLY,
             content: drdoc.content,
             owner: uidMap[drdoc.user_id],

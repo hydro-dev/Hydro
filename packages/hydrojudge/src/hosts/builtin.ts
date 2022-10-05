@@ -4,16 +4,15 @@ import path from 'path';
 import fs from 'fs-extra';
 import type { JudgeResultBody } from 'hydrooj';
 import {
-    Logger, SettingModel, StorageModel, SystemModel, TaskModel,
+    SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
 import { processTestdata } from '../cases';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
+import logger from '../log';
 import { JudgeTask } from '../task';
-
-const logger = new Logger('judge');
 
 const session = {
     config: { detail: SystemModel.get('hydrojudge.detail') },

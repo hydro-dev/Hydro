@@ -16,7 +16,6 @@ declare module 'hydrooj' {
 }
 
 export function apply(ctx: Context) {
-    if (process.env.NODE_APP_INSTANCE === '0') {
-        ctx.once('app/started', () => require('./hosts/builtin').postInit());
-    }
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
+    ctx.once('app/started', () => require('./hosts/builtin').postInit());
 }

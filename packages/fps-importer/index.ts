@@ -127,7 +127,6 @@ class FpsProblemImportHandler extends Handler {
     }
 }
 
-export const sideEffect = true;
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.inject('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
