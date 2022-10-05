@@ -1,7 +1,6 @@
 import yaml from 'js-yaml';
 import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
-import * as bus from 'hydrooj/src/service/bus';
 import { Logger } from './logger';
 import { NestKeys } from './typeutils';
 
@@ -64,7 +63,7 @@ export async function saveConfig(config: any) {
     Schema.intersect(SystemSettings)(config);
     const value = yaml.dump(config);
     await global.Hydro.service.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
-    bus.broadcast('config/update');
+    loadConfig();
 }
 export async function setConfig(key: string, value: any) {
     const path = key.split('.');
@@ -109,5 +108,3 @@ export function requestConfig<T, S>(s: Schema<T, S>): {
 const builtin = requestConfig(builtinSettings);
 export const builtinConfig = builtin.config;
 export const setBuiltinConfig = builtin.setConfig;
-
-bus.on('config/update', loadConfig);

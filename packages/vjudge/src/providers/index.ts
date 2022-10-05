@@ -5,7 +5,7 @@ import poj from './poj';
 import spoj from './spoj';
 import uoj from './uoj';
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
     interface HydroGlobal {
         vjudge: typeof vjudge;
     }

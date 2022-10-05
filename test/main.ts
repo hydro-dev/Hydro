@@ -2,7 +2,6 @@ import assert from 'assert';
 import autocannon from 'autocannon';
 import { writeFileSync } from 'fs-extra';
 import * as supertest from 'supertest';
-import * as bus from 'hydrooj/src/service/bus';
 
 const Root = {
     username: 'root',
@@ -17,7 +16,7 @@ describe('App', () => {
         let timeout;
         const resolve = () => setTimeout(() => {
             clearTimeout(timeout);
-            agent = supertest.agent(require('hydrooj/src/service/server').httpServer);
+            agent = supertest.agent(require('hydrooj').httpServer);
             done();
         }, 2000);
         process.send = ((send) => (data) => {

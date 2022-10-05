@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import { camelCase } from '@hydrooj/utils/lib/utils';
+import { Context } from '../context';
 import {
     BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
@@ -9,6 +10,7 @@ import {
 import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar from '../lib/avatar';
 import * as mail from '../lib/mail';
+import * as useragent from '../lib/useragent';
 import { isDomainId, isEmail, isPassword } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
@@ -24,11 +26,9 @@ import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param, query, Route, Types,
+    ConnectionHandler, Handler, param, query, Types,
 } from '../service/server';
 import { md5 } from '../utils';
-
-const { geoip, useragent } = global.Hydro.lib;
 
 export class HomeHandler extends Handler {
     uids = new Set<number>();
@@ -147,6 +147,7 @@ export class HomeHandler extends Handler {
     }
 }
 
+let geoip: Context['geoip'] = null;
 class HomeSecurityHandler extends Handler {
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
@@ -154,17 +155,18 @@ class HomeSecurityHandler extends Handler {
         for (const session of sessions) {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
-            if (useragent) session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
-            if (geoip) {
-                session.updateGeoip = geoip.lookup(
-                    session.updateIp || session.createIp,
-                    this.translate('geoip_locale'),
-                );
-            }
+            session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
+            session.updateGeoip = geoip?.lookup?.(
+                session.updateIp || session.createIp,
+                this.translate('geoip_locale'),
+            );
         }
         this.response.template = 'home_security.html';
-        this.response.body = { sessions, geoipProvider: geoip?.provider };
-        if (useragent) this.response.body.icon = useragent.icon;
+        this.response.body = {
+            sessions,
+            geoipProvider: geoip?.provider,
+            icon: useragent.icon,
+        };
     }
 
     @param('current', Types.String)
@@ -223,6 +225,7 @@ class HomeSecurityHandler extends Handler {
 
 function set(s: Setting, key: string, value: any) {
     if (s) {
+        if (s.family === 'setting_storage') return undefined;
         if (s.flag & setting.FLAG_DISABLED) return undefined;
         if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
         if (s.type === 'boolean') {
@@ -431,15 +434,16 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply() {
-    Route('homepage', '/', HomeHandler);
-    Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
-    Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);
-    Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PRIV.PRIV_USER_PROFILE);
-    Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
-    Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
-    if (system.get('server.message')) Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
-    Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
+export async function apply(ctx: Context) {
+    ctx.using(['geoip'], (g) => {
+        geoip = g.geoip;
+    });
+    ctx.Route('homepage', '/', HomeHandler);
+    ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
+    if (system.get('server.message')) ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
 }
-
-global.Hydro.handler.home = apply;

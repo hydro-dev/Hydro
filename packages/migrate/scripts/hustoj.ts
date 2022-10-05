@@ -1,23 +1,11 @@
 /* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
-import fs from 'fs-extra';
-import { ObjectID } from 'mongodb';
 import mysql from 'mysql';
 import TurndownService from 'turndown';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import { noop, Time } from '@hydrooj/utils/lib/utils';
-import { addScript, Schema } from 'hydrooj';
-import { NotFoundError } from 'hydrooj/src/error';
-import { postJudge } from 'hydrooj/src/handler/judge';
-import { RecordDoc } from 'hydrooj/src/interface';
-import { buildContent } from 'hydrooj/src/lib/content';
-import * as contest from 'hydrooj/src/model/contest';
-import domain from 'hydrooj/src/model/domain';
-import problem from 'hydrooj/src/model/problem';
-import record from 'hydrooj/src/model/record';
-import SolutionModel from 'hydrooj/src/model/solution';
-import * as system from 'hydrooj/src/model/system';
-import user from 'hydrooj/src/model/user';
+import {
+    buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectID, postJudge, ProblemModel,
+    RecordDoc, RecordModel, Schema, SolutionModel, STATUS, SystemModel, Time, UserModel,
+} from 'hydrooj';
 
 const turndown = new TurndownService({
     codeBlockStyle: 'fenced',
@@ -81,7 +69,7 @@ export async function run({
             else res([val, fields]);
         });
     });
-    const target = await domain.get(domainId);
+    const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
     /*
@@ -101,22 +89,22 @@ export async function run({
     */
     const uidMap: Record<string, number> = {};
     const [udocs] = await query('SELECT * FROM `users`');
-    const precheck = await user.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
+    const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
         if (randomMail) delete udoc.email;
-        let current = await user.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
-        if (!current) current = await user.getByUname(domainId, udoc.user_id);
+        let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
+        if (!current) current = await UserModel.getByUname(domainId, udoc.user_id);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.user_id}` });
             uidMap[udoc.user_id] = current._id;
         } else {
-            const uid = await user.create(
+            const uid = await UserModel.create(
                 udoc.email || `${udoc.user_id}@hustoj.local`, udoc.user_id, '',
-                null, udoc.ip, udoc.defunct === 'Y' ? 0 : system.get('default.priv'),
+                null, udoc.ip, udoc.defunct === 'Y' ? 0 : SystemModel.get('default.priv'),
             );
             uidMap[udoc.user_id] = uid;
-            await user.setById(uid, {
+            await UserModel.setById(uid, {
                 loginat: udoc.accesstime,
                 regat: udoc.reg_time,
                 hash: udoc.password,
@@ -124,7 +112,7 @@ export async function run({
                 school: udoc.school || '',
                 hashType: 'hust',
             });
-            await domain.setUserInDomain(domainId, uid, {
+            await DomainModel.setUserInDomain(domainId, uid, {
                 displayName: udoc.nick || '',
                 school: udoc.school || '',
                 nSubmit: udoc.submit,
@@ -134,7 +122,7 @@ export async function run({
     }
 
     const [admins] = await query("SELECT * FROM `privilege` WHERE `rightstr` = 'administrator'");
-    for (const admin of admins) await domain.setUserRole(domainId, uidMap[admin.user_id], 'root');
+    for (const admin of admins) await DomainModel.setUserRole(domainId, uidMap[admin.user_id], 'root');
     const adminUids = admins.map((admin) => uidMap[admin.user_id]);
     report({ message: 'user finished' });
 
@@ -167,11 +155,11 @@ export async function run({
         const [pdocs] = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
         for (const pdoc of pdocs) {
             if (rerun) {
-                const opdoc = await problem.get(domainId, `P${pdoc.problem_id}`);
+                const opdoc = await ProblemModel.get(domainId, `P${pdoc.problem_id}`);
                 if (opdoc) pidMap[pdoc.problem_id] = opdoc.docId;
             }
             if (!pidMap[pdoc.problem_id]) {
-                const pid = await problem.add(
+                const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
                     pdoc.title, buildContent({
                         description: pdoc.description,
@@ -188,7 +176,7 @@ export async function run({
             const [cdoc] = await query(`SELECT * FROM \`privilege\` WHERE \`rightstr\` = 'p${pdoc.problem_id}'`);
             const maintainer = [];
             for (let i = 1; i < cdoc.length; i++) maintainer.push(uidMap[cdoc[i].user_id]);
-            await problem.edit(domainId, pidMap[pdoc.problem_id], {
+            await ProblemModel.edit(domainId, pidMap[pdoc.problem_id], {
                 nAccept: 0,
                 nSubmit: pdoc.submit,
                 config: `time: ${pdoc.time_limit}s\nmemory: ${pdoc.memory_limit}m`,
@@ -221,7 +209,7 @@ export async function run({
     for (const tdoc of tdocs) {
         const [pdocs] = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
-        const tid = await contest.add(
+        const tid = await ContestModel.add(
             domainId, tdoc.title, tdoc.description || 'Description',
             adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, true,
             { _code: password },
@@ -282,9 +270,9 @@ export async function run({
             if (source[0]?.source) data.code = source[0].source;
             if (rdoc.contest_id) {
                 data.contest = new ObjectID(tidMap[rdoc.contest_id]);
-                await contest.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
-            await record.coll.insertOne(data);
+            await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
     }
@@ -298,21 +286,22 @@ export async function run({
     for (const file of files) {
         if (!file.isDirectory()) continue;
         const datas = await fs.readdir(`${dataDir}/${file.name}`, { withFileTypes: true });
-        const pdoc = await problem.get(domainId, `P${file.name}`, undefined, true);
+        const pdoc = await ProblemModel.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
             const filename = nameMap[data.name] || data;
-            await problem.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
+            await ProblemModel.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
-        await problem.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
+        await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
     }
     return true;
 }
 
-addScript('migrateHustoj', 'migrate from hustoj')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'migrateHustoj', 'migrate from hustoj',
+    Schema.object({
         host: Schema.string().required(),
         port: Schema.number().required(),
         name: Schema.string().required(),
@@ -321,4 +310,6 @@ addScript('migrateHustoj', 'migrate from hustoj')
         domainId: Schema.string().required(),
         contestType: Schema.string().required(),
         dataDir: Schema.string().required(),
-    })).action(run);
+    }),
+    run,
+);

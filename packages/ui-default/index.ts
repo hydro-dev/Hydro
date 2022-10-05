@@ -2,24 +2,18 @@
 /* eslint-disable camelcase */
 import crypto from 'crypto';
 import esbuild from 'esbuild';
-import { PERM, PRIV } from 'hydrooj/src/model/builtin';
-import * as contest from 'hydrooj/src/model/contest';
-import problem from 'hydrooj/src/model/problem';
-import * as setting from 'hydrooj/src/model/setting';
-import * as system from 'hydrooj/src/model/system';
-import user from 'hydrooj/src/model/user';
-import * as bus from 'hydrooj/src/service/bus';
-import { UiContextBase } from 'hydrooj/src/service/layers/base';
-import { Handler, Route } from 'hydrooj/src/service/server';
-import { SystemSettings } from 'hydrooj/src/settings';
-import { ObjectID } from 'mongodb';
+import {
+  ContestModel, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
+  SettingModel, SystemModel, SystemSettings, UiContextBase,
+  UserModel,
+} from 'hydrooj';
+import { debounce } from 'lodash';
 import { tmpdir } from 'os';
-import { join } from 'path';
-import Schema from 'schemastery';
+import { join, resolve } from 'path';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
 
-declare module 'hydrooj/src/interface' {
+declare module 'hydrooj' {
   interface UI {
     esbuildPlugins?: esbuild.Plugin[]
   }
@@ -27,23 +21,32 @@ declare module 'hydrooj/src/interface' {
     'ui-default.nav_logo_dark': string;
     'ui-default.nav_logo_dark_2x': string;
   }
-}
-declare module 'hydrooj/src/service/layers/base' {
   interface UiContextBase {
-    nav_logo_dark: string;
-    nav_logo_dark_2x: string;
-    constantVersion: string;
+    nav_logo_dark?: string;
+    nav_logo_dark_2x?: string;
+    constantVersion?: string;
   }
 }
 
 let constant = '';
 let hash = '';
+const logger = new Logger('ui');
 
-async function buildUI() {
-  const pageFiles = Object.keys(global.Hydro.ui.manifest).filter((i) => /\.page\.[jt]sx?$/.test(i));
+export async function buildUI() {
+  const start = Date.now();
+  const entryPoints: string[] = [];
+  for (const addon of global.addons) {
+    const publicPath = resolve(addon, 'public');
+    if (fs.existsSync(publicPath)) {
+      const targets = fs.readdirSync(publicPath);
+      for (const target of targets) {
+        if (/\.page\.[jt]sx?$/.test(target)) entryPoints.push(join(publicPath, target));
+      }
+    }
+  }
   const build = await esbuild.build({
     format: 'iife',
-    entryPoints: pageFiles.map((i) => join(global.Hydro.ui.manifest[i], i)),
+    entryPoints,
     bundle: true,
     outdir: tmpdir(),
     splitting: false,
@@ -57,28 +60,26 @@ async function buildUI() {
   if (build.errors.length) console.error(build.errors);
   if (build.warnings.length) console.warn(build.warnings);
   const pages = build.outputFiles.map((i) => i.text);
-  const payload = [`window.LANGS=${JSON.stringify(setting.langs)};`, ...pages];
+  const payload = [`window.LANGS=${JSON.stringify(SettingModel.langs)};`, ...pages];
 
   const c = crypto.createHash('sha1');
   c.update(JSON.stringify(payload));
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
+  logger.success('UI addons built in %d ms', Date.now() - start);
 }
 function updateLogo() {
-  [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = system.getMany([
+  [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = SystemModel.getMany([
     'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
   ]);
 }
-bus.on('app/started', buildUI);
-bus.on('app/started', updateLogo);
-bus.on('system/setting', updateLogo);
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
 
   async get({ domainId }) {
-    const LANGS = setting.langs;
+    const LANGS = SettingModel.langs;
     const languages = {};
     for (const key in LANGS) {
       if (LANGS[key].domain && !LANGS[key].domain.includes(domainId)) continue;
@@ -94,9 +95,9 @@ class WikiAboutHandler extends Handler {
   noCheckPermView = true;
 
   async get() {
-    let raw = system.get('ui-default.about') || '';
+    let raw = SystemModel.get('ui-default.about') || '';
     // TODO template engine
-    raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || system.get('server.name')).trim();
+    raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || SystemModel.get('server.name')).trim();
     const lines = raw.split('\n');
     const sections = [];
     for (const line of lines) {
@@ -119,7 +120,7 @@ class SetThemeHandler extends Handler {
 
   async get({ theme }) {
     this.checkPriv(PRIV.PRIV_USER_PROFILE);
-    await user.setById(this.user._id, { theme });
+    await UserModel.setById(this.user._id, { theme });
     this.back();
   }
 }
@@ -154,7 +155,7 @@ class UiConstantsHandler extends ResourceHandler {
 
 class LanguageHandler extends ResourceHandler {
   async all({ lang }) {
-    if (!global.Hydro.locales[lang]) lang = system.get('server.language');
+    if (!global.Hydro.locales[lang]) lang = SystemModel.get('server.language');
     this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang])};`;
     this.response.type = 'application/javascript';
   }
@@ -170,34 +171,34 @@ class SystemConfigSchemaHandler extends Handler {
 class RichMediaHandler extends Handler {
   async renderUser(domainId, payload) {
     let d = payload.domainId || domainId;
-    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     if (!cur.hasPerm(PERM.PERM_VIEW)) d = domainId;
-    const udoc = Number.isNaN(+payload.id) ? await user.getByUname(d, payload.id) : await user.getById(d, +payload.id);
+    const udoc = Number.isNaN(+payload.id) ? await UserModel.getByUname(d, payload.id) : await UserModel.getById(d, +payload.id);
     return await this.renderHTML('partials/user.html', { udoc });
   }
 
   async renderProblem(domainId, payload) {
-    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     let pdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_PROBLEM)
-      ? await problem.get(payload.domainId || domainId, payload.id) || problem.default
-      : problem.default;
-    if (pdoc.hidden && !cur.own(pdoc) && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = problem.default;
+      ? await ProblemModel.get(payload.domainId || domainId, payload.id) || ProblemModel.default
+      : ProblemModel.default;
+    if (pdoc.hidden && !cur.own(pdoc) && !cur.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) pdoc = ProblemModel.default;
     return await this.renderHTML('partials/problem.html', { pdoc });
   }
 
   async renderContest(domainId, payload) {
-    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_CONTEST)
-      ? await contest.get(payload.domainId || domainId, new ObjectID(payload.id))
+      ? await ContestModel.get(payload.domainId || domainId, new ObjectID(payload.id))
       : null;
     if (tdoc) return await this.renderHTML('partials/contest.html', { tdoc });
     return '';
   }
 
   async renderHomework(domainId, payload) {
-    const cur = payload.domainId ? await user.getById(payload.domainId, this.user._id) : this.user;
+    const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_HOMEWORK)
-      ? await contest.get(payload.domainId || domainId, new ObjectID(payload.id))
+      ? await ContestModel.get(payload.domainId || domainId, new ObjectID(payload.id))
       : null;
     if (tdoc) return await this.renderHTML('partials/homework.html', { tdoc });
     return '';
@@ -217,13 +218,26 @@ class RichMediaHandler extends Handler {
   }
 }
 
-global.Hydro.handler.ui = async () => {
-  Route('wiki_help', '/wiki/help', WikiHelpHandler);
-  Route('wiki_about', '/wiki/about', WikiAboutHandler);
-  Route('set_theme', '/set_theme/:theme', SetThemeHandler);
-  Route('constant', '/constant/:version', UiConstantsHandler);
-  Route('markdown', '/markdown', MarkdownHandler);
-  Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
-  Route('lang', '/l/:lang', LanguageHandler);
-  Route('media', '/media', RichMediaHandler);
-};
+export function apply(ctx) {
+  if (process.env.HYDRO_CLI) return;
+  ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
+  ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
+  ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
+  ctx.Route('constant', '/constant/:version', UiConstantsHandler);
+  ctx.Route('markdown', '/markdown', MarkdownHandler);
+  ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
+  ctx.Route('lang', '/l/:lang', LanguageHandler);
+  ctx.Route('media', '/media', RichMediaHandler);
+  ctx.on('app/started', buildUI);
+  ctx.on('app/started', updateLogo);
+  ctx.on('system/setting', updateLogo);
+  const debouncedBuildUI = debounce(buildUI, 1000);
+  const triggerHotUpdate = (path) => {
+    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
+    debouncedBuildUI();
+  };
+  ctx.on('app/watch/change', triggerHotUpdate);
+  ctx.on('app/watch/unlink', triggerHotUpdate);
+  buildUI();
+  updateLogo();
+}

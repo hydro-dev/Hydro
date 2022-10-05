@@ -6,7 +6,7 @@ import {
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { OAuthUserResponse, Udoc, User } from '../interface';
+import { Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
@@ -22,7 +22,7 @@ import task from '../model/task';
 import token from '../model/token';
 import user from '../model/user';
 import {
-    Handler, param, post, Route, Types,
+    Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
@@ -298,7 +298,7 @@ class UserDetailHandler extends Handler {
         const [udoc, sdoc, union] = await Promise.all([
             user.getById(domainId, uid),
             token.getMostRecentSessionByUid(uid, ['createAt', 'updateAt']),
-            domain.getUnion(domainId),
+            domain.get(domainId),
         ]);
         if (!udoc) throw new UserNotFoundError(uid);
         const pdocs: ProblemDoc[] = [];
@@ -359,7 +359,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.String)
     async get(domainId: string, type: string) {
-        await global.Hydro.lib[`oauth_${type}`]?.get?.call(this);
+        await global.Hydro.module.oauth[type]?.get.call(this);
     }
 }
 
@@ -367,8 +367,8 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        if (!global.Hydro.lib[`oauth_${args.type}`]) throw new UserFacingError('Oauth type');
-        const r = await global.Hydro.lib[`oauth_${args.type}`].callback.call(this, args) as OAuthUserResponse;
+        if (!global.Hydro.module.oauth[args.type]) throw new UserFacingError('Oauth type');
+        const r = await global.Hydro.module.oauth[args.type].callback.call(this, args);
         const uid = await oauth.get(r._id);
         if (uid) {
             await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });
@@ -422,17 +422,15 @@ class OauthCallbackHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('user_login', '/login', UserLoginHandler);
-    Route('user_oauth', '/oauth/:type', OauthHandler);
-    Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
-    Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
-    Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
-    Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
-    Route('user_lostpass', '/lostpass', UserLostPassHandler);
-    Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
-    Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
-    Route('user_detail', '/user/:uid', UserDetailHandler);
+export async function apply(ctx) {
+    ctx.Route('user_login', '/login', UserLoginHandler);
+    ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
+    ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
+    ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
+    ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
+    ctx.Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_lostpass', '/lostpass', UserLostPassHandler);
+    ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
+    ctx.Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_detail', '/user/:uid', UserDetailHandler);
 }
-
-global.Hydro.handler.user = apply;

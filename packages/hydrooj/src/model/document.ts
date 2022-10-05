@@ -3,6 +3,7 @@ import assert from 'assert';
 import {
     Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, UpdateQuery,
 } from 'mongodb';
+import { Context } from '../context';
 import {
     BlogDoc, Content, DiscussionDoc,
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
@@ -80,7 +81,7 @@ export async function add(
         doc.parentType = parentType;
         doc.parentId = parentId;
     }
-    await bus.serial('document/add', doc);
+    await bus.parallel('document/add', doc);
     const res = await coll.insertOne(doc);
     return docId || res.insertedId;
 }
@@ -306,7 +307,7 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
 ): Promise<DocStatusType[T]> {
-    const current = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
+    const current: Partial<DocStatusType[T]> = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
     if (typeof key === 'string' && key.includes('.')) {
         const acc = key.split('.');
         let c = current;
@@ -405,7 +406,11 @@ export async function revSetStatus<T extends keyof DocStatusType>(
     return res.value;
 }
 
-bus.once('app/started', async () => {
+export async function apply(ctx: Context) {
+    ctx.on('domain/delete', (domainId) => Promise.all([
+        coll.deleteMany({ domainId }),
+        collStatus.deleteMany({ domainId }),
+    ]));
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
@@ -436,11 +441,7 @@ bus.once('app/started', async () => {
         { key: { domainId: 1, docType: 1, docId: 1, accept: -1, time: 1 }, name: 'contestRuleACM', sparse: true },
         { key: { domainId: 1, docType: 1, uid: 1, enroll: 1, docId: 1 }, name: 'training', sparse: true },
     );
-});
-bus.on('domain/delete', (domainId) => Promise.all([
-    coll.deleteMany({ domainId }),
-    collStatus.deleteMany({ domainId }),
-]));
+}
 
 global.Hydro.model.document = {
     coll,

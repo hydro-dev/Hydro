@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 import Schema from 'schemastery';
-import { addScript } from '../loader';
 import { STATUS } from '../model/builtin';
 import storage from '../model/storage';
 
@@ -37,6 +36,4 @@ export async function run(_, report) {
     return true;
 }
 
-addScript('storageUsage', 'Calculate storage usage')
-    .args(Schema.any())
-    .action(run);
+export const apply = (ctx) => ctx.addScript('storageUsage', 'Calculate storage usage', Schema.any(), run);

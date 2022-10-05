@@ -159,8 +159,8 @@ const acm = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time, page);
+    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getList(tdoc.domainId, uids);
         // Find first accept
@@ -179,7 +179,7 @@ const acm = buildContestRule({
             { $match: { 'detail.status': STATUS.STATUS_ACCEPTED } },
             { $sort: { 'detail.rid': 1 } },
             { $group: { _id: '$detail.pid', first: { $first: '$detail.rid' } } },
-        ]).toArray();
+        ]).toArray() as any[];
         for (const t of data) first[t._id] = t.first.generationTime;
 
         const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
@@ -191,7 +191,7 @@ const acm = buildContestRule({
                 ),
             )),
         ];
-        return [rows, udict, nPages];
+        return [rows, udict];
     },
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
@@ -274,8 +274,8 @@ const oi = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
+    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getList(tdoc.domainId, uids);
         const psdict = {};
@@ -309,7 +309,7 @@ const oi = buildContestRule({
                 ),
             )),
         ];
-        return [rows, udict, nPages];
+        return [rows, udict];
     },
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
@@ -455,8 +455,8 @@ const homework = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor, page) {
-        const [rankedTsdocs, nPages] = await ranked(cursor, (a, b) => a.score === b.score, page);
+    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getList(tdoc.domainId, uids);
         const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
@@ -466,7 +466,7 @@ const homework = buildContestRule({
                 ([rank, tsdoc]) => this.scoreboardRow(isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc),
             )),
         ];
-        return [rows, udict, nPages];
+        return [rows, udict];
     },
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
@@ -492,11 +492,11 @@ export async function add(
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     RULES[rule].check(data);
-    await bus.serial('contest/before-add', data);
+    await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
-    await bus.serial('contest/add', data, res);
+    await bus.parallel('contest/add', data, res);
     return res;
 }
 
@@ -681,18 +681,18 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectID,
-    isExport = false, page: number, ignoreLock = false,
-): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict, number]> {
+    isExport = false, ignoreLock = false,
+): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     if (ignoreLock) delete tdoc.lockAt;
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
-    const [rows, udict, nPages] = await RULES[tdoc.rule].scoreboard(
+    const [rows, udict] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),
-        tdoc, pdict, tsdocsCursor, page,
+        tdoc, pdict, tsdocsCursor,
     );
-    return [tdoc, rows, udict, pdict, nPages];
+    return [tdoc, rows, udict, pdict];
 }
 
 export const statusText = (tdoc: Tdoc, tsdoc?: any) => (

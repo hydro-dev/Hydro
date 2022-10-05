@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import { ObjectID } from 'mongodb';
 import Schema from 'schemastery';
-import { addScript } from '../loader';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
 import db from '../service/db';
@@ -153,15 +152,17 @@ export async function pdoc(report) {
     if (bulk.length) await bulk.execute();
 }
 
-addScript('problemStat', 'Recalculates nSubmit and nAccept in problem status.')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'problemStat', 'Recalculates nSubmit and nAccept in problem status.',
+    Schema.object({
         udoc: Schema.boolean(),
         pdoc: Schema.boolean(),
         psdoc: Schema.boolean(),
-    }))
-    .action(async (arg, report) => {
+    }),
+    async (arg, report) => {
         if (arg.pdoc === undefined || arg.pdoc) await pdoc(report);
         if (arg.udoc === undefined || arg.udoc) await udoc(report);
         if (arg.psdoc === undefined || arg.psdoc) await psdoc(report);
         return true;
-    });
+    },
+);

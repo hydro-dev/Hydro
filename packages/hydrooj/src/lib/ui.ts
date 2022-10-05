@@ -31,7 +31,9 @@ export const nodes = new Proxy({}, {
     },
 });
 export function inject(node: UIInjectableFields, name: string, args: Record<string, any> = {}, ...permPrivChecker: PermPrivChecker) {
-    nodes[node].push({ name, args: args || {}, checker: buildChecker(...permPrivChecker) });
+    const obj = { name, args: args || {}, checker: buildChecker(...permPrivChecker) };
+    nodes[node].push(obj);
+    return () => { nodes[node] = nodes[node].filter((i) => i !== obj); };
 }
 export function getNodes(name: UIInjectableFields) {
     return nodes[name];
@@ -65,5 +67,4 @@ inject('ProblemAdd', 'problem_create', { icon: 'add', text: 'Create Problem' });
 global.Hydro.ui.inject = inject;
 global.Hydro.ui.nodes = nodes as any;
 global.Hydro.ui.getNodes = getNodes;
-global.Hydro.ui.Nav = Nav;
-global.Hydro.ui.ProblemAdd = ProblemAdd;
+Object.assign(global.Hydro.ui, { ProblemAdd, Nav });

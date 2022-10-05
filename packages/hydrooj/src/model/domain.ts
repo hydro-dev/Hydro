@@ -10,7 +10,6 @@ import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
-const collUnion = db.collection('domain.union');
 
 interface DomainUserArg {
     _id: number,
@@ -52,7 +51,7 @@ class DomainModel {
             roles: {},
             avatar: '',
         };
-        await bus.serial('domain/create', ddoc);
+        await bus.parallel('domain/create', ddoc);
         await coll.insertOne(ddoc);
         await DomainModel.setUserRole(domainId, owner, 'root');
         return domainId;
@@ -61,18 +60,18 @@ class DomainModel {
     @ArgMethod
     static async get(domainId: string): Promise<DomainDoc | null> {
         const query: FilterQuery<DomainDoc> = { lower: domainId.toLowerCase() };
-        await bus.serial('domain/before-get', query);
+        await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
-        if (result) await bus.serial('domain/get', result);
+        if (result) await bus.parallel('domain/get', result);
         return result;
     }
 
     @ArgMethod
     static async getByHost(host: string): Promise<DomainDoc | null> {
         const query: FilterQuery<DomainDoc> = { host };
-        await bus.serial('domain/before-get', query);
+        await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
-        if (result) await bus.serial('domain/get', result);
+        if (result) await bus.parallel('domain/get', result);
         return result;
     }
 
@@ -81,9 +80,9 @@ class DomainModel {
     }
 
     static async edit(domainId: string, $set: Partial<DomainDoc>) {
-        await bus.serial('domain/before-update', domainId, $set);
+        await bus.parallel('domain/before-update', domainId, $set);
         const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnDocument: 'after' });
-        if (result.value) await bus.serial('domain/update', domainId, $set, result.value);
+        if (result.value) await bus.parallel('domain/update', domainId, $set, result.value);
         return result.value;
     }
 
@@ -254,36 +253,22 @@ class DomainModel {
     }
 
     @ArgMethod
-    static async addUnion(domainId: string, union: string[]) {
-        return await collUnion.updateOne({ _id: domainId }, { $set: { union } }, { upsert: true });
-    }
-
-    @ArgMethod
-    static async removeUnion(domainId: string) {
-        return await collUnion.deleteOne({ _id: domainId });
-    }
-
-    @ArgMethod
+    /** @deprecated */
     static async getUnion(domainId: string) {
-        return await collUnion.findOne({ _id: domainId });
-    }
-
-    @ArgMethod
-    static async searchUnion(query) {
-        return await collUnion.find(query).toArray();
+        return await coll.findOne({ _id: domainId });
     }
 }
 
-bus.once('app/started', async () => {
-    await db.ensureIndexes(
+bus.on('ready', () => Promise.all([
+    db.ensureIndexes(
         coll,
         { key: { lower: 1 }, name: 'lower', unique: true },
-    );
-    await db.ensureIndexes(
+    ),
+    db.ensureIndexes(
         collUser,
         { key: { domainId: 1, uid: 1 }, name: 'uid', unique: true },
         { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
-    );
-});
+    ),
+]));
 export default DomainModel;
 global.Hydro.model.domain = DomainModel;

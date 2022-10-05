@@ -2,11 +2,12 @@
 import {
     Collection, Db, IndexSpecification, MongoClient,
 } from 'mongodb';
-import { BaseService, Collections } from '../interface';
 import { Logger } from '../logger';
+import options from '../options';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');
+export interface Collections { }
 
 interface MongoConfig {
     protocol?: string,
@@ -19,10 +20,9 @@ interface MongoConfig {
     prefix?: string,
 }
 
-class MongoService implements BaseService {
+class MongoService {
     public client: MongoClient;
     public db: Db;
-    public started = false;
     private opts: MongoConfig;
 
     static buildUrl(opts: MongoConfig) {
@@ -33,8 +33,8 @@ class MongoService implements BaseService {
         return mongourl;
     }
 
-    async start(opts: MongoConfig) {
-        opts ||= {};
+    async start() {
+        const opts = options() || {};
         let mongourl = MongoService.buildUrl(opts);
         if (process.env.CI) {
             const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -45,7 +45,6 @@ class MongoService implements BaseService {
         this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
         this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
-        this.started = true;
     }
 
     public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
@@ -83,8 +82,14 @@ class MongoService implements BaseService {
             }
         }
     }
+
+    public async apply(ctx) {
+        await this.start();
+        ctx.on('dispose', () => this.client.close());
+    }
 }
 
 const service = new MongoService();
 global.Hydro.service.db = service;
-export = service;
+export default service;
+export const collection = service.collection.bind(service);

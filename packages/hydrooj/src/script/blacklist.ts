@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { ObjectID } from 'mongodb';
 import Schema from 'schemastery';
-import { addScript } from '../loader';
 import blacklist from '../model/blacklist';
 import * as discussion from '../model/discussion';
 import * as document from '../model/document';
@@ -61,8 +60,9 @@ async function _user(
     if (!dryrun) await UserModel.ban(uid);
 }
 
-addScript('blacklist', 'Add blacklist by ip, uid')
-    .args(Schema.object({
+export const apply = (ctx) => ctx.addScript(
+    'blacklist', 'Add blacklist by ip, uid',
+    Schema.object({
         address: Schema.string(),
         discuss: Schema.object({
             domainId: Schema.string(),
@@ -70,8 +70,8 @@ addScript('blacklist', 'Add blacklist by ip, uid')
         }),
         user: Schema.number(),
         dryrun: Schema.boolean(),
-    }))
-    .action(async ({
+    }),
+    async ({
         address = null, discuss = null, user = null, dryrun = true,
     }, report) => {
         if (address) await _address(address, new Set(), new Set(), new Set(), dryrun, report);
@@ -83,4 +83,5 @@ addScript('blacklist', 'Add blacklist by ip, uid')
         }
         if (user) await _user(user, new Set(), new Set(), new Set(), dryrun, report);
         return true;
-    });
+    },
+);

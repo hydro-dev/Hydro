@@ -1,8 +1,8 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "hydrooj utils",
-    "main": "package.json",
+    "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
@@ -14,6 +14,7 @@
         "js-yaml": "^4.1.0",
         "moment-timezone": "^0.5.37",
         "mongodb": "^3.7.3",
+        "reggol": "^1.3.0",
         "source-map-support": "^0.5.21",
         "systeminformation": "^5.12.6"
     },

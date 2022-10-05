@@ -1,21 +1,20 @@
 import { Cursor } from 'mongodb';
-import paginate from './paginate';
 
-type ranked = <T>(cursor: Cursor<T>, equ: ((a: T, b: T) => boolean), page?: number) => Promise<[[number, T][], number]>;
+type ranked = <T>(cursor: Cursor<T>, equ: ((a: T, b: T) => boolean)) => Promise<[number, T][]>;
 
-const ranked: ranked = async (cursor, equ, page) => {
+const ranked: ranked = async (cursor, equ) => {
     let last = null;
-    let r = page ? (page - 1) * 100 : 0;
-    let count = page ? r : 0;
+    let r = 0;
+    let count = 0;
     const results = [];
-    const [docs, nPages] = page ? await paginate(cursor, page, 100) : [await cursor.toArray(), 1];
+    const docs = await cursor.toArray();
     for (const doc of docs) {
         count++;
         if (!last || !equ(last, doc)) r = count;
         last = doc;
         results.push([r, doc]);
     }
-    return [results, nPages];
+    return results;
 };
 
 global.Hydro.lib.rank = ranked;

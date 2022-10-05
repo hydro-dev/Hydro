@@ -4,19 +4,19 @@ import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
+import { Context } from '../context';
 import { Logger } from '../logger';
-import options from '../options';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import {
-    handler, lib, locale, model, script, service, setting, template,
+    addon, builtinModel, handler, lib, locale, model,
+    script, service, setting, template,
 } from './common';
 
+const argv = cac().parse();
 const logger = new Logger('worker');
-const detail = cac().parse().options.loaderDetail;
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 
-export async function load() {
+export async function apply(ctx: Context) {
     fs.ensureDirSync(tmpdir);
     require('../lib/i18n');
     require('../utils');
@@ -24,60 +24,50 @@ export async function load() {
     const config = require('../options')();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
-        return require('./setup').load();
+        await require('./setup').load();
     }
     const pending = global.addons;
     const fail = [];
-    if (detail) logger.info('start');
     await Promise.all([
         locale(pending, fail),
         template(pending, fail),
     ]);
-    if (detail) logger.info('finish: locale/template/static');
-    const opts = options();
-    await db.start(opts);
+    await db.start();
     await require('../settings').loadConfig();
-    if (detail) logger.info('finish: db.connect');
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
-    if (detail) logger.info('finish: config');
     const storage = require('../service/storage');
     await storage.loadStorageService();
-    if (detail) logger.info('finish: storage.connect');
+    await require('../service/server').apply(ctx);
+    // Make sure everything is ready and then start main entry
+    if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
+    await ctx.root.start();
     require('../lib/index');
-    if (detail) logger.info('finish: lib.builtin');
-    await lib(pending, fail);
-    if (detail) logger.info('finish: lib.extra');
-    require('../service/monitor');
-    if (detail) logger.info('finish: monitor');
-    const server = require('../service/server');
-    await server.prepare();
-    if (detail) logger.info('finish: server');
-    await service(pending, fail);
-    if (detail) logger.info('finish: service.extra');
-    require('../model/index');
-    if (detail) logger.info('finish: model.builtin');
-    require('../handler/index');
-    if (detail) logger.info('finish: handler.builtin');
-    await model(pending, fail);
-    if (detail) logger.info('finish: model.extra');
+    await lib(pending, fail, ctx);
+    ctx.plugin(require('../service/monitor'));
+    await service(pending, fail, ctx);
+    await builtinModel(ctx);
+    await model(pending, fail, ctx);
+    await ctx.lifecycle.flush();
+
     const modelSetting = require('../model/setting');
     await setting(pending, fail, modelSetting);
-    if (detail) logger.info('finish: setting');
-    await handler(pending, fail);
-    if (detail) logger.info('finish: handler.extra');
+    const handlerDir = path.resolve(__dirname, '..', 'handler');
+    const handlers = await fs.readdir(handlerDir);
+    for (const h of handlers) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
+    }
+    await handler(pending, fail, ctx);
+    await addon(pending, fail, ctx);
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
-    if (detail) logger.info('finish: handler.apply');
-    const notfound = require('../handler/notfound');
-    await notfound.apply();
-    require('../script/index');
-    if (detail) logger.info('finish: script.builtin');
-    await script(pending, fail);
-    if (detail) logger.info('finish: script.extra');
-    await bus.serial('app/started');
-    if (detail) logger.info('finish: bus.serial(start)');
-    await server.start();
-    if (detail) logger.info('finish: server.start');
+    const scriptDir = path.resolve(__dirname, '..', 'script');
+    for (const h of await fs.readdir(scriptDir)) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+    }
+    await ctx.lifecycle.flush();
+    await script(pending, fail, ctx);
+    await ctx.lifecycle.flush();
+    await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         const scripts = require('../upgrade').default;
         let dbVer = (await modelSystem.get('db.ver')) ?? 0;
@@ -98,5 +88,6 @@ export async function load() {
     }
     logger.success('Server started');
     process.send?.('ready');
+    await ctx.parallel('app/ready');
     return { fail };
 }

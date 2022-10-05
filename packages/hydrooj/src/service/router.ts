@@ -6,6 +6,10 @@ import type WebSocket from 'ws';
 import type { KoaContext } from './server';
 
 type WebSocketCallback = (socket: WebSocket, request: IncomingMessage, ctx: KoaContext) => void;
+function remove<T>(list: T[], item: T) {
+    const index = list.indexOf(item);
+    if (index >= 0) list.splice(index, 1);
+}
 
 export class WebSocketLayer {
     clients = new Set<WebSocket>();
@@ -34,20 +38,21 @@ export class WebSocketLayer {
 
 export class Router extends KoaRouter {
     wsStack: WebSocketLayer[] = [];
+    disposeLastOp = () => null;
 
     /**
      * hack into router methods to make sure that koa middlewares are disposable
      */
     register(...args: Parameters<KoaRouter['register']>) {
         const layer = super.register(...args);
-        // TODO handle unregister
+        this.disposeLastOp = () => remove(this.stack, layer);
         return layer;
     }
 
     ws(path: Parameters<typeof pathToRegexp>[0], callback?: WebSocketCallback) {
         const layer = new WebSocketLayer(this, path, callback);
         this.wsStack.push(layer);
-        // TODO handle unregistry
+        this.disposeLastOp = () => remove(this.wsStack, layer);
         return layer;
     }
 }

@@ -1,8 +1,8 @@
 import { PassThrough } from 'stream';
 import { cloneDeep } from 'lodash';
-import * as system from 'hydrooj/src/model/system';
-import token from 'hydrooj/src/model/token';
-import type { HydroRequest, HydroResponse } from 'hydrooj/src/service/server';
+import * as system from '../../model/system';
+import token from '../../model/token';
+import type { HydroRequest, HydroResponse } from '../server';
 
 export interface UiContextBase {
     cdn_prefix: string;

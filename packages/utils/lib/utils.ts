@@ -4,9 +4,19 @@ import path from 'path';
 import { Duplex } from 'stream';
 import { inspect } from 'util';
 import fs from 'fs-extra';
-import type { Moment } from 'moment-timezone';
-import { isMoment } from 'moment-timezone';
+import { isMoment, Moment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
+import Logger from 'reggol';
+
+Logger.levels.base = process.env.DEV ? 3 : 2;
+Logger.targets[0].showTime = 'MM/dd hh:mm:ss';
+Logger.targets[0].label = {
+    align: 'right',
+    width: 10,
+    margin: 2,
+};
+
+export { Logger };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
@@ -151,7 +161,23 @@ export namespace Time {
 
 export function errorMessage(err: Error | string) {
     const t = typeof err === 'string' ? err : err.stack;
-    const parsed = t
+    const lines = t.split('\n')
+        .filter((i) => !i.includes(' (node:') && !i.includes('(internal'));
+    let cursor = 1;
+    let count = 0;
+    while (cursor < lines.length) {
+        if (lines[cursor] !== lines[cursor - 1]) {
+            if (count) {
+                lines[cursor - 1] += ` [+${count}]`;
+                count = 0;
+            }
+            cursor++;
+        } else {
+            count++;
+            lines.splice(cursor, 1);
+        }
+    }
+    const parsed = lines.join('\n')
         .replace(/[A-Z]:\\.+\\@hydrooj\\/g, '@hydrooj\\')
         .replace(/\/.+\/@hydrooj\//g, '\\')
         .replace(/[A-Z]:\\.+\\hydrooj\\/g, 'hydrooj\\')

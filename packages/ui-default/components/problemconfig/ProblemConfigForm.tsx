@@ -83,9 +83,9 @@ function ExtraFilesConfig() {
 
 function LangConfig() {
   const langs = useSelector((state: RootState) => state.config.langs) || [];
-  const prefixes = new Set(Object.keys(LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-  const data = Object.keys(LANGS).filter((i) => !prefixes.has(i))
-    .map((i) => ({ name: LANGS[i].display, _id: i }));
+  const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+  const data = Object.keys(window.LANGS).filter((i) => !prefixes.has(i))
+    .map((i) => ({ name: window.LANGS[i].display, _id: i }));
   const dispatch = useDispatch();
   const ref = React.useRef<any>();
   const selectedKeys = langs.filter((i) => !prefixes.has(i));

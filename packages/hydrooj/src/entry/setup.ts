@@ -10,6 +10,7 @@ import { Logger } from '../logger';
 
 const logger = new Logger('setup');
 const listenPort = cac().parse().options.port || 8888;
+let resolve;
 
 async function get(ctx: Context) {
     ctx.body = `<!DOCTYPE html>
@@ -105,7 +106,8 @@ async function post(ctx: Context) {
         fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
             host, port, name, username, password,
         }));
-        ctx.body = '<h1>Done! Please restart Hydro.</h1>';
+        ctx.body = '<h1>Done! Hydro is now starting.</h1>';
+        resolve?.();
     } catch (e) {
         ctx.body = `Error connecting to database: ${e.message}\n${e.stack}`;
     }
@@ -123,4 +125,7 @@ export function load() {
         });
     server.listen(listenPort);
     logger.success('Server listening at: %d', listenPort);
+    return new Promise((r) => {
+        resolve = r;
+    });
 }

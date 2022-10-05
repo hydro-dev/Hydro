@@ -1,5 +1,5 @@
 import { normalizeSubtasks, readSubtasksFromFiles, size } from '@hydrooj/utils/lib/common';
-import { SubtaskType } from 'hydrooj/src/interface';
+import type { SubtaskType } from 'hydrooj/src/interface';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';

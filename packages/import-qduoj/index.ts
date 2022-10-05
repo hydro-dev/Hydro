@@ -1,22 +1,21 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
-import AdmZip from 'adm-zip';
-import fs from 'fs-extra';
-import yaml from 'js-yaml';
-import type { ContentNode, ProblemConfigFile } from 'hydrooj';
-import { ValidationError } from 'hydrooj/src/error';
-import { buildContent } from 'hydrooj/src/lib/content';
-import { ProblemAdd } from 'hydrooj/src/lib/ui';
-import { PERM } from 'hydrooj/src/model/builtin';
-import problem from 'hydrooj/src/model/problem';
-import { Handler, Route } from 'hydrooj/src/service/server';
+import {
+    AdmZip, buildContent, ContentNode, Context, fs, Handler, PERM,
+    ProblemConfigFile, ProblemModel, ValidationError, yaml,
+} from 'hydrooj';
 
 fs.ensureDirSync('/tmp/hydro/import-qduoj');
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
-        const zip = new AdmZip(zipfile);
+        let zip: AdmZip;
+        try {
+            zip = new AdmZip(zipfile);
+        } catch (e) {
+            throw new ValidationError('zip', null, e.message);
+        }
         const tmp = path.resolve(os.tmpdir(), 'hydro', 'import-qduoj', String.random(32));
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
@@ -75,9 +74,9 @@ class ImportQduojHandler extends Handler {
                     });
                 }
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
-                const n = await problem.get(domainId, pdoc.display_id);
+                const n = await ProblemModel.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
-                const pid = await problem.add(domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'), this.user._id, pdoc.tags);
+                const pid = await ProblemModel.add(domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'), this.user._id, pdoc.tags);
                 const config: ProblemConfigFile = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,
@@ -85,11 +84,11 @@ class ImportQduojHandler extends Handler {
                 };
                 for (const tc of pdoc.test_case_score) {
                     await Promise.all([
-                        problem.addTestdata(
+                        ProblemModel.addTestdata(
                             domainId, pid, tc.input_name,
                             path.join(tmp, folder, 'testcase', tc.input_name),
                         ),
-                        problem.addTestdata(
+                        ProblemModel.addTestdata(
                             domainId, pid, tc.output_name,
                             path.join(tmp, folder, 'testcase', tc.output_name),
                         ),
@@ -103,8 +102,8 @@ class ImportQduojHandler extends Handler {
                     });
                 }
                 await Promise.all([
-                    problem.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-                    problem.edit(domainId, pid, { html: true }),
+                    ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+                    ProblemModel.edit(domainId, pid, { html: true }),
                 ]);
             }
         } finally {
@@ -126,9 +125,7 @@ class ImportQduojHandler extends Handler {
     }
 }
 
-export async function apply() {
-    Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
-    ProblemAdd('problem_import_qduoj', {}, 'copy', 'From QDUOJ Export');
+export async function apply(ctx: Context) {
+    ctx.Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
+    ctx.inject('ProblemAdd', 'problem_import_qduoj', { icon: 'copy', text: 'From QDUOJ Export' });
 }
-
-global.Hydro.handler.qduImport = apply;

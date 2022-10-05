@@ -16,7 +16,7 @@ import TaskModel from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    Connection, ConnectionHandler, Handler, param, Route, Types,
+    ConnectionHandler, Handler, param, Types,
 } from '../service/server';
 import { buildProjection } from '../utils';
 import { postJudge } from './judge';
@@ -133,7 +133,7 @@ class RecordDetailHandler extends Handler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
-        let tdoc;
+        let tdoc: Tdoc<30>;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -155,6 +155,10 @@ class RecordDetailHandler extends Handler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
+        if (tdoc && contest.isDone(tdoc)) {
+            const tsdoc = await contest.getStatus(domainId, tdoc.docId, this.user._id);
+            canViewCode ||= tsdoc?.attend;
+        }
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};
@@ -359,11 +363,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply() {
-    Route('record_main', '/record', RecordListHandler);
-    Route('record_detail', '/record/:rid', RecordDetailHandler);
-    Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
-    Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
+export async function apply(ctx) {
+    ctx.Route('record_main', '/record', RecordListHandler);
+    ctx.Route('record_detail', '/record/:rid', RecordDetailHandler);
+    ctx.Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
+    ctx.Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }
-
-global.Hydro.handler.record = apply;

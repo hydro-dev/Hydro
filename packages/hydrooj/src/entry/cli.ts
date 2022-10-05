@@ -1,12 +1,13 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
+import path from 'path';
 import cac from 'cac';
+import fs from 'fs-extra';
 import { ObjectID } from 'mongodb';
-import { validate } from '../lib/validator';
-import options from '../options';
+import { Context } from '../context';
 import db from '../service/db';
 import {
-    lib, model, script, service,
+    addon, lib, model, script, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -24,12 +25,7 @@ function parseParameters(fn: Function) {
 async function runScript(name: string, arg: any) {
     const s = global.Hydro.script[name];
     if (!s) return console.error('Script %s not found.', name);
-    if (typeof s.validate === 'function') {
-        arg = s.validate(arg);
-    } else {
-        console.warn('You are using the legacy script validation API, which will be dropped in the future.');
-        validate(s.validate, arg);
-    }
+    if (typeof s.validate === 'function') arg = s.validate(arg);
     return await s.run(arg, console.info);
 }
 
@@ -84,26 +80,33 @@ async function cli() {
     return console.log(result);
 }
 
-export async function load() {
+export async function load(ctx: Context) {
     const pending = global.addons;
     const fail = [];
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    require('../options');
-    const opts = options();
-    await db.start(opts);
+    await db.start();
     await require('../settings').loadConfig();
-    const storage = require('../service/storage');
-    await storage.loadStorageService();
+    await require('../model/system').runConfig();
+    await require('../service/storage').loadStorageService();
+    await ctx.root.start();
     require('../lib/index');
-    await lib(pending, fail);
-    const systemModel = require('../model/system');
-    await systemModel.runConfig();
-    await service(pending, fail);
+    await Promise.all([
+        lib(pending, fail, ctx),
+        service(pending, fail, ctx),
+    ]);
     require('../model/index');
-    await model(pending, fail);
-    require('../script/index');
-    await script(pending, fail);
+    await Promise.all([
+        model(pending, fail, ctx),
+        setting(pending, fail, require('../model/setting')),
+    ]);
+    ctx.plugin(require('../service/server'));
+    await addon(pending, fail, ctx);
+    const scriptDir = path.resolve(__dirname, '..', 'script');
+    for (const h of await fs.readdir(scriptDir)) {
+        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+    }
+    await script(pending, fail, ctx);
     await cli();
 }

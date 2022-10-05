@@ -1,14 +1,17 @@
 import { dirname, resolve } from 'path';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { URL } from 'url';
 import {
-    copyFile, createReadStream, ensureDir,
+    CopyObjectCommand, DeleteObjectCommand, DeleteObjectsCommand,
+    GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client,
+} from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import {
+    copyFile, createReadStream, createWriteStream, ensureDir,
     remove, stat, writeFile,
 } from 'fs-extra';
 import { lookup } from 'mime-types';
-import {
-    BucketItem, Client, CopyConditions, ItemBucketMetadata,
-} from 'minio';
 import { Logger } from '../logger';
 import { builtinConfig } from '../settings';
 import { MaybeArray } from '../typeutils';
@@ -27,31 +30,6 @@ interface StorageOptions {
     endPointForJudge?: string;
 }
 
-interface EndpointConfig {
-    endPoint: string;
-    port: number;
-    useSSL: boolean;
-}
-
-function parseMainEndpointUrl(endpoint: string): EndpointConfig {
-    if (!endpoint) throw new Error('Empty endpoint');
-    const url = new URL(endpoint);
-    const result: Partial<EndpointConfig> = {};
-    if (url.pathname !== '/') throw new Error('Main endpoint URL of a sub-directory is not supported.');
-    if (url.username || url.password || url.hash || url.search) {
-        throw new Error('Authorization, search parameters and hash are not supported for main endpoint URL.');
-    }
-    if (url.protocol === 'http:') result.useSSL = false;
-    else if (url.protocol === 'https:') result.useSSL = true;
-    else {
-        throw new Error(
-            `Invalid protocol "${url.protocol}" for main endpoint URL. Only HTTP and HTTPS are supported.`,
-        );
-    }
-    result.endPoint = url.hostname;
-    result.port = url.port ? Number(url.port) : result.useSSL ? 443 : 80;
-    return result as EndpointConfig;
-}
 function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) => string {
     if (!endpoint) return (originalUrl) => originalUrl;
     const pathonly = endpoint.startsWith('/');
@@ -82,7 +60,7 @@ export function encodeRFC5987ValueChars(str: string) {
 }
 
 class RemoteStorageService {
-    public client: Client;
+    public client: S3Client;
     public error = '';
     public opts: StorageOptions;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
@@ -110,19 +88,15 @@ class RemoteStorageService {
                 endPointForUser,
                 endPointForJudge,
             };
-            this.client = new Client({
-                ...parseMainEndpointUrl(this.opts.endPoint),
-                pathStyle: this.opts.pathStyle,
-                accessKey: this.opts.accessKey,
-                secretKey: this.opts.secretKey,
+            this.client = new S3Client({
+                endpoint: this.opts.endPoint,
+                region: this.opts.region,
+                forcePathStyle: this.opts.pathStyle,
+                credentials: {
+                    accessKeyId: this.opts.accessKey,
+                    secretAccessKey: this.opts.secretKey,
+                },
             });
-            try {
-                const exists = await this.client.bucketExists(this.opts.bucket);
-                if (!exists) await this.client.makeBucket(this.opts.bucket, this.opts.region);
-            } catch (e) {
-                // Some platform doesn't support bucketExists & makeBucket API.
-                // Ignore this error.
-            }
             this.replaceWithAlternativeUrlFor = {
                 user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
                 judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),
@@ -137,119 +111,121 @@ class RemoteStorageService {
         }
     }
 
-    async put(target: string, file: string | Buffer | Readable, meta: ItemBucketMetadata = {}) {
+    async put(target: string, file: string | Buffer | Readable, meta: Record<string, string> = {}) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (typeof file === 'string') file = createReadStream(file);
-        try {
-            await this.client.putObject(this.opts.bucket, target, file, meta);
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+        await this.client.send(new PutObjectCommand({
+            Bucket: this.opts.bucket,
+            Body: file,
+            Key: target,
+            Metadata: meta,
+        }));
     }
 
     async get(target: string, path?: string) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            if (path) return await this.client.fGetObject(this.opts.bucket, target, path);
-            return await this.client.getObject(this.opts.bucket, target);
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
+        const res = await this.client.send(new GetObjectCommand({
+            Bucket: this.opts.bucket,
+            Key: target,
+        }));
+        if (!res.Body) throw new Error();
+        const stream = res.Body as Readable;
+        if (path) {
+            await new Promise((end, reject) => {
+                const file = createWriteStream(path);
+                stream.on('error', reject);
+                stream.on('end', () => {
+                    file.close();
+                    end(null);
+                });
+                stream.pipe(file);
+            });
+            return null;
         }
+        const p = new PassThrough();
+        stream.pipe(p);
+        return p;
     }
 
     async del(target: string | string[]) {
         if (typeof target === 'string') {
             if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         } else if (target.find((t) => t.includes('..') || t.includes('//'))) throw new Error('Invalid path');
-        try {
-            if (typeof target === 'string') return await this.client.removeObject(this.opts.bucket, target);
-            return await this.client.removeObjects(this.opts.bucket, target);
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
+        if (typeof target === 'string') {
+            return await this.client.send(new DeleteObjectCommand({
+                Bucket: this.opts.bucket,
+                Key: target,
+            }));
         }
+        return await this.client.send(new DeleteObjectsCommand({
+            Bucket: this.opts.bucket,
+            Delete: {
+                Objects: target.map((i) => ({ Key: i })),
+            },
+        }));
     }
 
     /** @deprecated use StorageModel.list instead. */
-    async list(target: string, recursive = true) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            const stream = this.client.listObjects(this.opts.bucket, target, recursive);
-            return await new Promise<BucketItem[]>((r, reject) => {
-                const results: BucketItem[] = [];
-                stream.on('data', (result) => {
-                    if (result.size) {
-                        results.push({
-                            ...result,
-                            prefix: target,
-                            name: result.name.split(target)[1],
-                        });
-                    }
-                });
-                stream.on('end', () => r(results));
-                stream.on('error', reject);
-            });
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+    async list() {
+        throw new Error('listObjectsAPI was no longer supported in hydrooj@4. Please use hydrooj@3 to migrate your files first.');
     }
 
     async getMeta(target: string) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            const result = await this.client.statObject(this.opts.bucket, target);
-            return { ...result.metaData, ...result };
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+        const res = await this.client.send(new HeadObjectCommand({
+            Bucket: this.opts.bucket,
+            Key: target,
+        }));
+        return {
+            size: res.ContentLength,
+            lastModified: res.LastModified,
+            etag: res.ETag,
+            metaData: res.Metadata,
+        };
     }
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            const headers: Record<string, string> = {};
-            if (filename) headers['response-content-disposition'] = `attachment; filename="${encodeRFC5987ValueChars(filename)}"`;
-            const url = await this.client.presignedGetObject(
-                this.opts.bucket,
-                target,
-                noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
-                headers,
-            );
-            if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
-            return url;
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+        const url = await getSignedUrl(this.client, new GetObjectCommand({
+            Bucket: this.opts.bucket,
+            Key: target,
+            ResponseContentDisposition: filename ? `attachment; filename="${encodeRFC5987ValueChars(filename)}"` : '',
+        }), {
+            expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
+        });
+        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+        return url;
     }
 
     async signUpload(target: string, size: number) {
-        const policy = this.client.newPostPolicy();
-        policy.setBucket(this.opts.bucket);
-        policy.setKey(target);
-        policy.setExpires(new Date(Date.now() + 30 * 60 * 1000));
-        if (size) policy.setContentLengthRange(size - 50, size + 50);
-        const policyResult = await this.client.presignedPostPolicy(policy);
+        const { url, fields } = await createPresignedPost(this.client, {
+            Bucket: this.opts.bucket,
+            Key: target,
+            Conditions: [
+                { $key: target },
+                { acl: 'public-read' },
+                { bucket: this.opts.bucket },
+                ['content-length-range', size - 50, size + 50],
+            ],
+            Fields: {
+                acl: 'public-read',
+            },
+            Expires: 600,
+        });
         return {
-            url: this.replaceWithAlternativeUrlFor.user(policyResult.postURL),
-            extraFormData: policyResult.formData,
+            url: this.replaceWithAlternativeUrlFor.user(url),
+            fields,
         };
     }
 
     async copy(src: string, target: string) {
         if (src.includes('..') || src.includes('//')) throw new Error('Invalid path');
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        try {
-            const result = await this.client.copyObject(this.opts.bucket, target, src, new CopyConditions());
-            return result;
-        } catch (e) {
-            e.stack = new Error().stack;
-            throw e;
-        }
+        return await this.client.send(new CopyObjectCommand({
+            Bucket: this.opts.bucket,
+            Key: target,
+            CopySource: src,
+        }));
     }
 }
 

@@ -11,9 +11,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
     - name: Check out
       uses: actions/checkout@v3
@@ -28,7 +25,6 @@ jobs:
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
     - uses: actions/cache@v3
-      id: yarn-cache
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -39,12 +35,18 @@ jobs:
         restore-keys: |
           cache-${{ github.ref }}-
           cache-
+    - name: Clear Cache
+      if: "contains(github.event.head_commit.message, 'skip-cache')"
+      run: |
+        rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
     - name: Config And Install
       run: |
         [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
         yarn
+      env:
+        LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files
       id: ui-changed-files
       uses: tj-actions/changed-files@v23.1
@@ -64,11 +66,11 @@ jobs:
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi
-      env:
-        PT_PROJECT_TOKEN: ${{ secrets.PT_PROJECT_TOKEN }}
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # - name: Benchmark
     #   run: yarn benchmark
     # - name: Benchmark result

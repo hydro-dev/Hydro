@@ -1,13 +1,10 @@
 import { Client } from '@elastic/elasticsearch';
-import { omit } from 'lodash';
-import { addScript, Schema } from 'hydrooj';
-import DomainModel from 'hydrooj/src/model/domain';
-import ProblemModel, { ProblemDoc } from 'hydrooj/src/model/problem';
-import * as system from 'hydrooj/src/model/system';
-import { iterateAllProblem, iterateAllProblemInDomain } from 'hydrooj/src/pipelineUtils';
-import * as bus from 'hydrooj/src/service/bus';
+import {
+    _, Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
+    ProblemDoc, ProblemModel, Schema, SystemModel,
+} from 'hydrooj';
 
-const client = new Client({ node: system.get('elastic-search.url') || 'http://127.0.0.1:9200' });
+const client = new Client({ node: SystemModel.get('elastic-search.url') || 'http://127.0.0.1:9200' });
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
 const processDocument = (doc: Partial<ProblemDoc>) => {
@@ -21,35 +18,14 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     if (doc.pid) {
         doc.pid = doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
     }
-    return omit(doc, indexOmit);
+    return _.omit(doc, indexOmit);
 };
 
-bus.on('problem/add', async (doc, docId) => {
-    await client.index({
-        index: 'problem',
-        id: `${doc.domainId}/${docId}`,
-        document: processDocument(doc),
-    });
-});
-bus.on('problem/edit', async (pdoc) => {
-    await client.index({
-        index: 'problem',
-        id: `${pdoc.domainId}/${pdoc.docId}`,
-        document: processDocument(pdoc),
-    });
-});
-bus.on('problem/del', async (domainId, docId) => {
-    await client.delete({
-        index: 'problem',
-        id: `${domainId}/${docId}`,
-    });
-});
-
 global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
-    const allowedSize = system.get('elasic-search.indexSize') || 10000;
-    const size = opts?.limit || system.get('pagination.problem');
+    const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
+    const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
-    const union = await DomainModel.getUnion(domainId);
+    const union = await DomainModel.get(domainId);
     const domainIds = [domainId, ...(union?.union || [])];
     const res = await client.search({
         index: 'problem',
@@ -98,8 +74,32 @@ async function run({ domainId }, report) {
     return true;
 }
 
-addScript('ensureElasticSearch', 'Elastic problem search re-index')
-    .args(Schema.object({
-        domainId: Schema.string(),
-    }))
-    .action(run);
+export const apply = (ctx: Context) => {
+    ctx.on('problem/add', async (doc, docId) => {
+        await client.index({
+            index: 'problem',
+            id: `${doc.domainId}/${docId}`,
+            document: processDocument(doc),
+        });
+    });
+    ctx.on('problem/edit', async (pdoc) => {
+        await client.index({
+            index: 'problem',
+            id: `${pdoc.domainId}/${pdoc.docId}`,
+            document: processDocument(pdoc),
+        });
+    });
+    ctx.on('problem/del', async (domainId, docId) => {
+        await client.delete({
+            index: 'problem',
+            id: `${domainId}/${docId}`,
+        });
+    });
+    ctx.addScript(
+        'ensureElasticSearch', 'Elastic problem search re-index',
+        Schema.object({
+            domainId: Schema.string(),
+        }),
+        run,
+    );
+};
