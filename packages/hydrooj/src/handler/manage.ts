@@ -276,8 +276,8 @@ class SystemUserPrivHandler extends SystemHandler {
         } else {
             const defaultPriv = system.get('default.priv');
             await user.coll.updateMany({ priv: defaultPriv }, { $set: { priv } });
-            await ctx.broadcast('user/delcache', true);
             await system.set('default.priv', priv);
+            bus.broadcast('user/delcache', true);
         }
         this.back();
     }
