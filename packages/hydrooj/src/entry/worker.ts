@@ -44,14 +44,15 @@ export async function apply(ctx: Context) {
     await ctx.root.start();
     require('../lib/index');
     await lib(pending, fail, ctx);
+    await ctx.lifecycle.flush();
+
+    await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/monitor'));
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     await ctx.lifecycle.flush();
 
-    const modelSetting = require('../model/setting');
-    await setting(pending, fail, modelSetting);
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
     for (const h of handlers) {
