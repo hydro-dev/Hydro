@@ -27,7 +27,7 @@ class MetricsHandler extends Handler {
             return;
         }
         const [name, password] = SystemModel.getMany(['prom-client.name', 'prom-client.password']);
-        const key = this.request.headers.authorization?.split('Basic ')?.[1];
+        const key = this.request.headers.authorization.split('Basic ')?.[1];
         if (!key || key !== Buffer.from(`${name}:${password}`).toString('base64')) {
             this.response.status = 403;
             this.response.body = {};
