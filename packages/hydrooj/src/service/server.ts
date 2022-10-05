@@ -277,8 +277,8 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         }
     } catch (e) {
         try {
-            await bail(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
-            await bail('handler/error', h, e);
+            await serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
+            await serial('handler/error', h, e);
             await h.onerror(e);
         } catch (err) {
             h.response.code = 500;
