@@ -3,11 +3,11 @@
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
-import { parseLang } from '@hydrooj/utils/lib/lang';
+import { LangConfig, parseLang } from '@hydrooj/utils/lib/lang';
 import { retry } from '@hydrooj/utils/lib/utils';
+import { Context } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
-import * as bus from '../service/bus';
 import * as builtin from './builtin';
 
 type SettingDict = Dictionary<_Setting>;
@@ -238,9 +238,9 @@ SystemSetting(
 );
 
 // eslint-disable-next-line import/no-mutable-exports
-export let langs = {};
+export const langs: Record<string, LangConfig> = {};
 
-bus.on('app/started', async () => {
+export async function apply(ctx: Context) {
     logger.debug('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
@@ -252,27 +252,26 @@ bus.on('app/started', async () => {
         }
     }
     try {
-        langs = parseLang(system.get('hydrooj.langs'));
-        global.Hydro.model.setting.langs = langs;
+        Object.assign(langs, parseLang(system.get('hydrooj.langs')));
         const range = {};
         for (const key in langs) range[key] = langs[key].display;
         LangSettingNode.range = range;
         ServerLangSettingNode.range = range;
     } catch (e) { /* Ignore */ }
-});
-
-bus.on('system/setting', (args) => {
-    if (args.hydrooj?.langs) {
-        langs = parseLang(args.hydrooj.langs);
-        global.Hydro.model.setting.langs = langs;
-        const range = {};
-        for (const key in langs) range[key] = langs[key].display;
-        LangSettingNode.range = range;
-        ServerLangSettingNode.range = range;
-    }
-});
+    console.log('l', langs?.cc);
+    ctx.on('system/setting', (args) => {
+        if (args.hydrooj?.langs) {
+            Object.assign(langs, parseLang(args.hydrooj.langs));
+            const range = {};
+            for (const key in langs) range[key] = langs[key].display;
+            LangSettingNode.range = range;
+            ServerLangSettingNode.range = range;
+        }
+    });
+}
 
 global.Hydro.model.setting = {
+    apply,
     Setting,
     PreferenceSetting,
     AccountSetting,

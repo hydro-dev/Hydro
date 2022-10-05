@@ -59,9 +59,10 @@ export const service = getLoader('service', 'service');
 
 export async function builtinModel(ctx: Context) {
     const modelDir = path.resolve(__dirname, '..', 'model');
-    const models = ['task', 'blacklist', 'discussion', 'document'];
+    const models = await fs.readdir(modelDir);
     for (const t of models) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(modelDir, t), {}, `hydrooj/model/${t}`);
+        const q = path.resolve(modelDir, t);
+        if ('apply' in require(q)) ctx.loader.reloadPlugin(ctx, q, {}, `hydrooj/model/${t.split('.')[0]}`);
     }
 }
 

@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import db from '../service/db';
+import { sleep } from '../utils';
 import {
     addon, builtinModel, handler, lib, locale, model,
     script, service, setting, template,
@@ -67,6 +68,7 @@ export async function apply(ctx: Context) {
     await ctx.lifecycle.flush();
     await script(pending, fail, ctx);
     await ctx.lifecycle.flush();
+    await sleep(1000); // lifecycle.flush won't wait for async function
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         const scripts = require('../upgrade').default;

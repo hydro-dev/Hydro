@@ -60,6 +60,7 @@ export async function buildUI() {
   if (build.errors.length) console.error(build.errors);
   if (build.warnings.length) console.warn(build.warnings);
   const pages = build.outputFiles.map((i) => i.text);
+  console.log('ui', SettingModel, JSON.stringify(SettingModel.langs));
   const payload = [`window.LANGS=${JSON.stringify(SettingModel.langs)};`, ...pages];
 
   const c = crypto.createHash('sha1');
@@ -230,14 +231,13 @@ export function apply(ctx) {
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.on('app/started', buildUI);
   ctx.on('app/started', updateLogo);
-  ctx.on('system/setting', updateLogo);
   const debouncedBuildUI = debounce(buildUI, 1000);
-  const triggerHotUpdate = (path) => {
-    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
+  const triggerHotUpdate = (path?: string) => {
+    if (path && !path.includes('/ui-default/') && !path.includes('/public/')) return;
     debouncedBuildUI();
+    updateLogo();
   };
+  ctx.on('system/setting', triggerHotUpdate);
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
-  buildUI();
-  updateLogo();
 }
