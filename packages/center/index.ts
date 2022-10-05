@@ -1,7 +1,7 @@
 import assert from 'assert';
 import crypto from 'crypto';
 import {
-    Context, db, ForbiddenError, Handler, post, Types, yaml,
+    db, definePlugin, ForbiddenError, Handler, post, Types, yaml,
 } from 'hydrooj';
 
 function decrypt(encrypted: string) {
@@ -67,6 +67,8 @@ class DataReportHandler extends Handler {
     }
 }
 
-export function apply(ctx: Context) {
-    ctx.Route('data_report', '/center/report', DataReportHandler);
-}
+export default definePlugin({
+    apply(ctx) {
+        ctx.Route('data_report', '/center/report', DataReportHandler);
+    },
+});
