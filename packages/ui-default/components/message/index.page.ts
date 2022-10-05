@@ -100,7 +100,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     localStorage.setItem('pages', JSON.stringify(c.filter((i) => i !== selfId)));
     if (!isMaster) return;
     localStorage.removeItem('page.master');
-    channel?.postMessage({ type: 'master' });
+    channel.postMessage({ type: 'master' });
   };
 
   function asMaster() {

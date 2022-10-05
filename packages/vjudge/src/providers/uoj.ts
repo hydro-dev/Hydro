@@ -55,7 +55,7 @@ export default class UOJProvider implements IBasicProvider {
             this.cookie = header['set-cookie'];
         }
         let value = /_token *: *"(.+?)"/g.exec(html);
-        if (value) return value?.[1];
+        if (value) return value[1];
         value = /_token" value="(.+?)"/g.exec(html);
         return value?.[1];
     }

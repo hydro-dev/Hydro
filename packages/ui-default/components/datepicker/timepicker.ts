@@ -186,7 +186,7 @@ export default class TimePicker {
   }; // TimePicker.prototype.scope
 
   parse(type, value, options) {
-    let hour; let minutes; let isPM; let item; let parseValue;
+    let hour; let minutes; let item; let parseValue;
     const clock = this;
     const parsingObject = {};
     if (!value || typeof value !== 'string') return value;
@@ -219,7 +219,7 @@ export default class TimePicker {
     }
 
     // Calculate it in minutes and return.
-    return (isPM ? hour + 12 : hour) * MINUTES_IN_HOUR + minutes;
+    return hour * MINUTES_IN_HOUR + minutes;
   }
 
   nodes(isOpen) {

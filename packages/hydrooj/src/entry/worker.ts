@@ -7,7 +7,6 @@ import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import db from '../service/db';
-import { sleep } from '../utils';
 import {
     addon, builtinModel, handler, lib, locale, model,
     script, service, setting, template,
