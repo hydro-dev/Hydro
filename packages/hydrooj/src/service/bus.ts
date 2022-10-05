@@ -126,3 +126,4 @@ export const serial: any = app.parallel.bind(app);
 export const broadcast = app.broadcast.bind(app);
 
 global.Hydro.service.bus = app as any;
+global.bus = app;

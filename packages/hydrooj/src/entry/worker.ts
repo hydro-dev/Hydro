@@ -40,7 +40,7 @@ export async function apply(ctx: Context) {
     await storage.loadStorageService();
     await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
-    if (argv.options.watch) await ctx.loader.reloadPlugin(ctx, 'hydrooj/src/service/watcher', {});
+    if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
     await ctx.root.start();
     require('../lib/index');
     await lib(pending, fail, ctx);

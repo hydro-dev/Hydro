@@ -48,7 +48,7 @@
         "require-resolve-hook": "^1.1.0",
         "saslprep": "^1.0.3",
         "schemastery": "^3.5.4",
-        "semver": "^7.3.7",
+        "semver": "^7.3.8",
         "serialize-javascript": "^6.0.0",
         "superagent": "^8.0.2",
         "thirty-two": "^1.0.2",

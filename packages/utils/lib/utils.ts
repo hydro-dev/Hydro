@@ -161,10 +161,23 @@ export namespace Time {
 
 export function errorMessage(err: Error | string) {
     const t = typeof err === 'string' ? err : err.stack;
-    const parsed = t
-        .split('\n')
-        .filter((i) => !i.includes(' (node:'))
-        .join('\n')
+    const lines = t.split('\n')
+        .filter((i) => !i.includes(' (node:') && !i.includes('(internal'));
+    let cursor = 1;
+    let count = 0;
+    while (cursor < lines.length) {
+        if (lines[cursor] !== lines[cursor - 1]) {
+            if (count) {
+                lines[cursor - 1] += ` [+${count}]`;
+                count = 0;
+            }
+            cursor++;
+        } else {
+            count++;
+            lines.splice(cursor, 1);
+        }
+    }
+    const parsed = lines.join('\n')
         .replace(/[A-Z]:\\.+\\@hydrooj\\/g, '@hydrooj\\')
         .replace(/\/.+\/@hydrooj\//g, '\\')
         .replace(/[A-Z]:\\.+\\hydrooj\\/g, 'hydrooj\\')
