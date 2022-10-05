@@ -258,7 +258,6 @@ export async function apply(ctx: Context) {
         LangSettingNode.range = range;
         ServerLangSettingNode.range = range;
     } catch (e) { /* Ignore */ }
-    console.log('l', langs?.cc);
     ctx.on('system/setting', (args) => {
         if (args.hydrooj?.langs) {
             Object.assign(langs, parseLang(args.hydrooj.langs));

@@ -3,7 +3,7 @@
 import crypto from 'crypto';
 import esbuild from 'esbuild';
 import {
-  ContestModel, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
+  ContestModel, Context, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
   SettingModel, SystemModel, SystemSettings, UiContextBase,
   UserModel,
 } from 'hydrooj';
@@ -60,7 +60,6 @@ export async function buildUI() {
   if (build.errors.length) console.error(build.errors);
   if (build.warnings.length) console.warn(build.warnings);
   const pages = build.outputFiles.map((i) => i.text);
-  console.log('ui', SettingModel, JSON.stringify(SettingModel.langs));
   const payload = [`window.LANGS=${JSON.stringify(SettingModel.langs)};`, ...pages];
 
   const c = crypto.createHash('sha1');
@@ -219,7 +218,7 @@ class RichMediaHandler extends Handler {
   }
 }
 
-export function apply(ctx) {
+export function apply(ctx: Context) {
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
@@ -237,7 +236,7 @@ export function apply(ctx) {
     debouncedBuildUI();
     updateLogo();
   };
-  ctx.on('system/setting', triggerHotUpdate);
+  ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
 }

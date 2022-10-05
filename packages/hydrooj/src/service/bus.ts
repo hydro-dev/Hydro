@@ -34,6 +34,11 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'app/started': () => void
     'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn
+    'app/before-reload': (entries: Set<string>) => VoidReturn
+    'app/reload': (entries: Set<string>) => VoidReturn
+
+    'app/watch/change': (path: string) => VoidReturn
+    'app/watch/unlink': (path: string) => VoidReturn
 
     'database/connect': (db: Db) => void
     'database/config': () => VoidReturn
