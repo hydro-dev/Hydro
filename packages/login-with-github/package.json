@@ -1,12 +1,9 @@
 {
     "name": "@hydrooj/login-with-github",
-    "version": "0.1.6",
+    "version": "0.2.0",
     "main": "index.ts",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
-    "preferUnplugged": true,
-    "peerDependencies": {
-        "hydrooj": "*"
-    }
+    "preferUnplugged": true
 }

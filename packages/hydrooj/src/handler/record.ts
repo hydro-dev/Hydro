@@ -133,7 +133,7 @@ class RecordDetailHandler extends Handler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
-        let tdoc;
+        let tdoc: Tdoc<30>;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -155,6 +155,10 @@ class RecordDetailHandler extends Handler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
+        if (tdoc && contest.isDone(tdoc)) {
+            const tsdoc = await contest.getStatus(domainId, tdoc.docId, this.user._id);
+            canViewCode ||= tsdoc?.attend;
+        }
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};

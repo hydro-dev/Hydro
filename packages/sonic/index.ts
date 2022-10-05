@@ -2,7 +2,7 @@ import {
     Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
     Logger, Schema, SystemModel,
 } from 'hydrooj';
-import * as SonicService from './service';
+import { SonicService } from './service';
 
 const logger = new Logger('sonic');
 

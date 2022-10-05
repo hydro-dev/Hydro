@@ -16,7 +16,7 @@ import type { ConnectionHandler, Handler } from './server';
 
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
-type HookType = 'before-prepare' | 'before' | 'after' | 'finish';
+type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
 type ModuleCategories = 'lib' | 'locale' | 'template' | 'script' | 'model' | 'setting' | 'handler' | 'service' | 'addon';
 type LifecycleEvents = Record<`app/load/${ModuleCategories}`, () => VoidReturn>;
 type MapHandlerEvents<N extends string, H extends Handler> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;

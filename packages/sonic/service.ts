@@ -40,10 +40,14 @@ function getHandler(type: string, that: any) {
     };
 }
 
-class SonicService extends Service {
+export class SonicService extends Service {
     public search: Search;
     public ingest: Ingest;
     public error = '';
+
+    constructor(ctx: Context) {
+        super(ctx, 'sonic', true);
+    }
 
     async start() {
         const [host, port, auth] = SystemModel.getMany(['sonic.host', 'sonic.port', 'sonic.auth']);
@@ -54,10 +58,6 @@ class SonicService extends Service {
         };
         this.search = new Search(cfg);
         this.ingest = new Ingest(cfg);
-        await this.connect();
-    }
-
-    async connect() {
         try {
             this.search.connect(getHandler('search', this));
             this.ingest.connect(getHandler('ingest', this));
@@ -106,8 +106,4 @@ class SonicService extends Service {
             this.ingest.close(),
         ]);
     }
-}
-
-export function apply() {
-    Context.service('sonic', SonicService);
 }
