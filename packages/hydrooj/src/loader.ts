@@ -59,7 +59,7 @@ export class Loader {
         } else {
             logger.info('apply plugin %c', key.split('node_modules').pop());
             const plugin = await this.resolvePlugin(key);
-            if (!plugin) return;    
+            if (!plugin) return;
             resolveConfig(plugin, config);
             if (asName) plugin.name = asName;
             // fork = parent.plugin(plugin, this.interpolate(config));
