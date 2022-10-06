@@ -25,8 +25,6 @@ const page = new NamedPage('manage_user_priv', () => {
 
   const setPrivDialog = new ActionDialog({
     $body: $('.dialog__body--set-priv > div'),
-    width: `${window.innerWidth - 200}px`,
-    height: `${window.innerHeight - 100}px`,
   });
   setPrivDialog.clear = function (priv) {
     this.$dom.find('input.priv[type=checkbox]:hidden').each((i, e) => {

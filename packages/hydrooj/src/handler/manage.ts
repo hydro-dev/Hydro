@@ -3,7 +3,9 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
-import { BadRequestError, UserNotFoundError, ValidationError } from '../error';
+import {
+    BadRequestError, ForbiddenError, UserNotFoundError, ValidationError,
+} from '../error';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
@@ -261,17 +263,22 @@ class SystemUserImportHandler extends SystemHandler {
 class SystemUserPrivHandler extends SystemHandler {
     async get() {
         const defaultPriv = system.get('default.priv');
-        const udocs = await user.getMulti({ _id: { $gte: -1000 }, priv: { $ne: defaultPriv } }).limit(1000).sort({ _id: 1 }).toArray();
-        this.response.body = { udocs, defaultPriv, PRIV };
+        const udocs = await user.getMulti({ _id: { $gte: -1000 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
+        const banudocs = await user.getMulti({ _id: { $gte: -1000 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
+        this.response.body = { udocs: [...udocs, ...banudocs], defaultPriv, PRIV };
         this.response.template = 'manage_user_priv.html';
     }
 
     @param('uid', Types.Int, true)
     @param('priv', Types.PositiveInt)
     async post(domainId: string, uid: number, priv: number) {
+        let allPriv = 0;
+        // eslint-disable-next-line no-return-assign
+        Object.keys(PRIV).filter((i) => i !== 'PRIV_ALL').map((i) => allPriv |= PRIV[i]);
         if (typeof uid === 'number') {
             const udoc = await user.getById(domainId, uid);
             if (!udoc) throw new UserNotFoundError(uid);
+            if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new ForbiddenError('you can not edit user as SU in web.');
             await user.setPriv(uid, priv);
         } else {
             const defaultPriv = system.get('default.priv');

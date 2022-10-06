@@ -20,8 +20,9 @@
     <div class="row"><div class="columns">
       <h1>{{ _('Set Privilege') }}</h1>
     </div></div>
-    <div class="row">
-      <div class="medium-12 columns">
+    {% set _mark = Math.ceil(Object.keys(PRIV).length/3) %}
+    {% macro col(PRIVS) %}           
+      <div class="medium-4 columns">
         <table class="data-table priv_table">
           <colgroup>
             <col class="col--description">
@@ -34,13 +35,13 @@
             </tr>
           </thead>
           <tbody>
-            {%- for name, priv in PRIV -%}
-            {%- if priv !== -1 -%}
+            {%- for p in PRIVS -%}
+            {%- if PRIV[p] != -1 and PRIV[p] != 0 -%}
             <tr>
-              <td class="col--description">{{ _(name) }}</td>
+              <td class="col--description">{{ _(p) }}</td>
               <td class="col--p">
                   <label class="compact checkbox">
-                    <input class="priv" name="{{ name }}" data-checkbox-group="priv" data-checkbox-range value="{{ priv }}" type="checkbox">
+                    <input class="priv" name="{{ p }}" data-checkbox-group="priv" data-checkbox-range value="{{ PRIV[p] }}" type="checkbox">
                   </label>
                 </td>
             </tr>
@@ -49,6 +50,11 @@
           </tbody>
         </table>
       </div>
+    {% endmacro %}
+    <div class="row">
+      {{ col(Object.keys(PRIV).slice(0, _mark)) }}
+      {{ col(Object.keys(PRIV).slice(_mark, _mark*2)) }}
+      {{ col(Object.keys(PRIV).slice(_mark*2, _mark*3)) }}
     </div>
   </div>
 </div>
@@ -65,6 +71,7 @@
       <colgroup>
         <col class="col--uid">
         <col class="col--user">
+        <col class="col--priv_info">
         <col class="col--priv">
         <col class="col--actions">
       </colgroup>
@@ -72,7 +79,8 @@
         <tr>
           <th class="col--uid">{{ _('User ID') }}</th>
           <th class="col--user">{{ _('Username') }}</th>
-          <th class="col--priv">{{ _('Privilege') }}</th>
+          <td class="col--priv_info">{{ _('Privilege') }}</th>
+          <th class="col--priv">{{ _('Value') }}</th>
           <th class="col--actions">{{ _('Actions') }}</th>
         </tr>
       </thead>
@@ -83,6 +91,15 @@
           </td>
           <td class="col--user">
             Default Privilege
+          </td>
+          <td class="col--priv_info">
+            {%- for name, priv in PRIV -%}
+              {%- if priv != -1 or priv != 17367108 -%}
+              {%- if defaultPriv|bitand(priv) -%}
+                {{ name }}<br>
+              {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
           </td>
           <td class="col--priv" title="{{ defaultPriv }}">
             {{ defaultPriv }}
@@ -98,6 +115,23 @@
           </td>
           <td class="col--user">
             {{ user.render_inline(udoc, badge=false) }}
+          </td>
+          <td class="col--priv_info">
+            {%- if udoc.priv == 0 -%}
+              PRIV_NONE
+            {%- elif udoc.priv == -1 -%}
+              PRIV_ALL
+            {%- else -%}     
+              {%- for name, priv in PRIV -%}
+                {%- if priv != -1 or priv != 17367108 -%}
+                {%- if user.priv|bitand(priv) and not defaultPriv|bitand(priv) -%}
+                  <b class="priv_plus">+</b> {{ name }}<br>
+                {%- elif not user.priv|bitand(priv) and defaultPriv|bitand(priv) -%}
+                  <b class="priv_minus">-</b> {{ name }}<br>
+                {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endif -%}
           </td>
           <td class="col--priv" title="{{ udoc.priv }}">
             {{ udoc.priv }}
