@@ -210,7 +210,7 @@ export class Handler extends HandlerCommon {
 }
 
 async function serial(name: string, ...args: any[]) {
-    const r = await (bus.serial as any)(name, ...args);
+    const r = await (global.app.serial as any)(name, ...args);
     if (r instanceof Error) throw r;
     return r;
 }
