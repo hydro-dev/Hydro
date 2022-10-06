@@ -23,25 +23,27 @@ export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
 const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
 
-export function deleteUserCache(udoc: User | Udoc | string | undefined | null, receiver = false) {
-    if (!udoc) return;
+export function deleteUserCache(udoc: User | Udoc | string | true | undefined | null, receiver = false) {
+    if (!udoc) return false;
     if (!receiver) {
         bus.broadcast(
             'user/delcache',
             JSON.stringify(typeof udoc === 'string' ? udoc : pick(udoc, ['uname', 'mail', '_id'])),
         );
     }
+    if (udoc === true) return cache.clear();
     if (typeof udoc === 'string') {
         // is domainId
         for (const key of [...cache.keys()].filter((i) => i.endsWith(`/${udoc}`))) cache.delete(key);
-        return;
+        return true;
     }
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
     for (const key of [...cache.keys()].filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
         cache.delete(key);
     }
+    return true;
 }
-bus.on('user/delcache', (content) => deleteUserCache(JSON.parse(content), true));
+bus.on('user/delcache', (content) => deleteUserCache(typeof content === 'string' ? JSON.parse(content) : content, true));
 
 export class User {
     _id: number;
@@ -156,6 +158,7 @@ function handleMailLower(mail: string) {
 }
 
 class UserModel {
+    static coll = coll;
     static User = User;
     static defaultUser: Udoc = {
         _id: 0,

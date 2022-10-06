@@ -1,0 +1,76 @@
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div style="display: none" class="dialog__body--set-priv">
+  <div>
+    <div class="row"><div class="columns">
+      <h1>{{ _('Set Privilege') }}</h1>
+    </div></div>
+    {% set _mark = Math.ceil(Object.keys(Priv).length/3) %}
+    {% macro col(PRIVS) %}           
+      <div class="medium-4 columns">
+        <table class="data-table priv_table">
+          <colgroup>
+            <col class="col--description">
+            <col class="col--p">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--description">{{ _('Name') }}</th>
+              <th class="col--p">{{ _('Privilege') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for p in PRIVS -%}
+            <tr>
+              <td class="col--description">
+                {{ _(p) }}
+              </td>
+              <td class="col--p">
+                <label class="compact checkbox">
+                  <input class="priv" name="{{ p }}" data-checkbox-group="priv" data-checkbox-range value="{{ Priv[p] }}" type="checkbox">
+                </label>
+              </td>
+            </tr>
+            {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+    {% endmacro %}
+    <div class="row">
+      {{ col(Object.keys(Priv).slice(0, _mark)) }}
+      {{ col(Object.keys(Priv).slice(_mark, _mark*2)) }}
+      {{ col(Object.keys(Priv).slice(_mark*2, _mark*3)) }}
+    </div>
+  </div>
+</div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('User Privilege') }}</h1>
+    <div class="section__tools">
+      <button class="primary rounded button" name="select_user"><span class="icon icon-search"></span>{{ _('Select User') }}</button>
+    </div>
+  </div>
+  {{ noscript_note.render() }}
+  <div class="section__body no-padding">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--uid">
+        <col class="col--user">
+        <col class="col--priv_info">
+        <col class="col--priv">
+        <col class="col--actions">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--uid">{{ _('User ID') }}</th>
+          <th class="col--user">{{ _('Username') }}</th>
+          <td class="col--priv_info">{{ _('Privilege') }}</th>
+          <th class="col--priv">{{ _('Value') }}</th>
+          <th class="col--actions">{{ _('Actions') }}</th>
+        </tr>
+      </thead>
+      {% include "partials/manage_user_priv.html" %}
+    </table>
+  </div>
+</div>
+{% endblock %}

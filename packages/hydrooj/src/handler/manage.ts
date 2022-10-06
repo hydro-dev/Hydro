@@ -3,7 +3,9 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
-import { BadRequestError, ValidationError } from '../error';
+import {
+    BadRequestError, ForbiddenError, UserNotFoundError, ValidationError,
+} from '../error';
 import { isEmail, isPassword, isUname } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
@@ -261,6 +263,47 @@ class SystemUserImportHandler extends SystemHandler {
     }
 }
 
+const Priv = Object.fromEntries(Object.entries(PRIV).filter(
+    (i) => (!i[0].endsWith('SELF') && !['PRIV_DEFAULT', 'PRIV_NEVER', 'PRIV_NONE', 'PRIV_ALL'].includes(i[0])),
+));
+const allPriv = Math.sum(Object.values(Priv));
+
+class SystemUserPrivHandler extends SystemHandler {
+    @requireSudo
+    async get({ pjax }) {
+        const defaultPriv = system.get('default.priv');
+        const udocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
+        const banudocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
+        this.response.body = {
+            udocs: [...udocs, ...banudocs],
+            defaultPriv,
+            Priv,
+        };
+        if (pjax) {
+            const html = await this.renderHTML('partials/manage_user_priv.html', this.response.body);
+            this.response.body = { fragments: [{ html }] };
+        } else this.response.template = 'manage_user_priv.html';
+    }
+
+    @requireSudo
+    @param('uid', Types.Int, true)
+    @param('priv', Types.UnsignedInt)
+    async post(domainId: string, uid: number, priv: number) {
+        if (typeof uid === 'number') {
+            const udoc = await user.getById(domainId, uid);
+            if (!udoc) throw new UserNotFoundError(uid);
+            if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new ForbiddenError('you can not edit user as SU in web.');
+            await user.setPriv(uid, priv);
+        } else {
+            const defaultPriv = system.get('default.priv');
+            await user.coll.updateMany({ priv: defaultPriv }, { $set: { priv } });
+            await system.set('default.priv', priv);
+            bus.broadcast('user/delcache', true);
+        }
+        this.back();
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
@@ -268,5 +311,6 @@ export async function apply(ctx) {
     ctx.Route('manage_setting', '/manage/setting', SystemSettingHandler);
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
+    ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
