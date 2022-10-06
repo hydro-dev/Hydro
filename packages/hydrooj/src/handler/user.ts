@@ -142,14 +142,14 @@ class UserLoginHandler extends Handler {
 
 class UserSudoHandler extends Handler {
     async get() {
-        if (!this.session.sudoArgs) throw new ForbiddenError();
+        if (!this.session.sudoArgs?.method) throw new ForbiddenError();
         this.response.template = 'user_sudo.html';
     }
 
     @param('password', Types.String)
     @param('tfa', Types.String, true)
     async post(domainId: string, password: string, tfa = '') {
-        if (!this.session.sudoArgs) throw new ForbiddenError();
+        if (!this.session.sudoArgs?.method) throw new ForbiddenError();
         await Promise.all([
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
@@ -163,8 +163,8 @@ class UserSudoHandler extends Handler {
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
             this.response.body = this.session.sudoArgs;
-            this.session.sudoArgs = null;
         } else this.response.redirect = this.session.sudoArgs.redirect;
+        this.session.sudoArgs.method = null;
     }
 }
 
@@ -197,7 +197,10 @@ export class UserRegisterHandler extends Handler {
             if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
             const mailDomain = mail.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-            await this.limitRate('send_mail', 3600, 30);
+            await Promise.all([
+                this.limitRate('send_mail', 3600, 30),
+                oplog.log(this, 'user.register', {}),
+            ]);
             const t = await token.add(
                 token.TYPE_REGISTRATION,
                 system.get('session.unsaved_expire_seconds'),
