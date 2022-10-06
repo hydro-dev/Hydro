@@ -37,9 +37,9 @@
       {%- else -%}
         {%- for name, priv in Priv -%}
           {%- if priv|bitand(udoc.priv) and not priv|bitand(defaultPriv) -%}
-            <b class="priv_plus">+</b> {{ name }}<br>
+            <p class="priv_plus">+{{ name }}</p>
           {%- elif priv|bitand(defaultPriv) and not priv|bitand(udoc.priv) -%}
-            <b class="priv_minus">-</b> {{ name }}<br>
+            <p class="priv_minus">-{{ name }}</p>
           {%- endif -%}
         {%- endfor -%}
       {%- endif -%}
