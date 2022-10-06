@@ -51,8 +51,9 @@ class ProblemImportHydroHandler extends Handler {
         });
         try {
             const problems = await fs.readdir(tmpdir, { withFileTypes: true });
-            for (const { name: i, isDirectory } of problems) {
-                if (!isDirectory()) continue;
+            for (const p of problems) {
+                const i = p.name;
+                if (!p.isDirectory()) continue;
                 const files = await fs.readdir(path.join(tmpdir, i));
                 if (!files.includes('problem.yaml')) continue;
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
