@@ -26,7 +26,7 @@ import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    ConnectionHandler, Handler, param, query, Types,
+    ConnectionHandler, Handler, param, query, requireSudo, Types,
 } from '../service/server';
 import { md5 } from '../utils';
 
@@ -149,6 +149,7 @@ export class HomeHandler extends Handler {
 
 let geoip: Context['geoip'] = null;
 class HomeSecurityHandler extends Handler {
+    @requireSudo
     async get() {
         // TODO(iceboy): pagination? or limit session count for uid?
         const sessions = await token.getSessionListByUid(this.user._id);
@@ -169,6 +170,7 @@ class HomeSecurityHandler extends Handler {
         };
     }
 
+    @requireSudo
     @param('current', Types.String)
     @param('password', Types.String, isPassword)
     @param('verifyPassword', Types.String)
@@ -180,6 +182,7 @@ class HomeSecurityHandler extends Handler {
         this.response.redirect = this.url('user_login');
     }
 
+    @requireSudo
     @param('password', Types.String)
     @param('mail', Types.Name, isEmail)
     async postChangeMail(domainId: string, current: string, email: string) {

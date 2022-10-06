@@ -4,6 +4,7 @@ import { isSafeInteger } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import saslprep from 'saslprep';
+import { Time } from '@hydrooj/utils';
 import { ValidationError } from '../error';
 import { isContent, isTitle } from '../lib/validator';
 import type { Handler } from './server';
@@ -210,3 +211,20 @@ export const query: DescriptorBuilder = (name, ...args) => _descriptor(_buildPar
 export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'post', ...args));
 export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
 export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
+
+export function requireSudo(target: any, funcName: string, obj: any) {
+    const originalMethod = obj.value;
+    obj.value = function sudo(this: Handler, ...args: any[]) {
+        if (this.session.sudo && Date.now() - this.session.sudo < Time.hour) {
+            return originalMethod.call(this, ...args);
+        }
+        this.session.sudoArgs = {
+            method: this.request.method,
+            args: this.args,
+            redirect: this.request.path,
+        };
+        this.response.redirect = this.url('user_sudo');
+        return 'cleanup';
+    };
+    return obj;
+}
