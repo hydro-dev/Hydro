@@ -7,7 +7,7 @@ import { ObjectID } from 'mongodb';
 import { Context } from '../context';
 import db from '../service/db';
 import {
-    addon, lib, model, script, service, setting,
+    addon, builtinModel, lib, script, service,
 } from './common';
 
 const argv = cac().parse();
@@ -96,7 +96,7 @@ export async function load(ctx: Context) {
         lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
-    await require('./common').builtinModel(ctx);
+    await builtinModel(ctx);
     ctx.plugin(require('../service/server'));
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
