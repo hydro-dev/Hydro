@@ -216,10 +216,12 @@ export function requireSudo(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
     obj.value = function sudo(this: Handler, ...args: any[]) {
         if (this.session.sudo && Date.now() - this.session.sudo < Time.hour) {
+            this.request.headers.referer = this.session.sudoArgs.referer;
             return originalMethod.call(this, ...args);
         }
         this.session.sudoArgs = {
             method: this.request.method,
+            referer: this.request.headers.referer,
             args: this.args,
             redirect: this.request.path,
         };
