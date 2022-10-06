@@ -33,7 +33,7 @@ export default class RecordModel {
         const pending = timeRecent.filter((i) => [
             STATUS.STATUS_WAITING, STATUS.STATUS_FETCHED, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING,
         ].includes(i.status)).length;
-        return base - ((pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000) + 1);
+        return base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1);
     }
 
     static async get(_id: ObjectID): Promise<RecordDoc | null>;
@@ -197,7 +197,7 @@ export default class RecordModel {
         return res.modifiedCount;
     }
 
-    static reset(domainId: string, rid: MaybeArray<ObjectID>, isRejudge: boolean) {
+    static async reset(domainId: string, rid: MaybeArray<ObjectID>, isRejudge: boolean) {
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -210,6 +210,7 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
+        await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
         return RecordModel.update(domainId, rid, upd);
     }
 

@@ -445,7 +445,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             contest: { $ne: new ObjectID('0'.repeat(24)) },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
-        const priority = await record.submissionPriority(this.user._id, -rdocs.length * 5 - 50);
+        const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
         await Promise.all(rdocs.map(
             (doc) => record.reset(domainId, doc._id, true)
                 .then(() => record.judge(domainId, doc._id, priority, doc.contest ? { detail: false } : {})),
