@@ -37,6 +37,7 @@
     <link rel="stylesheet" media="all" href="/default.theme.css">
   {% else %}
     <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}default-{{ global.Hydro.version['ui-default'] }}.theme.css">
+    <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}hydro.css">
   {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script>
