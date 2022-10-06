@@ -20,7 +20,7 @@
     <div class="row"><div class="columns">
       <h1>{{ _('Set Privilege') }}</h1>
     </div></div>
-    {% set _mark = Math.ceil(Object.keys(PRIV).length/3) %}
+    {% set _mark = Math.ceil(Object.keys(Priv).length/3) %}
     {% macro col(PRIVS) %}           
       <div class="medium-4 columns">
         <table class="data-table priv_table">
@@ -36,25 +36,23 @@
           </thead>
           <tbody>
             {%- for p in PRIVS -%}
-            {%- if PRIV[p] != -1 and PRIV[p] != 0 -%}
             <tr>
               <td class="col--description">{{ _(p) }}</td>
               <td class="col--p">
                   <label class="compact checkbox">
-                    <input class="priv" name="{{ p }}" data-checkbox-group="priv" data-checkbox-range value="{{ PRIV[p] }}" type="checkbox">
+                    <input class="priv" name="{{ p }}" data-checkbox-group="priv" data-checkbox-range value="{{ Priv[p] }}" type="checkbox">
                   </label>
                 </td>
             </tr>
-            {%- endif -%}
             {%- endfor -%}
           </tbody>
         </table>
       </div>
     {% endmacro %}
     <div class="row">
-      {{ col(Object.keys(PRIV).slice(0, _mark)) }}
-      {{ col(Object.keys(PRIV).slice(_mark, _mark*2)) }}
-      {{ col(Object.keys(PRIV).slice(_mark*2, _mark*3)) }}
+      {{ col(Object.keys(Priv).slice(0, _mark)) }}
+      {{ col(Object.keys(Priv).slice(_mark, _mark*2)) }}
+      {{ col(Object.keys(Priv).slice(_mark*2, _mark*3)) }}
     </div>
   </div>
 </div>
@@ -93,11 +91,9 @@
             Default Privilege
           </td>
           <td class="col--priv_info">
-            {%- for name, priv in PRIV -%}
-              {%- if priv != -1 or priv != 17367108 -%}
+            {%- for name, priv in Priv -%}
               {%- if defaultPriv|bitand(priv) -%}
                 {{ name }}<br>
-              {%- endif -%}
               {%- endif -%}
             {%- endfor -%}
           </td>
@@ -122,13 +118,11 @@
             {%- elif udoc.priv == -1 -%}
               PRIV_ALL
             {%- else -%}     
-              {%- for name, priv in PRIV -%}
-                {%- if priv != -1 or priv != 17367108 -%}
-                {%- if user.priv|bitand(priv) and not defaultPriv|bitand(priv) -%}
+              {%- for name, priv in Priv -%}
+                {%- if priv|bitand(udoc.priv) and not priv|bitand(defaultPriv) -%}
                   <b class="priv_plus">+</b> {{ name }}<br>
-                {%- elif not user.priv|bitand(priv) and defaultPriv|bitand(priv) -%}
+                {%- elif priv|bitand(defaultPriv) and not priv|bitand(udoc.priv) -%}
                   <b class="priv_minus">-</b> {{ name }}<br>
-                {%- endif -%}
                 {%- endif -%}
               {%- endfor -%}
             {%- endif -%}

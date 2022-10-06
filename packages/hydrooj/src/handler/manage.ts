@@ -264,20 +264,33 @@ class SystemUserImportHandler extends SystemHandler {
 }
 
 class SystemUserPrivHandler extends SystemHandler {
+    @requireSudo
     async get() {
         const defaultPriv = system.get('default.priv');
         const udocs = await user.getMulti({ _id: { $gte: -1000 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
         const banudocs = await user.getMulti({ _id: { $gte: -1000 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
-        this.response.body = { udocs: [...udocs, ...banudocs], defaultPriv, PRIV };
+        const showPriv = { ...PRIV };
+        // eslint-disable-next-line array-callback-return
+        Object.keys(showPriv).map((i) => {
+            if (i.endsWith('SELF') || [0, -1].includes(showPriv[i])) delete showPriv[i];
+        });
+        this.response.body = {
+            udocs: [...udocs, ...banudocs],
+            defaultPriv,
+            Priv: showPriv,
+        };
         this.response.template = 'manage_user_priv.html';
     }
 
+    @requireSudo
     @param('uid', Types.Int, true)
     @param('priv', Types.PositiveInt)
     async post(domainId: string, uid: number, priv: number) {
         let allPriv = 0;
-        // eslint-disable-next-line no-return-assign
-        Object.keys(PRIV).filter((i) => i !== 'PRIV_ALL').map((i) => allPriv |= PRIV[i]);
+        // eslint-disable-next-line array-callback-return
+        Object.keys(PRIV).map((i) => {
+            if (!(i.endsWith('SELF') || [0, -1].includes(PRIV[i]))) allPriv |= PRIV[i];
+        });
         if (typeof uid === 'number') {
             const udoc = await user.getById(domainId, uid);
             if (!udoc) throw new UserNotFoundError(uid);
