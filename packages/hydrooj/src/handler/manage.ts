@@ -16,8 +16,7 @@ import * as system from '../model/system';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import {
-    ConnectionHandler, Handler,
-    param, Types,
+    ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
 import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
@@ -144,6 +143,7 @@ class SystemScriptHandler extends SystemHandler {
 }
 
 class SystemSettingHandler extends SystemHandler {
+    @requireSudo
     async get() {
         this.response.template = 'manage_setting.html';
         this.response.body.current = {};
@@ -153,6 +153,7 @@ class SystemSettingHandler extends SystemHandler {
         }
     }
 
+    @requireSudo
     async post(args: any) {
         const tasks = [];
         const booleanKeys = args.booleanKeys || {};
@@ -181,6 +182,7 @@ class SystemSettingHandler extends SystemHandler {
 }
 
 class SystemConfigHandler extends SystemHandler {
+    @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
         let value = configSource;
@@ -193,6 +195,7 @@ class SystemConfigHandler extends SystemHandler {
         };
     }
 
+    @requireSudo
     @param('value', Types.String)
     async post(domainId: string, value: string) {
         let config;

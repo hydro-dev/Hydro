@@ -17,7 +17,7 @@ import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, query, Types,
+    Handler, param, post, query, requireSudo, Types,
 } from '../service/server';
 import { log2 } from '../utils';
 import { registerResolver, registerValue } from './api';
@@ -100,8 +100,8 @@ class DomainEditHandler extends ManageHandler {
         this.response.redirect = this.url('domain_dashboard');
     }
 
-    async postDelete({ domainId, password }) {
-        this.user.checkPassword(password);
+    @requireSudo
+    async postDelete({ domainId }) {
         if (domainId === 'system') throw new ForbiddenError('You are not allowed to delete system domain');
         if (this.domain.owner !== this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
         await domain.del(domainId);

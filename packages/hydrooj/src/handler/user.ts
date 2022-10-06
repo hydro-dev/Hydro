@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import notp from 'notp';
 import b32 from 'thirty-two';
 import {
-    BlacklistedError, InvalidTokenError, LoginError,
+    BlacklistedError, ForbiddenError, InvalidTokenError, LoginError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -130,12 +130,41 @@ class UserLoginHandler extends Handler {
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname);
         this.session.viewLang = '';
         this.session.uid = udoc._id;
+        this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
         this.response.redirect = (redirect ? decodeURIComponent(redirect) : '')
             || ((this.request.referer || '/login').endsWith('/login')
                 ? this.url('homepage')
                 : this.request.referer);
+    }
+}
+
+class UserSudoHandler extends Handler {
+    async get() {
+        if (!this.session.sudoArgs) throw new ForbiddenError();
+        this.response.template = 'user_sudo.html';
+    }
+
+    @param('password', Types.String)
+    @param('tfa', Types.String, true)
+    async post(domainId: string, password: string, tfa = '') {
+        if (!this.session.sudoArgs) throw new ForbiddenError();
+        await Promise.all([
+            this.limitRate('user_sudo', 60, 5, true),
+            oplog.log(this, 'user.sudo', {}),
+        ]);
+        if (tfa) {
+            if (!this.user._tfa || !verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
+        } else {
+            this.user.checkPassword(password);
+        }
+        this.session.sudo = Date.now();
+        if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
+            this.response.template = 'user_sudo_redirect.html';
+            this.response.body = this.session.sudoArgs;
+            this.session.sudoArgs = null;
+        } else this.response.redirect = this.session.sudoArgs.redirect;
     }
 }
 
@@ -148,6 +177,7 @@ class UserLogoutHandler extends Handler {
 
     async post() {
         this.session.uid = 0;
+        this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.response.redirect = '/';
     }
@@ -425,6 +455,7 @@ class OauthCallbackHandler extends Handler {
 export async function apply(ctx) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
+    ctx.Route('user_sudo', '/user/sudo', UserSudoHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
     ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
