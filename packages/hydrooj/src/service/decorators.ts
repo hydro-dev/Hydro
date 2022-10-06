@@ -185,7 +185,7 @@ function _descriptor(v: ParamOption) {
                                 : this.request.body;
                     const value = src[item.name];
                     if (!item.isOptional || value) {
-                        if (!value) throw new ValidationError(item.name);
+                        if (value === undefined || value === null || value === '') throw new ValidationError(item.name);
                         if (item.validate && !item.validate(value)) throw new ValidationError(item.name);
                         if (item.convert) c.push(item.convert(value));
                         else c.push(value);
@@ -216,7 +216,8 @@ export function requireSudo(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
     obj.value = function sudo(this: Handler, ...args: any[]) {
         if (this.session.sudo && Date.now() - this.session.sudo < Time.hour) {
-            this.request.headers.referer = this.session.sudoArgs.referer;
+            if (this.session.sudoArgs?.referer) this.request.headers.referer = this.session.sudoArgs.referer;
+            this.session.sudoArgs = null;
             return originalMethod.call(this, ...args);
         }
         this.session.sudoArgs = {

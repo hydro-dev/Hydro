@@ -263,34 +263,32 @@ class SystemUserImportHandler extends SystemHandler {
     }
 }
 
+const Priv = Object.fromEntries(Object.entries(PRIV).filter(
+    (i) => (!i[0].endsWith('SELF') && !['PRIV_DEFAULT', 'PRIV_NEVER', 'PRIV_NONE', 'PRIV_ALL'].includes(i[0])),
+));
+const allPriv = Math.sum(Object.values(Priv));
+
 class SystemUserPrivHandler extends SystemHandler {
     @requireSudo
-    async get() {
+    async get({ pjax }) {
         const defaultPriv = system.get('default.priv');
         const udocs = await user.getMulti({ _id: { $gte: -1000 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
         const banudocs = await user.getMulti({ _id: { $gte: -1000 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
-        const showPriv = { ...PRIV };
-        // eslint-disable-next-line array-callback-return
-        Object.keys(showPriv).map((i) => {
-            if (i.endsWith('SELF') || [0, -1].includes(showPriv[i])) delete showPriv[i];
-        });
         this.response.body = {
             udocs: [...udocs, ...banudocs],
             defaultPriv,
-            Priv: showPriv,
+            Priv,
         };
-        this.response.template = 'manage_user_priv.html';
+        if (pjax) {
+            const html = await this.renderHTML('partials/manage_user_priv.html', this.response.body);
+            this.response.body = { fragments: [{ html }] };
+        } else this.response.template = 'manage_user_priv.html';
     }
 
     @requireSudo
     @param('uid', Types.Int, true)
-    @param('priv', Types.PositiveInt)
+    @param('priv', Types.UnsignedInt)
     async post(domainId: string, uid: number, priv: number) {
-        let allPriv = 0;
-        // eslint-disable-next-line array-callback-return
-        Object.keys(PRIV).map((i) => {
-            if (!(i.endsWith('SELF') || [0, -1].includes(PRIV[i]))) allPriv |= PRIV[i];
-        });
         if (typeof uid === 'number') {
             const udoc = await user.getById(domainId, uid);
             if (!udoc) throw new UserNotFoundError(uid);

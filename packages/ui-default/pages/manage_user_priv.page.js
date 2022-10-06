@@ -4,6 +4,7 @@ import Notification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
+import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
 
 const page = new NamedPage('manage_user_priv', () => {
@@ -23,10 +24,10 @@ const page = new NamedPage('manage_user_priv', () => {
         uid,
         priv,
       } : { priv });
-      if (res.url) window.location.href = res.url;
+      if (res.url && res.url !== window.location.href) window.location.href = res.url;
       else {
         Notification.success(i18n('Priv has been updated to {0}.', priv));
-        window.location.reload();
+        pjax.request({ push: false });
       }
     } catch (error) {
       Notification.error(error.message);
