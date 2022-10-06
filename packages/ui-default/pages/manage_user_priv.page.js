@@ -1,28 +1,12 @@
 import $ from 'jquery';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
+import selectUser from 'vj/components/selectUser';
 import { NamedPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 
 const page = new NamedPage('manage_user_priv', () => {
-  const selectUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--select-user [name="user"]'));
-  const selectUserDialog = new ActionDialog({
-    $body: $('.dialog__body--select-user > div'),
-    onDispatch(action) {
-      if (action === 'ok' && selectUserSelector.value() === null) {
-        selectUserSelector.focus();
-        return false;
-      }
-      return true;
-    },
-  });
-  selectUserDialog.clear = function () {
-    selectUserSelector.clear();
-    return this;
-  };
-
   const setPrivDialog = new ActionDialog({
     $body: $('.dialog__body--set-priv > div'),
   });
@@ -63,11 +47,9 @@ const page = new NamedPage('manage_user_priv', () => {
   }
 
   async function handleClickSelectUser() {
-    const action = await selectUserDialog.clear().open();
-    if (action !== 'ok') {
-      return;
-    }
-    const user = await request.get(`/user/${selectUserSelector.value()._id}`);
+    const target = await selectUser();
+    if (!target) return;
+    const user = await request.get(`/user/${target._id}`);
     handleOpenUserPrivDialog(user.udoc);
   }
 
