@@ -96,11 +96,7 @@ export async function load(ctx: Context) {
         lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
-    require('../model/index');
-    await Promise.all([
-        model(pending, fail, ctx),
-        setting(pending, fail, require('../model/setting')),
-    ]);
+    await require('./common').builtinModel(ctx);
     ctx.plugin(require('../service/server'));
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
