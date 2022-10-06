@@ -64,7 +64,7 @@ export const RpTypes: Record<string, RpDef> = {
                     journal: { $ne: null },
                 }).sort(contest.RULES[tdoc.rule].statusSort);
                 if (!await cursor.count()) continue;
-                const [rankedTsdocs] = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
+                const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
                 const users = rankedTsdocs.map((i) => ({ uid: i[1].uid, rank: i[0], old: udict[i[1].uid] }));
                 // FIXME sum(rating.new) always less than sum(rating.old)
                 for (const udoc of rating(users)) udict[udoc.uid] = udoc.new;

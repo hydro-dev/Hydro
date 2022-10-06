@@ -63,6 +63,7 @@ if (!(window.matchMedia('all').addListener || window.matchMedia('all').addEventL
         for (let i = 0, il = listeners.length; i < il; i++) {
           if (listeners[i] === listener) {
             listeners.splice(i, 1);
+            i--;
           }
         }
       };

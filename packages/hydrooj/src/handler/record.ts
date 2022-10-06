@@ -1,4 +1,4 @@
-import { debounce, omit } from 'lodash';
+import { omit, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, ForbiddenError, PermissionError,
@@ -303,7 +303,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
-    debounceSend: any;
+    throttleSend: any;
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
@@ -334,7 +334,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
-        this.debounceSend = debounce(this.send, 1000);
+        this.throttleSend = throttle(this.send, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
@@ -359,7 +359,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
             this.sendUpdate(rdoc);
             this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 30000);
-        } else this.debounceSend(rdoc);
+        } else this.throttleSend(rdoc);
     }
 }
 

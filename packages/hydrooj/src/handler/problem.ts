@@ -508,7 +508,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             throw new BadRequestError('Language not allowed.');
         }
         if (pretest) {
-            if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest;
+            if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
             if (setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
             if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new BadRequestError('unable to run pretest');

@@ -69,6 +69,7 @@ const UIConfig = {
     ],
     compilerOptions: {
         experimentalDecorators: true,
+        esModuleInterop: true,
         resolveJsonModule: true,
         jsx: 'react',
         module: 'commonjs',

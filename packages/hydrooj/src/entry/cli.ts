@@ -7,7 +7,7 @@ import { ObjectID } from 'mongodb';
 import { Context } from '../context';
 import db from '../service/db';
 import {
-    addon, lib, model, script, service, setting,
+    addon, builtinModel, lib, script, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -96,11 +96,8 @@ export async function load(ctx: Context) {
         lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
-    require('../model/index');
-    await Promise.all([
-        model(pending, fail, ctx),
-        setting(pending, fail, require('../model/setting')),
-    ]);
+    await builtinModel(ctx);
+    await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/server'));
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');

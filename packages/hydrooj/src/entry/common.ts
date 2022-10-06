@@ -9,6 +9,7 @@ import { Context } from '../context';
 import i18n from '../lib/i18n';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
+import { unwrapExports } from '../utils';
 
 const logger = new Logger('common');
 
@@ -37,7 +38,7 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {
             try {
-                const m = require(p);
+                const m = unwrapExports(require(p));
                 if (m.apply) ctx.loader.reloadPlugin(ctx, p, {});
                 else logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} init: %s`, i);
             } catch (e) {
@@ -59,9 +60,10 @@ export const service = getLoader('service', 'service');
 
 export async function builtinModel(ctx: Context) {
     const modelDir = path.resolve(__dirname, '..', 'model');
-    const models = ['task', 'blacklist', 'discussion', 'document'];
+    const models = await fs.readdir(modelDir);
     for (const t of models) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(modelDir, t), {}, `hydrooj/model/${t}`);
+        const q = path.resolve(modelDir, t);
+        if ('apply' in require(q)) ctx.loader.reloadPlugin(ctx, q, {}, `hydrooj/model/${t.split('.')[0]}`);
     }
 }
 

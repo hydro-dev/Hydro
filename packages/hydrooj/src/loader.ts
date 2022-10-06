@@ -54,10 +54,10 @@ export class Loader {
     async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
         let fork = parent.state[Loader.Record]?.[key];
         if (fork) {
-            logger.info('reload plugin %c', key);
+            logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
-            logger.info('apply plugin %c', key);
+            logger.info('apply plugin %c', key.split('node_modules').pop());
             const plugin = await this.resolvePlugin(key);
             if (!plugin) return;
             resolveConfig(plugin, config);

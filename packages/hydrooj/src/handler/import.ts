@@ -50,13 +50,16 @@ class ProblemImportHydroHandler extends Handler {
             });
         });
         try {
-            const problems = await fs.readdir(tmpdir);
-            for (const i of problems) {
+            const problems = await fs.readdir(tmpdir, { withFileTypes: true });
+            for (const p of problems) {
+                const i = p.name;
+                if (!p.isDirectory()) continue;
                 const files = await fs.readdir(path.join(tmpdir, i));
                 if (!files.includes('problem.yaml')) continue;
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
                 const pdoc: ProblemDoc = yaml.load(content) as any;
-                let pid = pdoc?.pid;
+                if (!pdoc) continue;
+                let pid = pdoc.pid;
                 if (pid) {
                     const current = await problem.get(domainId, pid);
                     if (current) pid = undefined;

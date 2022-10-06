@@ -3,7 +3,7 @@
 import crypto from 'crypto';
 import esbuild from 'esbuild';
 import {
-  ContestModel, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
+  ContestModel, Context, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
   SettingModel, SystemModel, SystemSettings, UiContextBase,
   UserModel,
 } from 'hydrooj';
@@ -218,7 +218,7 @@ class RichMediaHandler extends Handler {
   }
 }
 
-export function apply(ctx) {
+export function apply(ctx: Context) {
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
@@ -230,14 +230,13 @@ export function apply(ctx) {
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.on('app/started', buildUI);
   ctx.on('app/started', updateLogo);
-  ctx.on('system/setting', updateLogo);
   const debouncedBuildUI = debounce(buildUI, 1000);
-  const triggerHotUpdate = (path) => {
-    if (!path.includes('/ui-default/') && !path.includes('/public/')) return;
+  const triggerHotUpdate = (path?: string) => {
+    if (path && !path.includes('/ui-default/') && !path.includes('/public/')) return;
     debouncedBuildUI();
+    updateLogo();
   };
+  ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
-  buildUI();
-  updateLogo();
 }
