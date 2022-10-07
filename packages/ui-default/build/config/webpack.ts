@@ -69,7 +69,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     stats: {
       preset: 'errors-warnings',
     },
-    devtool: env.production ? 'source-map' : false,
+    devtool: false,
     entry: {
       hydro: './entry.js',
       polyfill: './polyfill.ts',
