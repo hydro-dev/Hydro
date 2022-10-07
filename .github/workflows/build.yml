@@ -66,6 +66,11 @@ jobs:
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi
+    - name: Upload Build UI Artifact
+      uses: actions/upload-artifact@v3.1.0
+      with: 
+        name: UI
+        path: packages/ui-default/
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node build/publish.js
