@@ -14,6 +14,8 @@ function format(message, args) {
   return result;
 }
 
+export const getConfiguredDefaultLocale = () => 'zh';
+
 let CURRENT_LOCALE_DATA = {};
 
 function find(path, message) {

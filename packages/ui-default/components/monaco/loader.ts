@@ -3,7 +3,7 @@ import loadExternalModule from 'vj/utils/loadModule';
 let loaded;
 const loaders = {
   i18n: async () => {
-    const { setLocaleData } = await import('vj/components/monaco/nls');
+    const { setLocaleData } = await import('./nls');
     let resource;
     const lang = UserContext.viewLang;
     if (lang === 'zh') {

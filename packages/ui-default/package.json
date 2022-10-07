@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.41.5",
+  "version": "4.41.6",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -10,8 +10,8 @@
     "lint": "eslint"
   },
   "devDependencies": {
-    "@blueprintjs/core": "4.10.2",
-    "@blueprintjs/select": "4.7.0",
+    "@blueprintjs/core": "4.11.2",
+    "@blueprintjs/select": "4.8.2",
     "@fontsource/dm-mono": "^4.5.10",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/inconsolata": "^4.5.8",
@@ -67,7 +67,7 @@
     "matchmedia-polyfill": "^0.3.2",
     "mini-css-extract-plugin": "^2.6.1",
     "moment": "^2.29.4",
-    "monaco-editor": "^0.33.0",
+    "monaco-editor": "^0.34.0",
     "monaco-editor-nls": "^2.0.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "monaco-graphql": "^1.1.2",
@@ -100,7 +100,7 @@
     "sticky-kit": "^1.1.3",
     "style-loader": "^3.3.1",
     "stylus": "^0.59.0",
-    "stylus-loader": "^7.0.0",
+    "stylus-loader": "^7.1.0",
     "tether": "1.4.7",
     "tether-drop": "^1.4.2",
     "through2": "^4.0.2",
