@@ -34,7 +34,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
   function postcssLoader() {
     return {
       loader: 'postcss-loader',
-      options: { postcssOptions: { sourceMap: env.production, config: root('postcss.config.js') } },
+      options: { postcssOptions: { sourceMap: false, config: root('postcss.config.js') } },
     };
   }
 
@@ -74,6 +74,8 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       hydro: './entry.js',
       polyfill: './polyfill.ts',
       'default.theme': './theme/default.js',
+      'service-worker': './service-worker.ts',
+      'messages-shared-worker': './components/message/worker.ts',
     },
     cache: {
       type: 'filesystem',

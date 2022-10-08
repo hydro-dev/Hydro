@@ -45,7 +45,7 @@ const endpoint = url.toString().replace('http', 'ws');
 const initWorkerMode = () => {
   console.log('Messages: using SharedWorker');
   // @ts-ignore
-  const worker = new SharedWorker(new URL('./worker?inline', import.meta.url), { name: 'HydroMessagesWorker' });
+  const worker = new SharedWorker('/message-shared-worker.js', { name: 'HydroMessagesWorker' });
   worker.port.start();
   window.addEventListener('beforeunload', () => {
     worker.port.postMessage({ type: 'unload' });
