@@ -155,7 +155,7 @@ class RecordDetailHandler extends Handler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (tdoc && contest.isDone(tdoc)) {
+        if (tdoc && tdoc.allowViewCode && contest.isDone(tdoc)) {
             const tsdoc = await contest.getStatus(domainId, tdoc.docId, this.user._id);
             canViewCode ||= tsdoc?.attend;
         }
