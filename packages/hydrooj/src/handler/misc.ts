@@ -18,6 +18,8 @@ import { builtinConfig } from '../settings';
 import { md5, sortFiles } from '../utils';
 
 class SwitchLanguageHandler extends Handler {
+    noCheckPermView = true;
+
     @param('lang', Types.Name)
     async get(domainId: string, lang: string) {
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
@@ -29,6 +31,8 @@ class SwitchLanguageHandler extends Handler {
 }
 
 export class FilesHandler extends Handler {
+    noCheckPermView = true;
+
     @param('pjax', Types.Boolean)
     async get(domainId: string, pjax = false) {
         if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
@@ -85,6 +89,8 @@ export class FilesHandler extends Handler {
 }
 
 export class FSDownloadHandler extends Handler {
+    noCheckPermView = true;
+
     @param('uid', Types.Int)
     @param('filename', Types.Name)
     @param('noDisposition', Types.Boolean)
@@ -105,6 +111,8 @@ export class FSDownloadHandler extends Handler {
 }
 
 export class StorageHandler extends Handler {
+    noCheckPermView = true;
+
     @param('target', Types.Name)
     @param('filename', Types.Name, true)
     @param('expire', Types.UnsignedInt)
