@@ -60,7 +60,7 @@ const sampleParser = (mode: 'input' | 'output') =>
         if (!node.innerHTML.includes('test-example-line')) {
             return `\n
 \`\`\`${mode}${index + 1}
-${node.innerHTML.trim()}
+${node.innerHTML.trim().replace(/<br>/g, '\n')}
 \`\`\`
 \n`;
         }
