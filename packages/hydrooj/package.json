@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.0.12",
+    "version": "4.0.13",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -13,6 +13,7 @@
     "preferUnplugged": true,
     "dependencies": {
         "@aws-sdk/client-s3": "^3.186.0",
+        "@aws-sdk/lib-storage": "^3.186.0",
         "@aws-sdk/middleware-endpoint": "^3.186.0",
         "@aws-sdk/s3-presigned-post": "^3.186.0",
         "@aws-sdk/s3-request-presigner": "^3.186.0",
