@@ -12,7 +12,7 @@ export default new AutoloadPage('media', async () => {
       resolvers.push((html) => html && $(ele).replaceWith($(html)));
     };
     users.get().forEach((ele) => resolve(ele, { type: 'user', id: +$(ele).text() }));
-    $dom.find('.typo').get().forEach((el) => {
+    $dom.find('.typo').addBack('.typo').get().forEach((el) => {
       if (el.className.includes('no-media')) return;
       $(el).find('a[href]').get().forEach((ele) => {
         if ($(ele).parent().hasClass('user-profile-link')) return;

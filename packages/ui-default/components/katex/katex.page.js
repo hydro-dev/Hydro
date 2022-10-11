@@ -19,7 +19,7 @@ const katexPage = new AutoloadPage('katexPage', () => {
       }));
     }
     runKatex($('.typo'));
-    $(document).on('vjContentNew', (e) => runKatex($(e.target).find('.typo')));
+    $(document).on('vjContentNew', (e) => runKatex($(e.target).find('.typo').addBack('.typo')));
   });
 });
 
