@@ -10,8 +10,8 @@
     "lint": "eslint"
   },
   "devDependencies": {
-    "@blueprintjs/core": "4.11.2",
-    "@blueprintjs/select": "4.8.2",
+    "@blueprintjs/core": "4.11.3",
+    "@blueprintjs/select": "4.8.3",
     "@fontsource/dm-mono": "^4.5.10",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/inconsolata": "^4.5.8",

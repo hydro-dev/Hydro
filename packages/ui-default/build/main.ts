@@ -57,8 +57,8 @@ async function runWebpack({
       if (!file.isFile() || file.name.endsWith('.map')) continue;
       const data = await fs.stat(path.join(root('public'), file.name));
       const key = file.name
-        .replace(/\.[a-f0-9]{4}\.chunk\./, '.chunk.')
-        .replace(/\.[a-f0-9]{4}\.worker\./, '.worker.');
+        .replace(/\.[a-f0-9]{6}\.chunk\./, '.chunk.')
+        .replace(/\.[a-f0-9]{6}\.worker\./, '.worker.');
       stats[key] = data.size;
     }
     const statsPath = root('__bundleInfo');

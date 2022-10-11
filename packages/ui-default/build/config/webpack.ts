@@ -91,8 +91,8 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
-      filename: '[name].js?[contenthash:4]',
-      chunkFilename: '[name].[chunkhash:4].chunk.js',
+      filename: '[name].js?[contenthash:6]',
+      chunkFilename: '[name].[chunkhash:6].chunk.js',
     },
     resolve: {
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
@@ -130,15 +130,15 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
                 const extra = p.split('node_modules')[1];
                 const moduleName = extra.split('/')[0];
                 if (extra.includes('@fontsource')) {
-                  return `fonts/${filename}?[hash:4]`;
+                  return `fonts/${filename}?[hash:6]`;
                 }
                 if (['katex', 'monaco-editor'].includes(moduleName)) {
-                  return `modules/${moduleName}/${filename}?[hash:4]`;
+                  return `modules/${moduleName}/${filename}?[hash:6]`;
                 }
-                return `modules/${extra.substr(1)}?[hash:4]`;
+                return `modules/${extra.substr(1)}?[hash:6]`;
               }
-              if (p.includes('.iconfont')) return `${filename}?[hash:4]`;
-              return `${p.split('ui-default')[1].substring(1)}?[hash:4]`;
+              if (p.includes('.iconfont')) return `${filename}?[hash:6]`;
+              return `${p.split('ui-default')[1].substring(1)}?[hash:6]`;
             },
           },
         },
@@ -238,7 +238,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
-        filename: '[name].css?[fullhash:4]',
+        filename: '[name].css?[fullhash:6]',
       }),
       new FriendlyErrorsPlugin(),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs)/ }),
@@ -257,7 +257,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new MonacoWebpackPlugin({
-        filename: '[name].[hash:4].worker.js',
+        filename: '[name].[hash:6].worker.js',
         customLanguages: [{
           label: 'yaml',
           entry: require.resolve('monaco-yaml/index.js'),
