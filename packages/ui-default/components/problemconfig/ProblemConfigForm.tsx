@@ -41,12 +41,6 @@ function ExtraFilesConfig() {
   const dispatch = useDispatch();
   const userRef = React.useRef<any>();
   const judgeRef = React.useRef<any>();
-  React.useEffect(() => {
-    userRef.current.setSelectedKeys(userExtraFiles);
-  }, [JSON.stringify(userExtraFiles)]);
-  React.useEffect(() => {
-    judgeRef.current.setSelectedKeys(judgeExtraFiles);
-  }, [JSON.stringify(judgeExtraFiles)]);
   return (
     <FormItem columns={12} label="ExtraFilesTabs" disableLabel>
       <Tabs id="ExtraFilesTabs">
@@ -89,9 +83,6 @@ function LangConfig() {
   const dispatch = useDispatch();
   const ref = React.useRef<any>();
   const selectedKeys = langs.filter((i) => !prefixes.has(i));
-  React.useEffect(() => {
-    ref.current.setSelectedKeys(selectedKeys);
-  }, [JSON.stringify(selectedKeys)]);
   return (
     <FormItem columns={12} label="langs">
       <CustomSelectAutoComplete
