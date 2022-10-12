@@ -399,9 +399,9 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                         const info = str.match(/="file:\/\/(.+?)"/);
                         return `="./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
                     })
-                    .replace(/=\\"file:\/\/(.+?)"/g, (str) => {
+                    .replace(/=\\"file:\/\/(.+?)\\"/g, (str) => {
                         const info = str.match(/=\\"file:\/\/(.+?)"/);
-                        return `=\\"./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
+                        return `=\\"./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}\\"`;
                     });
             } else {
                 this.response.body.pdoc.content = this.response.body.pdoc.content
