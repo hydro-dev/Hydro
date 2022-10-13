@@ -16,11 +16,7 @@ function onBeforeUnload(e) {
   }
   e.returnValue = '';
 }
-if (window.location.protocol === 'https:'
-  || window.location.protocol === 'chrome-extension:'
-  || window.location.hostname === 'localhost') {
-  streamsaver.mitm = '/streamsaver/mitm.html';
-}
+streamsaver.mitm = `${window.isSecureContext ? '' : 'https://hydro.ac'}/streamsaver/mitm.html`;
 
 const waitForWritableStream = window.WritableStream
   ? Promise.resolve()

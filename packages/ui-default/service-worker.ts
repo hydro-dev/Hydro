@@ -2,8 +2,10 @@
 /// <reference lib="ES2015" />
 /// <reference types="@types/serviceworker" />
 /* global clients */
-// eslint-disable-next-line no-restricted-globals
-addEventListener('notificationclick', (event) => {
+/* eslint-disable no-restricted-globals */
+import 'streamsaver/sw.js';
+
+self.addEventListener('notificationclick', (event) => {
   console.log('On notification click: ', event.notification.tag);
   event.notification.close();
   if (!event.notification.tag.startsWith('message-')) return;
