@@ -109,7 +109,8 @@ export class ContestDetailBaseHandler extends Handler {
 
     @param('tid', Types.ObjectID, true)
     async after(domainId: string, tid: ObjectID) {
-        if (!tid || this.request.json || !this.response.template || !contest.isOngoing(this.tdoc, this.tsdoc)) return;
+        if (!tid || this.tdoc.rule === 'homework' || !contest.isOngoing(this.tdoc, this.tsdoc)) return;
+        if (this.request.json || !this.response.template) return;
         const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
         this.response.body.overrideNav = [
             { name: 'homepage', args: { prefix: 'homepage' }, checker: () => true },
