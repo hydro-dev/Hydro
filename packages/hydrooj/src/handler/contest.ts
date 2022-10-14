@@ -106,6 +106,36 @@ export class ContestDetailBaseHandler extends Handler {
             this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
         }
     }
+
+    @param('tid', Types.ObjectID, true)
+    async after(domainId: string, tid: ObjectID) {
+        if (!tid || this.request.json || !this.response.template || !contest.isOngoing(this.tdoc, this.tsdoc)) return;
+        const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
+        this.response.body.overrideNav = [
+            { name: 'homepage', args: { prefix: 'homepage' }, checker: () => true },
+            {
+                name: 'contest_detail',
+                displayName: this.tdoc.title,
+                args: { tid, prefix: 'contest_detail' },
+                checker: () => true,
+            },
+            {
+                name: 'contest_scoreboard',
+                args: { tid, prefix: 'contest_scoreboard' },
+                checker: () => contest.canShowScoreboard.call(this, this.tdoc, true),
+            },
+            {
+                name: 'record_main',
+                args: { tid, prefix: 'record_main', query: contest.canShowRecord.call(this, this.tdoc, true) ? {} : { uidOrName: this.user._id } },
+                checker: () => contest.canShowSelfRecord.call(this, this.tdoc, true),
+            },
+            {
+                displayName: `${String.fromCharCode(65 + this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
+                args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
+                checker: () => 'pdoc' in this,
+            },
+        ];
+    }
 }
 
 export class ContestDetailHandler extends ContestDetailBaseHandler {

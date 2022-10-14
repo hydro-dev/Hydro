@@ -35,17 +35,20 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
         response.body = await ctx.renderHTML(name, args);
         response.type = 'text/html';
     };
-    ctx.getUrl = (name: string, kwargs: any = {}) => {
+    ctx.getUrl = (name: string, ...kwargsList: Record<string, any>[]) => {
+        if (name === '#') return '#';
         let res = '#';
         const args: any = {};
         const query: any = {};
-        for (const key in kwargs) {
-            if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
-            else args[key] = kwargs[key].toString().replace(/\//g, '%2F');
-        }
-        for (const key in kwargs.query || {}) {
-            if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
-            else query[key] = kwargs.query[key].toString();
+        for (const kwargs of kwargsList) {
+            for (const key in kwargs) {
+                if (kwargs[key] instanceof ObjectID) args[key] = kwargs[key].toHexString();
+                else args[key] = kwargs[key].toString().replace(/\//g, '%2F');
+            }
+            for (const key in kwargs.query || {}) {
+                if (query[key] instanceof ObjectID) query[key] = kwargs.query[key].toHexString();
+                else query[key] = kwargs.query[key].toString();
+            }
         }
         try {
             const { anchor } = args;

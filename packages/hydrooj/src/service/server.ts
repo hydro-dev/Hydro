@@ -252,7 +252,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             ...operation ? [
                 `handler/before-operation/${name}`, 'handler/before-operation',
                 `post${operation}`, 'log/__operationDone',
-            ] : [],
+            ] : [], 'after',
             `handler/after/${name}`, 'handler/after', 'cleanup',
             `handler/finish/${name}`, 'handler/finish',
         ];
