@@ -566,7 +566,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _69_70() {
         const tasks = await TaskModel.coll.find({ type: 'schedule', subType: 'contest' }).toArray();
-        await ScheduleModel.coll.insertMany(tasks as any);
+        if (tasks.length) await ScheduleModel.coll.insertMany(tasks as any);
         await TaskModel.coll.deleteMany({});
         return true;
     },

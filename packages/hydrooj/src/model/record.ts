@@ -83,6 +83,7 @@ export default class RecordModel {
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
             if (pdoc.config.type === 'remote_judge') {
+                await task.deleteMany({ rid: { $in: rids } });
                 return await task.addMany(rids.map((rid) => ({
                     ...(pdoc.config as any),
                     priority,
@@ -94,6 +95,7 @@ export default class RecordModel {
                 } as any)));
             }
         }
+        await task.deleteMany({ rid: { $in: rids } });
         return await task.addMany(rids.map((rid) => ({
             priority,
             type: 'judge',
