@@ -103,9 +103,7 @@ export async function postJudge(rdoc: RecordDoc) {
                     contest: { $ne: new ObjectID('0'.repeat(24)) },
                 }).project({ _id: 1, contest: 1 }).toArray();
                 const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
-                await Promise.all(rdocs.map(
-                    (r) => record.judge(rdoc.domainId, r._id, priority, r.contest ? { detail: false } : {}, { hackRejudge: input }),
-                ));
+                await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
             } catch (e) {
                 next({
                     rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
