@@ -202,10 +202,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
             // eslint-disable-next-line no-await-in-loop
             if (!t) await sleep(500);
         }
-        this.send({ task: t });
+        let rdoc = await record.get(t.domainId, t.rid);
+        this.send({ task: { ...rdoc, ...t } });
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
-        const rdoc = await record.update(t.domainId, t.rid, $set, {});
+        rdoc = await record.update(t.domainId, t.rid, $set, {});
         bus.broadcast('record/change', rdoc, $set, {});
     }
 

@@ -2,7 +2,7 @@
 import os from 'os';
 import {
     Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, sleep, STATUS, TaskModel, Time,
+    ProblemModel, RecordModel, sleep, STATUS, TaskModel, Time,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import { getDifficulty } from './providers/codeforces';
@@ -35,6 +35,8 @@ class Service {
     }
 
     async judge(task) {
+        const rdoc = await RecordModel.get(task.domainId, task.rid);
+        task = Object.assign(rdoc, task);
         const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid });
         const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid });
         await next({ status: STATUS.STATUS_FETCHED });

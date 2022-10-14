@@ -551,8 +551,15 @@ export interface Task {
     _id: ObjectID;
     type: string;
     subType?: string;
-    executeAfter: Date;
     priority: number;
+    [key: string]: any;
+}
+
+export interface Schedule {
+    _id: ObjectID;
+    type: string;
+    subType?: string;
+    executeAfter: Date;
     [key: string]: any;
 }
 
@@ -618,6 +625,7 @@ declare module './service/db' {
         'oplog': OplogDoc;
         'event': EventDoc;
         'opcount': OpCountDoc;
+        'schedule': Schedule;
     }
 }
 
@@ -637,6 +645,7 @@ export interface Model {
     solution: typeof import('./model/solution').default,
     system: typeof import('./model/system'),
     task: typeof import('./model/task').default,
+    schedule: typeof import('./model/schedule').default;
     oplog: typeof import('./model/oplog'),
     token: typeof import('./model/token').default,
     training: typeof import('./model/training'),

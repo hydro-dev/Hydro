@@ -1,5 +1,5 @@
 /* eslint-disable object-curly-newline */
-import { omit, sum } from 'lodash';
+import { sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
     FilterQuery, MatchKeysAndValues,
@@ -9,7 +9,7 @@ import {
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import {
-    FileInfo, JudgeMeta, JudgeRequest, ProblemConfigFile, RecordDoc,
+    FileInfo, JudgeMeta, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
@@ -63,8 +63,10 @@ export default class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rid: ObjectID, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
-        const rdoc = await RecordModel.get(domainId, rid);
+    static async judge(domainId: string, rids: MaybeArray<ObjectID>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
+        rids = rids instanceof Array ? rids : [rids];
+        if (!rids.length) return null;
+        const rdoc = await RecordModel.get(domainId, rids[0]);
         if (!rdoc) return null;
         let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
@@ -81,23 +83,18 @@ export default class RecordModel {
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
             if (pdoc.config.type === 'remote_judge') {
-                if (rdoc.contest?.toHexString() !== '0'.repeat(24)) {
-                    return await task.add({
-                        ...omit(rdoc, ['_id']),
-                        priority,
-                        type: 'remotejudge',
-                        subType: pdoc.config.subType,
-                        target: pdoc.config.target,
-                        rid,
-                        domainId,
-                        config,
-                        data,
-                    });
-                }
+                return await task.addMany(rids.map((rid) => ({
+                    ...(pdoc.config as any),
+                    priority,
+                    type: 'remotejudge',
+                    rid,
+                    domainId,
+                    config,
+                    data,
+                } as any)));
             }
         }
-        return await task.add({
-            ...omit(rdoc, ['_id']),
+        return await task.addMany(rids.map((rid) => ({
             priority,
             type: 'judge',
             rid,
@@ -106,7 +103,7 @@ export default class RecordModel {
             data,
             source,
             meta,
-        } as unknown as JudgeRequest);
+        } as any)));
     }
 
     static async add(
