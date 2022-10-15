@@ -15,13 +15,14 @@ import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
-import {
-    ConnectionHandler, Handler, param, Types,
-} from '../service/server';
+import { ConnectionHandler, param, Types } from '../service/server';
 import { buildProjection } from '../utils';
+import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
-class RecordListHandler extends Handler {
+class RecordListHandler extends ContestDetailBaseHandler {
+    tdoc?: Tdoc<30>;
+
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.Name, true)
     @param('tid', Types.ObjectID, true)
@@ -42,6 +43,7 @@ class RecordListHandler extends Handler {
         if (full) uidOrName = this.user._id.toString();
         if (tid) {
             tdoc = await contest.get(domainId, tid);
+            this.tdoc = tdoc;
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
             if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
@@ -106,8 +108,10 @@ class RecordListHandler extends Handler {
     }
 }
 
-class RecordDetailHandler extends Handler {
+class RecordDetailHandler extends ContestDetailBaseHandler {
     rdoc: RecordDoc;
+    tdoc?: Tdoc<30>;
+
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
         this.rdoc = await record.get(domainId, rid);
@@ -133,15 +137,15 @@ class RecordDetailHandler extends Handler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
-        let tdoc: Tdoc<30>;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
-            tdoc = await contest.get(domainId, rdoc.contest);
-            let canView = this.user.own(tdoc);
-            canView ||= contest.canShowRecord.call(this, tdoc);
-            canView ||= contest.canShowSelfRecord.call(this, tdoc, true) && rdoc.uid === this.user._id;
+            this.tdoc = await contest.get(domainId, rdoc.contest);
+            let canView = this.user.own(this.tdoc);
+            canView ||= contest.canShowRecord.call(this, this.tdoc);
+            canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
             if (!canView) throw new PermissionError(rid);
+            this.args.tid = this.tdoc.docId;
         }
 
         // eslint-disable-next-line prefer-const
@@ -155,8 +159,8 @@ class RecordDetailHandler extends Handler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (tdoc && tdoc.allowViewCode && contest.isDone(tdoc)) {
-            const tsdoc = await contest.getStatus(domainId, tdoc.docId, this.user._id);
+        if (this.tdoc && this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
+            const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             canViewCode ||= tsdoc?.attend;
         }
         if (!canViewCode) {
@@ -170,7 +174,7 @@ class RecordDetailHandler extends Handler {
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc, pdoc, tdoc,
+            udoc, rdoc, pdoc, tdoc: this.tdoc,
         };
     }
 

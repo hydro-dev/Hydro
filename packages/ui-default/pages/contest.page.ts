@@ -1,7 +1,7 @@
 import NProgress from 'nprogress';
 import { NamedPage } from 'vj/misc/Page';
 
-export default new NamedPage(['contest_detail', 'contest_detail_problem'], () => {
+export default new NamedPage(['contest_detail', 'contest_detail_problem', 'contest_scoreboard'], () => {
   const beginAt = new Date(UiContext.tdoc.beginAt).getTime();
   const endAt = new Date(UiContext.tdoc.endAt).getTime();
   NProgress.configure({ trickle: false, showSpinner: false, minimum: 0 });

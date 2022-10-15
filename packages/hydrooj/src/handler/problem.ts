@@ -377,8 +377,12 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             solutionCount: scnt,
             discussionCount: dcnt,
             tdoc: this.tdoc,
-            tsdoc: pick(this.tsdoc, ['attend', 'startAt']),
         };
+        if (this.tdoc && this.tsdoc) {
+            const fields = ['attend', 'startAt'];
+            if (contest.canShowSelfRecord.call(this, this.tdoc, true)) fields.push('detail');
+            this.response.body.tsdoc = pick(this.tsdoc, fields);
+        }
         this.response.template = 'problem_detail.html';
         this.UiContext.extraTitleContent = this.pdoc.title;
     }

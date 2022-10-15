@@ -142,6 +142,7 @@ env.addGlobal('static_url', (assetName) => {
 env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
 env.addGlobal('Object', Object);
+env.addGlobal('String', String);
 env.addGlobal('Math', Math);
 env.addGlobal('process', process);
 env.addGlobal('global', global);

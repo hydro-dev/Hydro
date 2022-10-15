@@ -63,7 +63,7 @@ const acm = buildContestRule({
     stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
         const naccept = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
-        const detail: AcmDetail[] = [];
+        const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
         for (const j of filterEffective(tdoc, journal, ignoreLock)) {
@@ -77,11 +77,11 @@ const acm = buildContestRule({
             const j = effective[pid];
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
-            detail.push({
+            detail[pid] = {
                 ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
-            });
+            };
         }
-        for (const d of detail.filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
+        for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
             accept++;
             time += d.time;
         }
@@ -118,8 +118,7 @@ const acm = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict: Record<number, AcmDetail> = {};
-        for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
+        const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
@@ -366,7 +365,7 @@ const homework = buildContestRule({
             score: sumBy(detail, 'score'),
             penaltyScore: sumBy(detail, 'penaltyScore'),
             time: Math.sum(detail.map((d) => d.time)),
-            detail,
+            detail: effective,
         };
     },
     showScoreboard: () => true,
@@ -410,10 +409,7 @@ const homework = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc) {
-        const tsddict = {};
-        for (const item of tsdoc.detail || []) {
-            if (!tsddict[item.pid] || tsddict[item.pid].score <= item.score) tsddict[item.pid] = item;
-        }
+        const tsddict = tsdoc.detail;
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             {
