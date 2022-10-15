@@ -7,7 +7,7 @@ import { ObjectID } from 'mongodb';
 import { Context } from '../context';
 import db from '../service/db';
 import {
-    addon, builtinModel, lib, script, service, setting,
+    addon, builtinModel, lib, model, script, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -97,6 +97,7 @@ export async function load(ctx: Context) {
         service(pending, fail, ctx),
     ]);
     await builtinModel(ctx);
+    await model(pending, fail, ctx);
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/server'));
     await addon(pending, fail, ctx);
