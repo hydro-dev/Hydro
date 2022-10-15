@@ -7,8 +7,8 @@ import type { Readable } from 'stream';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import storage from '../service/storage';
+import ScheduleModel from './schedule';
 import * as system from './system';
-import TaskModel from './task';
 
 export class StorageModel {
     static coll = db.collection('storage');
@@ -135,15 +135,15 @@ async function cleanFiles() {
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
 }
-TaskModel.Worker.addHandler('storage.prune', cleanFiles);
+ScheduleModel.Worker.addHandler('storage.prune', cleanFiles);
 bus.on('ready', async () => {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     await db.ensureIndexes(
         StorageModel.coll,
         { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
     );
-    if (!await TaskModel.count({ type: 'schedule', subType: 'storage.prune' })) {
-        await TaskModel.add({
+    if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+        await ScheduleModel.add({
             type: 'schedule',
             subType: 'storage.prune',
             executeAfter: moment().startOf('hour').toDate(),

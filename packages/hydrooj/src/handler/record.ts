@@ -98,10 +98,7 @@ class RecordListHandler extends Handler {
             filterStatus: status,
         };
         if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && !full) {
-            this.response.body.statistics = {
-                ...await record.stat(all ? undefined : domainId),
-                delay: await TaskModel.getDelay({ type: 'judge' }),
-            };
+            this.response.body.statistics = await record.stat(all ? undefined : domainId);
         }
     }
 }

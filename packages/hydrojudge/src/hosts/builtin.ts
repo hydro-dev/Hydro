@@ -2,9 +2,9 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import fs from 'fs-extra';
-import type { JudgeResultBody } from 'hydrooj';
 import {
-    SettingModel, StorageModel, SystemModel, TaskModel,
+    JudgeResultBody, RecordModel, SettingModel,
+    StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
 import { processTestdata } from '../cases';
@@ -75,7 +75,10 @@ const session = {
 
 export async function postInit() {
     if (SystemModel.get('hydrojudge.disable')) return;
-    const handle = (t) => (new JudgeTask(session, t)).handle().catch(logger.error);
+    const handle = async (t) => {
+        const rdoc = await RecordModel.get(t.domainId, t.rid);
+        (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
+    };
     TaskModel.consume({ type: 'judge' }, handle);
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
 }
