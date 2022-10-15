@@ -42,7 +42,7 @@ const langMap = {
     16: 'js',
     17: 'go',
 };
-const nameMap = {
+const nameMap: Record<string, string> = {
     'sample.in': 'sample0.in',
     'sample.out': 'sample0.out',
     'test.in': 'test0.in',
@@ -291,7 +291,7 @@ export async function run({
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            const filename = nameMap[data.name] || data;
+            const filename = nameMap[data.name] || data.name;
             await ProblemModel.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
         await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
