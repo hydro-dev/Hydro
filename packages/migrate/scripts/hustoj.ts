@@ -291,7 +291,7 @@ export async function run({
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            const filename = nameMap[data.name] || data;
+            const filename = nameMap[data.name] || data.name;
             await ProblemModel.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
         await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
