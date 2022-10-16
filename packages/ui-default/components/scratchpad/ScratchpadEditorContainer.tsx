@@ -26,7 +26,7 @@ export default connect((state: any) => ({
     });
   },
 }))(class MonacoEditor extends React.PureComponent<ScratchpadOptions> {
-  disposable = [];
+  disposable: monaco.IDisposable[] = [];
   __prevent_trigger_change_event = false;
   model: monaco.editor.ITextModel;
   editor: monaco.editor.IStandaloneCodeEditor;
@@ -78,7 +78,7 @@ export default connect((state: any) => ({
         [
           {
             range: model.getFullModelRange(),
-            text: value,
+            text: value!,
           },
         ],
         () => null,
