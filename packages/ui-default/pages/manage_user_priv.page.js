@@ -20,10 +20,11 @@ const page = new NamedPage('manage_user_priv', () => {
 
   async function changeUserPriv(uid, priv) {
     try {
-      const res = await request.post('', uid !== 'default' ? {
-        uid,
+      const res = await request.post('', {
+        uid: uid !== 'default' ? uid : 0,
         priv,
-      } : { priv });
+        system: uid === 'default',
+      });
       if (res.url && res.url !== window.location.href) window.location.href = res.url;
       else {
         Notification.success(i18n('Priv has been updated to {0}.', priv));
