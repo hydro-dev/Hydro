@@ -6,19 +6,6 @@
   </div>
 {% endif %}
   <div>
-    <div class="contest-problems">
-      {% for pid in tdoc.pids -%}
-        {% set status = tsdoc.detail[pid].status %}
-        {% set pass = status == STATUS.STATUS_ACCEPTED %}
-        {% set fail = status and not pass %}
-        <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
-          class="{% if pass %}pass{% elif fail %}fail{% endif %}
-                 {% if pid==pdoc.docId %} active{% endif %}">
-          <span class="id">{{ String.fromCharCode(65+loop.index0) }}</span>
-          {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
-        </a>
-      {%- endfor %}
-    </div>
     <ol class="menu">
     {% if model.contest.isOngoing(tdoc, tsdoc) %}
     {% if page_name == 'contest_detail_problem' %}
