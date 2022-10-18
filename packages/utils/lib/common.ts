@@ -149,6 +149,20 @@ export function parseMemoryMB(str: string | number, throwOnError = true) {
     return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
 }
 
+function _digit2(number: number) {
+    return number < 10 ? `0${number}` : number.toString();
+}
+
+export function formatSeconds(_seconds: string | number = '0', showSeconds = true) {
+    const seconds = +_seconds;
+    let res = '{0}:{1}'.format(
+        showSeconds ? _digit2(Math.floor(seconds / 3600)) : Math.floor(seconds / 3600),
+        _digit2(Math.floor((seconds % 3600) / 60)),
+    );
+    if (showSeconds) res += `:${_digit2(seconds % 60)}`;
+    return res;
+}
+
 export function size(s: number, base = 1) {
     s *= base;
     const unit = 1024;

@@ -1,5 +1,6 @@
 {% import "components/paginator.html" as paginator with context %}
 {% extends "layout/basic.html" %}
+{{ set(UiContext, 'tdoc', tdoc) }}
 {% set type = 'homework' if tdoc.rule == 'homework' else 'contest' %}
 {% block content %}
 <div class="row"><div class="medium-12 columns scoreboard--{{ tdoc.rule }}">

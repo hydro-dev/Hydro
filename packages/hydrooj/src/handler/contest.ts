@@ -127,7 +127,12 @@ export class ContestDetailBaseHandler extends Handler {
             },
             {
                 name: 'record_main',
-                args: { tid, prefix: 'record_main', query: contest.canShowRecord.call(this, this.tdoc, true) ? {} : { uidOrName: this.user._id } },
+                args: {
+                    prefix: 'record',
+                    query: contest.canShowRecord.call(this, this.tdoc, true)
+                        ? { tid }
+                        : { tid, uidOrName: this.user._id },
+                },
                 checker: () => contest.canShowSelfRecord.call(this, this.tdoc, true),
             },
             {
@@ -163,14 +168,14 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             && !this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
         ) return;
         const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
-        const psdict = {};
+        let psdict = {};
         let rdict = {};
         if (this.tsdoc) {
             if (this.tsdoc.attend && !this.tsdoc.startAt && contest.isOngoing(this.tdoc)) {
                 await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
                 this.tsdoc.startAt = new Date();
             }
-            for (const pdetail of this.tsdoc.journal || []) psdict[pdetail.pid] = pdetail;
+            psdict = this.tsdoc.detail || {};
             if (contest.canShowSelfRecord.call(this, this.tdoc)) {
                 rdict = await record.getList(domainId, Object.values(psdict).map((i: any) => i.rid));
             } else {

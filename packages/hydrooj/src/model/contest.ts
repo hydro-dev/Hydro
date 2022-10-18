@@ -63,7 +63,7 @@ const acm = buildContestRule({
     stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
         const naccept = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
-        const detail: AcmDetail[] = [];
+        const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
         for (const j of filterEffective(tdoc, journal, ignoreLock)) {
@@ -77,11 +77,11 @@ const acm = buildContestRule({
             const j = effective[pid];
             const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
-            detail.push({
+            detail[pid] = {
                 ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
-            });
+            };
         }
-        for (const d of detail.filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
+        for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
             accept++;
             time += d.time;
         }
@@ -92,7 +92,12 @@ const acm = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'email', value: _('Email') });
+        if (isExport) {
+            columns.push({ type: 'email', value: _('Email') });
+            columns.push({ type: 'string', value: _('School') });
+            columns.push({ type: 'string', value: _('Name') });
+            columns.push({ type: 'string', value: _('Student ID') });
+        }
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
@@ -118,13 +123,17 @@ const acm = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict: Record<number, AcmDetail> = {};
-        for (const item of tsdoc.detail || []) tsddict[item.pid] = item;
+        const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) row.push({ type: 'email', value: udoc.mail });
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school });
+            row.push({ type: 'string', value: udoc.displayName });
+            row.push({ type: 'string', value: udoc.studentId });
+        }
         row.push({
             type: 'time',
             value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
@@ -220,7 +229,12 @@ const oi = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'email', value: _('Email') });
+        if (isExport) {
+            columns.push({ type: 'email', value: _('Email') });
+            columns.push({ type: 'string', value: _('School') });
+            columns.push({ type: 'string', value: _('Name') });
+            columns.push({ type: 'string', value: _('Student ID') });
+        }
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             if (isExport) {
@@ -244,7 +258,12 @@ const oi = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) row.push({ type: 'email', value: udoc.mail });
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school });
+            row.push({ type: 'string', value: udoc.displayName });
+            row.push({ type: 'string', value: udoc.studentId });
+        }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
@@ -366,7 +385,7 @@ const homework = buildContestRule({
             score: sumBy(detail, 'score'),
             penaltyScore: sumBy(detail, 'penaltyScore'),
             time: Math.sum(detail.map((d) => d.time)),
-            detail,
+            detail: effective,
         };
     },
     showScoreboard: () => true,
@@ -410,10 +429,7 @@ const homework = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc) {
-        const tsddict = {};
-        for (const item of tsdoc.detail || []) {
-            if (!tsddict[item.pid] || tsddict[item.pid].score <= item.score) tsddict[item.pid] = item;
-        }
+        const tsddict = tsdoc.detail;
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             {
@@ -484,7 +500,7 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc> = {},
+    rated = false, data: Partial<Tdoc<30>> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -682,7 +698,7 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectID,
     isExport = false, ignoreLock = false,
-): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict]> {
+): Promise<[Tdoc<30>, ScoreboardRow[], Udict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     if (ignoreLock) delete tdoc.lockAt;
@@ -692,6 +708,7 @@ export async function getScoreboard(
         isExport, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,
     );
+    await bus.parallel('contest/scoreboard', tdoc, rows, udict, pdict);
     return [tdoc, rows, udict, pdict];
 }
 

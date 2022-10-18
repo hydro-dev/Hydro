@@ -20,6 +20,7 @@ import * as system from './model/system';
 import TaskModel from './model/task';
 import user from './model/user';
 import {
+    iterateAllContest,
     iterateAllDomain, iterateAllProblem, iterateAllUser,
 } from './pipelineUtils';
 import db from './service/db';
@@ -568,6 +569,14 @@ const scripts: UpgradeScript[] = [
         const tasks = await TaskModel.coll.find({ type: 'schedule', subType: 'contest' }).toArray();
         if (tasks.length) await ScheduleModel.coll.insertMany(tasks as any);
         await TaskModel.coll.deleteMany({});
+        return true;
+    },
+    async function _70_71() {
+        await iterateAllContest(async (tdoc) => {
+            if (['acm', 'homework'].includes(tdoc.rule)) {
+                await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+            }
+        });
         return true;
     },
 ];

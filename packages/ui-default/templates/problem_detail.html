@@ -26,7 +26,7 @@
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
-      <div class="section__header" style="align: center">
+      <div class="section__header">
         <h1 class="section__title">
           {% if rdoc %}
             <a href="{{ url('record_detail', {rid:rdoc._id}) }}">
@@ -46,10 +46,27 @@
           {% endif %}
           #{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
         </h1>
+        {% if tdoc %}
+          <div class="section__tools contest-problems">
+            {% for pid in tdoc.pids -%}
+              {% set status = tsdoc.detail[pid].status %}
+              {% set pass = status == STATUS.STATUS_ACCEPTED %}
+              {% set fail = status and not pass %}
+              <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
+                 class="{% if pass %}pass{% elif fail %}fail{% endif %}
+                        {% if pid==pdoc.docId %} active{% endif %}">
+                <span class="id">{{ String.fromCharCode(65+loop.index0) }}</span>
+                {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
+              </a>
+            {%- endfor %}
+          </div>
+        {% endif %}
       </div>
       <div class="section__body">
         <ul class="problem__tags">
-          <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
+          {% if not tdoc %}
+            <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
+          {% endif %}
           <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
           {% if pdoc.config.type != 'objective' and pdoc.config.type != 'submit_answer' %}
             <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
@@ -59,8 +76,8 @@
             <a class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
             <a class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
             <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
+            <span class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% endif %}
-          <span class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% if pdoc.tag.length %}
             <span name="show_tags" class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
             {%- for tag in pdoc.tag -%}
