@@ -55,8 +55,8 @@ const page = new NamedPage('manage_user_priv', () => {
     handleOpenUserPrivDialog(user.udoc);
   }
 
-  $('[name="select_user"]').on('click', () => handleClickSelectUser());
-  $('[name="set_priv"]').on('click', (ev) => handleOpenUserPrivDialog(ev));
+  $(document).on('click', '[name="select_user"]', () => handleClickSelectUser());
+  $(document).on('click', '[name="set_priv"]', (ev) => handleOpenUserPrivDialog(ev));
 });
 
 export default page;
