@@ -94,6 +94,8 @@ export function rebuild() {
 }
 
 class ApiHandler extends Handler {
+    noCheckPermView = true;
+
     query(q: string, variables: any) {
         return graphql({
             schema,

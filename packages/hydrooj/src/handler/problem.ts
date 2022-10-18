@@ -70,6 +70,7 @@ registerValue('Problem', [
 registerResolver(
     'Query', 'problem(id: Int, pid: String)', 'Problem',
     async (arg, ctx) => {
+        ctx.checkPerm(PERM.PERM_VIEW);
         const pdoc = await problem.get(ctx.args.domainId, arg.pid || arg.id);
         if (!pdoc) return null;
         if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
@@ -83,6 +84,7 @@ registerResolver(
     },
 );
 registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
+    ctx.checkPerm(PERM.PERM_VIEW);
     const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
         ctx.user.group, undefined, undefined, true);
     return Object.keys(res).map((id) => res[+id]);

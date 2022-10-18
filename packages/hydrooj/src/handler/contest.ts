@@ -44,6 +44,7 @@ registerValue('Contest', [
 registerResolver(
     'Query', 'contest(id: ObjectID!)', 'Contest',
     async (arg, ctx) => {
+        ctx.checkPerm(PERM.PERM_VIEW);
         arg.id = new ObjectID(arg.id);
         ctx.tdoc = await contest.get(ctx.args.domainId, new ObjectID(arg.id));
         if (!ctx.tdoc) throw new ContestNotFoundError(ctx.args.domainId, arg.id);
