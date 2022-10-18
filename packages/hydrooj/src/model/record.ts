@@ -82,7 +82,7 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-            if (pdoc.config.type === 'remote_judge') {
+            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
                 await task.deleteMany({ rid: { $in: rids } });
                 return await task.addMany(rids.map((rid) => ({
                     ...(pdoc.config as any),

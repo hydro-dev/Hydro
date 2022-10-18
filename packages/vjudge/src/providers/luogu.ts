@@ -36,7 +36,7 @@ const UA = [
 export default class LuoguProvider implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         if (account.cookie) this.cookie = account.cookie;
-        setInterval(() => this.getCsrfToken('/'), 5 * 60 * 1000);
+        setInterval(() => this.getCsrfToken('/user/setting'), 5 * 60 * 1000);
     }
 
     cookie: string[] = [];
@@ -78,7 +78,7 @@ export default class LuoguProvider implements IBasicProvider {
 
     async ensureLogin() {
         if (await this.loggedIn) {
-            await this.getCsrfToken('/');
+            await this.getCsrfToken('/user/setting');
             return true;
         }
         logger.info('retry login');

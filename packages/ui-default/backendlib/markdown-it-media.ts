@@ -109,7 +109,7 @@ export function Media(md: MarkdownIt) {
       `;
     }
     if (service === 'pdf') {
-      if (src.startsWith('file://')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
+      if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
       return `\
         <object classid="clsid:${randomUUID().toUpperCase()}">
           <param name="SRC" value="${src}" >
