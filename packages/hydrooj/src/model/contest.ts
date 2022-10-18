@@ -92,7 +92,12 @@ const acm = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'email', value: _('Email') });
+        if (isExport) {
+            columns.push({ type: 'email', value: _('Email') });
+            columns.push({ type: 'string', value: _('School') });
+            columns.push({ type: 'string', value: _('Name') });
+            columns.push({ type: 'string', value: _('Student ID') });
+        }
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
@@ -123,7 +128,12 @@ const acm = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) row.push({ type: 'email', value: udoc.mail });
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school });
+            row.push({ type: 'string', value: udoc.displayName });
+            row.push({ type: 'string', value: udoc.studentId });
+        }
         row.push({
             type: 'time',
             value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
@@ -219,7 +229,12 @@ const oi = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) columns.push({ type: 'email', value: _('Email') });
+        if (isExport) {
+            columns.push({ type: 'email', value: _('Email') });
+            columns.push({ type: 'string', value: _('School') });
+            columns.push({ type: 'string', value: _('Name') });
+            columns.push({ type: 'string', value: _('Student ID') });
+        }
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             if (isExport) {
@@ -243,7 +258,12 @@ const oi = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) row.push({ type: 'email', value: udoc.mail });
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school });
+            row.push({ type: 'string', value: udoc.displayName });
+            row.push({ type: 'string', value: udoc.studentId });
+        }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
