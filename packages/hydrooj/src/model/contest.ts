@@ -429,7 +429,7 @@ const homework = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc) {
-        const tsddict = tsdoc.detail;
+        const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             {
