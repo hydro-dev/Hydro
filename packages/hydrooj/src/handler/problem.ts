@@ -484,6 +484,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid?: ObjectID) {
         if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
+        if (typeof this.pdoc.config === 'string') throw new BadRequestError('Invalid problem config');
     }
 
     async get() {

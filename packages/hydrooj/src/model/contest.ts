@@ -130,9 +130,9 @@ const acm = buildContestRule({
         ];
         if (isExport) {
             row.push({ type: 'email', value: udoc.mail });
-            row.push({ type: 'string', value: udoc.school });
-            row.push({ type: 'string', value: udoc.displayName });
-            row.push({ type: 'string', value: udoc.studentId });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({
             type: 'time',
@@ -260,9 +260,9 @@ const oi = buildContestRule({
         ];
         if (isExport) {
             row.push({ type: 'email', value: udoc.mail });
-            row.push({ type: 'string', value: udoc.school });
-            row.push({ type: 'string', value: udoc.displayName });
-            row.push({ type: 'string', value: udoc.studentId });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         for (const pid of tdoc.pids) {
