@@ -103,9 +103,7 @@ export async function postJudge(rdoc: RecordDoc) {
                     contest: { $ne: new ObjectID('0'.repeat(24)) },
                 }).project({ _id: 1, contest: 1 }).toArray();
                 const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
-                await Promise.all(rdocs.map(
-                    (r) => record.judge(rdoc.domainId, r._id, priority, r.contest ? { detail: false } : {}, { hackRejudge: input }),
-                ));
+                await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
             } catch (e) {
                 next({
                     rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
@@ -202,10 +200,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
             // eslint-disable-next-line no-await-in-loop
             if (!t) await sleep(500);
         }
-        this.send({ task: t });
+        let rdoc = await record.get(t.domainId, t.rid);
+        this.send({ task: { ...rdoc, ...t } });
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
-        const rdoc = await record.update(t.domainId, t.rid, $set, {});
+        rdoc = await record.update(t.domainId, t.rid, $set, {});
         bus.broadcast('record/change', rdoc, $set, {});
     }
 

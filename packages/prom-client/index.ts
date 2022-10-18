@@ -1,3 +1,4 @@
+import { hostname } from 'os';
 import { AggregatorRegistry, metric } from 'prom-client';
 import { Context, Handler, SystemModel } from 'hydrooj';
 import { createRegistry } from './metrics';
@@ -39,10 +40,11 @@ class MetricsHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
+    if (process.env.HYDRO_CLI) return;
     const registry = createRegistry(ctx);
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
     ctx.setInterval(async () => {
-        ctx.broadcast('metrics', process.env.NODE_APP_INSTANCE!, await registry.getMetricsAsJSON());
+        ctx.broadcast('metrics', `${hostname()}/${process.env.NODE_APP_INSTANCE}`, await registry.getMetricsAsJSON());
     }, 5000 * (+SystemModel.get('prom-client.collect_rate') || 1));
     ctx.Route('metrics', '/metrics', MetricsHandler);
 }

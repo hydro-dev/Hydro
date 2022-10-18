@@ -163,18 +163,26 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('.loader-container').hide();
   }
 
+  let progress = false;
+
   async function enterScratchpadMode() {
+    if (progress) return;
+    progress = true;
     await extender.extend();
     await loadReact();
     renderReact();
     await scratchpadFadeIn();
+    progress = false;
   }
 
   async function leaveScratchpadMode() {
+    if (progress) return;
+    progress = true;
     await scratchpadFadeOut();
     $('.problem-content-container').append($('.problem-content'));
     await extender.collapse();
     unmountReact();
+    progress = false;
   }
 
   async function loadObjective() {

@@ -443,17 +443,17 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     @param('pid', Types.UnsignedInt)
     async postRejudge(domainId: string, pid: number) {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
-        // TODO maybe async?
         const rdocs = await record.getMulti(domainId, {
             pid,
             contest: { $ne: new ObjectID('0'.repeat(24)) },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
         const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
-        await Promise.all(rdocs.map(
-            (doc) => record.reset(domainId, doc._id, true)
-                .then(() => record.judge(domainId, doc._id, priority, doc.contest ? { detail: false } : {})),
-        ));
+        await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+        await Promise.all([
+            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }),
+            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}),
+        ]);
         this.back();
     }
 

@@ -15,6 +15,7 @@ import domain from './model/domain';
 import MessageModel from './model/message';
 import problem from './model/problem';
 import RecordModel from './model/record';
+import ScheduleModel from './model/schedule';
 import * as system from './model/system';
 import TaskModel from './model/task';
 import user from './model/user';
@@ -395,7 +396,7 @@ const scripts: UpgradeScript[] = [
         const _FRESH_INSTALL_IGNORE = 1;
         const tasks = await db.collection('task').find({ type: 'schedule', subType: 'contest.problemHide' }).toArray();
         for (const task of tasks) {
-            await TaskModel.add({ ...task, subType: 'contest', operation: ['unhide'] });
+            await ScheduleModel.add({ ...task, subType: 'contest', operation: ['unhide'] });
         }
         await TaskModel.deleteMany({ type: 'schedule', subType: 'contest.problemHide' });
         return true;
@@ -561,6 +562,12 @@ const scripts: UpgradeScript[] = [
     async function _68_69() {
         const _FRESH_INSTALL_IGNORE = 1;
         await db.collection('cache' as any).deleteMany({});
+        return true;
+    },
+    async function _69_70() {
+        const tasks = await TaskModel.coll.find({ type: 'schedule', subType: 'contest' }).toArray();
+        if (tasks.length) await ScheduleModel.coll.insertMany(tasks as any);
+        await TaskModel.coll.deleteMany({});
         return true;
     },
 ];

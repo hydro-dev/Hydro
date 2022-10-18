@@ -1,9 +1,8 @@
 import { hostname } from 'os';
-import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
-import { Context, Service } from '../context';
+import { Context } from '../context';
 import { EventDoc, Task } from '../interface';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
@@ -16,14 +15,9 @@ const collEvent = db.collection('event');
 async function getFirst(query: FilterQuery<Task>) {
     if (process.env.CI) return null;
     const q = { ...query };
-    q.executeAfter = q.executeAfter || { $lt: new Date() };
     const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
     if (res.value) {
         logger.debug('%o', res.value);
-        if (res.value.interval) {
-            const executeAfter = moment(res.value.executeAfter).add(...res.value.interval).toDate();
-            await coll.insertOne({ ...res.value, executeAfter });
-        }
         return res.value;
     }
     return null;
@@ -63,49 +57,22 @@ class Consumer {
     }
 }
 
-class WorkerService extends Service {
-    private handlers: Record<string, Function> = {};
-    public consumer = new Consumer(
-        { type: 'schedule', subType: { $in: Object.keys(this.handlers) } },
-        async (doc) => {
-            try {
-                logger.debug('Worker task: %o', doc);
-                const start = Date.now();
-                await Promise.race([
-                    this.handlers[doc.subType](doc),
-                    sleep(300000),
-                ]);
-                const spent = Date.now() - start;
-                if (spent > 500) logger.warn('Slow worker task (%d ms): %o', spent, doc);
-            } catch (e) {
-                logger.error('Worker task fail: ', e);
-                logger.error('%o', doc);
-            }
-        },
-        false,
-    );
-
-    public addHandler(type: string, handler: Function) {
-        this.handlers[type] = handler;
-        this.consumer.filter = { type: 'schedule', subType: { $in: Object.keys(this.handlers) } };
-        this.caller?.on('dispose', () => {
-            delete this.handlers[type];
-        });
-    }
-}
-
-const Worker = new WorkerService(app, 'worker', false);
-
 class TaskModel {
+    static coll = coll;
+
     static async add(task: Partial<Task> & { type: string }) {
         const t: Task = {
             ...task,
             priority: task.priority ?? 0,
-            executeAfter: task.executeAfter || new Date(),
             _id: new ObjectID(),
         };
         const res = await coll.insertOne(t);
         return res.insertedId;
+    }
+
+    static async addMany(tasks: Task[]) {
+        const res = await coll.insertMany(tasks);
+        return res.insertedIds;
     }
 
     static get(_id: ObjectID) {
@@ -126,43 +93,14 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static async getDelay(query?: FilterQuery<Task>): Promise<[number, Date]> {
-        const now = new Date();
-        const [res] = await coll.find(query).sort({ executeAfter: 1 }).limit(1).toArray();
-        if (res) return [Math.max(0, now.getTime() - res.executeAfter.getTime()), res.executeAfter];
-        return [0, now];
-    }
-
     static async consume(query: any, cb: Function, destoryOnError = true) {
         return new Consumer(query, cb, destoryOnError);
     }
-
-    static Consumer = Consumer;
-    static WorkerService = WorkerService;
-    static Worker = Worker;
 }
 
 const id = process.env.exec_mode === 'cluster_mode' ? hostname() : nanoid();
 
-declare module '../context' {
-    interface Context {
-        worker: WorkerService;
-    }
-}
-
 export async function apply(ctx: Context) {
-    Context.service('worker', WorkerService);
-    ctx.worker = Worker;
-
-    Worker.addHandler('task.daily', async () => {
-        await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
-        await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
-        await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
-        if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
-            await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
-        }
-        await ctx.parallel('task/daily');
-    });
     ctx.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
     ctx.on('bus/broadcast', (event, payload) => {
         collEvent.insertOne({
@@ -174,14 +112,6 @@ export async function apply(ctx: Context) {
     });
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    if (!await TaskModel.count({ type: 'schedule', subType: 'task.daily' })) {
-        await TaskModel.add({
-            type: 'schedule',
-            subType: 'task.daily',
-            executeAfter: moment().add(1, 'day').hour(3).minute(0).second(0).millisecond(0).toDate(),
-            interval: [1, 'day'],
-        });
-    }
     await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
     const stream = collEvent.watch();
     const handleEvent = async (doc: EventDoc) => {
@@ -208,6 +138,7 @@ export async function apply(ctx: Context) {
             await (res.value ? handleEvent(res.value) : sleep(500));
         }
     });
+    await db.ensureIndexes(coll, { name: 'task', key: { type: 1, subType: 1, priority: -1 } });
 }
 
 export default TaskModel;

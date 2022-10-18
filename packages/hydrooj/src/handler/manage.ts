@@ -286,10 +286,11 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 
     @requireSudo
-    @param('uid', Types.Int, true)
+    @param('uid', Types.Int)
     @param('priv', Types.UnsignedInt)
-    async post(domainId: string, uid: number, priv: number) {
-        if (typeof uid === 'number') {
+    @param('system', Types.Boolean, true)
+    async post(domainId: string, uid: number, priv: number, editSystem: boolean) {
+        if (!editSystem) {
             const udoc = await user.getById(domainId, uid);
             if (!udoc) throw new UserNotFoundError(uid);
             if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new ForbiddenError('you can not edit user as SU in web.');

@@ -17,9 +17,9 @@ import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
+import ScheduleModel from '../model/schedule';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import TaskModel from '../model/task';
 import user from '../model/user';
 import {
     Handler, param, post, Types,
@@ -52,7 +52,7 @@ registerResolver(
     'Get a contest by ID',
 );
 
-TaskModel.Worker.addHandler('contest', async (doc) => {
+ScheduleModel.Worker.addHandler('contest', async (doc) => {
     const tdoc = await contest.get(doc.domainId, doc.tid);
     if (!tdoc) return;
     const tasks = [];
@@ -199,7 +199,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
         await contest.del(domainId, tid);
         await record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' });
-        await TaskModel.deleteMany({
+        await ScheduleModel.deleteMany({
             type: 'schedule', subType: 'contest', domainId, tid,
         });
         this.response.redirect = this.url('contest_main');
@@ -346,20 +346,18 @@ export class ContestEditHandler extends Handler {
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
         };
-        await TaskModel.deleteMany(task);
+        await ScheduleModel.deleteMany(task);
+        const operation = [];
         if (Date.now() <= endAt.getTime() && autoHide) {
             // eslint-disable-next-line no-await-in-loop
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
-            await TaskModel.add({
-                ...task,
-                operation: ['unhide'],
-                executeAfter: endAt,
-            });
+            operation.push('unhide');
         }
-        if (lock && lockAt <= endAt) {
-            await TaskModel.add({
+        if (lock && lockAt <= endAt) operation.push('unlock');
+        if (operation.length) {
+            await ScheduleModel.add({
                 ...task,
-                operation: ['unlock'],
+                operation,
                 executeAfter: endAt,
             });
         }

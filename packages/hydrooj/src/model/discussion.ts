@@ -10,7 +10,7 @@ import { buildProjection } from '../utils';
 import * as contest from './contest';
 import * as document from './document';
 import problem from './problem';
-import TaskModel from './task';
+import ScheduleModel from './schedule';
 import * as training from './training';
 
 export interface DiscussionDoc extends Document { }
@@ -294,8 +294,8 @@ async function updateSort() {
 export function apply(ctx: Context) {
     ctx.using(['worker'], async ({ worker }) => {
         worker.addHandler('discussion.sort', updateSort);
-        if (!await TaskModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
-            await TaskModel.add({
+        if (!await ScheduleModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
+            await ScheduleModel.add({
                 type: 'schedule',
                 subType: 'discussion.sort',
                 executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
