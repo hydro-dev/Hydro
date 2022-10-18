@@ -41,6 +41,14 @@ for key, value in $contest-color
     background: $primary-color
     border-color: $primary-color
 
+.contest-timer
+  position: fixed;
+  left: 0;
+  top: 48px;
+  z-index: 10000;
+  +mobile()
+    visibility: hidden !important;
+
 .contest-problems
   font-size: 0.9375rem;
   font-weight: 400;
