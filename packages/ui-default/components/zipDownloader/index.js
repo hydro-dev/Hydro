@@ -49,7 +49,7 @@ export default async function download(filename, targets) {
     } catch (e) {
       window.captureException?.(e);
       stopDownload();
-      Notification.error(i18n('Download Error', [target.filename, e.toString()]));
+      Notification.error(i18n('Download Error: {0} {1}', [target.filename, e.toString()]));
     }
     return {};
   }
