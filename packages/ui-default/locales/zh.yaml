@@ -67,7 +67,6 @@ Add module: 添加模块
 Add new data: 添加新数据
 Add User: 添加用户
 Add: 添加
-After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.: 在你执行完受保护的操作后，系统只会在你不再使用的几个小时后再次要求你重新进行身份验证。
 All {0} Contests: 所有 {0} 比赛
 All Contests: 所有比赛
 All Homeworks: 所有作业
@@ -145,7 +144,6 @@ Compilers' Version and Parameters: 编译器版本及参数
 Complete: 完成
 Completed: 已完成
 Config: 配置
-Confirm Access: 访问确认
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this reply?: 确认删除这个回复吗？
@@ -413,7 +411,6 @@ In following contests: 在下列比赛中
 In following homework: 在以下作业中
 In following training plans: 在下列训练计划中
 In Progress: 进行中
-In sudo mode, you can perform sensitive actions without authentication.: 在Sudo模式下，你可以在无需身份验证的情况下执行敏感操作。
 Information: 信息
 Initialize: 初始化
 Inline codes: 行内代码
