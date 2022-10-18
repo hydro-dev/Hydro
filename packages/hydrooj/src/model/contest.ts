@@ -500,7 +500,7 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc> = {},
+    rated = false, data: Partial<Tdoc<30>> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -698,7 +698,7 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectID,
     isExport = false, ignoreLock = false,
-): Promise<[Tdoc<30 | 60>, ScoreboardRow[], Udict, ProblemDict]> {
+): Promise<[Tdoc<30>, ScoreboardRow[], Udict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     if (ignoreLock) delete tdoc.lockAt;
@@ -708,6 +708,7 @@ export async function getScoreboard(
         isExport, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,
     );
+    await bus.parallel('contest/scoreboard', tdoc, rows, udict, pdict);
     return [tdoc, rows, udict, pdict];
 }
 

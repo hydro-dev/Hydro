@@ -7,8 +7,8 @@ import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
     DiscussionDoc, DomainDoc, FileInfo,
-    MessageDoc, ProblemDoc, RecordDoc,
-    Tdoc, TrainingDoc, User,
+    MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
+    ScoreboardRow, Tdoc, TrainingDoc, Udict, User,
 } from '../interface';
 import type { DocType } from '../model/document';
 import type { ConnectionHandler, Handler } from './server';
@@ -86,8 +86,9 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
-    'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
-    'contest/add': (payload: Partial<Tdoc>, id: ObjectID) => VoidReturn
+    'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectID) => VoidReturn
+    'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: Udict, pdict: ProblemDict) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 
