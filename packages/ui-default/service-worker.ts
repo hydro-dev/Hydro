@@ -88,10 +88,10 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith(get(event.request.url));
     return;
   }
+  if (process.env.NODE_ENV !== 'production') return;
   event.respondWith((async () => {
     const cachedResponse = await caches.match(event.request);
     if (cachedResponse) return cachedResponse;
-    if (process.env.NODE_ENV !== 'production') return fetch(event.request);
     console.log(`Caching ${event.request.url}`);
     const [cache, response] = await Promise.all([
       caches.open(PRECACHE),
