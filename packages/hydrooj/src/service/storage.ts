@@ -3,7 +3,7 @@ import { PassThrough, Readable } from 'stream';
 import { URL } from 'url';
 import {
     CopyObjectCommand, DeleteObjectCommand, DeleteObjectsCommand,
-    GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client,
+    GetObjectCommand, HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
@@ -115,17 +115,19 @@ class RemoteStorageService {
     async put(target: string, file: string | Buffer | Readable, meta: Record<string, string> = {}) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (typeof file === 'string') file = createReadStream(file);
+        const params: PutObjectCommandInput = {
+            Bucket: this.opts.bucket,
+            Key: target,
+            Body: file,
+            Metadata: meta,
+            ContentType: meta['Content-Type'] || 'application/octet-stream',
+        };
         if (file instanceof Buffer && file.byteLength <= 5 * 1024 * 1024) {
-            await this.client.send(new PutObjectCommand({
-                Bucket: this.opts.bucket,
-                Body: file,
-                Key: target,
-                Metadata: meta,
-            }));
+            await this.client.send(new PutObjectCommand(params));
         } else {
             const upload = new Upload({
                 client: this.client,
-                params: { Bucket: this.opts.bucket, Key: target, Body: file },
+                params,
                 tags: [],
                 queueSize: 4,
                 partSize: 1024 * 1024 * 5,

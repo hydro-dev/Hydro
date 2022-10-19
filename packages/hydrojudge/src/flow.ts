@@ -100,15 +100,19 @@ export const runFlow = async (ctx: Context, task: Task) => {
             ctx.end({ nop: true });
         }
     } else {
-        const tasks = [];
-        for (const sid in ctx.config.subtasks) tasks.push(judgeSubtask(ctx.config.subtasks[sid], sid, task.judgeCase)(ctx));
-        const scores = await Promise.all(tasks);
-        for (const sid in ctx.config.subtasks) {
+        const scores = {};
+        await Promise.all(Object.entries(ctx.config.subtasks).map(async ([key, value]) => {
+            const sid = value.id?.toString() || key;
+            scores[sid] = await judgeSubtask(value, sid, task.judgeCase)(ctx);
+        }));
+        for (const [key, value] of Object.entries(ctx.config.subtasks)) {
             let effective = true;
-            for (const required of ctx.config.subtasks[sid].if || []) {
+            const sid = value.id?.toString() || key;
+            for (const required of value.if || []) {
                 if (ctx.failed[required.toString()]) effective = false;
             }
             if (effective) ctx.total_score += scores[sid];
+            else ctx.failed[sid] = true;
         }
         ctx.end({
             status: ctx.total_status,
