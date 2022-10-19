@@ -80,6 +80,9 @@ formatCode:
   desc: Auto format code
   category: preference
   value: true
+preload:
+  type: text
+  default: ''
 about:
   type: markdown
   name: about
