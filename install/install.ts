@@ -120,11 +120,12 @@ uid: 1536
 gid: 1536
 `;
 
+let data;
 function removeOptionalEsbuildDeps() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
-    const data = existsSync(pkgjson) ? require(pkgjson) : {};
+    data = existsSync(pkgjson) ? require(pkgjson) : {};
     data.resolutions = data.resolutions || {};
     Object.assign(data.resolutions, Object.fromEntries([
         '@esbuild/linux-loong64',
@@ -138,6 +139,15 @@ function removeOptionalEsbuildDeps() {
             .map((i) => `esbuild-${i}-64`),
     ].map((i) => [i, 'link:/dev/null'])));
     exec(`mkdir -p ${yarnGlobalPath}`);
+    writeFileSync(pkgjson, JSON.stringify(data, null, 2));
+    return true;
+}
+
+function rollbackResolveField() {
+    const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
+    if (!yarnGlobalPath) return false;
+    const pkgjson = `${yarnGlobalPath}/package.json`;
+    delete data.resolutions;
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
     return true;
 }
@@ -259,6 +269,7 @@ const steps = [
             },
             () => log.info('extra.dbUser'),
             () => log.info('extra.dbPassword', password),
+            () => rollbackResolveField(),
         ],
     },
 ];
