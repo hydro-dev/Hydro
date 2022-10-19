@@ -17,3 +17,87 @@ self.addEventListener('notificationclick', (event) => {
     return null;
   }));
 });
+
+const PRECACHE = `precache-${process.env.VERSION}`;
+const DO_NOT_CACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
+
+function shouldCache(name: string) {
+  if (!name.split('/').pop()) return false;
+  if (!name.split('/').pop().includes('.')) return false;
+  return true;
+}
+function shouldPreCache(name: string) {
+  if (!shouldCache(name)) return false;
+  if (DO_NOT_CACHE.filter((i) => name.includes(i)).length) return false;
+  return true;
+}
+
+interface ServiceWorkerConfig {
+  base?: string;
+  targets?: string[];
+  preload?: string;
+}
+let config: ServiceWorkerConfig = null;
+
+async function get(url: string) {
+  const pending = [url, ...(config?.targets || []).map((i) => url.replace(config.base, i))];
+  let response: Promise<Response>;
+  for (const source of pending) {
+    response = fetch(source);
+    try {
+      console.log('From ', source);
+      const r = await response;
+      if (r.ok) return r;
+    } catch (error) {
+      console.warn(source, ' Load fail ', error);
+    }
+  }
+  return response;
+}
+
+self.addEventListener('install', (event) => event.waitUntil((async () => {
+  const [cache, manifest, cfg] = await Promise.all([
+    caches.open(PRECACHE),
+    fetch('/manifest.json').then((res) => res.json()),
+    fetch('/sw-config').then((res) => res.json()),
+  ]);
+  config = cfg;
+  if (process.env.NODE_ENV === 'production' && config?.preload) {
+    const files = Object.values(manifest).filter(shouldPreCache)
+      .map((i: string) => new URL(i, config.preload).toString());
+    await cache.addAll(files); // NOTE: CORS header
+  }
+  self.skipWaiting();
+})()));
+
+self.addEventListener('activate', (event) => {
+  const valid = [PRECACHE];
+  event.waitUntil(
+    caches.keys()
+      .then((names) => Promise.all(
+        names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)),
+      )).then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener('fetch', (event: FetchEvent) => {
+  if (!['get', 'head'].includes(event.request.method.toLowerCase())) return;
+  if (!event.request.url.startsWith('http')) return;
+  if (!shouldCache(event.request.url) && config?.base && config?.targets?.length) {
+    if (new URL(event.request.url).origin !== location.origin) return;
+    event.respondWith(get(event.request.url));
+    return;
+  }
+  if (process.env.NODE_ENV !== 'production' || !shouldCache(event.request.url)) return;
+  event.respondWith((async () => {
+    const cachedResponse = await caches.match(event.request);
+    if (cachedResponse) return cachedResponse;
+    console.log(`Caching ${event.request.url}`);
+    const [cache, response] = await Promise.all([
+      caches.open(PRECACHE),
+      fetch(event.request),
+    ]);
+    if (response.ok) await cache.put(event.request, response.clone());
+    return response;
+  })());
+});

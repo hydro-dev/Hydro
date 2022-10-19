@@ -9,6 +9,7 @@ import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import { dirname } from 'path';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WebpackBar from 'webpackbar';
 import root from '../utils/root';
 
@@ -18,7 +19,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'es2015',
+        target: 'chrome80',
         sourcemap: true,
       },
     };
@@ -220,7 +221,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome60',
+          'chrome80',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],
@@ -240,8 +241,9 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       new ExtractCssPlugin({
         filename: '[name].css?[fullhash:6]',
       }),
+      new WebpackManifestPlugin({}),
       new FriendlyErrorsPlugin(),
-      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs)/ }),
+      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
