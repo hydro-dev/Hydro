@@ -88,7 +88,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     event.respondWith(get(event.request.url));
     return;
   }
-  if (process.env.NODE_ENV !== 'production') return;
+  if (process.env.NODE_ENV !== 'production' || !shouldCache(event.request.url)) return;
   event.respondWith((async () => {
     const cachedResponse = await caches.match(event.request);
     if (cachedResponse) return cachedResponse;
