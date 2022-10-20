@@ -2,18 +2,17 @@
 import os from 'os';
 import {
     Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, RecordModel, sleep, STATUS, TaskModel, Time,
+    ProblemModel, RecordModel, Service, sleep, STATUS, TaskModel, Time,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import { getDifficulty } from './providers/codeforces';
 import providers from './providers/index';
 
 const coll = db.collection('vjudge');
-const Pool = {};
 const logger = new Logger('vjudge');
 const syncing = {};
 
-class Service {
+class AccountService {
     api: IBasicProvider;
     problemLists: Set<string>;
     listUpdated = false;
@@ -127,6 +126,9 @@ declare module 'hydrooj' {
     interface Model {
         vjudge: VJudgeModel;
     }
+    interface Context {
+        vjudge: VJudgeService;
+    }
 }
 
 class VJudgeModel {
@@ -139,16 +141,41 @@ class VJudgeModel {
     }
 }
 
+class VJudgeService extends Service {
+    constructor(ctx) {
+        super(ctx, 'vjudge', false);
+    }
+
+    accounts: RemoteAccount[];
+    private providers: Record<string, any> = {};
+    private pool: Record<string, any> = {};
+    async start() {
+        this.accounts = await coll.find().toArray();
+    }
+
+    addProvider(type: string, provider: BasicProvider) {
+        if (this.providers[type]) throw new Error(`duplicate provider ${type}`);
+        this.providers[type] = provider;
+        for (const account of this.accounts.filter((a) => a.type === type)) {
+            if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
+            this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
+        }
+        this.caller?.on('dispose', () => {
+            // TODO dispose session
+        });
+    }
+}
+
 global.Hydro.model.vjudge = VJudgeModel;
 
-export function apply(ctx: Context) {
+Context.service('vjudge', VJudgeService);
+export const name = 'vjudge';
+export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    ctx.on('ready', async () => {
-        const accounts = await coll.find().toArray();
-        for (const account of accounts) {
-            if (!providers[account.type]) continue;
-            if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
-            Pool[`${account.type}/${account.handle}`] = new Service(providers[account.type], account);
-        }
-    });
+    const vjudge = new VJudgeService(ctx);
+    await vjudge.start();
+    for (const [k, v] of Object.entries(providers)) {
+        vjudge.addProvider(k, v);
+    }
+    ctx.vjudge = vjudge;
 }
