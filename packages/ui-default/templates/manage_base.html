@@ -12,12 +12,9 @@
             <span class="icon icon-info"></span> {{ _('Properties') }}
           </div>
           <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'manage_dashboard') }}
-            {{ sidemenu.render_item(null, 'manage_script') }}
-            {{ sidemenu.render_item(null, 'manage_user_import') }}
-            {{ sidemenu.render_item(null, 'manage_user_priv') }}
-            {{ sidemenu.render_item(null, 'manage_setting') }}
-            {{ sidemenu.render_item(null, 'manage_config') }}
+            {%- for item in ui.getNodes('ControlPanel') -%}
+              {{ sidemenu.render_item(item.icon, item.name) }}
+            {%- endfor -%}
           </ol>
         </li>
       </ol>

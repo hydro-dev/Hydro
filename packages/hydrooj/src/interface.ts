@@ -695,7 +695,7 @@ export interface Lib extends Record<string, any> {
     problemSearch: ProblemSearch;
 }
 
-export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown';
+export type UIInjectableFields = 'ProblemAdd' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel';
 export interface UI {
     template: Record<string, string>,
     nodes: Record<UIInjectableFields, any[]>,

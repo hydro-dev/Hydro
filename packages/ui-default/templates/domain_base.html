@@ -7,27 +7,18 @@
   <div class="medium-3 columns"><div data-sticky="large">
     <div class="section side">
       <ol class="menu">
-        <li class="menu__item">
-          <div class="menu__link expandable">
-            <span class="icon icon-info"></span> {{ _('Properties') }}
-          </div>
-          <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_dashboard') }}
-            {{ sidemenu.render_item(null, 'domain_edit') }}
-            {{ sidemenu.render_item(null, 'domain_join_applications') }}
-          </ol>
-        </li>
-        <li class="menu__item">
-          <div class="menu__link expandable">
-            <span class="icon icon-user"></span> {{ _('Access Control') }}
-          </div>
-          <ol class="menu collapsed">
-            {{ sidemenu.render_item(null, 'domain_role') }}
-            {{ sidemenu.render_item(null, 'domain_user') }}
-            {{ sidemenu.render_item(null, 'domain_permission') }}
-            {{ sidemenu.render_item(null, 'domain_group') }}
-          </ol>
-        </li>
+        {%- for family, items in ui.getNodes('DomainManage')|groupby('args.family') -%}
+          <li class="menu__item">
+            <div class="menu__link expandable">
+              <span class="icon icon-{{ items[0].args.icon }}"></span> {{ _(family) }}
+            </div>
+            <ol class="menu collapsed">
+              {%- for item in items -%}
+                {{ sidemenu.render_item(null, item.name) }}
+              {%- endfor -%}
+            </ol>
+          </li>
+        {% endfor %}
       </ol>
     </div>
   </div></div>
