@@ -166,7 +166,8 @@ class SWConfigHandler extends ResourceHandler {
     this.response.body = {
       preload: SystemModel.get('ui-default.preload'),
       hosts: [
-        `${this.request.method}://${this.request.host}`,
+        `http://${this.request.host}`,
+        `https://${this.request.host}`,
         SystemModel.get('server.url'),
         SystemModel.get('server.cdn'),
       ],
