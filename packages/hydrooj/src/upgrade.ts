@@ -579,6 +579,12 @@ const scripts: UpgradeScript[] = [
         });
         return true;
     },
+    async function _71_72() {
+        await iterateAllContest(async (tdoc) => {
+            if (tdoc.rule === 'homework') await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+        });
+        return true;
+    },
 ];
 
 export default scripts;

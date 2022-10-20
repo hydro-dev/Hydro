@@ -375,11 +375,9 @@ const homework = buildContestRule({
         }
         const detail = [];
         for (const j in effective) {
-            detail.push({
-                ...effective[j],
-                penaltyScore: penaltyScore(effective[j]),
-                time: time(effective[j]),
-            });
+            effective[j].penaltyScore = penaltyScore(effective[j]);
+            effective[j].time = time(effective[j]);
+            detail.push(effective[j]);
         }
         return {
             score: sumBy(detail, 'score'),
