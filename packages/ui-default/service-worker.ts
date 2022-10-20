@@ -34,6 +34,7 @@ function shouldPreCache(name: string) {
 
 interface ServiceWorkerConfig {
   base?: string;
+  hosts?: string[];
   targets?: string[];
   preload?: string;
 }
@@ -72,32 +73,41 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 
 self.addEventListener('activate', (event) => {
   const valid = [PRECACHE];
-  event.waitUntil(
-    caches.keys()
-      .then((names) => Promise.all(
-        names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)),
-      )).then(() => self.clients.claim()),
-  );
+  event.waitUntil((async () => {
+    const [names, cfg] = await Promise.all([
+      caches.keys(),
+      fetch('/sw-config').then((res) => res.json()),
+    ]);
+    config = cfg;
+    await Promise.all(names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
+    self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event: FetchEvent) => {
   if (!['get', 'head'].includes(event.request.method.toLowerCase())) return;
-  if (!event.request.url.startsWith('http')) return;
   if (!shouldCache(event.request.url) && config?.base && config?.targets?.length) {
     if (new URL(event.request.url).origin !== location.origin) return;
     event.respondWith(get(event.request.url));
     return;
   }
+  // Only handle whitelisted origins;
+  if (!config?.hosts?.some((i) => event.request.url.startsWith(i))) return;
   if (process.env.NODE_ENV !== 'production' || !shouldCache(event.request.url)) return;
   event.respondWith((async () => {
-    const cachedResponse = await caches.match(event.request);
+    const cachedResponse = await caches.match(event.request.url);
     if (cachedResponse) return cachedResponse;
     console.log(`Caching ${event.request.url}`);
     const [cache, response] = await Promise.all([
       caches.open(PRECACHE),
-      fetch(event.request),
+      fetch(event.request.url), // Fetch from url to prevent opaque response
     ]);
-    if (response.ok) await cache.put(event.request, response.clone());
-    return response;
+    if (response.ok) {
+      cache.put(event.request.url, response.clone());
+      return response;
+    }
+    // If response fails, re-fetch the original request to prevent
+    // errors caused by different headers and do not cache them
+    return fetch(event.request);
   })());
 });

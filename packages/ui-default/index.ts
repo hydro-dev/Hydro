@@ -165,6 +165,11 @@ class SWConfigHandler extends ResourceHandler {
   async get() {
     this.response.body = {
       preload: SystemModel.get('ui-default.preload'),
+      hosts: [
+        `${this.request.method}://${this.request.host}`,
+        SystemModel.get('server.url'),
+        SystemModel.get('server.cdn'),
+      ],
     };
   }
 }
