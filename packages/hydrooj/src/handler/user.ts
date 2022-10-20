@@ -121,7 +121,8 @@ class UserLoginHandler extends Handler {
         if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         await Promise.all([
-            this.limitRate('user_login', 60, 5),
+            this.limitRate('user_login', 60, 30),
+            this.limitRate(`user_login_${uname}`, 60, 5),
             oplog.log(this, 'user.login', { redirect }),
         ]);
         if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');

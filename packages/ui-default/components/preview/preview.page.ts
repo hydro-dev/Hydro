@@ -9,7 +9,7 @@ import pjax from 'vj/utils/pjax';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
 
-async function startEdit(filename, value) {
+async function startEdit(filename, value, fileCategory = 'file') {
   const { default: Editor } = await import('vj/components/editor/index');
   const promise = new ActionDialog({
     $body: tpl`
@@ -32,7 +32,7 @@ async function startEdit(filename, value) {
     autoResize: false,
     autoLayout: false,
     language: (language as string),
-    model: `hydro://problem/file/${filename}`,
+    model: `hydro://problem/${fileCategory}/${filename}`,
   });
   const action = await promise;
   value = (editor.value() as string).replace(/\r\n/g, '\n');
@@ -143,7 +143,7 @@ export async function previewFile(ev, type = '') {
       throw e;
     }
   } else Notification.info(i18n('Loading editor...'));
-  const val = await startEdit(filename, content);
+  const val = await startEdit(filename, content, type || 'file');
   if (typeof val !== 'string') return null;
   Notification.info(i18n('Saving file...'));
   const data = new FormData();
