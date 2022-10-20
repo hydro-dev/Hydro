@@ -171,7 +171,7 @@ class SystemSettingHandler extends SystemHandler {
         for (const key in booleanKeys) {
             if (typeof booleanKeys[key] === 'object') {
                 for (const subkey in booleanKeys[key]) {
-                    if (!args[key][subkey]) tasks.push(system.set(`${key}.${subkey}`, false));
+                    if (!args[key]?.[subkey]) tasks.push(system.set(`${key}.${subkey}`, false));
                 }
             }
         }
