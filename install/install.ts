@@ -120,12 +120,11 @@ uid: 1536
 gid: 1536
 `;
 
-let data;
 function removeOptionalEsbuildDeps() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
-    data = existsSync(pkgjson) ? require(pkgjson) : {};
+    const data = existsSync(pkgjson) ? require(pkgjson) : {};
     data.resolutions = data.resolutions || {};
     Object.assign(data.resolutions, Object.fromEntries([
         '@esbuild/linux-loong64',
@@ -147,6 +146,7 @@ function rollbackResolveField() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
+    const data = JSON.parse(readFileSync(pkgjson, 'utf-8'));
     delete data.resolutions;
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
     return true;
