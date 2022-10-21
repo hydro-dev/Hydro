@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.42.3",
+  "version": "4.42.4",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -10,8 +10,8 @@
     "lint": "eslint"
   },
   "devDependencies": {
-    "@blueprintjs/core": "4.11.3",
-    "@blueprintjs/select": "4.8.3",
+    "@blueprintjs/core": "4.11.4",
+    "@blueprintjs/select": "4.8.4",
     "@fontsource/dm-mono": "^4.5.10",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/inconsolata": "^4.5.9",

@@ -156,7 +156,12 @@ env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('lib', global.Hydro.lib);
 env.addGlobal('model', global.Hydro.model);
 env.addGlobal('ui', global.Hydro.ui);
-env.addGlobal('isIE', (str) => (str ? (str.includes('MSIE') || str.includes('rv:11.0')) : false));
+env.addGlobal('isIE', (str) => {
+  if (!str) return false;
+  if (['MSIE', 'rv:11.0'].some((i) => str.includes(i))) return true;
+  if (str.includes('Chrome/') && +str.split('Chrome/')[1].split('.')[0] < 60) return true;
+  return false;
+});
 env.addGlobal('set', (obj, key, val) => {
   if (val !== undefined) obj[key] = val;
   else Object.assign(obj, key);

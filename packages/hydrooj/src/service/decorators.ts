@@ -73,7 +73,7 @@ export const Types: Types = {
         },
         (v) => {
             const d = v.split('-');
-            assert(d.length === 3);
+            if (d.length !== 3) return false;
             const st = `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
             return moment(st).isValid();
         },
@@ -86,7 +86,7 @@ export const Types: Types = {
         },
         (v) => {
             const t = v.split(':');
-            assert(t.length === 2);
+            if (t.length !== 2) return false;
             return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
         },
     ],

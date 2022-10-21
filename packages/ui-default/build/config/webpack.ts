@@ -19,7 +19,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'chrome80',
+        target: 'chrome60',
         sourcemap: true,
       },
     };
@@ -221,7 +221,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome80',
+          'chrome60',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],
