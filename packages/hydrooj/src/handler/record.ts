@@ -142,12 +142,12 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView)  {
+            if (!canView) {
                 if (rdoc.uid !== this.user._id) {
                     throw new PermissionError(rid);
                 } else {
                     canViewStatus = true;
-                }    
+                }
             }
             this.args.tid = this.tdoc.docId;
         }
@@ -162,7 +162,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         if (canViewStatus) {
             rdoc.status = STATUS.STATUS_WAITING;
             rdoc.memory = 0;
-            rdoc.time = 0; 
+            rdoc.time = 0;
             rdoc.score = 0;
             rdoc.judgeTexts = [];
             rdoc.testCases = [];
@@ -186,7 +186,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) {
                 throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            } 
+            }
         }
 
         this.response.template = 'record_detail.html';
@@ -349,7 +349,6 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             rdoc.code = '';
             rdoc.compilerTexts = [];
         }
-        
         if (!(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -357,7 +356,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         this.throttleSend = throttle(this.send, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
-        
+
         this.onRecordChange(rdoc);
     }
 
