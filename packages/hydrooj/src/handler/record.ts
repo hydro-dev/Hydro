@@ -143,10 +143,11 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
             if (!canView)  {
-                if (rdoc.uid !== this.user._id)
+                if (rdoc.uid !== this.user._id) {
                     throw new PermissionError(rid);
-                else
+                } else {
                     contestSelfCode = true;
+                }    
             }
             this.args.tid = this.tdoc.docId;
         }
@@ -186,8 +187,10 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         }
 
         if (contestSelfCode) {
-            self.status = STATUS.STATUS_WAITING;
             rdoc.status = STATUS.STATUS_WAITING;
+            rdoc.score = 0;
+            rdoc.judgeTexts = [];
+            rdoc.testCases = [];
         }
 
         this.response.template = 'record_detail.html';
@@ -251,7 +254,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string,
         status?: number, pretest = false, all = false,
     ) {
-        let contestSelfCode = false;
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
             if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
@@ -346,11 +348,15 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
 
-        if (viewSelfCode) rdoc.status = STATUS.STATUS_WAITING, self.status = STATUS.STATUS_WAITING;
+        if (viewSelfCode) {
+            rdoc.status = STATUS.STATUS_WAITING;
+            rdoc.score = 0;
+            rdoc.judgeTexts = [];
+            rdoc.testCases = [];
+        }
 
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
