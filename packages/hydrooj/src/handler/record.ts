@@ -134,6 +134,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
+        let contestSelfCode = false;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -141,7 +142,12 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView) throw new PermissionError(rid);
+            if (!canView)  {
+                if (rdoc.uid !== this.user._id)
+                    throw new PermissionError(rid);
+                else
+                    contestSelfCode = true;
+            }
             this.args.tid = this.tdoc.docId;
         }
 
@@ -152,6 +158,13 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
+        if (contestSelfCode) {
+            rdoc.status = STATUS.STATUS_WAITING;
+            rdoc.score = 0;
+            rdoc.judgeTexts = [];
+            rdoc.testCases = [];
+        }
+
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
@@ -160,13 +173,21 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             canViewCode ||= tsdoc?.attend;
         }
+
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};
             rdoc.compilerTexts = [];
         } else if (download) return await this.download();
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
-            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!problem.canViewBy(pdoc, this.user)) {
+                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            } 
+        }
+
+        if (contestSelfCode) {
+            self.status = STATUS.STATUS_WAITING;
+            rdoc.status = STATUS.STATUS_WAITING;
         }
 
         this.response.template = 'record_detail.html';
@@ -230,6 +251,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string,
         status?: number, pretest = false, all = false,
     ) {
+        let contestSelfCode = false;
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
             if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
@@ -308,6 +330,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
+        let viewSelfCode = false;
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {
@@ -315,12 +338,15 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             let canView = this.user.own(tdoc);
             canView ||= contest.canShowRecord.call(this, tdoc);
             canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);
-            if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!canView && this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!canView && this.user._id === rdoc.uid) viewSelfCode = true;
         }
         const [pdoc, self] = await Promise.all([
             problem.get(rdoc.domainId, rdoc.pid),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
+
+        if (viewSelfCode) rdoc.status = STATUS.STATUS_WAITING, self.status = STATUS.STATUS_WAITING;
 
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
@@ -330,7 +356,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             rdoc.code = '';
             rdoc.compilerTexts = [];
         }
-
+        
         if (!(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -338,6 +364,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         this.throttleSend = throttle(this.send, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
+        
         this.onRecordChange(rdoc);
     }
 
