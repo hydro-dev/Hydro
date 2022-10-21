@@ -19,7 +19,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'chrome60',
+        target: 'es2015',
         sourcemap: true,
       },
     };
