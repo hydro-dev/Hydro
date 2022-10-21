@@ -16,11 +16,9 @@ export default function tpl(pieces: TemplateStringsArray, ...substitutions: Subs
 }
 
 tpl.typoMsg = function (msg: string, raw = false) {
-  return tpl`
-    <div class="typo">
-      <p>${raw ? { html: msg, templateRaw: true } : msg}</p>
-    </div>
-  `;
+  if (raw) return `<div class="typo"><p>${msg}</p></div>`;
+  const lines = msg.trim().split('\n');
+  return `<div class="typo">${lines.map((i) => `<p>${_.escape(i)}</p>`).join('\n')}</div>`;
 };
 
 export function rawHtml(html: string) {
