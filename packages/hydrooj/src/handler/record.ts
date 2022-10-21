@@ -184,9 +184,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             rdoc.compilerTexts = [];
         } else if (download) return await this.download();
         if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
-            if (!problem.canViewBy(pdoc, this.user)) {
-                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            }
+            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
         this.response.template = 'record_detail.html';
@@ -343,12 +341,14 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         ]);
 
         let canViewCode = rdoc.uid === this.user._id;
+        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.compilerTexts = [];
         }
+        
         if (!(rdoc.contest && this.user._id === rdoc.uid)) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
@@ -356,7 +356,6 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         this.throttleSend = throttle(this.send, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
-
         this.onRecordChange(rdoc);
     }
 
