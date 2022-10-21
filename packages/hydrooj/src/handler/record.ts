@@ -341,8 +341,8 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         ]);
 
         let canViewCode = rdoc.uid === this.user._id;
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
+        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (!canViewCode) {
             rdoc.code = '';
