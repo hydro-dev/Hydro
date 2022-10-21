@@ -177,7 +177,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             canViewCode ||= tsdoc?.attend;
         }
-
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};
