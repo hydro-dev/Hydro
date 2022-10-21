@@ -134,7 +134,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
-        let contestSelfCode = false;
+        let canViewStatus = false;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -146,7 +146,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
                 if (rdoc.uid !== this.user._id) {
                     throw new PermissionError(rid);
                 } else {
-                    contestSelfCode = true;
+                    canViewStatus = true;
                 }    
             }
             this.args.tid = this.tdoc.docId;
@@ -159,11 +159,14 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
-        if (contestSelfCode) {
+        if (canViewStatus) {
             rdoc.status = STATUS.STATUS_WAITING;
+            rdoc.memory = 0;
+            rdoc.time = 0; 
             rdoc.score = 0;
             rdoc.judgeTexts = [];
             rdoc.testCases = [];
+            rdoc.compilerTexts = [];
         }
 
         let canViewCode = rdoc.uid === this.user._id;
@@ -184,13 +187,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             if (!problem.canViewBy(pdoc, this.user)) {
                 throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
             } 
-        }
-
-        if (contestSelfCode) {
-            rdoc.status = STATUS.STATUS_WAITING;
-            rdoc.score = 0;
-            rdoc.judgeTexts = [];
-            rdoc.testCases = [];
         }
 
         this.response.template = 'record_detail.html';
@@ -332,7 +328,6 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
 
     @param('rid', Types.ObjectID)
     async prepare(domainId: string, rid: ObjectID) {
-        let viewSelfCode = false;
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {
@@ -340,20 +335,12 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             let canView = this.user.own(tdoc);
             canView ||= contest.canShowRecord.call(this, tdoc);
             canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);
-            if (!canView && this.user._id !== rdoc.uid) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!canView && this.user._id === rdoc.uid) viewSelfCode = true;
+            if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         const [pdoc, self] = await Promise.all([
             problem.get(rdoc.domainId, rdoc.pid),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
-
-        if (viewSelfCode) {
-            rdoc.status = STATUS.STATUS_WAITING;
-            rdoc.score = 0;
-            rdoc.judgeTexts = [];
-            rdoc.testCases = [];
-        }
 
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
