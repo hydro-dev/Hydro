@@ -2,8 +2,8 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export default class Sock {
   constructor(url) {
-    const WsPrefix = UiContext.ws_prefix === '/' ? window.location.href : UiContext.ws_prefix;
-    const i = new URL(url, WsPrefix);
+    if (url.startsWith('/')) url = UiContext.ws_prefix + url.slice(1);
+    const i = new URL(url, window.location.href);
     i.protocol = i.protocol.replace('http', 'ws');
     this.url = i.toString();
     this.sock = new ReconnectingWebSocket(this.url);
