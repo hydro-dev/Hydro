@@ -36,8 +36,8 @@ const onmessage = (msg) => {
   }).show();
   return true;
 };
-
-const url = new URL('/home/messages-conn', window.location.href);
+const WsPrefix = UiContext.ws_prefix === '/' ? window.location.href : UiContext.ws_prefix;
+const url = new URL('/home/messages-conn', WsPrefix);
 // TODO handle a better way for cookie
 url.searchParams.append('sid', document.cookie);
 const endpoint = url.toString().replace('http', 'ws');

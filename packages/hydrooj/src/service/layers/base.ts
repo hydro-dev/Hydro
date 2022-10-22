@@ -7,10 +7,12 @@ import type { HydroRequest, HydroResponse } from '../server';
 export interface UiContextBase {
     cdn_prefix: string;
     url_prefix: string;
+    ws_prefix: string;
 }
 export const UiContextBase: UiContextBase = {
     cdn_prefix: '/',
     url_prefix: '/',
+    ws_prefix: '/',
 };
 
 export default async (ctx, next) => {
@@ -62,6 +64,7 @@ export default async (ctx, next) => {
     };
     const UiContext: any = cloneDeep(UiContextBase);
     if (!process.env.DEV) UiContext.cdn_prefix = system.get('server.cdn');
+    if (!process.env.DEV) UiContext.ws_prefix = system.get('server.ws');
     UiContext.domainId = domainId;
     UiContext.domain = domainInfo;
     ctx.HydroContext = {
