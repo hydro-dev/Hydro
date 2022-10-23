@@ -68,7 +68,7 @@ export async function builtinModel(ctx: Context) {
 }
 
 export async function locale(pending: string[], fail: string[]) {
-    await Promise.all(pending.map(async (i) => {
+    for (const i of pending) {
         const p = locateFile(i, ['locale', 'locales']);
         if (p && (await fs.stat(p)).isDirectory() && !fail.includes(i)) {
             try {
@@ -86,7 +86,7 @@ export async function locale(pending: string[], fail: string[]) {
                 logger.error(e);
             }
         }
-    }));
+    }
     await bus.parallel('app/load/locale');
 }
 
