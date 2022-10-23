@@ -37,7 +37,7 @@ const onmessage = (msg) => {
   return true;
 };
 
-const url = new URL('/home/messages-conn', window.location.href);
+const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
 // TODO handle a better way for cookie
 url.searchParams.append('sid', document.cookie);
 const endpoint = url.toString().replace('http', 'ws');

@@ -141,7 +141,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const { Provider, store } = await loadReactRedux(ScratchpadReducer);
 
-    const sock = new WebSocket(UiContext.pretestConnUrl);
+    const sock = new WebSocket(UiContext.ws_prefix + UiContext.pretestConnUrl);
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       store.dispatch({

@@ -31,7 +31,7 @@ const page = new NamedPage('home_messages', () => {
 
     reduxStore = store;
 
-    const sock = new WebSocket('/home/messages-conn');
+    const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       store.dispatch({

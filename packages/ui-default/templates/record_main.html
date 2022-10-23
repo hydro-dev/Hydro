@@ -2,7 +2,7 @@
 {% block content %}
 {{ set(
   UiContext, 'socketUrl',
-  "/record-conn?domainId=" + handler.args.domainId
+  "record-conn?domainId=" + handler.args.domainId
   + (("&tid=" + filterTid) if filterTid else "")
   + (("&uidOrName=" + filterUidOrName) if filterUidOrName else "")
   + (("&pid=" + filterPid) if filterPid else "")
