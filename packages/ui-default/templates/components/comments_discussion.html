@@ -98,9 +98,9 @@
           <div class="history" data-dropdown-target="#comments-history" data-dropdown-pos="bottom right">
             <span> {{ _('Edited') }} <span class="icon icon-expand_more"></span></span>
             <ol class="dropdown-target menu" id="comments-history">
-            {%- for history in doc.history|sort(true,false,"time") -%}
-              <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}" data-time="{{ history.time.getTime() }}">Edit at {{  datetimeSpan(history.time)|safe }}</a></li>
-            {%- endfor -%}
+              {%- for history in doc.history|sort(true,false,"time") -%}
+              <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}" data-time="{{ history.time.getTime() }}">{{ _('Edited at') }} {{  datetimeSpan(history.time)|safe }}</a></li>
+              {%- endfor -%}
             </ol>
           </div>
           {%- endif -%}
@@ -146,9 +146,9 @@
                   <div class="history" data-dropdown-target="#comments-history" data-dropdown-pos="bottom right">
                     <span> {{ _('Edited') }} <span class="icon icon-expand_more"></span></span>
                     <ol class="dropdown-target menu" id="comments-history">
-                    {%- for history in rdoc.history|sort(true,false,"time") -%}
-                      <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}" data-time="{{ history.time.getTime() }}">Edit at {{  datetimeSpan(history.time)|safe }}</a></li>
-                    {%- endfor -%}
+                      {%- for history in rdoc.history|sort(true,false,"time") -%}
+                      <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}" data-time="{{ history.time.getTime() }}">{{ _('Edited at') }} {{  datetimeSpan(history.time)|safe }}</a></li>
+                      {%- endfor -%}
                     </ol>
                   </div>
                   {%- endif -%}

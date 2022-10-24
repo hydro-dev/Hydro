@@ -40,7 +40,7 @@
           <span> {{ _('Edited') }} <span class="icon icon-expand_more"></span></span>
           <ol class="dropdown-target menu" id="comments-history">
             {%- for history in ddoc.history|sort(true,false,"time") -%}
-            <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}" data-time="{{ history.time.getTime() }}">Edit at {{  datetimeSpan(history.time)|safe }}</a></li>
+            <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}" data-time="{{ history.time.getTime() }}">{{ _('Edited at') }} {{  datetimeSpan(history.time)|safe }}</a></li>
             {%- endfor -%}
           </ol>
         </li>

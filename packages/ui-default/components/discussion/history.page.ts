@@ -17,8 +17,8 @@ const page = new AutoloadPage('discussionHistoryPage', () => {
       new InfoDialog({
         $body: tpl`
                 <div class="typo">
-                  <p>${{ templateRaw: true, html: $(ev.currentTarget).html() }}<p>
-                  <p>${{ templateRaw: true, html: md }}</p>
+                  ${{ templateRaw: true, html: $(ev.currentTarget).html() }}
+                  ${{ templateRaw: true, html: md }}
                 </div>
               `,
       }).open();
