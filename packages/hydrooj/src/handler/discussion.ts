@@ -356,9 +356,19 @@ class DiscussionDetailHandler extends DiscussionHandler {
 class DiscussionRawHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
-    async get(domainId: string, drid: ObjectID, drrid: ObjectID) {
+    @param('time', Types.UnsignedInt, true)
+    async get(domainId: string, drid: ObjectID, drrid: ObjectID, time: number) {
         this.response.type = 'text/markdown';
-        this.response.body = drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
+        if (!time) {
+            this.response.body = drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
+            return;
+        }
+        const history = drrid ? this.drrdoc.history : drid ? this.drdoc.history : this.ddoc.history;
+        const doc = history.find((i) => i.time.getTime() === time);
+        if (!doc) {
+            throw new DiscussionNotFoundError('Discussion history not found.');
+        }
+        this.response.body = doc.content;
     }
 }
 
@@ -434,7 +444,7 @@ export async function apply(ctx) {
     ctx.Route('discussion_main', '/discuss', DiscussionMainHandler);
     ctx.Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
     ctx.Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
-    ctx.Route('discussion_detail', '/discuss/:did/raw', DiscussionRawHandler);
+    ctx.Route('discussion_raw', '/discuss/:did/raw', DiscussionRawHandler);
     ctx.Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionRawHandler);
     ctx.Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionRawHandler);
     ctx.Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);
