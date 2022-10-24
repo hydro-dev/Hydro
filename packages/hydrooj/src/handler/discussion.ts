@@ -272,7 +272,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editReply(domainId, drid, content),
+            discussion.editReply(domainId, drid, content, this.user._id),
             oplog.log(this, 'discussion.reply.edit', this.drdoc),
         ]);
         this.back();
@@ -312,7 +312,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drrdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editTailReply(domainId, drid, drrid, content),
+            discussion.editTailReply(domainId, drid, drrid, content, this.user._id),
             oplog.log(this, 'discussion.tailReply.edit', this.drrdoc),
         ]);
         this.back();
@@ -405,7 +405,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         let $push = null;
         if (content !== lastContent) {
             $set.content = content;
-            $push = { history: { content, time: new Date() } };
+            $push = { history: { content, time: new Date(), uid: this.user._id } };
         }
         await Promise.all([
             discussion.edit(domainId, did, $set, $push),

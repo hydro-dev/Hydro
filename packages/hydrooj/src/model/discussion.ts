@@ -50,7 +50,7 @@ export async function add(
         ip,
         nReply: 0,
         highlight,
-        history: [{ content, time }],
+        history: [{ content, time, uid: owner }],
         pin,
         updateAt: time,
         views: 0,
@@ -115,7 +115,7 @@ export async function addReply(
     const [drid] = await Promise.all([
         document.add(
             domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
-            null, document.TYPE_DISCUSSION, did, { ip, history: [{ content, time }] },
+            null, document.TYPE_DISCUSSION, did, { ip, history: [{ content, time, uid: owner }] },
         ),
         document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: time }),
     ]);
@@ -127,12 +127,12 @@ export function getReply(domainId: string, drid: ObjectID): Promise<DiscussionRe
 }
 
 export async function editReply(
-    domainId: string, drid: ObjectID, content: string,
+    domainId: string, drid: ObjectID, content: string, uid: number,
 ): Promise<DiscussionReplyDoc | null> {
     const { content: lastContent } = await document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid, ['content']);
     if (content !== lastContent) {
         return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content }, null,
-            { history: { content, time: new Date() } });
+            { history: { content, time: new Date(), uid } });
     }
     return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content }, null);
 }
@@ -177,7 +177,7 @@ export async function addTailReply(
     const time = new Date();
     const [drdoc, subId] = await document.push(
         domainId, document.TYPE_DISCUSSION_REPLY, drid,
-        'reply', content, owner, { ip, history: [{ content, time }] },
+        'reply', content, owner, { ip, history: [{ content, time, user: owner }] },
     );
     await document.set(
         domainId, document.TYPE_DISCUSSION, drdoc.parentId,
@@ -193,12 +193,12 @@ export function getTailReply(
 }
 
 export async function editTailReply(
-    domainId: string, drid: ObjectID, drrid: ObjectID, content: string,
+    domainId: string, drid: ObjectID, drrid: ObjectID, content: string, uid: number,
 ): Promise<DiscussionTailReplyDoc> {
     const [, { content: lastContent }] = await getTailReply(domainId, drid, drrid);
     if (content !== lastContent) {
         return document.setAndPushSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
-            'reply', drrid, { content }, { history: { content, time: new Date() } });
+            'reply', drrid, { content }, { history: { content, time: new Date(), uid } });
     }
     return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
         'reply', drrid, { content });

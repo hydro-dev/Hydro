@@ -17,7 +17,7 @@ const page = new AutoloadPage('discussionHistoryPage', () => {
       new InfoDialog({
         $body: tpl`
                 <div class="typo">
-                  ${{ templateRaw: true, html: $(ev.currentTarget).html() }}
+                  <div data-user>${$(ev.currentTarget).data('uid')}</div>${{ templateRaw: true, html: $(ev.currentTarget).html() }}
                   ${{ templateRaw: true, html: md }}
                 </div>
               `,

@@ -408,6 +408,7 @@ export interface BlacklistDoc {
 export interface HistoryDoc {
     content: string;
     time: Date;
+    uid: number
 }
 
 // Discussion
