@@ -24,7 +24,7 @@ function History({ payload }) {
   if (!history.length) request.get(`${payload}?all=1`).then((res) => updateHistory(res.history));
   return (
     <Popover usePortal interactionKind="hover">
-      <span>{ i18n('Edited') } <span className="icon icon-expand_more"></span></span>
+      <a>{ i18n('Edited') }</a>
       <ol className="menu">
         {!history.length && <li className="menu__item">Loading...</li>}
         {history.map((item) => (
@@ -43,10 +43,14 @@ function History({ payload }) {
 
 const page = new AutoloadPage('discussionHistoryPage', () => {
   if ($('[data-discussion-history]').length) {
-    $('[data-discussion-history]').each((i, e) => {
-      ReactDOM.createRoot(e).render(
-        <History payload={$(e).data('raw-url')} />,
+    const rendered = [];
+    $(document).on('mouseover', '[data-discussion-history]', (ev) => {
+      const $el = $(ev.currentTarget);
+      if (rendered.includes($el.data('raw-url'))) return;
+      ReactDOM.createRoot($el.get(0)).render(
+        <History payload={$el.data('raw-url')} />,
       );
+      rendered.push($el.data('raw-url'));
     });
   }
 });

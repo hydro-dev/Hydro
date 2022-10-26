@@ -95,7 +95,7 @@
           {{ user.render_inline(udoc, avatar=false) }}
           @ {{ datetimeSpan(doc['_id'])|safe }}
           {% if doc.edited %}
-            <div class="history" data-discussion-history data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}"><span>{{ _('Edited') }} <span class="icon icon-expand_more"></span></span></div>
+            <div class="history" data-discussion-history data-raw-url="{{ url('discussion_reply_raw', did=doc.parentId, drid=doc._id) }}"><a>{{ _('Edited') }}</a></div>
           {% endif %}
         </div>
         <div class="dczcomments__operations nojs--hide">
@@ -136,7 +136,7 @@
                   {{ user.render_inline(udoc, avatar=false) }}
                   @ {{ datetimeSpan(rdoc._id)|safe }}
                   {% if doc.edited %} 
-                    <div class="history" data-discussion-history data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}"><span>{{ _('Edited') }} <span class="icon icon-expand_more"></span></span></div>
+                    <div class="history" data-discussion-history data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}"><a>{{ _('Edited') }}</a></div>
                   {% endif %}
                 </div>
                 <div class="dczcomments__operations nojs--hide">
