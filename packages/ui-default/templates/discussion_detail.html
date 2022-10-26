@@ -35,15 +35,8 @@
           <span class="icon icon-edit"></span> {{ _('Edit') }}
         </a></li>
       {% endif %}
-      {%- if (ddoc.history.length > 1) -%}
-        <li class="history" data-dropdown-target="#comments-history" data-dropdown-pos="bottom right">
-          <span> {{ _('Edited') }} <span class="icon icon-expand_more"></span></span>
-          <ol class="dropdown-target menu" id="comments-history">
-            {%- for history in ddoc.history|sort(true,false,"time") -%}
-            <li class="menu__item"><a class="menu__link" data-discussion-history data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}" data-time="{{ history.time.getTime() }}"  data-uid="{{ history.uid }}">{{ _('Edited at') }} {{  datetimeSpan(history.time)|safe }}</a></li>
-            {%- endfor -%}
-          </ol>
-        </li>
+      {%- if ddoc.edited -%}
+        <li data-discussion-history="{{ ddoc._id }}">{{ _('Edited') }}</li>
       {%- endif -%}
         <li>{{ _('{0} views').format(ddoc.views) }}</li>
       {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}

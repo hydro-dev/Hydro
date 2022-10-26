@@ -272,7 +272,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editReply(domainId, drid, content, this.user._id),
+            discussion.editReply(domainId, drid, content, this.user._id, this.request.ip),
             oplog.log(this, 'discussion.reply.edit', this.drdoc),
         ]);
         this.back();
@@ -312,7 +312,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drrdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editTailReply(domainId, drid, drrid, content, this.user._id),
+            discussion.editTailReply(domainId, drid, drrid, content, this.user._id, this.request.ip),
             oplog.log(this, 'discussion.tailReply.edit', this.drrdoc),
         ]);
         this.back();
@@ -357,18 +357,21 @@ class DiscussionRawHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
     @param('time', Types.UnsignedInt, true)
-    async get(domainId: string, drid: ObjectID, drrid: ObjectID, time: number) {
-        this.response.type = 'text/markdown';
-        if (!time) {
-            this.response.body = drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
-            return;
+    @param('all', Types.Boolean)
+    async get(domainId: string, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
+        if (all) {
+            const history = await discussion.getHistory(domainId, drid);
+            this.response.body = {
+                history,
+                udict: await user.getList(domainId, history.map((i) => i.uid)),
+            };
+        } else {
+            const time = new Date(ts);
+            const [doc] = await discussion.getHistory(domainId, drrid || drid, time ? { time } : {});
+            if (!doc) throw new DiscussionNotFoundError(drrid || drid);
+            this.response.type = 'text/markdown';
+            this.response.body = doc.content;
         }
-        const history = drrid ? this.drrdoc.history : drid ? this.drdoc.history : this.ddoc.history;
-        const doc = history.find((i) => i.time.getTime() === time);
-        if (!doc) {
-            throw new DiscussionNotFoundError('Discussion history not found.');
-        }
-        this.response.body = doc.content;
     }
 }
 
