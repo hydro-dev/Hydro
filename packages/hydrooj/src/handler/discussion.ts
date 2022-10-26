@@ -357,7 +357,7 @@ class DiscussionRawHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
     @param('time', Types.UnsignedInt, true)
-    @param('all', Types.Boolean)
+    @param('all', Types.Boolean, true)
     async get(domainId: string, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
         if (all) {
             const history = await discussion.getHistory(domainId, drid);
@@ -366,11 +366,10 @@ class DiscussionRawHandler extends DiscussionHandler {
                 udict: await user.getList(domainId, history.map((i) => i.uid)),
             };
         } else {
-            const time = new Date(ts);
-            const [doc] = await discussion.getHistory(domainId, drrid || drid, time ? { time } : {});
-            if (!doc) throw new DiscussionNotFoundError(drrid || drid);
+            const [doc] = await discussion.getHistory(domainId, drrid || drid, ts ? { time: new Date(ts) } : {});
+            if (!doc && ts) throw new DiscussionNotFoundError(drrid || drid);
             this.response.type = 'text/markdown';
-            this.response.body = doc.content;
+            this.response.body = doc ? doc.content : drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
         }
     }
 }

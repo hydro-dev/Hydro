@@ -84,7 +84,7 @@
               </a>
             </li>
           {% endif %}
-          {% if ui.getNodes('UserDropdown') %}
+          {% if ui.getNodes('UserDropdown').length %}
             <li class="menu__seperator"></li>
             {%- for item in ui.getNodes('UserDropdown') -%}
             <li class="menu__item nojs--hide">

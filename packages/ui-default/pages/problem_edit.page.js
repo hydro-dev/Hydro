@@ -110,6 +110,7 @@ function buildCategoryFilter() {
         const $tag = $(subCategoryTag);
         treeItem.children[$tag.text()] = { select: false, $tag };
       });
+      console.log($categoryTag, $drop[0]);
       Dropdown.getOrConstruct($categoryTag, {
         target: $drop[0],
         position: 'left center',

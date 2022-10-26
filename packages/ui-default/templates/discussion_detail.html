@@ -35,9 +35,9 @@
           <span class="icon icon-edit"></span> {{ _('Edit') }}
         </a></li>
       {% endif %}
-      {%- if ddoc.edited -%}
+      {% if ddoc.edited %}
         <li data-discussion-history="{{ ddoc._id }}">{{ _('Edited') }}</li>
-      {%- endif -%}
+      {% endif %}
         <li>{{ _('{0} views').format(ddoc.views) }}</li>
       {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <li><form class="form--inline" method="post">
