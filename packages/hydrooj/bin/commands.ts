@@ -111,7 +111,15 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
             }
         }
 
-        if (operation === 'add' && name) addons.push(name);
+        if (operation === 'add' && name) {
+            try {
+                require.resolve(`${name}/package.json`);
+            } catch (e) {
+                console.error(`Addon not found or not available: ${name}`);
+                return;
+            }
+            addons.push(name);
+        }
         addons = Array.from(new Set(addons));
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
