@@ -1,4 +1,12 @@
 #!/bin/bash
+if [ $EUID != 0 ]; then
+    echo "This script requires root however you are currently running under another user."
+    echo "We will call sudo directly for you."
+    echo "Please input your account password below:"
+    echo "安装脚本需要使用 root 权限，请在下方输入此账号的密码确认授权："
+    sudo "$0" "$@"
+    exit $?
+fi
 set -e
 echo "Executing Hydro install script v3.0.0"
 echo "Hydro includes anonymous system telemetry,

@@ -1,7 +1,9 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import net from 'net';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -31,6 +33,7 @@ const locales = {
         'install.compiler': '正在安装编译器...',
         'install.hydro': '正在安装 Hydro...',
         'install.done': 'Hydro 安装成功！',
+        'install.alldone': '安装已全部完成。',
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
         'info.skip': '步骤已跳过。',
@@ -119,6 +122,30 @@ domainName: executor_server
 uid: 1536
 gid: 1536
 `;
+const Caddyfile = `\
+# 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
+# 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
+# 仅需将 :80 改为你的域名（如 hydro.ac）后直接重载配置即可自动签发 ssl 证书。
+# 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
+# For more information, refer to caddy v2 documentation.
+:80 {
+  reverse_proxy http://127.0.0.1:8888 {
+    header_up x-forwarded-for {remote_host}
+    header_up x-forwarded-host {hostport}
+  }
+}
+`;
+
+const isPortFree = async (port: number) => {
+    const server = net.createServer();
+    const res = await new Promise((resolve) => {
+        server.once('error', () => resolve(false));
+        server.once('listening', () => resolve(true));
+        server.listen(port);
+    });
+    server.close();
+    return res;
+};
 
 function removeOptionalEsbuildDeps() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
@@ -176,9 +203,7 @@ const steps = [
     {
         init: 'install.mongodb',
         operations: [
-            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
-            'nix-env -iA nixpkgs.mongodb-tools',
-            `nix-env -iA hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
+            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongodb-tools`,
         ],
     },
     {
@@ -192,6 +217,14 @@ const steps = [
         skip: () => !exec('hydro-sandbox --help').code,
         operations: [
             'nix-env -iA hydro.sandbox',
+        ],
+    },
+    {
+        init: 'install.caddy',
+        skip: () => !exec('caddy version').code,
+        operations: [
+            'nix-env -iA nixpkgs.caddy',
+            () => writeFileSync(`${process.env.HOME}/.hydro/Caddyfile`, Caddyfile),
         ],
     },
     {
@@ -234,6 +267,12 @@ const steps = [
             () => sleep(1000),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
             'pm2 start hydrooj',
+            async () => {
+                if (!await isPortFree(80)) log.warn('port.80');
+                exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
+                exec('hydrooj cli system set server.xff x-forwarded-for');
+                exec('hydrooj cli system set server.xhost x-forwarded-host');
+            },
             'pm2 startup',
             'pm2 save',
         ],
@@ -270,6 +309,19 @@ const steps = [
             () => log.info('extra.dbUser'),
             () => log.info('extra.dbPassword', password),
             () => rollbackResolveField(),
+        ],
+    },
+    {
+        init: 'install.postinstall',
+        operations: [
+            ['pm2 install pm2-logrotate', { retry: true }],
+            'pm2 set pm2-logrotate:max_size 64M',
+        ],
+    },
+    {
+        init: 'install.alldone',
+        operations: [
+            () => log.info('install.alldone'),
         ],
     },
 ];
