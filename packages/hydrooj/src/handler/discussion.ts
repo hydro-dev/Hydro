@@ -354,20 +354,17 @@ class DiscussionDetailHandler extends DiscussionHandler {
 }
 
 class DiscussionRawHandler extends DiscussionHandler {
+    @param('did', Types.ObjectID, true)
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
     @param('time', Types.UnsignedInt, true)
     @param('all', Types.Boolean, true)
-    async get(domainId: string, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
+    async get(domainId: string, did: ObjectID, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
         if (all) {
-            const history = await discussion.getHistory(domainId, drid);
-            this.response.body = {
-                history,
-                udict: await user.getList(domainId, history.map((i) => i.uid)),
-            };
+            this.response.body.history = await discussion.getHistory(domainId, drrid || drid || did);
         } else {
-            const [doc] = await discussion.getHistory(domainId, drrid || drid, ts ? { time: new Date(ts) } : {});
-            if (!doc && ts) throw new DiscussionNotFoundError(drrid || drid);
+            const [doc] = await discussion.getHistory(domainId, drrid || drid || did, ts ? { time: new Date(ts) } : {});
+            if (!doc && ts) throw new DiscussionNotFoundError(drrid || drid || did);
             this.response.type = 'text/markdown';
             this.response.body = doc ? doc.content : drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
         }
@@ -400,17 +397,11 @@ class DiscussionEditHandler extends DiscussionHandler {
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
-        const { content: lastContent } = await discussion.get(domainId, did, ['content']);
         const $set: Partial<DiscussionDoc> = {
-            title, highlight, pin,
+            title, highlight, pin, content, editor: this.user._id, edited: true,
         };
-        let $push = null;
-        if (content !== lastContent) {
-            $set.content = content;
-            $push = { history: { content, time: new Date(), uid: this.user._id } };
-        }
         await Promise.all([
-            discussion.edit(domainId, did, $set, $push),
+            discussion.edit(domainId, did, $set),
             oplog.log(this, 'discussion.edit', this.ddoc),
         ]);
         this.response.body = { did };

@@ -1,6 +1,6 @@
 import { omit } from 'lodash';
 import moment from 'moment';
-import { FilterQuery, ObjectID, PushOperator } from 'mongodb';
+import { FilterQuery, ObjectID } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import {
@@ -80,13 +80,11 @@ export async function get<T extends Field>(
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
-export function edit(
-    domainId: string,
-    did: ObjectID,
-    $set: Partial<DiscussionDoc>,
-    $push?: PushOperator<DiscussionDoc>,
-) {
-    return document.set(domainId, document.TYPE_DISCUSSION, did, $set, null, $push);
+export async function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
+    await coll.insertOne({
+        domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
+    });
+    return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
 }
 
 export function inc(

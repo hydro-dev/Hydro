@@ -21,12 +21,17 @@ async function historyDialog(payload, time, uid) {
 
 function History({ payload }) {
   const [history, updateHistory] = React.useState([]);
-  if (!history.length) request.get(`${payload}?all=1`).then((res) => updateHistory(res.history));
+  const [loading, updateLoading] = React.useState(true);
+  if (loading) {
+    try {
+      request.get(`${payload}?all=1`).then((res) => updateHistory(res.history), updateLoading(false));
+    } catch (e) { updateLoading(false); }
+  }
   return (
     <Popover usePortal interactionKind="hover">
       <a>{ i18n('Edited') }</a>
       <ol className="menu">
-        {!history.length && <li className="menu__item">Loading...</li>}
+        {!history.length && <li className="menu__item">{ loading ? 'Loading...' : 'Loading failed.' }</li>}
         {history.map((item) => (
           <li className="menu__item" key={item.time}>
             <a className="menu__link" onClick={() => historyDialog(payload, item.time, item.uid)}>

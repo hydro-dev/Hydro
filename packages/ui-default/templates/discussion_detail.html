@@ -36,7 +36,7 @@
         </a></li>
       {% endif %}
       {% if ddoc.edited %}
-        <li data-discussion-history="{{ ddoc._id }}">{{ _('Edited') }}</li>
+        <li data-discussion-history data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">{{ _('Edited') }}</li>
       {% endif %}
         <li>{{ _('{0} views').format(ddoc.views) }}</li>
       {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
