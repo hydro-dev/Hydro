@@ -87,6 +87,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
+    "react-query": "^3.39.2",
     "react-redux": "^8.0.4",
     "react-split-pane": "^0.1.92",
     "reconnecting-websocket": "^4.4.0",
