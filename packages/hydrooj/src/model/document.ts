@@ -260,28 +260,6 @@ export async function setSub<T extends keyof DocType, K extends NormalArrayKeys<
     return res.value;
 }
 
-export async function setAndPushSub<T extends keyof DocType, K extends NormalArrayKeys<DocType[T]>>(
-    domainId: string, docType: T, docId: DocType[T]['docId'],
-    key: K, subId: DocType[T][K][0]['_id'], setArgs: Partial<DocType[T][K][0]>,
-    pushArgs: PushOperator<DocType[T][K][0]>,
-): Promise<DocType[T]> {
-    const $set: Record<string, any> = {};
-    const $push: Record<string, any> = {};
-    for (const k in setArgs) $set[`${key}.$.${k}`] = setArgs[k];
-    for (const k in pushArgs) $push[`${key}.$.${k}`] = pushArgs[k];
-    const res = await coll.findOneAndUpdate(
-        {
-            domainId,
-            docType,
-            docId,
-            [key]: { $elemMatch: { _id: subId } },
-        },
-        { $set, $push },
-        { returnDocument: 'after' },
-    );
-    return res.value;
-}
-
 export async function addToSet<T extends keyof DocType, K extends ArrayKeys<DocType[T], string>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
     setKey: K, content: string,
@@ -504,7 +482,6 @@ global.Hydro.model.document = {
     setStatus,
     setMultiStatus,
     setSub,
-    setAndPushSub,
 
     TYPE_CONTEST,
     TYPE_DISCUSSION,

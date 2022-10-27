@@ -449,6 +449,7 @@ export interface DiscussionTailReplyDoc {
     content: string;
     ip: string;
     edited?: boolean;
+    editor?:number;
 }
 
 export interface BlogDoc {

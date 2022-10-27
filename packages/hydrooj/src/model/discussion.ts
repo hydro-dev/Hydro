@@ -148,7 +148,7 @@ export async function editReply(
     await coll.insertOne({
         domainId, docId: drid, content, uid, ip, time: new Date(),
     });
-    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content, edited: true });
+    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content, edited: true, editor: uid });
 }
 
 export async function delReply(domainId: string, drid: ObjectID) {
@@ -220,7 +220,7 @@ export async function editTailReply(
             domainId, docId: drrid, content, uid, time: new Date(), ip,
         }),
         document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
-            'reply', drrid, { content, edited: true }),
+            'reply', drrid, { content, edited: true, editor: uid }),
     ]);
     return drrdoc;
 }
