@@ -13,10 +13,6 @@
   z-index: 500
   background: rgba(#FFF, 0.98)
 
-  .nav__logo
-    width: rem($nav-logo-width + 10)
-    opacity: 1
-
   .nav__item
     color: $text-1-color
     &.nav--active
@@ -137,20 +133,10 @@
 .nav__list--secondary .nav__item--round
   margin-left: rem(5px)
 
-.nav__logo__options
-  background-image: url(./nav-logo-small_dark.png)
-  background-image: url(./nav-logo-small@2x_dark.png)
-
 .nav__logo
   display: block
-  background-size:100% 100%;
-  width: 0
-  opacity: 0
   height: rem($nav-logo-height)
-  margin: rem((($nav-item-height - $nav-logo-height) / 2) 0)
-  background: no-repeat
-  transition: width .3s, opacity .3s
-  transition-timing-function: ease-out-cubic
+  margin: rem((($nav-item-height - $nav-logo-height) / 2) 5px)
 
   &:hover
     text-decoration: none

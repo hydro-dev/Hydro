@@ -9,7 +9,9 @@
 <nav class="nav slideout-menu" id="menu">
   <div class="row"><div class="columns clearfix">
     <ol class="nav__list nav__list--main clearfix">
-      <li class="nav__list-item"><a href="/" class="nav__logo" style="background-size: 100% 100%;">&nbsp;</a></li>
+      <li class="nav__list-item">
+        <a href="/"><img class="nav__logo" src="{{ UiContext.domain.nav_logo_dark or UiContext.nav_logo_dark }}"></a>
+      </li>
       {%- for item in overrideNav|default(ui.getNodes('Nav')) -%}{% if item.checker(handler) %}
         {{ nav_item(item) }}
       {% endif %}{%- endfor -%}

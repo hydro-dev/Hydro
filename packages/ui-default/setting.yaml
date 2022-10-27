@@ -41,11 +41,6 @@ nav_logo_dark:
   name: nav_logo_dark
   desc: Nav Logo Dark
   default: /components/navigation/nav-logo-small_dark.png
-nav_logo_dark_2x:
-  type: text
-  name: nav_logo_dark_2x
-  desc: Nav Logo Dark@2x
-  default: /components/navigation/nav-logo-small@2x_dark.png
 preferredEditorType:
   type:
     wysiwyg: WYSIWYG

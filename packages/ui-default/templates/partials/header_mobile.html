@@ -1,7 +1,9 @@
 <div class="header--mobile">
   <div class="row"><div class="columns clearfix">
     <div class="float-left">
-      <a class="header--mobile__domain" href="/" target="_self">&nbsp;</a>
+      <a class="header--mobile__domain" href="/" target="_self">
+        <img src="{{ UiContext.domain.nav_logo_dark or UiContext.nav_logo_dark }}">
+      </a>
     </div>
     <div class="float-right">
       {% include "partials/hamburger.html" %}

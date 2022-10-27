@@ -19,11 +19,9 @@ declare module 'hydrooj' {
   }
   interface SystemKeys {
     'ui-default.nav_logo_dark': string;
-    'ui-default.nav_logo_dark_2x': string;
   }
   interface UiContextBase {
     nav_logo_dark?: string;
-    nav_logo_dark_2x?: string;
     constantVersion?: string;
   }
 }
@@ -70,9 +68,7 @@ export async function buildUI() {
   logger.success('UI addons built in %d ms', Date.now() - start);
 }
 function updateLogo() {
-  [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = SystemModel.getMany([
-    'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
-  ]);
+  UiContextBase.nav_logo_dark = SystemModel.get('ui-default.nav_logo_dark');
 }
 
 class WikiHelpHandler extends Handler {
