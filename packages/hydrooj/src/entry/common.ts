@@ -8,6 +8,7 @@ import yaml from 'js-yaml';
 import { Context } from '../context';
 import i18n from '../lib/i18n';
 import { Logger } from '../logger';
+import { PRIV } from '../model/builtin';
 import * as bus from '../service/bus';
 import { unwrapExports } from '../utils';
 
@@ -37,13 +38,18 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
     for (const i of pending) {
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {
+            const name = type.replace(/^(.)/, (t) => t.toUpperCase());
             try {
                 const m = unwrapExports(require(p));
                 if (m.apply) ctx.loader.reloadPlugin(ctx, p, {});
-                else logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} init: %s`, i);
+                else logger.info(`${name} init: %s`, i);
             } catch (e) {
                 fail.push(i);
-                logger.info(`${type.replace(/^(.)/, (t) => t.toUpperCase())} load fail: %s`, i);
+                app.inject(
+                    'Notification', `${name} load fail: {0}`,
+                    { args: [i] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION,
+                );
+                logger.info(`${name} load fail: %s`, i);
                 logger.error(e);
             }
         }
@@ -82,6 +88,7 @@ export async function locale(pending: string[], fail: string[]) {
                 logger.info('Locale init: %s', i);
             } catch (e) {
                 fail.push(i);
+                app.inject('Notification', 'Locale load fail: {0}', { args: [i] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Locale Load Fail: %s', i);
                 logger.error(e);
             }
@@ -123,6 +130,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                 }
                 logger.info('Config load: %s', i);
             } catch (e) {
+                app.inject('Notification', 'Config load fail: {0}', { args: [i] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Config Load Fail: %s', i);
                 logger.error(e);
             }
@@ -144,6 +152,7 @@ export async function template(pending: string[], fail: string[]) {
                 logger.info('Template init: %s', i);
             } catch (e) {
                 fail.push(i);
+                app.inject('Notification', 'Template load fail: {0}', { args: [i] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Template Load Fail: %s', i);
                 logger.error(e);
             }

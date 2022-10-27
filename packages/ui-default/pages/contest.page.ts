@@ -16,11 +16,7 @@ export default new NamedPage(['contest_detail', 'contest_detail_problem', 'conte
       NProgress.set((now - beginAt) / (endAt - beginAt));
       contestTimer.show();
       contestTimer.text(formatSeconds(Math.floor((endAt - now) / 1000)));
-    } else {
-      if (now > endAt) NProgress.set(1);
-      else NProgress.set(0);
-      contestTimer.hide();
-    }
+    } else contestTimer.hide();
   }
   NProgress.start();
   updateProgress();
