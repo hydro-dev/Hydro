@@ -84,6 +84,16 @@
               </a>
             </li>
           {% endif %}
+          {% if ui.getNodes('UserDropdown').length %}
+            <li class="menu__seperator"></li>
+            {%- for item in ui.getNodes('UserDropdown') -%}
+            <li class="menu__item nojs--hide">
+              <a href="{{ url(item.name) }}" class="menu__link">
+                <span class="icon icon-{{ item.args.icon }}"></span> {{ _(item.args.displayName or item.name) }}
+              </a>
+            </li>
+            {%- endfor -%}
+          {% endif %}
           <li class="menu__seperator"></li>
           {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) %}
             <li class="menu__item nojs--hide">

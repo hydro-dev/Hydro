@@ -405,11 +405,6 @@ export interface BlacklistDoc {
     expireAt: Date;
 }
 
-export interface HistoryDoc {
-    content: string;
-    time: Date;
-}
-
 // Discussion
 export type { DiscussionDoc } from './model/discussion';
 declare module './model/discussion' {
@@ -426,7 +421,8 @@ declare module './model/discussion' {
         updateAt: Date;
         nReply: number;
         views: number;
-        history: HistoryDoc[];
+        edited?: boolean;
+        editor?: number;
         react: Record<string, number>;
         sort: number;
         lastRCount: number;
@@ -442,16 +438,18 @@ export interface DiscussionReplyDoc extends Document {
     ip: string;
     content: string;
     reply: DiscussionTailReplyDoc[];
-    history: HistoryDoc[];
+    edited?: boolean;
+    editor?: number;
     react: Record<string, number>;
 }
 
 export interface DiscussionTailReplyDoc {
-    _id: ObjectID,
-    owner: number,
-    content: string,
-    ip: string,
-    history: HistoryDoc[],
+    _id: ObjectID;
+    owner: number;
+    content: string;
+    ip: string;
+    edited?: boolean;
+    editor?:number;
 }
 
 export interface BlogDoc {
@@ -602,6 +600,17 @@ export interface OauthMap {
     uid: number;
 }
 
+export interface DiscussionHistoryDoc {
+    title?: string;
+    content: string;
+    domainId: string;
+    docId: ObjectID;
+    /** Create time */
+    time: Date;
+    uid: number;
+    ip: string;
+}
+
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -610,6 +619,7 @@ declare module './service/db' {
         'record': RecordDoc;
         'document': any;
         'document.status': StatusDocBase;
+        'discussion.history': DiscussionHistoryDoc;
         'user': Udoc;
         'user.preference': UserPreferenceDoc;
         'vuser': VUdoc;

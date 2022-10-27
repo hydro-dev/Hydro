@@ -272,7 +272,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editReply(domainId, drid, content),
+            discussion.editReply(domainId, drid, content, this.user._id, this.request.ip),
             oplog.log(this, 'discussion.reply.edit', this.drdoc),
         ]);
         this.back();
@@ -312,7 +312,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.checkPerm(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         if (!this.user.own(this.drrdoc)) throw new PermissionError(PERM.PERM_EDIT_DISCUSSION_REPLY_SELF);
         await Promise.all([
-            discussion.editTailReply(domainId, drid, drrid, content),
+            discussion.editTailReply(domainId, drid, drrid, content, this.user._id, this.request.ip),
             oplog.log(this, 'discussion.tailReply.edit', this.drrdoc),
         ]);
         this.back();
@@ -354,11 +354,20 @@ class DiscussionDetailHandler extends DiscussionHandler {
 }
 
 class DiscussionRawHandler extends DiscussionHandler {
+    @param('did', Types.ObjectID, true)
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
-    async get(domainId: string, drid: ObjectID, drrid: ObjectID) {
-        this.response.type = 'text/markdown';
-        this.response.body = drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
+    @param('time', Types.UnsignedInt, true)
+    @param('all', Types.Boolean, true)
+    async get(domainId: string, did: ObjectID, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
+        if (all) {
+            this.response.body.history = await discussion.getHistory(domainId, drrid || drid || did);
+        } else {
+            const [doc] = await discussion.getHistory(domainId, drrid || drid || did, ts ? { time: new Date(ts) } : {});
+            if (!doc && ts) throw new DiscussionNotFoundError(drrid || drid || did);
+            this.response.type = 'text/markdown';
+            this.response.body = doc ? doc.content : drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
+        }
     }
 }
 
@@ -390,7 +399,7 @@ class DiscussionEditHandler extends DiscussionHandler {
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
         await Promise.all([
             discussion.edit(domainId, did, {
-                title, content, highlight, pin,
+                title, highlight, pin, content, editor: this.user._id, edited: true,
             }),
             oplog.log(this, 'discussion.edit', this.ddoc),
         ]);
@@ -427,7 +436,7 @@ export async function apply(ctx) {
     ctx.Route('discussion_main', '/discuss', DiscussionMainHandler);
     ctx.Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
     ctx.Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
-    ctx.Route('discussion_detail', '/discuss/:did/raw', DiscussionRawHandler);
+    ctx.Route('discussion_raw', '/discuss/:did/raw', DiscussionRawHandler);
     ctx.Route('discussion_reply_raw', '/discuss/:did/:drid/raw', DiscussionRawHandler);
     ctx.Route('discussion_tail_reply_raw', '/discuss/:did/:drid/:drrid/raw', DiscussionRawHandler);
     ctx.Route('discussion_node', '/discuss/:type/:name', DiscussionNodeHandler);

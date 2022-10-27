@@ -254,4 +254,10 @@ export function apply(ctx: Context) {
   ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
+  ctx.on('handler/after/DiscussionRaw', async (that) => {
+    if (that.args.render && that.response.type === 'text/markdown') {
+      that.response.type = 'text/html';
+      that.response.body = await markdown.render(that.response.body);
+    }
+  });
 }
