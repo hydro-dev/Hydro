@@ -40,7 +40,7 @@ function History({ payload }) {
             </a>
           </li>
         )}
-        {data?.length && data.map((item) => (
+        {data?.map((item) => (
           <li className="menu__item" key={item.time}>
             <a className="menu__link" onClick={() => historyDialog(payload, item.time, item.uid)}>
               {i18n('Edited at')}
