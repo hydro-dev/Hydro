@@ -8,14 +8,14 @@ import i18n from 'vj/utils/i18n';
 import request from 'vj/utils/request';
 import tpl from 'vj/utils/tpl';
 
-async function historyDialog(payload, time) {
+async function historyDialog(payload, time, uid) {
   const rawHtml = await fetch(`${payload}?time=${new Date(time).getTime()}`).then((res) => res.text());
   new InfoDialog({
     $body: tpl`
-            <div class="typo">
-            ${{ templateRaw: true, html: rawHtml }}
-            </div>
-          `,
+      <div class="typo">
+        <p><div data-user>${uid}</div> ${i18n('Edited at')} <span class="time relative" data-timestamp="${time / 1000}">${time / 1000}</span></p>
+        ${{ templateRaw: true, html: rawHtml }}
+      </div>`,
   }).open();
 }
 
@@ -29,7 +29,7 @@ function History({ payload }) {
         {!history.length && <li className="menu__item">Loading...</li>}
         {history.map((item) => (
           <li className="menu__item" key={item.time}>
-            <a className="menu__link" onClick={() => historyDialog(payload, item.time)}>
+            <a className="menu__link" onClick={() => historyDialog(payload, item.time, item.uid)}>
               {i18n('Edited at')}
               {' '}
               <time><TimeAgo datetime={item.time} locale={i18n('timeago_locale')} /></time>
