@@ -34,10 +34,10 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/mocha": "^10.0.0",
         "@types/node": "^18.11.3",
-        "@types/semver": "^7.3.12",
+        "@types/semver": "^7.3.13",
         "@types/supertest": "^2.0.12",
-        "@typescript-eslint/eslint-plugin": "^5.40.1",
-        "@typescript-eslint/parser": "^5.40.1",
+        "@typescript-eslint/eslint-plugin": "^5.41.0",
+        "@typescript-eslint/parser": "^5.41.0",
         "autocannon": "^7.10.0",
         "cac": "^6.7.14",
         "cross-env": "^7.0.3",
@@ -62,7 +62,7 @@
         "nyc": "^15.1.0",
         "ora": "^6.1.2",
         "semver": "^7.3.8",
-        "supertest": "^6.3.0",
+        "supertest": "^6.3.1",
         "typescript": "4.8.4"
     },
     "packageManager": "yarn@3.2.3"

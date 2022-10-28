@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.2.13",
+    "version": "4.2.14",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -12,11 +12,11 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.194.0",
-        "@aws-sdk/lib-storage": "^3.194.0",
-        "@aws-sdk/middleware-endpoint": "^3.193.0",
-        "@aws-sdk/s3-presigned-post": "^3.194.0",
-        "@aws-sdk/s3-request-presigner": "^3.194.0",
+        "@aws-sdk/client-s3": "^3.198.0",
+        "@aws-sdk/lib-storage": "^3.198.0",
+        "@aws-sdk/middleware-endpoint": "^3.198.0",
+        "@aws-sdk/s3-presigned-post": "^3.198.0",
+        "@aws-sdk/s3-request-presigner": "^3.198.0",
         "@graphql-tools/schema": "^8.5.1",
         "@hydrooj/utils": "workspace:*",
         "adm-zip": "0.5.5",
@@ -53,7 +53,7 @@
         "serialize-javascript": "^6.0.0",
         "superagent": "^8.0.2",
         "thirty-two": "^1.0.2",
-        "ws": "^8.9.0"
+        "ws": "^8.10.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
@@ -69,7 +69,7 @@
         "@types/nodemailer": "^6.4.6",
         "@types/notp": "^2.0.2",
         "@types/saslprep": "^1.0.1",
-        "@types/semver": "^7.3.12",
+        "@types/semver": "^7.3.13",
         "@types/serialize-javascript": "^5.0.2",
         "@types/superagent": "^4.1.15",
         "moment": "^2.29.4"
