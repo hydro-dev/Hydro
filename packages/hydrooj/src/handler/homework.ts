@@ -22,7 +22,8 @@ const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
-    async get({ domainId, page = 1 }) {
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, page = 1) {
         const cursor = contest.getMulti(domainId, { rule: 'homework' });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];

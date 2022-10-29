@@ -99,7 +99,7 @@ setDiagnosticsOptions({
       schema: problemConfigSchema as any,
     },
     {
-      uri: '/manage/config/schema.json',
+      uri: new URL('/manage/config/schema.json', window.location.href).toString(),
       fileMatch: ['hydro://system/setting.yaml'],
     },
   ],

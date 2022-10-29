@@ -181,13 +181,12 @@ const acm = buildContestRule({
                     docType: document.TYPE_CONTEST,
                     docId: tdoc.docId,
                     accept: { $gte: 1 },
-                    detail: { $elemMatch: { status: STATUS.STATUS_ACCEPTED } },
                 },
             },
-            { $unwind: '$detail' },
-            { $match: { 'detail.status': STATUS.STATUS_ACCEPTED } },
-            { $sort: { 'detail.rid': 1 } },
-            { $group: { _id: '$detail.pid', first: { $first: '$detail.rid' } } },
+            { $project: { r: { $objectToArray: '$detail' } } },
+            { $unwind: '$r' },
+            { $match: { 'r.v.status': STATUS.STATUS_ACCEPTED } },
+            { $group: { _id: '$r.v.pid', first: { $min: '$r.v.rid' } } },
         ]).toArray() as any[];
         for (const t of data) first[t._id] = t.first.generationTime;
 
