@@ -15,7 +15,7 @@ To disable this feature, checkout our sourcecode."
 mkdir -p /data/db /data/file ~/.hydro
 bash <(curl https://hydro.ac/nix.sh)
 export PATH=$HOME/.nix-profile/bin:$PATH
-nix-env -iA nixpkgs.nodejs nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.coreutils nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.qrencode
+nix-env -iA nixpkgs.nodejs nixpkgs.coreutils nixpkgs.qrencode
 echo "扫码加入QQ群："
 echo https://qm.qq.com/cgi-bin/qm/qr\?k\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8
 echo "// File created by Hydro install script\n" >/tmp/install.js
