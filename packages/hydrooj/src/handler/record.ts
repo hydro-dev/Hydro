@@ -36,6 +36,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
         uidOrName?: string, lang?: string, status?: number, full = false,
         all = false,
     ) {
+        const notification = [];
         let tdoc = null;
         let invalid = false;
         this.response.template = 'record_main.html';
@@ -46,8 +47,13 @@ class RecordListHandler extends ContestDetailBaseHandler {
             this.tdoc = tdoc;
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!this.user.own(tdoc) && !(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
-                throw new ContestNotAttendedError(domainId, tid);
+            if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
+                if (contest.canShowRecord.call(this, tdoc, true)) {
+                    const name = tdoc.rule === 'homework'
+                        ? "You haven't claimed this homework yet."
+                        : "You haven't attended this contest yet.";
+                    notification.push({ name, args: { type: 'note' }, checker: () => true });
+                } else throw new ContestNotAttendedError(domainId, tid);
             }
         }
         if (uidOrName) {
@@ -98,6 +104,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             filterUidOrName: uidOrName,
             filterLang: lang,
             filterStatus: status,
+            notification,
         };
         if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && !full) {
             this.response.body.statistics = await record.stat(all ? undefined : domainId);

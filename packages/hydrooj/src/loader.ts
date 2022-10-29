@@ -97,7 +97,7 @@ export function addon(addonPath: string, prepend = false) {
     } catch (e) {
         logger.error(`Addon not found: ${addonPath}`);
         logger.error(e);
-        inject('Notification', 'Addon not found: {0}', { args: [addonPath] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+        inject('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
     }
 }
 
