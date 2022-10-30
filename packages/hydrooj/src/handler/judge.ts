@@ -151,6 +151,7 @@ export class JudgeFilesDownloadHandler extends Handler {
     @post('pid', Types.UnsignedInt)
     async post(domainId: string, files: Set<string>, pid: number) {
         const pdoc = await problem.get(domainId, pid);
+        if (!pdoc) this.response.body.links = null;
         const links = {};
         for (const file of files) {
             // eslint-disable-next-line no-await-in-loop

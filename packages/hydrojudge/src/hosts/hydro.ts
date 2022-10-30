@@ -54,6 +54,9 @@ export default class Hydro {
         await Lock.acquire(`${this.config.host}/${source}`);
         try {
             return await this._cacheOpen(source, files, next);
+        } catch (e) {
+            log.warn('CacheOpen Fail: %s %o %o', source, files, e);
+            throw e;
         } finally {
             Lock.release(`${this.config.host}/${source}`);
         }
@@ -87,14 +90,22 @@ export default class Hydro {
                 pid: +pid,
                 files: filenames,
             });
+            if (!res.body.links) throw new FormatError('problem not exist');
             // eslint-disable-next-line no-inner-declarations
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
                 const w = fs.createWriteStream(path.join(filePath, name));
                 this.get(res.body.links[name]).pipe(w);
                 await new Promise((resolve, reject) => {
-                    w.on('finish', resolve);
-                    w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
+                    const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
+                    w.on('error', (e) => {
+                        clearTimeout(timeout);
+                        reject(new Error(`DownloadFail(${name}): ${e.message}`));
+                    });
+                    w.on('finish', () => {
+                        clearTimeout(timeout);
+                        resolve(null);
+                    });
                 });
             }
             const tasks = [];
