@@ -242,23 +242,24 @@ connect-timeout = 10`);
         init: 'install.hydro',
         operations: [
             () => removeOptionalEsbuildDeps(),
-            () => {
-                if (!CN) return;
+            (CN ? () => {
+                let res: any = null;
                 try {
                     exec('yarn config set registry https://registry.npmmirror.com/', { stdio: 'inherit' });
-                    exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { stdio: 'inherit' });
+                    res = exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { stdio: 'inherit' });
                 } catch (e) {
                     console.log('Failed to install from npmmirror, fallback to yarnpkg');
                 } finally {
                     exec('yarn config set registry https://registry.yarnpkg.com', { stdio: 'inherit' });
                 }
                 try {
-                    exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge');
+                    exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { timeout: 60000 });
                 } catch (e) {
-                    console.log('Failed to check update from yarnpkg');
+                    console.warn('Failed to check update from yarnpkg');
+                    if (res?.code !== 0) return 'retry';
                 }
-            },
-            ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }],
+                return null;
+            } : ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]),
             () => writeFileSync(`${process.env.HOME}/.hydro/addon.json`, '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
             () => rollbackResolveField(),
         ],
