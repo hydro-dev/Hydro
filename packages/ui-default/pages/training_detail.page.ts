@@ -29,7 +29,7 @@ function searchUser() {
 
 function selectUser(ev) {
   ev.preventDefault();
-  if ($('.enroll_user_menu:visible').length) {
+  if ($('.enroll_user_menu:visible').length === 1) {
     $('.enroll_user_menu:visible').first().find('a')[0].click();
   }
 }
