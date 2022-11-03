@@ -161,7 +161,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
-        if (!canViewDetail) rdoc.status = STATUS.STATUS_SUBMITTED;
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
@@ -181,7 +180,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: !canViewDetail ? pick(rdoc, ['_id', 'lang', 'status', 'code']) : rdoc, pdoc, tdoc: this.tdoc,
+            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
         };
     }
 

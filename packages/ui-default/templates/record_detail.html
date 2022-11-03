@@ -1,12 +1,12 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-{% if canViewDetail %}
+{% if typeof(rdoc['status']) === 'number' %}
   {{ set(UiContext, 'socketUrl', "record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
 {% endif %}
 <div class="row">
   <div class="medium-9 columns">
-    {% if rdoc['status'] !== STATUS.STATUS_SUBMITTED %}
+    {% if typeof(rdoc['status']) === 'number' %}
       {% include 'record_detail_status.html' %}
     {% endif %}
     {% if rdoc['code'] or rdoc.files.code %}
@@ -94,7 +94,7 @@
             <dd>{{ user.render_inline(judge_udoc, badge=false) }}</dd>
           {% endif %}
         </dl>
-        {% if rdoc['status'] !== STATUS.STATUS_SUBMITTED %}
+        {% if typeof(rdoc['status']) === 'number' %}
           {% include 'record_detail_summary.html' %}
         {% endif %}
       </div>
