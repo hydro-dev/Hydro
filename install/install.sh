@@ -1,4 +1,12 @@
 #!/bin/bash
+if [ $EUID != 0 ]; then
+    echo "This script requires root however you are currently running under another user."
+    echo "We will call sudo directly for you."
+    echo "Please input your account password below:"
+    echo "安装脚本需要使用 root 权限，请在下方输入此账号的密码确认授权："
+    sudo "$0" "$@"
+    exit $?
+fi
 set -e
 echo "Executing Hydro install script v3.0.0"
 echo "Hydro includes anonymous system telemetry,
@@ -7,7 +15,7 @@ To disable this feature, checkout our sourcecode."
 mkdir -p /data/db /data/file ~/.hydro
 bash <(curl https://hydro.ac/nix.sh)
 export PATH=$HOME/.nix-profile/bin:$PATH
-nix-env -iA nixpkgs.nodejs nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.coreutils nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.qrencode
+nix-env -iA nixpkgs.nodejs nixpkgs.coreutils nixpkgs.qrencode
 echo "扫码加入QQ群："
 echo https://qm.qq.com/cgi-bin/qm/qr\?k\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8
 echo "// File created by Hydro install script\n" >/tmp/install.js

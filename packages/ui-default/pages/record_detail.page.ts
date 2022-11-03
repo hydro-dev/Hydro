@@ -8,7 +8,7 @@ const page = new NamedPage('record_detail', async () => {
     import('diff-dom'),
   ]);
 
-  const sock = new WebSocket(UiContext.socketUrl);
+  const sock = new WebSocket(UiContext.ws_prefix + UiContext.socketUrl);
   const dd = new DiffDOM();
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);

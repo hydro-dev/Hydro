@@ -46,22 +46,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // eslint-disable-next-line camelcase
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
-  const e = document.createElement('style');
-  const dark = UiContext.domain.nav_logo_dark || UiContext.nav_logo_dark;
-  const dark2x = UiContext.domain.nav_logo_dark_2x || UiContext.nav_logo_dark_2x;
-  e.innerHTML = `
-    ${dark ? `.nav__logo { background-image: url(${dark}) !important }` : ''}
-    ${dark2x ? `
-      @media
-      only screen and (-webkit-min-device-pixel-ratio: 1.5), 
-      only screen and (min-resolution: 1.5dppx),
-      only screen and (min-resolution: 144dpi) {
-        .nav__logo, .header--mobile__domain {
-          background-image: url(${dark2x}) !important
-        }
-      }` : ''}`;
-  document.body.appendChild(e);
-
   const [data] = await Promise.all([
     (await fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' })).json(),
     await import('./modules'),

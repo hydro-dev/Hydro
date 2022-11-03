@@ -6,6 +6,9 @@
   <div class="slideout-overlay"></div>
   {% if UserContext %}{% include "partials/header_mobile.html" %}{% endif %}
   <div class="main">
+    {% for item in ui.getNodes('Notification').concat(notification or []) %}{% if item.checker(handler) %}
+      <div class="row"><blockquote class="{{ item.args.type }}">{{ _(item.name).format(item.args.args or []) }}</blockquote></div>
+    {% endif %}{% endfor %}
     {% block content %}{% endblock %}
   </div>
   {% include "partials/footer.html" %}

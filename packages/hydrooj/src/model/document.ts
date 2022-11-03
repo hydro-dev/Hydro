@@ -1,7 +1,7 @@
 /* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
-    Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, UpdateQuery,
+    Cursor, FilterQuery, ObjectID, OnlyFieldsOfType, PushOperator, UpdateQuery,
 } from 'mongodb';
 import { Context } from '../context';
 import {
@@ -15,6 +15,7 @@ import { ArrayKeys, MaybeArray, NumberKeys, Projection } from '../typeutils';
 import { buildProjection } from '../utils';
 
 type DocID = ObjectID | string | number;
+type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, Symbol>;
 
 export const coll = db.collection('document');
 export const collStatus = db.collection('document.status');
@@ -95,12 +96,18 @@ export async function get<K extends keyof DocType>(domainId: string, docType: K,
 }
 
 export async function set<K extends keyof DocType>(
-    domainId: string, docType: K, docId: DocType[K]['docId'], $set?: Partial<DocType[K]>, $unset?: OnlyFieldsOfType<DocType[K], any, true | '' | 1>,
+    domainId: string,
+    docType: K,
+    docId: DocType[K]['docId'],
+    $set?: Partial<DocType[K]>,
+    $unset?: OnlyFieldsOfType<DocType[K], any, true | '' | 1>,
+    $push?: PushOperator<DocType[K]>,
 ): Promise<DocType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set, $unset);
     const update: UpdateQuery<DocType[K]> = {};
     if ($set) update.$set = $set;
     if ($unset) update.$unset = $unset;
+    if ($push) update.$push = $push;
     const res = await coll.findOneAndUpdate(
         { domainId, docType, docId },
         update,
@@ -234,7 +241,7 @@ export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocTyp
     return [doc, null];
 }
 
-export async function setSub<T extends keyof DocType, K extends string & ArrayKeys<DocType[T]>>(
+export async function setSub<T extends keyof DocType, K extends NormalArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
     key: K, subId: DocType[T][K][0]['_id'], args: Partial<DocType[T][K][0]>,
 ): Promise<DocType[T]> {
@@ -368,7 +375,7 @@ export async function incStatus<T extends keyof DocStatusType>(
 
 export async function revPushStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
-    key: string & ArrayKeys<DocStatusType[T]>, value: any, id = '_id',
+    key: NormalArrayKeys<DocStatusType[T]>, value: any, id = '_id',
 ): Promise<DocStatusType[T]> {
     let res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [`${key}.${id}`]: value[id] },

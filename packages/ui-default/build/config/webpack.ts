@@ -247,6 +247,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
+          { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],

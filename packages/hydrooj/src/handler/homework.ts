@@ -6,7 +6,7 @@ import {
     ContestNotFoundError, ForbiddenError, HomeworkNotLiveError,
     ValidationError,
 } from '../error';
-import { PenaltyRules } from '../interface';
+import { PenaltyRules, Tdoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -22,8 +22,10 @@ const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
-    async get({ domainId }) {
-        const tdocs = await contest.getMulti(domainId, { rule: 'homework' }).toArray();
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, page = 1) {
+        const cursor = contest.getMulti(domainId, { rule: 'homework' });
+        const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
         for (const tdoc of tdocs) {
             const cal = { ...tdoc, url: this.url('homework_detail', { tid: tdoc.docId }) };
@@ -33,7 +35,9 @@ class HomeworkMainHandler extends Handler {
             } else cal.endAt = tdoc.penaltySince;
             calendar.push(cal);
         }
-        this.response.body = { tdocs, calendar };
+        this.response.body = {
+            tdocs, calendar, tpcount, page,
+        };
         this.response.template = 'homework_main.html';
     }
 }

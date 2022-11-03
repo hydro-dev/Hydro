@@ -1,7 +1,9 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
+import net from 'net';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -31,6 +33,7 @@ const locales = {
         'install.compiler': '正在安装编译器...',
         'install.hydro': '正在安装 Hydro...',
         'install.done': 'Hydro 安装成功！',
+        'install.alldone': '安装已全部完成。',
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
         'info.skip': '步骤已跳过。',
@@ -92,8 +95,8 @@ function randomstring(digit = 32, dict = defaultDict) {
     return str;
 }
 let password = randomstring(32);
-// TODO read from args
-const CN = true;
+// eslint-disable-next-line
+let CN = true;
 
 const nixBin = `${process.env.HOME}/.nix-profile/bin`;
 const entry = (source: string, target = source, ro = true) => `\
@@ -119,13 +122,36 @@ domainName: executor_server
 uid: 1536
 gid: 1536
 `;
+const Caddyfile = `\
+# 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
+# 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
+# 仅需将 :80 改为你的域名（如 hydro.ac）后直接重载配置即可自动签发 ssl 证书。
+# 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
+# For more information, refer to caddy v2 documentation.
+:80 {
+  reverse_proxy http://127.0.0.1:8888 {
+    header_up x-forwarded-for {remote_host}
+    header_up x-forwarded-host {hostport}
+  }
+}
+`;
 
-let data;
+const isPortFree = async (port: number) => {
+    const server = net.createServer();
+    const res = await new Promise((resolve) => {
+        server.once('error', () => resolve(false));
+        server.once('listening', () => resolve(true));
+        server.listen(port);
+    });
+    server.close();
+    return res;
+};
+
 function removeOptionalEsbuildDeps() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
-    data = existsSync(pkgjson) ? require(pkgjson) : {};
+    const data = existsSync(pkgjson) ? require(pkgjson) : {};
     data.resolutions = data.resolutions || {};
     Object.assign(data.resolutions, Object.fromEntries([
         '@esbuild/linux-loong64',
@@ -147,15 +173,27 @@ function rollbackResolveField() {
     const yarnGlobalPath = exec('yarn global dir').output?.trim() || '';
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
+    const data = JSON.parse(readFileSync(pkgjson, 'utf-8'));
     delete data.resolutions;
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
     return true;
 }
 
-const steps = [
+const Steps = () => [
     {
         init: 'install.preparing',
         operations: [
+            () => {
+                if (CN) return;
+                // rollback mirrors
+                writeFileSync('/etc/nix/nix.conf', `substituters = https://cache.nixos.org/ https://nix.hydro.ac/cache
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydro.ac:EytfvyReWHFwhY9MCGimCIn46KQNfmv9y8E2NqlNfxQ=
+connect-timeout = 10`);
+                exec('nix-channel --del nixpkgs', { stdio: 'inherit' });
+                exec('nix-channel --add nixpkgs https://nixos.org/channels/nixpkgs-unstable', { stdio: 'inherit' });
+                exec('nix-channel --update', { stdio: 'inherit' });
+            },
+            'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
             () => {
                 // Not implemented yet
                 // if (fs.existsSync('/home/judge/src')) {
@@ -176,9 +214,7 @@ const steps = [
     {
         init: 'install.mongodb',
         operations: [
-            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
-            'nix-env -iA nixpkgs.mongodb-tools',
-            `nix-env -iA hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''}`,
+            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongodb-tools`,
         ],
     },
     {
@@ -195,11 +231,37 @@ const steps = [
         ],
     },
     {
+        init: 'install.caddy',
+        skip: () => !exec('caddy version').code,
+        operations: [
+            'nix-env -iA nixpkgs.caddy',
+            () => writeFileSync(`${process.env.HOME}/.hydro/Caddyfile`, Caddyfile),
+        ],
+    },
+    {
         init: 'install.hydro',
         operations: [
             () => removeOptionalEsbuildDeps(),
-            ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }],
+            (CN ? () => {
+                let res: any = null;
+                try {
+                    exec('yarn config set registry https://registry.npmmirror.com/', { stdio: 'inherit' });
+                    res = exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { stdio: 'inherit' });
+                } catch (e) {
+                    console.log('Failed to install from npmmirror, fallback to yarnpkg');
+                } finally {
+                    exec('yarn config set registry https://registry.yarnpkg.com', { stdio: 'inherit' });
+                }
+                try {
+                    exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { timeout: 60000 });
+                } catch (e) {
+                    console.warn('Failed to check update from yarnpkg');
+                    if (res?.code !== 0) return 'retry';
+                }
+                return null;
+            } : ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]),
             () => writeFileSync(`${process.env.HOME}/.hydro/addon.json`, '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
+            () => rollbackResolveField(),
         ],
     },
     {
@@ -234,6 +296,12 @@ const steps = [
             () => sleep(1000),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
             'pm2 start hydrooj',
+            async () => {
+                if (!await isPortFree(80)) log.warn('port.80');
+                exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
+                exec('hydrooj cli system set server.xff x-forwarded-for');
+                exec('hydrooj cli system set server.xhost x-forwarded-host');
+            },
             'pm2 startup',
             'pm2 save',
         ],
@@ -269,16 +337,39 @@ const steps = [
             },
             () => log.info('extra.dbUser'),
             () => log.info('extra.dbPassword', password),
-            () => rollbackResolveField(),
+        ],
+    },
+    {
+        init: 'install.postinstall',
+        operations: [
+            ['pm2 install pm2-logrotate', { retry: true }],
+            'pm2 set pm2-logrotate:max_size 64M',
+        ],
+    },
+    {
+        init: 'install.alldone',
+        operations: [
+            () => log.info('install.alldone'),
         ],
     },
 ];
 
 async function main() {
+    try {
+        console.log('Getting IP info to find best mirror:');
+        const res = await fetch('https://ipinfo.io', { headers: { accept: 'application/json' } }).then((r) => r.json());
+        delete res.readme;
+        console.log(res);
+        if (res.country !== 'CN') CN = false;
+    } catch (e) {
+        console.error(e);
+        console.log('Cannot find the best mirror. Fallback to default.');
+    }
+    const steps = Steps();
     for (let i = 0; i < steps.length; i++) {
         const step = steps[i];
         if (!step.silent) log.info(step.init);
-        if (!(step.skip && step.skip())) {
+        if (!(step.skip?.())) {
             for (let op of step.operations) {
                 if (!(op instanceof Array)) op = [op, {}] as any;
                 if (op[0].toString().startsWith('nix-env')) op[1].retry = true;
@@ -294,7 +385,7 @@ async function main() {
                     }
                 } else {
                     retry = 0;
-                    let res = op[0](op[1]);
+                    let res = await op[0](op[1]);
                     while (res === 'retry') {
                         if (retry < 30) {
                             log.warn('Retry...');
@@ -309,3 +400,4 @@ async function main() {
     }
 }
 main().catch(log.fatal);
+global.main = main;

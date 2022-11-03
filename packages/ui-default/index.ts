@@ -19,11 +19,9 @@ declare module 'hydrooj' {
   }
   interface SystemKeys {
     'ui-default.nav_logo_dark': string;
-    'ui-default.nav_logo_dark_2x': string;
   }
   interface UiContextBase {
     nav_logo_dark?: string;
-    nav_logo_dark_2x?: string;
     constantVersion?: string;
   }
 }
@@ -70,9 +68,7 @@ export async function buildUI() {
   logger.success('UI addons built in %d ms', Date.now() - start);
 }
 function updateLogo() {
-  [UiContextBase.nav_logo_dark, UiContextBase.nav_logo_dark_2x] = SystemModel.getMany([
-    'ui-default.nav_logo_dark', 'ui-default.nav_logo_dark_2x',
-  ]);
+  UiContextBase.nav_logo_dark = SystemModel.get('ui-default.nav_logo_dark');
 }
 
 class WikiHelpHandler extends Handler {
@@ -254,4 +250,10 @@ export function apply(ctx: Context) {
   ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
+  ctx.on('handler/after/DiscussionRaw', async (that) => {
+    if (that.args.render && that.response.type === 'text/markdown') {
+      that.response.type = 'text/html';
+      that.response.body = await markdown.render(that.response.body);
+    }
+  });
 }

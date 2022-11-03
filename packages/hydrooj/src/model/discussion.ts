@@ -3,8 +3,11 @@ import moment from 'moment';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
-import { DiscussionReplyDoc, DiscussionTailReplyDoc, Document } from '../interface';
+import {
+    DiscussionHistoryDoc, DiscussionReplyDoc, DiscussionTailReplyDoc, Document,
+} from '../interface';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import { NumberKeys } from '../typeutils';
 import { buildProjection } from '../utils';
 import * as contest from './contest';
@@ -22,8 +25,11 @@ export const PROJECTION_LIST: Field[] = [
     'parentId', 'parentType', 'title',
 ];
 export const PROJECTION_PUBLIC: Field[] = [
-    ...PROJECTION_LIST, 'content', 'history', 'react', 'maintainer',
+    ...PROJECTION_LIST, 'content', 'edited', 'react', 'maintainer',
     'lock',
+];
+export const HISTORY_PROJECTION_PUBLIC: (keyof DiscussionHistoryDoc)[] = [
+    'title', 'content', 'docId', 'uid', 'time',
 ];
 
 export const typeDisplay = {
@@ -34,15 +40,19 @@ export const typeDisplay = {
     [document.TYPE_HOMEWORK]: 'homework',
 };
 
+export const coll = db.collection('discussion.history');
+
 export async function add(
     domainId: string, parentType: number, parentId: ObjectID | number | string,
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean, pin: boolean,
 ): Promise<ObjectID> {
+    const time = new Date();
     const payload: Partial<DiscussionDoc> = {
         domainId,
         content,
         owner,
+        editor: owner,
         parentType,
         parentId,
         title,
@@ -50,7 +60,7 @@ export async function add(
         nReply: 0,
         highlight,
         pin,
-        updateAt: new Date(),
+        updateAt: time,
         views: 0,
         sort: 100,
     };
@@ -70,7 +80,10 @@ export async function get<T extends Field>(
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
-export function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
+export async function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
+    await coll.insertOne({
+        domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
+    });
     return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
 }
 
@@ -80,13 +93,20 @@ export function inc(
     return document.inc(domainId, document.TYPE_DISCUSSION, did, key, value);
 }
 
-export function del(domainId: string, did: ObjectID): Promise<never> {
-    return Promise.all([
+export async function del(domainId: string, did: ObjectID): Promise<void> {
+    const [ddoc, drdocs] = await Promise.all([
+        document.get(domainId, document.TYPE_DISCUSSION, did),
+        document.getMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
+            parentType: document.TYPE_DISCUSSION, parentId: did,
+        }).project({ _id: 1, 'reply._id': 1 }).toArray(),
+    ]) as any;
+    await Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION, did),
         document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
             parentType: document.TYPE_DISCUSSION, parentId: did,
         }),
         document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: did }),
+        coll.deleteMany({ domainId, docId: { $in: [ddoc._id, ...(drdocs.reply?.map((i) => i._id) || [])] } }),
     ]) as any;
 }
 
@@ -104,13 +124,17 @@ export async function addReply(
     domainId: string, did: ObjectID, owner: number,
     content: string, ip: string,
 ): Promise<ObjectID> {
+    const time = new Date();
     const [drid] = await Promise.all([
         document.add(
             domainId, content, owner, document.TYPE_DISCUSSION_REPLY,
-            null, document.TYPE_DISCUSSION, did, { ip },
+            null, document.TYPE_DISCUSSION, did, { ip, editor: owner },
         ),
-        document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: new Date() }),
+        document.incAndSet(domainId, document.TYPE_DISCUSSION, did, 'nReply', 1, { updateAt: time }),
     ]);
+    await coll.insertOne({
+        domainId, docId: drid, content, uid: owner, ip, time,
+    });
     return drid;
 }
 
@@ -119,9 +143,12 @@ export function getReply(domainId: string, drid: ObjectID): Promise<DiscussionRe
 }
 
 export async function editReply(
-    domainId: string, drid: ObjectID, content: string,
+    domainId: string, drid: ObjectID, content: string, uid: number, ip: string,
 ): Promise<DiscussionReplyDoc | null> {
-    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content });
+    await coll.insertOne({
+        domainId, docId: drid, content, uid, ip, time: new Date(),
+    });
+    return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content, edited: true, editor: uid });
 }
 
 export async function delReply(domainId: string, drid: ObjectID) {
@@ -130,6 +157,7 @@ export async function delReply(domainId: string, drid: ObjectID) {
     return await Promise.all([
         document.deleteOne(domainId, document.TYPE_DISCUSSION_REPLY, drid),
         document.inc(domainId, document.TYPE_DISCUSSION, drdoc.parentId, 'nReply', -1),
+        coll.deleteMany({ domainId, docId: { $in: [drid, ...(drdoc.reply?.map((i) => i._id) || [])] } }),
     ]);
 }
 
@@ -161,14 +189,20 @@ export async function addTailReply(
     domainId: string, drid: ObjectID,
     owner: number, content: string, ip: string,
 ): Promise<[DiscussionReplyDoc, ObjectID]> {
+    const time = new Date();
     const [drdoc, subId] = await document.push(
         domainId, document.TYPE_DISCUSSION_REPLY, drid,
-        'reply', content, owner, { ip },
+        'reply', content, owner, { ip, editor: owner },
     );
-    await document.set(
-        domainId, document.TYPE_DISCUSSION, drdoc.parentId,
-        { updateAt: new Date() },
-    );
+    await Promise.all([
+        coll.insertOne({
+            domainId, docId: subId, content, uid: owner, ip, time: new Date(),
+        }),
+        document.set(
+            domainId, document.TYPE_DISCUSSION, drdoc.parentId,
+            { updateAt: time },
+        ),
+    ]);
     return [drdoc, subId];
 }
 
@@ -178,14 +212,33 @@ export function getTailReply(
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
-export function editTailReply(
-    domainId: string, drid: ObjectID, drrid: ObjectID, content: string,
+export async function editTailReply(
+    domainId: string, drid: ObjectID, drrid: ObjectID, content: string, uid: number, ip: string,
 ): Promise<DiscussionTailReplyDoc> {
-    return document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid, { content });
+    const [, drrdoc] = await Promise.all([
+        coll.insertOne({
+            domainId, docId: drrid, content, uid, time: new Date(), ip,
+        }),
+        document.setSub(domainId, document.TYPE_DISCUSSION_REPLY, drid,
+            'reply', drrid, { content, edited: true, editor: uid }),
+    ]);
+    return drrdoc;
 }
 
 export async function delTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
-    return document.deleteSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
+    return Promise.all([
+        document.deleteSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid),
+        coll.deleteMany({ domainId, docId: drrid }),
+    ]);
+}
+
+export function getHistory(
+    domainId: string, docId: ObjectID, query: FilterQuery<DiscussionHistoryDoc> = {},
+    projection = HISTORY_PROJECTION_PUBLIC,
+) {
+    return coll.find({ domainId, docId, ...query })
+        .sort({ time: -1 }).project(buildProjection(projection))
+        .toArray();
 }
 
 export function setStar(domainId: string, did: ObjectID, uid: number, star: boolean) {
@@ -306,9 +359,11 @@ export function apply(ctx: Context) {
 }
 
 global.Hydro.model.discussion = {
+    coll,
     typeDisplay,
     PROJECTION_LIST,
     PROJECTION_PUBLIC,
+    HISTORY_PROJECTION_PUBLIC,
 
     apply,
     add,
@@ -330,6 +385,7 @@ global.Hydro.model.discussion = {
     delTailReply,
     react,
     getReaction,
+    getHistory,
     setStar,
     getStatus,
     setStatus,

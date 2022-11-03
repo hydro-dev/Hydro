@@ -10,9 +10,6 @@ declare global {
     interface ArrayConstructor {
         isDiff: (a: any[], b: any[]) => boolean;
     }
-    interface Date {
-        format: (fmt?: string) => string;
-    }
     interface Math {
         sum: (...args: Array<number[] | number>) => number;
     }
@@ -75,6 +72,7 @@ Array.isDiff = function isDiff(a, b) {
     return false;
 };
 
+// @ts-ignore
 Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
     let m = this.getMonth() + 1;
     if (m < 10) m = `0${m}`;

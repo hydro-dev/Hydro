@@ -18,8 +18,9 @@ export default function reducer(state = {
     isLoading: false,
   },
   isPosting: false,
-  waitSec: 0,
-  isWaiting: false,
+  pretestWaitSec: 0,
+  submitWaitSec: 0,
+  lastTick: 0,
   activePage: 'problem',
 }, action: any = {}) {
   switch (action.type) {
@@ -65,15 +66,20 @@ export default function reducer(state = {
     case 'SCRATCHPAD_POST_PRETEST_FULFILLED':
     case 'SCRATCHPAD_POST_SUBMIT_FULFILLED': {
       Notification.success(i18n('Submitted.'));
-      if (action.type === 'SCRATCHPAD_POST_SUBMIT_FULFILLED' && UiContext.canViewRecord) {
-        state.records.visible = true;
-      }
-      return {
-        ...state,
-        isPosting: false,
-        waitSec: 5,
-        isWaiting: true,
-      };
+      return (action.type === 'SCRATCHPAD_POST_SUBMIT_FULFILLED' && UiContext.canViewRecord)
+        ? {
+          ...state,
+          records: {
+            ...state.records,
+            visible: true,
+          },
+          isPosting: false,
+          submitWaitSec: 8,
+        } : {
+          ...state,
+          isPosting: false,
+          pretestWaitSec: 5,
+        };
     }
     case 'SCRATCHPAD_POST_PRETEST_REJECTED':
     case 'SCRATCHPAD_POST_SUBMIT_REJECTED': {
@@ -81,15 +87,17 @@ export default function reducer(state = {
       return {
         ...state,
         isPosting: false,
-        waitSec: 5,
-        isWaiting: true,
+        pretestWaitSec: 3,
+        submitWaitSec: 3,
       };
     }
     case 'SCRATCHPAD_WAITING_TICK': {
+      if (Date.now() - state.lastTick < 950) return state;
       return {
         ...state,
-        waitSec: state.waitSec - 1,
-        isWaiting: state.waitSec > 1,
+        lastTick: Date.now(),
+        pretestWaitSec: Math.max(state.pretestWaitSec - 1, 0),
+        submitWaitSec: Math.max(state.submitWaitSec - 1, 0),
       };
     }
     case 'SCRATCHPAD_RECORDS_LOAD_SUBMISSIONS_PENDING': {

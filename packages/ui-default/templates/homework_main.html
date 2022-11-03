@@ -51,6 +51,7 @@
           </li>
         {%- endfor -%}
         </ol>
+        {{ paginator.render(page, tpcount) }}
         <div name="calendar_entry"></div>
       {% endif %}
       </div>

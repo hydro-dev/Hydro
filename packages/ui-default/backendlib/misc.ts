@@ -13,7 +13,7 @@ export function ansiToHtml(str: string, whiteToBlack = true) {
 
 export function datetimeSpan(dt: Date | ObjectID, relative = true, format = 'YYYY-M-D H:mm:ss', tz = 'Asia/Shanghai') {
   if (!dt) return 'DATETIME_SPAN_ERROR';
-  if (dt instanceof ObjectID) dt = new Date(dt.generationTime * 1000);
+  if (dt instanceof ObjectID) dt = dt.getTimestamp();
   else if (typeof dt === 'string' && ObjectID.isValid(dt)) dt = new Date(new ObjectID(dt).generationTime * 1000);
   else if (typeof dt === 'number' || typeof dt === 'string') dt = new Date(dt);
   return '<span class="time{0}" data-timestamp="{1}">{2}</span>'.format(
