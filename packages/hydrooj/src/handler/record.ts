@@ -1,4 +1,4 @@
-import { omit, throttle } from 'lodash';
+import { omit, pick, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, ForbiddenError, PermissionError,
@@ -141,6 +141,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
+        let canViewDetail = true;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -148,7 +149,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView) throw new PermissionError(rid);
+            if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
+            canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
         }
 
@@ -178,7 +180,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc, pdoc, tdoc: this.tdoc,
+            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
         };
     }
 
