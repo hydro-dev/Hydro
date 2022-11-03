@@ -3,7 +3,40 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
+  {%- if enrollUsers -%}
+  <div class="medium-3 columns">
+    <div class="section side"><div data-sticky="large">
+      <ol class="menu">
+        <li class="menu__item nojs--hide">
+          <form method="get" id="searchForm">
+            <div class="search">
+              <input name="uid" type="text" class="textbox" placeholder="{{ _('Select User') }}">
+            </div>
+          </form>
+        </li>
+        {%- for uid in enrollUsers -%}
+        <li class="menu__item enroll_user_menu" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
+          <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if handler.request.query.uid == uid %} active{% endif %}">
+            <span class="user-profile-link">
+              <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udict[uid].avatar|default('')) }}" width="20" height="20">
+              <span class="user-profile-name">
+                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udict[uid].displayName and udict[uid].displayName != udict[uid].uname %}
+                  {{ udict[uid].displayName }} ({{ udict[uid].uname }})
+                {% else %}
+                  {{ udict[uid].uname }}
+                {% endif %}
+              </span>
+            </span>
+          </a>
+        </li>
+        {%- endfor -%}
+      </ol>
+    </div></div>
+  </div>
+  <div class="medium-6 columns">
+  {%- else -%}
   <div class="medium-9 columns">
+  {%- endif -%}
     <div class="section">
       <div class="section__body typo">
         {{ tdoc['content'] }}
@@ -195,7 +228,7 @@
           {% endif %}
           <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc.attend|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>
-          <dd>{{ user.render_inline(owner, badge=false) }}</dd>
+          <dd>{{ user.render_inline(udict[tdoc.owner], badge=false) }}</dd>
         </dl>
       </div>
     </div>

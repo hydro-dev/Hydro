@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import _ from 'lodash';
 import { NamedPage } from 'vj/misc/Page';
 import { slideDown, slideUp } from 'vj/utils/slide';
 
@@ -17,7 +17,19 @@ async function handleSection(ev, type: string) {
   $section.removeClass('animating');
 }
 
+function searchUser() {
+  const val = $('input[name=uid]').val();
+  console.log(val);
+  $('.enroll_user_menu').each((i, e) => {
+    const $item = $(e);
+    const $username = $item.data('uname').toString();
+    const $uid = $item.data('uid').toString();
+    $item.toggle($username.startsWith(val) || $uid.startsWith(val));
+  });
+}
+
 const page = new NamedPage('training_detail', () => {
+  $('#searchForm').find('input').on('input', _.debounce(searchUser, 1000));
   $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expand'));
   $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
 });

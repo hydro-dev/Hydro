@@ -91,16 +91,21 @@ class TrainingMainHandler extends Handler {
 
 class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
+    @param('uid', Types.PositiveInt, true)
+    async get(domainId: string, tid: ObjectID, uid: number) {
         const tdoc = await training.get(domainId, tid);
         await bus.parallel('training/get', tdoc, this);
         const pids = training.getPids(tdoc.dag);
+        const enrollUsers = (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc))
+            ? (await training.getMultiStatus(domainId, { docId: tid }).toArray()).map((x) => +x.uid) : [];
+        const queryUser = (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc))
+            && enrollUsers.includes(uid) ? uid : this.user._id;
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        const [owner, pdict] = await Promise.all([
-            user.getById(domainId, tdoc.owner),
+        const [udict, pdict] = await Promise.all([
+            user.getList(domainId, [tdoc.owner, ...enrollUsers]),
             problem.getList(domainId, pids, canViewHidden, this.user.group, true),
         ]);
-        const psdict = await problem.getListStatus(domainId, this.user._id, pids);
+        const psdict = await problem.getListStatus(domainId, queryUser, pids);
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
@@ -136,7 +141,7 @@ class TrainingDetailHandler extends Handler {
         });
         this.response.template = 'training_detail.html';
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, owner,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers,
         };
     }
 
