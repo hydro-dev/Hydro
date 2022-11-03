@@ -141,7 +141,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
-        let canViewStatus = false;
+        let canViewDetail = true;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -149,13 +149,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView) {
-                if (rdoc.uid !== this.user._id) {
-                    throw new PermissionError(rid);
-                } else {
-                    canViewStatus = true;
-                }
-            }
+            if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
+            canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
         }
 
@@ -166,16 +161,14 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
-        if (canViewStatus) {
-            rdoc.status = STATUS.STATUS_WAITING;
+        if (!canViewDetail) {
+            rdoc.status = STATUS.STATUS_SUBMITTED;
             rdoc.memory = 0;
             rdoc.time = 0;
             rdoc.score = 0;
             rdoc.judgeTexts = [];
             rdoc.testCases = [];
-            rdoc.compilerTexts = [];
         }
-
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
@@ -195,7 +188,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc, pdoc, tdoc: this.tdoc,
+            udoc, rdoc, pdoc, tdoc: this.tdoc, canViewDetail,
         };
     }
 
