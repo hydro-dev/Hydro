@@ -141,6 +141,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectID, download = false) {
         const rdoc = this.rdoc;
+        let canViewDetail = true;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
@@ -148,7 +149,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView) throw new PermissionError(rid);
+            if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
+            canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
         }
 
@@ -159,6 +161,11 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
+        if (!canViewDetail) {
+            if (rdoc.status !== STATUS.STATUS_COMPILE_ERROR) rdoc.status = STATUS.STATUS_SUBMITTED;
+            rdoc.memory = rdoc.time = rdoc.score = 0;
+            rdoc.judgeTexts = rdoc.testCases = [];
+        }
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);

@@ -1,7 +1,9 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-{{ set(UiContext, 'socketUrl', "record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
+{%- if canViewDetail -%}
+  {{ set(UiContext, 'socketUrl', "record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
+{%- endif -%}
 <div class="row">
   <div class="medium-9 columns">
     {% include 'record_detail_status.html' %}
