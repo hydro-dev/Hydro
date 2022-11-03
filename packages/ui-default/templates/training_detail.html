@@ -9,9 +9,7 @@
       <ol class="menu">
         <li class="menu__item nojs--hide">
           <form method="get" id="searchForm">
-            <div class="search">
-              <input name="uid" type="text" class="textbox" placeholder="{{ _('Select User') }}">
-            </div>
+            <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
         {%- for uid in enrollUsers -%}

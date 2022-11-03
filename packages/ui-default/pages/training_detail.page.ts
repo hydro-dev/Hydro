@@ -19,7 +19,6 @@ async function handleSection(ev, type: string) {
 
 function searchUser() {
   const val = $('input[name=uid]').val();
-  console.log(val);
   $('.enroll_user_menu').each((i, e) => {
     const $item = $(e);
     const $username = $item.data('uname').toString();
@@ -28,8 +27,16 @@ function searchUser() {
   });
 }
 
+function selectUser(ev) {
+  ev.preventDefault();
+  if ($('.enroll_user_menu:visible').length) {
+    $('.enroll_user_menu:visible').first().find('a')[0].click();
+  }
+}
+
 const page = new NamedPage('training_detail', () => {
-  $('#searchForm').find('input').on('input', _.debounce(searchUser, 1000));
+  $('.search__input').on('input', _.debounce(searchUser, 500));
+  $('#searchForm').on('submit', selectUser);
   $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expand'));
   $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
 });
