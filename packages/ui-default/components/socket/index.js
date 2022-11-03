@@ -3,6 +3,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 export default class Sock {
   constructor(url) {
     const i = new URL(url, window.location.href);
+    if (i.host !== window.location.host) i.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
     i.protocol = i.protocol.replace('http', 'ws');
     this.url = i.toString();
     this.sock = new ReconnectingWebSocket(this.url);
