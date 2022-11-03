@@ -3,7 +3,6 @@ import { ValidationError } from '../error';
 const RE_UID = /^-?\d+$/i;
 const RE_DOMAINID = /^[a-zA-Z][a-zA-Z0-9_]{3,31}$/i;
 const RE_PID = /^[a-zA-Z]+[a-zA-Z0-9]*$/i;
-const RE_UNAME = /^.{3,31}$/i;
 const RE_ROLE = /^[_0-9A-Za-z]{1,31}$/i;
 const RE_MAIL = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i;
 
@@ -13,8 +12,6 @@ export const isDomainId = (s) => RE_DOMAINID.test(s);
 export const checkDomainId = (s) => { if (!isDomainId(s)) throw new ValidationError('domainId'); else return s; };
 export const isUid = (s) => RE_UID.test(s);
 export const checkUid = (s) => { if (!isUid(s)) throw new ValidationError('uid'); else return s; };
-export const isUname = (s) => RE_UNAME.test(s);
-export const checkUname = (s) => { if (!isUname(s)) throw new ValidationError('uname'); else return s; };
 export const isRole = (s) => RE_ROLE.test(s);
 export const checkRole = (s) => { if (!isRole(s)) throw new ValidationError('role'); else return s; };
 export const isPassword = (s) => s.length >= 5;
@@ -37,8 +34,6 @@ global.Hydro.lib.validator = {
     checkDomainId,
     isUid,
     checkUid,
-    isUname,
-    checkUname,
     isRole,
     checkRole,
     isPassword,

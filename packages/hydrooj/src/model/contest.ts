@@ -298,15 +298,15 @@ const oi = buildContestRule({
         const udict = await user.getList(tdoc.domainId, uids);
         const psdict = {};
         const first = {};
-        for (const pid of tdoc.pids) {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define, no-await-in-loop
+        await Promise.all(tdoc.pids.map(async (pid) => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             const [data] = await getMultiStatus(tdoc.domainId, {
                 docType: document.TYPE_CONTEST,
                 docId: tdoc.docId,
                 [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
             }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
             first[pid] = data ? data.detail[pid].rid.generationTime : new ObjectID().generationTime;
-        }
+        }));
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
             const psdocs = await Promise.all(

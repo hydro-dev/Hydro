@@ -78,4 +78,7 @@ export function apply(ctx: Context) {
         callback,
         get,
     });
+    ctx.i18n.load('zh', {
+        'Login With Google': '使用 Google 登录',
+    });
 }

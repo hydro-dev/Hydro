@@ -9,6 +9,7 @@ export function apply(ctx: Context) {
     hustoj(ctx);
     vijos(ctx);
     syzoj(ctx);
+
     ctx.provideModule('hash', 'hust', ($password, $saved) => {
         $password = md5($password);
         if (RE_MD5.test($saved)) return $password === $saved;
@@ -27,4 +28,10 @@ export function apply(ctx: Context) {
         return `${Buffer.from(uname).toString('base64')}|${mixedSha1}`;
     });
     ctx.provideModule('hash', 'syzoj', (password: string) => md5(`${password}syzoj2_xxx`));
+
+    ctx.i18n.load('zh', {
+        'migrate from hustoj': '从 HustOJ 导入',
+        'migrate from vijos': '从 Vijos 导入',
+        'migrate from syzoj': '从 SYZOJ 导入',
+    });
 }
