@@ -15,7 +15,7 @@
         "p-queue": "^7.3.0",
         "schemastery": "^3.5.4",
         "shell-quote": "^1.7.4",
-        "superagent": "^8.0.2",
+        "superagent": "^8.0.3",
         "ws": "^8.10.0"
     },
     "preferUnplugged": true,
@@ -23,7 +23,7 @@
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
         "@types/js-yaml": "^4.0.5",
-        "@types/lodash": "^4.14.186",
+        "@types/lodash": "^4.14.187",
         "@types/shell-quote": "^1.7.1",
         "@types/ws": "^8.5.3"
     }

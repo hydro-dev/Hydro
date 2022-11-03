@@ -10,12 +10,12 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "chrome-finder": "^1.0.7",
-        "jsdom": "^20.0.1",
+        "jsdom": "^20.0.2",
         "puppeteer-core": "^15.5.0",
         "puppeteer-extra": "3.3.0",
         "puppeteer-extra-plugin-portal": "3.1.0",
         "puppeteer-extra-plugin-stealth": "2.10.1",
-        "superagent": "^8.0.2",
+        "superagent": "^8.0.3",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {

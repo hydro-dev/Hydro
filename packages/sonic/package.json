@@ -8,6 +8,6 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "sonic-channel": "^1.2.14"
+        "sonic-channel": "^1.3.0"
     }
 }

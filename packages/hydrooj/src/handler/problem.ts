@@ -511,7 +511,11 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('input', Types.String, true)
     @param('tid', Types.ObjectID, true)
     async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectID) {
-        if (this.response.body.pdoc.config?.langs && !this.response.body.pdoc.config.langs.includes(lang)) {
+        const config = this.pdoc.config;
+        if (typeof config === 'string' || config === null) throw new BadRequestError('Problem configuration incorrect');
+        if (config.type === 'objective') {
+            lang = '_';
+        } else if (config.langs && !config.langs.includes(lang)) {
             throw new BadRequestError('Language not allowed.');
         }
         if (pretest) {
@@ -527,8 +531,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (!code) {
             const file = this.request.files?.file;
             if (!file || file.size === 0) throw new ValidationError('code');
-            const config = this.response.body.pdoc.config;
-            if (typeof config !== 'object' || config === null) throw new BadRequestError('Incorrect problem config');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
             if (file.size > sizeLimit) throw new ValidationError('file');
             if (file.size > 65535 || await isBinaryFile(file.filepath, file.size)) {
