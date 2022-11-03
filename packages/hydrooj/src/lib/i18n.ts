@@ -1,33 +1,71 @@
-const locales = {};
+import { Context, Service } from '../context';
 
+const translations: Record<string, Record<string, string>[]> = {};
+
+declare module '../context' {
+    interface Context {
+        i18n: I18nService;
+    }
+}
 declare global {
     interface String {
         translate: (...languages: string[]) => string;
     }
 }
 
+class I18nService extends Service {
+    constructor(ctx: Context) {
+        super(ctx, 'i18n', true);
+    }
+
+    load(lang: string, content: Record<string, string>) {
+        if (!translations[lang]) translations[lang] = [];
+        translations[lang].unshift(content);
+        this.caller?.on('dispose', () => {
+            translations[lang] = translations[lang].filter((i) => i !== content);
+        });
+    }
+
+    get(key: string, lang: string) {
+        if (!translations[lang]) return null;
+        for (const t of translations[lang] || []) {
+            if (t[key]) return t[key];
+        }
+        return null;
+    }
+}
+
+Context.service('i18n');
+app.i18n = new I18nService(app);
+
 String.prototype.translate = function translate(...languages: string[]) {
     if (languages[0]?.startsWith('en')) {
         // For most use cases, source text equals to translated text in English.
         // So if it doesn't exist, we should use the original text instead of fallback.
-        return locales[languages[0]]?.[this] || locales['en']?.[this] || this;
+        return app.i18n.get(this, languages[0]) || app.i18n.get(this, 'en') || this;
     }
-    for (const language of languages) {
-        if (!language) continue;
-        const curr = (locales[language] || {})[this] || (locales[language.split('_')[0]] || {})[this];
+    for (const language of languages.filter(Boolean)) {
+        const curr = app.i18n.get(this, language) || app.i18n.get(this, language.split('_')[0]);
         if (curr) return curr;
     }
     return this;
 };
 
+/** @deprecated use ctx.i18n.load instead. */
 function load(data: Record<string, Record<string, string>>) {
-    for (const i in data) {
-        if (!locales[i]) locales[i] = { __id: i, ...data[i] };
-        else locales[i] = Object.assign(locales[i], data[i]);
-    }
+    for (const i in data) app.i18n.load(i, data[i]);
 }
 
 export = load;
 
-global.Hydro.locales = locales;
+global.Hydro.locales = new Proxy(translations, {
+    get(self, lang: string) {
+        if (!self[lang]) return {};
+        return new Proxy(self[lang], {
+            get(s, key: string) {
+                return app.i18n.get(lang, key);
+            },
+        });
+    },
+}) as any;
 global.Hydro.lib.i18n = load;

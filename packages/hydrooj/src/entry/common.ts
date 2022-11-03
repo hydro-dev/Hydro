@@ -1,12 +1,13 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-eval */
+import '../lib/index';
+
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { Context } from '../context';
-import i18n from '../lib/i18n';
 import { Logger } from '../logger';
 import { PRIV } from '../model/builtin';
 import * as bus from '../service/bus';
@@ -79,12 +80,12 @@ export async function locale(pending: string[], fail: string[]) {
         if (p && (await fs.stat(p)).isDirectory() && !fail.includes(i)) {
             try {
                 const files = await fs.readdir(p);
-                const locales = {};
                 for (const file of files) {
                     const content = await fs.readFile(path.resolve(p, file), 'utf-8');
-                    locales[file.split('.')[0]] = yaml.load(content);
+                    const dict = yaml.load(content);
+                    if (typeof dict !== 'object' || !dict) throw new Error('Invalid locale file');
+                    app.i18n.load(file.split('.')[0], dict as any);
                 }
-                i18n(locales);
                 logger.info('Locale init: %s', i);
             } catch (e) {
                 fail.push(i);

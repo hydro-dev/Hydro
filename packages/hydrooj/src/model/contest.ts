@@ -387,7 +387,7 @@ const homework = buildContestRule({
     },
     showScoreboard: () => true,
     showSelfRecord: () => true,
-    showRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
     async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
