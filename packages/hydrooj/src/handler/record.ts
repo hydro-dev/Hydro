@@ -1,4 +1,4 @@
-import { omit, throttle } from 'lodash';
+import { omit, pick, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, ForbiddenError, PermissionError,
@@ -161,11 +161,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             user.getById(domainId, rdoc.uid),
         ]);
 
-        if (!canViewDetail) {
-            if (rdoc.status !== STATUS.STATUS_COMPILE_ERROR) rdoc.status = STATUS.STATUS_SUBMITTED;
-            rdoc.memory = rdoc.time = rdoc.score = 0;
-            rdoc.judgeTexts = rdoc.testCases = [];
-        }
+        if (!canViewDetail) rdoc.status = STATUS.STATUS_SUBMITTED;
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
@@ -185,7 +181,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc, pdoc, tdoc: this.tdoc,
+            udoc, rdoc: !canViewDetail ? pick(rdoc, ['_id', 'lang', 'status', 'code']) : rdoc, pdoc, tdoc: this.tdoc,
         };
     }
 
