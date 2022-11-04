@@ -63,7 +63,7 @@ global.Hydro.locales = new Proxy(translations, {
         if (!self[lang]) return {};
         return new Proxy(self[lang], {
             get(s, key: string) {
-                return app.i18n.get(lang, key);
+                return app.i18n.get(key, lang);
             },
         });
     },
