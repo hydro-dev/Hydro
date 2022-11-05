@@ -76,4 +76,7 @@ export function apply(ctx: Context) {
         callback,
         get,
     });
+    ctx.i18n.load('zh', {
+        'Login With Github': '使用 Github 登录',
+    });
 }

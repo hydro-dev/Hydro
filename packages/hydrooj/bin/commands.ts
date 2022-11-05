@@ -1,13 +1,16 @@
-import child, { execSync } from 'child_process';
+import child from 'child_process';
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
+import superagent from 'superagent';
+import tar from 'tar';
 
 const argv = cac().parse();
-let isGlobal = null;
+let yarnVersion = 0;
 try {
-    isGlobal = __dirname.startsWith(execSync('yarn global dir').toString().trim());
+    // eslint-disable-next-line no-unsafe-optional-chaining
+    yarnVersion = +child.execSync('yarn --version', { cwd: os.tmpdir() }).toString().split('v').pop()!.split('.')[0];
 } catch (e) {
     // yarn 2 does not support global dir
 }
@@ -124,14 +127,43 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
     });
-    cli.command('install [package]').action((name) => {
-        if (!isGlobal) {
-            console.warn('This is not a global installation, unable to install.');
-            return;
+    cli.command('install [package]').action(async (src) => {
+        if (yarnVersion !== 1) throw new Error('Yarn 1 is required.');
+        const addonDir = path.join(hydroPath, 'addons');
+        let newAddonPath: string = '';
+        fs.ensureDirSync(addonDir);
+        if (!src.startsWith('http')) {
+            try {
+                src = child.execSync(`yarn info ${src} dist.tarball`, { cwd: os.tmpdir() })
+                    .toString().trim().split('\n')[1];
+            } catch (e) {
+                throw new Error('Cannot fetch package info.');
+            }
         }
-        // TODO support install from tarball
-        child.execSync(`yarn global install '${name}'`, { stdio: 'inherit' });
-        child.execSync(`hydrooj addon add '${name}'`);
+        // TODO: install from npm and check for update
+        if (src.startsWith('http')) {
+            const url = new URL(src);
+            const filename = url.pathname.split('/').pop()!;
+            if (['.tar.gz', '.tgz', '.zip'].find((i) => filename.endsWith(i))) {
+                const name = filename.replace(/(-?\d+\.\d+\.\d+)?(\.tar\.gz|\.zip|\.tgz)$/g, '');
+                newAddonPath = path.join(addonDir, name);
+                console.log(`Downloading ${src} to ${newAddonPath}`);
+                fs.ensureDirSync(newAddonPath);
+                await new Promise((resolve, reject) => {
+                    superagent.get(src)
+                        .pipe(tar.x({
+                            C: newAddonPath,
+                            strip: 1,
+                        }))
+                        .on('finish', resolve)
+                        .on('error', reject);
+                });
+            } else throw new Error('Unsupported file type');
+        } else throw new Error(`Unsupported install source: ${src}`);
+        if (!newAddonPath) throw new Error('Addon download failed');
+        console.log('Installing depedencies');
+        child.execSync('yarn --production', { stdio: 'inherit', cwd: newAddonPath });
+        child.execSync(`hydrooj addon add '${newAddonPath}'`);
     });
     cli.help();
     cli.parse();

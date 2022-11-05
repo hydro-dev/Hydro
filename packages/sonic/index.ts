@@ -92,4 +92,8 @@ export function apply(ctx: Context) {
         }),
         run,
     );
+
+    ctx.i18n.load('zh', {
+        'Sonic problem search re-index': '重建题目搜索索引。',
+    });
 }

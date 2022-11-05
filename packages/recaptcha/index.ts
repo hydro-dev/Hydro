@@ -15,7 +15,7 @@ export function apply(ctx: Context) {
             .field('secret', SystemModel.get('recaptcha.secret'))
             .field('response', thisArg.args.captcha)
             .field('remoteip', thisArg.request.ip);
-        if (!response.body.success) throw new ForbiddenError('captcha fail');
+        if (!response.body.success) throw new ForbiddenError('Failed to solve the captcha.');
     });
 
     ctx.on('handler/after/UserRegister', async (thisArg) => {
@@ -23,5 +23,9 @@ export function apply(ctx: Context) {
 <script src="https://recaptcha.net/recaptcha/api.js?render=${SystemModel.get('recaptcha.key')}"></script>
 <input type="text" name="captcha" id="_captcha" style="display:none">
 <input type="submit" id="_submit" style="display:none">`;
+    });
+
+    ctx.i18n.load('zh', {
+        'Failed to solve the captcha': '没有通过 ReCaptcha 验证。',
     });
 }

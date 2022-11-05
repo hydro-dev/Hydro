@@ -152,7 +152,7 @@ class UiConstantsHandler extends ResourceHandler {
 class LanguageHandler extends ResourceHandler {
   async all({ lang }) {
     if (!global.Hydro.locales[lang]) lang = SystemModel.get('server.language');
-    this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang])};`;
+    this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
     this.response.type = 'application/javascript';
   }
 }

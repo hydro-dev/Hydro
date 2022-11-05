@@ -6,7 +6,7 @@ import * as check from '../check';
 import {
     BadRequestError, ForbiddenError, UserNotFoundError, ValidationError,
 } from '../error';
-import { isEmail, isPassword, isUname } from '../lib/validator';
+import { isEmail, isPassword } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -228,7 +228,7 @@ class SystemUserImportHandler extends SystemHandler {
             if (!email || !username || !password) [email, username, password, displayName] = u.split('\t').map((t) => t.trim());
             if (email && username && password) {
                 if (!isEmail(email)) messages.push(`Line ${+i + 1}: Invalid email.`);
-                else if (!isUname(username)) messages.push(`Line ${+i + 1}: Invalid username`);
+                else if (!Types.Username[1](username)) messages.push(`Line ${+i + 1}: Invalid username`);
                 else if (!isPassword(password)) messages.push(`Line ${+i + 1}: Invalid password`);
                 // eslint-disable-next-line no-await-in-loop
                 else if (await user.getByEmail('system', email)) {
