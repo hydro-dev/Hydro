@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import _ from 'lodash';
 import { NamedPage } from 'vj/misc/Page';
 import { slideDown, slideUp } from 'vj/utils/slide';
