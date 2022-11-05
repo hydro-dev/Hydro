@@ -8,6 +8,7 @@ import superagent from 'superagent';
 import { Context } from './context';
 import db from './service/db';
 export { ObjectID, ObjectId, FilterQuery } from 'mongodb';
+export { WebSocket, WebSocketServer } from 'ws';
 export * from './utils';
 export * from './interface';
 export * from './pipelineUtils';

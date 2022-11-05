@@ -8,7 +8,7 @@ import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import WebSocket from 'ws';
-import { isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
     HydroError, InvalidOperationError, MethodNotAllowedError,
@@ -389,6 +389,7 @@ class NotFoundHandler extends Handler {
 export class RouteService extends Service {
     static readonly methods = ['Route', 'Connection', 'withHandlerClass'];
     private registry = {};
+    private registrationCount = Counter();
 
     constructor(ctx) {
         super(ctx, 'server', true);
@@ -396,15 +397,19 @@ export class RouteService extends Service {
 
     private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
         const HandlerClass = args[2];
+        const name = HandlerClass.name;
         if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
-        if (this.registry[HandlerClass.name]) logger.warn('Route name with %s already exists.', HandlerClass.name);
-        this.registry[HandlerClass.name] = HandlerClass;
-        const dispose = () => delete this.registry[HandlerClass.name];
+        if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
+            logger.warn('Route with name %s already exists.', name);
+        }
+        this.registry[name] = HandlerClass;
+        this.registrationCount[name]++;
         const res = func(...args);
-        this.ctx.parallel(`handler/register/${HandlerClass.name}`, HandlerClass);
+        this.ctx.parallel(`handler/register/${name}`, HandlerClass);
         this.caller?.on('dispose', () => {
+            this.registrationCount[name]--;
+            if (!this.registrationCount[name]) delete this.registry[name];
             res();
-            dispose();
         });
     }
 
