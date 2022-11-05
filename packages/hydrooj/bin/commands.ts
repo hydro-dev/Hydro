@@ -132,6 +132,14 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         const addonDir = path.join(hydroPath, 'addons');
         let newAddonPath: string = '';
         fs.ensureDirSync(addonDir);
+        if (!src.startsWith('http')) {
+            try {
+                src = child.execSync(`yarn info ${src} dist.tarball`, { cwd: os.tmpdir() })
+                    .toString().trim().split('\n')[1];
+            } catch (e) {
+                throw new Error('Cannot fetch package info.');
+            }
+        }
         // TODO: install from npm and check for update
         if (src.startsWith('http')) {
             const url = new URL(src);
@@ -151,7 +159,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
                         .on('error', reject);
                 });
             } else throw new Error('Unsupported file type');
-        } else throw new Error('Unsupported install schema');
+        } else throw new Error(`Unsupported install source: ${src}`);
         if (!newAddonPath) throw new Error('Addon download failed');
         console.log('Installing depedencies');
         child.execSync('yarn --production', { stdio: 'inherit', cwd: newAddonPath });
