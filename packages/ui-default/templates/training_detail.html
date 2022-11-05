@@ -2,16 +2,17 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-<div class="row">
+<div class="row" data-sticky-parent>
   {%- if enrollUsers -%}
-  <div class="medium-3 columns">
-    <div class="section side"><div data-sticky="large">
+  <div class="medium-2 columns mobile--hide">
+    <div data-sticky="large"><div class="section side">
       <ol class="menu">
         <li class="menu__item nojs--hide">
           <form method="get" id="searchForm">
             <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
+        <div style="height: 80vh; overflow-y: scroll; overflow-x: hidden">
         {%- for uid in enrollUsers -%}
         <li class="menu__item enroll_user_menu" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
           <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if handler.request.query.uid == uid %} active{% endif %}">
@@ -28,10 +29,11 @@
           </a>
         </li>
         {%- endfor -%}
+        </div>
       </ol>
     </div></div>
   </div>
-  <div class="medium-6 columns">
+  <div class="medium-7 columns">
   {%- else -%}
   <div class="medium-9 columns">
   {%- endif -%}

@@ -19,12 +19,12 @@ async function handleSection(ev, type: string) {
 }
 
 function searchUser() {
-  const val = $('input[name=uid]').val();
+  const val = $('input[name=uid]').val().toString().toLowerCase();
   $('.enroll_user_menu').each((i, e) => {
     const $item = $(e);
-    const $username = $item.data('uname').toString();
-    const $uid = $item.data('uid').toString();
-    $item.toggle($username.startsWith(val) || $uid.startsWith(val));
+    const $username = $item.data('uname').toString().toLowerCase();
+    const $uid = $item.data('uid').toString().toLowerCase();
+    $item.toggle($username.includes(val) || $uid === val);
   });
 }
 
