@@ -92,12 +92,13 @@ class TrainingMainHandler extends Handler {
 class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('uid', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, uid: number) {
+    @param('pjax', Types.Boolean, true)
+    async get(domainId: string, tid: ObjectID, uid: number, pjax: boolean) {
         const tdoc = await training.get(domainId, tid);
         await bus.parallel('training/get', tdoc, this);
         const pids = training.getPids(tdoc.dag);
         const enrollUsers = (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc))
-            ? (await training.getMultiStatus(domainId, { docId: tid }).toArray()).map((x) => +x.uid) : [];
+            ? (await training.getMultiStatus(domainId, { docId: tid, uid: { $ne: 0 } }).toArray()).map((x) => +x.uid) : [];
         const queryUser = (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc))
             && enrollUsers.includes(uid) ? uid : this.user._id;
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
@@ -139,10 +140,13 @@ class TrainingDetailHandler extends Handler {
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
         });
-        this.response.template = 'training_detail.html';
         this.response.body = {
             tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers,
         };
+        if (pjax) {
+            const html = await this.renderHTML('partials/training_detail.html', this.response.body);
+            this.response.body = { fragments: [{ html }] };
+        } else this.response.template = 'training_detail.html';
     }
 
     @param('tid', Types.ObjectID)

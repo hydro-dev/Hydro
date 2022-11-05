@@ -537,6 +537,7 @@ Output Format: 输出格式
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。
+page.training_detail.see_other_user_detail: 您正在查看其它用户的训练详情。
 pager_first: « 第一页
 pager_last: 末页 »
 pager_next: 下一页 ›
