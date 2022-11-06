@@ -65,7 +65,7 @@ global.Hydro.locales = new Proxy(translations, {
             get(s, key) {
                 if (typeof key === 'string') return app.i18n.get(key, lang);
                 const result = {};
-                for (let i = s.length - 1; i; i--) Object.assign(result, s[i]);
+                for (let i = s.length - 1; i >= 0; i--) Object.assign(result, s[i]);
                 return result;
             },
             has(s, key: string) {

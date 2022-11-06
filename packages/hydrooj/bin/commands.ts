@@ -167,6 +167,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         } else throw new Error(`Unsupported install source: ${src}`);
         if (!newAddonPath) throw new Error('Addon download failed');
         console.log('Installing depedencies');
+        if (!fs.existsSync(path.join(newAddonPath, 'package.json'))) throw new Error('Invalid plugin file');
         child.execSync('yarn --production', { stdio: 'inherit', cwd: newAddonPath });
         child.execSync(`hydrooj addon add '${newAddonPath}'`);
         fs.writeFileSync(path.join(newAddonPath, '__metadata__'), JSON.stringify({
