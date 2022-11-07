@@ -3,6 +3,14 @@ import {
 } from 'prom-client';
 import { Context, db } from 'hydrooj';
 
+declare module 'hydrooj' {
+    interface Context {
+        metrics: Registry;
+    }
+}
+
+Context.service('metrics');
+
 export function createRegistry(ctx: Context) {
     const registry = new Registry();
 
@@ -61,5 +69,7 @@ export function createRegistry(ctx: Context) {
     });
 
     collectDefaultMetrics({ register: registry });
+
+    ctx.metrics = registry;
     return registry;
 }

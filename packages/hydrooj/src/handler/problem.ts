@@ -648,10 +648,9 @@ export class ProblemEditHandler extends ProblemManageHandler {
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<ProblemDoc> = {
-            title, content, pid: newPid, hidden, assign, tag: tag ?? [], difficulty,
+            title, content, pid: newPid, hidden, assign, tag: tag ?? [], difficulty, html: false,
         };
-        let pdoc = await problem.get(domainId, pid);
-        pdoc = await problem.edit(domainId, pdoc.docId, $update);
+        const pdoc = await problem.edit(domainId, this.pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
     }
 }

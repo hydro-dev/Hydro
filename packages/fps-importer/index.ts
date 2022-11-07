@@ -2,7 +2,7 @@
 import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
-    _, AdmZip, buildContent, ContentNode, Context, FileTooLargeError, fs,
+    _, AdmZip, BadRequestError, buildContent, ContentNode, Context, FileTooLargeError, fs,
     Handler, PERM, ProblemConfigFile, ProblemModel, SolutionModel, ValidationError,
 } from 'hydrooj';
 
@@ -12,6 +12,7 @@ class FpsProblemImportHandler extends Handler {
     }
 
     async run(domainId: string, result: any) {
+        if (!result?.fps) throw new BadRequestError('Selected file is not a valid FPS problemset.');
         for (const p of result.fps.item) {
             const content: ContentNode[] = [];
             if (p.description?.[0]) {
