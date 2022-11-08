@@ -45,7 +45,9 @@ export interface HydroRequest {
     body: any;
     files: Record<string, import('formidable').File>;
     query: any;
+    querystring: string;
     path: string;
+    originalPath: string;
     params: any;
     referer: string;
     json: boolean;
@@ -114,17 +116,18 @@ export class HandlerCommon {
     session: Record<string, any>;
     /** @deprecated */
     domainId: string;
+    ctx: Context = global.app;
 
     constructor(
-        public ctx: KoaContext, public args: Record<string, any>,
+        public context: KoaContext, public args: Record<string, any>,
         public request: HydroRequest, public response: HydroResponse,
         public user: User, public domain: DomainDoc, public UiContext: Record<string, any>,
     ) {
-        this.render = ctx.render.bind(ctx);
-        this.renderHTML = ctx.renderHTML.bind(ctx);
-        this.url = ctx.getUrl.bind(ctx);
-        this.translate = ctx.translate.bind(ctx);
-        this.session = ctx.session;
+        this.render = context.render.bind(context);
+        this.renderHTML = context.renderHTML.bind(context);
+        this.url = context.getUrl.bind(context);
+        this.translate = context.translate.bind(context);
+        this.session = context.session;
         this.domainId = args.domainId;
     }
 
@@ -140,8 +143,8 @@ export class HandlerCommon {
 
     renderTitle(str: string) {
         const name = this.domain?.ui?.name || system.get('server.name');
-        if (this.UiContext.extraTitleContent) return `${this.ctx.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
-        return `${this.ctx.translate(str)} - ${name}`;
+        if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
+        return `${this.translate(str)} - ${name}`;
     }
 
     checkPerm(...args: bigint[]) {
@@ -193,9 +196,9 @@ export class Handler extends HandlerCommon {
             if (error.stack) logger.error(error.stack);
         }
         if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.ctx.getUrl('user_login', {
+            this.response.redirect = this.url('user_login', {
                 query: {
-                    redirect: (this.ctx.originalPath || this.request.path) + this.ctx.search,
+                    redirect: (this.context.originalPath || this.request.path) + this.context.search,
                 },
             });
         } else {
@@ -330,10 +333,10 @@ export class ConnectionHandler extends HandlerCommon {
     }
 
     onerror(err: HydroError) {
-        if (err instanceof UserFacingError) err.stack = this.ctx.HydroContext.request.path;
+        if (err instanceof UserFacingError) err.stack = this.request.path;
         if (!(err instanceof NotFoundError)
             && !((err instanceof PrivilegeError || err instanceof PermissionError) && this.user?._id === 0)) {
-            logger.error(`Path:${this.ctx.HydroContext.request.path}, User:${this.user?._id}(${this.user?.uname})`);
+            logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
             logger.error(err);
         }
         this.send({

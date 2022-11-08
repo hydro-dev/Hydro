@@ -107,7 +107,7 @@ class ApiHandler extends Handler {
     }
 
     async get() {
-        const q = decodeURIComponent(this.ctx.request.querystring);
+        const q = decodeURIComponent(this.request.querystring);
         if (q === 'schema') {
             this.response.type = 'application/json';
             this.response.body = { schema: schemaStr };

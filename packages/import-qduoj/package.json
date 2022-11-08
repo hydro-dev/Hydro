@@ -6,8 +6,5 @@
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
-    "preferUnplugged": true,
-    "dependencies": {
-        "decode-html": "^2.0.0"
-    }
+    "preferUnplugged": true
 }
