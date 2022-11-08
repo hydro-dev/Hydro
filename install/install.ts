@@ -98,14 +98,17 @@ let password = randomstring(32);
 // eslint-disable-next-line
 let CN = true;
 
-const nixBin = `${process.env.HOME}/.nix-profile/bin`;
+const nixProfile = `${process.env.HOME}/.nix-profile/`;
 const entry = (source: string, target = source, ro = true) => `\
   - type: bind
     source: ${source}
     target: ${target}${ro ? '\n    readonly: true' : ''}`;
 const mount = `mount:
-${entry(nixBin, '/bin')}
-${entry(nixBin, '/usr/bin')}
+${entry(`${nixProfile}bin`, '/bin')}
+${entry(`${nixProfile}bin`, '/usr/bin')}
+${entry(`${nixProfile}lib`, '/lib')}
+${entry(`${nixProfile}share`, '/share')}
+${entry(`${nixProfile}etc`, '/etc')}
 ${entry('/nix', '/nix')}
 ${entry('/dev/null', '/dev/null', false)}
 ${entry('/dev/urandom', '/dev/urandom', false)}
