@@ -105,35 +105,6 @@ export function bufferToStream(buffer: Buffer): NodeJS.ReadableStream {
     return stream;
 }
 
-export function sleep(timeout: number) {
-    return new Promise((resolve) => {
-        setTimeout(() => resolve(true), timeout);
-    });
-}
-
-function deepen(modifyString: (source: string) => string) {
-    function modifyObject<T>(source: T): T {
-        if (typeof source !== 'object' || !source) return source;
-        if (Array.isArray(source)) return source.map(modifyObject) as any;
-        const result = {} as T;
-        for (const key in source) {
-            result[modifyString(key)] = modifyObject(source[key]);
-        }
-        return result;
-    }
-
-    return function t<T>(source: T): T {
-        if (typeof source === 'string') return modifyString(source) as any;
-        return modifyObject(source);
-    };
-}
-
-export function noop() { }
-
-export const camelCase = deepen((source) => source.replace(/[_-][a-z]/g, (str) => str.slice(1).toUpperCase()));
-export const paramCase = deepen((source) => source.replace(/_/g, '-').replace(/(?<!^)[A-Z]/g, (str) => `-${str.toLowerCase()}`));
-export const snakeCase = deepen((source) => source.replace(/-/g, '_').replace(/(?<!^)[A-Z]/g, (str) => `_${str.toLowerCase()}`));
-
 export namespace Time {
     export const second = 1000;
     export const minute = second * 60;
