@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.2.16",
+    "version": "4.3.0",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",

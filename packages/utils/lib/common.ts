@@ -155,7 +155,6 @@ export const camelCase = deepen((source) => source.replace(/[_-][a-z]/g, (str) =
 export const paramCase = deepen((source) => source.replace(/_/g, '-').replace(/(?<!^)[A-Z]/g, (str) => `-${str.toLowerCase()}`));
 export const snakeCase = deepen((source) => source.replace(/-/g, '_').replace(/(?<!^)[A-Z]/g, (str) => `_${str.toLowerCase()}`));
 
-
 const TIME_RE = /^([0-9]+(?:\.[0-9]*)?)([mu]?)s?$/i;
 const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
