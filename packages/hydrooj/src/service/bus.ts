@@ -26,6 +26,7 @@ type HandlerEvents =
     KnownHandlerEvents
     & Record<`handler/${HookType}/${string}`, (thisArg: Handler & Record<string, any>) => VoidReturn>
     & Record<`handler/${HookType}`, (thisArg: Handler) => VoidReturn>
+    & Record<`handler/register/${string}`, (HandlerClass: typeof Handler) => VoidReturn>
     & Record<`connection/${'create' | 'active' | 'close'}`, (thisArg: ConnectionHandler) => VoidReturn>;
 
 /* eslint-disable @typescript-eslint/naming-convention */

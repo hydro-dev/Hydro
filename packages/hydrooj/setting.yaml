@@ -44,7 +44,7 @@ langs:
     c:
       compile: /usr/bin/gcc -Wall --std=c99 -o foo foo.c -lm
       highlight: c
-      monaco: cpp
+      monaco: c
       display: C
     cc:
       compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm

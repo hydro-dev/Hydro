@@ -25,6 +25,7 @@ export interface Context {
     loader: Loader;
     Route: typeof import('./service/server').Route;
     Connection: typeof import('./service/server').Connection;
+    withHandlerClass: import('./service/server').RouteService['withHandlerClass'];
     setTimeout: typeof setTimeout;
     setInterval: typeof setInterval;
     setImmediate: typeof setImmediate;

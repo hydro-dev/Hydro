@@ -82,29 +82,39 @@ class ImportQduojHandler extends Handler {
                     memory: `${pdoc.memory_limit}m`,
                     subtasks: [],
                 };
+                const tasks = [];
                 for (const tc of pdoc.test_case_score) {
-                    await Promise.all([
-                        ProblemModel.addTestdata(
-                            domainId, pid, tc.input_name,
-                            path.join(tmp, folder, 'testcase', tc.input_name),
-                        ),
-                        ProblemModel.addTestdata(
+                    tasks.push(ProblemModel.addTestdata(
+                        domainId, pid, tc.input_name,
+                        path.join(tmp, folder, 'testcase', tc.input_name),
+                    ));
+                    if (tc.output_name !== '-') {
+                        tasks.push(ProblemModel.addTestdata(
                             domainId, pid, tc.output_name,
                             path.join(tmp, folder, 'testcase', tc.output_name),
-                        ),
-                    ]);
+                        ));
+                    }
                     config.subtasks.push({
                         score: tc.score,
                         cases: [{
                             input: tc.input_name,
-                            output: tc.output_name,
+                            output: tc.output_name === '-' ? '/dev/null' : tc.output_name,
                         }],
                     });
                 }
-                await Promise.all([
+                if (pdoc.spj?.language === 'C++') {
+                    tasks.push(ProblemModel.addTestdata(
+                        domainId, pid, 'checker.cc',
+                        Buffer.from(pdoc.spj.code),
+                    ));
+                    config.checker = 'checker.cc';
+                    config.checker_type = 'qduoj';
+                }
+                tasks.push(
                     ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
                     ProblemModel.edit(domainId, pid, { html: true }),
-                ]);
+                );
+                await Promise.all(tasks);
             }
         } finally {
             await fs.remove(tmp);
@@ -125,7 +135,11 @@ class ImportQduojHandler extends Handler {
     }
 }
 
+export const name = 'import-qduoj';
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.inject('ProblemAdd', 'problem_import_qduoj', { icon: 'copy', text: 'From QDUOJ Export' });
+    ctx.i18n.load('zh', {
+        'From QDUOJ Export': '从 QDUOJ 导入',
+    });
 }

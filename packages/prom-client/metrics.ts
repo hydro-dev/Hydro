@@ -3,6 +3,14 @@ import {
 } from 'prom-client';
 import { Context, db } from 'hydrooj';
 
+declare module 'hydrooj' {
+    interface Context {
+        metrics: Registry;
+    }
+}
+
+Context.service('metrics');
+
 export function createRegistry(ctx: Context) {
     const registry = new Registry();
 
@@ -40,10 +48,10 @@ export function createRegistry(ctx: Context) {
         labelNames: ['domainId'],
     });
     ctx.on('connection/active', (h) => {
-        connectionGauge.inc({ domainId: h.args.domainId });
+        connectionGauge.inc({ domainId: (h as any).category || h.args.domainId });
     });
     ctx.on('connection/close', (h) => {
-        connectionGauge.dec({ domainId: h.args.domainId });
+        connectionGauge.dec({ domainId: (h as any).category || h.args.domainId });
     });
 
     const taskColl = db.collection('task');
@@ -61,5 +69,7 @@ export function createRegistry(ctx: Context) {
     });
 
     collectDefaultMetrics({ register: registry });
+
+    ctx.metrics = registry;
     return registry;
 }

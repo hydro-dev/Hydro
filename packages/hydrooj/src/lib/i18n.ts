@@ -58,15 +58,21 @@ function load(data: Record<string, Record<string, string>>) {
 
 export = load;
 
+function collect(lang: string) {
+    const s = translations[lang];
+    if (!(s instanceof Array)) return {};
+    const result = {};
+    for (let i = s.length - 1; i >= 0; i--) Object.assign(result, s[i]);
+    return result;
+}
+
 global.Hydro.locales = new Proxy(translations, {
     get(self, lang: string) {
         if (!self[lang]) return {};
         return new Proxy(self[lang], {
             get(s, key) {
                 if (typeof key === 'string') return app.i18n.get(key, lang);
-                const result = {};
-                for (let i = s.length - 1; i; i--) Object.assign(result, s[i]);
-                return result;
+                return Object.assign(collect(lang.split('_')[0]), collect(lang));
             },
             has(s, key: string) {
                 return !!s.find((i) => !!i[key]);

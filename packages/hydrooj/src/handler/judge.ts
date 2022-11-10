@@ -172,6 +172,7 @@ export class SubmissionDataDownloadHandler extends Handler {
 }
 
 class JudgeConnectionHandler extends ConnectionHandler {
+    category = '#judge';
     processing: any = null;
     closed = false;
     query: any = { type: 'judge' };

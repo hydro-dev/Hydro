@@ -8,7 +8,7 @@ import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import WebSocket from 'ws';
-import { parseMemoryMB } from '@hydrooj/utils/lib/utils';
+import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
     HydroError, InvalidOperationError, MethodNotAllowedError,
@@ -45,7 +45,9 @@ export interface HydroRequest {
     body: any;
     files: Record<string, import('formidable').File>;
     query: any;
+    querystring: string;
     path: string;
+    originalPath: string;
     params: any;
     referer: string;
     json: boolean;
@@ -114,17 +116,18 @@ export class HandlerCommon {
     session: Record<string, any>;
     /** @deprecated */
     domainId: string;
+    ctx: Context = global.app;
 
     constructor(
-        public ctx: KoaContext, public args: Record<string, any>,
+        public context: KoaContext, public args: Record<string, any>,
         public request: HydroRequest, public response: HydroResponse,
         public user: User, public domain: DomainDoc, public UiContext: Record<string, any>,
     ) {
-        this.render = ctx.render.bind(ctx);
-        this.renderHTML = ctx.renderHTML.bind(ctx);
-        this.url = ctx.getUrl.bind(ctx);
-        this.translate = ctx.translate.bind(ctx);
-        this.session = ctx.session;
+        this.render = context.render.bind(context);
+        this.renderHTML = context.renderHTML.bind(context);
+        this.url = context.getUrl.bind(context);
+        this.translate = context.translate.bind(context);
+        this.session = context.session;
         this.domainId = args.domainId;
     }
 
@@ -140,8 +143,8 @@ export class HandlerCommon {
 
     renderTitle(str: string) {
         const name = this.domain?.ui?.name || system.get('server.name');
-        if (this.UiContext.extraTitleContent) return `${this.ctx.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
-        return `${this.ctx.translate(str)} - ${name}`;
+        if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
+        return `${this.translate(str)} - ${name}`;
     }
 
     checkPerm(...args: bigint[]) {
@@ -193,9 +196,9 @@ export class Handler extends HandlerCommon {
             if (error.stack) logger.error(error.stack);
         }
         if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.ctx.getUrl('user_login', {
+            this.response.redirect = this.url('user_login', {
                 query: {
-                    redirect: (this.ctx.originalPath || this.request.path) + this.ctx.search,
+                    redirect: (this.context.originalPath || this.request.path) + this.context.search,
                 },
             });
         } else {
@@ -330,10 +333,10 @@ export class ConnectionHandler extends HandlerCommon {
     }
 
     onerror(err: HydroError) {
-        if (err instanceof UserFacingError) err.stack = this.ctx.HydroContext.request.path;
+        if (err instanceof UserFacingError) err.stack = this.request.path;
         if (!(err instanceof NotFoundError)
             && !((err instanceof PrivilegeError || err instanceof PermissionError) && this.user?._id === 0)) {
-            logger.error(`Path:${this.ctx.HydroContext.request.path}, User:${this.user?._id}(${this.user?.uname})`);
+            logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
             logger.error(err);
         }
         this.send({
@@ -386,26 +389,59 @@ class NotFoundHandler extends Handler {
     all() { }
 }
 
-class RouteService extends Service {
-    static readonly methods = ['Route', 'Connection'];
+export class RouteService extends Service {
+    static readonly methods = ['Route', 'Connection', 'withHandlerClass'];
+    private registry = {};
+    private registrationCount = Counter();
+
     constructor(ctx) {
         super(ctx, 'server', true);
     }
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    Route(...args: Parameters<typeof Route>) {
-        const res = Route(...args);
-        this.caller?.on('dispose', () => res());
+    private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
+        const HandlerClass = args[2];
+        const name = HandlerClass.name;
+        if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
+        if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
+            logger.warn('Route with name %s already exists.', name);
+        }
+        this.registry[name] = HandlerClass;
+        this.registrationCount[name]++;
+        const res = func(...args);
+        this.ctx.parallel(`handler/register/${name}`, HandlerClass);
+        this.caller?.on('dispose', () => {
+            this.registrationCount[name]--;
+            if (!this.registrationCount[name]) delete this.registry[name];
+            res();
+        });
+    }
+
+    public withHandlerClass(name: string, callback: (HandlerClass: typeof HandlerCommon) => any) {
+        if (this.registry[name]) callback(this.registry[name]);
+        this.ctx.on(`handler/register/${name}`, callback);
+        this.caller?.on('dispose', () => {
+            this.ctx.off(`handler/register/${name}`, callback);
+        });
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    Connection(...args: Parameters<typeof Connection>) {
-        const res = Connection(...args);
-        this.caller?.on('dispose', () => res());
+    public Route(...args: Parameters<typeof Route>) {
+        this.register(Route, ...args);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    public Connection(...args: Parameters<typeof Connection>) {
+        this.register(Connection, ...args);
     }
 }
 
-export async function apply(pluginContext) {
+declare module '../context' {
+    interface Context {
+        server: RouteService;
+    }
+}
+
+export async function apply(pluginContext: Context) {
     Context.service('server', RouteService);
     pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
@@ -490,6 +526,7 @@ global.Hydro.service.server = {
     wsServer,
     router,
     captureAllRoutes,
+    RouteService,
     HandlerCommon,
     Handler,
     ConnectionHandler,

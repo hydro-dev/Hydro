@@ -127,11 +127,16 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         console.log('Current Addons: ', addons);
         fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
     });
-    cli.command('install [package]').action(async (src) => {
+    cli.command('install [package]').action(async (_src) => {
+        if (!_src) {
+            cli.outputHelp();
+            return;
+        }
         if (yarnVersion !== 1) throw new Error('Yarn 1 is required.');
         const addonDir = path.join(hydroPath, 'addons');
         let newAddonPath: string = '';
         fs.ensureDirSync(addonDir);
+        let src = _src;
         if (!src.startsWith('http')) {
             try {
                 src = child.execSync(`yarn info ${src} dist.tarball`, { cwd: os.tmpdir() })
@@ -162,10 +167,35 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         } else throw new Error(`Unsupported install source: ${src}`);
         if (!newAddonPath) throw new Error('Addon download failed');
         console.log('Installing depedencies');
+        if (!fs.existsSync(path.join(newAddonPath, 'package.json'))) throw new Error('Invalid plugin file');
         child.execSync('yarn --production', { stdio: 'inherit', cwd: newAddonPath });
         child.execSync(`hydrooj addon add '${newAddonPath}'`);
+        fs.writeFileSync(path.join(newAddonPath, '__metadata__'), JSON.stringify({
+            src: _src,
+            lastUpdate: Date.now(),
+        }));
+    });
+    cli.command('uninstall [package]').action(async (name) => {
+        if (!name) {
+            cli.outputHelp();
+            return;
+        }
+        if (yarnVersion !== 1) throw new Error('Yarn 1 is required.');
+        const addonDir = path.join(hydroPath, 'addons');
+        fs.ensureDirSync(addonDir);
+        const plugins = fs.readdirSync(addonDir);
+        if (!plugins.includes(name)) {
+            throw new Error(`Plugin ${name} not found or not installed with \`hydrooj install\`.`);
+        }
+        const newAddonPath = path.join(addonDir, name);
+        child.execSync(`hydrooj addon remove '${newAddonPath}'`, { stdio: 'inherit' });
+        fs.removeSync(newAddonPath);
+        console.log(`Successfully uninstalled ${name}.`);
     });
     cli.help();
     cli.parse();
-    if (!cli.matchedCommand) console.log('Unknown command.');
+    if (!cli.matchedCommand) {
+        console.log('Unknown command.');
+        cli.outputHelp();
+    }
 }
