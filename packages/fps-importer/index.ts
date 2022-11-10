@@ -61,29 +61,30 @@ class FpsProblemImportHandler extends Handler {
             const title = decodeHTML(p.title.join(' '));
             const tags = _.filter(p.source, (i: string) => i.trim());
             const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
-            await ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`));
+            const tasks = [
+                ProblemModel.edit(domainId, pid, { html: true }),
+                ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`)),
+            ];
+            const addTestdata = (node: any, id: string, ext: string) => {
+                let c = node;
+                if (node.$?.name) {
+                    id = node.$.name;
+                    c = node._;
+                }
+                tasks.push(ProblemModel.addTestdata(domainId, pid, `${id}.${ext}`, Buffer.from(c)));
+            };
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
-                    const input = typeof p.test_input[i]?._ === 'string'
-                        ? p.test_input[i]?._
-                        : typeof p.test_input[i] === 'string'
-                            ? p.test_input[i]
-                            : '';
-                    const output = typeof p.test_output[i]?._ === 'string'
-                        ? p.test_output[i]?._
-                        : typeof p.test_output[i] === 'string'
-                            ? p.test_output[i]
-                            : '';
-                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(input));
-                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(output));
+                    addTestdata(p.test_input[i], `${i + 1}`, 'in');
+                    addTestdata(p.test_output[i], `${i + 1}`, 'out');
                 }
             } else if (p.test_input) {
                 for (let i = 0; i < p.test_input.length / 2; i++) {
-                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.in`, Buffer.from(p.test_input[2 * i]));
-                    await ProblemModel.addTestdata(domainId, pid, `${i + 1}.out`, Buffer.from(p.test_input[2 * i + 1]));
+                    addTestdata(p.test_input[2 * i], `${i + 1}`, 'in');
+                    addTestdata(p.test_input[2 * i + 1], `${i + 1}`, 'out');
                 }
             }
-            await ProblemModel.edit(domainId, pid, { html: true });
+            await Promise.all(tasks);
             if (p.solution) {
                 let s = '';
                 for (const sol of p.solution) {
@@ -131,4 +132,7 @@ class FpsProblemImportHandler extends Handler {
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.inject('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
+    ctx.i18n.load('zh', {
+        'From FPS File': '从 FPS 文件导入',
+    });
 }

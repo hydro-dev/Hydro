@@ -64,13 +64,13 @@ String.prototype.format = function formatStr(...args) {
     return result;
 };
 
-export function isClass(obj: any, strict = false) {
+export function isClass(obj: any, strict = false): obj is new (...args: any) => any {
     if (typeof obj !== 'function') return false;
-    const str = obj.toString();
     if (obj.prototype === undefined) return false;
     if (obj.prototype.constructor !== obj) return false;
-    if (str.slice(0, 5) === 'class') return true;
     if (Object.getOwnPropertyNames(obj.prototype).length >= 2) return true;
+    const str = obj.toString();
+    if (str.slice(0, 5) === 'class') return true;
     if (/^function\s+\(|^function\s+anonymous\(/.test(str)) return false;
     if (strict && /^function\s+[A-Z]/.test(str)) return true;
     if (/\b\(this\b|\bthis[.[]\b/.test(str)) {
