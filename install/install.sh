@@ -23,5 +23,5 @@ cat >/tmp/install.b64 << EOF123
 %PLACEHOLDER%
 EOF123
 cat /tmp/install.b64 | base64 -d >>/tmp/install.js 
-node /tmp/install.js
+node /tmp/install.js "$@"
 set +e
