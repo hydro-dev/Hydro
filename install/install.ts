@@ -391,7 +391,10 @@ connect-timeout = 10`);
     {
         init: 'install.postinstall',
         operations: [
-            ...installAsJudge ? [] : ['hydrooj install https://hydro.ac/language-server-0.0.1.tgz'],
+            ...installAsJudge ? [] : [
+                'hydrooj install https://hydro.ac/language-server-0.0.1.tgz',
+                'pm2 restart hydrooj',
+            ],
             ['pm2 install pm2-logrotate', { retry: true }],
             'pm2 set pm2-logrotate:max_size 64M',
         ],
