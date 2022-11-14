@@ -185,6 +185,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.module.oauth[key].icon,
                 text: global.Hydro.module.oauth[key].text,
             }));
+        if (this.context.pendingError) throw this.context.pendingError;
     }
 
     async onerror(error: HydroError) {
