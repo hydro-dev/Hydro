@@ -3,20 +3,22 @@ import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
+import { Counter, sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
+    ContestScoreboardHiddenError,
     ForbiddenError, InvalidTokenError, PermissionError,
     ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
-import { PERM, PRIV } from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
+import RecordModel from '../model/record';
 import ScheduleModel from '../model/schedule';
 import storage from '../model/storage';
 import * as system from '../model/system';
@@ -230,7 +232,7 @@ export class ContestBroadcastHandler extends ContestDetailBaseHandler {
 
 export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
-    @param('ext', Types.Range(['csv', 'html']), true)
+    @param('ext', Types.Range(['csv', 'html', 'ghost']), true)
     async get(domainId: string, tid: ObjectID, ext = '') {
         if (ext) {
             await this.exportScoreboard(domainId, tid, ext);
@@ -247,8 +249,50 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         };
     }
 
+    async exportGhost(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (!contest.canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
+        const [pdict, teams] = await Promise.all([
+            problem.getList(domainId, tdoc.pids, true, undefined, false, undefined, true),
+            contest.getMultiStatus(domainId, { docId: tid }).toArray(),
+        ]);
+        const udict = await user.getList(domainId, teams.map((i) => i.uid));
+        const teamIds: Record<number, number> = {};
+        for (let i = 1; i <= teams.length; i++) teamIds[teams[i - 1].uid] = i;
+        const time = (t: ObjectID) => Math.floor((t.getTimestamp().getTime() - tdoc.beginAt.getTime()) / Time.second);
+        const pid = (i: number) => String.fromCharCode(65 + i);
+        const escape = (i: string) => i.replace(/[",]/g, '');
+        const unknownSchool = this.translate('Unknown School');
+        const submissions = teams.flatMap((i, idx) => {
+            if (!i.journal) return [];
+            const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
+            const c = Counter();
+            return journal.map((s) => {
+                const id = pid(tdoc.pids.indexOf(s.pid));
+                c[id]++;
+                return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${s.status === STATUS.STATUS_ACCEPTED ? 'AC' : 'RJ'}`;
+            });
+        });
+        const res = [
+            `@contest "${escape(tdoc.title)}"`,
+            `@contlen ${Math.floor((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) / Time.minute)}`,
+            `@problems ${tdoc.pids.length}`,
+            `@teams ${tdoc.attend}`,
+            `@submissions ${submissions.length}`,
+        ].concat(
+            tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i].title)},20,0`),
+            teams.map((i, idx) => `@t ${idx + 1},0,1,${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].uname)}`),
+            submissions,
+        );
+        this.binary(res.join('\n'), `${this.tdoc.title}.ghost`);
+    }
+
     async exportScoreboard(domainId: string, tid: ObjectID, ext: string) {
         await this.limitRate('scoreboard_download', 120, 3);
+        if (ext === 'ghost') {
+            await this.exportGhost(domainId, tid);
+            return;
+        }
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
