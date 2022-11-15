@@ -18,7 +18,6 @@ import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
-import RecordModel from '../model/record';
 import ScheduleModel from '../model/schedule';
 import storage from '../model/storage';
 import * as system from '../model/system';
