@@ -96,6 +96,7 @@ const acm = buildContestRule({
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push(
                     {
@@ -134,6 +135,11 @@ const acm = buildContestRule({
             value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
             hover: formatSeconds(tsdoc.time || 0.0),
         });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
@@ -231,6 +237,8 @@ const oi = buildContestRule({
         }
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
+            const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push({
                     type: 'string',
@@ -259,6 +267,11 @@ const oi = buildContestRule({
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -395,6 +408,7 @@ const homework = buildContestRule({
         columns.push({ type: 'time', value: _('Total Time') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push(
                     {
@@ -438,6 +452,11 @@ const homework = buildContestRule({
             row.push({ type: 'string', value: tsdoc.score || 0 });
         }
         row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const rid = tsddict[pid]?.rid;
             const colScore = tsddict[pid]?.penaltyScore ?? '';
@@ -536,11 +555,7 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
 }
 
 export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
-    const [tdoc, status] = await Promise.all([
-        get(domainId, tid),
-        document.getStatus(domainId, document.TYPE_CONTEST, tid, uid),
-    ]);
-    return status;
+    return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
 async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: number, status: STATUS, score: number) {
@@ -702,7 +717,7 @@ export async function getScoreboard(
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
-    const pdict = await problem.getList(domainId, tdoc.pids, true);
+    const pdict = await problem.getList(domainId, tdoc.pids, true, problem.PROJECTION_CONTEST_DETAIL);
     const [rows, udict] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,

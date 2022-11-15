@@ -2,6 +2,18 @@
 {% extends "layout/basic.html" %}
 {{ set(UiContext, 'tdoc', tdoc) }}
 {% set type = 'homework' if tdoc.rule == 'homework' else 'contest' %}
+
+{% macro renderRecord(cell, canView) %}
+  <a href="{{ url('record_detail', rid=cell.raw) if canView else '' }}"{% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %}>
+    {%- if cell.status == status.STATUS_JUDGING -%}
+      <span style="font-weight:bold;color:yellow">?</span>
+    {%- else -%}
+      {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
+      <span style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
+    {%- endif -%}
+  </a>
+{% endmacro %}
+
 {% block content %}
 <div class="row"><div class="medium-12 columns scoreboard--{{ tdoc.rule }}">
   <div class="section visible">
@@ -12,7 +24,7 @@
       <a class="button" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext='csv') }}">
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
-      {% if model.contest.isEnded(tdoc) and tdoc.lockAt and handler.user.own(tdoc) and not tdoc.unlocked %}
+      {% if model.contest.isDone(tdoc) and tdoc.lockAt and handler.user.own(tdoc) and not tdoc.unlocked %}
         <form method="POST">
           <input type="hidden" name="operation" value="unlock">
           <button type="submit" class="button" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext='csv') }}">
@@ -27,7 +39,7 @@
           {{ _('Scoreboard locked at {0}').format(datetimeSpan(tdoc.lockAt))|safe }}
         </blockquote>
       </div>
-    {% elif model.contest.isEnded(tdoc) and tdoc.lockAt and not tdoc.unlocked %}
+    {% elif model.contest.isDone(tdoc) and tdoc.lockAt and not tdoc.unlocked %}
       <div class="section__body no-padding">
         <blockquote class="note">
           {{ _('Please wait until contest host unlock the scoreboard.') }}
@@ -45,48 +57,49 @@
           <tr>
           {%- for column in rows[0] -%}
             <th class="col--{{ column.type }}">
-            {% if column.type == 'problem' and column.raw %}
+            {%- if column.type == 'problem' and column.raw -%}
               <a href="{{ url('problem_detail', pid=column.raw, query={tid:tdoc.docId}) }}" data-tooltip="{{ pdict[column.raw].title }}">
-                {{ column.value }}<br />{{ pdict[column.raw].nAccept }}/{{ pdict[column.raw].nSubmit }}
+                {{ column.value }}<br />{{ pdict[column.raw].nAccept|default(0) }}/{{ pdict[column.raw].nSubmit|default(0) }}
               </a>
-            {% else %}
+            {%- else -%}
               {{ column.value|string|nl2br|safe }}
-            {% endif %}
+            {%- endif -%}
             </th>
           {%- endfor -%}
           </tr>
         </thead>
         <tbody>
-        {% set canViewAll = handler.user.own(tdoc) or model.contest.canShowRecord.call(handler, tdoc) %}
-        {%- for row in rows -%}{% if loop.index0 > 0 %}
+        {%- set canViewAll = handler.user.own(tdoc) or model.contest.canShowRecord.call(handler, tdoc) -%}
+        {%- for row in rows -%}{%- if loop.index0 > 0 -%}
           <tr>
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
-              {% if column.type == 'user' %}
-                {% set canView = canViewAll or handler.user._id == column.raw %}
+              {%- if column.type == 'user' -%}
+                {%- set canView = canViewAll or handler.user._id == column.raw -%}
                 {{ user.render_inline(udict[column.raw], badge=false) }}
-              {% elif column.type == 'record' and column.raw %}
+              {%- elif column.type == 'record' and column.raw -%}
                 <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}" data-tooltip="{{ column.hover }}">
                   <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|string|nl2br|safe }}</span>
                 </a>
-              {% elif column.type == 'records' %}
+              {%- elif column.type == 'records' -%}
                 {%- for record in column.raw -%}
-                  {% if loop.index0 %}/{% endif %}
-                  {% if record.raw %}
+                  {%- if loop.index0 -%}/{%- endif -%}
+                  {%- if record.raw -%}
                     <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
-                      <span style="font-weight:bold;color:{{ utils.status.getScoreColor(record.score|default(record.value)) }}">{{ record.value|string|nl2br|safe }}</span>
+                      {%- set _color = utils.status.getScoreColor(record.score|default(record.value)) -%}
+                      <span style="font-weight:bold;color:{{ _color }}">{{ record.value|string|nl2br|safe }}</span>
                     </a>
-                  {% else %}
+                  {%- else -%}
                     {{ record.value|string|nl2br|safe }}
-                  {% endif %}
+                  {%- endif -%}
                 {%- endfor -%}
-              {% else %}
+              {%- else -%}
                 {{ column.value|string|nl2br|safe }}
-              {% endif %}
+              {%- endif -%}
               </td>
             {%- endfor -%}
           </tr>
-        {% endif %}{%- endfor -%}
+        {%- endif -%}{%- endfor -%}
         </tbody>
       </table>
     </div>

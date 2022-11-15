@@ -236,11 +236,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             await this.exportScoreboard(domainId, tid, ext);
             return;
         }
-        const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, false, [
-            // Problem statistics display is allowed as we can view submission info in scoreboard.
-            ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
-        ]);
-        const [, rows, udict] = await contest.getScoreboard.call(this, domainId, tid, false);
+        const [, rows, udict, pdict] = await contest.getScoreboard.call(this, domainId, tid, false);
         this.response.template = 'contest_scoreboard.html';
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
