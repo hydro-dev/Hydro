@@ -352,9 +352,12 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     assign?: string[];
     files?: FileInfo[];
     allowViewCode?: boolean;
+    nSubmit?: Record<number, number>;
+    nAccept?: Record<number, number>;
 
     // For contest
     lockAt?: Date;
+    unlocked?: boolean;
     /**
      * In hours
      * 在比赛有效时间内选择特定的 X 小时参加比赛（从首次打开比赛算起）
@@ -494,7 +497,7 @@ export interface ContestRule<T = any> {
     showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
     showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[], ignoreLock?: boolean) => ContestStat & T;
+    stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict,

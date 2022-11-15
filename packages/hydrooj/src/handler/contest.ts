@@ -5,7 +5,7 @@ import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotFoundError, ContestNotLiveError,
+    BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ForbiddenError, InvalidTokenError, PermissionError,
     ValidationError,
 } from '../error';
@@ -62,7 +62,7 @@ ScheduleModel.Worker.addHandler('contest', async (doc) => {
             for (const pid of tdoc.pids) {
                 tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
             }
-        } else if (op === 'unlock') tasks.push(contest.recalcStatus(doc.domainId, doc.tid));
+        }
     }
     await Promise.all(tasks);
 });
@@ -231,22 +231,16 @@ export class ContestBroadcastHandler extends ContestDetailBaseHandler {
 export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html']), true)
-    @param('ignoreLock', Types.Boolean, true)
-    async get(domainId: string, tid: ObjectID, ext = '', ignoreLock = false) {
-        if (ignoreLock && !this.user.own(this.tdoc)) {
-            this.checkPerm(this.tdoc.rule === 'homework'
-                ? PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD
-                : PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-        }
+    async get(domainId: string, tid: ObjectID, ext = '') {
         if (ext) {
-            await this.exportScoreboard(domainId, tid, ext, ignoreLock);
+            await this.exportScoreboard(domainId, tid, ext);
             return;
         }
         const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, false, [
             // Problem statistics display is allowed as we can view submission info in scoreboard.
             ...problem.PROJECTION_CONTEST_LIST, 'nSubmit', 'nAccept',
         ]);
-        const [, rows, udict] = await contest.getScoreboard.call(this, domainId, tid, false, ignoreLock);
+        const [, rows, udict] = await contest.getScoreboard.call(this, domainId, tid, false);
         this.response.template = 'contest_scoreboard.html';
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
@@ -257,14 +251,22 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         };
     }
 
-    async exportScoreboard(domainId: string, tid: ObjectID, ext: string, ignoreLock: boolean) {
+    async exportScoreboard(domainId: string, tid: ObjectID, ext: string) {
         await this.limitRate('scoreboard_download', 120, 3);
         const getContent = {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
-        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true, ignoreLock);
+        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true);
         this.binary(await getContent[ext](rows, this.tdoc), `${this.tdoc.title}.${ext}`);
+    }
+
+    @param('tid', Types.ObjectID)
+    async postUnlock(domainId: string, tid: ObjectID) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        if (!contest.isDone(this.tdoc)) throw new ContestNotEndedError(domainId, tid);
+        await contest.unlockScoreboard(domainId, tid);
+        this.back();
     }
 }
 
@@ -355,7 +357,6 @@ export class ContestEditHandler extends Handler {
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
             operation.push('unhide');
         }
-        if (lock && lockAt <= endAt) operation.push('unlock');
         if (operation.length) {
             await ScheduleModel.add({
                 ...task,

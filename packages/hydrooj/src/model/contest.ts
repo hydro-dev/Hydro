@@ -2,20 +2,21 @@ import { sumBy } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
+    ContestAlreadyAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
     ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, Tdoc,
-    Udict,
+    ScoreboardNode, ScoreboardRow, Tdoc, Udict,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
+import { buildProjection } from '../utils';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
+import RecordModel from './record';
 import user from './user';
 
 interface AcmJournal {
@@ -46,12 +47,6 @@ function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
     return def;
 }
 
-function filterEffective<T extends AcmJournal>(tdoc: Tdoc, journal: T[], ignoreLock = false): T[] {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (isLocked(tdoc) && !ignoreLock) journal = journal.filter((i) => i.rid.generationTime * 1000 < tdoc.lockAt.getTime());
-    return journal.filter((i) => tdoc.pids.includes(i.pid));
-}
-
 const acm = buildContestRule({
     TEXT: 'ACM/ICPC',
     check: () => { },
@@ -60,13 +55,13 @@ const acm = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
+    stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
-        for (const j of filterEffective(tdoc, journal, ignoreLock)) {
+        for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             effective[j.pid] = j;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
@@ -545,26 +540,26 @@ export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
         get(domainId, tid),
         document.getStatus(domainId, document.TYPE_CONTEST, tid, uid),
     ]);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (status && isLocked(tdoc)) Object.assign(status, RULES[tdoc.rule].stat(tdoc, status.journal || [], true));
     return status;
+}
+
+async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: number, status: STATUS, score: number) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    if (isLocked(tdoc)) status = STATUS.STATUS_WAITING;
+    const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
+        rid, pid, status, score,
+    }, 'rid');
+    const journal = _getStatusJournal(tsdoc);
+    const stats = RULES[tdoc.rule].stat(tdoc, journal);
+    return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0,
 ) {
-    const [tdoc, otsdoc] = await Promise.all([
-        get(domainId, tid),
-        getStatus(domainId, tid, uid),
-    ]);
-    if (!otsdoc.attend) throw new ContestNotAttendedError(tid, uid);
-    const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, uid, 'journal', {
-        rid, pid, status, score,
-    }, 'rid');
-    const journal = _getStatusJournal(tsdoc);
-    const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    return await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, uid, tsdoc.rev, { journal, ...stats });
+    const tdoc = await get(domainId, tid);
+    return await _updateStatus(tdoc, uid, rid, pid, status, score);
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
@@ -670,6 +665,15 @@ export async function recalcStatus(domainId: string, tid: ObjectID) {
     return await Promise.all(tasks);
 }
 
+export async function unlockScoreboard(domainId: string, tid: ObjectID) {
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+    if (!tdoc.lockAt || tdoc.unlocked) return;
+    const rdocs = await RecordModel.getMulti(domainId, { tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
+        .project(buildProjection(['_id', 'uid', 'pid', 'status', 'score'])).toArray();
+    await Promise.all(rdocs.map((rdoc) => _updateStatus(tdoc, rdoc.uid, rdoc._id, rdoc.pid, rdoc.status, rdoc.score)));
+    await edit(domainId, tid, { unlocked: true });
+}
+
 export function canViewHiddenScoreboard() {
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
@@ -693,12 +697,10 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 }
 
 export async function getScoreboard(
-    this: Handler, domainId: string, tid: ObjectID,
-    isExport = false, ignoreLock = false,
+    this: Handler, domainId: string, tid: ObjectID, isExport = false,
 ): Promise<[Tdoc<30>, ScoreboardRow[], Udict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
-    if (ignoreLock) delete tdoc.lockAt;
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true);
     const [rows, udict] = await RULES[tdoc.rule].scoreboard(
@@ -735,6 +737,7 @@ global.Hydro.model.contest = {
     setStatus,
     getAndListStatus,
     recalcStatus,
+    unlockScoreboard,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,

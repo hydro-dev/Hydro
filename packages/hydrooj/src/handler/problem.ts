@@ -328,13 +328,12 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (!this.tdoc?.pids?.includes(this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
+            // Delete problem-related info in contest mode
             this.pdoc.tag.length = 0;
-            if (!contest.canShowScoreboard.call(this, this.tdoc) || !contest.isLocked(this.tdoc)) {
-                delete this.pdoc.nAccept;
-                delete this.pdoc.nSubmit;
-                delete this.pdoc.difficulty;
-                delete this.pdoc.stats;
-            }
+            delete this.pdoc.nAccept;
+            delete this.pdoc.nSubmit;
+            delete this.pdoc.difficulty;
+            delete this.pdoc.stats;
         } else if (!problem.canViewBy(this.pdoc, this.user)) {
             throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }

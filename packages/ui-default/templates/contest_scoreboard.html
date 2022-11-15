@@ -12,11 +12,25 @@
       <a class="button" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext='csv') }}">
         <span class="icon icon-download"></span> {{ _('Export as CSV') }}
       </a>
+      {% if model.contest.isEnded(tdoc) and tdoc.lockAt and handler.user.own(tdoc) and not tdoc.unlocked %}
+        <form method="POST">
+          <input type="hidden" name="operation" value="unlock">
+          <button type="submit" class="button" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext='csv') }}">
+            <span class="icon icon-feeling-lucky"></span> {{ _('Unlock scoreboard') }}
+          </button>
+        </form>
+      {% endif %}
     </div>
     {% if model.contest.isLocked(tdoc) %}
       <div class="section__body no-padding">
         <blockquote class="note">
           {{ _('Scoreboard locked at {0}').format(datetimeSpan(tdoc.lockAt))|safe }}
+        </blockquote>
+      </div>
+    {% elif model.contest.isEnded(tdoc) and tdoc.lockAt and not tdoc.unlocked %}
+      <div class="section__body no-padding">
+        <blockquote class="note">
+          {{ _('Please wait until contest host unlock the scoreboard.') }}
         </blockquote>
       </div>
     {% endif %}
