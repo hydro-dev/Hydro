@@ -70,7 +70,7 @@ const acm = buildContestRule({
         }
         for (const pid in effective) {
             const j = effective[pid];
-            const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
+            const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
             detail[pid] = {
                 ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
@@ -143,7 +143,8 @@ const acm = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const colTime = accept ? formatSeconds(doc.real, false).toString() : '';
+            const pending = doc.status === STATUS.STATUS_WAITING;
+            const colTime = pending ? '?' : accept ? formatSeconds(doc.real, false).toString() : '';
             const colPenalty = doc.rid ? Math.ceil(doc.penalty / 60).toString() : '';
             if (isExport) {
                 row.push(
@@ -151,19 +152,20 @@ const acm = buildContestRule({
                     { type: 'string', value: colPenalty },
                 );
             } else {
+                let value = '';
+                if (doc.rid) value = `-${doc.naccept}`;
+                if (accept) value = `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`;
+                if (pending) value = `<span style="color:blue">${doc.naccept}?</span>`;
                 row.push({
                     type: 'record',
                     score: accept ? 100 : 0,
-                    value: accept
-                        ? `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`
-                        : doc.rid
-                            ? `-${doc.naccept}`
-                            : '',
+                    value,
                     hover: accept ? formatSeconds(doc.time) : '',
                     raw: doc.rid,
-                    style: accept && doc.rid.generationTime === meta?.first?.[pid]
-                        ? 'background-color: rgb(217, 240, 199);'
-                        : undefined,
+                    style: pending ? 'background-color: yellow'
+                        : accept && doc.rid.generationTime === meta?.first?.[pid]
+                            ? 'background-color: rgb(217, 240, 199);'
+                            : undefined,
                 });
             }
         }
@@ -560,7 +562,10 @@ export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
 
 async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: number, status: STATUS, score: number) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (isLocked(tdoc)) status = STATUS.STATUS_WAITING;
+    if (isLocked(tdoc)) {
+        status = STATUS.STATUS_WAITING;
+        score = 0;
+    }
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score,
     }, 'rid');
