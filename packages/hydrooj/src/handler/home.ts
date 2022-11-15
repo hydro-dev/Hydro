@@ -363,8 +363,6 @@ class HomeDomainCreateHandler extends Handler {
 }
 
 class HomeMessagesHandler extends Handler {
-    category = '#message';
-
     async get() {
         // TODO(iceboy): projection, pagination.
         const messages = await message.getByUser(this.user._id);
@@ -421,6 +419,7 @@ class HomeMessagesHandler extends Handler {
 }
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
+    category = '#message';
     dispose: bus.Disposable;
 
     async prepare() {
