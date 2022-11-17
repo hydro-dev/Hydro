@@ -31,7 +31,7 @@
         "@types/autocannon": "^7.9.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/mocha": "^10.0.0",
-        "@types/node": "^18.11.3",
+        "@types/node": "^18.11.9",
         "@types/semver": "^7.3.13",
         "@types/supertest": "^2.0.12",
         "@typescript-eslint/eslint-plugin": "^5.43.0",
@@ -61,7 +61,7 @@
         "ora": "^6.1.2",
         "semver": "^7.3.8",
         "supertest": "^6.3.1",
-        "typescript": "4.8.4"
+        "typescript": "4.9.3"
     },
     "packageManager": "yarn@3.2.3"
 }

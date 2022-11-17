@@ -4,6 +4,8 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
+import os from 'os';
+import path from 'path';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -217,6 +219,8 @@ function rollbackResolveField() {
     return true;
 }
 
+const tmpFile = path.join(os.tmpdir(), `${Math.random().toString()}.js`);
+
 const Steps = () => [
     {
         init: 'install.preparing',
@@ -315,12 +319,12 @@ connect-timeout = 10`);
         operations: [
             'pm2 start mongod',
             () => sleep(3000),
-            () => writeFileSync('/tmp/createUser.js', `db.createUser(${JSON.stringify({
+            () => writeFileSync(tmpFile, `db.createUser(${JSON.stringify({
                 user: 'hydro',
                 pwd: password,
                 roles: [{ role: 'readWrite', db: 'hydro' }],
             })})`),
-            ['mongo 127.0.0.1:27017/hydro /tmp/createUser.js', { retry: true }],
+            [`mongo 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/config.json`, JSON.stringify({
                 host: '127.0.0.1',
                 port: 27017,

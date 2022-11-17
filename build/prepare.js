@@ -62,11 +62,11 @@ const UIConfig = {
     exclude: [
         'packages/ui-default/public',
     ],
-    include: [
-        'packages/ui-default/**/*.ts',
-        'packages/**/public/**/*.ts',
-        'plugins/**/public/**/*.ts',
-    ],
+    include: ['ts', 'tsx'].flatMap((i) => [
+        `packages/ui-default/**/*.${i}`,
+        `packages/**/public/**/*.${i}`,
+        `plugins/**/public/**/*.${i}`,
+    ]),
     compilerOptions: {
         experimentalDecorators: true,
         esModuleInterop: true,

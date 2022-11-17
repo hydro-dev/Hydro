@@ -1,43 +1,10 @@
 {% extends "layout/basic.html" %}
 {% block content %}
-<div style="height: 80vh">
-  <div id="toolbar" style="display: inline-flex"></div>
-  <div style="display: flex;align-items: stretch">
-    <div style="width: 30vw">
-      <div id="operation"></div>
-      <div id="variables"></div>
-    </div>
-    <div style="width: 45vw">
-      <div id="results"></div>
-      <div id="schema-sdl"></div>
-    </div>
-    <div>
-      <div id="docs" class="graphiql-container"></div>
-    </div>
-  </div>
-</div>
+<div style="height: 90vh" id="main"></div>
 <style>
-#operation {
-  height: 60vh;
-  min-height: 260px;
-}
-#variables {
-  height: 30vh;
-  align-items: stretch;
-}
-#results {
-  align-items: stretch;
-  height: 60vh;
-}
-#schema-sdl {
-  align-items: stretch;
-  height: 30vh;
-}
-.graphiql-container .doc-explorer-contents {
-  position: relative !important;
-}
-#docs {
+#main {
   font-family: var(--code-font-family)
 }
 </style>
+<link href="/graphiql.min.css" rel="stylesheet" />
 {% endblock %}
