@@ -28,6 +28,7 @@ interface AcmJournal {
 }
 interface AcmDetail extends AcmJournal {
     naccept?: number;
+    npending?: number;
     penalty: number;
     real: number;
 }
@@ -57,12 +58,17 @@ const acm = buildContestRule({
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
+        const npending = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            if (j.status === STATUS.STATUS_WAITING) {
+                npending[j.pid]++;
+                continue;
+            }
             effective[j.pid] = j;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
@@ -73,7 +79,7 @@ const acm = buildContestRule({
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
             detail[pid] = {
-                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
+                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty, npending: npending[j.pid],
             };
         }
         for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
@@ -143,8 +149,7 @@ const acm = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const pending = doc.status === STATUS.STATUS_WAITING;
-            const colTime = pending ? '?' : accept ? formatSeconds(doc.real, false).toString() : '';
+            const colTime = accept ? formatSeconds(doc.real, false).toString() : '';
             const colPenalty = doc.rid ? Math.ceil(doc.penalty / 60).toString() : '';
             if (isExport) {
                 row.push(
@@ -155,17 +160,16 @@ const acm = buildContestRule({
                 let value = '';
                 if (doc.rid) value = `-${doc.naccept}`;
                 if (accept) value = `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`;
-                if (pending) value = `<span style="color:blue">${doc.naccept}?</span>`;
+                else if (doc.npending) value += `${value ? ' ' : ''}<span style="color:orange">+${doc.npending}</span>`;
                 row.push({
                     type: 'record',
                     score: accept ? 100 : 0,
                     value,
                     hover: accept ? formatSeconds(doc.time) : '',
                     raw: doc.rid,
-                    style: pending ? 'background-color: yellow'
-                        : accept && doc.rid.generationTime === meta?.first?.[pid]
-                            ? 'background-color: rgb(217, 240, 199);'
-                            : undefined,
+                    style: accept && doc.rid.generationTime === meta?.first?.[pid]
+                        ? 'background-color: rgb(217, 240, 199);'
+                        : undefined,
                 });
             }
         }
