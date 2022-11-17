@@ -78,6 +78,8 @@ env:
   default: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
+    # modify to your python version installed
+    PYTHONPATH=/lib/python3.10/site-packages
 secret:
   type: text
   name: secret

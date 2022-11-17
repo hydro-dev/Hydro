@@ -83,7 +83,10 @@ function proc(params: Parameter): Cmd {
     const memory = params.memory || parseMemoryMB(getConfig('memoryMax'));
     return {
         args: parseArgs(params.execute || ''),
-        env: [...getConfig('env').split('\n'), ...Object.entries(params.env || {}).map(([k, v]) => `${k}=${v.replace(/=/g, '\\=')}`)],
+        env: [
+            ...getConfig('env').split('\n').map((i) => i.trim()).filter((i) => i.startsWith('#')),
+            ...Object.entries(params.env || {}).map(([k, v]) => `${k}=${v.replace(/=/g, '\\=')}`),
+        ],
         files: [
             params.filename ? { content: '' } : stdin,
             { name: 'stdout', max: Math.floor(1024 * 1024 * size) },
