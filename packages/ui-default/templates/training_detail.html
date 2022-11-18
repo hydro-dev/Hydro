@@ -1,7 +1,7 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row" data-sticky-parent>
-  {%- if enrollUsers -%}
+  {%- if enrollUsers.length -%}
   <div class="medium-2 columns mobile--hide">
     <div data-sticky="large"><div class="section side">
       <ol class="menu">
@@ -10,7 +10,7 @@
             <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
-        <div style="max-height: 80vh; overflow-y: auto; overflow-x: hidden">
+        <div style="max-height: calc(85vh - 45px); overflow-y: auto; overflow-x: hidden">
         {%- for uid in enrollUsers -%}
         <li class="menu__item enroll_user_menu" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
           <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
@@ -96,11 +96,11 @@
         </dl>
       </div>
     </div>
-    <div class="section side"><div data-sticky="large">
+    <div class="section side">
       <ol class="menu">
         {{ sidemenu.render_item('list', 'training_detail', {tid:tdoc._id}, label='tasks_list', menu_item='training_detail') }}
       </ol>
-    </div></div>
+    </div>
   </div>
 </div>
 {% endblock %}
