@@ -84,7 +84,7 @@ function proc(params: Parameter): Cmd {
     return {
         args: parseArgs(params.execute || ''),
         env: [
-            ...getConfig('env').split('\n').map((i) => i.trim()).filter((i) => i.startsWith('#')),
+            ...getConfig('env').split('\n').map((i) => i.trim()).filter((i) => !i.startsWith('#')),
             ...Object.entries(params.env || {}).map(([k, v]) => `${k}=${v.replace(/=/g, '\\=')}`),
         ],
         files: [
