@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.3.0",
+    "version": "4.3.1",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -8,15 +8,15 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "engines": {
-        "node": ">=12"
+        "node": ">=14"
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.202.0",
-        "@aws-sdk/lib-storage": "^3.202.0",
-        "@aws-sdk/middleware-endpoint": "^3.201.0",
-        "@aws-sdk/s3-presigned-post": "^3.202.0",
-        "@aws-sdk/s3-request-presigner": "^3.202.0",
+        "@aws-sdk/client-s3": "^3.212.0",
+        "@aws-sdk/lib-storage": "^3.212.0",
+        "@aws-sdk/middleware-endpoint": "^3.212.0",
+        "@aws-sdk/s3-presigned-post": "^3.212.0",
+        "@aws-sdk/s3-request-presigner": "^3.212.0",
         "@graphql-tools/schema": "^8.5.1",
         "@hydrooj/utils": "workspace:*",
         "adm-zip": "0.5.5",
@@ -31,15 +31,15 @@
         "isbinaryfile": "^5.0.0",
         "js-yaml": "^4.1.0",
         "koa": "^2.13.4",
-        "koa-body": "^5.0.0",
+        "koa-body": "^6.0.1",
         "koa-compress": "^5.1.0",
         "koa-proxies": "^0.12.2",
         "koa-router": "^12.0.0",
         "koa-static-cache": "^5.1.4",
         "lodash": "^4.17.21",
-        "lru-cache": "7.12.0",
+        "lru-cache": "7.14.1",
         "mime-types": "^2.1.35",
-        "moment-timezone": "^0.5.38",
+        "moment-timezone": "^0.5.39",
         "mongodb": "^3.7.3",
         "nanoid": "^4.0.0",
         "nodemailer": "^6.8.0",
@@ -54,7 +54,7 @@
         "superagent": "^8.0.3",
         "tar": "^6.1.12",
         "thirty-two": "^1.0.2",
-        "ws": "^8.10.0"
+        "ws": "^8.11.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
@@ -64,7 +64,7 @@
         "@types/koa-compress": "^4.0.3",
         "@types/koa-router": "^7.4.4",
         "@types/koa-static-cache": "^5.1.1",
-        "@types/lodash": "^4.14.187",
+        "@types/lodash": "^4.14.189",
         "@types/mime-types": "^2.1.1",
         "@types/mongodb": "^3.6.20",
         "@types/nodemailer": "^6.4.6",

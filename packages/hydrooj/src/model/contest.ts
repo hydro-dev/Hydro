@@ -2,20 +2,21 @@ import { sumBy } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotFoundError,
+    ContestAlreadyAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
     ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, Tdoc,
-    Udict,
+    ScoreboardNode, ScoreboardRow, Tdoc, Udict,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
+import { buildProjection } from '../utils';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
+import RecordModel from './record';
 import user from './user';
 
 interface AcmJournal {
@@ -27,6 +28,7 @@ interface AcmJournal {
 }
 interface AcmDetail extends AcmJournal {
     naccept?: number;
+    npending?: number;
     penalty: number;
     real: number;
 }
@@ -46,12 +48,6 @@ function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
     return def;
 }
 
-function filterEffective<T extends AcmJournal>(tdoc: Tdoc, journal: T[], ignoreLock = false): T[] {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (isLocked(tdoc) && !ignoreLock) journal = journal.filter((i) => i.rid.generationTime * 1000 < tdoc.lockAt.getTime());
-    return journal.filter((i) => tdoc.pids.includes(i.pid));
-}
-
 const acm = buildContestRule({
     TEXT: 'ACM/ICPC',
     check: () => { },
@@ -60,14 +56,19 @@ const acm = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat(tdoc, journal: AcmJournal[], ignoreLock = false) {
+    stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
+        const npending = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
-        for (const j of filterEffective(tdoc, journal, ignoreLock)) {
+        for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            if (j.status === STATUS.STATUS_WAITING) {
+                npending[j.pid]++;
+                continue;
+            }
             effective[j.pid] = j;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
@@ -75,10 +76,10 @@ const acm = buildContestRule({
         }
         for (const pid in effective) {
             const j = effective[pid];
-            const real = j.rid.generationTime - Math.floor(tdoc.beginAt.getTime() / 1000);
+            const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
             detail[pid] = {
-                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
+                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty, npending: npending[j.pid],
             };
         }
         for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
@@ -101,6 +102,7 @@ const acm = buildContestRule({
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push(
                     {
@@ -139,6 +141,11 @@ const acm = buildContestRule({
             value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
             hover: formatSeconds(tsdoc.time || 0.0),
         });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
@@ -150,14 +157,14 @@ const acm = buildContestRule({
                     { type: 'string', value: colPenalty },
                 );
             } else {
+                let value = '';
+                if (doc.rid) value = `-${doc.naccept}`;
+                if (accept) value = `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`;
+                else if (doc.npending) value += `${value ? ' ' : ''}<span style="color:orange">+${doc.npending}</span>`;
                 row.push({
                     type: 'record',
                     score: accept ? 100 : 0,
-                    value: accept
-                        ? `${doc.naccept ? `+${doc.naccept}` : '<span class="icon icon-check"></span>'}\n${colTime}`
-                        : doc.rid
-                            ? `-${doc.naccept}`
-                            : '',
+                    value,
                     hover: accept ? formatSeconds(doc.time) : '',
                     raw: doc.rid,
                     style: accept && doc.rid.generationTime === meta?.first?.[pid]
@@ -236,6 +243,8 @@ const oi = buildContestRule({
         }
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
+            const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push({
                     type: 'string',
@@ -264,6 +273,11 @@ const oi = buildContestRule({
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -400,6 +414,7 @@ const homework = buildContestRule({
         columns.push({ type: 'time', value: _('Total Time') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
+            pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (isExport) {
                 columns.push(
                     {
@@ -443,6 +458,11 @@ const homework = buildContestRule({
             row.push({ type: 'string', value: tsdoc.score || 0 });
         }
         row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
         for (const pid of tdoc.pids) {
             const rid = tsddict[pid]?.rid;
             const colScore = tsddict[pid]?.penaltyScore ?? '';
@@ -541,30 +561,29 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
 }
 
 export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
-    const [tdoc, status] = await Promise.all([
-        get(domainId, tid),
-        document.getStatus(domainId, document.TYPE_CONTEST, tid, uid),
-    ]);
+    return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
+}
+
+async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: number, status: STATUS, score: number) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (status && isLocked(tdoc)) Object.assign(status, RULES[tdoc.rule].stat(tdoc, status.journal || [], true));
-    return status;
+    if (isLocked(tdoc)) {
+        status = STATUS.STATUS_WAITING;
+        score = 0;
+    }
+    const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
+        rid, pid, status, score,
+    }, 'rid');
+    const journal = _getStatusJournal(tsdoc);
+    const stats = RULES[tdoc.rule].stat(tdoc, journal);
+    return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
 export async function updateStatus(
     domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0,
 ) {
-    const [tdoc, otsdoc] = await Promise.all([
-        get(domainId, tid),
-        getStatus(domainId, tid, uid),
-    ]);
-    if (!otsdoc.attend) throw new ContestNotAttendedError(tid, uid);
-    const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, uid, 'journal', {
-        rid, pid, status, score,
-    }, 'rid');
-    const journal = _getStatusJournal(tsdoc);
-    const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    return await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, uid, tsdoc.rev, { journal, ...stats });
+    const tdoc = await get(domainId, tid);
+    return await _updateStatus(tdoc, uid, rid, pid, status, score);
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
@@ -670,6 +689,15 @@ export async function recalcStatus(domainId: string, tid: ObjectID) {
     return await Promise.all(tasks);
 }
 
+export async function unlockScoreboard(domainId: string, tid: ObjectID) {
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+    if (!tdoc.lockAt || tdoc.unlocked) return;
+    const rdocs = await RecordModel.getMulti(domainId, { tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
+        .project(buildProjection(['_id', 'uid', 'pid', 'status', 'score'])).toArray();
+    await Promise.all(rdocs.map((rdoc) => _updateStatus(tdoc, rdoc.uid, rdoc._id, rdoc.pid, rdoc.status, rdoc.score)));
+    await edit(domainId, tid, { unlocked: true });
+}
+
 export function canViewHiddenScoreboard() {
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
@@ -693,14 +721,12 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 }
 
 export async function getScoreboard(
-    this: Handler, domainId: string, tid: ObjectID,
-    isExport = false, ignoreLock = false,
+    this: Handler, domainId: string, tid: ObjectID, isExport = false,
 ): Promise<[Tdoc<30>, ScoreboardRow[], Udict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
-    if (ignoreLock) delete tdoc.lockAt;
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
-    const pdict = await problem.getList(domainId, tdoc.pids, true);
+    const pdict = await problem.getList(domainId, tdoc.pids, true, problem.PROJECTION_CONTEST_DETAIL);
     const [rows, udict] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,
@@ -735,6 +761,7 @@ global.Hydro.model.contest = {
     setStatus,
     getAndListStatus,
     recalcStatus,
+    unlockScoreboard,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,

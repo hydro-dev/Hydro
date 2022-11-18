@@ -68,6 +68,13 @@ export function createRegistry(ctx: Context) {
         labelNames: ['type'],
     });
 
+    const eventCounter = createMetric(Counter, 'hydro_eventcount', 'eventcount', {
+        labelNames: ['name'],
+    });
+    ctx.on('bus/broadcast', (name) => {
+        eventCounter.inc({ name });
+    });
+
     collectDefaultMetrics({ register: registry });
 
     ctx.metrics = registry;

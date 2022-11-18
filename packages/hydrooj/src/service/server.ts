@@ -185,6 +185,7 @@ export class Handler extends HandlerCommon {
                 icon: global.Hydro.module.oauth[key].icon,
                 text: global.Hydro.module.oauth[key].text,
             }));
+        if (this.context.pendingError) throw this.context.pendingError;
     }
 
     async onerror(error: HydroError) {
@@ -497,6 +498,12 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     layers.forEach((layer) => app.use(layer as any));
     app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
     wsServer.on('connection', async (socket, request) => {
+        socket.on('error', (err) => {
+            logger.warn('Websocket Error: %s', err.message);
+            try {
+                socket.close(1003, 'Websocket Error');
+            } catch (e) { }
+        });
         const ctx: any = app.createContext(request, {} as any);
         await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
         for (const manager of router.wsStack) {

@@ -3,7 +3,7 @@ import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import {
-    BadRequestError, ForbiddenError, ValidationError,
+    BadRequestError, ForbiddenError, NotFoundError, ValidationError,
 } from '../error';
 import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
@@ -96,6 +96,7 @@ export class FSDownloadHandler extends Handler {
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
         const targetUser = await user.getById('system', uid);
+        if (!targetUser) throw new NotFoundError(uid);
         if (this.user._id !== uid && !targetUser.hasPriv(PRIV.PRIV_CREATE_FILE)) throw new ForbiddenError('Access denied');
         this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;

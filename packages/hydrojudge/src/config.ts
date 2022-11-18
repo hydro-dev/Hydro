@@ -29,13 +29,16 @@ const JudgeSettings = Schema.object({
     detail: Schema.boolean().description('Show diff detail').default(true),
 });
 
+const oldPath = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
+const newPath = path.resolve(os.homedir(), '.hydro', 'judge.yaml');
+
 const config = global.Hydro
     ? JudgeSettings({})
     : (() => {
         const cfg = JudgeSettings({});
         const configFilePath = (process.env.CONFIG_FILE || argv.options.config)
             ? path.resolve(process.env.CONFIG_FILE || argv.options.config)
-            : path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
+            : fs.existsSync(oldPath) ? oldPath : newPath;
 
         if (process.env.TEMP_DIR || argv.options.tmp) {
             cfg.tmp_dir = path.resolve(process.env.TEMP_DIR || argv.options.tmp);

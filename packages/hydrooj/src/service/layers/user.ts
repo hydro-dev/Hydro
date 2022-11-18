@@ -17,10 +17,13 @@ export default async (ctx: KoaContext, next) => {
     if (user._id === 0) delete user.viewLang;
     user.avatarUrl = avatar(user.avatar, 128);
     ctx.HydroContext.user = user;
-    if (!domain) throw new NotFoundError(args.domainId);
+    if (!domain) {
+        ctx.pendingError = new NotFoundError(args.domainId);
+        args.domainId = 'system';
+    }
     if (request.method === 'post' && request.headers.referer) {
         const host = new URL(request.headers.referer).host;
-        if (host !== request.host) throw new CsrfTokenError(host);
+        if (host !== request.host) ctx.pendingError = new CsrfTokenError(host);
     }
     await next();
 };

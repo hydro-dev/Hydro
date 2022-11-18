@@ -248,7 +248,10 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         patterns: [
           { from: root('static') },
           { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
+          { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/mitm.html`), to: 'streamsaver/mitm.html' },
+          { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/sw.js`), to: 'streamsaver/sw.js' },
           { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
+          { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
       }),
@@ -267,13 +270,6 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           worker: {
             id: 'vs/language/yaml/yamlWorker',
             entry: require.resolve('monaco-yaml/yaml.worker.js'),
-          },
-        }, {
-          label: 'graphql',
-          entry: require.resolve('monaco-graphql/esm/monaco.contribution.js'),
-          worker: {
-            id: 'vs/language/graphql/graphqlWorker',
-            entry: require.resolve('monaco-graphql/esm/graphql.worker.js'),
           },
         }],
       }),

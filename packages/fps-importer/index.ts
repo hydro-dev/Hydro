@@ -66,6 +66,7 @@ class FpsProblemImportHandler extends Handler {
                 ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`)),
             ];
             const addTestdata = (node: any, id: string, ext: string) => {
+                if (!node && typeof node !== 'string') return; // Ignore file not exist
                 let c = node;
                 if (node.$?.name) {
                     id = node.$.name;

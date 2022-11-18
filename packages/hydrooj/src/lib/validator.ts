@@ -18,7 +18,7 @@ export const isPassword = (s) => s.length >= 5;
 export const checkPassword = (s) => { if (!(s && s.length >= 5)) throw new ValidationError('password'); else return s; };
 export const isEmail = (s) => RE_MAIL.test(s);
 export const checkEmail = (s) => { if (!RE_MAIL.test(s)) throw new ValidationError('mail'); else return s; };
-export const isContent = (s: any) => s && s.length < 65536;
+export const isContent = (s: any) => s && s.toString().trim().length < 65536;
 export const checkContent = (s) => { if (!(s && s.length < 65536)) throw new ValidationError('content'); else return s; };
 export const isPid = (s) => RE_PID.test(s.toString());
 export const checkPid = (s) => { if (!RE_PID.test(s)) throw new ValidationError('pid'); else return s; };

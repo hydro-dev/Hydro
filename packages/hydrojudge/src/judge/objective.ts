@@ -2,6 +2,7 @@ import assert from 'assert';
 import { readFile } from 'fs-extra';
 import yaml from 'js-yaml';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import { FormatError } from '../error';
 import { Context } from './interface';
 
 export async function judge({
@@ -29,6 +30,7 @@ export async function judge({
     }
     let totalScore = 0;
     let totalStatus = 0;
+    if (!Object.keys(answers).length) throw new FormatError('Invalid standard answer.');
     for (const key in config.answers) {
         const [subtaskId, caseId] = key.split('-').map(Number);
         const ansInfo = config.answers[key] as [string | string[], number];

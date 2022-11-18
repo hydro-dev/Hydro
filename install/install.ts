@@ -4,6 +4,8 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
+import os from 'os';
+import path from 'path';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -34,6 +36,7 @@ const locales = {
         'install.hydro': '正在安装 Hydro...',
         'install.done': 'Hydro 安装成功！',
         'install.alldone': '安装已全部完成。',
+        'install.editJudgeConfigAndStart': '请编辑 ~/.hydro/judge.yaml 后使用 pm2 start hydrojudge && pm2 save 启动。',
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
         'info.skip': '步骤已跳过。',
@@ -51,11 +54,20 @@ const locales = {
         'install.compiler': 'Installing compiler...',
         'install.hydro': 'Installing Hydro...',
         'install.done': 'Hydro installation completed!',
+        'install.editJudgeConfigAndStart': 'Please edit config at ~/.hydro/judge.yaml than start hydrojudge with:\npm2 start hydrojudge && pm2 save.',
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
         'info.skip': 'Step skipped.',
     },
 };
+
+const installAsJudge = process.argv.includes('--judge');
+const noCaddy = process.argv.includes('--no-caddy');
+const installTarget = installAsJudge
+    ? '@hydrooj/hydrojudge'
+    : 'hydrooj @hydrooj/hydrojudge @hydrooj/ui-default @hydrooj/fps-importer';
+const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer'];
+
 let locale = process.env.LANG?.includes('zh') ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
 const processLog = (orig) => (str, ...args) => (orig(locales[locale][str] || str, ...args), 0);
@@ -76,12 +88,12 @@ const values = {};
 for (const line of lines) {
     if (!line.trim()) continue;
     const d = line.split('=');
-    if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substr(1, d[1].length - 2);
+    if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substring(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
 let avx2 = true;
 const cpuInfoFile = readFileSync('/proc/cpuinfo', 'utf-8');
-if (!cpuInfoFile.includes('avx2')) {
+if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
@@ -139,6 +151,31 @@ const Caddyfile = `\
 }
 `;
 
+const judgeYaml = `\
+hosts:
+  local:
+    host: localhost
+    type: hydro
+    server_url: https://hydro.ac/
+    uname: judge
+    password: examplepassword
+    detail: true
+tmpfs_size: 512m
+stdio_size: 256m
+memoryMax: 1024m
+processLimit: 128
+testcases_max: 60
+total_time_limit: 300
+retry_delay_sec: 3
+parallelism: 10
+rate: 1.00
+rerun: 0
+secret: examplesecret
+env: |
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nodejs/bin
+    HOME=/w
+`;
+
 const isPortFree = async (port: number) => {
     const server = net.createServer();
     const res = await new Promise((resolve) => {
@@ -182,6 +219,8 @@ function rollbackResolveField() {
     return true;
 }
 
+const tmpFile = path.join(os.tmpdir(), `${Math.random().toString()}.js`);
+
 const Steps = () => [
     {
         init: 'install.preparing',
@@ -216,6 +255,8 @@ connect-timeout = 10`);
     },
     {
         init: 'install.mongodb',
+        skip: () => installAsJudge,
+        hidden: installAsJudge,
         operations: [
             `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} hydro.mongosh${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongodb-tools`,
         ],
@@ -235,7 +276,8 @@ connect-timeout = 10`);
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code,
+        skip: () => !exec('caddy version').code || installAsJudge || noCaddy,
+        hidden: installAsJudge,
         operations: [
             'nix-env -iA nixpkgs.caddy',
             () => writeFileSync(`${process.env.HOME}/.hydro/Caddyfile`, Caddyfile),
@@ -249,36 +291,40 @@ connect-timeout = 10`);
                 let res: any = null;
                 try {
                     exec('yarn config set registry https://registry.npmmirror.com/', { stdio: 'inherit' });
-                    res = exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { stdio: 'inherit' });
+                    res = exec(`yarn global add ${installTarget}`, { stdio: 'inherit' });
                 } catch (e) {
                     console.log('Failed to install from npmmirror, fallback to yarnpkg');
                 } finally {
                     exec('yarn config set registry https://registry.yarnpkg.com', { stdio: 'inherit' });
                 }
                 try {
-                    exec('yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { timeout: 60000 });
+                    exec(`yarn global add ${installTarget}`, { timeout: 60000 });
                 } catch (e) {
                     console.warn('Failed to check update from yarnpkg');
                     if (res?.code !== 0) return 'retry';
                 }
                 return null;
-            } : ['yarn global add hydrooj @hydrooj/ui-default @hydrooj/hydrojudge', { retry: true }]),
-            () => writeFileSync(`${process.env.HOME}/.hydro/addon.json`, '["@hydrooj/ui-default","@hydrooj/hydrojudge"]'),
+            } : [`yarn global add ${installTarget}`, { retry: true }]),
+            () => {
+                if (installAsJudge) writeFileSync(`${process.env.HOME}/.hydro/judge.yaml`, judgeYaml);
+                else writeFileSync(`${process.env.HOME}/.hydro/addon.json`, JSON.stringify(addons));
+            },
             () => rollbackResolveField(),
         ],
     },
     {
         init: 'install.createDatabaseUser',
-        skip: () => existsSync(`${process.env.HOME}/.hydro/config.json`),
+        skip: () => existsSync(`${process.env.HOME}/.hydro/config.json`) || installAsJudge,
+        hidden: installAsJudge,
         operations: [
             'pm2 start mongod',
             () => sleep(3000),
-            () => writeFileSync('/tmp/createUser.js', `db.createUser(${JSON.stringify({
+            () => writeFileSync(tmpFile, `db.createUser(${JSON.stringify({
                 user: 'hydro',
                 pwd: password,
                 roles: [{ role: 'readWrite', db: 'hydro' }],
             })})`),
-            ['mongo 127.0.0.1:27017/hydro /tmp/createUser.js', { retry: true }],
+            [`mongo 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/config.json`, JSON.stringify({
                 host: '127.0.0.1',
                 port: 27017,
@@ -295,16 +341,19 @@ connect-timeout = 10`);
         operations: [
             ['pm2 stop all', { ignore: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/mount.yaml`, mount),
-            'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
-            () => sleep(1000),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
-            'pm2 start hydrooj',
-            async () => {
-                if (!await isPortFree(80)) log.warn('port.80');
-                exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
-                exec('hydrooj cli system set server.xff x-forwarded-for');
-                exec('hydrooj cli system set server.xhost x-forwarded-host');
-            },
+            ...installAsJudge ? [] : [
+                'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
+                () => sleep(1000),
+                'pm2 start hydrooj',
+                async () => {
+                    if (noCaddy) return;
+                    if (!await isPortFree(80)) log.warn('port.80');
+                    exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
+                    exec('hydrooj cli system set server.xff x-forwarded-for');
+                    exec('hydrooj cli system set server.xhost x-forwarded-host');
+                },
+            ],
             'pm2 startup',
             'pm2 save',
         ],
@@ -334,6 +383,7 @@ connect-timeout = 10`);
     },
     {
         init: 'install.done',
+        skip: () => installAsJudge,
         operations: [
             () => {
                 password = require(`${process.env.HOME}/.hydro/config.json`).password;
@@ -345,6 +395,10 @@ connect-timeout = 10`);
     {
         init: 'install.postinstall',
         operations: [
+            ...installAsJudge ? [] : [
+                'hydrooj install https://hydro.ac/language-server-0.0.1.tgz',
+                'pm2 restart hydrooj',
+            ],
             ['pm2 install pm2-logrotate', { retry: true }],
             'pm2 set pm2-logrotate:max_size 64M',
         ],
@@ -353,6 +407,7 @@ connect-timeout = 10`);
         init: 'install.alldone',
         operations: [
             () => log.info('install.alldone'),
+            () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
         ],
     },
 ];
