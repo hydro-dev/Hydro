@@ -525,7 +525,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             }
         }
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
+        await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         const files: Record<string, string> = {};
         if (!code) {
             const file = this.request.files?.file;
@@ -599,7 +599,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async post(domainId: string, input = '', tid?: ObjectID) {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
+        await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         const id = `${this.user._id}/${nanoid()}`;
         if (this.request.files?.file?.size > 0) {
             const file = this.request.files.file;

@@ -287,7 +287,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     }
 
     async exportScoreboard(domainId: string, tid: ObjectID, ext: string) {
-        await this.limitRate('scoreboard_download', 120, 3);
+        await this.limitRate('scoreboard_download', 60, 3);
         if (ext === 'ghost') {
             await this.exportGhost(domainId, tid);
             return;
@@ -415,7 +415,7 @@ export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('all', Types.Boolean)
     async get(domainId: string, tid: ObjectID, all: boolean) {
-        await this.limitRate('contest_code', 3600, 60);
+        await this.limitRate('contest_code', 60, 10);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             this.checkPerm(PERM.PERM_READ_RECORD_CODE);

@@ -121,8 +121,8 @@ class UserLoginHandler extends Handler {
         if (!udoc) udoc = await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         await Promise.all([
-            this.limitRate('user_login', 60, 30),
-            this.limitRate(`user_login_${uname}`, 60, 5),
+            this.limitRate('user_login', 60, 30, false),
+            this.limitRate(`user_login_${uname}`, 60, 5, false),
             oplog.log(this, 'user.login', { redirect }),
         ]);
         if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA token invalid.');
@@ -199,7 +199,7 @@ export class UserRegisterHandler extends Handler {
             const mailDomain = mail.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             await Promise.all([
-                this.limitRate('send_mail', 3600, 30),
+                this.limitRate('send_mail', 3600, 30, false),
                 oplog.log(this, 'user.register', {}),
             ]);
             const t = await token.add(
