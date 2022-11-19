@@ -9,7 +9,7 @@ const menuHeadingPage = new AutoloadPage('menuHeadingPage', null, () => {
     if ($target.length === 0) return;
     let $menu = $target.children('.menu');
     if ($menu.length === 0) {
-      $menu = $(tpl`<ul class="menu collapsed" style="max-height: calc(85vh - 45px); overflow-y: auto; overflow-x: hidden"></ul>`).appendTo($target);
+      $menu = $(tpl`<ul class="menu collapsed"></ul>`).appendTo($target);
       $target.children('.menu__link').addClass('expandable');
     }
     $container.find('[data-heading]').get().forEach((heading) => {

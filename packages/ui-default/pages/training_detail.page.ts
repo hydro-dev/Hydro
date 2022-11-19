@@ -21,7 +21,7 @@ async function handleSection(ev, type: string) {
 
 function searchUser() {
   const val = $('input[name=uid]').val().toString().toLowerCase();
-  $('.enroll_user_menu').each((i, e) => {
+  $('.enroll_user_menu_item').each((i, e) => {
     const $item = $(e);
     const $username = $item.data('uname').toString().toLowerCase();
     const $uid = $item.data('uid').toString().toLowerCase();
@@ -31,14 +31,14 @@ function searchUser() {
 
 function selectUser(ev) {
   ev.preventDefault();
-  if ($('.enroll_user_menu:visible').length === 1) {
-    $('.enroll_user_menu:visible').first().find('a')[0].click();
+  if ($('.enroll_user_menu_item:visible').length === 1) {
+    $('.enroll_user_menu_item:visible').first().find('a')[0].click();
   }
 }
 
 function handleChooseUser(ev) {
   ev.preventDefault();
-  $('.enroll_user_menu .active').removeClass('active');
+  $('.enroll_user_menu_item .active').removeClass('active');
   $(ev.currentTarget).addClass('active');
   pjax.request({ url: ev.currentTarget.href });
 }
@@ -48,7 +48,7 @@ const page = new NamedPage('training_detail', () => {
   $('#searchForm').on('submit', selectUser);
   $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expand'));
   $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
-  $(document).on('click', '.enroll_user_menu > a', (ev) => handleChooseUser(ev));
+  $(document).on('click', '.enroll_user_menu_item > a', (ev) => handleChooseUser(ev));
 });
 
 export default page;

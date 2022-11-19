@@ -10,9 +10,9 @@
             <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
-        <div style="max-height: calc(85vh - 45px); overflow-y: auto; overflow-x: hidden">
+        <ul class="enroll_user_menu">
         {%- for uid in enrollUsers -%}
-        <li class="menu__item enroll_user_menu" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
+        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
           <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
             <span class="user-profile-link">
               <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udict[uid].avatar|default('')) }}" width="20" height="20">
@@ -27,7 +27,7 @@
           </a>
         </li>
         {%- endfor -%}
-        </div>
+        </ul>
       </ol>
     </div></div>
   </div>
