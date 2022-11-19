@@ -47,33 +47,33 @@ langs:
       monaco: c
       display: C
     cc:
-      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -I/include
       code_file: foo.cc
       highlight: cpp
       monaco: cpp
       display: C++
     cc.cc98:
-      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
       display: C++98
     cc.cc98o2:
-      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -O2
+      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -O2 -I/include
       display: C++98(O2)
     cc.cc11:
-      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm -I/include
       display: C++11
     cc.cc11o2:
-      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm -O2
+      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm -O2 -I/include
       display: C++11(O2)
     cc.cc14:
       display: C++14
     cc.cc14o2:
-      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -O2
+      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -O2 -I/include
       display: C++14(O2)
     cc.cc17:
-      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm
+      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -I/include
       display: C++17
     cc.cc17o2:
-      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2
+      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2 -I/include
       display: C++17(O2)
     pas:
       compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
