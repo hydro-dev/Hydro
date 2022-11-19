@@ -188,7 +188,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status } = await run(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { stderr, status, code } = await run(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -202,6 +202,13 @@ const checkers: Record<string, Checker> = new Proxy({
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
                 message: stderr,
+            };
+        }
+        if (status === STATUS.STATUS_RUNTIME_ERROR) {
+            return {
+                status: STATUS.STATUS_WRONG_ANSWER,
+                score: 0,
+                message: `Checker exited with code ${code}`,
             };
         }
         return parse(stderr, config.score);
