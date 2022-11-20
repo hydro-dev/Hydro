@@ -10,7 +10,7 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import {
-    buildContent, Logger, SettingModel, sleep, STATUS,
+    buildContent, Logger, SettingModel, sleep, STATUS, Time,
 } from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
@@ -120,6 +120,7 @@ export default class CodeforcesProvider implements IBasicProvider {
             cookies = await page.cookies();
         }
         this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
+        logger.debug('Cookie:', this.cookie);
         await this.save({ cookie: this.cookie });
         await page.close();
     }
@@ -198,6 +199,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     get loggedIn() {
         return this.get('/enter').then(({ text: html }) => {
             if (html.includes('Login into Codeforces')) return false;
+            if (html.length < 1000 && html.includes('Redirecting...')) return false;
             return true;
         });
     }
@@ -221,6 +223,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async puppeteerLogin() {
+        await this.ensureBrowser();
         if (!this.puppeteer) return false;
         const page = await this.puppeteer.newPage();
         await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2' });
@@ -228,24 +231,26 @@ export default class CodeforcesProvider implements IBasicProvider {
         logger.info(`Login portal opened: ${url}`);
         await page.waitForRequest((req) => {
             if (req.method() !== 'POST') return false;
-            if (!req.url().endsWith('/enter')) return false;
-            return true;
-        }, { timeout: 24 * 3600 * 1000 });
+            // sometimes we have validation query strings, ignore them
+            return req.url().split('?')[0].endsWith('/enter');
+        }, { timeout: Time.day });
         await page.waitForTimeout(10 * 1000);
         await this.clearPage(page);
+        await this.puppeteer?.close();
         return true;
     }
 
     async ensureLogin() {
-        await this.ensureBrowser();
         if (await this.loggedIn) return true;
         logger.info('retry normal login');
         await this.normalLogin();
         if (await this.loggedIn) return true;
-        if (!this.puppeteer) return false;
         logger.info('starting puppeteer login');
         await this.puppeteerLogin();
-        if (await this.loggedIn) return true;
+        if (await this.loggedIn) {
+            logger.success('Logged in');
+            return true;
+        }
         return false;
     }
 
