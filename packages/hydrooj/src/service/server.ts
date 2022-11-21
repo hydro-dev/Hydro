@@ -228,7 +228,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
     ctx.handler = h;
     try {
         const method = ctx.method.toLowerCase();
-        const operation = (method === 'post' && ctx.request.body.operation)
+        const operation = (method === 'post' && ctx.request.body?.operation)
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
 
