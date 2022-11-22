@@ -169,7 +169,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             && !this.user.own(this.tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
         ) return;
-        const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
+        const pdict = await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST);
         let psdict = {};
         let rdict = {};
         if (this.tsdoc) {
@@ -252,7 +252,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         const tdoc = await contest.get(domainId, tid);
         if (!contest.canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
         const [pdict, teams] = await Promise.all([
-            problem.getList(domainId, tdoc.pids, true, undefined, false, undefined, true),
+            problem.getList(domainId, tdoc.pids, true, false, undefined, true),
             contest.getMultiStatus(domainId, { docId: tid }).toArray(),
         ]);
         const udict = await user.getList(domainId, teams.map((i) => i.uid));
@@ -373,7 +373,7 @@ export class ContestEditHandler extends Handler {
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
                 title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,

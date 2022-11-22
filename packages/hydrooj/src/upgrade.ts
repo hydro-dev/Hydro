@@ -385,14 +385,7 @@ const scripts: UpgradeScript[] = [
         await db.collection('oplog').deleteMany({ type: 'user.login' });
         return true;
     },
-    async function _57_58() {
-        const _FRESH_INSTALL_IGNORE = 1;
-        await db.collection('document').updateMany(
-            { docType: document.TYPE_PROBLEM, assign: null },
-            { $set: { assign: [] } },
-        );
-        return true;
-    },
+    null,
     async function _58_59() {
         const _FRESH_INSTALL_IGNORE = 1;
         const tasks = await db.collection('task').find({ type: 'schedule', subType: 'contest.problemHide' }).toArray();

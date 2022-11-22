@@ -64,7 +64,6 @@ registerValue('Problem', [
     ['difficulty', 'Int'],
     ['tag', '[String]'],
     ['hidden', 'Boolean'],
-    ['assign', '[String]'],
 ]);
 
 registerResolver(
@@ -74,11 +73,6 @@ registerResolver(
         const pdoc = await problem.get(ctx.args.domainId, arg.pid || arg.id);
         if (!pdoc) return null;
         if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        if (pdoc.assign.length && !ctx.user.own(pdoc)) {
-            if (!Set.intersection(new Set(pdoc.assign), new Set(ctx.user.group)).size) {
-                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            }
-        }
         ctx.pdoc = pdoc;
         return pdoc;
     },
@@ -86,7 +80,7 @@ registerResolver(
 registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
     ctx.checkPerm(PERM.PERM_VIEW);
     const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
-        ctx.user.group, undefined, undefined, true);
+        undefined, undefined, true);
     return Object.keys(res).map((id) => res[+id]);
 }, 'Get a list of problem by ids');
 registerResolver(
@@ -105,7 +99,7 @@ registerResolver(
     },
 );
 registerResolver(
-    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean, assign: [String])', 'Problem!',
+    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
     (arg, ctx) => problem.edit(ctx.args.domainId, ctx.pdoc.docId, arg),
 );
 
@@ -640,14 +634,13 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
-    @post('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
-        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0, assign: string[] = [],
+        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
         const $update: Partial<ProblemDoc> = {
-            title, content, pid: newPid, hidden, assign, tag: tag ?? [], difficulty, html: false,
+            title, content, pid: newPid, hidden, tag: tag ?? [], difficulty, html: false,
         };
         const pdoc = await problem.edit(domainId, this.pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
@@ -972,13 +965,12 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    @post('assign', Types.CommaSeperatedArray, true)
     async post(
         domainId: string, title: string, content: string, pid: string,
-        hidden = false, difficulty = 0, tag: string[] = [], assign: string[] = [],
+        hidden = false, difficulty = 0, tag: string[] = [],
     ) {
         if (pid && await problem.get(domainId, pid)) throw new BadRequestError('ProblemID already exists');
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden, assign);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];
         for (const file of files) {

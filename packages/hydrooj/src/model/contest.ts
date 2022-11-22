@@ -726,7 +726,7 @@ export async function getScoreboard(
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
-    const pdict = await problem.getList(domainId, tdoc.pids, true, problem.PROJECTION_CONTEST_DETAIL);
+    const pdict = await problem.getList(domainId, tdoc.pids, true, true, problem.PROJECTION_CONTEST_DETAIL);
     const [rows, udict] = await RULES[tdoc.rule].scoreboard(
         isExport, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,

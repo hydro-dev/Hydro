@@ -28,7 +28,7 @@ function sortable(source: string) {
 export class ProblemModel {
     static PROJECTION_CONTEST_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
-        'owner', 'title', 'assign',
+        'owner', 'title',
     ];
 
     static PROJECTION_LIST: Field[] = [
@@ -66,7 +66,6 @@ export class ProblemModel {
         additional_file: [],
         stats: {},
         hidden: true,
-        assign: [],
         config: '',
         difficulty: 0,
     };
@@ -88,31 +87,30 @@ export class ProblemModel {
         additional_file: [],
         stats: {},
         hidden: true,
-        assign: [],
         config: '',
         difficulty: 0,
     };
 
     static async add(
         domainId: string, pid: string = '', title: string, content: string, owner: number,
-        tag: string[] = [], hidden = false, assign: string[] = [],
+        tag: string[] = [], hidden = false,
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
         const result = await ProblemModel.addWithId(
             domainId, (doc?.docId || 0) + 1, pid,
-            title, content, owner, tag, hidden, assign,
+            title, content, owner, tag, hidden,
         );
         return result;
     }
 
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
-        content: string, owner: number, tag: string[] = [], hidden = false, assign: string[] = [],
+        content: string, owner: number, tag: string[] = [], hidden = false,
     ) {
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden, assign, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
+            title, tag, hidden, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
@@ -298,8 +296,7 @@ export class ProblemModel {
 
     static async getList(
         domainId: string, pids: number[], canViewHidden: number | boolean = false,
-        group: string[] = [], doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC,
-        indexByDocIdOnly = false,
+        doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC, indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
         if (!pids?.length) return [];
         const r: Record<number, ProblemDoc> = {};
@@ -307,9 +304,6 @@ export class ProblemModel {
         const q: any = { docId: { $in: pids } };
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
             .project(buildProjection(projection)).toArray();
-        if (group.length > 0 && canViewHidden !== true) {
-            pdocs = pdocs.filter((i) => !i.assign?.length || Set.intersection(group, i.assign).size);
-        }
         if (canViewHidden !== true) {
             pdocs = pdocs.filter((i) => i.owner === canViewHidden || i.maintainer?.includes(canViewHidden as any) || !i.hidden);
         }
@@ -383,8 +377,7 @@ export class ProblemModel {
         if (udoc.own(pdoc)) return true;
         if (udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return true;
         if (pdoc.hidden) return false;
-        if (!pdoc.assign.length) return true;
-        return !!Set.intersection(pdoc.assign, udoc.group).size;
+        return true;
     }
 }
 

@@ -344,7 +344,7 @@ class UserDetailHandler extends Handler {
                 pdocs.push(...Object.values(
                     await problem.getList(
                         did, psdocs.map((i) => i.docId), canViewHidden,
-                        this.user.group, false, problem.PROJECTION_LIST, true,
+                        false, problem.PROJECTION_LIST, true,
                     ),
                 ));
             }));
@@ -366,7 +366,7 @@ class UserDetailHandler extends Handler {
             if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) {
                 this.response.body.pdict = await problem.getList(
                     domainId, psdocs.map((i) => i.parentId), canViewHidden,
-                    this.user.group, false, problem.PROJECTION_LIST,
+                    false, problem.PROJECTION_LIST,
                 );
             }
         }
