@@ -165,19 +165,18 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (this.tdoc && this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
+        if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
-            canViewCode ||= tsdoc?.attend;
-        }
+            if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
+                canViewCode ||= tsdoc?.attend;
+            }
+            if (!tsdoc.attend && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        } else if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};
             rdoc.compilerTexts = [];
         } else if (download) return await this.download();
-        if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
-            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        }
-
         this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
