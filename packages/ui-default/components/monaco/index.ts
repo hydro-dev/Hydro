@@ -1,4 +1,5 @@
 import './monaco.styl';
+import './initMonacoEnvironment';
 
 import $ from 'jquery';
 import { EditorAction, registerEditorAction } from 'monaco-editor/esm/vs/editor/browser/editorExtensions';

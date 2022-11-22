@@ -2,7 +2,6 @@ import react from '@vitejs/plugin-react';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { dirname } from 'path';
 import { defineConfig } from 'vite';
-import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 import { prismjsPlugin } from 'vite-plugin-prismjs';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import svgr from 'vite-plugin-svgr';
@@ -11,22 +10,16 @@ import { version } from './package.json';
 
 export default defineConfig({
   base: '/vite/',
+  publicDir: 'static',
   define: {
     'process.env.VERSION': JSON.stringify(version),
   },
-  publicDir: 'static',
   plugins: [
     svgr(),
     react(),
     prismjsPlugin({
       languages: 'all',
       plugins: ['toolbar', 'line-highlight'],
-    }),
-    monacoEditorPlugin({
-      customWorkers: [{
-        label: 'yaml',
-        entry: require.resolve('monaco-yaml/yaml.worker.js'),
-      }],
     }),
     {
       name: 'ServerProxy',
