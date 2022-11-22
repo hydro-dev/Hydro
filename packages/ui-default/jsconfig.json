@@ -6,10 +6,12 @@
     "resolveJsonModule": true,
     "jsx": "react",
     "allowSyntheticDefaultImports": true,
-    "target": "ES2020",
+    "target": "ESNext",
+    "module": "ESNext",
     "baseUrl": ".",
     "lib": [
-      "ES2020"
+      "ESNext",
+      "DOM"
     ],
     "moduleResolution": "node",
     "paths": {

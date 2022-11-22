@@ -8,7 +8,6 @@ import gulp from 'gulp';
 import { sum } from 'lodash';
 import path from 'path';
 import webpack, { Stats } from 'webpack';
-import WebpackDevServer from 'webpack-dev-server';
 import pkg from '../package.json';
 import gulpConfig from './config/gulp';
 import webpackConfig from './config/webpack';
@@ -16,73 +15,73 @@ import root from './utils/root';
 
 const argv = cac().parse();
 
-async function runWebpack({
-  watch, production, measure, dev,
-}) {
-  const compiler = webpack(webpackConfig({ watch, production, measure }));
-  if (dev) {
-    const server = new WebpackDevServer({
-      port: 8000,
-      compress: true,
-      hot: true,
-      proxy: {
-        context: (p) => p !== '/ws',
-        target: 'http://localhost:2333',
-        ws: true,
-      },
-    }, compiler);
-    server.start();
-    return;
-  }
-  const res = await new Promise<Stats>((resolve, reject) => {
-    function compilerCallback(err, stats) {
-      if (err) {
-        console.error(err.stack || err);
-        if (err.details) console.error(err.details);
-        if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
-        reject(err);
-        return;
-      }
-      if (argv.options.detail) console.log(stats.toString());
-      if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
-      resolve(stats);
-    }
-    if (watch) compiler.watch({}, compilerCallback);
-    else compiler.run(compilerCallback);
-  });
-  if (production && res && !res.hasErrors()) {
-    const stats = {};
-    const files = fs.readdirSync(root('public'), { withFileTypes: true });
-    for (const file of files) {
-      if (!file.isFile() || file.name.endsWith('.map')) continue;
-      const data = await fs.stat(path.join(root('public'), file.name));
-      const key = file.name
-        .replace(/\.[a-f0-9]{6}\.chunk\./, '.chunk.')
-        .replace(/\.[a-f0-9]{6}\.worker\./, '.worker.');
-      stats[key] = data.size;
-    }
-    const statsPath = root('__bundleInfo');
-    if (fs.existsSync(statsPath)) {
-      log('Compare to last production bundle:');
-      const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
-      for (const key in stats) if (!oldStats[key]) oldStats[key] = 0;
-      const entries: [filename: string, orig: number, curr: number][] = [];
-      for (const [key, value] of Object.entries(oldStats)) {
-        if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
-      }
-      const sorted = entries.sort((i) => i[1] - i[2]);
-      sorted.push(['Total', sum(sorted.map((i) => i[1])), sum(sorted.map((i) => i[2]))]);
-      for (const entry of sorted) {
-        const [name, orig, curr] = entry;
-        const diff = 100 * (curr - orig) / orig;
-        if (Math.abs(diff) < 0.01 && name !== 'Total') continue;
-        const color = orig > curr ? chalk.green : chalk.red;
-        log(color(`${name.padStart(35)} ${size(orig).padStart(10)} -> ${size(curr).padEnd(10)} (${diff.toPrecision(5)}%)`), chalk.reset());
-      }
-    }
-    await fs.writeFile(statsPath, JSON.stringify(stats));
-  }
-}
+// async function runWebpack({
+//   watch, production, measure, dev,
+// }) {
+//   const compiler = webpack(webpackConfig({ watch, production, measure }));
+//   if (dev) {
+//     const server = new WebpackDevServer({
+//       port: 8000,
+//       compress: true,
+//       hot: true,
+//       proxy: {
+//         context: (p) => p !== '/ws',
+//         target: 'http://localhost:2333',
+//         ws: true,
+//       },
+//     }, compiler);
+//     server.start();
+//     return;
+//   }
+//   const res = await new Promise<Stats>((resolve, reject) => {
+//     function compilerCallback(err, stats) {
+//       if (err) {
+//         console.error(err.stack || err);
+//         if (err.details) console.error(err.details);
+//         if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
+//         reject(err);
+//         return;
+//       }
+//       if (argv.options.detail) console.log(stats.toString());
+//       if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
+//       resolve(stats);
+//     }
+//     if (watch) compiler.watch({}, compilerCallback);
+//     else compiler.run(compilerCallback);
+//   });
+//   if (production && res && !res.hasErrors()) {
+//     const stats = {};
+//     const files = fs.readdirSync(root('public'), { withFileTypes: true });
+//     for (const file of files) {
+//       if (!file.isFile() || file.name.endsWith('.map')) continue;
+//       const data = await fs.stat(path.join(root('public'), file.name));
+//       const key = file.name
+//         .replace(/\.[a-f0-9]{6}\.chunk\./, '.chunk.')
+//         .replace(/\.[a-f0-9]{6}\.worker\./, '.worker.');
+//       stats[key] = data.size;
+//     }
+//     const statsPath = root('__bundleInfo');
+//     if (fs.existsSync(statsPath)) {
+//       log('Compare to last production bundle:');
+//       const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
+//       for (const key in stats) if (!oldStats[key]) oldStats[key] = 0;
+//       const entries: [filename: string, orig: number, curr: number][] = [];
+//       for (const [key, value] of Object.entries(oldStats)) {
+//         if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
+//       }
+//       const sorted = entries.sort((i) => i[1] - i[2]);
+//       sorted.push(['Total', sum(sorted.map((i) => i[1])), sum(sorted.map((i) => i[2]))]);
+//       for (const entry of sorted) {
+//         const [name, orig, curr] = entry;
+//         const diff = 100 * (curr - orig) / orig;
+//         if (Math.abs(diff) < 0.01 && name !== 'Total') continue;
+//         const color = orig > curr ? chalk.green : chalk.red;
+//         log(color(`${name.padStart(35)} ${size(orig).padStart(10)} -> ${size(curr).padEnd(10)} (${diff.toPrecision(5)}%)`), chalk.reset());
+//       }
+//     }
+//     await fs.writeFile(statsPath, JSON.stringify(stats));
+//   }
+// }
 
 async function runGulp() {
   function handleError(err) {
@@ -111,7 +110,7 @@ async function main() {
   process.chdir(root());
   if (argv.options.gulp) await runGulp();
   else {
-    await runWebpack(argv.options as any);
+    // await runWebpack(argv.options as any);
     if (fs.existsSync('public/hydro.js')) {
       fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
     }

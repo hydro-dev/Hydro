@@ -2,11 +2,9 @@ import { Page } from './Page';
 
 export default class PageLoader {
   constructor() {
-    const pages = require.context('../pages/', true, /\.page\.[jt]sx?$/i);
-    const components = require.context('../components/', true, /\.page\.[jt]sx?$/i);
     this.pageInstances = [
-      ...pages.keys().map((key) => pages(key)),
-      ...components.keys().map((key) => components(key)),
+      ...Object.values(import.meta.glob('../pages/**/*.page.{js,ts,jsx,tsx}', { eager: true, import: 'default' })),
+      ...Object.values(import.meta.glob('../components/**/*.page.{js,ts,jsx,tsx}', { eager: true, import: 'default' })),
       ...window.Hydro.extraPages,
     ].map((page) => {
       page = page?.default || page;

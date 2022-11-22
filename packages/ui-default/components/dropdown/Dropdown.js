@@ -8,8 +8,6 @@ import zIndexManager from 'vj/utils/zIndexManager';
 export default class Dropdown extends DOMAttachedObject {
   static DOMAttachKey = 'vjDropdownInstance';
 
-  static DOMAttachSelector = '[data-dropdown-target]';
-
   constructor($dom, options = {}) {
     if ($dom.attr('data-dropdown-trigger-desktop-only') !== undefined) {
       if (isBelow(responsiveCutoff.mobile)) {
@@ -52,3 +50,5 @@ export default class Dropdown extends DOMAttachedObject {
 }
 
 _.assign(Dropdown, DOMAttachedObject);
+DOMAttachedObject.DOMAttachSelector = '[data-dropdown-target]';
+Dropdown.DOMAttachSelector = '[data-dropdown-target]';

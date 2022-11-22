@@ -33,12 +33,12 @@
       --font-ligatures: {{ "normal" if UserContext.codeFontLigatures else "none" }} !important;
     }
   </style>
-  {% if process.env.DEV %}
+  {# {% if process.env.DEV %}
     <link rel="stylesheet" media="all" href="/default.theme.css">
   {% else %}
     <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}default-{{ global.Hydro.version['ui-default'] }}.theme.css">
     <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}hydro.css">
-  {% endif %}
+  {% endif %} #}
   {% if not isIE(handler.request.headers['user-agent']) %}
     <script>
       var _htmlNode = document.documentElement;
@@ -62,9 +62,17 @@
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}l/{{ _('__id') }}"></script>
-    <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
+    {# <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script> #}
     {% if process.env.DEV %}
-      <script type="text/javascript" src="/hydro.js"></script>
+      <script type="module" src="/vite/@vite/client"></script>
+      <script type="module">
+        import RefreshRuntime from '/vite/@react-refresh'
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => {}
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+      </script>
+      <script type="module" src="/vite/entry.js"></script>
     {% else %}
       <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
     {% endif %}

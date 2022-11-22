@@ -1,3 +1,7 @@
+// eslint-disable-next-line import/no-unresolved
+import 'vite/modulepreload-polyfill';
+import './theme/default';
+
 import $ from 'jquery';
 import * as bus from './bus';
 

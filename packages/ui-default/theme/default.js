@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unresolved */
 import 'normalize.css/normalize.css';
 import 'vditor/dist/index.css';
 import 'pickadate/lib/themes/classic.css';
@@ -25,11 +26,7 @@ import 'vj/misc/section.styl';
 import 'vj/misc/nothing.styl';
 import 'vj/components/editor/cmeditor.styl';
 import 'vj/components/datepicker/datepicker.styl';
-
-// load all page stylesheets
-const pageStyleReq = require.context('../', true, /\.page\.styl$/i);
-pageStyleReq.keys().map((key) => pageStyleReq(key));
-const pageStyleReqDefault = require.context('../', true, /\.page\.default\.styl$/i);
-pageStyleReqDefault.keys().map((key) => pageStyleReqDefault(key));
-
 import './dark.styl';
+
+import.meta.glob('../**/*.page.styl', { eager: true });
+import.meta.glob('../**/*.default.styl', { eager: true });

@@ -1,15 +1,15 @@
 import $ from 'jquery';
 import * as timeago from 'timeago.js';
+import * as locales from 'timeago.js/lib/lang/index';
 import { AutoloadPage } from 'vj/misc/Page';
 import i18n from 'vj/utils/i18n';
 
 try {
-  const locales = require.context('timeago.js/lib/lang', false, /\.js$/);
   let locale;
   try {
-    locale = locales(`./${i18n('timeago_locale')}.js`).default;
+    locale = locales[i18n('timeago_locale')];
   } catch (e) {
-    locale = locales('./en_US.js').default;
+    locale = locales.en_US;
   }
   timeago.register(i18n('timeago_locale'), locale);
 } catch (e) {
