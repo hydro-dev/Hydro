@@ -49,5 +49,3 @@ export default class StyledTable extends DOMAttachedObject {
     this.$header.trigger('sticky_kit:detach');
   }
 }
-
-_.assign(StyledTable, DOMAttachedObject);

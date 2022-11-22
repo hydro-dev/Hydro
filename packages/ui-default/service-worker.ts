@@ -18,7 +18,7 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = `precache-${process.env.VERSION}`;
+const PRE_CACHE = `precache-${process.env.VERSION}`;
 const DO_NOT_CACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
 
 function shouldCache(name: string, request?: Request) {
@@ -60,7 +60,7 @@ async function get(url: string) {
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
   const [cache, manifest, cfg] = await Promise.all([
-    caches.open(PRECACHE),
+    caches.open(PRE_CACHE),
     fetch('/manifest.json').then((res) => res.json()),
     fetch('/sw-config').then((res) => res.json()),
   ]);
@@ -74,7 +74,7 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 })()));
 
 self.addEventListener('activate', (event) => {
-  const valid = [PRECACHE];
+  const valid = [PRE_CACHE];
   event.waitUntil((async () => {
     const [names, cfg] = await Promise.all([
       caches.keys(),
@@ -102,7 +102,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     if (cachedResponse) return cachedResponse;
     console.log(`Caching ${event.request.url}`);
     const [cache, response] = await Promise.all([
-      caches.open(PRECACHE),
+      caches.open(PRE_CACHE),
       fetch(event.request.url, { headers: { Accept } }), // Fetch from url to prevent opaque response
     ]);
     if (response.ok) {

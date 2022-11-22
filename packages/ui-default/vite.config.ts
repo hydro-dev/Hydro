@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { dirname } from 'path';
 import { defineConfig } from 'vite';
+import monacoEditorPlugin from 'vite-plugin-monaco-editor';
 import { prismjsPlugin } from 'vite-plugin-prismjs';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import svgr from 'vite-plugin-svgr';
@@ -20,6 +21,12 @@ export default defineConfig({
     prismjsPlugin({
       languages: 'all',
       plugins: ['toolbar', 'line-highlight'],
+    }),
+    monacoEditorPlugin({
+      customWorkers: [{
+        label: 'yaml',
+        entry: require.resolve('monaco-yaml/yaml.worker.js'),
+      }],
     }),
     {
       name: 'ServerProxy',
@@ -53,7 +60,11 @@ export default defineConfig({
   build: {
     manifest: true,
     rollupOptions: {
-      input: './entry.js',
+      input: {
+        hydro: './entry.js',
+        'service-worker': './service-worker.ts',
+        'messages-shared-worker': './components/message/worker.ts',
+      },
     },
   },
   css: {

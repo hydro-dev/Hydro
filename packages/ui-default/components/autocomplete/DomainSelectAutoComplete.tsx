@@ -1,4 +1,3 @@
-import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -42,5 +41,4 @@ export default class DomainSelectAutoComplete extends AutoComplete {
   }
 }
 
-assign(DomainSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.DomainSelectAutoComplete = DomainSelectAutoComplete;

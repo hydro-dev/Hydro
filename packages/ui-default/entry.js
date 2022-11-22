@@ -4,6 +4,8 @@ import './theme/default';
 
 import $ from 'jquery';
 import * as bus from './bus';
+// eslint-disable-next-line import/no-unresolved
+import serviceWorkerUrl from './service-worker.ts?worker&url';
 
 window.Hydro = {
   extraPages: [],
@@ -33,7 +35,7 @@ console.log(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+    navigator.serviceWorker.register(serviceWorkerUrl, { type: 'module' }).then((registration) => {
       console.log('SW registered: ', registration);
     }).catch((registrationError) => {
       console.log('SW registration failed: ', registrationError);

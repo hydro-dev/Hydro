@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Drop from 'tether-drop';
 import responsiveCutoff from 'vj/breakpoints.json';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -7,6 +6,8 @@ import zIndexManager from 'vj/utils/zIndexManager';
 
 export default class Dropdown extends DOMAttachedObject {
   static DOMAttachKey = 'vjDropdownInstance';
+
+  static DOMAttachSelector = '[data-dropdown-target]';
 
   constructor($dom, options = {}) {
     if ($dom.attr('data-dropdown-trigger-desktop-only') !== undefined) {
@@ -48,7 +49,3 @@ export default class Dropdown extends DOMAttachedObject {
     this.$dom.trigger('vjDropdownHide');
   }
 }
-
-_.assign(Dropdown, DOMAttachedObject);
-DOMAttachedObject.DOMAttachSelector = '[data-dropdown-target]';
-Dropdown.DOMAttachSelector = '[data-dropdown-target]';

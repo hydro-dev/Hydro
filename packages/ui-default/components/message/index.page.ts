@@ -25,7 +25,7 @@ const onmessage = (msg) => {
   // Is message
   new VjNotification({
     ...(msg.udoc._id === 1 && msg.mdoc.flag & 4)
-      ? { message: i18n('You received a system message, click here to view.') }
+      ? { message: i18n('You received a system message, click here to view.') } as any
       : {
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
@@ -44,7 +44,7 @@ const endpoint = url.toString().replace('http', 'ws');
 
 const initWorkerMode = () => {
   console.log('Messages: using SharedWorker');
-  const worker = new SharedWorker('/messages-shared-worker.js', { name: 'HydroMessagesWorker' });
+  const worker = new SharedWorker(new URL('./worker.ts', import.meta.url), { name: 'HydroMessagesWorker', type: 'module' });
   worker.port.start();
   window.addEventListener('beforeunload', () => {
     worker.port.postMessage({ type: 'unload' });
@@ -70,7 +70,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
       message: i18n(`You have ${UserContext.unreadMsg > 1 ? 'new messages' : 'a new message'}.`),
       duration: 5000,
       action: () => window.open('/home/messages', '_blank'),
-    }).show();
+    } as any).show();
   }
   if (window.SharedWorker) {
     try {

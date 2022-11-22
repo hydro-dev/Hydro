@@ -47,5 +47,3 @@ export default class Tooltip extends DOMAttachedObject {
     this.drop.open();
   }
 }
-
-_.assign(Tooltip, DOMAttachedObject);

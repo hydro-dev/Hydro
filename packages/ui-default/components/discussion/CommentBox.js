@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import TextareaHandler from 'vj/components/editor/textareaHandler';
 import Notification from 'vj/components/notification';
@@ -102,5 +101,3 @@ export default class CommentBox extends DOMAttachedObject {
     this.detach();
   }
 }
-
-_.assign(CommentBox, DOMAttachedObject);
