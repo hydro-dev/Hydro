@@ -35,7 +35,6 @@ export default defineConfig({
           '/',
           createProxyMiddleware((url) => !url.startsWith('/vite/'), {
             target: 'http://127.0.0.1:2334/',
-            changeOrigin: true,
             ws: true,
           }) as any,
         );

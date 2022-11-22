@@ -59,13 +59,12 @@ async function get(url: string) {
 }
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
-  const [cache, manifest, cfg] = await Promise.all([
-    caches.open(PRE_CACHE),
-    fetch('/manifest.json').then((res) => res.json()),
-    fetch('/sw-config').then((res) => res.json()),
-  ]);
-  config = cfg;
+  config = await fetch('/sw-config').then((res) => res.json());
   if (process.env.NODE_ENV === 'production' && config?.preload) {
+    const [cache, manifest] = await Promise.all([
+      caches.open(PRE_CACHE),
+      fetch('/manifest.json').then((res) => res.json()),
+    ]);
     const files = Object.values(manifest).filter(shouldPreCache)
       .map((i: string) => new URL(i, config.preload).toString());
     await cache.addAll(files); // NOTE: CORS header

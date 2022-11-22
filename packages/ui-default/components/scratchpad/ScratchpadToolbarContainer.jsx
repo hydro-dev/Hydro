@@ -111,7 +111,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
       <Toolbar>
         {canUsePretest && (
           <ToolbarButton
-            disabled={this.props.isPosting || this.props.isRunning || this.props.pretestWaitSec}
+            disabled={!!(this.props.isPosting || this.props.isRunning || this.props.pretestWaitSec)}
             className="scratchpad__toolbar__pretest"
             onClick={() => this.props.postPretest(this.props)}
             data-global-hotkey="f9"
@@ -125,7 +125,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
           </ToolbarButton>
         )}
         <ToolbarButton
-          disabled={this.props.isPosting || this.props.submitWaitSec}
+          disabled={!!(this.props.isPosting || this.props.submitWaitSec)}
           className="scratchpad__toolbar__submit"
           onClick={() => this.props.postSubmit(this.props)}
           data-global-hotkey="f10"
@@ -151,7 +151,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
         <ToolbarItem>
           <select
             className="select"
-            disabled={this.props.isPosting}
+            disabled={!!this.props.isPosting}
             value={this.props.editorLang}
             onChange={(ev) => this.props.setEditorLanguage(ev.target.value)}
           >

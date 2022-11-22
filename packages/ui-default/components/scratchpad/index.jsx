@@ -1,4 +1,4 @@
-import ProblemIcon from '@vscode/codicons/src/icons/file.svg?react';
+import { ReactComponent as ProblemIcon } from '@vscode/codicons/src/icons/file.svg';
 import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
