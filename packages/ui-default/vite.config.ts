@@ -1,5 +1,6 @@
+import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import proxy from 'http2-proxy';
 import { dirname } from 'path';
 import { defineConfig } from 'vite';
 import { prismjsPlugin } from 'vite-plugin-prismjs';
@@ -8,15 +9,19 @@ import svgr from 'vite-plugin-svgr';
 import root from './build/utils/root';
 import { version } from './package.json';
 
+const target = 'http://127.0.0.1:2333/';
+const targetUrl = new URL(target);
 export default defineConfig({
   base: '/vite/',
   publicDir: 'static',
+  server: { https: true },
   define: {
     'process.env.VERSION': JSON.stringify(version),
   },
   plugins: [
     svgr(),
     react(),
+    basicSsl(),
     prismjsPlugin({
       languages: 'all',
       plugins: ['toolbar', 'line-highlight'],
@@ -24,13 +29,31 @@ export default defineConfig({
     {
       name: 'ServerProxy',
       configureServer(server) {
-        server.middlewares.use(
-          '/',
-          createProxyMiddleware((url) => !url.startsWith('/vite/'), {
-            target: 'http://127.0.0.1:2334/',
-            ws: true,
-          }) as any,
-        );
+        // server.httpServer.on('upgrade', (req, socket, head) => {
+        //   proxy.ws(req, socket as any, head, {
+        //     hostname: targetUrl.hostname,
+        //     port: +targetUrl.port,
+        //   });
+        // });
+        server.middlewares.use('/', (req, res, next) => {
+          if (req.url.startsWith('/vite/')) {
+            next();
+            return;
+          }
+          const url = req.url.replace(/^\/+/, '');
+          const { pathname, search } = new URL(url, target);
+          proxy.web(
+            req,
+            res,
+            {
+              protocol: targetUrl.protocol.slice(0, -1) as 'http' | 'https',
+              port: +targetUrl.port,
+              hostname: targetUrl.hostname,
+              path: pathname + search,
+            },
+            (err) => err && next(err),
+          );
+        });
       },
     },
     viteStaticCopy({
