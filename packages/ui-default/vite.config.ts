@@ -1,5 +1,6 @@
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import react from '@vitejs/plugin-react';
+import compression from 'compression';
 import proxy from 'http2-proxy';
 import { dirname } from 'path';
 import { defineConfig } from 'vite';
@@ -14,7 +15,7 @@ const targetUrl = new URL(target);
 export default defineConfig({
   base: '/vite/',
   publicDir: 'static',
-  server: { https: true },
+  server: { https: true, host: true },
   define: {
     'process.env.VERSION': JSON.stringify(version),
   },
@@ -35,6 +36,15 @@ export default defineConfig({
         //     port: +targetUrl.port,
         //   });
         // });
+        server.middlewares.use('/', (req, res, next) => {
+          if (!('_implicitHeader' in res)) {
+            (res as any)._implicitHeader = function () {
+              this.writeHead(this.statusCode);
+            };
+          }
+          return next();
+        });
+        server.middlewares.use(compression({ level: 9 }));
         server.middlewares.use('/', (req, res, next) => {
           if (req.url.startsWith('/vite/')) {
             next();
