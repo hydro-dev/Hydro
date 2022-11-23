@@ -3,7 +3,7 @@ import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import {
-    BadRequestError, ForbiddenError, NotFoundError, ValidationError,
+    BadRequestError, FileUploadError, ForbiddenError, NotFoundError, ValidationError,
 } from '../error';
 import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
@@ -57,14 +57,14 @@ export class FilesHandler extends Handler {
     async postUploadFile(domainId: string, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
-            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileUploadError('File limit exceeded.');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.user_files_size')) {
-            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new ForbiddenError('File size limit exceeded.');
+            if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileUploadError('File size limit exceeded.');
         }
         if (!filename) filename = file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -72,7 +72,7 @@ export class FilesHandler extends Handler {
         await storage.put(`user/${this.user._id}/${filename}`, file.filepath, this.user._id);
         const meta = await storage.getMeta(`user/${this.user._id}/${filename}`);
         const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
-        if (!meta) throw new Error('Upload failed');
+        if (!meta) throw new FileUploadError();
         this.user._files.push({ _id: filename, ...payload });
         await user.setById(this.user._id, { _files: this.user._files });
         this.back();

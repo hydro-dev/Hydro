@@ -99,6 +99,8 @@ export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', 
 export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeError', ForbiddenError, 'The invitation code you provided is invalid.');
 export const CurrentPasswordError = Err('CurrentPasswordError', ForbiddenError, "Current password doesn't match.");
 export const DiscussionLockedError = Err('DiscussionLockedError', ForbiddenError, 'The discussion is locked, you can not reply anymore.');
+export const FileUploadError = Err('FileUploadError', ForbiddenError, 'File upload failed.');
+export const HackFailedError = Err('HackFailedError', ForbiddenError, 'Hack failed.');
 
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
@@ -168,6 +170,8 @@ global.Hydro.error = {
     FileTooLargeError,
     CurrentPasswordError,
     DiscussionLockedError,
+    FileUploadError,
+    HackFailedError,
 };
 
 /*

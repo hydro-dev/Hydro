@@ -2,7 +2,7 @@ import { escapeRegExp, pick } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import type { Readable } from 'stream';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
-import { ProblemNotFoundError, ValidationError } from '../error';
+import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
@@ -245,7 +245,7 @@ export class ProblemModel {
             storage.put(`problem/${domainId}/${pid}/testdata/${name}`, f, operator),
         ]);
         const meta = await storage.getMeta(`problem/${domainId}/${pid}/testdata/${name}`);
-        if (!meta) throw new Error('Upload failed');
+        if (!meta) throw new FileUploadError();
         const payload = { name, ...pick(meta, ['size', 'lastModified', 'etag']) };
         payload.lastModified ||= new Date();
         if (!fileinfo) await ProblemModel.push(domainId, pid, 'data', { _id: name, ...payload });

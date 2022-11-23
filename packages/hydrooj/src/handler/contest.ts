@@ -7,6 +7,7 @@ import { Counter, sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError,
+    FileUploadError,
     ForbiddenError, InvalidTokenError, PermissionError,
     ValidationError,
 } from '../error';
@@ -485,21 +486,21 @@ export class ContestFilesHandler extends ContestDetailBaseHandler {
     @post('filename', Types.Name, true)
     async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
         if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
-            throw new ForbiddenError('File limit exceeded.');
+            throw new FileUploadError('File limit exceeded.');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.contest_files_size')) {
-            throw new ForbiddenError('File size limit exceeded.');
+            throw new FileUploadError('File size limit exceeded.');
         }
         if (!filename) filename = file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
         const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
         const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
-        if (!meta) throw new Error('Upload failed');
+        if (!meta) throw new FileUploadError();
         await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
         this.back();
     }

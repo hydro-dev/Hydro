@@ -10,7 +10,7 @@ import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError,
     ContestNotFoundError, ContestNotLiveError,
-    ForbiddenError, NoProblemError, NotFoundError,
+    ForbiddenError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError,
     ValidationError,
 } from '../error';
@@ -565,17 +565,17 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     @param('rid', Types.ObjectID)
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, rid: ObjectID, tid?: ObjectID) {
-        if (typeof this.pdoc.config !== 'object' || !this.pdoc.config.hackable) throw new ForbiddenError('This problem is not hackable.');
+        if (typeof this.pdoc.config !== 'object' || !this.pdoc.config.hackable) throw new HackFailedError('This problem is not hackable.');
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc || this.rdoc.pid !== this.pdoc.docId
             || this.rdoc.contest?.toString() !== tid?.toString()) throw new RecordNotFoundError(domainId, rid);
         if (tid) {
-            if (this.tdoc.rule !== 'codeforces') throw new ForbiddenError('This contest is not hackable.');
+            if (this.tdoc.rule !== 'codeforces') throw new HackFailedError('This contest is not hackable.');
             if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
         if (this.rdoc.uid === this.user._id) throw new BadRequestError('You cannot hack your own submission');
-        if (this.psdoc?.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You must accept this problem before hacking.');
-        if (this.rdoc.status !== STATUS.STATUS_ACCEPTED) throw new ForbiddenError('You cannot hack a unsuccessful submission.');
+        if (this.psdoc?.status !== STATUS.STATUS_ACCEPTED) throw new HackFailedError('You must accept this problem before hacking.');
+        if (this.rdoc.status !== STATUS.STATUS_ACCEPTED) throw new HackFailedError('You cannot hack a unsuccessful submission.');
     }
 
     async get() {
