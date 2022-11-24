@@ -239,6 +239,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
             delete this.response.body.expirations[domain.JOIN_EXPIRATION_KEEP_CURRENT];
         }
         this.response.body.url_prefix = (this.domain.host || [])[0] || system.get('server.url');
+        if (!this.response.body.url_prefix.endsWith('/')) this.response.body.url_prefix += '/';
         this.response.template = 'domain_join_applications.html';
     }
 
