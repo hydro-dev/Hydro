@@ -1,5 +1,5 @@
 import { ObjectID } from 'mongodb';
-import { DiscussionNotFoundError, ForbiddenError } from '../error';
+import { BlogDisabledError, DiscussionNotFoundError } from '../error';
 import { BlogDoc } from '../interface';
 import paginate from '../lib/paginate';
 import * as blog from '../model/blog';
@@ -14,7 +14,7 @@ class BlogHandler extends Handler {
 
     @param('did', Types.ObjectID, true)
     async _prepare(domainId: string, did: ObjectID) {
-        if (!system.get('server.blog')) throw new ForbiddenError('Blog is disabled');
+        if (!system.get('server.blog')) throw new BlogDisabledError();
         if (did) {
             this.ddoc = await blog.get(did);
             if (!this.ddoc) throw new DiscussionNotFoundError(domainId, did);

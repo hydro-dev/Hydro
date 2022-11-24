@@ -13,6 +13,15 @@ class TokenModel {
     static TYPE_LOSTPASS = 5;
     static TYPE_EXPORT = 6;
     static TYPE_IMPORT = 7;
+    static TYPE_TEXTS = {
+        [TokenModel.TYPE_SESSION]: 'Session',
+        [TokenModel.TYPE_REGISTRATION]: 'Registration',
+        [TokenModel.TYPE_CHANGEMAIL]: 'Change Email',
+        [TokenModel.TYPE_OAUTH]: 'OAuth',
+        [TokenModel.TYPE_LOSTPASS]: 'Lost Password',
+        [TokenModel.TYPE_EXPORT]: 'Export',
+        [TokenModel.TYPE_IMPORT]: 'Import',
+    };
 
     static async add(
         tokenType: number, expireSeconds: number, data: any, id = String.random(32),

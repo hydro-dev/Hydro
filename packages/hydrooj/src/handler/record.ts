@@ -1,7 +1,7 @@
 import { omit, pick, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ContestNotAttendedError, ContestNotFoundError, HackFailedError, PermissionError,
+    ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -186,7 +186,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     @param('rid', Types.ObjectID)
     async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
-        if (this.rdoc.files?.hack) throw new HackFailedError('Cannot rejudge a hack record.');
+        if (this.rdoc.files?.hack) throw new HackRejudgeFailedError();
     }
 
     @param('rid', Types.ObjectID)

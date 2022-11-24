@@ -8,11 +8,11 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotAttendedError, ContestNotEndedError,
-    ContestNotFoundError, ContestNotLiveError,
-    ForbiddenError, HackFailedError, NoProblemError, NotFoundError,
-    PermissionError, ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError,
-    ValidationError,
+    ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
+    FileSizeLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
+    PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
+    ProblemIsReferencedError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
+    RecordNotFoundError, SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
@@ -94,7 +94,7 @@ registerResolver(
     'ProblemManage', 'delete', 'Boolean!',
     async (arg, ctx) => {
         const tdocs = await contest.getRelated(ctx.args.domainId, ctx.pdoc.docId);
-        if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
+        if (tdocs.length) throw new ProblemAlreadyUsedByContestError(ctx.pdoc.docId, tdocs[0]._id);
         return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
     },
 );
@@ -467,7 +467,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     async postDelete() {
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const tdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
-        if (tdocs.length) throw new BadRequestError('Problem already used by contest {0}', tdocs[0]._id);
+        if (tdocs.length) throw new ProblemAlreadyUsedByContestError(this.pdoc.docId, tdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
     }
@@ -477,7 +477,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async prepare(domainId: string, tid?: ObjectID) {
         if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
-        if (typeof this.pdoc.config === 'string') throw new BadRequestError('Invalid problem config');
+        if (typeof this.pdoc.config === 'string') throw new ProblemConfigError();
     }
 
     async get() {
@@ -505,17 +505,17 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectID, true)
     async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectID) {
         const config = this.pdoc.config;
-        if (typeof config === 'string' || config === null) throw new BadRequestError('Problem configuration incorrect');
+        if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (config.type === 'objective') {
             lang = '_';
         } else if (config.langs && !config.langs.includes(lang)) {
-            throw new BadRequestError('Language not allowed.');
+            throw new ProblemNotAllowLanguageError();
         }
         if (pretest) {
             if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-            if (setting.langs[lang]?.pretest === false) throw new BadRequestError('Cannot run pretest for this language.');
+            if (setting.langs[lang]?.pretest === false) throw new ProblemNotAllowPretestError('language');
             if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
-                throw new BadRequestError('unable to run pretest');
+                throw new ProblemNotAllowPretestError('type');
             }
         }
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
@@ -573,7 +573,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
             if (this.tdoc.rule !== 'codeforces') throw new HackFailedError('This contest is not hackable.');
             if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
-        if (this.rdoc.uid === this.user._id) throw new BadRequestError('You cannot hack your own submission');
+        if (this.rdoc.uid === this.user._id) throw new HackFailedError('You cannot hack your own submission');
         if (this.psdoc?.status !== STATUS.STATUS_ACCEPTED) throw new HackFailedError('You must accept this problem before hacking.');
         if (this.rdoc.status !== STATUS.STATUS_ACCEPTED) throw new HackFailedError('You cannot hack a unsuccessful submission.');
     }
@@ -638,7 +638,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
         domainId: string, pid: string | number, title: string, content: string,
         newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
-        if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new BadRequestError('new pid exists');
+        if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new ProblemAlreadyExistError(pid);
         const $update: Partial<ProblemDoc> = {
             title, content, pid: newPid, hidden, tag: tag ?? [], difficulty, html: false,
         };
@@ -649,7 +649,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
 
 export class ProblemConfigHandler extends ProblemManageHandler {
     async get() {
-        if (this.pdoc.reference) throw new ForbiddenError('Cannot edit config of a referenced problem.');
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('edit config');
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
         const configFile = (this.pdoc.data || []).filter((i) => i.name.toLowerCase() === 'config.yaml');
         this.response.body.config = '';
@@ -692,7 +692,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
-            if (this.pdoc.reference) throw new BadRequestError('Cannot download testdata.');
+            if (this.pdoc.reference) throw new ProblemIsReferencedError('download testdata.');
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
             if (this.tdoc && !contest.isDone(this.tdoc)) throw new ContestNotEndedError(this.tdoc.domainId, this.tdoc.docId);
         }
@@ -720,7 +720,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Name, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (this.pdoc.reference) throw new ForbiddenError('Cannot edit files of a referenced problem.');
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
         if (!this.request.files.file) throw new ValidationError('file');
         if (!filename) filename = this.request.files.file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
@@ -756,7 +756,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 + (this.pdoc.additional_file?.length || 0)
                 + files.length
                 >= system.get('limit.problem_files_max')) {
-                throw new ForbiddenError('File limit exceeded.');
+                throw new FileSizeLimitExceededError();
             }
             const size = Math.sum(
                 (this.pdoc.data || []).map((i) => i.size),
@@ -764,7 +764,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 files.map((i) => i.size),
             );
             if (size >= system.get('limit.problem_files_max_size')) {
-                throw new ForbiddenError('File size limit exceeded.');
+                throw new FileSizeLimitExceededError();
             }
         }
         for (const entry of files) {
@@ -782,7 +782,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.Array)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
-        if (this.pdoc.reference) throw new ForbiddenError('Cannot delete files of a referenced problem.');
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files, this.user._id);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files, this.user._id);
@@ -796,7 +796,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
         if (this.pdoc.reference) {
-            if (type === 'testdata') throw new ForbiddenError('Cannot download testdata');
+            if (type === 'testdata') throw new ProblemIsReferencedError('download testdata');
             this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             if (!this.pdoc) throw new ProblemNotFoundError();
         }
@@ -969,7 +969,7 @@ export class ProblemCreateHandler extends Handler {
         domainId: string, title: string, content: string, pid: string,
         hidden = false, difficulty = 0, tag: string[] = [],
     ) {
-        if (pid && await problem.get(domainId, pid)) throw new BadRequestError('ProblemID already exists');
+        if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];

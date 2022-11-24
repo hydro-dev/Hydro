@@ -217,7 +217,7 @@ class HomeSecurityHandler extends Handler {
                 return this.back();
             }
         }
-        throw new InvalidTokenError(tokenDigest);
+        throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_SESSION], tokenDigest);
     }
 
     async postDeleteAllTokens() {
@@ -293,7 +293,7 @@ class UserChangemailWithCodeHandler extends Handler {
     async get(domainId: string, code: string) {
         const tdoc = await token.get(code, token.TYPE_CHANGEMAIL);
         if (!tdoc || tdoc.uid !== this.user._id) {
-            throw new InvalidTokenError(code);
+            throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_CHANGEMAIL], code);
         }
         const udoc = await user.getByEmail(domainId, tdoc.email);
         if (udoc) throw new UserAlreadyExistError(tdoc.email);
