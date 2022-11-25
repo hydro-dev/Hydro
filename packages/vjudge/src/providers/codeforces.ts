@@ -13,7 +13,7 @@ import {
     buildContent, Logger, SettingModel, sleep, STATUS, Time,
 } from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
-import { VERDICT } from '../verdict';
+import { normalize, VERDICT } from '../verdict';
 
 proxy(superagent);
 const logger = new Logger('remote/codeforces');
@@ -465,7 +465,7 @@ export default class CodeforcesProvider implements IBasicProvider {
                 });
             }
             if (body.waiting === 'true') continue;
-            const status = VERDICT[Object.keys(VERDICT).filter((k) => body.verdict.includes(k))[0]];
+            const status = VERDICT[Object.keys(VERDICT).find((k) => normalize(body.verdict).includes(k))];
             return await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
