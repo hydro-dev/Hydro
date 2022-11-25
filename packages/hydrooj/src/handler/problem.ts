@@ -9,7 +9,7 @@ import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    FileSizeLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
+    FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
     ProblemIsReferencedError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
     RecordNotFoundError, SolutionNotFoundError, ValidationError,
@@ -756,7 +756,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 + (this.pdoc.additional_file?.length || 0)
                 + files.length
                 >= system.get('limit.problem_files_max')) {
-                throw new FileSizeLimitExceededError();
+                throw new FileLimitExceededError('count');
             }
             const size = Math.sum(
                 (this.pdoc.data || []).map((i) => i.size),
@@ -764,7 +764,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 files.map((i) => i.size),
             );
             if (size >= system.get('limit.problem_files_max_size')) {
-                throw new FileSizeLimitExceededError();
+                throw new FileLimitExceededError('size');
             }
         }
         for (const entry of files) {

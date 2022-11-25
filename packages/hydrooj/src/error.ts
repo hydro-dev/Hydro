@@ -84,7 +84,6 @@ export const ValidationError = Err('ValidationError', ForbiddenError, function (
         ? 'Field {0} or {1} validation failed.'
         : 'Field {0} validation failed.';
 });
-export const BlogDisabledError = Err('BlogDisabledError', ForbiddenError, 'Blog is disabled.');
 export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenError, "You haven't attended this contest yet.");
 export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');
 export const ContestAlreadyAttendedError = Err('ContestAlreadyAttendedError', ForbiddenError, "You've already attended this contest.");
@@ -103,7 +102,7 @@ export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeErro
 export const CurrentPasswordError = Err('CurrentPasswordError', ForbiddenError, "Current password doesn't match.");
 export const DiscussionLockedError = Err('DiscussionLockedError', ForbiddenError, 'The discussion is locked, you can not reply anymore.');
 export const NotAssignedError = Err('NotAssignedError', ForbiddenError, 'You are not assigned to this {0}.');
-export const FileSizeLimitExceededError = Err('FileSizeLimitExceededError', ForbiddenError, 'File size limit exceeded.');
+export const FileLimitExceededError = Err('FileLimitExceededError', ForbiddenError, 'File {0} limit exceeded.');
 export const FileUploadError = Err('FileUploadError', ForbiddenError, 'File upload failed.');
 export const FileExistsError = Err('FileExistsError', ForbiddenError, 'File {0} already exists.');
 export const HackFailedError = Err('HackFailedError', ForbiddenError, 'Hack failed: {0}');
@@ -188,7 +187,7 @@ global.Hydro.error = {
     FileTooLargeError,
     CurrentPasswordError,
     DiscussionLockedError,
-    FileSizeLimitExceededError,
+    FileLimitExceededError,
     FileUploadError,
     FileExistsError,
     HackFailedError,
@@ -198,7 +197,6 @@ global.Hydro.error = {
     NotAssignedError,
     BuiltinLoginError,
     ProblemAlreadyExistError,
-    BlogDisabledError,
     ProblemAlreadyUsedByContestError,
     ProblemConfigError,
     ProblemIsReferencedError,
