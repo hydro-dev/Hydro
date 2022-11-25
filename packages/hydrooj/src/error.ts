@@ -106,17 +106,18 @@ export const FileLimitExceededError = Err('FileLimitExceededError', ForbiddenErr
 export const FileUploadError = Err('FileUploadError', ForbiddenError, 'File upload failed.');
 export const FileExistsError = Err('FileExistsError', ForbiddenError, 'File {0} already exists.');
 export const HackFailedError = Err('HackFailedError', ForbiddenError, 'Hack failed: {0}');
-export const HackRejudgeFailedError = Err('HackRejudgeFailedError', ForbiddenError, 'Cannot rejudge a hack record.');
-export const CannotDeleteSystemDomainError = Err('CannotDeleteSystemDomainError', ForbiddenError, 'You are not allowed to delete system domain.');
-export const OnlyOwnerCanDeleteDomainError = Err('OnlyOwnerCanDeleteDomainError', ForbiddenError, 'You are not the owner of this domain.');
-export const CannotEditSuperAdminError = Err('CannotEditSuperAdminError', ForbiddenError, 'You are not allowed to edit super admin in web.');
 export const ProblemAlreadyExistError = Err('ProblemAlreadyExistError', ForbiddenError, 'Problem {0} already exists.');
 export const ProblemAlreadyUsedByContestError = Err('ProblemAlreadyUsedByContestError', ForbiddenError, 'Problem {0} is already used by contest {1}.');
-export const ProblemConfigError = Err('ProblemConfigError', ForbiddenError, 'Invalid problem config.');
-export const ProblemIsReferencedError = Err('ProblemIsReferencedError', ForbiddenError, 'Cannot {0} of a referenced problem.');
 export const ProblemNotAllowPretestError = Err('ProblemNotAllowPretestError', ForbiddenError, 'This {0} is not allow run pretest.');
 export const ProblemNotAllowLanguageError = Err('ProblemNotAllowSubmitError', ForbiddenError, 'This language is not allow to submit.');
-export const TFAOperationError = Err('TFAOperationError', ForbiddenError, '2FA is already {0}.');
+
+export const HackRejudgeFailedError = Err('HackRejudgeFailedError', BadRequestError, 'Cannot rejudge a hack record.');
+export const CannotDeleteSystemDomainError = Err('CannotDeleteSystemDomainError', BadRequestError, 'You are not allowed to delete system domain.');
+export const OnlyOwnerCanDeleteDomainError = Err('OnlyOwnerCanDeleteDomainError', BadRequestError, 'You are not the owner of this domain.');
+export const CannotEditSuperAdminError = Err('CannotEditSuperAdminError', BadRequestError, 'You are not allowed to edit super admin in web.');
+export const ProblemConfigError = Err('ProblemConfigError', BadRequestError, 'Invalid problem config.');
+export const ProblemIsReferencedError = Err('ProblemIsReferencedError', BadRequestError, 'Cannot {0} of a referenced problem.');
+export const TFAOperationError = Err('TFAOperationError', BadRequestError, '2FA is already {0}.');
 
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
