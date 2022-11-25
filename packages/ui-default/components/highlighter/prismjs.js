@@ -1,32 +1,13 @@
-import Prism from 'prismjs'; // eslint-disable-line
-
-// import 'prismjs/plugins/toolbar/prism-toolbar';
-// import 'prismjs/plugins/toolbar/prism-toolbar.css';
-import 'prismjs/plugins/line-numbers/prism-line-numbers';
-import 'prismjs/plugins/line-numbers/prism-line-numbers.css';
-// import 'prismjs/plugins/line-highlight/prism-line-highlight';
+import '@virtual/prismjs-all';
 
 import Clipboard from 'clipboard';
 import $ from 'jquery';
-import components from 'prismjs/components';
-import getLoader from 'prismjs/dependencies';
+import Prism from 'prismjs';
 import Notification from 'vj/components/notification/index';
 import i18n from 'vj/utils/i18n';
 import languageMeta from './meta';
 
-// const files = import.meta.glob('prismjs/components/prism-?([a-z0-9-]+).js');
-const loadedLanguages = new Set();
-function loadLanguages() {
-  const languages = Object.keys(components.languages).filter((l) => l !== 'meta');
-  const loaded = [...loadedLanguages, ...Object.keys(Prism.languages)];
-  getLoader(components, languages, loaded).load((lang) => {
-    // files(`./prism-${lang}.js`);
-    loadedLanguages.add(lang);
-  });
-}
-
 const languageExtMap = {};
-loadLanguages();
 // Map possible language names to Prism language name
 languageMeta.forEach((meta) => {
   for (let i = 0; i < meta.ext.length; ++i) {

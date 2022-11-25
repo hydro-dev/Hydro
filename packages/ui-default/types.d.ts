@@ -1,3 +1,8 @@
+declare module '@virtual/*' {
+  const out;
+  export default out;
+}
+
 declare global {
   interface Window {
     node_modules: any;
@@ -7,5 +12,3 @@ declare global {
   let UserContext: Record<string, any>;
   let UiContext: Record<string, any>;
 }
-
-export { };
