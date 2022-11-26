@@ -482,6 +482,7 @@ My Files: 我的文件
 My Profile: 我的资料
 My Recent Submissions: 我的最近递交记录
 My Role: 我的角色
+My status: 我的状态
 name: 名称
 Name: 名称
 Network error: 网络错误
@@ -537,6 +538,7 @@ Output Format: 输出格式
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。
+page.training_detail.see_other_user_detail: 您正在查看用户 {0} 的训练详情。
 pager_first: « 第一页
 pager_last: 末页 »
 pager_next: 下一页 ›

@@ -49,6 +49,7 @@ manage: System Manage
 no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
 page.problem_detail.sidebar.show_category: Click to Show
 page.training_detail.invalid_when_not_enrolled: You cannot view problem details unless enrolled.
+page.training_detail.see_other_user_detail: You are viewing user {0} training details.
 pager_first: « First
 pager_last: Last »
 pager_next: Next ›

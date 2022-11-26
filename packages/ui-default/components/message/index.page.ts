@@ -39,7 +39,7 @@ const onmessage = (msg) => {
 
 const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
 // TODO handle a better way for cookie
-url.searchParams.append('sid', document.cookie);
+if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
 const endpoint = url.toString().replace('http', 'ws');
 
 const initWorkerMode = () => {

@@ -91,16 +91,30 @@ class TrainingMainHandler extends Handler {
 
 class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
+    @param('uid', Types.PositiveInt, true)
+    @param('pjax', Types.Boolean, true)
+    async get(domainId: string, tid: ObjectID, uid: number, pjax: boolean) {
         const tdoc = await training.get(domainId, tid);
         await bus.parallel('training/get', tdoc, this);
+        let targetUser = this.user._id;
+        let enrollUsers = [];
+        let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
+        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
+                .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
+            if (uid) {
+                targetUser = uid;
+                shouldCompare = targetUser !== this.user._id;
+            }
+        }
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        const [owner, pdict] = await Promise.all([
-            user.getById(domainId, tdoc.owner),
+        const [udict, pdict] = await Promise.all([
+            user.getList(domainId, [tdoc.owner, ...enrollUsers]),
             problem.getList(domainId, pids, canViewHidden, true),
         ]);
-        const psdict = await problem.getListStatus(domainId, this.user._id, pids);
+        const psdict = await problem.getListStatus(domainId, targetUser, pids);
+        const selfPsdict = shouldCompare ? await problem.getListStatus(domainId, this.user._id, pids) : {};
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
@@ -134,10 +148,13 @@ class TrainingDetailHandler extends Handler {
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
         });
-        this.response.template = 'training_detail.html';
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, owner,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers, selfPsdict,
         };
+        if (pjax) {
+            const html = await this.renderHTML('partials/training_detail.html', this.response.body);
+            this.response.body = { fragments: [{ html }] };
+        } else this.response.template = 'training_detail.html';
     }
 
     @param('tid', Types.ObjectID)
