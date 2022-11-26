@@ -453,18 +453,15 @@ export async function apply(pluginContext: Context) {
         rewrite: (p) => p.replace('/fs', ''),
     });
     app.use(async (ctx, next) => {
+        for (const key in captureAllRoutes) {
+            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
+        }
         if (!ctx.path.startsWith('/fs/')) return await next();
         if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
         ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
         return await next();
     });
     app.use(Compress());
-    app.use(async (ctx, next) => {
-        for (const key in captureAllRoutes) {
-            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
-        }
-        return next();
-    });
     for (const addon of [...global.addons].reverse()) {
         const dir = resolve(addon, 'public');
         if (!fs.existsSync(dir)) continue;

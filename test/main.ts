@@ -70,14 +70,11 @@ describe('App', () => {
     }
 
     after(() => {
-        const metrics = [];
-        for (const key in results) {
-            metrics.push({
-                name: `Benchmark - ${key} - Req/sec`,
-                unit: 'Req/sec',
-                value: results[key].requests.average,
-            });
-        }
+        const metrics = Object.entries(([k, v]) => ({
+            name: `Benchmark - ${k} - Req/sec`,
+            unit: 'Req/sec',
+            value: v.requests.average,
+        }));
         writeFileSync('./benchmark.json', JSON.stringify(metrics, null, 2));
         setTimeout(() => process.exit(0), 1000);
     });

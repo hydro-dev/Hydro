@@ -9,7 +9,7 @@ if [ $EUID != 0 ]; then
 fi
 set -e
 echo "Executing Hydro install script v3.0.0"
-echo "Hydro includes anonymous system telemetry,
+echo "Hydro includes system telemetry,
 which helps developers figure out the most commonly used operating system and platform.
 To disable this feature, checkout our sourcecode."
 mkdir -p /data/db /data/file ~/.hydro
