@@ -1,5 +1,6 @@
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
+{% set expanded = 0 %}
 <div data-fragment-id="training_detail">
   {% if handler.request.query.uid and handler.request.query.uid != handler.user._id %}
   <blockquote class="typo note">
@@ -7,7 +8,7 @@
   </blockquote>
   {% endif %}
   {%- for node in tdoc['dag'] -%}
-    <div data-heading-extract-to="#menu-item-training_detail" class="training__section {% if nsdict[node['_id']]['isDone'] %}done{% elif nsdict[node['_id']]['isProgress'] %}progress{% elif nsdict[node['_id']]['isOpen'] %}open{% else %}invalid{% endif %}  {% if nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen'] %}expanded{% else %}collapsed{% endif %}">
+    <div data-heading-extract-to="#menu-item-training_detail" class="training__section {% if expanded < 5 and (nsdict[node['_id']]['isProgress'] or nsdict[node['_id']]['isOpen']) %}expanded{% set expanded = expanded + 1 %}{% else %}collapsed{% endif %}">
       <div class="section__header clearfix">
         <div class="float-left">
           <h1 data-heading id="node-{{ node._id }}" class="section__title">{{ _('Section') }} {{ node['_id'] }}. {{ node['title'].split('\n')[0] }}</h1>
