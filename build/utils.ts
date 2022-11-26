@@ -1,9 +1,10 @@
-const globby = require('globby');
-const spawn = require('cross-spawn');
+import { SpawnOptions } from 'child_process';
+import spawn from 'cross-spawn';
+import { globby } from 'globby';
 
-const cwd = process.cwd();
+export const cwd = process.cwd();
 
-function getWorkspaces() {
+export function getWorkspaces() {
     return globby(require('../package.json').workspaces, {
         cwd,
         deep: 0,
@@ -12,9 +13,9 @@ function getWorkspaces() {
     });
 }
 
-function spawnAsync(command, path) {
+export function spawnAsync(command, path) {
     const args = command.split(/\s+/);
-    const options = { stdio: 'inherit' };
+    const options: SpawnOptions = { stdio: 'inherit' };
     if (path) options.cwd = path;
     const child = spawn(args[0], args.slice(1), options);
     return new Promise((resolve, reject) => {
@@ -22,7 +23,3 @@ function spawnAsync(command, path) {
         child.on('error', reject);
     });
 }
-
-module.exports = {
-    cwd, spawnAsync, getWorkspaces,
-};

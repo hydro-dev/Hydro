@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.42.18",
+  "version": "4.42.19",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -52,7 +52,7 @@
     "fancy-log": "^2.0.0",
     "flatpickr": "^4.6.13",
     "friendly-errors-webpack-plugin": "^1.7.0",
-    "graphiql": "2.1.0",
+    "graphiql": "2.2.0",
     "gulp": "^4.0.2",
     "gulp-iconfont": "^11.0.1",
     "gulp-if": "^3.0.0",

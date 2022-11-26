@@ -15,12 +15,12 @@
         "puppeteer-extra": "3.3.0",
         "puppeteer-extra-plugin-portal": "3.1.0",
         "puppeteer-extra-plugin-stealth": "2.10.1",
-        "superagent": "^8.0.3",
+        "superagent": "^8.0.4",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {
         "@types/jsdom": "^20.0.1",
-        "@types/superagent": "^4.1.15",
+        "@types/superagent": "^4.1.16",
         "@types/superagent-proxy": "^3.0.0"
     }
 }
