@@ -40,6 +40,7 @@ const locales = {
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
         'info.skip': '步骤已跳过。',
+        'warn.bt': '检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Ubuntu 22.04 系统进行安装。',
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
@@ -58,6 +59,7 @@ const locales = {
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
         'info.skip': 'Step skipped.',
+        'warn.bt': 'BT-Panel detected, the installation script may not work properly. It is recommended to use a pure Ubuntu 22.04 OS.',
     },
 };
 
@@ -225,6 +227,14 @@ const Steps = () => [
     {
         init: 'install.preparing',
         operations: [
+            () => {
+                if (process.env.IGNORE_BT) return;
+                const res = exec('bt default');
+                if (!res.code) {
+                    log.warn('warn.bt');
+                    process.exit(1);
+                }
+            },
             () => {
                 if (CN) return;
                 // rollback mirrors

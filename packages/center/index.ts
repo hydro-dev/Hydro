@@ -1,15 +1,15 @@
 import assert from 'assert';
-import crypto from 'crypto';
+import crypto from 'crypto-js';
 import {
     db, definePlugin, ForbiddenError, Handler, post, Types, yaml,
 } from 'hydrooj';
 
 function decrypt(encrypted: string) {
-    if (!encrypted) throw new Error();
-    const decipher = crypto.createDecipheriv('des-ecb', 'hydro-oj', '');
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+    return crypto.DES.decrypt(
+        { ciphertext: crypto.enc.Hex.parse(encrypted) },
+        crypto.enc.Utf8.parse('hydro-oj'),
+        { mode: crypto.mode.ECB },
+    ).toString(crypto.enc.Utf8);
 }
 
 declare module 'hydrooj' {
@@ -38,6 +38,7 @@ class DataReportHandler extends Handler {
         try {
             assert(typeof payload.url === 'string');
         } catch (e) {
+            console.log(payload);
             throw new ForbiddenError();
         }
         const old = await coll.findOne({ _id: installId });

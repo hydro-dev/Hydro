@@ -4,35 +4,29 @@ import { STATUS } from '../model/builtin';
 import storage from '../model/storage';
 
 export async function run(_, report) {
-    const cursor = storage.coll.find({ path: { $regex: /^problem\//i } }).sort({ path: 1 });
-    const count = await cursor.count();
-    report({ message: `Total ${count} files` });
-    let current = '';
-    let memory = 0;
-    let start = new Date().getTime();
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const doc = await cursor.next();
-        const id = doc?.path.split('problem/')[1].split('/')[0]!;
-        if (!current) current = id;
-        if (!doc || current !== id) {
-            const end = new Date().getTime();
-            report({
-                case: {
-                    message: current,
-                    memory: Math.floor(memory / 102.4) / 10,
-                    time: end - start,
-                    status: STATUS.STATUS_ACCEPTED,
-                    score: 0,
-                },
-            });
-            start = end;
-            memory = 0;
-            current = id;
-            if (!doc) break;
-        }
-        memory += doc.size || 0;
+    let totalProblemSize = 0;
+    const m = await storage.coll.aggregate([
+        { $match: { path: { $regex: /^problem\//i } } },
+        { $addFields: { domainId: { $arrayElemAt: [{ $split: ['$path', '/'] }, 1] } } },
+        { $group: { _id: '$domainId', size: { $sum: '$size' }, count: { $sum: 1 } } },
+        { $match: { size: { $gt: 10 * 1024 * 1024 } } },
+        { $sort: { size: -1 } },
+    ]).toArray();
+    for (let i = 0; i < m.length; i++) {
+        const message = m[i]._id;
+        report({
+            case: {
+                id: i + 1,
+                message,
+                memory: Math.floor(m[i].size / 102.4) / 10,
+                time: 0,
+                status: STATUS.STATUS_ACCEPTED,
+                score: 0,
+            },
+        });
+        totalProblemSize += m[i].size;
     }
+    report({ message: `Problem total ${totalProblemSize / 1024 / 1024} MB` });
     return true;
 }
 

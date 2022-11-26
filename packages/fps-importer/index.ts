@@ -59,7 +59,7 @@ class FpsProblemImportHandler extends Handler {
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
             const title = decodeHTML(p.title.join(' '));
-            const tags = _.filter(p.source, (i: string) => i.trim());
+            const tags = _.filter(p.source, (i: string) => i.trim()).flatMap((i) => i.split(' ')).filter((i) => i);
             const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
             const tasks = [
                 ProblemModel.edit(domainId, pid, { html: true }),

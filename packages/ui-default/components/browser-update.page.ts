@@ -17,12 +17,12 @@ function isSupported() {
 
 export default new AutoloadPage('browser-update', () => {
   if (UserContext.priv !== -1) return; // Only warn superadmins
-  if (sessionStorage.getItem('su-browser-warn')) return;
+  if ((+localStorage.getItem('su-browser-warn') || 0) - Date.now() < 24 * 3600 * 1000) return;
   const key = 'warn::admin:unsupportedbrowser';
   if (!isSupported() && i18n(key) !== key) {
     new InfoDialog({
       $body: tpl.typoMsg(i18n(key)),
     }).open();
-    sessionStorage.setItem('su-browser-warn', 'on');
+    localStorage.setItem('su-browser-warn', Date.now().toString());
   }
 });

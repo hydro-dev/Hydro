@@ -1,7 +1,7 @@
 import { omit, pick, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ContestNotAttendedError, ContestNotFoundError, ForbiddenError, PermissionError,
+    ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError, PermissionError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -89,7 +89,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
                 canViewProblem
-                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, this.user.group, false)
+                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false)
                     : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
             ]);
         this.response.body = {
@@ -165,19 +165,18 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (this.tdoc && this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
+        if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
-            canViewCode ||= tsdoc?.attend;
-        }
+            if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
+                canViewCode ||= tsdoc?.attend;
+            }
+            if (!tsdoc.attend && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+        } else if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';
             rdoc.files = {};
             rdoc.compilerTexts = [];
         } else if (download) return await this.download();
-        if (pdoc && !(rdoc.contest && this.user._id === rdoc.uid)) {
-            if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        }
-
         this.response.template = 'record_detail.html';
         this.response.body = {
             udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
@@ -187,7 +186,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     @param('rid', Types.ObjectID)
     async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
-        if (this.rdoc.files?.hack) throw new ForbiddenError('Cannot rejudge a hack record.');
+        if (this.rdoc.files?.hack) throw new HackRejudgeFailedError();
     }
 
     @param('rid', Types.ObjectID)
@@ -346,7 +345,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
-        this.throttleSend = throttle(this.send, 1000);
+        this.throttleSend = throttle(this.sendUpdate, 1000);
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);

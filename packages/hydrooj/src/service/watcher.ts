@@ -4,7 +4,7 @@
 import { relative, resolve } from 'path';
 import { FSWatcher, watch } from 'chokidar';
 import { debounce } from 'lodash';
-import { Context, Runtime, Service } from '../context';
+import { Context, MainScope, Service } from '../context';
 import { Logger } from '../logger';
 import { unwrapExports } from '../utils';
 
@@ -142,10 +142,10 @@ export default class Watcher extends Service {
         this.analyzeChanges();
 
         /** plugins pending classification */
-        const pending = new Map<string, Runtime>();
+        const pending = new Map<string, MainScope>();
 
         /** plugins that should be reloaded */
-        const reloads = new Map<Runtime, string>();
+        const reloads = new Map<MainScope, string>();
 
         // we assume that plugin entry files are "atomic"
         // that is, reloading them will not cause any other reloads
@@ -172,7 +172,7 @@ export default class Watcher extends Service {
 
             // prepare for reload
             let isMarked = false;
-            const visited = new Set<Runtime>();
+            const visited = new Set<MainScope>();
             const queued = [runtime];
             while (queued.length) {
                 const runtime = queued.shift();

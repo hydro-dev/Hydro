@@ -93,7 +93,7 @@ export class HomeHandler extends Handler {
         for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
         const pdict = await ProblemModel.getList(
             domainId, psdocs.map((pdoc) => pdoc.docId),
-            this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, false,
+            this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
         );
         const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
         return [pdocs, psdict];
@@ -114,7 +114,7 @@ export class HomeHandler extends Handler {
     }
 
     async get({ domainId }) {
-        const homepageConfig = system.get('hydrooj.homepage');
+        const homepageConfig = this.domain.homepage || system.get('hydrooj.homepage');
         const info = yaml.load(homepageConfig) as any;
         const contents = [];
         for (const column of info) {
@@ -217,7 +217,7 @@ class HomeSecurityHandler extends Handler {
                 return this.back();
             }
         }
-        throw new InvalidTokenError(tokenDigest);
+        throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_SESSION], tokenDigest);
     }
 
     async postDeleteAllTokens() {
@@ -293,7 +293,7 @@ class UserChangemailWithCodeHandler extends Handler {
     async get(domainId: string, code: string) {
         const tdoc = await token.get(code, token.TYPE_CHANGEMAIL);
         if (!tdoc || tdoc.uid !== this.user._id) {
-            throw new InvalidTokenError(code);
+            throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_CHANGEMAIL], code);
         }
         const udoc = await user.getByEmail(domainId, tdoc.email);
         if (udoc) throw new UserAlreadyExistError(tdoc.email);

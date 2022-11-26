@@ -119,21 +119,27 @@ const checkers: Record<string, Checker> = new Proxy({
      * argv[6]：输出错误报告的文件
      */
     async lemon(config) {
-        const { files } = await run(`${config.execute} input usrout answer ${config.score} score message`, {
+        const { files, code } = await run(`${config.execute} input usrout answer ${config.score} score message`, {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
                 input: config.input,
                 ...config.copyIn,
             },
-            copyOut: ['score', 'message'],
+            copyOut: ['score?', 'message?'],
             env: config.env,
         });
-        const { message } = files;
-        const score = parseInt(files.score, 10);
+        if (code) {
+            return {
+                score: 0,
+                message: `Checker returned with status ${code}`,
+                status: STATUS.STATUS_SYSTEM_ERROR,
+            };
+        }
+        const score = Math.floor(+files.score) || 0;
         return {
             score,
-            message,
+            message: files.message,
             status: score === config.score
                 ? STATUS.STATUS_ACCEPTED
                 : STATUS.STATUS_WRONG_ANSWER,
@@ -188,7 +194,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status } = await run(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { stderr, status, code } = await run(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -202,6 +208,13 @@ const checkers: Record<string, Checker> = new Proxy({
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
                 message: stderr,
+            };
+        }
+        if (status === STATUS.STATUS_RUNTIME_ERROR) {
+            return {
+                status: STATUS.STATUS_WRONG_ANSWER,
+                score: 0,
+                message: `Checker exited with code ${code}`,
             };
         }
         return parse(stderr, config.score);

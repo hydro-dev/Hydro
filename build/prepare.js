@@ -9,6 +9,7 @@ const compilerOptionsBase = {
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',
+    jsx: 'react',
     sourceMap: false,
     composite: true,
     strictBindCallApply: true,

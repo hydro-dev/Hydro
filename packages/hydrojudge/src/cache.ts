@@ -27,6 +27,7 @@ export = function main() {
                 const domaindir = path.resolve(hostdir, domain);
                 if (!fs.statSync(domaindir).isDirectory()) continue;
                 let problems = fs.readdirSync(domaindir);
+                if (problems.includes('.skip-prune')) continue;
                 for (const problem of problems) {
                     const problemdir = path.resolve(domaindir, problem);
                     if (!fs.statSync(problemdir).isDirectory()) continue;

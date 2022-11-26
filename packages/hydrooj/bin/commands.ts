@@ -1,3 +1,4 @@
+/* eslint-disable import/no-dynamic-require */
 import child from 'child_process';
 import os from 'os';
 import path from 'path';
@@ -46,9 +47,9 @@ if (!addons.includes('@hydrooj/ui-default')) {
     }
 }
 
+addons = Array.from(new Set(addons));
 if (!argv.args[0] || argv.args[0] === 'cli') {
     const hydro = require('../src/loader');
-    addons = Array.from(new Set(addons));
     for (const addon of addons) hydro.addon(addon);
     (argv.args[0] === 'cli' ? hydro.loadCli : hydro.load)().catch((e) => {
         console.error(e);
@@ -195,7 +196,19 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
     cli.help();
     cli.parse();
     if (!cli.matchedCommand) {
-        console.log('Unknown command.');
-        cli.outputHelp();
+        for (const i of addons) {
+            try {
+                require(`${i}/command.ts`).apply(cli);
+            } catch (e) {
+                try {
+                    require(`${i}/command.js`).apply(cli);
+                } catch (err) { }
+            }
+        }
+        cli.parse();
+        if (!cli.matchedCommand) {
+            console.log('Unknown command.');
+            cli.outputHelp();
+        }
     }
 }

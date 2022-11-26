@@ -6,7 +6,6 @@ dist/
 /build/*.js
 .cache/
 *.log
-*.d.ts
 *.js.map
 *.tsbuildinfo
 *.hydro
@@ -37,7 +36,6 @@ packages/**/*.js
 !/build/*.js
 !**/bin/*.js
 !*.page.js
-!/install/jssh.d.ts
 !packages/utils/lib/register.js
 ## ui-default
 !packages/ui-default/**/*.js

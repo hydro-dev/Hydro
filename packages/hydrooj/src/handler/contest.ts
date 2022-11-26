@@ -6,9 +6,8 @@ import { ObjectID } from 'mongodb';
 import { Counter, sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    ContestScoreboardHiddenError,
-    ForbiddenError, InvalidTokenError, PermissionError,
-    ValidationError,
+    ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError, InvalidTokenError,
+    NotAssignedError, PermissionError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -101,7 +100,7 @@ export class ContestDetailBaseHandler extends Handler {
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc)) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
-                throw new ForbiddenError('You are not assigned.');
+                throw new NotAssignedError('contest', tid);
             }
         }
         if (this.tdoc.duration && this.tsdoc?.startAt) {
@@ -169,7 +168,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             && !this.user.own(this.tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)
         ) return;
-        const pdict = await problem.getList(domainId, this.tdoc.pids, true, undefined, undefined, problem.PROJECTION_CONTEST_LIST);
+        const pdict = await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST);
         let psdict = {};
         let rdict = {};
         if (this.tsdoc) {
@@ -191,7 +190,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
     @param('code', Types.String, true)
     async postAttend(domainId: string, tid: ObjectID, code = '') {
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
-        if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError(code);
+        if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
         await contest.attend(domainId, tid, this.user._id);
         this.back();
     }
@@ -252,7 +251,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         const tdoc = await contest.get(domainId, tid);
         if (!contest.canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
         const [pdict, teams] = await Promise.all([
-            problem.getList(domainId, tdoc.pids, true, undefined, false, undefined, true),
+            problem.getList(domainId, tdoc.pids, true, false, undefined, true),
             contest.getMultiStatus(domainId, { docId: tid }).toArray(),
         ]);
         const udict = await user.getList(domainId, teams.map((i) => i.uid));
@@ -287,7 +286,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     }
 
     async exportScoreboard(domainId: string, tid: ObjectID, ext: string) {
-        await this.limitRate('scoreboard_download', 120, 3);
+        await this.limitRate('scoreboard_download', 60, 3);
         if (ext === 'ghost') {
             await this.exportGhost(domainId, tid);
             return;
@@ -373,7 +372,7 @@ export class ContestEditHandler extends Handler {
         if (beginAtMoment.isSameOrAfter(endAt)) throw new ValidationError('duration');
         const beginAt = beginAtMoment.toDate();
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
-        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, this.user.group, true);
+        await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
                 title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
@@ -415,7 +414,7 @@ export class ContestCodeHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('all', Types.Boolean)
     async get(domainId: string, tid: ObjectID, all: boolean) {
-        await this.limitRate('contest_code', 3600, 60);
+        await this.limitRate('contest_code', 60, 10);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
         if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
             this.checkPerm(PERM.PERM_READ_RECORD_CODE);
@@ -485,21 +484,21 @@ export class ContestFilesHandler extends ContestDetailBaseHandler {
     @post('filename', Types.Name, true)
     async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
         if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
-            throw new ForbiddenError('File limit exceeded.');
+            throw new FileLimitExceededError('count');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
         if (size >= system.get('limit.contest_files_size')) {
-            throw new ForbiddenError('File size limit exceeded.');
+            throw new FileLimitExceededError('size');
         }
         if (!filename) filename = file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
         const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
         const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
-        if (!meta) throw new Error('Upload failed');
+        if (!meta) throw new FileUploadError();
         await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
         this.back();
     }

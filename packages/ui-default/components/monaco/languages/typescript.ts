@@ -7,7 +7,7 @@ const diagnosticsOptions: monaco.languages.typescript.DiagnosticsOptions = {
   noSyntaxValidation: false,
   noSuggestionDiagnostics: true,
 };
-const compilerOptions = {
+const compilerOptions: monaco.languages.typescript.CompilerOptions = {
   target: monaco.languages.typescript.ScriptTarget.ES2020,
   module: monaco.languages.typescript.ModuleKind.ESNext,
   allowNonTsExtensions: true,

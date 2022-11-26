@@ -131,7 +131,7 @@ export class HandlerCommon {
         this.domainId = args.domainId;
     }
 
-    async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = false) {
+    async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
         if (ignoredLimit.includes(op)) return;
         if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
         const overrideLimit = system.get(`limit.${op}`);
@@ -177,7 +177,7 @@ export class Handler extends HandlerCommon {
     }
 
     async init() {
-        if (!argv.options.benchmark) await this.limitRate('global', 5, 88);
+        if (!argv.options.benchmark) await this.limitRate('global', 5, 100);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         this.loginMethods = Object.keys(global.Hydro.module.oauth)
             .map((key) => ({
@@ -228,7 +228,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
     ctx.handler = h;
     try {
         const method = ctx.method.toLowerCase();
-        const operation = (method === 'post' && ctx.request.body.operation)
+        const operation = (method === 'post' && ctx.request.body?.operation)
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
 
@@ -453,18 +453,15 @@ export async function apply(pluginContext: Context) {
         rewrite: (p) => p.replace('/fs', ''),
     });
     app.use(async (ctx, next) => {
+        for (const key in captureAllRoutes) {
+            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
+        }
         if (!ctx.path.startsWith('/fs/')) return await next();
         if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
         ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
         return await next();
     });
     app.use(Compress());
-    app.use(async (ctx, next) => {
-        for (const key in captureAllRoutes) {
-            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
-        }
-        return next();
-    });
     for (const addon of [...global.addons].reverse()) {
         const dir = resolve(addon, 'public');
         if (!fs.existsSync(dir)) continue;

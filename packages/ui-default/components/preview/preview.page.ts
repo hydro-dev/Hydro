@@ -135,7 +135,7 @@ export async function previewFile(ev, type = '') {
     if (ext === 'pdf') return previewPDF(`${link}${link.includes('?') ? '&' : '?'}noDisposition=1`);
     Notification.info(i18n('Loading file...'));
     try {
-      const { url } = await request.get(link);
+      const { url } = await request.get(link, {}, { headers: { 'Do-Not-Cache': 'on' } });
       if (/^(doc|xls|ppt)x?$/.test(ext)) return previewOffice(link, url);
       content = await request.get(url, undefined, { dataType: 'text' });
     } catch (e) {

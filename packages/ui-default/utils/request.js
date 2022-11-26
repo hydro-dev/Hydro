@@ -26,7 +26,7 @@ const request = {
             const { error } = jqXHR.responseJSON;
             if (error.params) {
               const message = i18n(error.message, ...error.params);
-              const err = new Error(message);
+              const err = new Error(message === error.message && error.params.length ? `${error.message}: ${error.params.join(' ')}` : message);
               err.rawMessage = error.message;
               err.params = error.params;
               reject(err);

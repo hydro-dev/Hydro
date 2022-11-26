@@ -1,4 +1,3 @@
-{% if not isIE(handler.request.headers['user-agent']) %}
 <div class="footer">
   <div class="row"><div class="columns">
   {% if show_topics|default(true) %}
@@ -50,7 +49,7 @@
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='privacy') }}">{{ _('Privacy') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
           <li class="footer__extra-link-item"><a href="https://hydro.js.org/#%E8%81%94%E7%B3%BB%E6%88%91%E4%BB%AC">{{ _('Copyright Complaint') }}</a></li>
-          <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-lang">
+          <li class="footer__extra-link-item nojs--hide" data-dropdown-target="#menu-footer-lang">
             <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-lang">
             {%- for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range -%}
@@ -58,7 +57,7 @@
             {%- endfor -%}
             </ol>
           </li>
-          <li class="footer__extra-link-item" data-dropdown-target="#menu-footer-theme">
+          <li class="footer__extra-link-item nojs--hide" data-dropdown-target="#menu-footer-theme">
             <span><span class="icon icon-global"></span> {{ _('Theme') }} <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-theme">
               <li class="menu__item"><a class="menu__link" href="{{ url('set_theme', theme='light') }}">{{ _('Light') }}</a></li>
@@ -84,4 +83,3 @@
     </div>
   </div></div>
 </div>
-{% endif %}

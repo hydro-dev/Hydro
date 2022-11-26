@@ -21,9 +21,11 @@ self.addEventListener('notificationclick', (event) => {
 const PRECACHE = `precache-${process.env.VERSION}`;
 const DO_NOT_CACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
 
-function shouldCache(name: string) {
+function shouldCache(name: string, request?: Request) {
   if (!name.split('/').pop()) return false;
   if (!name.split('/').pop().includes('.')) return false;
+  // For files download, a response is formatted as string
+  if (request && request.headers.get('Do-Not-Cache')) return false;
   return true;
 }
 function shouldPreCache(name: string) {
@@ -86,21 +88,22 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event: FetchEvent) => {
   if (!['get', 'head'].includes(event.request.method.toLowerCase())) return;
-  if (!shouldCache(event.request.url) && config?.base && config?.targets?.length) {
+  if (!shouldCache(event.request.url, event.request) && config?.base && config?.targets?.length) {
     if (new URL(event.request.url).origin !== location.origin) return;
     event.respondWith(get(event.request.url));
     return;
   }
   // Only handle whitelisted origins;
   if (!config?.hosts?.some((i) => event.request.url.startsWith(i))) return;
-  if (process.env.NODE_ENV !== 'production' || !shouldCache(event.request.url)) return;
+  if (!shouldCache(event.request.url, event.request)) return;
+  const Accept = event.request.headers.get('Accept');
   event.respondWith((async () => {
     const cachedResponse = await caches.match(event.request.url);
     if (cachedResponse) return cachedResponse;
     console.log(`Caching ${event.request.url}`);
     const [cache, response] = await Promise.all([
       caches.open(PRECACHE),
-      fetch(event.request.url), // Fetch from url to prevent opaque response
+      fetch(event.request.url, { headers: { Accept } }), // Fetch from url to prevent opaque response
     ]);
     if (response.ok) {
       cache.put(event.request.url, response.clone());

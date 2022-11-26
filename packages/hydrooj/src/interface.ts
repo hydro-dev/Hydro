@@ -229,7 +229,6 @@ declare module './model/problem' {
         data: FileInfo[];
         additional_file: FileInfo[];
         hidden?: boolean;
-        assign: string[];
         html?: boolean;
         stats?: any;
         difficulty?: number;

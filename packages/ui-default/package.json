@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.42.17",
+  "version": "4.42.18",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -31,8 +31,8 @@
     "@types/qrcode": "^1.5.0",
     "@types/react-dom": "^18.0.9",
     "@types/redux-logger": "^3.0.9",
-    "@types/serviceworker": "^0.0.56",
-    "@types/sharedworker": "^0.0.85",
+    "@types/serviceworker": "^0.0.57",
+    "@types/sharedworker": "^0.0.86",
     "@types/webpack-env": "^1.18.0",
     "@vscode/codicons": "^0.0.32",
     "autoprefixer": "^10.4.13",

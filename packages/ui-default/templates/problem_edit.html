@@ -6,12 +6,6 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            <div class="medium-7 columns">
-              <label>
-                {{ _('Title') }}
-                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox"{% if page_name == 'problem_create' %} autofocus{% endif %}>
-              </label>
-            </div>
             <div class="medium-3 columns">
               <label>
                 {{ _('pid') }}
@@ -19,6 +13,12 @@
                 <label>
                   <input name="pid" placeholder="P1000" value="{{ pdoc['pid']|default('') }}" class="textbox">
                 </label>
+              </label>
+            </div>
+            <div class="medium-7 columns">
+              <label>
+                {{ _('Title') }}
+                <input name="title" placeholder="{{ _('title') }}" value="{{ pdoc['title']|default('') }}" class="textbox"{% if page_name == 'problem_create' %} autofocus{% endif %}>
               </label>
             </div>
             <div class="medium-2 columns">
@@ -33,19 +33,11 @@
           <div class="row">
           {{ form.form_text({
                row:false,
-               columns:6,
+               columns:9,
                label:'Tags',
                help_text:'Split by \', \'.',
                name:'tag',
                value:pdoc['tag']|default([])|join(', ')
-             }) }}
-          {{ form.form_text({
-               row:false,
-               columns:3,
-               label:'Assign',
-               placeholder:_('Group / UID'),
-               name:'assign',
-               value:pdoc.assign|default([])|join(', ')
              }) }}
           {{ form.form_text({
                row:false,
