@@ -26,7 +26,7 @@ export function createRegistry(ctx: Context) {
     const reqCounter = createMetric(Counter, 'hydro_reqcount', 'reqcount', {
         labelNames: ['domainId'],
     });
-    ctx.on('handler/create', (h) => reqCounter.inc({ domainId: h.args.domainId }));
+    ctx.on('handler/create', (h) => reqCounter.inc({ domainId: (h as any).category || h.args.domainId }));
 
     const judgeCounter = createMetric(Counter, 'hydro_judgecount', 'judgecount');
     ctx.on('record/judge', () => judgeCounter.inc());

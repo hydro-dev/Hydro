@@ -25,6 +25,7 @@ const coll = db.collection('dataReport');
 
 class DataReportHandler extends Handler {
     noCheckPermView = true;
+    category = '#center';
 
     @post('installId', Types.String)
     @post('payload', Types.String)
