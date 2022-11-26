@@ -4,7 +4,7 @@ import mongodb, { Cursor, Db } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
-    MessageDoc, RecordDoc, Schema, TestCase, TrainingNode,
+    MessageDoc, RecordDoc, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const map = {};
@@ -503,15 +503,3 @@ export async function run({
     await global.Hydro.model.system.set('db.ver', 1);
     return true;
 }
-
-export const apply = (ctx) => ctx.addScript(
-    'migrateVijos', 'migrate from vijos',
-    Schema.object({
-        host: Schema.string().required(),
-        port: Schema.number().required(),
-        name: Schema.string().required(),
-        username: Schema.string().required(),
-        password: Schema.string().required(),
-    }),
-    run,
-);

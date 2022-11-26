@@ -4,7 +4,7 @@ import mysql from 'mysql';
 import TurndownService from 'turndown';
 import {
     buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectID, postJudge, ProblemModel,
-    RecordDoc, RecordModel, Schema, SolutionModel, STATUS, SystemModel, Time, UserModel,
+    RecordDoc, RecordModel, SolutionModel, STATUS, SystemModel, Time, UserModel,
 } from 'hydrooj';
 
 const turndown = new TurndownService({
@@ -298,18 +298,3 @@ export async function run({
     }
     return true;
 }
-
-export const apply = (ctx) => ctx.addScript(
-    'migrateHustoj', 'migrate from hustoj',
-    Schema.object({
-        host: Schema.string().required(),
-        port: Schema.number().required(),
-        name: Schema.string().required(),
-        username: Schema.string().required(),
-        password: Schema.string().required(),
-        domainId: Schema.string().required(),
-        contestType: Schema.string().required(),
-        dataDir: Schema.string().required(),
-    }),
-    run,
-);

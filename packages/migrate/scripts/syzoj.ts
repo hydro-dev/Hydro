@@ -3,7 +3,7 @@ import mariadb from 'mariadb';
 import {
     buildContent, ContestModel, DiscussionDoc, DiscussionReplyDoc, DocumentModel, DomainModel,
     fs, noop, NotFoundError, ObjectID, PERM, postJudge, ProblemModel, RecordDoc, RecordModel,
-    Schema, STATUS, SystemModel, Time, UserModel, yaml,
+    STATUS, SystemModel, Time, UserModel, yaml,
 } from 'hydrooj';
 
 const contentTypeMap = {
@@ -496,17 +496,3 @@ export async function run({
     }
     return true;
 }
-
-export const apply = (ctx) => ctx.addScript(
-    'migrateSyzoj', 'migrate from syzoj',
-    Schema.object({
-        host: Schema.string().required(),
-        port: Schema.number().required(),
-        name: Schema.string().required(),
-        username: Schema.string().required(),
-        password: Schema.string().required(),
-        domainId: Schema.string().default('system'),
-        dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
-    }),
-    run,
-);

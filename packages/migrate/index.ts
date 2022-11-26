@@ -1,14 +1,48 @@
-import { Context, md5, sha1 } from 'hydrooj';
-import { apply as hustoj } from './scripts/hustoj';
-import { apply as syzoj } from './scripts/syzoj';
-import { apply as vijos } from './scripts/vijos';
+import {
+    Context, md5, Schema, sha1,
+} from 'hydrooj';
 
 const RE_MD5 = /^[\da-f]{32}$/;
 
 export function apply(ctx: Context) {
-    hustoj(ctx);
-    vijos(ctx);
-    syzoj(ctx);
+    ctx.addScript(
+        'migrateHustoj', 'migrate from hustoj',
+        Schema.object({
+            host: Schema.string().required(),
+            port: Schema.number().required(),
+            name: Schema.string().required(),
+            username: Schema.string().required(),
+            password: Schema.string().required(),
+            domainId: Schema.string().required(),
+            contestType: Schema.string().required(),
+            dataDir: Schema.string().required(),
+        }),
+        (...args) => require('./scripts/hustoj').run(...args),
+    );
+    ctx.addScript(
+        'migrateSyzoj', 'migrate from syzoj',
+        Schema.object({
+            host: Schema.string().required(),
+            port: Schema.number().required(),
+            name: Schema.string().required(),
+            username: Schema.string().required(),
+            password: Schema.string().required(),
+            domainId: Schema.string().default('system'),
+            dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
+        }),
+        (...args) => require('./scripts/syzoj').run(...args),
+    );
+    ctx.addScript(
+        'migrateVijos', 'migrate from vijos',
+        Schema.object({
+            host: Schema.string().required(),
+            port: Schema.number().required(),
+            name: Schema.string().required(),
+            username: Schema.string().required(),
+            password: Schema.string().required(),
+        }),
+        (...args) => require('./scripts/vijos').run(...args),
+    );
 
     ctx.provideModule('hash', 'hust', ($password, $saved) => {
         $password = md5($password);
