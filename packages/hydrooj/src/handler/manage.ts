@@ -4,7 +4,7 @@ import * as yaml from 'js-yaml';
 import Schema from 'schemastery';
 import * as check from '../check';
 import {
-    BadRequestError, ForbiddenError, UserNotFoundError, ValidationError,
+    CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
 } from '../error';
 import { isEmail, isPassword } from '../lib/validator';
 import { Logger } from '../logger';
@@ -86,7 +86,7 @@ class SystemDashboardHandler extends SystemHandler {
     }
 
     async postRestart() {
-        if (!process.env.pm_cwd) throw new BadRequestError('Not launched by pm2');
+        if (!process.env.pm_cwd) throw new NotLaunchedByPM2Error();
         exec(`pm2 reload "${process.env.name}"`);
         this.back();
     }
@@ -293,7 +293,7 @@ class SystemUserPrivHandler extends SystemHandler {
         if (!editSystem) {
             const udoc = await user.getById(domainId, uid);
             if (!udoc) throw new UserNotFoundError(uid);
-            if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new ForbiddenError('you can not edit user as SU in web.');
+            if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new CannotEditSuperAdminError();
             await user.setPriv(uid, priv);
         } else {
             const defaultPriv = system.get('default.priv');

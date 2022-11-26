@@ -3,8 +3,8 @@ import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import { Context } from '../context';
 import {
-    DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
-    InvalidJoinInvitationCodeError, PermissionError, RoleAlreadyExistError, ValidationError,
+    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError,
+    InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
@@ -102,8 +102,8 @@ class DomainEditHandler extends ManageHandler {
 
     @requireSudo
     async postDelete({ domainId }) {
-        if (domainId === 'system') throw new ForbiddenError('You are not allowed to delete system domain');
-        if (this.domain.owner !== this.user._id) throw new ForbiddenError('You are not the owner of this domain.');
+        if (domainId === 'system') throw new CannotDeleteSystemDomainError();
+        if (this.domain.owner !== this.user._id) throw new OnlyOwnerCanDeleteDomainError();
         await domain.del(domainId);
         this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
