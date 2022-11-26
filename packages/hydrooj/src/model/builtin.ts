@@ -81,7 +81,6 @@ export const PERM = {
 
     // Training
     PERM_VIEW_TRAINING: 1n << 46n,
-    PERM_VIEW_TRAINING_PROGRESS: 1n << 68n,
     PERM_CREATE_TRAINING: 1n << 47n,
     PERM_EDIT_TRAINING: 1n << 48n,
     PERM_PIN_TRAINING: 1n << 63n,
@@ -159,7 +158,6 @@ export const PERMS = [
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK, 'Edit any homework'),
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK_SELF, 'Edit own homework'),
     Permission('perm_training', PERM.PERM_VIEW_TRAINING, 'View training plans'),
-    Permission('perm_training', PERM.PERM_VIEW_TRAINING_PROGRESS, 'View training plan enroll user progress'),
     Permission('perm_training', PERM.PERM_CREATE_TRAINING, 'Create training plans'),
     Permission('perm_training', PERM.PERM_EDIT_TRAINING, 'Edit training plans'),
     Permission('perm_training', PERM.PERM_PIN_TRAINING, 'Pin training plans'),

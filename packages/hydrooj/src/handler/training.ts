@@ -100,7 +100,7 @@ class TrainingDetailHandler extends Handler {
         let enrollUsers = [];
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
-        if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc)) {
+        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             if (uid) {
