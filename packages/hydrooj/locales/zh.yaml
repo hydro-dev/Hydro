@@ -437,8 +437,8 @@ List View: 列表视图
 Live: 正在进行
 Live...: 正在进行…
 Location: 位置
-Lock Topic: 锁定主题
 Lock discussions: 锁定讨论
+Lock Topic: 锁定主题
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -482,6 +482,7 @@ My Files: 我的文件
 My Profile: 我的资料
 My Recent Submissions: 我的最近递交记录
 My Role: 我的角色
+My status: 我的状态
 name: 名称
 Name: 名称
 Network error: 网络错误
@@ -537,7 +538,7 @@ Output Format: 输出格式
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
 page.training_detail.invalid_when_not_enrolled: 未参加训练计划时您不能查看题目详情。
-page.training_detail.see_other_user_detail: 您正在查看其它用户的训练详情。
+page.training_detail.see_other_user_detail: 您正在查看用户{0}的训练详情。
 pager_first: « 第一页
 pager_last: 末页 »
 pager_next: 下一页 ›
@@ -867,8 +868,8 @@ View or create discussion: 查看与发表讨论
 View or submit solution: 查看与发表题解
 View Owned Problems: 查看自己的题目
 View Owned Training Plans: 查看自己的训练计划
-View problem solutions: 查看题解
 View problem solutions after accept: 题目通过后查看题解
+View problem solutions: 查看题解
 View Problem: 查看题目
 View problems: 查看题目
 View ranking: 查看排名

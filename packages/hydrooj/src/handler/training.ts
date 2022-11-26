@@ -98,11 +98,15 @@ class TrainingDetailHandler extends Handler {
         await bus.parallel('training/get', tdoc, this);
         let targetUser = this.user._id;
         let enrollUsers = [];
+        let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPerm(PERM.PERM_VIEW_TRAINING_PROGRESS) || this.user.own(tdoc)) {
-            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $ne: 0 } })
+            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
-            if (uid) targetUser = uid;
+            if (uid) {
+                targetUser = uid;
+                shouldCompare = targetUser !== this.user._id;
+            }
         }
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udict, pdict] = await Promise.all([
@@ -110,6 +114,7 @@ class TrainingDetailHandler extends Handler {
             problem.getList(domainId, pids, canViewHidden, true),
         ]);
         const psdict = await problem.getListStatus(domainId, targetUser, pids);
+        const selfPsdict = shouldCompare ? await problem.getListStatus(domainId, this.user._id, pids) : {};
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
@@ -144,7 +149,7 @@ class TrainingDetailHandler extends Handler {
             done: doneNids.size === tdoc.dag.length,
         });
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers, selfPsdict,
         };
         if (pjax) {
             const html = await this.renderHTML('partials/training_detail.html', this.response.body);

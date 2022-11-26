@@ -4,7 +4,7 @@
 <div data-fragment-id="training_detail">
   {% if handler.request.query.uid and handler.request.query.uid != handler.user._id %}
   <blockquote class="typo note">
-    <p>{{ _('page.training_detail.see_other_user_detail') }}</p>
+    <p>{{ _('page.training_detail.see_other_user_detail', udict[handler.request.query.uid].uname) }}</p>
   </blockquote>
   {% endif %}
   {%- for node in tdoc['dag'] -%}
@@ -65,10 +65,16 @@
           </div>
         {% endif %}
         <div class="section__body no-padding training__problems">
+          {% set should_compare = (handler.request.query.uid or handler.user._id) != handler.user._id and tsdoc["enroll"] %}
           <table class="data-table">
             <colgroup>
               {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-                <col class="col--status">
+                {% if should_compare %}
+                  <col class="col--status col--status--sm">
+                  <col class="col--status col--status--sm">
+                {% else %}
+                  <col class="col--status">
+                {% endif %}
               {% endif %}
               <col class="col--name">
               <col class="col--tried">
@@ -78,7 +84,12 @@
             <thead>
               <tr>
                 {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-                  <th class="col--status record-status--border">{{ _('Status') }}</th>
+                  {% if should_compare %}
+                    <th class="col--status col--status--sm record-status--border">{{ _('Status') }}</th>
+                    <th class="col--status col--status--sm">{{ _('My status') }}</th>
+                  {% else %}
+                    <th class="col--status record-status--border">{{ _('Status') }}</th>
+                  {% endif %}
                 {% endif %}
                 <th class="col--name">{{ _('Problem') }}</th>
                 <th class="col--tried">{{ _('Tried') }}</th>
@@ -91,12 +102,20 @@
                 {% if pid in pdict %}
                   {% set pdoc=pdict[pid] %}
                   {% set psdoc=psdict[pid] %}
+                  {% set self_psdoc=selfPsdict[pid] %}
                   <tr>
                     {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                       {% if psdoc['rid'] %}
-                        {{ record.render_status_td(psdoc, rid_key='rid') }}
+                        {{ record.render_status_td(psdoc, rid_key='rid', short=should_compare) }}
                       {% else %}
                         <td class="col--status record-status--border"></td>
+                      {% endif %}
+                      {% if should_compare %}
+                        {% if self_psdoc['rid'] %}
+                          {{ record.render_status_td(self_psdoc, rid_key='rid', short=true) }}
+                        {% else %}
+                          <td class="col--status col--status--sm"></td>
+                        {% endif %}
                       {% endif %}
                     {% endif %}
                     <td class="col--name col--problem-name">

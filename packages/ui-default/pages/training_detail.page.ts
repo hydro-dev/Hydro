@@ -4,7 +4,12 @@ import { NamedPage } from 'vj/misc/Page';
 import pjax from 'vj/utils/pjax';
 import { slideDown, slideUp } from 'vj/utils/slide';
 
+type SectionAction = 'expand' | 'collapse';
 type SectionState = 'expanded' | 'collapsed';
+
+function action2state(action: SectionAction): SectionState {
+  return action === 'expand' ? 'expanded' : 'collapsed';
+}
 
 async function setSectionState($section: JQuery<HTMLElement>, state: SectionState) {
   if ($section.is(`.${state}, .animating`)) return;
@@ -20,9 +25,9 @@ async function setSectionState($section: JQuery<HTMLElement>, state: SectionStat
   $section.removeClass('animating');
 }
 
-async function handleSection(ev: JQuery.ClickEvent<Document>, type: SectionState) {
+async function handleSection(ev: JQuery.ClickEvent<Document>, type: SectionAction) {
   const $section = $(ev.currentTarget).closest('.training__section');
-  await setSectionState($section, type);
+  await setSectionState($section, action2state(type));
 }
 
 function searchUser() {
@@ -66,8 +71,8 @@ async function handleHashChange() {
 const page = new NamedPage('training_detail', () => {
   $('.search__input').on('input', _.debounce(searchUser, 500));
   $('#searchForm').on('submit', selectUser);
-  $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expanded'));
-  $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapsed'));
+  $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expand'));
+  $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapse'));
   $(document).on('click', '.enroll_user_menu_item > a', (ev) => handleChooseUser(ev));
   $(document).on('click', '#menu-item-training_detail > ul > li > a', (ev) => handleSidebarClick(ev));
   window.addEventListener('hashchange', handleHashChange);
