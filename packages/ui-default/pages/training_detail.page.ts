@@ -35,7 +35,7 @@ function searchUser() {
   $('.enroll_user_menu_item').each((i, e) => {
     const $item = $(e);
     const $username = $item.data('uname').toString().toLowerCase();
-    const $uid = $item.data('uid').toString().toLowerCase();
+    const $uid = $item.data('uid').toString();
     $item.toggle($username.includes(val) || $uid === val);
   });
 }

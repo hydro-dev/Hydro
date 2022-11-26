@@ -4,7 +4,7 @@
 <div data-fragment-id="training_detail">
   {% if handler.request.query.uid and handler.request.query.uid != handler.user._id %}
   <blockquote class="typo note">
-    <p>{{ _('page.training_detail.see_other_user_detail', udict[handler.request.query.uid].uname) }}</p>
+    <p>{{ _('page.training_detail.see_other_user_detail').format(udict[handler.request.query.uid].uname) }}</p>
   </blockquote>
   {% endif %}
   {%- for node in tdoc['dag'] -%}
