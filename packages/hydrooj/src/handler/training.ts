@@ -3,13 +3,12 @@ import { FilterQuery, ObjectID } from 'mongodb';
 import { ProblemNotFoundError, ValidationError } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
 import paginate from '../lib/paginate';
-import { PERM, PRIV } from '../model/builtin';
-import * as builtin from '../model/builtin';
+import { PERM, PRIV, STATUS } from '../model/builtin';
+import DomainModel from '../model/domain';
 import problem from '../model/problem';
 import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
-import { DomainModel } from '../plugin-api';
 import * as bus from '../service/bus';
 import { Handler, param, Types } from '../service/server';
 
@@ -126,7 +125,7 @@ class TrainingDetailHandler extends Handler {
             if (!+pid) continue;
             const psdoc = psdict[pid];
             if (psdoc.status) {
-                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) donePids.add(+pid);
+                if (psdoc.status === STATUS.STATUS_ACCEPTED) donePids.add(+pid);
                 else progPids.add(+pid);
             }
         }
