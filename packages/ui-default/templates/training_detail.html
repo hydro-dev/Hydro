@@ -1,7 +1,7 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row" data-sticky-parent>
-  {%- if enrollUsers.length -%}
+  {%- if udocs.length -%}
   <div class="medium-2 columns mobile--hide">
     <div data-sticky="large"><div class="section side">
       <ol class="menu">
@@ -11,16 +11,16 @@
           </form>
         </li>
         <ul class="enroll_user_menu">
-        {%- for uid in enrollUsers -%}
-        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udict[uid].uname }}">
-          <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
+        {%- for udoc in udocs -%}
+        <li class="menu__item enroll_user_menu_item" data-uid="{{ udoc._id }}" data-uname="{{ udoc.uname }}">
+          <a href="./{{ tdoc._id }}?uid={{ udoc._id }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
             <span class="user-profile-link">
-              <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udict[uid].avatar|default('')) }}" width="20" height="20">
+              <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
               <span class="user-profile-name">
-                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udict[uid].displayName and udict[uid].displayName != udict[uid].uname %}
-                  {{ udict[uid].displayName }} ({{ udict[uid].uname }})
+                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and dudict[udoc._id] and dudict[udoc._id] != udoc.uname %}
+                  {{ dudict[udoc._id] }} ({{ udoc.uname }})
                 {% else %}
-                  {{ udict[uid].uname }}
+                  {{ udoc.uname }}
                 {% endif %}
               </span>
             </span>
@@ -92,7 +92,7 @@
           {% endif %}
           <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc.attend|default(0) }}</dd>
           <dt>{{ _('Created By') }}</dt>
-          <dd>{{ user.render_inline(udict[tdoc.owner], badge=false) }}</dd>
+          <dd>{{ user.render_inline(udoc, badge=false) }}</dd>
         </dl>
       </div>
     </div>

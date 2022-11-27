@@ -10,7 +10,7 @@ import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
     copyFile, createReadStream, createWriteStream, ensureDir,
-    remove, stat, writeFile,
+    existsSync, remove, stat, writeFile,
 } from 'fs-extra';
 import { lookup } from 'mime-types';
 import { Logger } from '../logger';
@@ -273,6 +273,7 @@ class LocalStorageService {
     async get(target: string, path?: string) {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         target = resolve(this.dir, target);
+        if (!existsSync(target)) throw new Error('File not found');
         if (path) await copyFile(target, path);
         return createReadStream(target);
     }

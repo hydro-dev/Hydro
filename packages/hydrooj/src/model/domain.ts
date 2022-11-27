@@ -189,6 +189,10 @@ class DomainModel {
         return dudoc;
     }
 
+    static getDomainUserMulti(domainId: string, uids: number[]) {
+        return collUser.find({ domainId, uid: { $in: uids } });
+    }
+
     static setMultiUserInDomain(domainId: string, query: any, params: any) {
         deleteUserCache(domainId);
         return collUser.updateMany({ domainId, ...query }, { $set: params }, { upsert: true });

@@ -9,6 +9,7 @@ import problem from '../model/problem';
 import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
+import { DomainModel } from '../plugin-api';
 import * as bus from '../service/bus';
 import { Handler, param, Types } from '../service/server';
 
@@ -97,7 +98,7 @@ class TrainingDetailHandler extends Handler {
         const tdoc = await training.get(domainId, tid);
         await bus.parallel('training/get', tdoc, this);
         let targetUser = this.user._id;
-        let enrollUsers = [];
+        let enrollUsers: number[] = [];
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
@@ -109,21 +110,24 @@ class TrainingDetailHandler extends Handler {
             }
         }
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        const [udict, pdict] = await Promise.all([
-            user.getList(domainId, [tdoc.owner, ...enrollUsers]),
+        const [udoc, udocs, dudocs, pdict, psdict, selfPsdict] = await Promise.all([
+            user.getById(domainId, tdoc.owner),
+            user.getMulti({ _id: { $in: enrollUsers } }).project({ _id: 1, uname: 1, avatar: 1 }).toArray(),
+            DomainModel.getDomainUserMulti(domainId, enrollUsers).project({ uid: 1, displayName: 1 }).toArray(),
             problem.getList(domainId, pids, canViewHidden, true),
+            problem.getListStatus(domainId, targetUser, pids),
+            shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
         ]);
-        const psdict = await problem.getListStatus(domainId, targetUser, pids);
-        const selfPsdict = shouldCompare ? await problem.getListStatus(domainId, this.user._id, pids) : {};
+        const dudict = {};
+        for (const dudoc of dudocs) dudict[dudoc.uid] = dudoc.displayName;
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
             if (!+pid) continue;
             const psdoc = psdict[pid];
             if (psdoc.status) {
-                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) {
-                    donePids.add(parseInt(pid, 10));
-                } else progPids.add(parseInt(pid, 10));
+                if (psdoc.status === builtin.STATUS.STATUS_ACCEPTED) donePids.add(+pid);
+                else progPids.add(+pid);
             }
         }
         const nsdict = {};
@@ -149,7 +153,7 @@ class TrainingDetailHandler extends Handler {
             done: doneNids.size === tdoc.dag.length,
         });
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udict, enrollUsers, selfPsdict,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udocs, dudict, selfPsdict,
         };
         if (pjax) {
             const html = await this.renderHTML('partials/training_detail.html', this.response.body);
