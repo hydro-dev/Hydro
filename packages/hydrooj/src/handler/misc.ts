@@ -34,24 +34,14 @@ class SwitchLanguageHandler extends Handler {
 export class FilesHandler extends Handler {
     noCheckPermView = true;
 
-    @param('pjax', Types.Boolean)
-    async get(domainId: string, pjax = false) {
+    async get() {
         if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
-        const body = {
+        this.response.body = {
             files: sortFiles(this.user._files),
             urlForFile: (filename: string) => this.url('fs_download', { uid: this.user._id, filename }),
         };
-        if (pjax) {
-            this.response.body = {
-                fragments: (await Promise.all([
-                    this.renderHTML('partials/files.html', body),
-                ])).map((i) => ({ html: i })),
-            };
-            this.response.template = '';
-        } else {
-            this.response.template = 'home_files.html';
-            this.response.body = body;
-        }
+        this.response.pjax = 'partials/files.html';
+        this.response.template = 'home_files.html';
     }
 
     @post('filename', Types.Name, true)

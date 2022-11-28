@@ -284,7 +284,7 @@ const allPriv = Math.sum(Object.values(Priv));
 
 class SystemUserPrivHandler extends SystemHandler {
     @requireSudo
-    async get({ pjax }) {
+    async get() {
         const defaultPriv = system.get('default.priv');
         const udocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
         const banudocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
@@ -293,10 +293,8 @@ class SystemUserPrivHandler extends SystemHandler {
             defaultPriv,
             Priv,
         };
-        if (pjax) {
-            const html = await this.renderHTML('partials/manage_user_priv.html', this.response.body);
-            this.response.body = { fragments: [{ html }] };
-        } else this.response.template = 'manage_user_priv.html';
+        this.response.pjax = 'partials/manage_user_priv.html';
+        this.response.template = 'manage_user_priv.html';
     }
 
     @requireSudo

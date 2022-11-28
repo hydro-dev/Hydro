@@ -92,8 +92,7 @@ class TrainingMainHandler extends Handler {
 class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('uid', Types.PositiveInt, true)
-    @param('pjax', Types.Boolean, true)
-    async get(domainId: string, tid: ObjectID, uid: number, pjax: boolean) {
+    async get(domainId: string, tid: ObjectID, uid: number) {
         const tdoc = await training.get(domainId, tid);
         await bus.parallel('training/get', tdoc, this);
         let targetUser = this.user._id;
@@ -154,10 +153,8 @@ class TrainingDetailHandler extends Handler {
         this.response.body = {
             tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udocs, dudict, selfPsdict,
         };
-        if (pjax) {
-            const html = await this.renderHTML('partials/training_detail.html', this.response.body);
-            this.response.body = { fragments: [{ html }] };
-        } else this.response.template = 'training_detail.html';
+        this.response.pjax = 'partials/training_detail.html';
+        this.response.template = 'training_detail.html';
     }
 
     @param('tid', Types.ObjectID)

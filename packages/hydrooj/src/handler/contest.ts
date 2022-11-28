@@ -451,27 +451,17 @@ export class ContestCodeHandler extends Handler {
 
 export class ContestFilesHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
-    @param('pjax', Types.Boolean)
-    async get(domainId: string, tid: ObjectID, pjax = false) {
+    async get(domainId: string, tid: ObjectID) {
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
-        const body = {
+        this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             files: sortFiles(this.tdoc.files || []),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
-        if (pjax) {
-            this.response.body = {
-                fragments: (await Promise.all([
-                    this.renderHTML('partials/files.html', body),
-                ])).map((i) => ({ html: i })),
-            };
-            this.response.template = '';
-        } else {
-            this.response.template = 'contest_files.html';
-            this.response.body = body;
-        }
+        this.response.pjax = 'partials/files.html';
+        this.response.template = 'contest_files.html';
     }
 
     @param('tid', Types.ObjectID)

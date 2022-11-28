@@ -54,15 +54,16 @@ export interface HydroRequest {
     websocket: boolean;
 }
 export interface HydroResponse {
-    body: any,
-    type: string,
-    status: number,
-    template?: string,
-    redirect?: string,
-    disposition?: string,
-    etag?: string,
-    attachment: (name: string, stream?: any) => void,
-    addHeader: (name: string, value: string) => void,
+    body: any;
+    type: string;
+    status: number;
+    template?: string;
+    pjax?: string;
+    redirect?: string;
+    disposition?: string;
+    etag?: string;
+    attachment: (name: string, stream?: any) => void;
+    addHeader: (name: string, value: string) => void;
 }
 interface HydroContext {
     request: HydroRequest;

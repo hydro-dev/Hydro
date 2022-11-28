@@ -35,6 +35,9 @@ export default (logger) => async (ctx: KoaContext, next) => {
                     response.body = new SystemError('Serialize failure', e.message);
                 }
                 response.type = 'application/json';
+            } else if (response.pjax && args.pjax) {
+                const html = await ctx.renderHTML(response.pjax, response.body);
+                response.body = { fragments: [{ html }] };
             } else if (response.template) {
                 const s = response.template.split('.');
                 let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
