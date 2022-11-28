@@ -105,7 +105,15 @@ export interface UserPreferenceDoc {
 export type ownerInfo = { owner: number, maintainer?: number[] };
 
 export type User = import('./model/user').User;
-export type Udict = NumericDictionary<User>;
+export type Udict = Record<number, User>;
+
+export interface BaseUser {
+    _id: number;
+    uname: string;
+    avatar: string;
+    displayName: string;
+}
+export type BaseUserDict = Record<number, BaseUser>;
 
 export interface FileInfo {
     /** storage path */
@@ -507,7 +515,7 @@ export interface ContestRule<T = any> {
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>,
-    ) => Promise<[board: ScoreboardRow[], udict: Udict]>;
+    ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
     ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
 }
 

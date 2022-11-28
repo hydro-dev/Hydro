@@ -32,6 +32,9 @@
       --code-font-family: "{{ UserContext.codeFontFamily }}", "monaco", "Source Code Pro", "Consolas", "Lucida Console", "monospace";
       --font-ligatures: {{ "normal" if UserContext.codeFontLigatures else "none" }} !important;
     }
+    {% if not isIE(handler.request.headers['user-agent']) %}
+      #panel { display: flex; flex-direction: column; }
+    {% endif %}
   </style>
   {% if process.env.DEV %}
     <link rel="stylesheet" media="all" href="/default.theme.css">

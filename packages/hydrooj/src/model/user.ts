@@ -3,14 +3,14 @@ import LRU from 'lru-cache';
 import { Collection, FilterQuery, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    FileInfo, GDoc, ownerInfo,
+    BaseUserDict, FileInfo, GDoc, ownerInfo,
     Udict, Udoc, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
-import { ArgMethod } from '../utils';
+import { ArgMethod, buildProjection } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
@@ -183,8 +183,10 @@ class UserModel {
         if (cache.has(`id/${_id}/${domainId}`)) return cache.get(`id/${_id}/${domainId}`) || null;
         const udoc = await (_id < -999 ? collV : coll).findOne({ _id });
         if (!udoc) return null;
-        const dudoc = await domain.getDomainUser(domainId, udoc);
-        const groups = await UserModel.listGroup(domainId, _id);
+        const [dudoc, groups] = await Promise.all([
+            domain.getDomainUser(domainId, udoc),
+            UserModel.listGroup(domainId, _id),
+        ]);
         dudoc.group = groups.map((i) => i.name);
         if (typeof scope === 'string') scope = BigInt(scope);
         const res = await new User(udoc, dudoc, scope).init();
@@ -339,8 +341,19 @@ class UserModel {
         return uid;
     }
 
-    static getMulti(params: FilterQuery<Udoc> = {}) {
-        return coll.find(params);
+    static getMulti(params: FilterQuery<Udoc> = {}, projection?: (keyof Udoc)[]) {
+        return projection ? coll.find(params).project(buildProjection(projection)) : coll.find(params);
+    }
+
+    static async getListForRender(domainId: string, uids: number[]) {
+        const [udocs, dudocs] = await Promise.all([
+            UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'avatar']).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: 1, displayName: 1 }).toArray(),
+        ]);
+        const udict = {};
+        for (const udoc of udocs) udict[udoc._id] = udoc;
+        for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
+        return udict as BaseUserDict;
     }
 
     @ArgMethod

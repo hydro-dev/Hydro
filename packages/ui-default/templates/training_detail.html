@@ -1,7 +1,7 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row" data-sticky-parent>
-  {%- if udocs.length -%}
+  {%- if Object.keys(udict).length -%}
   <div class="medium-2 columns mobile--hide">
     <div data-sticky="large"><div class="section side">
       <ol class="menu">
@@ -11,14 +11,14 @@
           </form>
         </li>
         <ul class="enroll_user_menu">
-        {%- for udoc in udocs -%}
-        <li class="menu__item enroll_user_menu_item" data-uid="{{ udoc._id }}" data-uname="{{ udoc.uname }}">
-          <a href="./{{ tdoc._id }}?uid={{ udoc._id }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
+        {%- for uid, udoc in udict -%}
+        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udoc.uname }}">
+          <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
             <span class="user-profile-link">
               <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
               <span class="user-profile-name">
-                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and dudict[udoc._id] and dudict[udoc._id] != udoc.uname %}
-                  {{ dudict[udoc._id] }} ({{ udoc.uname }})
+                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
+                  {{ udoc.displayName }} ({{ udoc.uname }})
                 {% else %}
                   {{ udoc.uname }}
                 {% endif %}

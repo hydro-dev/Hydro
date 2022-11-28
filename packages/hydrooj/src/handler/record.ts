@@ -345,7 +345,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
-        this.throttleSend = throttle(this.sendUpdate, 1000);
+        this.throttleSend = throttle(this.sendUpdate, 1000, { trailing: true });
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
@@ -368,9 +368,9 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
-            this.sendUpdate(rdoc);
             this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 30000);
-        } else this.throttleSend(rdoc);
+        }
+        this.throttleSend(rdoc);
     }
 }
 

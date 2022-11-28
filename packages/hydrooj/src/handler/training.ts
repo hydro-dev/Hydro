@@ -4,7 +4,6 @@ import { ProblemNotFoundError, ValidationError } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
-import DomainModel from '../model/domain';
 import problem from '../model/problem';
 import * as system from '../model/system';
 import * as training from '../model/training';
@@ -108,16 +107,13 @@ class TrainingDetailHandler extends Handler {
             }
         }
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        const [udoc, udocs, dudocs, pdict, psdict, selfPsdict] = await Promise.all([
+        const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            user.getMulti({ _id: { $in: enrollUsers } }).project({ _id: 1, uname: 1, avatar: 1 }).toArray(),
-            DomainModel.getDomainUserMulti(domainId, enrollUsers).project({ uid: 1, displayName: 1 }).toArray(),
+            user.getListForRender(domainId, enrollUsers),
             problem.getList(domainId, pids, canViewHidden, true),
             problem.getListStatus(domainId, targetUser, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
         ]);
-        const dudict = {};
-        for (const dudoc of dudocs) dudict[dudoc.uid] = dudoc.displayName;
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
@@ -151,7 +147,7 @@ class TrainingDetailHandler extends Handler {
             done: doneNids.size === tdoc.dag.length,
         });
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udocs, dudict, selfPsdict,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict,
         };
         this.response.pjax = 'partials/training_detail.html';
         this.response.template = 'training_detail.html';

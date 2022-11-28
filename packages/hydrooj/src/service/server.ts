@@ -58,6 +58,9 @@ export interface HydroResponse {
     type: string;
     status: number;
     template?: string;
+    /** If set, and pjax content was request from client,
+     *  The template will be used for rendering.
+     */
     pjax?: string;
     redirect?: string;
     disposition?: string;
