@@ -4,8 +4,7 @@ import crypto from 'crypto';
 import esbuild from 'esbuild';
 import {
   ContestModel, Context, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, UiContextBase,
-  UserModel,
+  SettingModel, SystemModel, SystemSettings, UiContextBase, UserModel,
 } from 'hydrooj';
 import { debounce } from 'lodash';
 import { tmpdir } from 'os';

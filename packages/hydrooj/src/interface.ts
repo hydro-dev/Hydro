@@ -110,8 +110,11 @@ export type Udict = Record<number, User>;
 export interface BaseUser {
     _id: number;
     uname: string;
+    mail: string;
     avatar: string;
-    displayName: string;
+    school?: string;
+    displayName?: string;
+    studentId?: string;
 }
 export type BaseUserDict = Record<number, BaseUser>;
 
@@ -509,7 +512,7 @@ export interface ContestRule<T = any> {
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, udoc: Udoc | User, rank: number, tsdoc: ContestStat & T,
+        tdoc: Tdoc<30>, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (

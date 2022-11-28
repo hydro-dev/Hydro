@@ -6,8 +6,8 @@ import {
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
-    ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, Tdoc, Udict,
+    BaseUserDict, ContestRule, ContestRules, ProblemDict,
+    ScoreboardNode, ScoreboardRow, Tdoc,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
@@ -722,7 +722,7 @@ export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
 
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectID, isExport = false,
-): Promise<[Tdoc<30>, ScoreboardRow[], Udict, ProblemDict]> {
+): Promise<[Tdoc<30>, ScoreboardRow[], BaseUserDict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
