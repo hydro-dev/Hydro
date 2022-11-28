@@ -232,6 +232,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
     @param('ext', Types.Range(['csv', 'html', 'ghost']), true)
     async get(domainId: string, tid: ObjectID, ext = '') {
+        if (!contest.canShowScoreboard.call(this, this.tdoc, true)) throw new ContestScoreboardHiddenError(tid);
         if (ext) {
             await this.exportScoreboard(domainId, tid, ext);
             return;
@@ -248,8 +249,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     }
 
     async exportGhost(domainId: string, tid: ObjectID) {
-        const tdoc = await contest.get(domainId, tid);
-        if (!contest.canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
+        const tdoc = this.tdoc;
         const [pdict, teams] = await Promise.all([
             problem.getList(domainId, tdoc.pids, true, false, undefined, true),
             contest.getMultiStatus(domainId, { docId: tid }).toArray(),
@@ -538,8 +538,8 @@ export async function apply(ctx) {
     ctx.Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_broadcast', '/contest/:tid/broadcast', ContestBroadcastHandler);
     ctx.Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
-    ctx.Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
-    ctx.Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
+    ctx.Route('contest_scoreboard_download', '/contest/:tid/export/:ext', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_files', '/contest/:tid/file', ContestFilesHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);

@@ -57,8 +57,10 @@ pager_previous: ‹ Previous
 perm_contest: Contests
 perm_discussion: Discussions
 perm_general: General
+perm_homework: Homework
 perm_problem_solution: Problem Solutions
 perm_problem: Problems
+perm_ranking: Ranking
 perm_record: Records
 perm_training: Trainings
 problem_create: Problem Create
