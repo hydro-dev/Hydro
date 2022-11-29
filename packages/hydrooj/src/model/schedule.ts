@@ -70,7 +70,7 @@ class WorkerService extends Service {
                 const start = Date.now();
                 await Promise.race([
                     this.handlers[doc.subType](doc),
-                    sleep(300000),
+                    sleep(1200000),
                 ]);
                 const spent = Date.now() - start;
                 if (spent > 500) logger.warn('Slow worker task (%d ms): %o', spent, doc);

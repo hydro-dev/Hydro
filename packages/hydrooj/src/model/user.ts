@@ -346,13 +346,22 @@ class UserModel {
     }
 
     static async getListForRender(domainId: string, uids: number[]) {
-        const [udocs, dudocs] = await Promise.all([
-            UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'avatar', 'school', 'studentId']).toArray(),
+        const [udocs, vudocs, dudocs] = await Promise.all([
+            UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
+            collV.find({ _id: { $in: uids } }).toArray(),
             domain.getDomainUserMulti(domainId, uids).project({ uid: 1, displayName: 1 }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
+        for (const udoc of vudocs) udict[udoc._id] = udoc;
         for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
+        for (const uid of uids) udict[uid] ||= { ...UserModel.defaultUser };
+        for (const key in udict) {
+            udict[key].school ||= '';
+            udict[key].studentId ||= '';
+            udict[key].displayName ||= udict[key].uname;
+            udict[key].avatar = `gravatar:${udict[key].mail}`;
+        }
         return udict as BaseUserDict;
     }
 
