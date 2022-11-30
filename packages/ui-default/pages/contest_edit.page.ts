@@ -13,7 +13,7 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     $(document).on('click', '[name="operation"]', (ev) => {
       ev.preventDefault();
       if (confirmed) {
-        return request.post('.', { operation: 'delete' }).then((res) => {
+        return request.post('', { operation: 'delete' }).then((res) => {
           window.location.href = res.url;
         });
       }
