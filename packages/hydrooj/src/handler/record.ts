@@ -133,7 +133,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         const lang = langs[this.rdoc.lang]?.pretest || this.rdoc.lang;
         this.response.body = this.rdoc.code;
         this.response.type = 'text/plain';
-        this.response.disposition = `attachment; filename="${langs[lang].code_file || `foo.${this.rdoc.lang}`}"`;
+        this.response.disposition = `attachment; filename="${langs[lang]?.code_file || `foo.${this.rdoc.lang}`}"`;
     }
 
     @param('rid', Types.ObjectID)
