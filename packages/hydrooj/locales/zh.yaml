@@ -88,6 +88,7 @@ Attended: 已参加
 author: 作者
 Auto format code: 自动格式化代码
 Avatar: 头像
+Back to contest list: 返回比赛列表
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -159,6 +160,7 @@ contest_detail: 比赛详情
 contest_edit: 编辑比赛
 contest_files: 比赛文件
 contest_main: 比赛
+contest_problemlist: 题目列表
 contest_scoreboard: 比赛成绩表
 Contest: 比赛
 Contests per page: 每页展示的比赛数量
@@ -437,8 +439,8 @@ List View: 列表视图
 Live: 正在进行
 Live...: 正在进行…
 Location: 位置
-Lock Topic: 锁定主题
 Lock discussions: 锁定讨论
+Lock Topic: 锁定主题
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -868,8 +870,8 @@ View or create discussion: 查看与发表讨论
 View or submit solution: 查看与发表题解
 View Owned Problems: 查看自己的题目
 View Owned Training Plans: 查看自己的训练计划
-View problem solutions: 查看题解
 View problem solutions after accept: 题目通过后查看题解
+View problem solutions: 查看题解
 View Problem: 查看题目
 View problems: 查看题目
 View ranking: 查看排名

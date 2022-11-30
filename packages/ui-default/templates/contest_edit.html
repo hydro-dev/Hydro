@@ -108,7 +108,7 @@
             <div class="columns">
               <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
               {% if page_name == 'contest_edit' %}
-                <button type="submit" class="rounded primary button">
+                <button name="operation" value="update" type="submit" class="rounded primary button">
                   {{ _('Update') }}
                 </button>
                 {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
@@ -117,7 +117,7 @@
                   </button>
                 {% endif %}
               {% else %}
-                <button type="submit" class="rounded primary button">
+                <button name="operation" value="update" type="submit" class="rounded primary button">
                   {{ _('Create') }}
                 </button>
               {% endif %}

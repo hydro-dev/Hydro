@@ -107,3 +107,63 @@ $highlight-button-color = #F6DF45
 
       .detail-button
         width: auto
+
+
+.page--contest_edit
+.page--contest_create
+  label
+    &.checkbox
+      margin-top: 24px
+
+
+.page--contest_problemlist
+  .col--status
+    width: rem(150px)
+
+  .col--submit-at
+    width: rem(150px)
+
+  .col--problem
+    border-left: 1px solid $table-border-color
+
+  +mobile()
+    .col--submit-at
+      display: none
+
+
+.page--contest_scoreboard
+  .main
+    .row
+      max-width: 100vw !important;
+
+  .col--rank
+    width: rem(60px)
+    text-align: center
+    border-right: 1px solid $table-border-color
+
+  .col--user
+    min-width: rem(150px)
+
+  .col--solved, .col--time
+    width: rem(70px)
+    text-align: center
+
+  .col--total_score
+    width: rem(100px)
+    text-align: center
+
+  .col--problem
+    width: rem(100px)
+    border-left: 1px solid $table-border-color
+    text-align: center
+
+  .scoreboard--acm
+    .col--problem
+      width: rem(70px) !important
+
+  +mobile()
+    .col--user
+      width: auto
+
+    .col--problem
+      display: none

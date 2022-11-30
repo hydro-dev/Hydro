@@ -510,6 +510,13 @@ export const RULES: ContestRules = {
     acm, oi, homework, ioi,
 };
 
+export enum AccessControl {
+    FREE,
+    LOCK_OTHER = 2,
+    UNIQUE_LOGIN = 4,
+    CLIENT_REQUIRED = 8,
+}
+
 function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }

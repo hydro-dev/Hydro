@@ -366,6 +366,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     // For contest
     lockAt?: Date;
     unlocked?: boolean;
+    access?: number;
+
     /**
      * In hours
      * 在比赛有效时间内选择特定的 X 小时参加比赛（从首次打开比赛算起）
