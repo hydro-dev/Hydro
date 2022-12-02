@@ -98,6 +98,7 @@ function proc(params: Parameter): Cmd {
         strictMemoryLimit: getConfig('strict_memory'),
         // stackLimit: memory * 1024 * 1024,
         procLimit: params.processLimit || getConfig('processLimit'),
+        copyOutMax: Math.floor(1024 * 1024 * size * 3),
         copyIn,
         copyOut,
         copyOutCached,
