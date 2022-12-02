@@ -69,6 +69,9 @@ export async function add(
         payload.domainId!, payload.content!, payload.owner!, document.TYPE_DISCUSSION,
         null, payload.parentType, payload.parentId, omit(payload, ['domainId', 'content', 'owner', 'parentType', 'parentId']),
     );
+    await coll.insertOne({
+        domainId, docId: res, content, uid: owner, ip, time: new Date(),
+    });
     payload.docId = res;
     await bus.parallel('discussion/add', payload);
     return payload.docId;
