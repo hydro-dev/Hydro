@@ -992,12 +992,10 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const pdocs = await problem.getPrefixList(domainId, prefix);
-        if (!Number.isNaN(+prefix) && !pdocs.filter((i) => i.docId === +prefix)) {
-            const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
-            if (pdoc) pdocs.unshift(pdoc);
-        }
-        const pdoc = await problem.get(domainId, prefix, ['domainId', 'docId', 'pid', 'title']);
+        const [pdocs, pdoc] = await Promise.all([
+            problem.getPrefixList(domainId, prefix),
+            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, ['domainId', 'docId', 'pid', 'title']),
+        ]);
         if (pdoc) pdocs.unshift(pdoc);
         if (pdocs.length < 20) {
             const search = global.Hydro.lib.problemSearch || defaultSearch;

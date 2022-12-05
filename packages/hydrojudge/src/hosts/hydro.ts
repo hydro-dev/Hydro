@@ -145,7 +145,7 @@ export default class Hydro {
     send(rid: string | ObjectID, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
         data.rid = new ObjectID(rid);
         data.key = key;
-        if (data.case) data.case.message = removeNixPath(data.case.message || '');
+        if (data.case && typeof data.case.message === 'string') data.case.message = removeNixPath(data.case.message);
         if (typeof data.message === 'string') data.message = removeNixPath(data.message);
         if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
         this.ws.send(JSON.stringify(data));
