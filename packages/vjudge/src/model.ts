@@ -172,6 +172,7 @@ Context.service('vjudge', VJudgeService);
 export const name = 'vjudge';
 export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
+    if (process.env.HYDRO_CLI) return;
     const vjudge = new VJudgeService(ctx);
     await vjudge.start();
     for (const [k, v] of Object.entries(providers)) {
