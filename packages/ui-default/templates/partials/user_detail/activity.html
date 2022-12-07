@@ -1,0 +1,18 @@
+<li class="section__tab-item">
+  <h1 class="section__tab-title">{{ _('Recent Activities') }}</h1>
+  <div class="section__tab-main">
+    {% if not tdocs.length %}
+      {{ nothing.render("This person is lazy and didn't join any contest or homework") }}
+    {% else %}
+    <div class="typo section__body no-media">
+      <ul>
+        {% for tdoc in tdocs %}
+        <li><a class="contest-type--{{ tdoc.rule }}" href="{{ url('contest_detail' if tdoc.rule !== 'homework' else 'homework_detail', tid=tdoc.docId) }}">
+          {{ tdoc.title }} <span class="contest-type-tag"><span class="icon icon-award"></span>{{ _(model.contest.RULES[tdoc['rule']].TEXT) }}</span>
+        </a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</li>
