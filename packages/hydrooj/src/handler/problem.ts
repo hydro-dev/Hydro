@@ -35,6 +35,7 @@ import * as bus from '../service/bus';
 import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
+import { buildProjection } from '../utils';
 import { registerResolver, registerValue } from './api';
 import { ContestDetailBaseHandler } from './contest';
 
@@ -992,15 +993,19 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const [pdocs, pdoc] = await Promise.all([
+        const projection = ['domainId', 'docId', 'pid', 'title'] as const;
+        const [pdocs, pdoc, apdoc] = await Promise.all([
             problem.getPrefixList(domainId, prefix),
-            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, ['domainId', 'docId', 'pid', 'title']),
+            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
+            /^P\d+$/.test(prefix) ? problem.get(domainId, +prefix.substring(1), projection) : Promise.resolve(null),
         ]);
+        if (apdoc) pdocs.unshift(apdoc);
         if (pdoc) pdocs.unshift(pdoc);
         if (pdocs.length < 20) {
             const search = global.Hydro.lib.problemSearch || defaultSearch;
             const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
-            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } }).toArray();
+            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } })
+                .project(buildProjection(projection)).toArray();
             pdocs.push(...docs);
         }
         this.response.body = uniqBy(pdocs, 'docId');

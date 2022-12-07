@@ -1,4 +1,4 @@
-export function buildProjection(fields: Array<string | number>): Record<string, 1> {
+export function buildProjection(fields: readonly (string | number)[]): Record<string, 1> {
     const o = {};
     for (const k of fields) o[k] = 1;
     return o;
