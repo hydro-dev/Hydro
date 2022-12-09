@@ -330,8 +330,7 @@ export class ProblemModel {
     }
 
     static async getPrefixList(domainId: string, prefix: string) {
-        prefix = prefix.toLowerCase();
-        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
+        const $regex = new RegExp(`^${escapeRegExp(prefix.toLowerCase())}`, 'i');
         const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
         return await document.getMulti(domainId, document.TYPE_PROBLEM, filter, ['domainId', 'docId', 'pid', 'title'])
             .limit(20).toArray();
