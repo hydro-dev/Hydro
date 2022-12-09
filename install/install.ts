@@ -336,11 +336,7 @@ connect-timeout = 10`);
             })})`),
             [`mongo 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/config.json`, JSON.stringify({
-                host: '127.0.0.1',
-                port: 27017,
-                name: 'hydro',
-                username: 'hydro',
-                password,
+                uri: `mongodb://hydro:${password}@127.0.0.1:27017/hydro`,
             })),
             'pm2 stop mongod',
             'pm2 del mongod',

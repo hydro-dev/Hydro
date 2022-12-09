@@ -17,6 +17,7 @@ interface MongoConfig {
     port?: string,
     name?: string,
     url?: string,
+    uri?: string,
     prefix?: string,
 }
 
@@ -29,7 +30,7 @@ class MongoService {
         let mongourl = `${opts.protocol || 'mongodb'}://`;
         if (opts.username) mongourl += `${opts.username}:${encodeURIComponent(opts.password)}@`;
         mongourl += `${opts.host}:${opts.port}/${opts.name}`;
-        if (opts.url) mongourl = opts.url;
+        if (opts.url || opts.uri) mongourl = opts.url || opts.uri;
         return mongourl;
     }
 
@@ -42,7 +43,12 @@ class MongoService {
             mongourl = mongod.getUri();
         }
         this.opts = opts;
-        this.client = await MongoClient.connect(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
+        this.client = await MongoClient.connect(mongourl, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            readPreference: 'nearest',
+            writeConcern: 'majority',
+        });
         this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
     }
