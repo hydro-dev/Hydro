@@ -3,6 +3,7 @@
 import { NumericDictionary, unionWith } from 'lodash';
 import { FilterQuery } from 'mongodb';
 import Schema from 'schemastery';
+import { Counter } from '@hydrooj/utils';
 import { Tdoc, Udoc } from '../interface';
 import difficultyAlgorithm from '../lib/difficulty';
 import rating from '../lib/rating';
@@ -100,21 +101,15 @@ export const RpTypes: Record<string, RpDef> = {
 global.Hydro.model.rp = RpTypes;
 
 export async function calcLevel(domainId: string, report: Function) {
-    const filter = { rp: { $gt: 0 } };
-    const ducnt = await domain.getMultiUserInDomain(domainId, filter).count();
     await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
-    if (!ducnt) return;
     let last = { rp: null };
     let rank = 0;
     let count = 0;
     const coll = db.collection('domain.user');
+    const filter = { rp: { $gt: 0 }, uid: { $nin: [0, 1], $gt: -1000 } };
     const ducur = domain.getMultiUserInDomain(domainId, filter).project({ rp: 1 }).sort({ rp: -1 });
     let bulk = coll.initializeUnorderedBulkOp();
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const dudoc = await ducur.next();
-        if (!dudoc) break;
-        if ([0, 1].includes(dudoc.uid)) continue;
+    for await (const dudoc of ducur) {
         count++;
         if (!dudoc.rp) dudoc.rp = null;
         if (dudoc.rp !== last.rp) rank = count;
@@ -122,6 +117,7 @@ export async function calcLevel(domainId: string, report: Function) {
         last = dudoc;
         if (count % 100 === 0) report({ message: `#${count}: Rank ${rank}` });
     }
+    if (!count) return;
     await bulk.execute();
     const levels = global.Hydro.model.builtin.LEVELS;
     bulk = coll.initializeUnorderedBulkOp();
@@ -136,28 +132,30 @@ export async function calcLevel(domainId: string, report: Function) {
     await bulk.execute();
 }
 
-async function runInDomain(id: string, report: Function) {
-    const info = await domain.get(id);
-    const domainIds = [id, ...(info.union || [])];
+async function runInDomain(domainId: string, report: Function) {
+    const info = await domain.get(domainId);
+    const domainIds = [domainId, ...(info.union || [])];
     const results: Record<keyof typeof RpTypes, ND> = {};
-    const udict = new Proxy({}, { get: (self, key) => self[key] || 0 });
+    const udict = Counter();
     for (const type in RpTypes) {
         results[type] = new Proxy({}, { get: (self, key) => self[key] || RpTypes[type].base });
         await RpTypes[type].run(domainIds, results[type], report);
+        const bulk = db.collection('domain.user').initializeUnorderedBulkOp();
         for (const uid in results[type]) {
-            const udoc = await UserModel.getById(id, +uid);
+            const udoc = await UserModel.getById(domainId, +uid);
             if (!udoc?.hasPriv(PRIV.PRIV_USER_PROFILE)) continue;
-            await domain.updateUserInDomain(id, +uid, { $set: { [`rpInfo.${type}`]: results[type][uid] } });
+            bulk.find({ domainId, uid: +uid }).updateOne({ $set: { [`rpInfo.${type}`]: results[type][uid] } });
             udict[+uid] += results[type][uid];
         }
+        if (bulk.length) await bulk.execute();
     }
-    await domain.setMultiUserInDomain(id, {}, { rp: 0 });
+    await domain.setMultiUserInDomain(domainId, {}, { rp: 0 });
     const bulk = db.collection('domain.user').initializeUnorderedBulkOp();
     for (const uid in udict) {
-        bulk.find({ domainId: id, uid: +uid }).upsert().update({ $set: { rp: Math.max(0, udict[uid]) } });
+        bulk.find({ domainId, uid: +uid }).upsert().update({ $set: { rp: Math.max(0, udict[uid]) } });
     }
     if (bulk.length) await bulk.execute();
-    await calcLevel(id, report);
+    await calcLevel(domainId, report);
 }
 
 export async function run({ domainId }, report: Function) {
