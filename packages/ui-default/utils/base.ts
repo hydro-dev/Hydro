@@ -107,7 +107,7 @@ export const request = {
     });
   },
 
-  post(url: string, dataOrForm: JQueryStatic | Node | string | Record<string, string> = {}, options: any = {}) {
+  post(url: string, dataOrForm: JQueryStatic | Node | string | Record<string, any> = {}, options: any = {}) {
     let postData;
     // @ts-ignore
     if (dataOrForm instanceof $ && dataOrForm.is('form')) {

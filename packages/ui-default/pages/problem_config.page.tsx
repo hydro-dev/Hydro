@@ -102,7 +102,7 @@ const page = new NamedPage('problem_config', () => {
 
     store.dispatch({
       type: 'CONFIG_LOAD',
-      payload: request.get(),
+      payload: request.get(''),
     });
     const unsubscribe = store.subscribe(() => {
       // TODO set yaml schema
