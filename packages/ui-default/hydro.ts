@@ -12,6 +12,7 @@ declare global {
     UiContext: any;
     Hydro: any;
     externalModules: Record<string, string>;
+    captureException?: (e: Error) => void;
   }
 }
 

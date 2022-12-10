@@ -29,8 +29,8 @@ export default async function download(filename, targets) {
   await waitForWritableStream;
   const fileStream = streamsaver.createWriteStream(filename);
   const queue = new PQueue({ concurrency: 5 });
-  const abortCallbackReceiver = {};
-  function stopDownload() { abortCallbackReceiver.abort(); }
+  const abortCallbackReceiver: any = {};
+  function stopDownload() { abortCallbackReceiver.abort?.(); }
   let i = 0;
   async function downloadFile(target) {
     try {

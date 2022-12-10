@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import type * as monaco from 'monaco-editor';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const _hooks: Record<keyof any, Array<(...args: any[]) => any>> = {};
@@ -11,7 +12,7 @@ export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 
 export interface EventMap extends Record<string, any> {
-  'scratchpadEditorCreate': (editor, monaco) => any;
+  'scratchpadEditorCreate': (editor: monaco.editor.IStandaloneCodeEditor, monaco: monaco) => any;
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {

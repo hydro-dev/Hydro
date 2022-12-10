@@ -12,11 +12,13 @@ export { default as substitute } from './utils/substitute';
 export { default as tpl } from './utils/tpl';
 export { default as zIndexManager } from './utils/zIndexManager';
 export * from './utils/zip';
-export { default as AutoComplete } from './components/autocomplete';
+export { default as base64 } from './utils/base64';
 export { default as Notification } from './components/notification';
 export * from './components/dialog';
+export * as bus from './bus';
 export { default as loadMonaco } from './components/monaco/loader';
 export * as redux from 'react-redux';
+export * from './components/zipDownloader';
 export { default as $ } from 'jquery';
 export { default as _ } from 'lodash';
 export { default as React } from 'react';
@@ -29,7 +31,16 @@ export default async function load(name: string) {
   if (name === 'moment') return import('moment');
   throw new Error(`Module ${name} not found`);
 }
-export { load };
+
+import AutoComplete from './components/autocomplete';
+import CustomSelectAutoComplete from './components/autocomplete/CustomSelectAutoComplete';
+import DomainSelectAutoComplete from './components/autocomplete/DomainSelectAutoComplete';
+import ProblemSelectAutoComplete from './components/autocomplete/ProblemSelectAutoComplete';
+import UserSelectAutoComplete from './components/autocomplete/UserSelectAutoComplete';
+
+export {
+  load, AutoComplete, UserSelectAutoComplete, ProblemSelectAutoComplete, DomainSelectAutoComplete, CustomSelectAutoComplete,
+};
 export const { UserContext, UiContext } = window;
 export function addPage(page: import('./misc/Page').Page | (() => Promise<void> | void)) {
   window.Hydro.extraPages.push(page);
@@ -45,6 +56,7 @@ declare global {
 }
 
 // Below are old version api compat
+/* eslint-disable import/order */
 import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
