@@ -15,6 +15,7 @@ plugins:
   - eslint-plugin-import
 ignorePatterns:
   - public/**/*.js
+  - packages/ui-default
 overrides:
   - files: 
       - '**/public/**/*.ts'

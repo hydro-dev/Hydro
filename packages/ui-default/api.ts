@@ -29,7 +29,8 @@ export default async function load(name: string) {
   if (name === 'moment') return import('moment');
   throw new Error(`Module ${name} not found`);
 }
-export { load, UserContext, UiContext };
+export { load };
+export const { UserContext, UiContext } = window;
 export function addPage(page: import('./misc/Page').Page | (() => Promise<void> | void)) {
   window.Hydro.extraPages.push(page);
 }
