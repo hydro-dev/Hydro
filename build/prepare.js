@@ -51,6 +51,8 @@ const configFlat = (name) => ({
 
 if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
     fs.mkdirSync(path.resolve(process.cwd(), 'plugins'));
+    // Write an empty file to make eslint happy
+    fs.writeFileSync(path.resolve(process.cwd(), 'plugins/eslint.ts'), '\n');
 }
 
 const modules = [
