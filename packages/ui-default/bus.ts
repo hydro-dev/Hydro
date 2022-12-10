@@ -12,7 +12,7 @@ export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 
 export interface EventMap extends Record<string, any> {
-  'scratchpadEditorCreate': (editor: monaco.editor.IStandaloneCodeEditor, monaco: monaco) => any;
+  'scratchpadEditorCreate': (editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => any;
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {
