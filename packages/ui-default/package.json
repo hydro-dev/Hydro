@@ -4,6 +4,7 @@
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
+  "types": "api.ts",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "preferUnplugged": true,
   "scripts": {

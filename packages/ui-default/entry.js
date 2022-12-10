@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
   const [data] = await Promise.all([
-    (await fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' })).json(),
-    await import('./modules'),
+    fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' }).then((r) => r.json()),
+    import('./api'),
   ]);
   eval(data[0]); // eslint-disable-line no-eval
   data.shift();

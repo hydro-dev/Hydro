@@ -3,7 +3,7 @@ extends:
   - airbnb-base
   - airbnb-typescript/base
 env:
-  jquery: true
+  es6: true
 globals:
   Atomics: readonly
   SharedArrayBuffer: readonly
@@ -14,8 +14,25 @@ plugins:
   - simple-import-sort
   - eslint-plugin-import
 ignorePatterns:
-  - public/
-  - '*.spec.ts'
+  - public/**/*.js
+overrides:
+  - files: 
+      - '**/public/**/*.ts'
+      - '**/public/**/*.page.js'
+    rules:
+      '@typescript-eslint/indent':
+        - warn
+        - 2
+    env:
+      browser: true
+      es6: true
+      jquery: true
+    globals: 
+      UiContext: true
+      UserContext: true
+      externalModules: true
+      LOCALES: true
+      LANGS: true
 rules:
   '@typescript-eslint/no-shadow': 1
 

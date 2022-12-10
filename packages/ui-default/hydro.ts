@@ -11,8 +11,6 @@ declare global {
     UserContext: any;
     UiContext: any;
     Hydro: any;
-    // eslint-disable-next-line camelcase
-    node_modules: any;
     externalModules: Record<string, string>;
   }
 }
