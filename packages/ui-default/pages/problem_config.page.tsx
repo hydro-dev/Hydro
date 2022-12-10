@@ -71,7 +71,7 @@ const page = new NamedPage('problem_config', () => {
   async function handleClickDownloadAll() {
     const files = reduxStore.getState().testdata.map((i) => i.name);
     const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'testdata' });
-    const targets = [];
+    const targets: { filename: string, url: string }[] = [];
     for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
     await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
   }
@@ -123,7 +123,7 @@ const page = new NamedPage('problem_config', () => {
         subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
       });
     });
-    createRoot($('#ProblemConfig').get(0)).render(
+    createRoot(document.getElementById('ProblemConfig')!).render(
       <Provider store={store}>
         <div className="row">
           <div className="medium-5 columns">

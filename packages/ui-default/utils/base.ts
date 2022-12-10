@@ -8,7 +8,7 @@ export function substitute(str: string, obj: any) {
   });
 }
 
-export function i18n(str: string, ...params: string[]) {
+export function i18n(str: string, ...params: any[]) {
   if (!str) return '';
   return substitute((window as any).LOCALES?.[str] || str, params);
 }
