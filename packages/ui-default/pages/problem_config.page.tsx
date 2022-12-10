@@ -10,10 +10,9 @@ import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEdito
 import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import loadReactRedux from 'vj/utils/loadReactRedux';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, loadReactRedux, request, tpl,
+} from 'vj/utils';
 
 const page = new NamedPage('problem_config', () => {
   let reduxStore;

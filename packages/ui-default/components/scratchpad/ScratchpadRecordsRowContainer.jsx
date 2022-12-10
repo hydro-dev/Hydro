@@ -5,10 +5,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import TimeAgo from 'timeago-react';
 import * as recordEnum from 'vj/constant/record';
-import emulateAnchorClick from 'vj/utils/emulateAnchorClick';
-import i18n from 'vj/utils/i18n';
-import { parse as parseMongoId } from 'vj/utils/mongoId';
-import substitute from 'vj/utils/substitute';
+import {
+  emulateAnchorClick, i18n, mongoId, substitute,
+} from 'vj/utils';
 
 const shouldShowDetail = (data) => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status];
 
@@ -58,7 +57,7 @@ export default connect(mapStateToProps, null, mergeProps)(class ScratchpadRecord
 
   render() {
     const { data } = this.props;
-    const submitAt = parseMongoId(data._id).timestamp * 1000;
+    const submitAt = mongoId(data._id).timestamp * 1000;
     // Is pretest
     return data.contest?.toString() === '000000000000000000000000' ? null : (
       <tr onClick={(ev) => this.handleRowClick(ev, data._id)}>

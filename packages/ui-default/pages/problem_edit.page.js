@@ -8,10 +8,9 @@ import Notification from 'vj/components/notification';
 import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import { slideDown, slideUp } from 'vj/utils/slide';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, request, slideDown, slideUp, tpl,
+} from 'vj/utils';
 
 const categories = {};
 const dirtyCategories = [];

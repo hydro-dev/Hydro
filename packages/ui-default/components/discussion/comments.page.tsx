@@ -4,11 +4,9 @@ import $ from 'jquery';
 import { ConfirmDialog } from 'vj/components/dialog';
 import CommentBox from 'vj/components/discussion/CommentBox';
 import { AutoloadPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import { slideDown, slideUp } from 'vj/utils/slide';
-import tpl from 'vj/utils/tpl';
+import {
+  delay, i18n, request, slideDown, slideUp, tpl,
+} from 'vj/utils';
 
 const $replyTemplate = $('.commentbox-container').eq(0).clone();
 

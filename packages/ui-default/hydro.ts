@@ -4,7 +4,7 @@ import $ from 'jquery';
 import _ from 'lodash';
 import Notification from 'vj/components/notification';
 import PageLoader from 'vj/misc/PageLoader';
-import delay from 'vj/utils/delay';
+import { delay } from 'vj/utils';
 
 declare global {
   interface Window {

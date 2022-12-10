@@ -4,10 +4,9 @@ import { nanoid } from 'nanoid';
 import { ActionDialog, InfoDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, pjax, request, tpl,
+} from 'vj/utils';
 
 async function startEdit(filename, value, fileCategory = 'file') {
   const { default: Editor } = await import('vj/components/editor/index');

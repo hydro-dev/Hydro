@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import Rotator from 'vj/components/rotator';
 import { AutoloadPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 function setVoteState($container, value, status) {
   const $num = $container.find('.vote-number');

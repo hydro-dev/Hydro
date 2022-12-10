@@ -6,7 +6,7 @@ import { chunk } from 'lodash';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import { AutoloadPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 function renderReactions(reactions, self, rootEle) {
   let html = '';

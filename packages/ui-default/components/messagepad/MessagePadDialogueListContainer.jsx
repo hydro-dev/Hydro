@@ -4,7 +4,7 @@ import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
 import { connect } from 'react-redux';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 import ListItem from './DialogueListItemComponent';
 
 const mapStateToProps = (state) => ({

@@ -1,9 +1,7 @@
 import $ from 'jquery';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
+import { delay, i18n, request } from 'vj/utils';
 
 const page = new NamedPage('manage_user_import', () => {
   async function post(draft) {

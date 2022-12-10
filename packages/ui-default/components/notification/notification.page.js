@@ -1,6 +1,6 @@
 import Notification from 'vj/components/notification/index';
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 
 export default new AutoloadPage('notificationPage', (pagename) => {
   const message = i18n(`Hint::Page::${pagename}`);

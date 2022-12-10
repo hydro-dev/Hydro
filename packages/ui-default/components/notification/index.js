@@ -1,7 +1,6 @@
 import { Intent, Position, Toaster } from '@blueprintjs/core';
 import $ from 'jquery';
-import tpl from 'vj/utils/tpl';
-import zIndexManager from 'vj/utils/zIndexManager';
+import { tpl, zIndexManager } from 'vj/utils/base';
 
 const ToasterContainer = document.createElement('div');
 ToasterContainer.style.position = 'fixed';

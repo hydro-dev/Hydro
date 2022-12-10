@@ -1,7 +1,7 @@
 import keyword from 'emojis-keywords';
 import list from 'emojis-list';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import api, { gql } from 'vj/utils/api';
+import { api, gql } from 'vj/utils';
 
 const qqEmojies = [
   'weixiao',

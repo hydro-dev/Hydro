@@ -2,7 +2,7 @@ import { pick } from 'lodash';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 const defaultQuery = `\
 query Example(

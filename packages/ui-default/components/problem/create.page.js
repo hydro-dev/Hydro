@@ -1,8 +1,7 @@
 import $ from 'jquery';
 import { InfoDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import { i18n, tpl } from 'vj/utils';
 
 export default new NamedPage(['problem_create', 'problem_edit'], () => {
   $('input[name="pid"]').on('blur', () => {

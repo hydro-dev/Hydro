@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import { parse as parseMongoId } from 'vj/utils/mongoId';
+import { i18n, mongoId } from 'vj/utils';
 
 const page = new NamedPage('homework_main', async () => {
   // Homework Calendar
@@ -13,7 +12,7 @@ const page = new NamedPage('homework_main', async () => {
       title: doc.title,
       maskFrom: doc.penaltySince ? doc.penaltySince : null,
       maskTitle: i18n('Time Extension'),
-      colorIndex: parseMongoId(doc._id).timestamp % 12,
+      colorIndex: mongoId(doc._id).timestamp % 12,
       link: doc.url,
     }));
     const calendar = new Calendar(events);
