@@ -24,7 +24,7 @@ export { default as ReactDOM } from 'react-dom/client';
 export * from './misc/Page';
 
 export default async function load(name: string) {
-  if (module.exports[name]) return module.exports[name];
+  if (window.node_modules[name]) return window.node_modules[name];
   if (name === 'echarts') return import('echarts');
   if (name === 'moment') return import('moment');
   throw new Error(`Module ${name} not found`);
@@ -43,8 +43,6 @@ declare global {
   let UserContext: Record<string, any>;
   let UiContext: Record<string, any>;
 }
-
-(window as any).HydroExports = module.exports;
 
 // Below are old version api compat
 import $ from 'jquery';
