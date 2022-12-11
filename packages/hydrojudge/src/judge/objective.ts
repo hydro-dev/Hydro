@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { readFile } from 'fs-extra';
-import yaml from 'js-yaml';
+import { yaml } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { FormatError } from '../error';
 import { Context } from './interface';

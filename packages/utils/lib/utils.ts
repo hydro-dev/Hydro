@@ -7,6 +7,8 @@ import fs from 'fs-extra';
 import { isMoment, Moment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import Logger from 'reggol';
+export * as yaml from 'js-yaml';
+export * as fs from 'fs-extra';
 
 Logger.levels.base = process.env.DEV ? 3 : 2;
 Logger.targets[0].showTime = 'dd hh:mm:ss';

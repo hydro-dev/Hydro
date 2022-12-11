@@ -2,8 +2,8 @@ import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
 import Schema from 'schemastery';
+import { yaml } from '@hydrooj/utils';
 
 const argv = cac().parse();
 

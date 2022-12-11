@@ -1,11 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
-import { max, sum } from 'lodash';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
 import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
-import { changeErrorType } from '@hydrooj/utils/lib/utils';
+import { changeErrorType, yaml } from '@hydrooj/utils/lib/utils';
 import { ProblemConfigFile } from 'hydrooj';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
@@ -16,11 +14,11 @@ function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
-    const time = sum(config.subtasks.map((subtask) => sum(subtask.cases.map((c) => c.time))));
+    const time = Math.sum(config.subtasks.map((subtask) => Math.sum(subtask.cases.map((c) => c.time))));
     if (time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
-    const memMax = max(config.subtasks.map((subtask) => max(subtask.cases.map((c) => c.memory))));
+    const memMax = Math.max(config.subtasks.map((subtask) => Math.max(subtask.cases.map((c) => c.memory))));
     if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
     if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
         throw new FormatError('You did not specify a checker.');
