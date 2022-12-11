@@ -1,5 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const child = require('child_process');
+
+if (fs.existsSync('plugins/patch-package/package.json') && fs.existsSync('node_modules/patch-package/package.json')) {
+    child.execSync('npx patch-package --patch-dir=plugins/patch-package/patches', { stdio: 'inherit' });
+}
 
 const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
 const types = fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i));

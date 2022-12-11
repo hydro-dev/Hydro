@@ -30,6 +30,7 @@
     "@types/markdown-it": "^12.2.3",
     "@types/pickadate": "^3.5.32",
     "@types/qrcode": "^1.5.0",
+    "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.9",
     "@types/redux-logger": "^3.0.9",
     "@types/serviceworker": "^0.0.57",
