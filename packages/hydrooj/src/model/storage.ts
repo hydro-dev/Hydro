@@ -1,7 +1,7 @@
 import { extname } from 'path';
 import { escapeRegExp } from 'lodash';
 import { lookup } from 'mime-types';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
 import * as bus from '../service/bus';

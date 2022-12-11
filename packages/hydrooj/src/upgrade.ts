@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
