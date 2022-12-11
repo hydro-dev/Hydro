@@ -11,7 +11,7 @@ import $ from 'jquery';
 import components from 'prismjs/components';
 import getLoader from 'prismjs/dependencies';
 import Notification from 'vj/components/notification/index';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 import languageMeta from './meta';
 
 const files = require.context('prismjs/components/', true, /prism-[a-z0-9-]+\.js/);

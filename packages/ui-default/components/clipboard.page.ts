@@ -1,9 +1,7 @@
 import Clipboard from 'clipboard';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
-import base64 from 'vj/utils/base64';
-import i18n from 'vj/utils/i18n';
-import substitute from 'vj/utils/substitute';
+import { base64, i18n, substitute } from 'vj/utils';
 
 export default new AutoloadPage('clipboard', () => {
   $('[data-copy]').get().forEach((el) => {

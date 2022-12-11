@@ -1,5 +1,5 @@
 import Notification from 'vj/components/notification';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 
 export default function reducer(state = {
   main: {

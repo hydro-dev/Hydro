@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import zIndexManager from 'vj/utils/zIndexManager';
+import { zIndexManager } from 'vj/utils';
 
 export interface DialogOptions {
   classes: string;

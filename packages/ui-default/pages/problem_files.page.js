@@ -7,10 +7,9 @@ import { previewFile } from 'vj/components/preview/preview.page';
 import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, pjax, request, tpl,
+} from 'vj/utils';
 
 async function downloadProblemFilesAsArchive(type, files) {
   const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });

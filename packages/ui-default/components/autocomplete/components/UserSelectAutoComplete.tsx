@@ -1,7 +1,7 @@
 import type { Udoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
 import React, { forwardRef } from 'react';
-import api, { gql } from 'vj/utils/api';
+import { api, gql } from 'vj/utils';
 import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
 // eslint-disable-next-line prefer-arrow-callback

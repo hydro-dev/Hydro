@@ -1,4 +1,4 @@
-import loadExternalModule from 'vj/utils/loadModule';
+import { loadExternalModule } from 'vj/utils';
 
 let loaded;
 const loaders = {

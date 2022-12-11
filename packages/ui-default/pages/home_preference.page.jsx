@@ -1,10 +1,9 @@
 import $ from 'jquery';
 import { renderLanguageSelect } from 'vj/components/languageselect';
 import { NamedPage } from 'vj/misc/Page';
-import getAvailableLangs from 'vj/utils/availableLangs';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import {
+  delay, getAvailableLangs, i18n, tpl,
+} from 'vj/utils';
 
 async function initCodeLangHelper() {
   const $el = $(tpl`<div class="row" id="codelang-select"></div>`);

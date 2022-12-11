@@ -2,7 +2,7 @@ import yaml from 'js-yaml';
 import Schema from 'schemastery';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 const page = new NamedPage('manage_config', async () => {
   const schema = new Schema(UiContext.schema);

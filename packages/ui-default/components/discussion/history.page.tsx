@@ -5,9 +5,7 @@ import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
 import TimeAgo from 'timeago-react';
 import { InfoDialog } from 'vj/components/dialog';
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import { i18n, request, tpl } from 'vj/utils';
 
 async function historyDialog(payload, time, uid) {
   const ts = new Date(time).getTime();

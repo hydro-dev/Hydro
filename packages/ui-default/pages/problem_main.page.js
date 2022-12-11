@@ -6,11 +6,9 @@ import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  delay, i18n, pjax, request, tpl,
+} from 'vj/utils';
 
 const categories = {};
 const dirtyCategories = [];

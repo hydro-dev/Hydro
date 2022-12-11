@@ -3,9 +3,7 @@ import Slideout from 'slideout';
 import Notification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import { i18n, request, tpl } from 'vj/utils';
 
 function handleNavLogoutClick(ev) {
   const $logoutLink = $(ev.currentTarget);

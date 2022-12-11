@@ -1,4 +1,3 @@
-/* eslint-disable */
 import path from 'path';
 
 export default function root(fn = '.') {

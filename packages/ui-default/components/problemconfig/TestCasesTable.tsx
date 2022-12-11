@@ -4,7 +4,7 @@ import type { SubtaskConfig } from 'hydrooj/src/interface';
 import { isEqual } from 'lodash';
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
 import type { RootState } from './reducer/index';
 

@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import Icon from 'vj/components/react/IconComponent';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 const mapStateToProps = (state) => ({
   activeId: state.activeId,

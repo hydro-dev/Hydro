@@ -1,7 +1,7 @@
 import type { DomainDoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
 import React, { forwardRef } from 'react';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
 const DomainSelectAutoComplete = forwardRef<AutoCompleteHandle<DomainDoc>, AutoCompleteProps<DomainDoc>>((props, ref) => (

@@ -1,4 +1,4 @@
 dist
 *.d.ts
 node_modules
-public
+public/**/*.js

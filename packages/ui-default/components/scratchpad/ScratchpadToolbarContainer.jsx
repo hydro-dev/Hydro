@@ -4,9 +4,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 import Icon from 'vj/components/react/IconComponent';
-import getAvailableLangs from 'vj/utils/availableLangs';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
+import { getAvailableLangs, i18n, request } from 'vj/utils';
 import Toolbar, {
   ToolbarButtonComponent as ToolbarButton,
   ToolbarItemComponent as ToolbarItem,

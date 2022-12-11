@@ -4,10 +4,9 @@ import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoCom
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import api, { gql } from 'vj/utils/api';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import {
+  api, delay, gql, i18n, tpl,
+} from 'vj/utils';
 
 function update(name: string, uids: number[]) {
   return api(gql`

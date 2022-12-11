@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import moment from 'moment';
-import tpl from 'vj/utils/tpl';
+import { tpl } from 'vj/utils';
 
 export default class Calendar {
   constructor(events) {
