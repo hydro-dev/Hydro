@@ -46,7 +46,9 @@
               {% endif %}
             {% endif %}
               <td class="col--problem col--problem-name">
-                {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}">
+                  <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
+                </a>
               </td>
             </tr>
           {%- endfor -%}
@@ -54,10 +56,12 @@
         </table>
       </div>
     </div>
-     <div class="section">
+    <div class="section">
       <div class="section__body no-padding">
-      {% if not rdocs.length %}
-        {{ nothing.render('Oh, there is no task in the queue!') }}
+      {% if not canViewRecord %}
+        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}'
+      {% elif not rdocs.length %}
+        {{ nothing.render('Oh, there is no submission!') }}
       {% else %}
         <table class="data-table record_main__table">
           <colgroup>
@@ -93,8 +97,8 @@
     </div>
   </div>
   <div class="medium-3 columns">
-  {% set owner_udoc = udict[tdoc.owner] %}
-  {% include "partials/contest_sidebar.html" %}
+    {% set owner_udoc = udict[tdoc.owner] %}
+    {% include "partials/contest_sidebar.html" %}
   </div>
 </div>
 {% endblock %}
