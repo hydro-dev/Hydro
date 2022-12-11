@@ -5,7 +5,7 @@ import $ from 'jquery';
 import { nanoid } from 'nanoid';
 import NProgress from 'nprogress';
 import Notification from 'vj/components/notification';
-import request from 'vj/utils/request';
+import { request } from './base';
 
 const pjax = {};
 

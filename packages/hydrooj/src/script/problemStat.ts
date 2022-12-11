@@ -1,4 +1,3 @@
-/* eslint-disable no-constant-condition */
 /* eslint-disable no-await-in-loop */
 import { ObjectID } from 'mongodb';
 import Schema from 'schemastery';
@@ -29,10 +28,8 @@ export async function udoc(report) {
         },
     ];
     let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
-    const cursor = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
-    while (true) {
-        const adoc = await cursor.next() as any;
-        if (!adoc) break;
+    const cursor = db.collection('record').aggregate<any>(pipeline, { allowDiskUse: true });
+    for await (const adoc of cursor) {
         bulk.find({
             domainId: adoc._id.domainId,
             uid: adoc._id.uid,
@@ -61,10 +58,8 @@ export async function psdoc(report) {
             },
         },
     ];
-    const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
-    while (true) {
-        const adoc = await data.next() as any;
-        if (!adoc) break;
+    const data = db.collection('record').aggregate<any>(pipeline, { allowDiskUse: true });
+    for await (const adoc of data) {
         await document.setStatus(adoc._id.domainId, document.TYPE_PROBLEM, adoc._id.pid, adoc._id.uid, { nSubmit: adoc.nSubmit });
     }
 }
@@ -117,11 +112,9 @@ export async function pdoc(report) {
         pipeline[2].$group[`s${i}`] = { $sum: `$s${i}` };
     }
     let bulk = db.collection('document').initializeUnorderedBulkOp();
-    const data = db.collection('record').aggregate(pipeline, { allowDiskUse: true });
+    const data = db.collection('record').aggregate<any>(pipeline, { allowDiskUse: true });
     let cnt = 0;
-    while (true) {
-        const adoc = await data.next() as any;
-        if (!adoc) break;
+    for await (const adoc of data) {
         const $set = {
             nSubmit: adoc.nSubmit,
             nAccept: adoc.nAccept,

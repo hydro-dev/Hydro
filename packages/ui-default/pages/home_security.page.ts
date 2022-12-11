@@ -3,10 +3,9 @@ import QRCode from 'qrcode';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import api, { gql } from 'vj/utils/api';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import {
+  api, delay, gql, i18n, tpl,
+} from 'vj/utils';
 
 export default new NamedPage('home_security', () => {
   $(document).on('click', '[name="tfa_enable"]', async () => {

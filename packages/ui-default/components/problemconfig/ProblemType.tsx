@@ -3,7 +3,7 @@ import {
 } from '@blueprintjs/core';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 import { FormItem, ManagedSelect, SingleFileSelect } from './BasicForm';
 import type { RootState } from './reducer/index';
 

@@ -1,9 +1,7 @@
 import $ from 'jquery';
 import { ConfirmDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import { i18n, request, tpl } from 'vj/utils';
 
 export default new NamedPage('training_edit', () => {
   let confirmed = false;

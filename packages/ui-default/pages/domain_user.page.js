@@ -4,10 +4,9 @@ import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoCom
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  delay, i18n, request, tpl,
+} from 'vj/utils';
 
 const page = new NamedPage('domain_user', () => {
   const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));

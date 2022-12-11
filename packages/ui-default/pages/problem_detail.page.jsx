@@ -6,12 +6,9 @@ import { createRoot } from 'react-dom/client';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import loadReactRedux from 'vj/utils/loadReactRedux';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  delay, i18n, loadReactRedux, pjax, request, tpl,
+} from 'vj/utils';
 
 class ProblemPageExtender {
   constructor() {

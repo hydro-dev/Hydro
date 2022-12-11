@@ -12,6 +12,7 @@ import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
+import * as ContestModel from '../model/contest';
 import domain from '../model/domain';
 import oauth from '../model/oauth';
 import * as oplog from '../model/oplog';
@@ -356,9 +357,12 @@ class UserDetailHandler extends Handler {
             }
         }
         const tags = Object.entries(acInfo).sort((a, b) => b[1] - a[1]).slice(0, 20);
+        const tsdocs = await ContestModel.getMultiStatus(domainId, { uid, attend: { $exists: true } }).project({ docId: 1 }).toArray();
+        const tdocs = await ContestModel.getMulti(domainId, { docId: { $in: tsdocs.map((i) => i.docId) } })
+            .project({ docId: 1, title: 1, rule: 1 }).sort({ _id: -1 }).toArray();
         this.response.template = 'user_detail.html';
         this.response.body = {
-            isSelfProfile, udoc, sdoc, pdocs, tags,
+            isSelfProfile, udoc, sdoc, pdocs, tags, tdocs,
         };
         if (this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION)) {
             const psdocs = await SolutionModel.getByUser(domainId, uid).limit(10).toArray();

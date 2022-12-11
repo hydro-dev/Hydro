@@ -41,6 +41,11 @@ langs:
           time_limit_rate: Time limit rate
           target: Compiler output file
           display: Display name
+    bash:
+      display: Bash
+      code_file: foo.sh
+      execute: /bin/bash foo.sh
+      highlight: bash
     c:
       compile: /usr/bin/gcc -Wall --std=c99 -o foo foo.c -lm
       highlight: c

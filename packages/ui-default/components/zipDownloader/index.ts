@@ -2,11 +2,9 @@ import { dump } from 'js-yaml';
 import PQueue from 'p-queue';
 import streamsaver from 'streamsaver';
 import Notification from 'vj/components/notification';
-import api, { gql } from 'vj/utils/api';
-import i18n from 'vj/utils/i18n';
-import pipeStream from 'vj/utils/pipeStream';
-import request from 'vj/utils/request';
-import { createZipStream } from 'vj/utils/zip';
+import {
+  api, createZipStream, gql, i18n, pipeStream, request,
+} from 'vj/utils';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -29,8 +27,8 @@ export default async function download(filename, targets) {
   await waitForWritableStream;
   const fileStream = streamsaver.createWriteStream(filename);
   const queue = new PQueue({ concurrency: 5 });
-  const abortCallbackReceiver = {};
-  function stopDownload() { abortCallbackReceiver.abort(); }
+  const abortCallbackReceiver: any = {};
+  function stopDownload() { abortCallbackReceiver.abort?.(); }
   let i = 0;
   async function downloadFile(target) {
     try {

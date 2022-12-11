@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import { InfoDialog } from 'vj/components/dialog';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import { i18n, tpl } from 'vj/utils';
 
 export default function createHint(message: string, element?: any) {
   if (i18n(message) === message || !element) return;

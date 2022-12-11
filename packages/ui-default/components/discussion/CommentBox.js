@@ -3,7 +3,7 @@ import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import TextareaHandler from 'vj/components/editor/textareaHandler';
 import Notification from 'vj/components/notification';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 let initialized = false;
 const $template = $('.dczcomments__box').eq(0).clone();

@@ -60,7 +60,7 @@ export class StorageModel {
         if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
         if (target.length && !target.endsWith('/')) target += '/';
         const results = await StorageModel.coll.find({
-            path: { $regex: new RegExp(`^${escapeRegExp(target)}${recursive ? '' : '[^/]+$'}`, 'i') },
+            path: { $regex: `^${escapeRegExp(target)}${recursive ? '' : '[^/]+$'}` },
             autoDelete: null,
         }).toArray();
         return results.map((i) => ({

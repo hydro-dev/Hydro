@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import request from 'vj/utils/request';
+import { request } from 'vj/utils';
 
 function setStarButtonState($starButton, star) {
   if (star) {

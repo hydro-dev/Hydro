@@ -1,9 +1,8 @@
 import { Dialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
-import delay from 'vj/utils/delay';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
+import {
+  delay, i18n, pjax, request,
+} from 'vj/utils';
 
 function onBeforeUnload(e) {
   e.returnValue = '';

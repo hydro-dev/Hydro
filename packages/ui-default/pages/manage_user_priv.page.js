@@ -3,9 +3,7 @@ import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
+import { i18n, pjax, request } from 'vj/utils';
 
 const page = new NamedPage('manage_user_priv', () => {
   const setPrivDialog = new ActionDialog({

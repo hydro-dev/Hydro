@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
-import { slideDown } from 'vj/utils/slide';
+import { delay, slideDown } from 'vj/utils';
 
 function expandMenu($menu) {
   slideDown($menu, 500, { opacity: 0 }, { opacity: 1 });

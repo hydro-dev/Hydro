@@ -3,8 +3,7 @@ import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import Notification from 'vj/components/notification';
-import i18n from 'vj/utils/i18n';
-import request from 'vj/utils/request';
+import { i18n, request } from 'vj/utils';
 
 export const config = {
   toolbar: [

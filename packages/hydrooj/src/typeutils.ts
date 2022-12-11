@@ -10,7 +10,7 @@ export type NestKeys<O, T = any, S = any[]> = O extends object ? O extends S ? n
 export type Value<O, V = ''> = {
     [K in keyof O]: V
 };
-export type Projection<O> = (string & keyof O)[];
+export type Projection<O> = readonly (string & keyof O)[];
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 export type Filter<T, U> = T extends U ? T : never;
 export type MaybeArray<T> = T | T[];

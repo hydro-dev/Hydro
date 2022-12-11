@@ -1,6 +1,5 @@
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import { i18n, tpl } from 'vj/utils';
 import { InfoDialog } from './dialog';
 
 function isSupported() {

@@ -10,10 +10,9 @@ import { configYamlFormat } from 'vj/components/problemconfig/ProblemConfigEdito
 import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import loadReactRedux from 'vj/utils/loadReactRedux';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, loadReactRedux, request, tpl,
+} from 'vj/utils';
 
 const page = new NamedPage('problem_config', () => {
   let reduxStore;
@@ -72,7 +71,7 @@ const page = new NamedPage('problem_config', () => {
   async function handleClickDownloadAll() {
     const files = reduxStore.getState().testdata.map((i) => i.name);
     const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'testdata' });
-    const targets = [];
+    const targets: { filename: string, url: string }[] = [];
     for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
     await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
   }
@@ -103,7 +102,7 @@ const page = new NamedPage('problem_config', () => {
 
     store.dispatch({
       type: 'CONFIG_LOAD',
-      payload: request.get(),
+      payload: request.get(''),
     });
     const unsubscribe = store.subscribe(() => {
       // TODO set yaml schema
@@ -124,7 +123,7 @@ const page = new NamedPage('problem_config', () => {
         subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
       });
     });
-    createRoot($('#ProblemConfig').get(0)).render(
+    createRoot(document.getElementById('ProblemConfig')!).render(
       <Provider store={store}>
         <div className="row">
           <div className="medium-5 columns">

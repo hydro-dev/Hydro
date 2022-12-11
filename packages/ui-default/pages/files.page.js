@@ -4,10 +4,9 @@ import { ConfirmDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import uploadFiles from 'vj/components/upload';
 import { NamedPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import pjax from 'vj/utils/pjax';
-import request from 'vj/utils/request';
-import tpl from 'vj/utils/tpl';
+import {
+  i18n, pjax, request, tpl,
+} from 'vj/utils';
 
 function ensureAndGetSelectedFiles() {
   const files = _.map(

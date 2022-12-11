@@ -1,9 +1,9 @@
 {% if psdocs %}
 <li class="section__tab-item">
-  <h1 class="section__tab-title">{{ _('Recent solutions') }}</h1>
+  <h1 class="section__tab-title">{{ _('Recent Solutions') }}</h1>
   <div class="section__tab-main">
   {% if not psdocs.length %}
-    {{ nothing.render("This person is lazy and wrote any solution") }}
+    {{ nothing.render("This person is lazy and didn't wrote any solution") }}
   {% else %}
     <div class="section__body typo no-media">
       <div class="typo section__body">

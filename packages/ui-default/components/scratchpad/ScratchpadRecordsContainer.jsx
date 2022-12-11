@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React from 'react';
 import { connect } from 'react-redux';
 import Icon from 'vj/components/react/IconComponent';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 import Panel from './PanelComponent';
 import ScratchpadRecordsRow from './ScratchpadRecordsRowContainer';
 

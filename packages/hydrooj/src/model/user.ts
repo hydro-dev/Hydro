@@ -367,8 +367,7 @@ class UserModel {
 
     @ArgMethod
     static async getPrefixList(domainId: string, prefix: string, limit: number = 50) {
-        prefix = prefix.toLowerCase();
-        const $regex = new RegExp(`\\A${escapeRegExp(prefix)}`, 'gmi');
+        const $regex = `^${escapeRegExp(prefix.toLowerCase())}`;
         const udocs = await coll.find({ unameLower: { $regex } })
             .limit(limit).project({ _id: 1 }).toArray();
         const users = [];

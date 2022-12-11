@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import i18n from 'vj/utils/i18n';
+import { i18n } from 'vj/utils';
 
 export default function LanguageSelect({
   fieldSelector, firstLoadMain, firstLoadSub, availableLangs, mainLangs,

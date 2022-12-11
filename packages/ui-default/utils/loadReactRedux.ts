@@ -1,4 +1,4 @@
-import { Action, AnyAction, Reducer } from 'redux';
+import type { Action, AnyAction, Reducer } from 'redux';
 
 export default async function loadReactRedux<S, A extends Action = AnyAction>(storeReducer: Reducer<S, A>) {
   const React = await import('react');

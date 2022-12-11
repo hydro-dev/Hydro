@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import api, { gql } from 'vj/utils/api';
+import { api, gql } from 'vj/utils';
 
 export default new AutoloadPage('user_login', (pagename) => {
   (pagename === 'user_login' ? $(document) : $('.dialog--signin__main')).on('blur', '[name="uname"]', async () => {

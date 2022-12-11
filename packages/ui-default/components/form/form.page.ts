@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
+import { delay } from 'vj/utils';
 
 const formPage = new AutoloadPage('formPage', () => {
   $(document).on('vjFormDisableUpdate', 'input, select, textarea', (ev) => {

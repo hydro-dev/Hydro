@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs-extra';
-import { noop } from 'lodash';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
@@ -40,7 +39,7 @@ export class JudgeTask {
     folder: string;
     config: ParsedConfig;
     meta: JudgeMeta;
-    files?:Record<string, string>;
+    files?: Record<string, string>;
     next: (data: Partial<JudgeResultBody>) => void;
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
@@ -103,7 +102,7 @@ export class JudgeTask {
         } finally {
             Lock.release(`${host}/${this.source}/${this.rid}`);
             // eslint-disable-next-line no-await-in-loop
-            for (const clean of this.clean) await clean()?.catch(noop);
+            for (const clean of this.clean) await clean()?.catch(() => null);
             tmpfs.umount(this.tmpdir);
             fs.removeSync(this.tmpdir);
         }

@@ -51,7 +51,22 @@ export async function buildUI() {
     target: [
       'chrome60',
     ],
-    plugins: global.Hydro.ui.esbuildPlugins || [],
+    plugins: [
+      ...(global.Hydro.ui.esbuildPlugins || []),
+      {
+        name: 'federation',
+        setup(b) {
+          b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
+            path: 'api',
+            namespace: 'ui-default',
+          }));
+          b.onLoad({ filter: /.*/, namespace: 'ui-default' }, () => ({
+            contents: 'module.exports = window.HydroExports;',
+            loader: 'tsx',
+          }));
+        },
+      },
+    ],
     minify: !process.env.DEV,
   });
   if (build.errors.length) console.error(build.errors);

@@ -1,7 +1,6 @@
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ActionDialog } from 'vj/components/dialog';
-import i18n from 'vj/utils/i18n';
-import tpl from 'vj/utils/tpl';
+import { i18n, tpl } from 'vj/utils';
 import createHint from './hint';
 
 let hintInserted = false;

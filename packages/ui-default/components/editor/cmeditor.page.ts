@@ -1,5 +1,5 @@
 import { AutoloadPage } from 'vj/misc/Page';
-import delay from 'vj/utils/delay';
+import { delay } from 'vj/utils';
 import CmEditor from '.';
 
 function runSubstitute($container: JQuery<Document | HTMLElement>) {

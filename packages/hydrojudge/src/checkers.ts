@@ -210,7 +210,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 message: stderr,
             };
         }
-        if (status === STATUS.STATUS_RUNTIME_ERROR) {
+        if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
             return {
                 status: STATUS.STATUS_WRONG_ANSWER,
                 score: 0,

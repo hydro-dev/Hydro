@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
 import {
-    escapeRegExp, flattenDeep, intersection, isSafeInteger, pick,
+    escapeRegExp, flattenDeep, intersection, isSafeInteger, pick, uniqBy,
 } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
@@ -35,6 +35,7 @@ import * as bus from '../service/bus';
 import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
+import { buildProjection } from '../utils';
 import { registerResolver, registerValue } from './api';
 import { ContestDetailBaseHandler } from './contest';
 
@@ -992,18 +993,22 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const pdocs = await problem.getPrefixList(domainId, prefix);
-        if (!Number.isNaN(+prefix) && !pdocs.filter((i) => i.docId === +prefix)) {
-            const pdoc = await problem.get(domainId, +prefix, ['domainId', 'docId', 'pid', 'title']);
-            if (pdoc) pdocs.unshift(pdoc);
-        }
+        const projection = ['domainId', 'docId', 'pid', 'title'] as const;
+        const [pdocs, pdoc, apdoc] = await Promise.all([
+            problem.getPrefixList(domainId, prefix),
+            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
+            /^P\d+$/.test(prefix) ? problem.get(domainId, +prefix.substring(1), projection) : Promise.resolve(null),
+        ]);
+        if (apdoc) pdocs.unshift(apdoc);
+        if (pdoc) pdocs.unshift(pdoc);
         if (pdocs.length < 20) {
             const search = global.Hydro.lib.problemSearch || defaultSearch;
             const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
-            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } }).toArray();
+            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } })
+                .project(buildProjection(projection)).toArray();
             pdocs.push(...docs);
         }
-        this.response.body = pdocs;
+        this.response.body = uniqBy(pdocs, 'docId');
     }
 }
 

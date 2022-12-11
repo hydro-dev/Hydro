@@ -46,10 +46,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // eslint-disable-next-line camelcase
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
-  const [data] = await Promise.all([
-    (await fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' })).json(),
-    await import('./modules'),
+  const [data, HydroExports] = await Promise.all([
+    fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' }).then((r) => r.json()),
+    import('./api'),
   ]);
+  Object.assign(window, { HydroExports });
   eval(data[0]); // eslint-disable-line no-eval
   data.shift();
   window.Hydro.preload = data;

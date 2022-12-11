@@ -4,8 +4,7 @@ import { createRoot } from 'react-dom/client';
 import VjNotification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { NamedPage } from 'vj/misc/Page';
-import api, { gql } from 'vj/utils/api';
-import loadReactRedux from 'vj/utils/loadReactRedux';
+import { api, gql, loadReactRedux } from 'vj/utils';
 
 const page = new NamedPage('home_messages', () => {
   let reduxStore;

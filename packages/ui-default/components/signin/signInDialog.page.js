@@ -3,9 +3,7 @@ import responsiveCutoff from 'vj/breakpoints.json';
 import DomDialog from 'vj/components/dialog/DomDialog';
 import { InfoDialog } from 'vj/components/dialog/index';
 import { AutoloadPage } from 'vj/misc/Page';
-import i18n from 'vj/utils/i18n';
-import { isBelow } from 'vj/utils/mediaQuery';
-import tpl from 'vj/utils/tpl';
+import { i18n, mediaQuery, tpl } from 'vj/utils';
 
 const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   const signInDialog = DomDialog.getOrConstruct($('.dialog--signin'), {
@@ -17,7 +15,7 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   if ($('[name="nav_login"]').length > 0) {
     // nav
     $('[name="nav_login"]').on('click', (ev) => {
-      if (isBelow(responsiveCutoff.mobile)) return;
+      if (mediaQuery.isBelow(responsiveCutoff.mobile)) return;
       if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
       signInDialog.show();
       ev.preventDefault();
@@ -32,7 +30,7 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   }
 
   window.showSignInDialog = () => {
-    if (isBelow(responsiveCutoff.mobile)) {
+    if (mediaQuery.isBelow(responsiveCutoff.mobile)) {
       if ($('[name="nav_login"]').length > 0) {
         window.location.href = $('[name="nav_login"]').attr('href');
         return;
