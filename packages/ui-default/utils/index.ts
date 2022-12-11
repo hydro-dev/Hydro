@@ -27,9 +27,8 @@ export const gql = (
   return res;
 };
 
-const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-
 export function getAvailableLangs(langsList?: string[]) {
+  const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
   const Langs = {};
   for (const key in window.LANGS) {
     if (prefixes.has(key)) continue;
