@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';

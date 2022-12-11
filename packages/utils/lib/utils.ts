@@ -4,7 +4,7 @@ import path from 'path';
 import { Duplex } from 'stream';
 import { inspect } from 'util';
 import fs from 'fs-extra';
-import { isMoment, Moment } from 'moment-timezone';
+import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectID } from 'mongodb';
 import Logger from 'reggol';
 export * as yaml from 'js-yaml';
@@ -18,7 +18,7 @@ Logger.targets[0].label = {
     margin: 1,
 };
 
-export { Logger };
+export { Logger, moment };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
