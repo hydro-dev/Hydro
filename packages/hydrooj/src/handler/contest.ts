@@ -119,7 +119,7 @@ export class ContestDetailBaseHandler extends Handler {
         const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
         this.response.body.overrideNav = [
             {
-                name: 'contest_list',
+                name: 'contest_main',
                 args: {},
                 displayName: 'Back to contest list',
                 checker: () => !(this.tdoc.access & contest.AccessControl.LOCK_OTHER),
@@ -190,7 +190,7 @@ export class ContestDetailHandler extends Handler {
         const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
         this.response.body.overrideNav = [
             {
-                name: 'contest_list',
+                name: 'contest_main',
                 args: {},
                 displayName: 'Back to contest list',
                 checker: () => !(this.tdoc.access & contest.AccessControl.LOCK_OTHER),
