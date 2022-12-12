@@ -3,16 +3,15 @@
 $checkbox-size = 16px
 
 .checkbox
-  font-size: rem($font-size-secondary)
-  line-height: 1.4
+  font-size: rem($font-size-small) !important
+  line-height: 1.4 !important
   border: 0
-  display: inline-block
+  display: inline-block !important
   vertical-align: middle
   cursor: pointer
   user-select: none
-  color: lighten($text-1-color, 30%)
-  margin: $input-margin
-  padding: ((rem($form-control-height) - (@line-height * @font-size)) / 2) 0
+  color: lighten($text-1-color, 30%) !important
+  margin: $input-margin !important
 
   &:hover
     color: $text-1-color
@@ -20,13 +19,12 @@ $checkbox-size = 16px
   input
     appearance: none
     border: 1px solid #D0D0D0
-    display: inline-block
     border-radius: 1px
     vertical-align: top
     width: rem($checkbox-size)
     height: rem($checkbox-size)
-    margin: ((@line-height * @font-size - rem($checkbox-size)) / 2) 0
-    margin-right: rem(5px)
+    margin: ((@line-height * @font-size - rem($checkbox-size)) / 2) 0  !important
+    margin-right: rem(5px) !important
     position: relative
     outline: 0
     transition: background .1s linear
