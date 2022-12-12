@@ -199,8 +199,7 @@
   <label class="checkbox">
     <input type="checkbox" name="{{ args.name }}"{% if args.value %} checked{% endif %}
       {{ form_attr('checkbox', args) }}
-    >
-    {% if args.placeholder %}{{ _(args.placeholder) }}{% endif %}
+    >{% if args.placeholder %}{{ _(args.placeholder) }}{% endif %}
   </label>
 </div>
 {% endmacro %}

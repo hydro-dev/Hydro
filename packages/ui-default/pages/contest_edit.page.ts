@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import moment from 'moment-timezone';
+import moment from 'moment';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ConfirmDialog } from 'vj/components/dialog';
