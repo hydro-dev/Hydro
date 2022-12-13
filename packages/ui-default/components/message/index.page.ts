@@ -8,7 +8,6 @@ import { i18n, tpl } from 'vj/utils';
 
 const onmessage = (msg) => {
   console.log('Received message', msg);
-  if (document.hidden) return false;
   if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
     new InfoDialog({
@@ -21,6 +20,7 @@ const onmessage = (msg) => {
     }).open();
     return true;
   }
+  if (document.hidden) return false;
   // Is message
   new VjNotification({
     ...(msg.udoc._id === 1 && msg.mdoc.flag & 4)

@@ -12,12 +12,28 @@ export const AppToaster = Toaster.create({
   className: 'recipe-toaster',
   position: Position.LEFT_BOTTOM,
   usePortal: true,
-}, ToasterContainer);
+} as any, ToasterContainer);
+
+interface NotificationOptions {
+  avatar?: string;
+  title?: string;
+  message: string;
+  type?: string;
+  duration?: number;
+  action?: any;
+}
 
 export default class Notification {
+  type: string;
+  action: any;
+  $dom: JQuery<HTMLElement>;
+  $n: JQuery<HTMLElement>;
+  duration: number;
+  autoHideTimer?: NodeJS.Timeout;
+
   constructor({
     avatar, title, message, type = '', duration = 3000, action,
-  }) {
+  }: NotificationOptions) {
     this.type = type;
     if (avatar) this.type += ' avatar';
     if (title) this.type += ' title';
@@ -49,19 +65,19 @@ export default class Notification {
     setTimeout(() => this.$n.remove(), 200);
   }
 
-  static success(message, duration) {
+  static success(message: string, duration?: number) {
     return AppToaster.show({ message, timeout: duration, intent: Intent.SUCCESS });
   }
 
-  static info(message, duration) {
+  static info(message: string, duration?: number) {
     return AppToaster.show({ message, timeout: duration, intent: Intent.PRIMARY });
   }
 
-  static warn(message, duration) {
+  static warn(message: string, duration?: number) {
     return AppToaster.show({ message, timeout: duration, intent: Intent.WARNING });
   }
 
-  static error(message, duration) {
+  static error(message: string, duration?: number) {
     return AppToaster.show({ message, timeout: duration, intent: Intent.DANGER });
   }
 }
