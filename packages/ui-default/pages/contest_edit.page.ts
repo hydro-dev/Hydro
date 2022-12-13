@@ -11,20 +11,23 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
   UserSelectAutoComplete.getOrConstruct<true>($('[name="maintainer"]'), { multi: true, clearDefaultValue: false });
   $('[name="rule"]').on('change', () => {
     const rule = $('[name="rule"]').val();
+    $('.contest-rule-settings input').attr('disabled', 'disabled');
     $('.contest-rule-settings').hide();
+    $(`.contest-rule--${rule} input`).removeAttr('disabled');
     $(`.contest-rule--${rule}`).show();
   }).trigger('change');
   $('[name="beginAtDate"], [name="beginAtTime"], [name="duration"]').on('change', () => {
     const beginAtDate = $('[name="beginAtDate"]').val();
     const beginAtTime = $('[name="beginAtTime"]').val();
     const duration = $('[name="duration"]').val();
-    console.log(beginAtDate, beginAtTime, duration);
     const endAt = moment(`${beginAtDate} ${beginAtTime}`).add(+duration, 'hours').toDate();
     if (endAt) $('[name="endAt"]').val(moment(endAt).format('YYYY-MM-DD HH:mm'));
   });
   $('[name="authorize"]').removeAttr('disabled').on('change', () => {
     const authorized = $('[name="authorize"]').val();
+    $('.authorize-settings input').attr('disabled', 'disabled');
     $('.authorize-settings').hide();
+    $(`.authorize--${authorized} input`).removeAttr('disabled');
     $(`.authorize--${authorized}`).show();
   }).trigger('change');
   if (pagename.endsWith('edit')) {

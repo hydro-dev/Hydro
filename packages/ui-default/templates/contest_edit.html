@@ -111,6 +111,7 @@
               name:'assign',
               placeholder:_('Group / UID'),
               value:tdoc.assign|default(''),
+              disabled:true,
               row:false
             }) }}
             </div>
@@ -121,6 +122,7 @@
               name:'code',
               placeholder:_('(leave blank if none)'),
               value:tdoc._code|default(''),
+              disabled:true,
               row:false
             }) }}
             </div>
@@ -164,6 +166,7 @@
               placeholder:_('(leave blank if none)'),
               value:(((tdoc.endAt - tdoc.lockAt)/60000)|int)|default(''),
               help_text:_('Lock scoreboard on last N minutes'),
+              disabled:true,
               row:false
             }) }}
             </div>
@@ -175,6 +178,7 @@
               placeholder:_('(leave blank if none)'),
               value:tdoc.duration|default(''),
               help_text:_('Limit user in N hours finish contest'),
+              disabled:true,
               row:false
             }) }}
             </div>
