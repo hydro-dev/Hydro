@@ -274,7 +274,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   };
 
   return (
-    <div style={{ display: 'inline-block', width: '100%' }}>
+    <div style={{ display: 'inline-block', width: '100%', marginBottom: '1rem' }}>
       <div
         className={focused ? 'autocomplete-wrapper focused' : 'autocomplete-wrapper'}
         style={{ width, height }}

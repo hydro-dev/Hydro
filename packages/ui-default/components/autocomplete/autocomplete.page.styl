@@ -2,23 +2,36 @@
   display: none !important
 
 .autocomplete-wrapper
-  width: 300px
   border: 1px solid #d9d9d9
-  background-color: #fff
   padding: 1px
   display: flex
   flex-wrap: wrap
   overflow-y: auto
 
+  form-styles()
+  background-color: $input-background-color
+  outline: $input-outline
+  transition: outline-color .2s, border-color .2s
+  transition-timing-function: ease-out-cubic
+
+  &:focus, &.focused
+    border-color: $input-focus-border-color
+    outline: $input-focus-outline
+    outline-offset: 0
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2)
+
+  // Overwrite, for IE compatibility
+  &:read-only
+    outline: 0
+
+  &:disabled
+    opacity: 0.5
+
   &:hover
     border-color: #40a9ff
 
-  &.focused
-    border-color: #40a9ff
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2)
-
   input
-    background-color: #fff
+    background-color: $input-background-color
     color: rgba(0,0,0,.85)
     height: 30px
     box-sizing: border-box
