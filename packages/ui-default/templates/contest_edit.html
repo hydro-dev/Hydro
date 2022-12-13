@@ -5,7 +5,7 @@
     <div class="section">
       <form method="post">
         <div class="section__header">
-          <h2 class="section__title">{{ _('Basic Settings') }}</h2>
+          <h2 class="section__title">{{ _('Basic Info') }}</h2>
         </div>
         <div class="section__body">
           <div class="row">
@@ -80,9 +80,16 @@
           }) }}
         </div>
         <div style="padding-top: 0" class="section__header">
-          <h2 class="section__title">{{ _('Authorize Settings') }}</h2>
+          <h2 class="section__title">{{ _('Permission Control') }}</h2>
         </div>
         <div class="section__body">
+          {{ form.form_text({
+            columns:12,
+            label:'Contest Maintainer',
+            name:'maintainer',
+            help_text:_('Allow to maintain this contest'),
+            value:tdoc.maintainer|default('')
+          }) }}
           <div class="row">
             {{ form.form_select({
               columns:3,
@@ -91,7 +98,7 @@
               options:{
                 'public': _('Public'),
                 'invite': _('Need Invitation Code'),
-                'assign': _('Assign User/Group')
+                'assign': _('Assign User or Group')
               },
               value: ("public" if not tdoc._code else "invite") if not tdoc.assign else "assign",
               disabled:true,
@@ -118,13 +125,6 @@
             }) }}
             </div>
           </div>
-          {{ form.form_text({
-            columns:12,
-            label:'Maintainer',
-            name:'maintainer',
-            help_text:_('Allow to Maintain Contest'),
-            value:tdoc.maintainer|default('')
-          }) }}
         </div>
         <div style="padding-top: 0" class="section__header">
           <h2 class="section__title">{{ _('Contest Settings') }}</h2>
@@ -143,7 +143,7 @@
               columns:3,
               label:'Auto hide-and show',
               name:'autoHide',
-              placeholder:_('Auto hide problems between contest'),
+              placeholder:_('Auto hide problems during the contest'),
               value:handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) and (tdoc.autoHide|default(true)),
               disabled:not handler.user.hasPerm(perm.PERM_EDIT_PROBLEM),
               row:false
@@ -161,6 +161,7 @@
               columns:4,
               label:'Lock (minutes)',
               name:'lock',
+              placeholder:_('(leave blank if none)'),
               value:(((tdoc.endAt - tdoc.lockAt)/60000)|int)|default(''),
               help_text:_('Lock scoreboard on last N minutes'),
               row:false
@@ -171,6 +172,7 @@
               columns:4,
               label:'Flexable Duration',
               name:'contestDuration',
+              placeholder:_('(leave blank if none)'),
               value:tdoc.duration|default(''),
               help_text:_('Limit user in N hours finish contest'),
               row:false
