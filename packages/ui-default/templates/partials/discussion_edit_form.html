@@ -11,10 +11,9 @@
   </div>
   <div class="medium-2 columns">
     <label>
-      {{ _('Highlight') }}
       <br>
       <label class="checkbox">
-        <input type="checkbox" name="highlight" value="on"
+        <input type="checkbox" name="highlight" value="on" class="checkbox"
           {%- if ddoc.highlight %} checked{% endif -%}
           {%- if not handler.user.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION) %} disabled{% endif -%}
         >{{ _('Highlight') }}
@@ -23,10 +22,9 @@
   </div>
   <div class="medium-2 columns">
     <label>
-      {{ _('Pin') }}
       <br>
       <label class="checkbox">
-        <input type="checkbox" name="pin" value="on"
+        <input type="checkbox" name="pin" value="on" class="checkbox"
           {%- if ddoc.pin %} checked{% endif -%}
           {%- if not handler.user.hasPerm(perm.PERM_PIN_DISCUSSION) %} disabled{% endif -%}
         >{{ _('Pin') }}

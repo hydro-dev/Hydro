@@ -6,7 +6,7 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            <div class="medium-5 columns">
+            <div class="medium-10 columns">
               <label>
                 {{ _('Title') }}
                 <input name="title" placeholder="{{ _('title') }}" value="{{ tdoc.title|default('') }}" class="textbox" autofocus>
@@ -16,7 +16,7 @@
               <label>
                 <br>
                 <label class="checkbox">
-                  <input type="checkbox" name="pin" value="on"{% if tdoc['hidden'] %} checked{% endif %}>{{ _('Pin') }}
+                  <input type="checkbox" name="pin" value="on"{% if tdoc['hidden'] %} checked{% endif %} class="checkbox">{{ _('Pin') }}
                 </label>
               </label>
             </div>
