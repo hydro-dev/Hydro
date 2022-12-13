@@ -22,6 +22,36 @@ type Checker = (config: CheckConfig) => Promise<{
     message: string,
 }>;
 
+function parseDiffMsg(msg: string) {
+    try {
+        // Note: we only handle first diff
+        const desc = msg.split('\n')[0];
+        if (desc.includes('d')) return 'User output longer than standard answer.';
+        if (desc.includes('a')) return 'Standard answer longer than user output.';
+        const pt = msg.split('---');
+        // Get the first different line
+        const u = pt[0].split('\n')[1];
+        const t = pt[1].split('\n')[1];
+        // Split by token
+        const usr = u.substring(2).trim().split(' ');
+        const std = t.substring(2).trim().split(' ');
+        if (std.every((x) => !Number.isNaN(+x))) {
+            // Number mode, report length not match
+            if (usr.length > std.length) return 'User output longer than standard answer.';
+            if (usr.length < std.length) return 'Standard answer longer than user output.';
+        }
+        for (let i = 0; i < usr.length; i++) {
+            if (usr[i] === std[i]) continue;
+            const usrString = usr[i].length > 20 ? `${usr[i].substring(0, 16)}...` : usr[i];
+            const stdString = std[i].length > 20 ? `${std[i].substring(0, 16)}...` : std[i];
+            return { message: 'Read {0}, expect {1}.', params: [usrString, stdString] };
+        }
+        throw new Error();
+    } catch (e) {
+        return msg.substring(0, msg.length - 1 <= 30 ? msg.length - 1 : 30);
+    }
+}
+
 const checkers: Record<string, Checker> = new Proxy({
     async default(config) {
         const { stdout } = await run('/usr/bin/diff -BZ usrout answer', {
@@ -35,33 +65,7 @@ const checkers: Record<string, Checker> = new Proxy({
         let message: any = '';
         if (stdout) {
             status = STATUS.STATUS_WRONG_ANSWER;
-            if (config.detail) {
-                try {
-                    const pt = stdout.split('---');
-                    const u = pt[0].split('\n')[1];
-                    const usr = u.substring(2).trim().split(' ');
-                    const t = pt[1].split('\n')[1];
-                    const std = t.substring(2).trim().split(' ');
-                    if (usr.length < std.length) message = 'Standard answer longer than user output.';
-                    else if (usr.length > std.length) message = 'User output longer than standard answer.';
-                    else {
-                        let usrString = usr[0];
-                        let stdString = std[0];
-                        for (const i in usr) {
-                            if (usr[i] !== std[i]) {
-                                usrString = usr[i];
-                                stdString = std[i];
-                                break;
-                            }
-                        }
-                        if (usrString.length > 20) usrString = `${usrString.substring(0, 16)}...`;
-                        if (stdString.length > 20) stdString = `${stdString.substring(0, 16)}...`;
-                        message = { message: 'Read {0}, expect {1}.', params: [usrString, stdString] };
-                    }
-                } catch (e) {
-                    message = stdout.substring(0, stdout.length - 1 <= 30 ? stdout.length - 1 : 30);
-                }
-            }
+            if (config.detail) message = parseDiffMsg(stdout);
         } else status = STATUS.STATUS_ACCEPTED;
         if (message.length > 1024000) message = '';
         return {
