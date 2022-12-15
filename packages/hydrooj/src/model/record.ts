@@ -232,7 +232,7 @@ export default class RecordModel {
 
 export function apply(ctx: Context) {
     // Mark problem as deleted
-    ctx.on('problem/delete', (domainId, docId) => RecordModel.coll.updateMany({ domainId, pid: docId }, { $set: { pid: -1 } }));
+    ctx.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
     ctx.on('ready', () => db.ensureIndexes(
         RecordModel.coll,
