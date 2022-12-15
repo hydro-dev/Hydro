@@ -157,28 +157,6 @@ export default class CodeforcesProvider implements IBasicProvider {
         return _tta;
     }
 
-    async checkLogin() {
-        await this.ensureBrowser();
-        const page = await this.getPage();
-        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2', timeout: 180000 });
-        const html = await page.content();
-        let cookies = await page.cookies();
-        let c = 0;
-        while (!cookies.find((i) => i.name === 'evercookie_etag').value && c <= 60) {
-            await sleep(1000);
-            cookies = await page.cookies();
-            c++;
-        }
-        if (c < 60) {
-            this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
-            await this.save({ cookie: this.cookie });
-        }
-        const ftaa = cookies.find((i) => i.name === '70a7c28f3de')?.value;
-        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1];
-        await page.close();
-        return [ftaa, bfaa, !html.includes('Login into Codeforces')];
-    }
-
     async getCsrfToken(url: string) {
         const { text: html } = await this.get(url);
         const { window: { document } } = new JSDOM(html);
@@ -197,9 +175,13 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     get loggedIn() {
-        return this.get('/enter').then(({ text: html }) => {
+        return this.get('/enter').then((res) => {
+            const html = res.text;
             if (html.includes('Login into Codeforces')) return false;
-            if (html.length < 1000 && html.includes('Redirecting...')) return false;
+            if (html.length < 1000 && html.includes('Redirecting...')) {
+                logger.debug('Got a redirect', html);
+                return false;
+            }
             return true;
         });
     }
@@ -226,7 +208,7 @@ export default class CodeforcesProvider implements IBasicProvider {
         await this.ensureBrowser();
         if (!this.puppeteer) return false;
         const page = await this.puppeteer.newPage();
-        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2' });
+        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2', timeout: 60000 });
         const url = await page.openPortal();
         logger.info(`Login portal opened: ${url}`);
         await page.waitForRequest((req) => {
