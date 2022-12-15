@@ -1,15 +1,24 @@
 import assert from 'assert';
+import { statSync } from 'fs-extra';
+import { pick } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
-import { ProblemNotFoundError, ValidationError } from '../error';
+import { sortFiles } from '@hydrooj/utils/lib/utils';
+import {
+    FileLimitExceededError, FileUploadError, ProblemNotFoundError, ValidationError,
+} from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
+import * as oplog from '../model/oplog';
 import problem from '../model/problem';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
 import * as bus from '../service/bus';
-import { Handler, param, Types } from '../service/server';
+import {
+    Handler, param, post, Types,
+} from '../service/server';
 
 async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag']> {
     const parsed = [];
@@ -149,6 +158,9 @@ class TrainingDetailHandler extends Handler {
         this.response.body = {
             tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict,
         };
+        this.response.body.tdoc.description = this.response.body.tdoc.description
+            .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
+            .replace(/="file:\/\//g, `="./${tdoc.docId}/file/`);
         this.response.pjax = 'partials/training_detail.html';
         this.response.template = 'training_detail.html';
     }
@@ -219,9 +231,86 @@ class TrainingEditHandler extends Handler {
     }
 }
 
+export class TrainingFilesHandler extends Handler {
+    tdoc: TrainingDoc;
+
+    @param('tid', Types.ObjectID)
+    async prepare(domainId: string, tid: ObjectID) {
+        this.tdoc = await training.get(domainId, tid);
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
+    }
+
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: await training.getStatus(domainId, this.tdoc.docId, this.user._id),
+            udoc: await user.getById(domainId, this.tdoc.owner),
+            files: sortFiles(this.tdoc.files || []),
+            urlForFile: (filename: string) => this.url('training_file_download', { tid, filename }),
+        };
+        this.response.pjax = 'partials/files.html';
+        this.response.template = 'training_files.html';
+    }
+
+    @param('tid', Types.ObjectID)
+    @post('filename', Types.Name, true)
+    async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
+        if ((this.tdoc.files?.length || 0) >= system.get('limit.training_files')) {
+            throw new FileLimitExceededError('count');
+        }
+        const file = this.request.files?.file;
+        if (!file) throw new ValidationError('file');
+        const f = statSync(file.filepath);
+        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
+        if (size >= system.get('limit.training_files_size')) {
+            throw new FileLimitExceededError('size');
+        }
+        if (!filename) filename = file.originalFilename || String.random(16);
+        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
+        await storage.put(`training/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`training/${domainId}/${tid}/${filename}`);
+        const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
+        if (!meta) throw new FileUploadError();
+        await training.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectID)
+    @post('files', Types.Array)
+    async postDeleteFiles(domainId: string, tid: ObjectID, files: string[]) {
+        await Promise.all([
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
+        ]);
+        this.back();
+    }
+}
+export class TrainingFileDownloadHandler extends Handler {
+    @param('tid', Types.ObjectID)
+    @param('filename', Types.Name)
+    @param('noDisposition', Types.Boolean)
+    async get(domainId: string, tid: ObjectID, filename: string, noDisposition = false) {
+        this.response.addHeader('Cache-Control', 'public');
+        const target = `training/${domainId}/${tid}/${filename}`;
+        const file = await storage.getMeta(target);
+        await oplog.log(this, 'download.file.training', {
+            target,
+            size: file?.size || 0,
+        });
+        this.response.redirect = await storage.signDownloadLink(
+            target, noDisposition ? undefined : filename, false, 'user',
+        );
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('training_main', '/training', TrainingMainHandler, PERM.PERM_VIEW_TRAINING);
     ctx.Route('training_create', '/training/create', TrainingEditHandler);
     ctx.Route('training_detail', '/training/:tid', TrainingDetailHandler, PERM.PERM_VIEW_TRAINING);
     ctx.Route('training_edit', '/training/:tid/edit', TrainingEditHandler);
+    ctx.Route('training_files', '/training/:tid/file', TrainingFilesHandler, PERM.PERM_VIEW_TRAINING);
+    ctx.Route('training_file_download', '/training/:tid/file/:filename', TrainingFileDownloadHandler, PERM.PERM_VIEW_TRAINING);
 }

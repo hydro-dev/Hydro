@@ -75,6 +75,9 @@
           <li class="menu__item"><a class="menu__link" href="{{ url('training_edit', tid=tdoc.docId) }}">
             <span class="icon icon-edit"></span>  {{ _('Edit') }}
           </a></li>
+          <li class="menu__item"><a class="menu__link" href="{{ url('training_files', tid=tdoc.docId) }}">
+            <span class="icon icon-file"></span> {{ _('Files') }}
+          </a></li>
         {% endif %}
           <li class="menu__item"><a class="menu__link" href="{{ url('wiki_help', anchor='training') }}">
             <span class="icon icon-help"></span> {{ _('Help') }}

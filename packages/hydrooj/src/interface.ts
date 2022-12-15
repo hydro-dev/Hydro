@@ -367,6 +367,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     lockAt?: Date;
     unlocked?: boolean;
     access?: number;
+    autoHide?: boolean;
+    unrankUsers?: number[];
 
     /**
      * In hours
@@ -495,6 +497,7 @@ export interface OplogDoc extends Record<string, any> {
 
 export interface ContestStat extends Record<string, any> {
     detail: Record<number, Record<string, any>>,
+    unrank?: boolean,
 }
 
 export interface ContestRule<T = any> {

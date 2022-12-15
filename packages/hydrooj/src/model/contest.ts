@@ -540,7 +540,7 @@ export async function add(
     return res;
 }
 
-export async function edit(domainId: string, tid: ObjectID, $set: any) {
+export async function edit(domainId: string, tid: ObjectID, $set: Partial<Tdoc>) {
     if ($set.rule && !RULES[$set.rule]) throw new ValidationError('rule');
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
