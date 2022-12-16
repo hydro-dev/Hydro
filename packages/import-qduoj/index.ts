@@ -20,9 +20,11 @@ class ImportQduojHandler extends Handler {
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
         });
+        let cnt = 0;
         try {
-            const folders = await fs.readdir(tmp);
-            for (const folder of folders) {
+            const folders = await fs.readdir(tmp, { withFileTypes: true });
+            for (const { name: folder } of folders.filter((i) => i.isDirectory())) {
+                if (!fs.existsSync(path.join(tmp, folder, 'problem.json'))) continue;
                 const buf = await fs.readFile(path.join(tmp, folder, 'problem.json'));
                 const pdoc = JSON.parse(buf.toString());
                 const content: ContentNode[] = [];
@@ -115,10 +117,12 @@ class ImportQduojHandler extends Handler {
                     ProblemModel.edit(domainId, pid, { html: true }),
                 );
                 await Promise.all(tasks);
+                cnt++;
             }
         } finally {
             await fs.remove(tmp);
         }
+        if (!cnt) throw new ValidationError('zip', 'No problemset imported');
     }
 
     async get() {
