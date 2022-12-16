@@ -60,6 +60,14 @@ export function encodeRFC5987ValueChars(str: string) {
     );
 }
 
+const convertPath = (p: string) => {
+    p = p.trim();
+    if (p.includes('..') || p.includes('//') || p.endsWith('/.') || p === '.' || p.includes('/./')) {
+        throw new Error('Invalid path');
+    }
+    return p;
+};
+
 class RemoteStorageService {
     public client: S3Client;
     public error = '';
@@ -113,7 +121,7 @@ class RemoteStorageService {
     }
 
     async put(target: string, file: string | Buffer | Readable, meta: Record<string, string> = {}) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = convertPath(target);
         if (typeof file === 'string') file = createReadStream(file);
         const params: PutObjectCommandInput = {
             Bucket: this.opts.bucket,
@@ -138,7 +146,7 @@ class RemoteStorageService {
     }
 
     async get(target: string, path?: string) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = convertPath(target);
         const res = await this.client.send(new GetObjectCommand({
             Bucket: this.opts.bucket,
             Key: target,
@@ -163,9 +171,8 @@ class RemoteStorageService {
     }
 
     async del(target: string | string[]) {
-        if (typeof target === 'string') {
-            if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        } else if (target.find((t) => t.includes('..') || t.includes('//'))) throw new Error('Invalid path');
+        if (typeof target === 'string') target = convertPath(target);
+        else target = target.map(convertPath);
         if (typeof target === 'string') {
             return await this.client.send(new DeleteObjectCommand({
                 Bucket: this.opts.bucket,
@@ -186,7 +193,7 @@ class RemoteStorageService {
     }
 
     async getMeta(target: string) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = convertPath(target);
         const res = await this.client.send(new HeadObjectCommand({
             Bucket: this.opts.bucket,
             Key: target,
@@ -200,7 +207,7 @@ class RemoteStorageService {
     }
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = convertPath(target);
         const url = await getSignedUrl(this.client, new GetObjectCommand({
             Bucket: this.opts.bucket,
             Key: target,
@@ -234,8 +241,8 @@ class RemoteStorageService {
     }
 
     async copy(src: string, target: string) {
-        if (src.includes('..') || src.includes('//')) throw new Error('Invalid path');
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        src = convertPath(src);
+        target = convertPath(target);
         return await this.client.send(new CopyObjectCommand({
             Bucket: this.opts.bucket,
             Key: target,
@@ -262,8 +269,7 @@ class LocalStorageService {
     }
 
     async put(target: string, file: string | Buffer | Readable) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        target = resolve(this.dir, target);
+        target = resolve(this.dir, convertPath(target));
         await ensureDir(dirname(target));
         if (typeof file === 'string') await copyFile(file, target);
         else if (file instanceof Buffer) await writeFile(target, file);
@@ -271,22 +277,19 @@ class LocalStorageService {
     }
 
     async get(target: string, path?: string) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        target = resolve(this.dir, target);
+        target = resolve(this.dir, convertPath(target));
         if (!existsSync(target)) throw new Error('File not found');
         if (path) await copyFile(target, path);
         return createReadStream(target);
     }
 
     async del(target: MaybeArray<string>) {
-        const targets = typeof target === 'string' ? [target] : target;
-        if (targets.find((i) => i.includes('..') || i.includes('//'))) throw new Error('Invalid path');
+        const targets = (typeof target === 'string' ? [target] : target).map(convertPath);
         await Promise.all(targets.map((i) => remove(resolve(this.dir, i))));
     }
 
     async getMeta(target: string) {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        target = resolve(this.dir, target);
+        target = resolve(this.dir, convertPath(target));
         const file = await stat(target);
         return {
             size: file.size,
@@ -302,7 +305,7 @@ class LocalStorageService {
     }
 
     async signDownloadLink(target: string, filename = '', noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
+        target = convertPath(target);
         const url = new URL('https://localhost/storage');
         url.searchParams.set('target', target);
         if (filename) url.searchParams.set('filename', filename);
@@ -322,10 +325,8 @@ class LocalStorageService {
     }
 
     async copy(src: string, target: string) {
-        if (src.includes('..') || src.includes('//')) throw new Error('Invalid path');
-        if (target.includes('..') || target.includes('//')) throw new Error('Invalid path');
-        src = resolve(this.dir, src);
-        target = resolve(this.dir, target);
+        src = resolve(this.dir, convertPath(src));
+        target = resolve(this.dir, convertPath(target));
         await copyFile(src, target);
         return { etag: target, lastModified: new Date() };
     }
