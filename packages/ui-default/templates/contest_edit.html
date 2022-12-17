@@ -127,6 +127,26 @@
             }) }}
             </div>
           </div>
+          <div class="row">
+            {{ form.form_text({
+              columns:9,
+              label:'UnRank User',
+              name:'unrankUser',
+              help_text:_('User who will not show rank in scoreboard'),
+              value:tdoc.unrankUser|default(''),
+              row:false
+            }) }}
+            <div style="display: none" class="authorize-settings authorize--invite">
+            {{ form.form_checkbox({
+              columns:3,
+              label:'Allow join by unrank',
+              name:'uninvite',
+              placeholder:_('Allow user join by unrank user without invite code'),
+              value:tdoc.uninvite|default(true),
+              row:false
+            }) }}
+            </div>
+          </div>
         </div>
         <div style="padding-top: 0" class="section__header">
           <h2 class="section__title">{{ _('Contest Settings') }}</h2>
@@ -134,12 +154,12 @@
         <div class="section__body">
           <div class="row">
             {{ form.form_checkbox({
-                columns:2,
-                label:'Rated',
-                name:'rated',
-                placeholder:_('Is rated'),
-                value:tdoc.rated|default(true),
-                row:false
+              columns:2,
+              label:'Rated',
+              name:'rated',
+              placeholder:_('Is rated'),
+              value:tdoc.rated|default(true),
+              row:false
             }) }}
             {{ form.form_checkbox({
               columns:3,
@@ -164,7 +184,7 @@
               label:'Lock (minutes)',
               name:'lock',
               placeholder:_('(leave blank if none)'),
-              value:(((tdoc.endAt - tdoc.lockAt)/60000)|int)|default(''),
+              value:(((tdoc.endAt - tdoc.lockAt)/60000)|int) if tdoc.lockAt else '',
               help_text:_('Lock scoreboard on last N minutes'),
               disabled:true,
               row:false

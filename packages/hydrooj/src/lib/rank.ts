@@ -11,6 +11,10 @@ const ranked: ranked = async (cursor, equ) => {
     for (const doc of docs) {
         count++;
         if (!last || !equ(last, doc)) r = count;
+        if (doc.unrank) {
+            results.push([0, doc]);
+            continue;
+        }
         last = doc;
         results.push([r, doc]);
     }

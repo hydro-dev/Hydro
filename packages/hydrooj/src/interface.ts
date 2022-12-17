@@ -368,7 +368,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     unlocked?: boolean;
     access?: number;
     autoHide?: boolean;
-    unrankUsers?: number[];
+    unrankUser?: number[];
+    uninvite?: boolean;
 
     /**
      * In hours
