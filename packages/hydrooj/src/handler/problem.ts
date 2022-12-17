@@ -444,6 +444,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             contest: { $ne: new ObjectID('0'.repeat(24)) },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
+        if (!this.pdoc.config || typeof this.pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
         await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
         await Promise.all([
