@@ -353,7 +353,10 @@ export default class CodeforcesProvider implements IBasicProvider {
             if (index !== page.toString()) return [];
         }
         if (listName === 'main') {
-            return Array.from(document.querySelectorAll('.id>a')).map((i) => `P${i.innerHTML.trim()}`);
+            // 1769 is a hidden contest
+            return Array.from(document.querySelectorAll('.id>a'))
+                .map((i) => `P${i.innerHTML.trim()}`)
+                .filter((i) => !['P1772', 'P1769'].find((t) => i.startsWith(t)));
         }
         if (listName === 'gym') {
             return Array.from(document.querySelectorAll('[data-contestId]')).map((i) => `LIST::GYM${i.getAttribute('data-contestId')}`);
