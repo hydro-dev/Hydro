@@ -210,6 +210,9 @@
                 <button name="operation" value="update" type="submit" class="rounded primary button">
                   {{ _('Update') }}
                 </button>
+                <button name="operation" value="update" type="submit" formaction="{{ url('contest_create') }}" class="rounded button">
+                  {{ _('Clone') }}
+                </button>
                 {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
                   <button name="operation" value="delete" type="submit" class="rounded button">
                     {{ _('Delete') }}
