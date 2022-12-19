@@ -35,6 +35,11 @@
           <p>{{ _('The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.') }}</p>
         </blockquote>
       {% endif %}
+      {% if tdoc.code and tdoc.uninvite %}
+        <blockquote class="note">
+          <p>{{ _('The contest is a invitational contest. However it allow users attend contest without the invitation code. Those users will not be ranked.') }}</p>
+        </blockquote>
+      {% endif %}
       </div>
     </div>
   </div>

@@ -73,7 +73,7 @@
           }) }}
           {{ form.form_textarea({
             columns:null,
-            label:'Content',
+            label:'Description',
             name:'content',
             value:tdoc['content']|default(''),
             markdown:true
@@ -117,7 +117,7 @@
             </div>
             <div style="display: none" class="authorize-settings authorize--invite">
             {{ form.form_text({
-              columns:9,
+              columns:6,
               label:'Invitation Code',
               name:'code',
               placeholder:_('(leave blank if none)'),
@@ -125,19 +125,7 @@
               disabled:true,
               row:false
             }) }}
-            </div>
-          </div>
-          <div class="row">
-            {{ form.form_text({
-              columns:9,
-              label:'UnRank User',
-              name:'unrankUser',
-              help_text:_('User who will not show rank in scoreboard'),
-              value:tdoc.unrankUser|default(''),
-              row:false
-            }) }}
-            <div style="display: none" class="authorize-settings authorize--invite">
-            {{ form.form_checkbox({
+              {{ form.form_checkbox({
               columns:3,
               label:'Allow join by unrank',
               name:'uninvite',

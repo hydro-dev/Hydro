@@ -224,8 +224,10 @@ export class ContestDetailHandler extends Handler {
     @param('code', Types.String, true)
     async postAttend(domainId: string, tid: ObjectID, code = '') {
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
-        if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
+        if (this.tdoc._code && code !== this.tdoc._code && !this.tdoc.uninvite) throw new InvalidTokenError('Contest Invitation', code);
         await contest.attend(domainId, tid, this.user._id);
+        if (this.tdoc.unrankUser.includes(this.user._id)
+            || (this.tdoc._code && code !== this.tdoc._code && this.tdoc.uninvite)) contest.setStatus(domainId, tid, this.user._id, { unrank: true });
         this.back();
     }
 }
@@ -412,11 +414,14 @@ export class ContestEditHandler extends Handler {
     @param('assign', Types.CommaSeperatedArray, true)
     @param('lock', Types.UnsignedInt, true)
     @param('contestDuration', Types.Float, true)
+    @param('maintainer', Types.NumericArray, true)
+    @param('uninvite', Types.Boolean, true)
+    @param('allowViewCode', Types.Boolean, true)
     async postUpdate(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration: number = null,
+        contestDuration: number = null, maintainer: number[] = null, uninvite = false, allowViewCode = true,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -457,7 +462,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt,
+            assign, _code, autoHide, lockAt, maintainer, uninvite, allowViewCode,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
