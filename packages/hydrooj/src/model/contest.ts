@@ -406,7 +406,6 @@ const fun = buildContestRule({
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
             const endScore = calcFunScore(naccept[j.pid], j.score);
-            console.log(j);
             detail[pid] = {
                 ...j, real, naccept: naccept[j.pid], penalty, endScore, npending: npending[j.pid],
             };
@@ -500,7 +499,6 @@ const fun = buildContestRule({
     },
     async scoreboard(isExport, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await ranked(cursor, (a, b) => a.endScore === b.endScore);
-        console.log(rankedTsdocs);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
         // Find first accept
