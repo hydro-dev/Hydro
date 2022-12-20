@@ -12,7 +12,7 @@
         <ul class="info">
           <li>
             <span class="icon icon-award"></span>
-            {{ _('Rule') }}: {{ model.contest.RULES[tdoc['rule']].TEXT }}
+            {{ _('Rule') }}: {{ _(model.contest.RULES[tdoc['rule']].TEXT) }}
           </li>
           <li>
             <span class="icon icon-calendar"></span>
@@ -56,7 +56,7 @@
   {%- endfor -%}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0} Contests').format(model.contest.RULES[rule].TEXT) }}</h1>
+        <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0} Contests').format(_(model.contest.RULES[rule].TEXT)) }}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
@@ -92,7 +92,7 @@
                 <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
                 <ul class="supplementary list">
                   <li>
-                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
+                    <a href="?rule={{ tdoc['rule'] }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</a>
                   </li>
                   {% if tdoc.rated %}
                     <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
