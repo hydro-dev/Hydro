@@ -272,8 +272,7 @@ class UserModel {
         if (_id < -999) return null;
         const udoc = await coll.findOne({ _id });
         if (!udoc) throw new UserNotFoundError(_id);
-        udoc[field] = udoc[field] + n || n;
-        await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
+        await coll.updateOne({ _id }, { $inc: { [field]: n } });
         deleteUserCache(udoc);
         return udoc;
     }
