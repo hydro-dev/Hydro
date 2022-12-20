@@ -28,7 +28,7 @@
         </form>
       {% endif %}
       <div class="section__tools">
-        <select class="select" name="list">
+        <select class="select filter" name="list">
           <option value="all">{{ _('All Users') }}</option>
           <option value="star">{{ _('Stared Users') }}</option>
           <option value="unrank">{{ _('Unrank Users') }}</option>
@@ -77,9 +77,11 @@
           <tr>
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
-              {%- if column.type == 'user' -%}
+              {%- if column.type == 'rank' -%}
+                <span class="{{ 'rank--normal' if column.raw else 'rank--unrank' }}">{{ column.value|string|nl2br|safe }}</span>
+              {%- elif column.type == 'user' -%}
                 {%- set canView = canViewAll or handler.user._id == column.raw -%}
-                <button class="star user--{{ colomn.raw }}">
+                <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
                   <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
                   <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
                 </button>

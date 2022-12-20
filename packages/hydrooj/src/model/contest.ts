@@ -127,7 +127,7 @@ const acm = buildContestRule({
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
-            { type: 'rank', value: rank ? rank.toString() : '*' },
+            { type: 'rank', value: rank ? rank.toString() : '*', raw: rank },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
         if (isExport) {
@@ -263,7 +263,7 @@ const oi = buildContestRule({
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardNode[] = [
-            { type: 'rank', value: rank ? rank.toString() : '*' },
+            { type: 'rank', value: rank ? rank.toString() : '*', raw: rank },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
         if (isExport) {
