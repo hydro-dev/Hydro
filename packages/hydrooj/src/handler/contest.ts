@@ -366,7 +366,7 @@ export class ContestEditHandler extends Handler {
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration: number = null,singleRatio :number, lowestRatio :number
+        contestDuration: number = null, singleRatio :number, lowestRatio :number,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -378,13 +378,13 @@ export class ContestEditHandler extends Handler {
         const lockAt = lock ? moment(endAt).add(-lock, 'minutes').toDate() : null;
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
-            if (rule == "fun") {
+            if (rule === 'fun') {
                 await contest.edit(domainId, tid, {
-                    title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration, singleRatio, lowestRatio 
+                    title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration, singleRatio, lowestRatio,
                 });
             } else {
                 await contest.edit(domainId, tid, {
-                    title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration 
+                    title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
                 });
             }
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
@@ -392,12 +392,11 @@ export class ContestEditHandler extends Handler {
                 || lockAt !== this.tdoc.lockAt) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
+        } else if (rule === 'fun') {
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration },
+                singleRatio, lowestRatio);
         } else {
-            if (rule == "fun") {
-                tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration }, singleRatio, lowestRatio );
-            } else {
-                tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
-            }
+            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,

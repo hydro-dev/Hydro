@@ -8,20 +8,20 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
   $(document).on('change', '[name="rule"]', () => {
     const rule = $('[name="rule"]').val();
-    if (rule == "fun") {
-      $("#fun-control").removeClass("hide--data");
+    if (rule === 'fun') {
+      $('#fun-control').removeClass('hide--data');
     } else {
-      $("#fun-control").addClass("hide--data");
+      $('#fun-control').addClass('hide--data');
     }
-  })
+  });
   const rule = $('[name="rule"]').val();
-  if (rule == "fun") {
-    $("#fun-control").removeClass("hide--data");
+  if (rule === 'fun') {
+    $('#fun-control').removeClass('hide--data');
   } else {
-    $("#fun-control").addClass("hide--data");
+    $('#fun-control').addClass('hide--data');
   }
   if (pagename.endsWith('edit')) {
-    let confirmed = false;  
+    let confirmed = false;
     $(document).on('click', '[name="operation"]', (ev) => {
       ev.preventDefault();
       if (confirmed) {

@@ -1,4 +1,4 @@
-import { max, sumBy, toInteger } from 'lodash';
+import { sumBy, toInteger } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
@@ -366,13 +366,11 @@ const ioi = buildContestRule({
 });
 
 function calcFunNowRatio(nAccept, singleRatio, lowestRatio) {
-    let nowRatio = singleRatio ** toInteger(nAccept);
-    return Math.max(lowestRatio, nowRatio);
+    return Math.max(lowestRatio, singleRatio ** toInteger(nAccept));
 }
 
 function calcFunScore(nAccept, beforeScore, singleRatio, lowestRatio) {
-    let score = Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio));
-    return score;
+    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio));
 }
 
 const fun = buildContestRule({
@@ -405,9 +403,9 @@ const fun = buildContestRule({
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
-            const endscore = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio);
+            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio);
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penalty, endscore, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], penalty, endscore: endscoreDetail, npending: npending[j.pid],
             };
         }
         let time = 0;
@@ -416,7 +414,9 @@ const fun = buildContestRule({
             time += d.real;
             endscore += d.endscore;
         }
-        return { accept, time, endscore, detail };
+        return {
+            accept, time, endscore, detail,
+        };
     },
     async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardRow = [
@@ -429,7 +429,7 @@ const fun = buildContestRule({
             columns.push({ type: 'string', value: _('Name') });
             columns.push({ type: 'string', value: _('Student ID') });
         }
-         columns.push({ type: 'total_score', value: _('Total Score') });
+        columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
@@ -472,8 +472,8 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            let nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio);
-            let score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio);
+            const nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio);
+            const score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio);
             let value = '';
             totalScore += score;
             if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRatio * 100) / 100).toString()})`;
@@ -702,15 +702,15 @@ export async function add(
     Object.assign(data, {
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
-    if (singleRatio != -1 && lowestRatio != -1) {
+    if (singleRatio !== -1 && lowestRatio !== -1) {
         Object.assign(data, {
-            singleRatio, lowestRatio
+            singleRatio, lowestRatio,
         });
     }
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated
+        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, res);
     return res;
