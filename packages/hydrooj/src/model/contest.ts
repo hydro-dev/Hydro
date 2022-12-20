@@ -38,7 +38,7 @@ interface FunJournal extends AcmJournal {
 }
 
 interface FunDetail extends AcmDetail {
-    endScore: number;
+    endscore: number;
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
@@ -365,20 +365,20 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
-function calcFunNowRadio(nAccept) {
-    let nowRadio = 0.95 ** toInteger(nAccept);
-    return Math.max(0.7, nowRadio);
+function calcFunNowRatio(nAccept, singleRatio, lowestRatio) {
+    let nowRatio = singleRatio ** toInteger(nAccept);
+    return Math.max(lowestRatio, nowRatio);
 }
 
-function calcFunScore(nAccept, beforeScore) {
-    let score = Math.floor((beforeScore) * calcFunNowRadio(nAccept));
+function calcFunScore(nAccept, beforeScore, singleRatio, lowestRatio) {
+    let score = Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio));
     return score;
 }
 
 const fun = buildContestRule({
     TEXT: 'FUN Contest',
     check: () => { },
-    statusSort: { endScore: -1, time: 1 },
+    statusSort: { endscore: -1, time: 1 },
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
@@ -389,7 +389,7 @@ const fun = buildContestRule({
         const effective: Record<number, FunJournal> = {};
         const detail: Record<number, FunDetail> = {};
         let accept = 0;
-        let endScore = 0;
+        let endscore = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             if (j.status === STATUS.STATUS_WAITING) {
@@ -405,18 +405,18 @@ const fun = buildContestRule({
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
-            const endScore = calcFunScore(naccept[j.pid], j.score);
+            const endscore = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio);
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penalty, endScore, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], penalty, endscore, npending: npending[j.pid],
             };
         }
         let time = 0;
         for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
             accept++;
             time += d.real;
-            endScore += d.endScore;
+            endscore += d.endscore;
         }
-        return { accept, time, endScore, detail };
+        return { accept, time, endscore, detail };
     },
     async scoreboardHeader(isExport, _, tdoc, pdict) {
         const columns: ScoreboardRow = [
@@ -472,11 +472,11 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            let score = calcFunScore(doc.naccept, doc?.score);
-            let nowRadio = calcFunNowRadio(doc.naccept);
+            let nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio);
+            let score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio);
             let value = '';
             totalScore += score;
-            if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRadio * 100) / 100).toString()})`;
+            if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRatio * 100) / 100).toString()})`;
             tmp.push({
                 type: 'record',
                 score,
@@ -498,7 +498,7 @@ const fun = buildContestRule({
         return row;
     },
     async scoreboard(isExport, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.endScore === b.endScore);
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.endscore === b.endscore);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
         // Find first accept
@@ -531,7 +531,7 @@ const fun = buildContestRule({
         return [rows, udict];
     },
     async ranked(tdoc, cursor) {
-        return await ranked(cursor, (a, b) => a.endScore === b.endScore);
+        return await ranked(cursor, (a, b) => a.endscore === b.endscore);
     },
 });
 
@@ -695,17 +695,22 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc<30>> = {},
+    rated = false, data: Partial<Tdoc<30>> = {}, singleRatio = -1, lowestRatio = -1,
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
+    if (singleRatio != -1 && lowestRatio != -1) {
+        Object.assign(data, {
+            singleRatio, lowestRatio
+        });
+    }
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
+        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated
     });
     await bus.parallel('contest/add', data, res);
     return res;

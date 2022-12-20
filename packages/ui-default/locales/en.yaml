@@ -63,3 +63,5 @@ user_logout: Logout
 user_lostpass: Lost Password
 user_register: Register
 wiki_help: Help
+single_ratio: Per Rate of Wrong Submission
+lowest_ratio: Lowest Rate of Wrong Submission
