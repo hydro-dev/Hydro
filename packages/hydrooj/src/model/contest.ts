@@ -37,7 +37,10 @@ interface FunJournal extends AcmJournal {
 
 }
 
-interface FunDetail extends AcmDetail {
+interface FunDetail extends FunJournal {
+    real?: number;
+    naccept?: number;
+    npending?: number;
     endscore: number;
 }
 
@@ -365,18 +368,19 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
-function calcFunNowRatio(nAccept, singleRatio, lowestRatio) {
-    return Math.max(lowestRatio, singleRatio ** toInteger(nAccept));
+function calcFunNowRatio(nAccept, singleRatio, lowestRatio, isAccept: boolean) {
+    const ratioTime = Math.max(0, toInteger(nAccept) - toInteger(!isAccept));
+    return Math.max(lowestRatio, singleRatio ** ratioTime);
 }
 
-function calcFunScore(nAccept, beforeScore, singleRatio, lowestRatio) {
-    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio));
+function calcFunScore(nAccept, beforeScore, singleRatio, lowestRatio, isAccept :boolean) {
+    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio, isAccept));
 }
 
 const fun = buildContestRule({
     TEXT: 'FUN Contest',
     check: () => { },
-    statusSort: { endscore: -1, time: 1 },
+    statusSort: { endscore: -1 },
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
@@ -386,7 +390,6 @@ const fun = buildContestRule({
         const npending = Counter<number>();
         const effective: Record<number, FunJournal> = {};
         const detail: Record<number, FunDetail> = {};
-        let accept = 0;
         let endscore = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
@@ -402,20 +405,20 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const penalty = 20 * 60 * naccept[j.pid];
-            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio);
+            console.log(j);
+            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio, j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penalty, endscore: endscoreDetail, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], endscore: endscoreDetail, npending: npending[j.pid],
             };
         }
         let time = 0;
-        for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
-            accept++;
+        for (const d of Object.values(detail)) {
+            console.log(d);
             time += d.real;
             endscore += d.endscore;
         }
         return {
-            accept, time, endscore, detail,
+            time, endscore, detail,
         };
     },
     async scoreboardHeader(isExport, _, tdoc, pdict) {
@@ -472,10 +475,12 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio);
-            const score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio);
+            const nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio, doc.status === STATUS.STATUS_ACCEPTED);
+            const score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio, doc.status === STATUS.STATUS_ACCEPTED);
             let value = '';
-            totalScore += score;
+            if (Number.isNaN(score) === false) {
+                totalScore += score;
+            }
             if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRatio * 100) / 100).toString()})`;
             tmp.push({
                 type: 'record',
