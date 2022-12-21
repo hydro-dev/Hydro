@@ -405,7 +405,6 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            console.log(j);
             const endscoreDetail = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio, j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
                 ...j, real, naccept: naccept[j.pid], endscore: endscoreDetail, npending: npending[j.pid],
@@ -413,7 +412,6 @@ const fun = buildContestRule({
         }
         let time = 0;
         for (const d of Object.values(detail)) {
-            console.log(d);
             time += d.real;
             endscore += d.endscore;
         }
