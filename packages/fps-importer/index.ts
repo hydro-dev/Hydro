@@ -70,7 +70,7 @@ class FpsProblemImportHandler extends Handler {
                 let c = node;
                 if (node.$?.name) {
                     id = node.$.name;
-                    c = node._;
+                    c = node._ || '';
                 }
                 tasks.push(ProblemModel.addTestdata(domainId, pid, `${id}.${ext}`, Buffer.from(c)));
             };
