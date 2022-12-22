@@ -59,6 +59,7 @@ Accepted Problems: 通过的题目
 Accepted Ratio: 通过率
 Accepted: 已通过
 Access Control: 访问控制
+According to the contest rules, you cannot view your submission details at current.: 根据比赛规则，你现在不能查看你的评测记录详情。
 Account Settings: 账户设置
 Action: 动作
 Active Sessions: 活动会话
@@ -92,6 +93,7 @@ At least 4 characters: 至少 4 个字符
 Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
+Attender Manage: 参赛者管理
 author: 作者
 Auto hide problems during the contest: 在比赛过程中自动隐藏题目
 Auto Read Tasks: 自动识别任务
@@ -175,6 +177,7 @@ contest_detail_problem_submit: 递交比赛题目
 contest_edit: 编辑比赛
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
+contest_user: 参赛者管理
 Contest: 比赛
 Continue: 继续
 Contributed Problems: 贡献的题目
@@ -551,6 +554,7 @@ objective: 客观题
 Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献过题目~
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
+Oh, there is no submission!: 喔，还没有评测记录呢！
 Oh, there is no task in the queue!: 喔，队列中目前没有任务。
 Oh, there is no task that matches the filter!: 喔，目前没有符合过滤条件的任务。
 Ok: 确定
@@ -867,6 +871,7 @@ Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
 Unlimited: 无限制
 Unordered List: 无序列表
+Unrank: 打星
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
 Unsupported configure this type of problem. Please refer to the documentation.: 暂不支持快捷配置此类题目。请参照文档操作。

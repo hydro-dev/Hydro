@@ -7,7 +7,7 @@ import {
     Counter, sortFiles, streamToBuffer, Time,
 } from '@hydrooj/utils/lib/utils';
 import {
-    BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
+    BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError, ForbiddenError,
     InvalidTokenError, NotAssignedError, PermissionError, ValidationError,
 } from '../error';
@@ -592,6 +592,40 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     }
 }
 
+export class ContestUserHandler extends ContestDetailBaseHandler {
+    @param('tid', Types.ObjectID)
+    async get(domainId: string, tid: ObjectID) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+        tsdocs.forEach((i) => {
+            i.endAt = this.tdoc.duration ? moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
+        });
+        const udict = await user.getListForRender(domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)]);
+        this.response.body = { tdoc: this.tdoc, tsdocs, udict };
+        this.response.pjax = 'partials/contest_user.html';
+        this.response.template = 'contest_user.html';
+    }
+
+    @param('tid', Types.ObjectID)
+    @param('uids', Types.NumericArray)
+    @param('unrank', Types.Boolean)
+    async postAddUser(domainId: string, tid: ObjectID, uids: number[], unrank = false) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        await Promise.all(uids.map((uid) => contest.attend(domainId, tid, uid, { unrank })));
+        this.back();
+    }
+
+    @param('tid', Types.ObjectID)
+    @param('uid', Types.PositiveInt)
+    async postRank(domainId: string, tid: ObjectID, uid: number) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
+        const tsdoc = await contest.getStatus(domainId, tid, uid);
+        if (!tsdoc) throw new ContestNotAttendedError(uid);
+        await contest.setStatus(domainId, tid, uid, { unrank: !tsdoc.unrank });
+        this.back();
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('contest_create', '/contest/create', ContestEditHandler);
     ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
@@ -604,4 +638,5 @@ export async function apply(ctx) {
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_files', '/contest/:tid/file', ContestFilesHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
 }

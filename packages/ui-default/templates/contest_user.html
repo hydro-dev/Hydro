@@ -1,0 +1,47 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% import "components/record.html" as record with context %}
+{% import "components/problem.html" as problem with context %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Attender Manage') }}</h1>
+        <div class="section__tools">
+        <button class="primary rounded button" name="add_user"><span class="icon icon-search"></span>{{ _('Add User') }}</button>
+        </div>
+      </div>
+      {{ noscript_note.render() }}
+      <div class="section__body no-padding">
+        <table class="data-table">
+        <colgroup>
+            <col class="col--uid">
+            <col class="col--user">
+            <col class="col--start-time">
+            <col class="col--end-time">
+            <col class="col--rank">
+            <col class="col--actions">
+        </colgroup>
+        <thead>
+            <tr>
+            <th class="col--uid">{{ _('User ID') }}</th>
+            <th class="col--user">{{ _('Username') }}</th>
+            <td class="col--start-time">{{ _('Begin Time') }}</th>
+            <th class="col--end-time">{{ _('End Time') }}</th>
+            <th class="col--rank">{{ _('Rank') }}</th>
+            <th class="col--actions">{{ _('Actions') }}</th>
+            </tr>
+        </thead>
+        {% include "partials/contest_user.html" %}
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+  {% set owner_udoc = udict[tdoc.owner] %}
+  {% include "partials/contest_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}

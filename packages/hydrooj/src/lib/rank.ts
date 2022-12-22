@@ -9,12 +9,12 @@ const ranked: ranked = async (cursor, equ) => {
     const results = [];
     const docs = await cursor.toArray();
     for (const doc of docs) {
-        count++;
-        if (!last || !equ(last, doc)) r = count;
         if (doc.unrank) {
             results.push([0, doc]);
             continue;
         }
+        count++;
+        if (!last || !equ(last, doc)) r = count;
         last = doc;
         results.push([r, doc]);
     }
