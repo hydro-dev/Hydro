@@ -367,7 +367,6 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
-    uninvite?: boolean;
 
     /**
      * In hours

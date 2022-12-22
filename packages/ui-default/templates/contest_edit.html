@@ -117,20 +117,12 @@
             </div>
             <div style="display: none" data-perm="invite">
             {{ form.form_text({
-              columns:6,
+              columns:9,
               label:'Invitation Code',
               name:'code',
               placeholder:_('(leave blank if none)'),
               value:tdoc._code|default(''),
               disabled:true,
-              row:false
-            }) }}
-              {{ form.form_checkbox({
-              columns:3,
-              label:'Allow unranked attendance',
-              name:'uninvite',
-              placeholder:_("Allow user who doesn't have a invitation code join unranked"),
-              value:tdoc.uninvite|default(true),
               row:false
             }) }}
             </div>
