@@ -400,9 +400,9 @@ class UserModel {
     }
 
     @ArgMethod
-    static ban(uid: number) {
+    static ban(uid: number, reason = '') {
         return Promise.all([
-            UserModel.setPriv(uid, PRIV.PRIV_NONE),
+            UserModel.setById(uid, { priv: PRIV.PRIV_NONE, banReason: reason }),
             token.delByUid(uid),
         ]);
     }

@@ -27,7 +27,6 @@ import UserSelectAutoComplete from './components/autocomplete/UserSelectAutoComp
 export {
   load, AutoComplete, UserSelectAutoComplete, ProblemSelectAutoComplete, DomainSelectAutoComplete, CustomSelectAutoComplete,
 };
-export const { UserContext, UiContext } = window;
 export function addPage(page: import('./misc/Page').Page | (() => Promise<void> | void)) {
   window.Hydro.extraPages.push(page);
 }
