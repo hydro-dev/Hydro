@@ -92,10 +92,6 @@ export class ContestDetailBaseHandler extends Handler {
 
     @param('tid', Types.ObjectID, true)
     async __prepare(domainId: string, tid: ObjectID) {
-        if (this.session.tid && this.session.tid !== tid) {
-            // TODO: you are already in a contest
-            throw new ForbiddenError();
-        }
         if (!tid) return; // ProblemDetailHandler also extends from ContestDetailBaseHandler
         [this.tdoc, this.tsdoc] = await Promise.all([
             contest.get(domainId, tid),
@@ -122,7 +118,7 @@ export class ContestDetailBaseHandler extends Handler {
                 name: 'contest_main',
                 args: {},
                 displayName: 'Back to contest list',
-                checker: () => !(this.tdoc.access & contest.AccessControl.LOCK_OTHER),
+                checker: () => true,
             },
             {
                 name: 'contest_detail',
@@ -161,10 +157,6 @@ export class ContestDetailHandler extends Handler {
             contest.getStatus(domainId, tid, this.user._id),
         ]);
         if (contest.RULES[this.tdoc.rule].hidden) throw new ContestNotFoundError(domainId, tid);
-        if (this.session.tid && this.session.tid !== tid) {
-            // TODO: you are already in a contest
-            throw new ForbiddenError();
-        }
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc)) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
@@ -193,7 +185,7 @@ export class ContestDetailHandler extends Handler {
                 name: 'contest_main',
                 args: {},
                 displayName: 'Back to contest list',
-                checker: () => !(this.tdoc.access & contest.AccessControl.LOCK_OTHER),
+                checker: () => true,
             },
             {
                 name: 'contest_detail',
@@ -225,9 +217,11 @@ export class ContestDetailHandler extends Handler {
     async postAttend(domainId: string, tid: ObjectID, code = '') {
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
         if (this.tdoc._code && code !== this.tdoc._code && !this.tdoc.uninvite) throw new InvalidTokenError('Contest Invitation', code);
-        await contest.attend(domainId, tid, this.user._id);
-        if (this.tdoc.unrankUser.includes(this.user._id)
-            || (this.tdoc._code && code !== this.tdoc._code && this.tdoc.uninvite)) contest.setStatus(domainId, tid, this.user._id, { unrank: true });
+        await contest.attend(
+            domainId, tid, this.user._id,
+            (this.tdoc._code && code !== this.tdoc._code && this.tdoc.uninvite)
+                ? { unrank: true } : {},
+        );
         this.back();
     }
 }

@@ -350,12 +350,15 @@ export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
 export async function cappedIncStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: NumberKeys<DocStatusType[T]>, value: number, minValue = -1, maxValue = 1,
+    setPayload: Partial<DocStatusType[T]> = {},
 ): Promise<DocStatusType[T]> {
     assert(value !== 0);
     const $not = value > 0 ? { $gte: maxValue } : { $lte: minValue };
+    const operation = { $inc: { [key]: value } } as UpdateQuery<DocStatusType[T]>;
+    if (Object.keys(setPayload).length) operation.$set = setPayload;
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [key]: { $not } },
-        { $inc: { [key]: value } },
+        operation,
         { upsert: true, returnDocument: 'after' },
     );
     return res.value;

@@ -366,9 +366,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     // For contest
     lockAt?: Date;
     unlocked?: boolean;
-    access?: number;
     autoHide?: boolean;
-    unrankUser?: number[];
     uninvite?: boolean;
 
     /**

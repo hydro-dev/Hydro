@@ -258,14 +258,14 @@ export class TrainingFilesHandler extends Handler {
     @param('tid', Types.ObjectID)
     @post('filename', Types.Name, true)
     async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
-        if ((this.tdoc.files?.length || 0) >= system.get('limit.training_files')) {
+        if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
             throw new FileLimitExceededError('count');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
         const f = statSync(file.filepath);
         const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
-        if (size >= system.get('limit.training_files_size')) {
+        if (size >= system.get('limit.contest_files_size')) {
             throw new FileLimitExceededError('size');
         }
         if (!filename) filename = file.originalFilename || String.random(16);

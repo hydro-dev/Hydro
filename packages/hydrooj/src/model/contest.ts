@@ -127,7 +127,7 @@ const acm = buildContestRule({
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
-            { type: 'rank', value: rank ? rank.toString() : '*', raw: rank },
+            { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
         if (isExport) {
@@ -263,7 +263,7 @@ const oi = buildContestRule({
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardNode[] = [
-            { type: 'rank', value: rank ? rank.toString() : '*', raw: rank },
+            { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
         if (isExport) {
@@ -510,13 +510,6 @@ export const RULES: ContestRules = {
     acm, oi, homework, ioi,
 };
 
-export enum AccessControl {
-    FREE,
-    LOCK_OTHER = 2,
-    UNIQUE_LOGIN = 4,
-    CLIENT_REQUIRED = 8,
-}
-
 function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
 }
@@ -600,9 +593,9 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
     return r;
 }
 
-export async function attend(domainId: string, tid: ObjectID, uid: number) {
+export async function attend(domainId: string, tid: ObjectID, uid: number, payload: any = {}) {
     try {
-        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1);
+        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1, payload);
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }
@@ -753,7 +746,6 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
 
 global.Hydro.model.contest = {
     RULES,
-    AccessControl,
     add,
     getListStatus,
     getMultiStatus,

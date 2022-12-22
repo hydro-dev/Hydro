@@ -35,7 +35,6 @@
         </select>
       </div>
     </div>
-    <h1 style="text-align:center" class="section__title">{{ tdoc.title }}</h1>
     {% if model.contest.isLocked(tdoc) %}
       <div class="section__body no-padding">
         <blockquote class="note">
@@ -78,7 +77,7 @@
             {%- for column in row -%}
               <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
               {%- if column.type == 'rank' -%}
-                <span class="{{ 'rank--normal' if column.raw else 'rank--unrank' }}">{{ column.value|string|nl2br|safe }}</span>
+                <span class="{{ 'rank--unrank' if column.value == '0' else 'rank--normal' }}">{{ '*' if column.value == '0' else column.value|string|nl2br|safe }}</span>
               {%- elif column.type == 'user' -%}
                 {%- set canView = canViewAll or handler.user._id == column.raw -%}
                 <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">

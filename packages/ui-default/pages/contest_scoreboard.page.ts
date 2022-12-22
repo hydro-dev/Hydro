@@ -3,35 +3,23 @@ import { NamedPage } from 'vj/misc/Page';
 
 const page = new NamedPage('contest_scoreboard', () => {
   const { tdoc } = UiContext;
-  let starData = JSON.parse(localStorage.getItem('Hydro.starData')) || {};
-  Object.keys(starData).forEach((key) => {
-    if (starData[key].expire < Date.now()) delete starData[key];
-  });
-  if (!starData[tdoc.docId]) {
-    starData[tdoc.docId] = {
-      expire: tdoc.endAt + 1000 * 60 * 60 * 24 * 7,
-      starUids: [],
-    };
-  } else {
-    starData[tdoc.docId].starUids.forEach((uid) => {
-      console.log(uid);
-      $(`.star.user--${uid}`).addClass('activated');
-    });
-  }
-  console.log(starData[tdoc.docId].starUids);
-  localStorage.setItem('Hydro.starData', JSON.stringify(starData));
+  const key = `scoreboard-star/${tdoc.domainId}/${tdoc.docId}`;
+  const read = () => JSON.parse(localStorage.getItem(key) || '[]');
+  const write = (data) => localStorage.setItem(key, JSON.stringify(data));
+
+  read().forEach((uid) => $(`.star.user--${uid}`).addClass('activated'));
   $('.star').on('click', (e) => {
-    starData = JSON.parse(localStorage.getItem('Hydro.starData'));
+    const star = read();
     const $target = $(e.currentTarget);
     const uid = $target.data('uid');
-    if (starData[tdoc.docId].starUids.includes(uid)) {
+    if (star.includes(uid)) {
       $target.removeClass('activated');
-      starData[tdoc.docId].starUids.splice(starData[tdoc.docId].starUids.indexOf(uid), 1);
+      star.splice(star.indexOf(uid), 1);
     } else {
       $target.addClass('activated');
-      starData[tdoc.docId].starUids.push(uid);
+      star.push(uid);
     }
-    localStorage.setItem('Hydro.starData', JSON.stringify(starData));
+    write(star);
   });
 
   $('.select.filter').on('change', (e) => {
@@ -40,9 +28,7 @@ const page = new NamedPage('contest_scoreboard', () => {
       $('.data-table tbody tr').show();
     } else if (val === 'star') {
       $('.data-table tbody tr').hide();
-      starData[tdoc.docId].starUids.forEach((uid) => {
-        $(`.star.user--${uid}`).closest('tr').show();
-      });
+      read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show());
     } else {
       $('.data-table tbody tr').hide();
       $('.rank--unrank').closest('tr').show();
