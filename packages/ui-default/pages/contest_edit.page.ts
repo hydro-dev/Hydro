@@ -23,12 +23,12 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     const endAt = moment(`${beginAtDate} ${beginAtTime}`).add(+duration, 'hours').toDate();
     if (endAt) $('[name="endAt"]').val(moment(endAt).format('YYYY-MM-DD HH:mm'));
   });
-  $('[name="authorize"]').removeAttr('disabled').on('change', () => {
-    const authorized = $('[name="authorize"]').val();
-    $('.authorize-settings input').attr('disabled', 'disabled');
-    $('.authorize-settings').hide();
-    $(`.authorize--${authorized} input`).removeAttr('disabled');
-    $(`.authorize--${authorized}`).show();
+  $('[name="permission"]').removeAttr('disabled').on('change', () => {
+    const type = $('[name="permission"]').val();
+    $('[data-perm] input').attr('disabled', 'disabled');
+    $('[data-perm]').hide();
+    $(`[data-perm="${type}"] input`).removeAttr('disabled');
+    $(`[data-perm="${type}"]`).show();
   }).trigger('change');
   if (pagename.endsWith('edit')) {
     let confirmed = false;

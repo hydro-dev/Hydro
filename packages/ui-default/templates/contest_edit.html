@@ -93,18 +93,18 @@
           <div class="row">
             {{ form.form_select({
               columns:3,
-              label:'Authorize Control',
-              name:'authorize',
+              label:'Permission Control',
+              name:'permission',
               options:{
                 'public': _('Public'),
-                'invite': _('Need Invitation Code'),
+                'invite': _('Require Invitation Code'),
                 'assign': _('Assign User or Group')
               },
               value: ("public" if not tdoc._code else "invite") if not tdoc.assign else "assign",
               disabled:true,
               row:false
             }) }}
-            <div style="display: none" class="authorize-settings authorize--assign">
+            <div style="display: none" data-perm="assign">
             {{ form.form_text({
               columns:9,
               label:'Assign',
@@ -115,7 +115,7 @@
               row:false
             }) }}
             </div>
-            <div style="display: none" class="authorize-settings authorize--invite">
+            <div style="display: none" data-perm="invite">
             {{ form.form_text({
               columns:6,
               label:'Invitation Code',
@@ -127,9 +127,9 @@
             }) }}
               {{ form.form_checkbox({
               columns:3,
-              label:'Allow join by unrank',
+              label:'Allow unranked attendance',
               name:'uninvite',
-              placeholder:_('Allow user join by unrank user without invite code'),
+              placeholder:_("Allow user who doesn't have a invitation code join unranked"),
               value:tdoc.uninvite|default(true),
               row:false
             }) }}
@@ -185,7 +185,7 @@
               name:'contestDuration',
               placeholder:_('(leave blank if none)'),
               value:tdoc.duration|default(''),
-              help_text:_('Limit user in N hours finish contest'),
+              help_text:_('Limit user to finish contest within N hours'),
               disabled:true,
               row:false
             }) }}

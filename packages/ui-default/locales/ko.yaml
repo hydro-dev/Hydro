@@ -299,8 +299,7 @@ Evaluated difficulty: 평가된 난이도
 expand: 확장
 Expire: 만료
 Export All Code: 모든 코드 내보내기
-Export as CSV: CSV로 내보내기
-Export as HTML: HTML로 내보내기
+Export as {0}: '{0}로 내보내기'
 Extension (days): 추가 (날짜)
 Extension Score Penalty: 추가 패널티
 Failed to join the domain. You are already a member.: 그룹 참여 실패. 이미 참여함.

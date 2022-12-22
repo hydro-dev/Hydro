@@ -30,8 +30,8 @@ const page = new NamedPage('contest_scoreboard', () => {
       $('.data-table tbody tr').hide();
       read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show());
     } else {
-      $('.data-table tbody tr').hide();
-      $('.rank--unrank').closest('tr').show();
+      $('.data-table tbody tr').show();
+      $('.rank--unrank').closest('tr').hide();
     }
   });
 });

@@ -73,6 +73,7 @@ All Homeworks: 所有作业
 All Languages: 所有语言
 All Submissions: 所有递交
 All Training Plans: 所有训练计划
+All Users: 所有用户
 All: 全部
 Allow to maintain this contest: 允许管理此比赛
 Allow user view others code after contest: 允许用户赛后查看其他人的代码
@@ -84,16 +85,16 @@ Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
-Assign: 分配给
 Assign User or Group: 分配给用户或小组
+Assign: 分配给
 Assignment: 作业
 At least 4 characters: 至少 4 个字符
 Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
-Auto Read Tasks: 自动识别任务
 Auto hide problems during the contest: 在比赛过程中自动隐藏题目
+Auto Read Tasks: 自动识别任务
 Basic Info: 基础信息
 Be Copied: 被复制
 Begin at: 开始于
@@ -136,6 +137,7 @@ Claimed: 已认领
 Clear Marks: 清除标记
 Click here to chat with me: 点击这里与我聊天
 click to add: 点击添加
+Clone: 复制
 CLOSE: 关闭
 Code blocks: 代码区块
 Code language: 代码语言
@@ -164,16 +166,16 @@ Contact: 联系
 Content copied to clipboard!: 内容已复制到剪贴板！
 content: 内容
 Content: 内容
+Contest Maintainer: 比赛管理员
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
+Contest Settings: 比赛设置
 contest_create: 创建比赛
 contest_detail_problem_submit: 递交比赛题目
 contest_edit: 编辑比赛
 contest_main: 比赛
 contest_scoreboard: 比赛成绩表
 Contest: 比赛
-Contest Maintainer: 比赛管理员
-Contest Settings: 比赛设置
 Continue: 继续
 Contributed Problems: 贡献的题目
 Contributions: 贡献
@@ -335,8 +337,7 @@ Exit: 退出
 expand: 展开
 Expire: 过期
 Export All Code: 导出所有代码
-Export as CSV: 导出为 CSV
-Export as HTML: 导出为 HTML
+Export as {0}: 导出为 {0}
 Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Extra Files Config: 额外文件设置
@@ -459,7 +460,7 @@ LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
 Light: 亮色
-Limit user in N hours finish contest: 限制用户在N小时内完成比赛
+Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
 Limitations: 限制
 Links: 链接
 List View: 列表视图
@@ -517,7 +518,6 @@ Nav Logo Dark: 左上角小图标（暗）
 Nav Logo Dark@2x: 左上角图标（暗）（大）
 Nav Logo Light: 左上角图标（亮）
 Nav Logo Light@2x: 左上角图标（亮）（大）
-Need Invitation Code: 需要邀请码
 Network error: 网络错误
 Never expire: 从不过期
 New dataset: 新测试数据
@@ -592,8 +592,8 @@ perm_problem_solution: 题解
 perm_problem: 题库
 perm_record: 记录
 perm_training: 训练
-Permission: 权限
 Permission Control: 权限控制
+Permission: 权限
 Permissions: 权限
 Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
 Pin: 置顶
@@ -658,6 +658,7 @@ QQ Visibility: QQ 可见性
 Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
+Ranked Users: 排名用户
 ranking: 排名
 Read data of own problems: 读取自己题目的数据
 Read data of problem: 读取题目数据
@@ -697,6 +698,7 @@ Reply problem solutions: 回复题解
 reply: 回复
 Reply: 回复
 Report: 举报
+Require Invitation Code: 需要邀请码
 required: 必填
 Reset Password or Find Username: 重置密码或找回用户名
 Reset Password: 重置密码
@@ -780,6 +782,7 @@ Sort by: 排序
 Source type: 来源类型
 Star Topic: 收藏讨论
 Star: 收藏
+Starred Users: 关注用户
 Start at: 开始于
 Statistics: 统计
 Status is hidden: 状态已隐藏
@@ -927,8 +930,8 @@ View problem solutions: 查看题解
 View Problem: 查看题目
 View problems: 查看题目
 View this domain: 查看此域
-View Training: 查看训练计划
 View training plans: 查看训练计划
+View Training: 查看训练计划
 View: 查看
 Visible to registered users: 对注册用户可见
 Visit: 查看

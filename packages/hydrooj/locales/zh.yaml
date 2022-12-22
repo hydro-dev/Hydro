@@ -324,8 +324,7 @@ Evaluated difficulty: 估计的难度
 expand: 展开
 Expire: 过期
 Export All Code: 导出所有代码
-Export as CSV: 导出为 CSV
-Export as HTML: 导出为 HTML
+Export as {0}: 导出为 {0}
 Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
