@@ -1,7 +1,8 @@
 import { omit, pick, throttle } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
-    ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError, PermissionError,
+    ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError,
+    PermissionError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -191,6 +192,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
     @param('rid', Types.ObjectID)
     async postRejudge(domainId: string, rid: ObjectID) {
+        const pdoc = await problem.get(domainId, this.rdoc.pid);
+        if (!pdoc?.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -20);
         const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         await record.reset(domainId, rid, true);

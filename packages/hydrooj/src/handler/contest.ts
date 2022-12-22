@@ -3,7 +3,9 @@ import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectID } from 'mongodb';
-import { Counter, sortFiles, Time } from '@hydrooj/utils/lib/utils';
+import {
+    Counter, sortFiles, streamToBuffer, Time,
+} from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError, ForbiddenError,
@@ -506,9 +508,18 @@ export class ContestCodeHandler extends Handler {
         const rdocs = await record.getMulti(domainId, {
             _id: { $in: Array.from(Object.keys(rnames)).map((id) => new ObjectID(id)) },
         }).toArray();
-        for (const rdoc of rdocs) {
-            zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
-        }
+        await Promise.all(rdocs.map(async (rdoc) => {
+            if (rdoc.files?.code) {
+                const [id, filename] = rdoc.files?.code?.split('#') || [];
+                if (!id) return;
+                zip.addFile(
+                    `${rnames[rdoc._id.toHexString()]}.${filename || 'txt'}`,
+                    await streamToBuffer(storage.get(id)),
+                );
+            } else if (rdoc.code) {
+                zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
+            }
+        }));
         this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
     }
 }

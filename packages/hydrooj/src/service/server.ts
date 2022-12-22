@@ -1,5 +1,6 @@
 import http from 'http';
-import { resolve } from 'path';
+import { tmpdir } from 'os';
+import { join, resolve } from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
 import Koa from 'koa';
@@ -484,14 +485,22 @@ export async function apply(pluginContext: Context) {
 ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         });
     }
+    const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
+    fs.ensureDirSync(uploadDir);
+    logger.debug('Using upload dir: %s', uploadDir);
     app.use(Body({
         multipart: true,
         jsonLimit: '8mb',
         formLimit: '8mb',
         formidable: {
+            uploadDir,
             maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
+            keepExtensions: true,
         },
     }));
+    pluginContext.on('app/exit', () => {
+        fs.emptyDirSync(uploadDir);
+    });
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     app.use(router.routes()).use(router.allowedMethods());

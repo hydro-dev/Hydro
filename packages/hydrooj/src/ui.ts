@@ -2,8 +2,14 @@
 import { Logger } from './logger';
 import * as bus from './service/bus';
 
+let terminating = false;
 async function terminate() {
+    if (terminating) process.exit(1);
     let hasError = false;
+    terminating = true;
+    setTimeout(() => {
+        new Logger('exit').info('Cleaning up temporary files... (Press Ctrl-C again to force exit)');
+    }, 1000);
     try {
         await bus.parallel('app/exit');
     } catch (e) {
@@ -12,6 +18,7 @@ async function terminate() {
     process.exit(hasError ? 1 : 0);
 }
 process.on('SIGINT', terminate);
+process.on('SIGTERM', terminate);
 
 const shell = new Logger('shell');
 async function executeCommand(input: string) {

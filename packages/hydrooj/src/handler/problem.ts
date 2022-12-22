@@ -444,6 +444,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             contest: { $ne: new ObjectID('0'.repeat(24)) },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
+        if (!this.pdoc.config || typeof this.pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
         await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
         await Promise.all([
@@ -527,13 +528,13 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (!file || file.size === 0) throw new ValidationError('code');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
             if (file.size > sizeLimit) throw new ValidationError('file');
-            if (file.size > 65535 || await isBinaryFile(file.filepath, file.size)) {
+            if (config.type !== 'submit_answer' || (file.size < 65535 && !await isBinaryFile(file.filepath, file.size))) {
+                // TODO auto detect & convert encoding
+                code = await readFile(file.filepath, 'utf-8');
+            } else {
                 const id = nanoid();
                 await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
                 files.code = `${this.user._id}/${id}#${file.originalFilename}`;
-            } else {
-                // TODO auto detect & convert encoding
-                code = await readFile(file.filepath, 'utf-8');
             }
         }
         const rid = await record.add(

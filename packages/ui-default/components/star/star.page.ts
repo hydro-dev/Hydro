@@ -2,7 +2,7 @@ import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 import { request } from 'vj/utils';
 
-function setStarButtonState($starButton, star) {
+function setStarButtonState($starButton: JQuery<any>, star: boolean) {
   if (star) {
     $starButton.addClass('activated');
   } else {
@@ -12,11 +12,12 @@ function setStarButtonState($starButton, star) {
 
 const starPage = new AutoloadPage('starPage', () => {
   $(document).on('click', '.star', (ev) => {
+    ev.preventDefault();
     const $button = $(ev.currentTarget);
     const currentState = $button.hasClass('activated');
     const $form = $button.closest('form');
     const $op = $form.find('[name="operation"]');
-    if (!['star', 'unstar'].includes($op.val())) return;
+    if (!['star', 'unstar'].includes($op.val() as any)) return;
     $op.val(currentState ? 'unstar' : 'star');
     setStarButtonState($button, !currentState);
     request
