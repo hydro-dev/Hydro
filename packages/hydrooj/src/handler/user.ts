@@ -129,7 +129,7 @@ class UserLoginHandler extends Handler {
         if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
-        if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname);
+        if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
         this.session.viewLang = '';
         this.session.uid = udoc._id;
         this.session.sudo = null;
@@ -471,5 +471,5 @@ export async function apply(ctx) {
     ctx.Route('user_lostpass', '/lostpass', UserLostPassHandler);
     ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
     ctx.Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Route('user_detail', '/user/:uid', UserDetailHandler);
+    ctx.Route('user_detail', '/user/:uid(-?\\d+)', UserDetailHandler);
 }

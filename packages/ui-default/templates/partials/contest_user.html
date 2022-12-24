@@ -1,0 +1,16 @@
+{% import "components/user.html" as user with context %}
+{% import "components/contest.html" as contest with context %}
+<tbody data-fragment-id="constest_user-tbody">
+  {%- for tsdoc in tsdocs -%}
+  <tr data-uid="{{ tsdoc.uid }}">
+    <td class="col--uid">{{ tsdoc.uid }}</td>
+    <td class="col--user">{{ user.render_inline(udict[tsdoc.uid], badge=false) }}</td>
+    <td class="col--start-time">{{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</td>
+    <td class="col--end-time">{{ contest.render_time(tsdoc.endAt or tdoc.endAt) }}</td>
+    <td class="col--rank">{{ _('UnRank') if tsdoc.unrank else _('Rank') }}</td>
+    <td class="col--actions">
+      <a name="edit_rank" data-uid="{{ tsdoc.uid }}">{{ _('Rank') if tsdoc.unrank else _('UnRank') }}</a>
+    </td>
+  </tr>
+  {%- endfor -%}
+</tbody>

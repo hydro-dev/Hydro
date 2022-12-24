@@ -719,7 +719,7 @@ export async function add(
     return res;
 }
 
-export async function edit(domainId: string, tid: ObjectID, $set: any) {
+export async function edit(domainId: string, tid: ObjectID, $set: Partial<Tdoc>) {
     if ($set.rule && !RULES[$set.rule]) throw new ValidationError('rule');
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
@@ -779,9 +779,9 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
     return r;
 }
 
-export async function attend(domainId: string, tid: ObjectID, uid: number) {
+export async function attend(domainId: string, tid: ObjectID, uid: number, payload: any = {}) {
     try {
-        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1);
+        await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1, payload);
     } catch (e) {
         throw new ContestAlreadyAttendedError(tid, uid);
     }

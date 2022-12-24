@@ -1,6 +1,6 @@
 import { Cursor } from 'mongodb';
 
-type ranked = <T>(cursor: Cursor<T>, equ: ((a: T, b: T) => boolean)) => Promise<[number, T][]>;
+type ranked = <T extends Record<string, any>>(cursor: Cursor<T>, equ: ((a: T, b: T) => boolean)) => Promise<[number, T][]>;
 
 const ranked: ranked = async (cursor, equ) => {
     let last = null;
@@ -9,6 +9,10 @@ const ranked: ranked = async (cursor, equ) => {
     const results = [];
     const docs = await cursor.toArray();
     for (const doc of docs) {
+        if (doc.unrank) {
+            results.push([0, doc]);
+            continue;
+        }
         count++;
         if (!last || !equ(last, doc)) r = count;
         last = doc;

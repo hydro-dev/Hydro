@@ -272,8 +272,7 @@ class UserModel {
         if (_id < -999) return null;
         const udoc = await coll.findOne({ _id });
         if (!udoc) throw new UserNotFoundError(_id);
-        udoc[field] = udoc[field] + n || n;
-        await coll.updateOne({ _id }, { $set: { [field]: udoc[field] } });
+        await coll.updateOne({ _id }, { $inc: { [field]: n } });
         deleteUserCache(udoc);
         return udoc;
     }
@@ -401,9 +400,9 @@ class UserModel {
     }
 
     @ArgMethod
-    static ban(uid: number) {
+    static ban(uid: number, reason = '') {
         return Promise.all([
-            UserModel.setPriv(uid, PRIV.PRIV_NONE),
+            UserModel.setById(uid, { priv: PRIV.PRIV_NONE, banReason: reason }),
             token.delByUid(uid),
         ]);
     }

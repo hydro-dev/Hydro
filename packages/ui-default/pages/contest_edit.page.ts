@@ -1,31 +1,41 @@
 import $ from 'jquery';
+import moment from 'moment';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
+import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ConfirmDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
 
 const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
-  $(document).on('change', '[name="rule"]', () => {
+  UserSelectAutoComplete.getOrConstruct<true>($('[name="maintainer"]'), { multi: true, clearDefaultValue: false });
+  $('[name="rule"]').on('change', () => {
     const rule = $('[name="rule"]').val();
-    if (rule === 'fun') {
-      $('#fun-control').removeClass('hide--data');
-    } else {
-      $('#fun-control').addClass('hide--data');
-    }
+    $('.contest-rule-settings input').attr('disabled', 'disabled');
+    $('.contest-rule-settings').hide();
+    $(`.contest-rule--${rule} input`).removeAttr('disabled');
+    $(`.contest-rule--${rule}`).show();
+  }).trigger('change');
+  $('[name="beginAtDate"], [name="beginAtTime"], [name="duration"]').on('change', () => {
+    const beginAtDate = $('[name="beginAtDate"]').val();
+    const beginAtTime = $('[name="beginAtTime"]').val();
+    const duration = $('[name="duration"]').val();
+    const endAt = moment(`${beginAtDate} ${beginAtTime}`).add(+duration, 'hours').toDate();
+    if (endAt) $('[name="endAt"]').val(moment(endAt).format('YYYY-MM-DD HH:mm'));
   });
-  const rule = $('[name="rule"]').val();
-  if (rule === 'fun') {
-    $('#fun-control').removeClass('hide--data');
-  } else {
-    $('#fun-control').addClass('hide--data');
-  }
+  $('[name="permission"]').removeAttr('disabled').on('change', () => {
+    const type = $('[name="permission"]').val();
+    $('[data-perm] input').attr('disabled', 'disabled');
+    $('[data-perm]').hide();
+    $(`[data-perm="${type}"] input`).removeAttr('disabled');
+    $(`[data-perm="${type}"]`).show();
+  }).trigger('change');
   if (pagename.endsWith('edit')) {
     let confirmed = false;
-    $(document).on('click', '[name="operation"]', (ev) => {
+    $(document).on('click', '[value="delete"]', (ev) => {
       ev.preventDefault();
       if (confirmed) {
-        return request.post('.', { operation: 'delete' }).then((res) => {
+        return request.post('', { operation: 'delete' }).then((res) => {
           window.location.href = res.url;
         });
       }

@@ -1,0 +1,65 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+        <div class="section__tools">
+          <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+        </div>
+      </div>
+      {{ noscript_note.render() }}
+      {% include "partials/files.html" %}
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div>
+        <ol class="menu">
+          <li class="menu__item"><a class="menu__link" href="{{ url('training_detail', tid=tdoc.docId) }}">
+            <span class="icon icon-award"></span> {{ _('View Training') }}
+          </a></li>
+        {% if not tsdoc['enroll'] and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+          <li class="menu__item">
+            <form action="" method="POST">
+              <input type="hidden" name="operation" value="enroll">
+              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
+              <button class="menu__link" type="submit">
+                <span class="icon icon-add"></span> {{ _('Enroll Training') }}
+              </button>
+            </form>
+          </li>
+        {% endif %}
+        {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING) %}
+          <li class="menu__item"><a class="menu__link" href="{{ url('training_edit', tid=tdoc.docId) }}">
+            <span class="icon icon-edit"></span>  {{ _('Edit') }}
+          </a></li>
+          <li class="menu__item"><a class="menu__link" href="{{ url('training_files', tid=tdoc.docId) }}">
+            <span class="icon icon-file"></span> {{ _('Files') }}
+          </a></li>
+        {% endif %}
+          <li class="menu__item"><a class="menu__link" href="{{ url('wiki_help', anchor='training') }}">
+            <span class="icon icon-help"></span> {{ _('Help') }}
+          </a></li>
+          <li class="menu__seperator"></li>
+        </ol>
+      </div>
+      <div class="section__body typo">
+        <dl class="large horizontal">
+        {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+          <dt>{{ _('Status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
+        {% endif %}
+          <dt>{{ _('Enrollees') }}</dt><dd>{{ tdoc.attend|default(0) }}</dd>
+          <dt>{{ _('Created By') }}</dt>
+          <dd>{{ user.render_inline(udoc, badge=false) }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

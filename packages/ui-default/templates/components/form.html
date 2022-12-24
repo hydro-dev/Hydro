@@ -199,13 +199,13 @@
   <label class="checkbox">
     <input type="checkbox" name="{{ args.name }}"{% if args.value %} checked{% endif %}
       {{ form_attr('checkbox', args) }}
-    >{{ _(args.label) }}
+    >{% if args.placeholder %}{{ _(args.placeholder) }}{% endif %}
   </label>
 </div>
 {% endmacro %}
 
 {% macro form_checkbox(args) %}
-{{ form_begin({columns:5, no_label:true}|assign(args)) }}
+{{ form_begin({columns:5}|assign(args)) }}
 {{ checkbox(args) }}
-{{ form_end({no_label:true}|assign(args)) }}
+{{ form_end(args) }}
 {% endmacro %}

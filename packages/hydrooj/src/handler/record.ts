@@ -216,7 +216,10 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             record.update(domainId, rid, $set),
             TaskModel.deleteMany({ rid: this.rdoc._id }),
         ]);
-        if (latest) await postJudge(latest);
+        if (latest) {
+            this.ctx.broadcast('record/change', latest);
+            await postJudge(latest);
+        }
         this.back();
     }
 }

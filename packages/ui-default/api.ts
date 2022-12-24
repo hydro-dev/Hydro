@@ -2,6 +2,7 @@ export * from './utils';
 export { default as Notification } from './components/notification';
 export * from './components/dialog';
 export * as bus from './bus';
+export { default as AnsiUp } from 'ansi_up';
 export { default as loadMonaco } from './components/monaco/loader';
 export * as redux from 'react-redux';
 export * from './components/zipDownloader';
@@ -27,7 +28,6 @@ import UserSelectAutoComplete from './components/autocomplete/UserSelectAutoComp
 export {
   load, AutoComplete, UserSelectAutoComplete, ProblemSelectAutoComplete, DomainSelectAutoComplete, CustomSelectAutoComplete,
 };
-export const { UserContext, UiContext } = window;
 export function addPage(page: import('./misc/Page').Page | (() => Promise<void> | void)) {
   window.Hydro.extraPages.push(page);
 }

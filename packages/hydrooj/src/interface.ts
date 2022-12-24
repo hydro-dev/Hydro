@@ -366,6 +366,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     // For contest
     lockAt?: Date;
     unlocked?: boolean;
+    autoHide?: boolean;
+
     /**
      * In hours
      * 在比赛有效时间内选择特定的 X 小时参加比赛（从首次打开比赛算起）
@@ -497,6 +499,7 @@ export interface OplogDoc extends Record<string, any> {
 
 export interface ContestStat extends Record<string, any> {
     detail: Record<number, Record<string, any>>,
+    unrank?: boolean,
 }
 
 export interface ContestRule<T = any> {
