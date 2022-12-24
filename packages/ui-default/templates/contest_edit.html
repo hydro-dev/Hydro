@@ -131,7 +131,30 @@
         <div style="padding-top: 0" class="section__header">
           <h2 class="section__title">{{ _('Contest Settings') }}</h2>
         </div>
+
         <div class="section__body">
+          <div class="contest-rule-settings contest-rule--fun">
+            <div class="row">
+              {{ form.form_text({
+                columns:6,
+                label:'single_ratio',
+                name:'singleRatio',
+                placeholder:_('single_ratio'),
+                value:tdoc['singleRatio']|default('0.95'),
+                autofocus:true,
+                row:false
+              }) }}
+              {{ form.form_text({
+                columns:6,
+                label:'lowest_ratio',
+                name:'lowestRatio',
+                placeholder:_('lowest_ratio'),
+                value:tdoc['lowestRatio']|default('0.7'),
+                autofocus:true,
+                row:false
+              }) }}
+            </div>
+          </div>
           <div class="row">
             {{ form.form_checkbox({
               columns:2,
