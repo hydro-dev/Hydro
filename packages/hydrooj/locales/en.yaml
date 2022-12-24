@@ -6,8 +6,8 @@ contest_detail_problem_submit: Submit Contest Problem
 contest_detail_problem: Problem Detail
 contest_detail: Contest Detail
 contest_edit: Contest Edit
-contest_files: Contest Files
 contest_main: Contest
+contest_manage: Contest Management
 contest_problemlist: Problem List
 contest_scoreboard: Scoreboard
 contest_user: Attendee Manage
