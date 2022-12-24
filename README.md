@@ -40,6 +40,26 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.5.0 / UI 4.44.0
+- fps: 修复题目中含空文件导致导入失败的问题
+- core: 封禁用户时支持附加理由
+- vjudge: codeforces: 跳过无法访问的 1769 和 1772 比赛
+- ui: 收藏题目操作不再触发页面刷新
+- core: 重测时检查题目配置文件有效性
+- core: 退出时自动清理临时文件
+- core: 禁止使用 . 作为文件名
+- import-qduoj: 跳过不合法的题目
+- core: 修复提交答案题的比赛代码导出
+- judge: 添加 stdioLimit 项
+- ui: 修复 message.FLAG_ALERT 显示
+- core: training 可上传文件
+- ui: 优化比赛导航栏
+- ui: 比赛成绩表支持关注队伍
+- core: 允许克隆比赛/作业
+- ui: 比赛编辑页面添加功能入口
+- core: 支持打星参赛
+- core: 整题重测时跳过已取消成绩的提交
+
 ### Hydro 4.4.5 / UI 4.43.0
 - core: 修复比赛基于 ID 搜索题目的功能
 - judge: 修复 testlib 错误信息显示异常的问题

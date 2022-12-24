@@ -105,6 +105,7 @@ module.exports = function plugin(md) {
   const katexInline = function (latex) {
     options.displayMode = false;
     try {
+      latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
       return katex.renderToString(latex, options);
     } catch (error) {
       if (options.throwOnError) logger.error(error);
@@ -117,6 +118,7 @@ module.exports = function plugin(md) {
   const katexBlock = function (latex) {
     options.displayMode = true;
     try {
+      latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
       return `<p>${katex.renderToString(latex, options)}</p>`;
     } catch (error) {
       if (options.throwOnError) logger.error(error);

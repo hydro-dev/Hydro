@@ -442,6 +442,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         const rdocs = await record.getMulti(domainId, {
             pid,
             contest: { $ne: new ObjectID('0'.repeat(24)) },
+            status: { $ne: STATUS.STATUS_CANCELED },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
         if (!this.pdoc.config || typeof this.pdoc.config === 'string') throw new ProblemConfigError();

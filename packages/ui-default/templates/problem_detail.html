@@ -44,7 +44,7 @@
               </button>
             </form>
           {% endif %}
-          #{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
+          #{{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) if tdoc else pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
         </h1>
         {% if tdoc %}
           <div class="section__tools contest-problems">
