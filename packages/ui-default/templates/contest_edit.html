@@ -135,6 +135,17 @@
         <div class="section__body">
           <div class="contest-rule-settings contest-rule--fun">
             <div class="row">
+              <div class = "medium-12 columns end">
+                <blockquote>
+                <span> {{ _('final score of each problem') }} :  {{ _('Max') }} (  {{ _('Real Score') }} * </span>
+                <span id="singleRatio"></span>
+                <span>^ {{ _('Wrong times') }},  </span>
+                <span id="lowestRatio"></span>
+                <span>)</span>
+                </blockquote>
+              </div>
+            </div>
+            <div class="row">
               {{ form.form_text({
                 columns:6,
                 label:'single_ratio',

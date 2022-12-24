@@ -20,6 +20,11 @@
         {% if tsdoc.attend %}
           <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
         {% endif %}
+        {% if tdoc.rule == 'fun' %}
+          <br>
+          <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('single_ratio') }}: {{ tdoc.singleRatio }}</span>
+          <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('lowest_ratio') }}: {{ tdoc.lowestRatio }}</span>
+        {% endif %}
       </div>
     </div>
     <div class="section">
