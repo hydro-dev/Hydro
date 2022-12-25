@@ -24,11 +24,11 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     if (endAt) $('[name="endAt"]').val(moment(endAt).format('YYYY-MM-DD HH:mm'));
   });
   $('[name="lowestRatio"], [name="singleRatio"]').on('input', () => {
-    $('[id="lowestRatio"]').html($('[name="lowestRatio"]').val().toString());
-    $('[id="singleRatio"]').html($('[name="singleRatio"]').val().toString());
+    $('[id="lowestRatio"]').text($('[name="lowestRatio"]').val().toString());
+    $('[id="singleRatio"]').text($('[name="singleRatio"]').val().toString());
   });
-  $('[id="lowestRatio"]').html($('[name="lowestRatio"]').val().toString());
-  $('[id="singleRatio"]').html($('[name="singleRatio"]').val().toString());
+  $('[id="lowestRatio"]').text($('[name="lowestRatio"]').val().toString());
+  $('[id="singleRatio"]').text($('[name="singleRatio"]').val().toString());
   $('[name="permission"]').removeAttr('disabled').on('change', () => {
     const type = $('[name="permission"]').val();
     $('[data-perm] input').attr('disabled', 'disabled');
