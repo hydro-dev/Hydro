@@ -414,7 +414,7 @@ export class ContestEditHandler extends Handler {
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration: number = null, singleRatio :number = -1, lowestRatio :number = -1, maintainer: number[] = null, allowViewCode = true,
+        contestDuration: number = null, singleRatio :number = null, lowestRatio :number = null, maintainer: number[] = null, allowViewCode = true,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
