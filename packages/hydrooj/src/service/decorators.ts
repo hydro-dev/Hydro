@@ -124,10 +124,10 @@ export const Types: Types = {
     }, null],
     NumericArray: [(v) => {
         if (v instanceof Array) return v.map(Number);
-        return v ? [Number(v)] : [];
+        return v.split(',').map(Number);
     }, (v) => {
-        if (v instanceof Array) return !v.map(Number).includes(NaN);
-        return !Number.isNaN(+v);
+        if (v instanceof Array) return v.map(Number).every(Number.isSafeInteger);
+        return v.split(',').map(Number).every(Number.isSafeInteger);
     }],
     CommaSeperatedArray: [
         (v) => v.toString().replace(/，/g, ',').split(',').map((e) => e.trim()).filter((i) => i),
