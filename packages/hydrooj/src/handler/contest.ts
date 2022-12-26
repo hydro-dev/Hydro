@@ -131,8 +131,7 @@ export class ContestDetailBaseHandler extends Handler {
             {
                 name: 'contest_problemlist',
                 args: { tid, prefix: 'contest_problemlist' },
-                checker: () => contest.isDone(this.tdoc, this.tsdoc)
-                    || (contest.isOngoing(this.tdoc, this.tsdoc) && this.tsdoc?.attend),
+                checker: () => true,
             },
             {
                 name: 'contest_scoreboard',
@@ -202,8 +201,7 @@ export class ContestDetailHandler extends Handler {
             {
                 name: 'contest_problemlist',
                 args: { tid },
-                checker: () => contest.isDone(this.tdoc, this.tsdoc)
-                    || (contest.isOngoing(this.tdoc, this.tsdoc) && this.tsdoc?.attend),
+                checker: () => true,
             },
             {
                 name: 'contest_scoreboard',
@@ -231,7 +229,8 @@ export class ContestDetailHandler extends Handler {
 export class ContestProblemListHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
     async get(domainId: string, tid: ObjectID) {
-        if (contest.isNotStarted(this.tdoc) || (!this.tsdoc?.attend && !contest.isDone(this.tdoc))) throw new ForbiddenError();
+        if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
+        if (!this.tsdoc?.attend && !contest.isDone(this.tdoc)) throw new ContestNotAttendedError(domainId, tid);
         const [pdict, udict] = await Promise.all([
             problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             user.getList(domainId, [this.tdoc.owner, this.user._id]),
