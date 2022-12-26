@@ -698,25 +698,26 @@ export async function unlockScoreboard(domainId: string, tid: ObjectID) {
     await edit(domainId, tid, { unlocked: true });
 }
 
-export function canViewHiddenScoreboard() {
+export function canViewHiddenScoreboard(tdoc: Tdoc<30>) {
+    if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
 export function canShowRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
 export function canShowSelfRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
 export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
