@@ -873,31 +873,42 @@ export async function recalcStatus(domainId: string, tid: ObjectID) {
 export async function unlockScoreboard(domainId: string, tid: ObjectID) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
-    const rdocs = await RecordModel.getMulti(domainId, { tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
+    const rdocs = await RecordModel.getMulti(domainId, { contest: tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
         .project(buildProjection(['_id', 'uid', 'pid', 'status', 'score'])).toArray();
-    await Promise.all(rdocs.map((rdoc) => _updateStatus(tdoc, rdoc.uid, rdoc._id, rdoc.pid, rdoc.status, rdoc.score)));
+    for (const rdoc of rdocs) {
+        // TODO optimize
+        // eslint-disable-next-line
+        const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, 'journal', {
+            rid: rdoc._id, pid: rdoc.pid, status: rdoc.status, score: rdoc.score,
+        }, 'rid');
+        const journal = _getStatusJournal(tsdoc);
+        const stats = RULES[tdoc.rule].stat(tdoc, journal);
+        // eslint-disable-next-line
+        await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, tsdoc.rev, { journal, ...stats });
+    }
     await edit(domainId, tid, { unlocked: true });
 }
 
-export function canViewHiddenScoreboard() {
+export function canViewHiddenScoreboard(tdoc: Tdoc<30>) {
+    if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
 export function canShowRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
 export function canShowSelfRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
 export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
-    if (allowPermOverride && canViewHiddenScoreboard.call(this)) return true;
+    if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
