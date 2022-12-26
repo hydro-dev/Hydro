@@ -12,12 +12,12 @@ function setStarButtonState($starButton: JQuery<any>, star: boolean) {
 
 const starPage = new AutoloadPage('starPage', () => {
   $(document).on('click', '.star', (ev) => {
-    ev.preventDefault();
     const $button = $(ev.currentTarget);
     const currentState = $button.hasClass('activated');
     const $form = $button.closest('form');
     const $op = $form.find('[name="operation"]');
     if (!['star', 'unstar'].includes($op.val() as any)) return;
+    ev.preventDefault();
     $op.val(currentState ? 'unstar' : 'star');
     setStarButtonState($button, !currentState);
     request
