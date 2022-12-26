@@ -692,9 +692,19 @@ export async function recalcStatus(domainId: string, tid: ObjectID) {
 export async function unlockScoreboard(domainId: string, tid: ObjectID) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
-    const rdocs = await RecordModel.getMulti(domainId, { tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
+    const rdocs = await RecordModel.getMulti(domainId, { contest: tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
         .project(buildProjection(['_id', 'uid', 'pid', 'status', 'score'])).toArray();
-    await Promise.all(rdocs.map((rdoc) => _updateStatus(tdoc, rdoc.uid, rdoc._id, rdoc.pid, rdoc.status, rdoc.score)));
+    for (const rdoc of rdocs) {
+        // TODO optimize
+        // eslint-disable-next-line
+        const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, 'journal', {
+            rid: rdoc._id, pid: rdoc.pid, status: rdoc.status, score: rdoc.score,
+        }, 'rid');
+        const journal = _getStatusJournal(tsdoc);
+        const stats = RULES[tdoc.rule].stat(tdoc, journal);
+        // eslint-disable-next-line
+        await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, tsdoc.rev, { journal, ...stats });
+    }
     await edit(domainId, tid, { unlocked: true });
 }
 
