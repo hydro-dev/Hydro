@@ -406,15 +406,13 @@ export class ContestEditHandler extends Handler {
     @param('assign', Types.CommaSeperatedArray, true)
     @param('lock', Types.UnsignedInt, true)
     @param('contestDuration', Types.Float, true)
-    @param('singleRatio', Types.Float, true)
-    @param('lowestRatio', Types.Float, true)
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean, true)
     async postUpdate(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration: number = null, singleRatio :number = null, lowestRatio :number = null, maintainer: number[] = null, allowViewCode = true,
+        contestDuration: number = null, maintainer: number[] = null, allowViewCode = true,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -427,7 +425,7 @@ export class ContestEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration, singleRatio, lowestRatio,
+                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
                 || Array.isDiff(this.tdoc.pids, pids) || this.tdoc.rule !== rule
@@ -436,7 +434,7 @@ export class ContestEditHandler extends Handler {
             }
         } else {
             tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, {
-                duration: contestDuration, singleRatio, lowestRatio,
+                duration: contestDuration,
             });
         }
         const task = {

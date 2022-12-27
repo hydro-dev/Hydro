@@ -405,7 +405,7 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, tdoc.singleRatio, tdoc.lowestRatio, j.status === STATUS.STATUS_ACCEPTED);
+            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, 0.95, 0.7, j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
                 ...j, real, naccept: naccept[j.pid], endscore: endscoreDetail, npending: npending[j.pid],
             };
@@ -473,8 +473,8 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = calcFunNowRatio(doc.naccept, tdoc.singleRatio, tdoc.lowestRatio, doc.status === STATUS.STATUS_ACCEPTED);
-            const score = calcFunScore(doc.naccept, doc?.score, tdoc.singleRatio, tdoc.lowestRatio, doc.status === STATUS.STATUS_ACCEPTED);
+            const nowRatio = calcFunNowRatio(doc.naccept, 0.95, 0.7, doc.status === STATUS.STATUS_ACCEPTED);
+            const score = calcFunScore(doc.naccept, doc?.score, 0.95, 0.7, doc.status === STATUS.STATUS_ACCEPTED);
             let value = '';
             if (Number.isNaN(score) === false) {
                 totalScore += score;
