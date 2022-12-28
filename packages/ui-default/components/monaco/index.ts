@@ -146,7 +146,9 @@ export function registerAction(
         monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter,
       ],
       run: () => {
-        $(element).closest('form').submit();
+        const form = $(element).closest('form');
+        if (form.find('[data-default-submit]').length) form.find('[data-default-submit]').click();
+        else form.submit();
       },
     });
   }
