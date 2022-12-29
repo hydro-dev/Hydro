@@ -32,83 +32,38 @@ export async function judge({
     let totalStatus = 0;
     if (!Object.keys(answers).length) throw new FormatError('Invalid standard answer.');
     for (const key in config.answers) {
-        const [subtaskId, caseId] = key.split('-').map(Number);
-        const ansInfo = config.answers[key] as [string | string[], number];
-        const score = (+ansInfo[1]) || 0;
-        const baseInfo = {
-            subtaskId,
-            id: caseId,
-            time: 0,
-            memory: 0,
+        const ansInfo = config.answers[key] as [string | string[], number] | Record<string, number>;
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        const report = (status: STATUS, score: number, message: string) => {
+            const [subtaskId, caseId] = key.split('-').map(Number);
+            totalScore += score;
+            totalStatus = Math.max(totalStatus, status);
+            next({
+                status: totalStatus,
+                case: {
+                    subtaskId,
+                    id: caseId,
+                    time: 0,
+                    memory: 0,
+                    status,
+                    score,
+                    message,
+                },
+            });
         };
-        if (typeof answers[key] === 'string') {
-            const stdAns = typeof ansInfo[0] === 'string' ? [ansInfo[0]] : ansInfo[0];
-            if (stdAns.some((ans) => ans.trim() === (answers[key] as any)?.trim())) {
-                totalScore += score;
-                totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_ACCEPTED,
-                        score,
-                        message: 'Correct',
-                    },
-                });
-            } else {
-                totalStatus = STATUS.STATUS_WRONG_ANSWER;
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_WRONG_ANSWER,
-                        score: 0,
-                        message: 'Incorrect',
-                    },
-                });
-            }
-        } else {
-            const stdAns = new Set(ansInfo[0] || []);
-            const ans = new Set(answers[key] || []);
-            const correct = stdAns.size === ans.size && [...stdAns].every((x) => ans.has(x));
-            const partialCorrect = [...stdAns].some((x) => ans.has(x)) && [...ans].every((x) => stdAns.has(x));
-            if (correct) {
-                totalScore += score;
-                totalStatus = Math.max(totalStatus, STATUS.STATUS_ACCEPTED);
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_ACCEPTED,
-                        score,
-                        message: 'Correct',
-                    },
-                });
-            } else if (partialCorrect) {
-                totalScore += Math.floor(score / 2);
-                totalStatus = STATUS.STATUS_WRONG_ANSWER;
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_WRONG_ANSWER,
-                        score: Math.floor(score / 2),
-                        message: 'Partially Correct',
-                    },
-                });
-            } else {
-                totalStatus = STATUS.STATUS_WRONG_ANSWER;
-                next({
-                    status: totalStatus,
-                    case: {
-                        ...baseInfo,
-                        status: STATUS.STATUS_WRONG_ANSWER,
-                        score: 0,
-                        message: 'Incorrect',
-                    },
-                });
-            }
-        }
+        const usrAns = answers[key].toString();
+        if (ansInfo instanceof Array) {
+            const fullScore = (+ansInfo[1]) || 0;
+            const stdAns = ansInfo[0];
+            if (stdAns instanceof Array) {
+                const ans = new Set(answers[key] instanceof Array ? answers[key] : [answers[key]]);
+                if (stdAns.length === ans.size && Set.isSuperset(ans, stdAns)) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
+                else if (ans.size && Set.isSuperset(ans, stdAns)) report(STATUS.STATUS_WRONG_ANSWER, Math.floor(fullScore / 2), 'Partially Correct');
+                else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
+            } else if (stdAns.toString() === usrAns.trim()) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct  ');
+            else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
+        } else if (!ansInfo[usrAns]) report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
+        else report(STATUS.STATUS_ACCEPTED, +ansInfo[usrAns] || 0, 'Correct');
     }
     end({
         status: totalStatus, score: totalScore, time: 0, memory: 0,
