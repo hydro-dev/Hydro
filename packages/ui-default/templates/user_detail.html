@@ -32,7 +32,7 @@
               {% endif %}
               </p>
               <p>{{ _('Solved {0} problems, RP: {1} (No. {2})').format(udoc.nAccept|default(0), udoc['rp']|default(0.0)|round(2), udoc['rank']|default('?')) }}</p>
-              {% if not udoc.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+              {% if udoc._id != 1 and not udoc.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                 <p>{{ _('This user was banned.') }}</p>
               {% endif %}
               <div class="profile-header__contact-bar">
