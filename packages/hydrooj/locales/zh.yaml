@@ -151,6 +151,7 @@ Contact Us: 联系我们
 Contact: 联系
 content: 内容
 Content: 内容
+Contest Management: 比赛管理
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
 contest_create: 创建比赛
@@ -158,8 +159,8 @@ contest_detail_problem_submit: 递交比赛题目
 contest_detail_problem: 题目详情
 contest_detail: 比赛详情
 contest_edit: 编辑比赛
-contest_files: 比赛文件
 contest_main: 比赛
+contest_manage: 比赛管理
 contest_problemlist: 题目列表
 contest_scoreboard: 比赛成绩表
 contest_user: 参赛者管理

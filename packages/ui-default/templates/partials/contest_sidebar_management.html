@@ -1,0 +1,50 @@
+{% import "components/user.html" as user with context %}
+{% import "components/contest.html" as contest with context %}
+<div class="section side">
+  <a class="contest-sidebar__bg" href="{{ url('contest_detail', tid=tdoc.docId) }}">
+    <div class="section__body">
+      <h1>{{ tdoc.title }}</h1>
+    </div>
+  </a>
+  <div>
+    <ol class="menu">
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_detail', tid=tdoc.docId) }}">
+        <span class="icon icon-award"></span> {{ _('View Contest') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_manage', tid=tdoc.docId) }}">
+        <span class="icon icon-settings"></span> {{ _('Contest Management') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
+        <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_user', tid=tdoc.docId) }}">
+        <span class="icon icon-user"></span> {{ _('Attendee Manage') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_code', tid=tdoc.docId) }}" data-no-instant>
+        <span class="icon icon-download"></span> {{ _('Export All Code') }}
+      </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
+        <span class="icon icon-flag"></span> {{ _('All Submissions') }}
+      </a></li>
+      <li class="menu__seperator"></li>
+    </ol>
+  </div>
+  <div class="section__body typo">
+    <dl class="large horizontal">
+      <dt>{{ _('Status') }}</dt>
+      <dd>
+        {{ _(model.contest.statusText(tdoc, tsdoc)) }}
+        {% if tsdoc.attend %}
+          ({{ _('Attended') }})
+        {% endif %}
+      </dd>
+      <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
+      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
+      <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</dd>
+      <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tsdoc.endAt or tdoc.endAt) }}</dd>
+      <dt>{{ _('Duration') }}</dt><dd>{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</dd>
+      <dt>{{ _('Host') }}</dt><dd>{{ user.render_inline(owner_udoc, badge=false) }}</dd>
+      <dt>{{ _('Partic.') }}</dt><dd>{{ tdoc['attend']|default(0) }}</dd>
+    </dl>
+  </div>
+</div>
