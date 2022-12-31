@@ -1,0 +1,133 @@
+.omnibar {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(3px);
+    z-index: 999;
+    transition: 0.2s;
+}
+.omnibar-main {
+    height: min(600px, 100% - 20px);
+    width: min(750px, 60%);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    >div:first-child {
+        transition: 0.2s;
+        margin-bottom: 10px;
+        input {
+            background-color: #fff;
+            border-radius: 5px;
+            border: 2px solid #aaa;
+            padding-left: 42px;
+            height: 48px;
+            width: 100%;
+            font-size: 18px;
+            outline: 0;
+            box-sizing: border-box;
+        }
+        span {
+            height: 48px;
+            width: 48px;
+            position: absolute;
+            display: grid;
+            scale: 1.5;
+            place-items: center;
+            top: 0px;
+            left: 0px;
+        }
+    }
+    >div:last-child {
+        flex: 1;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        &::-webkit-scrollbar { width: 0 !important; }
+    }
+}
+.omnibar-toggle {
+    z-index: 99;
+    background: white;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    position: fixed;
+    right: 20px;
+    bottom: 30px;
+    transition: 0.2s;
+    border-radius: 5px;
+    &:hover {
+        background: #ccc;
+    }
+    span {
+        scale: 1.5;
+    }
+}
+#omnibar-content {
+    overscroll-behavior: none;
+}
+.omnibar-content-title {
+    text-align: left;
+    margin-bottom: 10px;
+    width: 100%;
+    font-size: 18px;
+    font-weight: bold;
+}
+.omnibar-content-section {
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    padding: 10px;
+    line-height: 1;
+    margin-bottom: 10px;
+    border: 2px solid #888;
+    box-sizing: border-box;
+    width: 100%;
+    text-decoration: none !important;
+    &:hover {
+        background: #eee;
+    }
+    >div {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+    }
+}
+
+.omnibar-user img {
+    height: 36px;
+    width: 36px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+.omnibar-user-info {
+    >span {
+        font-size: 14px;
+        margin-bottom: 3px;
+        display: inline-block;
+    }
+    >div {
+        display: flex;
+        flex-direction: row;
+    }
+}
+
+.omnibar-problem a {
+    margin: 2px 0px 3px 0px;
+}
+.omnibar-problem .icon {
+    margin-right: 3px;
+    &:not(:first-child) {
+        margin-left: 10px;
+    }
+}

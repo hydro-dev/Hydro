@@ -6,7 +6,8 @@ import {
     ProblemConfigFile, ProblemModel, ValidationError, yaml,
 } from 'hydrooj';
 
-fs.ensureDirSync('/tmp/hydro/import-qduoj');
+const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
+fs.ensureDirSync(tmpdir);
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
@@ -16,7 +17,7 @@ class ImportQduojHandler extends Handler {
         } catch (e) {
             throw new ValidationError('zip', null, e.message);
         }
-        const tmp = path.resolve(os.tmpdir(), 'hydro', 'import-qduoj', String.random(32));
+        const tmp = path.resolve(tmpdir, String.random(32));
         await new Promise((resolve, reject) => {
             zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
         });

@@ -6,12 +6,11 @@ import * as document from '../model/document';
 import db from '../service/db';
 
 const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
-const $match = { contest: { $ne: new ObjectID('000000000000000000000000') } };
 
 export async function udoc(report) {
     report({ message: 'Udoc' });
     const pipeline = [
-        { $match },
+        { $match: { contest: { $ne: new ObjectID('000000000000000000000000') } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -50,7 +49,7 @@ export async function udoc(report) {
 export async function psdoc(report) {
     report({ message: 'Psdoc' });
     const pipeline = [
-        { $match },
+        { $match: { contest: { $ne: new ObjectID('000000000000000000000000') } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -67,7 +66,12 @@ export async function psdoc(report) {
 export async function pdoc(report) {
     report({ message: 'Pdoc' });
     const pipeline = [
-        { $match },
+        {
+            $match: {
+                contest: { $ne: new ObjectID('000000000000000000000000') },
+                status: { $ne: STATUS.STATUS_CANCELED },
+            },
+        },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },

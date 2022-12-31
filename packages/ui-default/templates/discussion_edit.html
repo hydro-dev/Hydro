@@ -8,7 +8,7 @@
           {% include "partials/discussion_edit_form.html" %}
             <div class="row"><div class="columns">
               <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-              <button name="operation" value="update" type="submit" class="rounded primary button">
+              <button name="operation" value="update" data-default-submit type="submit" class="rounded primary button">
                 {{ _('Update') }} (Ctrl+Enter)
               </button>
             {% if handler.user.own(ddoc) or handler.user.hasPerm(perm.PERM_DELETE_DISCUSSION) %}

@@ -29,15 +29,15 @@ function isHotkeyMatch(sortedHotkeyArr, hotkeyStr) {
   return _.isEqual(sortedHotkeyArr, hotkeyDefined.sort());
 }
 
+let triggered = false;
 function testElementHotkey(hotkey, $element, attr) {
-  if (!$element.is(':visible')) {
-    return;
-  }
+  if (!$element.is(':visible')) return;
   String($element.attr(attr))
     .split(',')
     .forEach((singleDef) => {
       const [defStr, trigger] = singleDef.split(':');
       if (isHotkeyMatch(hotkey, defStr)) {
+        triggered = true;
         switch (trigger) {
           case 'submit':
             $element.closest('form').trigger('submit');
@@ -66,6 +66,7 @@ const hotkeyPage = new AutoloadPage('hotkeyPage', () => {
     }
     hotkey.sort();
 
+    triggered = false;
     // Find all global hotkeys
     $('[data-global-hotkey]').get().forEach((element) => {
       testElementHotkey(hotkey, $(element), 'data-global-hotkey');
@@ -75,6 +76,7 @@ const hotkeyPage = new AutoloadPage('hotkeyPage', () => {
     $(ev.target).parents('[data-hotkey]').get().forEach((element) => {
       testElementHotkey(hotkey, $(element), 'data-hotkey');
     });
+    if (triggered) ev.preventDefault();
   });
 });
 

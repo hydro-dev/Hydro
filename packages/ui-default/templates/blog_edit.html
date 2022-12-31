@@ -29,7 +29,7 @@
                 extra_textarea_class:'auto-resize'
               }) }}
             <div class="row"><div class="columns">
-              <button name="operation" value="{{ 'update' if ddoc else 'create' }}" type="submit" class="rounded primary button">
+              <button name="operation" value="{{ 'update' if ddoc else 'create' }}" data-default-submit type="submit" class="rounded primary button">
                 {{ _('Update') if ddoc else _('Create') }} (Ctrl+Enter)
               </button>
             {% if ddoc and (handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) or handler.user.own(ddoc)) %}

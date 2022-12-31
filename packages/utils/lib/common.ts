@@ -14,7 +14,7 @@ declare global {
         sum: (...args: Array<number[] | number>) => number;
     }
     interface SetConstructor {
-        isSuperset: (set: Set<any>, subset: Set<any>) => boolean;
+        isSuperset: (set: Set<any>, subset: Set<any> | Array<any>) => boolean;
         intersection: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
         union: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
     }
