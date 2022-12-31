@@ -8,7 +8,7 @@ import {
 } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError, ForbiddenError,
+    ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, NotAssignedError, PermissionError, ValidationError,
 } from '../error';
 import { Tdoc } from '../interface';
