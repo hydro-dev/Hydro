@@ -527,9 +527,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     async postBroadcast(domainId: string, tid: ObjectID, content: string) {
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
         const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
-        await Promise.all(
-            uids.map((uid) => message.send(this.user._id, uid, content, message.FLAG_ALERT)),
-        );
+        const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
+        await Promise.all(uids.map((uid) => message.send(this.user._id, uid, content, flag)));
         this.back();
     }
 

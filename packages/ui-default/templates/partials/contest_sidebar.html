@@ -73,7 +73,7 @@
         <span class="icon icon-edit"></span> {{ _('Edit Contest') }}
       </a></li>
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_manage', tid=tdoc.docId) }}">
-        <span class="icon icon-edit"></span> {{ _('Contest Management') }}
+        <span class="icon icon-settings"></span> {{ _('Contest Management') }}
       </a></li>
     {% endif %}
     {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
