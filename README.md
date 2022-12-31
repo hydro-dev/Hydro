@@ -40,6 +40,21 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.5.1 / UI 4.45.0
+- ui: 支持全局快捷搜索
+- core: problem_list: 支持 limit 参数
+- core: 精简默认讨论节点列表
+- core: validator: 双汉字也被认为是合法用户名
+- judge: objective: 支持多答案题目
+- core: problemStat: 忽略已取消成绩的提交
+- ui: 修复讨论编辑 Ctrl+Enter 快捷键
+- ui: 修复锁定讨论主题功能
+- core: 优化作业鉴权设置
+- core: 封榜功能修复
+- ui: contest: 允许手动管理参赛人员
+- ui: contest: 支持赛时广播消息提醒
+- ui: 其他漏洞修复和性能优化
+
 ### Hydro 4.5.0 / UI 4.44.0
 - fps: 修复题目中含空文件导致导入失败的问题
 - core: 封禁用户时支持附加理由
