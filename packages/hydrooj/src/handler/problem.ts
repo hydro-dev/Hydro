@@ -136,9 +136,11 @@ const defaultSearch = async (domainId: string, q: string, options?: ProblemSearc
 export class ProblemMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
+    @param('limit', Types.PositiveInt, true)
     @param('pjax', Types.Boolean)
-    async get(domainId: string, page = 1, q = '', pjax = false) {
+    async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
         this.response.template = 'problem_main.html';
+        if (!limit || limit > system.get('pagination.problem') || page > 1) limit = system.get('pagination.problem');
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
         const psdict = {};
@@ -155,7 +157,7 @@ export class ProblemMainHandler extends Handler {
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (text) {
-            const result = await search(domainId, q, { skip: (page - 1) * system.get('pagination.problem') });
+            const result = await search(domainId, q, { skip: (page - 1) * limit });
             total = result.total;
             pcountRelation = result.countRelation;
             if (!result.hits.length) fail = true;
@@ -172,14 +174,10 @@ export class ProblemMainHandler extends Handler {
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
-            : await problem.list(
-                domainId, query,
-                sort?.length ? 1 : page, system.get('pagination.problem'),
-                undefined, this.user._id,
-            );
+            : await problem.list(domainId, query, sort?.length ? 1 : page, limit, undefined, this.user._id);
         if (total) {
             pcount = total;
-            ppcount = Math.ceil(total / system.get('pagination.problem'));
+            ppcount = Math.ceil(total / limit);
         }
         if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q && page === 1) {
