@@ -1,0 +1,7 @@
+{
+    "name": "@hydrooj/flexsearch",
+    "version": "0.0.1",
+    "dependencies": {
+        "flexsearch": "^0.7.31"
+    }
+}
