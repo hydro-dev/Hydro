@@ -94,6 +94,7 @@ export function rebuild() {
 }
 
 class ApiHandler extends Handler {
+    category = '#api';
     noCheckPermView = true;
 
     query(q: string, variables: any) {
