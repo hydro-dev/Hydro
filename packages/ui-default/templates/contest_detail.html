@@ -37,6 +37,14 @@
       {% endif %}
       </div>
     </div>
+    {% if tdoc.files.length %}
+      <div class="section">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Files') }}</h1>
+        </div>
+        {% include "partials/files.html" %}
+      </div>
+    {% endif %}
   </div>
   <div class="medium-3 columns">
   {% set owner_udoc = udict[tdoc.owner] %}

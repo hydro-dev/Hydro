@@ -1,0 +1,72 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-5 columns">
+    <div class="section">
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <colgroup>
+            <col class="col--problem">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--problem">{{ _('Problem') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {%- for pid in tdoc.pids -%}
+            <tr>
+              <td class="col--problem col--problem-name">
+                <a href="{{ url('problem_detail', pid=pid) }}">
+                  <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
+                </a>
+              </td>
+            </tr>
+          {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="medium-4 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+        <div class="section__tools">
+          <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+        </div>
+      </div>
+      {{ noscript_note.render() }}
+      {% include "partials/files.html" %}
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+      </div>
+    </div>
+    {% if model.contest.isOngoing(tdoc) %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Broadcast Message') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post">
+          {{ form.form_textarea({
+               columns:null,
+               label:'Content',
+               name:'content',
+               value:''
+             }) }}
+          <div class="row"><div class="columns">
+            <button name="operation" value="broadcast" type="submit" class="rounded primary button">
+              {{ _('Send') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="medium-3 columns">
+    {% include 'partials/contest_sidebar_management.html' %}
+  </div>
+</div>
+{% endblock %}

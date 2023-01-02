@@ -55,7 +55,7 @@ const safeSaslprep = (v) => {
 export const Types: Types = {
     Content: [(v) => v.toString().trim(), isContent],
     Name: [(v) => saslprep(v.toString().trim()), (v) => /^.{1,255}$/.test(safeSaslprep(v))],
-    Username: [(v) => saslprep(v.toString().trim()), (v) => /^.{3,31}$/.test(safeSaslprep(v))],
+    Username: [(v) => saslprep(v.toString().trim()), (v) => /^(.{3,31}|[\u4e00-\u9fa5]{2})$/.test(safeSaslprep(v))],
     Title: [(v) => v.toString().trim(), isTitle],
     String: [(v) => v.toString(), null],
     Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],

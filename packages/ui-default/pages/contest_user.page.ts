@@ -65,7 +65,7 @@ const page = new NamedPage('contest_user', () => {
       });
       if (res.url && res.url !== window.location.href) window.location.href = res.url;
       else {
-        Notification.success(i18n('User has been added.'));
+        Notification.success(i18n('User added.'));
         pjax.request({ push: false });
       }
     } catch (error) {
@@ -82,7 +82,7 @@ const page = new NamedPage('contest_user', () => {
       });
       if (res.url && res.url !== window.location.href) window.location.href = res.url;
       else {
-        Notification.success(i18n('User Rank has been edited.'));
+        Notification.success(i18n('Ranking status updated.'));
         pjax.request({ push: false });
       }
     } catch (error) {
