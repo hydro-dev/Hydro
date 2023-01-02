@@ -1,4 +1,4 @@
-import { sumBy, toInteger } from 'lodash';
+import { sumBy } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
@@ -41,7 +41,8 @@ interface FunDetail extends FunJournal {
     real?: number;
     naccept?: number;
     npending?: number;
-    endscore: number;
+    penaltyScore: number;
+    penaltyRatio: number;
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
@@ -368,29 +369,33 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
-function calcFunNowRatio(nAccept, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
-    const ratioTime = Math.max(0, toInteger(nAccept) - toInteger(!isAccept));
-    return Math.max(lowestRatio, singleRatio ** ratioTime);
-}
 
-function calcFunScore(nAccept, beforeScore, isAccept :boolean, singleRatio = 0.95, lowestRatio = 0.7) {
-    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, isAccept, singleRatio, lowestRatio));
-}
 
 const fun = buildContestRule({
     TEXT: 'FUN Contest',
     check: () => { },
-    statusSort: { endscore: -1 },
+    statusSort: { penaltyScore: -1 },
     submitAfterAccept: false,
+    
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: FunJournal[]) {
+        
+        function calcFunNowRatio(nAccept, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
+            const ratioTime = Math.max(0, +nAccept - +!isAccept);
+            return Math.max(lowestRatio, singleRatio ** ratioTime);
+        }
+
+        function calcFunScore(nAccept, beforeScore, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
+            return Math.floor(beforeScore * calcFunNowRatio(nAccept, isAccept, singleRatio, lowestRatio));
+        }
+
         const naccept = Counter<number>();
         const npending = Counter<number>();
         const effective: Record<number, FunJournal> = {};
         const detail: Record<number, FunDetail> = {};
-        let endscore = 0;
+        let penaltyScore = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             if (j.status === STATUS.STATUS_WAITING) {
@@ -405,18 +410,19 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, j.status === STATUS.STATUS_ACCEPTED);
+            const penaltyScore = calcFunScore(naccept[j.pid], j.score, j.status === STATUS.STATUS_ACCEPTED);
+            const penaltyRatio = calcFunNowRatio(naccept[j.pid], j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], endscore: endscoreDetail, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], penaltyScore, penaltyRatio, npending: npending[j.pid],
             };
         }
         let time = 0;
         for (const d of Object.values(detail)) {
             time += d.real;
-            endscore += d.endscore;
+            penaltyScore += d.penaltyScore;
         }
         return {
-            time, endscore, detail,
+            time, penaltyScore, detail,
         };
     },
     async scoreboardHeader(isExport, _, tdoc, pdict) {
@@ -473,12 +479,10 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = calcFunNowRatio(doc.naccept, doc.status === STATUS.STATUS_ACCEPTED);
-            const score = calcFunScore(doc.naccept, doc?.score, doc.status === STATUS.STATUS_ACCEPTED);
+            const nowRatio = doc?.penaltyRatio;
+            const score = doc?.penaltyScore || 0;
             let value = '';
-            if (Number.isNaN(score) === false) {
-                totalScore += score;
-            }
+            totalScore += score;
             if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRatio * 100) / 100).toString()})`;
             tmp.push({
                 type: 'record',
@@ -501,7 +505,7 @@ const fun = buildContestRule({
         return row;
     },
     async scoreboard(isExport, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.endscore === b.endscore);
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
         // Find first accept
@@ -534,7 +538,7 @@ const fun = buildContestRule({
         return [rows, udict];
     },
     async ranked(tdoc, cursor) {
-        return await ranked(cursor, (a, b) => a.endscore === b.endscore);
+        return await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
     },
 });
 
