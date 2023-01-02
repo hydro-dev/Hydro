@@ -368,13 +368,13 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
-function calcFunNowRatio(nAccept, singleRatio, lowestRatio, isAccept: boolean) {
+function calcFunNowRatio(nAccept, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
     const ratioTime = Math.max(0, toInteger(nAccept) - toInteger(!isAccept));
     return Math.max(lowestRatio, singleRatio ** ratioTime);
 }
 
-function calcFunScore(nAccept, beforeScore, singleRatio, lowestRatio, isAccept :boolean) {
-    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, singleRatio, lowestRatio, isAccept));
+function calcFunScore(nAccept, beforeScore, isAccept :boolean, singleRatio = 0.95, lowestRatio = 0.7) {
+    return Math.floor((beforeScore) * calcFunNowRatio(nAccept, isAccept, singleRatio, lowestRatio));
 }
 
 const fun = buildContestRule({
@@ -405,7 +405,7 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, 0.95, 0.7, j.status === STATUS.STATUS_ACCEPTED);
+            const endscoreDetail = calcFunScore(naccept[j.pid], j.score, j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
                 ...j, real, naccept: naccept[j.pid], endscore: endscoreDetail, npending: npending[j.pid],
             };
@@ -473,8 +473,8 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = calcFunNowRatio(doc.naccept, 0.95, 0.7, doc.status === STATUS.STATUS_ACCEPTED);
-            const score = calcFunScore(doc.naccept, doc?.score, 0.95, 0.7, doc.status === STATUS.STATUS_ACCEPTED);
+            const nowRatio = calcFunNowRatio(doc.naccept, doc.status === STATUS.STATUS_ACCEPTED);
+            const score = calcFunScore(doc.naccept, doc?.score, doc.status === STATUS.STATUS_ACCEPTED);
             let value = '';
             if (Number.isNaN(score) === false) {
                 totalScore += score;
