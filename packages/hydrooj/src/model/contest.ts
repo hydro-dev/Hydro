@@ -369,26 +369,22 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 });
 
-
-
 const fun = buildContestRule({
     TEXT: 'FUN Contest',
     check: () => { },
     statusSort: { penaltyScore: -1 },
     submitAfterAccept: false,
-    
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: FunJournal[]) {
-        
-        function calcFunNowRatio(nAccept, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
+        function calcFunNowRatio(nAccept, isAccept: boolean) {
             const ratioTime = Math.max(0, +nAccept - +!isAccept);
-            return Math.max(lowestRatio, singleRatio ** ratioTime);
+            return Math.max(0.7, 0.95 ** ratioTime);
         }
 
-        function calcFunScore(nAccept, beforeScore, isAccept: boolean, singleRatio = 0.95, lowestRatio = 0.7) {
-            return Math.floor(beforeScore * calcFunNowRatio(nAccept, isAccept, singleRatio, lowestRatio));
+        function calcFunScore(nAccept, beforeScore, isAccept: boolean) {
+            return Math.floor(beforeScore * calcFunNowRatio(nAccept, isAccept));
         }
 
         const naccept = Counter<number>();
@@ -483,7 +479,7 @@ const fun = buildContestRule({
             const score = doc?.penaltyScore || 0;
             let value = '';
             totalScore += score;
-            if (doc.rid) value = `${(score).toString()} (*${(Math.floor(nowRatio * 100) / 100).toString()})`;
+            if (doc.rid) value = `${score} (*${(Math.floor(nowRatio * 100) / 100)})`;
             tmp.push({
                 type: 'record',
                 score,
@@ -504,39 +500,7 @@ const fun = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
-        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getListForRender(tdoc.domainId, uids);
-        // Find first accept
-        const first = {};
-        const data = await document.collStatus.aggregate([
-            {
-                $match: {
-                    domainId: tdoc.domainId,
-                    docType: document.TYPE_CONTEST,
-                    docId: tdoc.docId,
-                    accept: { $gte: 1 },
-                },
-            },
-            { $project: { r: { $objectToArray: '$detail' } } },
-            { $unwind: '$r' },
-            { $match: { 'r.v.status': STATUS.STATUS_ACCEPTED } },
-            { $group: { _id: '$r.v.pid', first: { $min: '$r.v.rid' } } },
-        ]).toArray() as any[];
-        for (const t of data) first[t._id] = t.first.generationTime;
-
-        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
-        const rows: ScoreboardRow[] = [
-            columns,
-            ...await Promise.all(rankedTsdocs.map(
-                ([rank, tsdoc]) => this.scoreboardRow(
-                    isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { first },
-                ),
-            )),
-        ];
-        return [rows, udict];
-    },
+    scoreboard: oi._originalRule.scoreboard,
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
     },
