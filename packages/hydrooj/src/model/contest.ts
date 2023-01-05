@@ -42,7 +42,7 @@ interface FunDetail extends FunJournal {
     naccept?: number;
     npending?: number;
     penaltyScore: number;
-    penaltyRatio: number;
+    // penaltyRatio: number;
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
@@ -407,9 +407,8 @@ const fun = buildContestRule({
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penaltyScore = calcFunScore(naccept[j.pid], j.score, j.status === STATUS.STATUS_ACCEPTED);
-            const penaltyRatio = calcFunNowRatio(naccept[j.pid], j.status === STATUS.STATUS_ACCEPTED);
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penaltyScore, penaltyRatio, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], penaltyScore, npending: npending[j.pid],
             };
         }
         let time = 0;
@@ -475,11 +474,16 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = doc?.penaltyRatio;
+            const nowRatio = doc?.penaltyScore / (doc?.score || 1);
             const score = doc?.penaltyScore || 0;
             let value = '';
             totalScore += score;
-            if (doc.rid) value = `${score} (*${(Math.floor(nowRatio * 100) / 100)})`;
+            if (doc.rid) {
+                value = score.toString();
+                if (score > 0) {
+                    value = `${value} (*${(Math.floor(nowRatio * 100) / 100)})`;
+                }
+            }
             tmp.push({
                 type: 'record',
                 score,
