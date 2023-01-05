@@ -45,6 +45,7 @@ rules:
   '@typescript-eslint/return-await': 0
 
   no-multi-str: 0
+  '@typescript-eslint/type-annotation-spacing': 1 
   '@typescript-eslint/indent':
     - warn
     - 4
@@ -98,6 +99,7 @@ rules:
 
   '@typescript-eslint/no-redeclare': 0
   '@typescript-eslint/default-param-last': 0
+  
 
   class-methods-use-this: 0
   global-require: 0
