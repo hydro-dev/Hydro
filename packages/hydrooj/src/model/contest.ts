@@ -48,9 +48,7 @@ function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule
     const f = {};
     const rule = { ...baseRule, ...def };
     for (const key of funcs) {
-        console.log(key);
         f[key] = def[key] || base[key];
-        console.log(f[key]);
         rule[key] = f[key].bind(rule);
     }
     rule._originalRule = f;
