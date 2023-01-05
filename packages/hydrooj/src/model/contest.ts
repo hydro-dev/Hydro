@@ -42,7 +42,6 @@ interface FunDetail extends FunJournal {
     naccept?: number;
     npending?: number;
     penaltyScore: number;
-    // penaltyRatio: number;
 }
 
 interface FunJournal extends AcmJournal {
@@ -54,7 +53,6 @@ interface FunDetail extends FunJournal {
     naccept?: number;
     npending?: number;
     penaltyScore: number;
-    penaltyRatio: number;
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
@@ -493,7 +491,7 @@ const fun = buildContestRule({
             if (doc.rid) {
                 value = score.toString();
                 if (score > 0) {
-                    value = `${value} (*${(Math.floor(nowRatio * 100) / 100)})`;
+                    value = `${value} (*${(Math.round(nowRatio * 100) / 100)})`;
                 }
             }
             tmp.push({
@@ -516,11 +514,10 @@ const fun = buildContestRule({
         }
         return row;
     },
-    scoreboard: oi._originalRule.scoreboard,
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
     },
-});
+}, oi);
 
 const homework = buildContestRule({
     TEXT: 'Assignment',
