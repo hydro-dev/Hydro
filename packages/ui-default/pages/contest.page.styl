@@ -113,7 +113,11 @@ $highlight-button-color = #F6DF45
     width: rem(150px)
 
   .col--submit-at
-    width: rem(150px)
+    width: rem(130px)
+    text-align: center
+
+  &.nojs .col--submit-at
+    width: rem(160px)
 
   .col--problem
     border-left: 1px solid $table-border-color
@@ -121,6 +125,33 @@ $highlight-button-color = #F6DF45
   +mobile()
     .col--submit-at
       display: none
+
+  +tablet()
+    .col--time,
+    .col--memory,
+    .col--lang
+      display: none
+
+  +mobile()
+    .col--time,
+    .col--memory,
+    .col--submit-at,
+    .col--lang
+      display: none
+  
+  .col--submit-by
+    display: none
+
+  .record_main__table
+    .col--status
+      width: rem(170px)
+
+    .col--time, .col--memory, .col--lang
+      width: rem(95px)
+      text-align: center
+
+    .col--lang
+      border-right: 1px solid $table-border-color
 
 
 .page--contest_scoreboard

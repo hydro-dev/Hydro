@@ -57,6 +57,9 @@
       </div>
     </div>
     <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Submissions') }}</h1>
+      </div>
       <div class="section__body no-padding">
       {% if not canViewRecord %}
         {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}'
