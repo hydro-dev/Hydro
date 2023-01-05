@@ -19,6 +19,7 @@ export async function add(data: Partial<OplogDoc> & { type: string }): Promise<O
 export async function log<T extends Handler>(handler: T, type: string, data: any) {
     const args = { ...handler.args };
     delete args.password;
+    delete args.verifyPassword;
     await bus.parallel('oplog/log', type, handler, args, data);
     const res = await coll.insertOne({
         ...data,
