@@ -356,6 +356,68 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 }, oi);
 
+const ledo = buildContestRule({
+    TEXT: 'Ledo',
+    check: () => { },
+    submitAfterAccept: false,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    showSelfRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    stat(tdoc, journal) {
+        const detail = {};
+        let score = 0;
+        let originalScore = 0;
+        for (const pid of tdoc.pids) {
+            journal.filter((i) => pid === i.pid).forEach((j, id) => {
+                const penaltyScore = Math.round(Math.max(0.7, 0.95 ** id) * j.score);
+                if (!detail[pid] || detail[pid].penaltyScore < penaltyScore) {
+                    detail[pid] = {
+                        ...j,
+                        penaltyScore,
+                        ntry: id,
+                    };
+                }
+            });
+            score += detail[pid].penaltyScore;
+            originalScore += detail[pid].score;
+        }
+        return {
+            score, originalScore, detail,
+        };
+    },
+    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+        const tsddict = tsdoc.detail || {};
+        const row: ScoreboardRow = [
+            { type: 'rank', value: rank.toString() },
+            { type: 'user', value: udoc.uname, raw: tsdoc.uid },
+        ];
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({ type: 'total_score', value: `${tsdoc.score}${tsdoc.score === tsdoc.originalScore ? ` / ${tsdoc.originalScore}` : ''}` || '0' });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
+        for (const pid of tdoc.pids) {
+            row.push({
+                type: 'record',
+                value: `${tsddict[pid]?.penaltyScore}${tsddict[pid]?.penaltyScore === tsddict[pid]?.score ? ` / ${tsdoc.score}` : ''}` || '',
+                hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
+                raw: tsddict[pid]?.rid,
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                    ? 'background-color: rgb(217, 240, 199);'
+                    : undefined,
+            });
+        }
+        return row;
+    },
+}, oi);
+
 const homework = buildContestRule({
     TEXT: 'Assignment',
     hidden: true,
@@ -506,7 +568,7 @@ const homework = buildContestRule({
 });
 
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi,
+    acm, oi, homework, ioi, ledo,
 };
 
 function _getStatusJournal(tsdoc) {
