@@ -387,7 +387,7 @@ const fun = buildContestRule({
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penaltyScore = Math.floor(j.score * Math.max(0.7, 0.95 ** naccept[j.pid]));
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penaltyScore,
+                ...j, real, naccept: naccept[j.pid] - +!(j.status === STATUS.STATUS_ACCEPTED), penaltyScore,
             };
         }
         let time = 0;
