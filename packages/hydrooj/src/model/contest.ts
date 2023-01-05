@@ -33,19 +33,20 @@ interface AcmDetail extends AcmJournal {
     real: number;
 }
 
-function buildContestRule<T>(def: ContestRule<T>): ContestRule<T> {
-    const _originalRule = {
-        scoreboard: def.scoreboard,
-        scoreboardRow: def.scoreboardRow,
-        scoreboardHeader: def.scoreboardHeader,
-        stat: def.stat,
+function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
+function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
+function buildContestRule<T>(def: Partial<ContestRule<T>>, { _originalRule: base }: ContestRule<T> = { _originalRule: {} } as any) {
+    def._originalRule = {
+        scoreboard: def.scoreboard || base.scoreboard,
+        scoreboardRow: def.scoreboardRow || base.scoreboardRow,
+        scoreboardHeader: def.scoreboardHeader || base.scoreboardHeader,
+        stat: def.stat || base.stat,
     };
-    def.scoreboard = (def._originalRule?.scoreboard || def.scoreboard).bind(def);
-    def.scoreboardHeader = (def._originalRule?.scoreboardHeader || def.scoreboardHeader).bind(def);
-    def.scoreboardRow = (def._originalRule?.scoreboardRow || def.scoreboardRow).bind(def);
-    def.stat = (def._originalRule?.stat || def.stat).bind(def);
-    def._originalRule = _originalRule;
-    return def;
+    def.scoreboard = (def.scoreboard || base.scoreboard).bind(def);
+    def.scoreboardHeader = (def.scoreboardHeader || base.scoreboardHeader).bind(def);
+    def.scoreboardRow = (def.scoreboardRow || base.scoreboardRow).bind(def);
+    def.stat = (def.stat || base.stat).bind(def);
+    return def as ContestRule<T>;
 }
 
 const acm = buildContestRule({
@@ -349,13 +350,12 @@ const oi = buildContestRule({
 });
 
 const ioi = buildContestRule({
-    ...oi,
     TEXT: 'IOI',
     submitAfterAccept: false,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: () => true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
-});
+}, oi);
 
 const homework = buildContestRule({
     TEXT: 'Assignment',
