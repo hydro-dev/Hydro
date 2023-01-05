@@ -42,18 +42,19 @@ interface FunDetail extends AcmJournal {
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
-function buildContestRule<T>(def: Partial<ContestRule<T>>, { _originalRule: base }: ContestRule<T> = { _originalRule: {} } as any) {
-    def._originalRule = {
-        scoreboard: def.scoreboard || base.scoreboard,
-        scoreboardRow: def.scoreboardRow || base.scoreboardRow,
-        scoreboardHeader: def.scoreboardHeader || base.scoreboardHeader,
-        stat: def.stat || base.stat,
-    };
-    def.scoreboard = (def.scoreboard || base.scoreboard).bind(def);
-    def.scoreboardHeader = (def.scoreboardHeader || base.scoreboardHeader).bind(def);
-    def.scoreboardRow = (def.scoreboardRow || base.scoreboardRow).bind(def);
-    def.stat = (def.stat || base.stat).bind(def);
-    return def as ContestRule<T>;
+function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
+    const base = baseRule._originalRule || {};
+    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat'];
+    const f = {};
+    const rule = { ...baseRule, ...def };
+    for (const key of funcs) {
+        console.log(key);
+        f[key] = def[key] || base[key];
+        console.log(f[key]);
+        rule[key] = f[key].bind(rule);
+    }
+    rule._originalRule = f;
+    return rule;
 }
 
 const acm = buildContestRule({
@@ -365,7 +366,7 @@ const ioi = buildContestRule({
 }, oi);
 
 const fun = buildContestRule({
-    TEXT: 'FUN Contest',
+    TEXT: 'Fun Contest',
     check: () => { },
     statusSort: { penaltyScore: -1 },
     submitAfterAccept: false,
@@ -386,7 +387,7 @@ const fun = buildContestRule({
         const npending = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, FunDetail> = {};
-        let penaltyScore = 0;
+        let penaltyScoreTotal = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             if (j.status === STATUS.STATUS_WAITING) {
@@ -409,10 +410,10 @@ const fun = buildContestRule({
         let time = 0;
         for (const d of Object.values(detail)) {
             time += d.real;
-            penaltyScore += d.penaltyScore;
+            penaltyScoreTotal += d.penaltyScore;
         }
         return {
-            time, penaltyScore, detail,
+            time, penaltyScore: penaltyScoreTotal, detail,
         };
     },
     async scoreboardHeader(isExport, _, tdoc, pdict) {
@@ -471,15 +472,16 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<FunDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = doc?.penaltyScore / (doc?.score || 1);
+            const nowRatio = (doc?.penaltyScore || 1) / (doc?.score || 1);
             const originalScore = doc?.score;
             const penaltyScore = doc?.penaltyScore || 0;
-            let value = '', hover = '';
+            let value = '';
+            let hover = '';
             if (doc.rid) {
                 value = penaltyScore.toString();
                 if (penaltyScore > 0 && penaltyScore < originalScore) {
-                    value = `${value} (*${(Math.round(nowRatio * 100) / 100)})`;
-                    hover = `-${doc?.naccept}`
+                    value = `${value} (${Math.round(nowRatio * 100)}%)`;
+                    hover = `-${doc?.naccept}`;
                 }
             }
             row.push({
