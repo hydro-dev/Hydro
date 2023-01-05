@@ -33,22 +33,7 @@ interface AcmDetail extends AcmJournal {
     real: number;
 }
 
-interface FunJournal extends AcmJournal {
-
-}
-
-interface FunDetail extends FunJournal {
-    real?: number;
-    naccept?: number;
-    npending?: number;
-    penaltyScore: number;
-}
-
-interface FunJournal extends AcmJournal {
-
-}
-
-interface FunDetail extends FunJournal {
+interface FunDetail extends AcmJournal {
     real?: number;
     naccept?: number;
     npending?: number;
@@ -387,19 +372,19 @@ const fun = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    stat(tdoc, journal: FunJournal[]) {
-        function calcFunNowRatio(nAccept, isAccept: boolean) {
-            const ratioTime = Math.max(0, +nAccept - +!isAccept);
+    stat(tdoc, journal: AcmJournal[]) {
+        function calcFunNowRatio(nAccept :number, isAccept: boolean) {
+            const ratioTime = Math.max(0, nAccept - +!isAccept);
             return Math.max(0.7, 0.95 ** ratioTime);
         }
 
-        function calcFunScore(nAccept, beforeScore, isAccept: boolean) {
+        function calcFunScore(nAccept :number, beforeScore :number, isAccept: boolean) {
             return Math.floor(beforeScore * calcFunNowRatio(nAccept, isAccept));
         }
 
         const naccept = Counter<number>();
         const npending = Counter<number>();
-        const effective: Record<number, FunJournal> = {};
+        const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, FunDetail> = {};
         let penaltyScore = 0;
         for (const j of journal) {
@@ -463,7 +448,6 @@ const fun = buildContestRule({
         return columns;
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        let totalScore = 0;
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
@@ -475,42 +459,34 @@ const fun = buildContestRule({
             row.push({ type: 'string', value: udoc.displayName || '' });
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
-        const tmp: ScoreboardRow = [];
-        for (const s of tsdoc.journal || []) {
-            if (!pdict[s.pid]) continue;
-            pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
-        }
+        row.push({
+            type: 'total_score',
+            value: `${tsdoc.penaltyScore || 0}`,
+        });
         for (const pid of tdoc.pids) {
-            const doc = tsddict[pid] || {} as Partial<AcmDetail>;
+            const doc = tsddict[pid] || {} as Partial<FunDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
             const nowRatio = doc?.penaltyScore / (doc?.score || 1);
-            const score = doc?.penaltyScore || 0;
-            let value = '';
-            totalScore += score;
+            const originalScore = doc?.score;
+            const penaltyScore = doc?.penaltyScore || 0;
+            let value = '', hover = '';
             if (doc.rid) {
-                value = score.toString();
-                if (score > 0) {
+                value = penaltyScore.toString();
+                if (penaltyScore > 0 && penaltyScore < originalScore) {
                     value = `${value} (*${(Math.round(nowRatio * 100) / 100)})`;
+                    hover = `-${doc?.naccept}`
                 }
             }
-            tmp.push({
+            row.push({
                 type: 'record',
-                score,
+                score: penaltyScore,
                 value,
-                hover: `-${doc.naccept}`,
+                hover,
                 raw: doc.rid,
                 style: accept && doc.rid.generationTime === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
-        }
-        row.push({
-            type: 'total_score',
-            value: `${totalScore || 0}`,
-        });
-        for (let i = 0; i < tmp.length; i++) {
-            row.push(tmp[i]);
         }
         return row;
     },
