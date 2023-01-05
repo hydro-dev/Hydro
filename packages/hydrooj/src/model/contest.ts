@@ -36,7 +36,6 @@ interface AcmDetail extends AcmJournal {
 interface FunDetail extends AcmJournal {
     real?: number;
     naccept?: number;
-    npending?: number;
     penaltyScore: number;
 }
 
@@ -372,26 +371,12 @@ const fun = buildContestRule({
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: AcmJournal[]) {
-        function calcFunNowRatio(naccept: number, isAccept: boolean) {
-            const ratioTime = Math.max(0, naccept - +!isAccept);
-            return Math.max(0.7, 0.95 ** ratioTime);
-        }
-
-        function calcFunScore(naccept: number, beforeScore: number, isAccept: boolean) {
-            return Math.floor(beforeScore * calcFunNowRatio(naccept, isAccept));
-        }
-
         const naccept = Counter<number>();
-        const npending = Counter<number>();
         const effective: Record<number, AcmJournal> = {};
         const detail: Record<number, FunDetail> = {};
         let penaltyScoreTotal = 0;
         for (const j of journal) {
             if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
-            if (j.status === STATUS.STATUS_WAITING) {
-                npending[j.pid]++;
-                continue;
-            }
             effective[j.pid] = j;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
@@ -400,9 +385,9 @@ const fun = buildContestRule({
         for (const pid in effective) {
             const j = effective[pid];
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const penaltyScore = calcFunScore(naccept[j.pid], j.score, j.status === STATUS.STATUS_ACCEPTED);
+            const penaltyScore = Math.floor(j.score * Math.max(0.7, 0.95 ** naccept[j.pid]));
             detail[pid] = {
-                ...j, real, naccept: naccept[j.pid], penaltyScore, npending: npending[j.pid],
+                ...j, real, naccept: naccept[j.pid], penaltyScore,
             };
         }
         let time = 0;
@@ -458,35 +443,22 @@ const fun = buildContestRule({
             row.push({ type: 'string', value: udoc.displayName || '' });
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
+        row.push({ type: 'total_score', value: tsdoc.penaltyScore || 0 });
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             pdict[s.pid].nSubmit++;
             if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
         }
-        row.push({
-            type: 'total_score',
-            value: `${tsdoc.penaltyScore || 0}`,
-        });
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<FunDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = (doc.penaltyScore || 1) / (doc.score || 1);
-            const originalScore = doc.score;
-            const penaltyScore = doc.penaltyScore || 0;
-            let value = '';
-            let hover = '';
-            if (doc.rid) {
-                value = penaltyScore.toString();
-                if (penaltyScore > 0 && penaltyScore < originalScore) {
-                    value = `${value} (${Math.round(nowRatio * 100)}%)`;
-                    hover = `-${doc.naccept}`;
-                }
-            }
+            const penalty = doc.penaltyScore && doc.penaltyScore < doc.score;
+            let value = doc.penaltyScore || '';
+            if (penalty) value += `\n${doc.score} (${Math.round((doc.penaltyScore / doc.score) * 100)}%)`;
             row.push({
                 type: 'record',
-                score: penaltyScore,
                 value,
-                hover,
+                hover: doc.naccept ? `-${doc.naccept}` : '',
                 raw: doc.rid,
                 style: accept && doc.rid.generationTime === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
@@ -494,6 +466,43 @@ const fun = buildContestRule({
             });
         }
         return row;
+    },
+    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+        const rankedTsdocs = await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
+        const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
+        const udict = await user.getListForRender(tdoc.domainId, uids);
+        const psdict = {};
+        const first = {};
+        await Promise.all(tdoc.pids.map(async (pid) => {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            const [data] = await getMultiStatus(tdoc.domainId, {
+                docType: document.TYPE_CONTEST,
+                docId: tdoc.docId,
+                [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
+            }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
+            first[pid] = data ? data.detail[pid].rid.generationTime : new ObjectID().generationTime;
+        }));
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        if (isDone(tdoc)) {
+            const psdocs = await Promise.all(
+                tdoc.pids.map((pid) => problem.getMultiStatus(tdoc.domainId, { docId: pid, uid: { $in: uids } }).toArray()),
+            );
+            for (const tpsdoc of psdocs) {
+                for (const psdoc of tpsdoc) {
+                    psdict[`${psdoc.uid}/${psdoc.domainId}/${psdoc.docId}`] = psdoc;
+                }
+            }
+        }
+        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
+        const rows: ScoreboardRow[] = [
+            columns,
+            ...await Promise.all(rankedTsdocs.map(
+                ([rank, tsdoc]) => this.scoreboardRow(
+                    isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { psdict, first },
+                ),
+            )),
+        ];
+        return [rows, udict];
     },
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.penaltyScore === b.penaltyScore);
