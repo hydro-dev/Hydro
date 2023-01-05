@@ -40,8 +40,6 @@ interface Parameter {
     env?: Record<string, string>;
     /** redirect stdin & stdout */
     filename?: string;
-    /** In megabytes */
-    stdioLimit?: number;
 }
 
 interface SandboxAdaptedResult {
@@ -75,9 +73,12 @@ function proc(params: Parameter): Cmd {
         ? params.copyOut
         : (params.copyOut || []).map((i) => (i.endsWith('?') ? i.substring(0, i.length - 1) : i));
     const stdioLimit = parseMemoryMB(getConfig('stdio_size'));
-    const stdioSize = params.stdioLimit || params.cacheStdoutAndStderr ? stdioLimit : 4;
+    const stdioSize = params.cacheStdoutAndStderr ? stdioLimit : 4;
     const copyOutCached = [...(params.copyOutCached || [])];
-    if (params.cacheStdoutAndStderr) copyOutCached.push(params.filename ? `${params.filename}.out?` : 'stdout', 'stderr');
+    if (params.cacheStdoutAndStderr) {
+        copyOutCached.push('stdout', 'stderr');
+        if (params.filename) copyOutCached.push(`${params.filename}.out?`);
+    }
     const copyIn = { ...(params.copyIn || {}) };
     const stdin = params.stdin || { content: '' };
     if (params.filename) copyIn[`${params.filename}.in`] = stdin;
