@@ -161,7 +161,7 @@ export class ProblemMainHandler extends Handler {
             total = result.total;
             pcountRelation = result.countRelation;
             if (!result.hits.length) fail = true;
-            if (!query.$and) query.$and = [];
+            query.$and ||= [];
             query.$and.push({
                 $or: result.hits.map((i) => {
                     const [did, docId] = i.split('/');
@@ -723,7 +723,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
         if (!this.request.files.file) throw new ValidationError('file');
-        if (!filename) filename = this.request.files.file.originalFilename || String.random(16);
+        filename ||= this.request.files.file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];

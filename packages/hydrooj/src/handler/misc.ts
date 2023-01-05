@@ -57,7 +57,7 @@ export class FilesHandler extends Handler {
         if (size >= system.get('limit.user_files_size')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('size');
         }
-        if (!filename) filename = file.originalFilename || String.random(16);
+        filename ||= file.originalFilename || String.random(16);
         if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (this.user._files.filter((i) => i.name === filename).length) throw new FileExistsError(filename);
         await storage.put(`user/${this.user._id}/${filename}`, file.filepath, this.user._id);

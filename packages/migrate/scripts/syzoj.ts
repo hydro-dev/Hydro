@@ -116,7 +116,7 @@ export async function run({
     for (const udoc of udocs) {
         if (randomMail) delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
-        if (!current) current = await UserModel.getByUname(domainId, udoc.username);
+        current ||= await UserModel.getByUname(domainId, udoc.username);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
             uidMap[udoc.id] = current._id;

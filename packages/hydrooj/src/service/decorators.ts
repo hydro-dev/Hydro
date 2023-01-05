@@ -166,8 +166,8 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
 
 function _descriptor(v: ParamOption) {
     return function desc(this: Handler, target: any, funcName: string, obj: any) {
-        if (!target.__param) target.__param = {};
-        if (!target.__param[target.constructor.name]) target.__param[target.constructor.name] = {};
+        target.__param ||= {};
+        target.__param[target.constructor.name] ||= {};
         if (!target.__param[target.constructor.name][funcName]) {
             target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string', source: 'route' }];
             const originalMethod = obj.value;

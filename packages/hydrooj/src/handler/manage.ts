@@ -242,7 +242,7 @@ class SystemUserImportHandler extends SystemHandler {
                     try {
                         const data = JSON.parse(extra);
                         if (data.group) {
-                            if (!groups[data.group]) groups[data.group] = [];
+                            groups[data.group] ||= [];
                             groups[data.group].push(email);
                         }
                         if (data.school) payload.school = data.school;

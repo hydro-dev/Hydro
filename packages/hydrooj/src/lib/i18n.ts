@@ -19,7 +19,7 @@ class I18nService extends Service {
     }
 
     load(lang: string, content: Record<string, string>) {
-        if (!translations[lang]) translations[lang] = [];
+        translations[lang] ||= [];
         translations[lang].unshift(content);
         this.caller?.on('dispose', () => {
             translations[lang] = translations[lang].filter((i) => i !== content);

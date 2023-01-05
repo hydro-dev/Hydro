@@ -57,7 +57,7 @@ async function daemon() {
     const queue = new PQueue({ concurrency: Infinity });
     queue.on('error', (e) => log.error(e));
     for (const i in _hosts) {
-        _hosts[i].host = _hosts[i].host || i;
+        _hosts[i].host ||= i;
         hosts[i] = new HydroHost(_hosts[i]);
         await hosts[i].init();
     }

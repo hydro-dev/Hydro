@@ -1,5 +1,5 @@
 import {
-    Context, ForbiddenError, superagent, SystemModel,
+    Context, ForbiddenError, Handler, superagent, SystemModel,
     TokenModel, UserFacingError, ValidationError,
 } from 'hydrooj';
 
@@ -11,7 +11,7 @@ declare module 'hydrooj' {
     }
 }
 
-async function get() {
+async function get(this: Handler) {
     const [appid, [state]] = await Promise.all([
         SystemModel.get('login-with-github.id'),
         TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer }),

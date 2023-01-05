@@ -209,7 +209,7 @@ class UserModel {
         const unameLower = uname.trim().toLowerCase();
         if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`) || null;
         let udoc = await coll.findOne({ unameLower });
-        if (!udoc) udoc = await collV.findOne({ unameLower });
+        udoc ||= await collV.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
         const res = await new UserModel.User(udoc, dudoc).init();

@@ -24,6 +24,7 @@ overrides:
       '@typescript-eslint/indent':
         - warn
         - 2
+      '@typescript-eslint/no-invalid-this': 0
     env:
       browser: true
       es6: true
@@ -44,7 +45,14 @@ rules:
   '@typescript-eslint/no-throw-literal': 0
   '@typescript-eslint/return-await': 0
 
+  no-implicit-coercion:
+    - warn
+    - allow: ["!!", "+"]
+  no-extra-boolean-cast:
+    - warn
+    - enforceForLogicalOperands: true
   no-multi-str: 0
+  '@typescript-eslint/no-invalid-this': 1
   '@typescript-eslint/type-annotation-spacing': 1 
   '@typescript-eslint/indent':
     - warn
@@ -111,6 +119,10 @@ rules:
   import/no-extraneous-dependencies: 0
   import/no-named-as-default: 0
   import/prefer-default-export: 0
+  logical-assignment-operators:
+    - warn
+    - always
+    - enforceForIfStatements: true
   max-classes-per-file: 0
   max-len:
     - warn
@@ -131,6 +143,7 @@ rules:
   no-return-await: 0
   no-shadow: 0
   no-underscore-dangle: 0
+  no-unmodified-loop-condition: 1
   prefer-destructuring: 0
   function-paren-newline: 0
   simple-import-sort/imports:
@@ -153,7 +166,8 @@ settings:
   import/resolver:
     typescript:
       alwaysTryTypes: true
-# parserOptions:
+parserOptions:
+  sourceType: module
 #   project:
 #     - './tsconfig.json'
 #     - './packages/**/tsconfig.json'

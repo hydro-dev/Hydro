@@ -18,7 +18,7 @@ if (!global.Hydro) {
         lib: {},
         module: new Proxy({} as any, {
             get(self, key) {
-                if (!self[key]) self[key] = {};
+                self[key] ||= {};
                 return self[key];
             },
         }),

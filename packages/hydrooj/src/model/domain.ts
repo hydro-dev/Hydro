@@ -178,10 +178,10 @@ class DomainModel {
 
     static async getDomainUser(domainId: string, udoc: DomainUserArg) {
         let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
-        dudoc = dudoc || {};
+        dudoc ||= {};
         if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
         if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
-        dudoc.role = dudoc.role || 'default';
+        dudoc.role ||= 'default';
         const ddoc = await DomainModel.get(domainId);
         dudoc.perm = ddoc?.roles[dudoc.role]
             ? BigInt(ddoc?.roles[dudoc.role])

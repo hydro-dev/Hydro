@@ -375,13 +375,11 @@ class HomeMessagesHandler extends Handler {
         const parsed = {};
         for (const m of messages) {
             const target = m.from === this.user._id ? m.to : m.from;
-            if (!parsed[target]) {
-                parsed[target] = {
-                    _id: target,
-                    udoc: { ...udict[target], avatarUrl: avatar(udict[target].avatar) },
-                    messages: [],
-                };
-            }
+            parsed[target] ||= {
+                _id: target,
+                udoc: { ...udict[target], avatarUrl: avatar(udict[target].avatar) },
+                messages: [],
+            };
             parsed[target].messages.push(m);
         }
         await user.setById(this.user._id, { unreadMsg: 0 });

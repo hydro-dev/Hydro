@@ -13,7 +13,7 @@ const coll = db.collection('schedule');
 async function getFirst(query: FilterQuery<Schedule>) {
     if (process.env.CI) return null;
     const q = { ...query };
-    q.executeAfter = q.executeAfter || { $lt: new Date() };
+    q.executeAfter ||= { $lt: new Date() };
     const res = await coll.findOneAndDelete(q);
     if (res.value) {
         logger.debug('%o', res.value);

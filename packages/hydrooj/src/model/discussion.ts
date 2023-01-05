@@ -305,7 +305,7 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
     const res = {};
     async function task(ddoc: DiscussionDoc) {
         const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId.toString());
-        if (!res[ddoc.parentType]) res[ddoc.parentType] = {};
+        res[ddoc.parentType] ||= {};
         if (!getHidden && vnode.hidden) return;
         if (vnode.assign?.length && Set.intersection(vnode.assign, assign).size) return;
         res[ddoc.parentType][ddoc.parentId] = vnode;

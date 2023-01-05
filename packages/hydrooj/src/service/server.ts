@@ -194,7 +194,7 @@ export class Handler extends HandlerCommon {
     }
 
     async onerror(error: HydroError) {
-        if (!error.msg) error.msg = () => error.message;
+        error.msg ||= () => error.message;
         if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
         if (!(error instanceof NotFoundError)) {
             // eslint-disable-next-line max-len

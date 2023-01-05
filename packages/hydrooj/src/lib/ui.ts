@@ -26,7 +26,7 @@ const buildChecker = (...permPrivChecker: PermPrivChecker) => {
 
 export const nodes = new Proxy({}, {
     get(self, key) {
-        if (!self[key]) self[key] = [];
+        self[key] ||= [];
         return self[key];
     },
 });

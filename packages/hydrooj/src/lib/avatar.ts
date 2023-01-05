@@ -11,7 +11,7 @@ export const providers: Record<string, AvatarProvider> = {
 };
 
 function avatar(src: string, size = 64, fallback = '') {
-    src = src || fallback;
+    src ||= fallback;
     let index = src.indexOf(':');
     if (index === -1) src = fallback;
     index = src.indexOf(':');

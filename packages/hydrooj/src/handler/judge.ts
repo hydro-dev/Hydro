@@ -115,7 +115,7 @@ export async function postJudge(rdoc: RecordDoc) {
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
-    if (body.rid) body.rid = new ObjectID(body.rid);
+    body.rid &&= new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;
     const $set: Partial<RecordDoc> = {};

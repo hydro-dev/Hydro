@@ -119,7 +119,7 @@ class UserLoginHandler extends Handler {
     async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '', tfa = '') {
         if (!system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
-        if (!udoc) udoc = await user.getByUname(domainId, uname);
+        udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
         await Promise.all([
             this.limitRate('user_login', 60, 30, false),
@@ -425,7 +425,7 @@ class OauthCallbackHandler extends Handler {
             }
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
-            r.uname = r.uname || [];
+            r.uname ||= [];
             r.uname.push(String.random(16));
             const mailDomain = r.email.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);

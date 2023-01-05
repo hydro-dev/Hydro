@@ -24,9 +24,9 @@ export default class Hydro {
     language: Record<string, LangConfig>;
 
     constructor(public config) {
-        this.config.detail = this.config.detail ?? true;
-        this.config.cookie = this.config.cookie || '';
-        this.config.last_update_at = this.config.last_update_at || 0;
+        this.config.detail ??= true;
+        this.config.cookie ||= '';
+        this.config.last_update_at ||= 0;
         if (!this.config.server_url.startsWith('http')) this.config.server_url = `http://${this.config.server_url}`;
         if (!this.config.server_url.endsWith('/')) this.config.server_url = `${this.config.server_url}/`;
         this.getLang = this.getLang.bind(this);
@@ -91,11 +91,12 @@ export default class Hydro {
                 files: filenames,
             });
             if (!res.body.links) throw new FormatError('problem not exist');
+            const that = this;
             // eslint-disable-next-line no-inner-declarations
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
                 const w = fs.createWriteStream(path.join(filePath, name));
-                this.get(res.body.links[name]).pipe(w);
+                that.get(res.body.links[name]).pipe(w);
                 await new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
                     w.on('error', (e) => {
@@ -111,7 +112,7 @@ export default class Hydro {
             const tasks = [];
             const queue = new PQueue({ concurrency: 10 });
             for (const name in res.body.links) {
-                tasks.push(queue.add(() => download.call(this, name)));
+                tasks.push(queue.add(() => download(name)));
             }
             queue.start();
             await Promise.all(tasks);

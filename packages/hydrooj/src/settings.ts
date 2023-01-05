@@ -71,7 +71,7 @@ export async function setConfig(key: string, value: any) {
     const t = path.pop();
     let cursor = systemConfig;
     for (const p of path) {
-        if (!cursor[p]) cursor[p] = {};
+        cursor[p] ||= {};
         cursor = cursor[p];
     }
     cursor[t] = value;

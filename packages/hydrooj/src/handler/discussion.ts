@@ -65,8 +65,8 @@ class DiscussionHandler extends Handler {
             }
         }
         if (this.ddoc) {
-            this.ddoc.parentType = this.ddoc.parentType || this.vnode.type;
-            this.ddoc.parentId = this.ddoc.parentId || this.vnode.id;
+            this.ddoc.parentType ||= this.vnode.type;
+            this.ddoc.parentId ||= this.vnode.id;
         }
     }
 }

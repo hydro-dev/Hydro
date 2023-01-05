@@ -8,16 +8,10 @@ const client = new Client({ node: SystemModel.get('elastic-search.url') || 'http
 
 const indexOmit = ['_id', 'docType', 'data', 'additional_file', 'config', 'stats', 'assign'];
 const processDocument = (doc: Partial<ProblemDoc>) => {
-    if (doc.content) {
-        doc.content = doc.content.replace(/[[\]【】()（）]/g, ' ');
-    }
-    if (doc.title) {
-        doc.title = doc.title.replace(/[[\]【】()（）]/g, ' ')
-            .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
-    }
-    if (doc.pid) {
-        doc.pid = doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
-    }
+    doc.content &&= doc.content.replace(/[[\]【】()（）]/g, ' ');
+    doc.title &&= doc.title.replace(/[[\]【】()（）]/g, ' ')
+        .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
+    doc.pid &&= doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
     return _.omit(doc, indexOmit);
 };
 

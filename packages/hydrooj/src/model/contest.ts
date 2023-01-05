@@ -35,18 +35,17 @@ interface AcmDetail extends AcmJournal {
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
-function buildContestRule<T>(def: Partial<ContestRule<T>>, { _originalRule: base }: ContestRule<T> = { _originalRule: {} } as any) {
-    def._originalRule = {
-        scoreboard: def.scoreboard || base.scoreboard,
-        scoreboardRow: def.scoreboardRow || base.scoreboardRow,
-        scoreboardHeader: def.scoreboardHeader || base.scoreboardHeader,
-        stat: def.stat || base.stat,
-    };
-    def.scoreboard = (def.scoreboard || base.scoreboard).bind(def);
-    def.scoreboardHeader = (def.scoreboardHeader || base.scoreboardHeader).bind(def);
-    def.scoreboardRow = (def.scoreboardRow || base.scoreboardRow).bind(def);
-    def.stat = (def.stat || base.stat).bind(def);
-    return def as ContestRule<T>;
+function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
+    const base = baseRule._originalRule || {};
+    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat'];
+    const f = {};
+    const rule = { ...baseRule, ...def };
+    for (const key of funcs) {
+        f[key] = def[key] || base[key];
+        rule[key] = f[key].bind(rule);
+    }
+    rule._originalRule = f;
+    return rule;
 }
 
 const acm = buildContestRule({
@@ -708,24 +707,24 @@ export async function unlockScoreboard(domainId: string, tid: ObjectID) {
     await edit(domainId, tid, { unlocked: true });
 }
 
-export function canViewHiddenScoreboard(tdoc: Tdoc<30>) {
+export function canViewHiddenScoreboard(this: Handler, tdoc: Tdoc<30>) {
     if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowRecord(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowSelfRecord(tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowSelfRecord(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowScoreboard(tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowScoreboard(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;

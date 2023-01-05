@@ -15,7 +15,7 @@ async function getStatus() {
         let desc = '';
         const online = new Date(stat.updateAt).getTime() > new Date().getTime() - 300000;
         if (!online) desc = 'Offline';
-        desc = desc || 'Online';
+        desc ||= 'Online';
         stat.isOnline = online;
         stat.status = desc;
     }

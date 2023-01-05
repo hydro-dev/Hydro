@@ -34,13 +34,13 @@ export function parseLang(config: string): Record<string, LangConfig> {
     }
     for (const key in file) {
         const entry = file[key];
-        entry.highlight = entry.highlight || key;
-        entry.monaco = entry.monaco || entry.highlight;
-        entry.time_limit_rate = entry.time_limit_rate || 1;
-        entry.code_file = entry.code_file || `foo.${key}`;
-        entry.execute = entry.execute || '/w/foo';
+        entry.highlight ||= key;
+        entry.monaco ||= entry.highlight;
+        entry.time_limit_rate ||= 1;
+        entry.code_file ||= `foo.${key}`;
+        entry.execute ||= '/w/foo';
         entry.key = key;
-        entry.hidden = entry.hidden || false;
+        entry.hidden ||= false;
     }
     return file;
 }

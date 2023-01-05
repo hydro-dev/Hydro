@@ -1,5 +1,5 @@
 import {
-    Context, superagent, SystemModel, TokenModel, UserFacingError,
+    Context, Handler, superagent, SystemModel, TokenModel, UserFacingError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -9,7 +9,7 @@ declare module 'hydrooj' {
     }
 }
 
-async function get() {
+async function get(this: Handler) {
     const [appid, url, [state]] = await Promise.all([
         SystemModel.get('login-with-google.id'),
         SystemModel.get('server.url'),
@@ -42,7 +42,7 @@ function decodeJWT(idToken: string) {
     }
 }
 
-async function callback({
+async function callback(this: Handler, {
     state, code, error,
 }) {
     if (error) throw new UserFacingError(error);

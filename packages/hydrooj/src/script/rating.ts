@@ -111,7 +111,7 @@ export async function calcLevel(domainId: string, report: Function) {
     let bulk = coll.initializeUnorderedBulkOp();
     for await (const dudoc of ducur) {
         count++;
-        if (!dudoc.rp) dudoc.rp = null;
+        dudoc.rp ||= null;
         if (dudoc.rp !== last.rp) rank = count;
         bulk.find({ _id: dudoc._id }).updateOne({ $set: { rank } });
         last = dudoc;
