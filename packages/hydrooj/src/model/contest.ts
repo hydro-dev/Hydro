@@ -17,7 +17,7 @@ import { PERM, STATUS } from './builtin';
 import * as document from './document';
 import problem from './problem';
 import RecordModel from './record';
-import user from './user';
+import user, { User } from './user';
 
 interface AcmJournal {
     rid: ObjectID;
@@ -707,24 +707,24 @@ export async function unlockScoreboard(domainId: string, tid: ObjectID) {
     await edit(domainId, tid, { unlocked: true });
 }
 
-export function canViewHiddenScoreboard(this: Handler, tdoc: Tdoc<30>) {
+export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
     if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowSelfRecord(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowSelfRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowScoreboard(this: Handler, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
