@@ -472,16 +472,16 @@ const fun = buildContestRule({
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<FunDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
-            const nowRatio = (doc?.penaltyScore || 1) / (doc?.score || 1);
-            const originalScore = doc?.score;
-            const penaltyScore = doc?.penaltyScore || 0;
+            const nowRatio = (doc.penaltyScore || 1) / (doc.score || 1);
+            const originalScore = doc.score;
+            const penaltyScore = doc.penaltyScore || 0;
             let value = '';
             let hover = '';
             if (doc.rid) {
                 value = penaltyScore.toString();
                 if (penaltyScore > 0 && penaltyScore < originalScore) {
                     value = `${value} (${Math.round(nowRatio * 100)}%)`;
-                    hover = `-${doc?.naccept}`;
+                    hover = `-${doc.naccept}`;
                 }
             }
             row.push({
