@@ -397,7 +397,11 @@ const ledo = buildContestRule({
             row.push({ type: 'string', value: udoc.displayName || '' });
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
-        row.push({ type: 'total_score', value: `${tsdoc.score}${tsdoc.score === tsdoc.originalScore ? ` / ${tsdoc.originalScore}` : ''}` || '0' });
+        row.push({
+            type: 'total_score',
+            value: tsdoc.score || 0,
+            hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
+        });
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             pdict[s.pid].nSubmit++;
@@ -406,7 +410,7 @@ const ledo = buildContestRule({
         for (const pid of tdoc.pids) {
             row.push({
                 type: 'record',
-                value: `${tsddict[pid]?.penaltyScore}${tsddict[pid]?.penaltyScore === tsddict[pid]?.score ? ` / ${tsdoc.score}` : ''}` || '',
+                value: tsddict[pid]?.penaltyScore || '',
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
