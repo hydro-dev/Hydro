@@ -14,15 +14,17 @@ import user from './model/user';
 export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, total?: number) => Promise<any>) {
     const ddocs = await domain.getMulti().toArray();
     for (const i in ddocs) await cb(ddocs[i], +i, ddocs.length);
+    return true;
 }
 
 export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
     const udocs = await user.getMulti().toArray();
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
+    return true;
 }
 
 export async function iterateAllContest(cb: (tdoc: Tdoc) => Promise<any>) {
-    await iterateAllDomain(async (ddoc) => {
+    return await iterateAllDomain(async (ddoc) => {
         const tdocs = await contest.getMulti(ddoc._id, {}).toArray();
         for (const tdoc of tdocs) {
             await cb(tdoc);
@@ -31,7 +33,7 @@ export async function iterateAllContest(cb: (tdoc: Tdoc) => Promise<any>) {
 }
 
 export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
-    await iterateAllDomain(async ({ _id: domainId }) => {
+    return await iterateAllDomain(async ({ _id: domainId }) => {
         const cursor = document.getMultiStatus(domainId, document.TYPE_PROBLEM, filter);
         while (await cursor.hasNext()) {
             const psdoc = await cursor.next();
@@ -54,19 +56,19 @@ export async function iterateAllProblemInDomain(
     const cursor = problem.getMulti(domainId, {}, fields as any);
     const total = await problem.getMulti(domainId, {}).count();
     let i = 0;
-    while (await cursor.hasNext()) {
-        const doc = await cursor.next();
+    for await (const doc of cursor) {
         i++;
         const res = await cb(doc, i, total);
         if (res) await problem.edit(doc.domainId, doc.docId, res);
     }
+    return true;
 }
 
 export async function iterateAllProblem(
     fields: (Field | string)[],
     cb: (pdoc: PartialProblemDoc, current?: number, total?: number) => Promise<any>,
 ) {
-    await iterateAllDomain(async (d) => {
+    return await iterateAllDomain(async (d) => {
         await iterateAllProblemInDomain(d._id, fields, cb);
     });
 }
@@ -77,9 +79,9 @@ export async function iterateAllRecord(
     const total = await RecordModel.coll.count();
     let i = 0;
     const cursor = RecordModel.coll.find().sort('_id', 1);
-    while (await cursor.hasNext()) {
-        const rdoc = await cursor.next();
+    for await (const rdoc of cursor) {
         i++;
         await cb(rdoc, i, total);
     }
+    return true;
 }

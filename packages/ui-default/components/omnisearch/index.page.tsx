@@ -90,7 +90,7 @@ export default new AutoloadPage('omnibar', () => {
     }
     setSearching?.(true);
     [{ pdocs, psdict }, udocs] = await Promise.all([
-      request.get(`/d/${UiContext.domainId}/p?q=${encodeURIComponent(query)}&limit=10`),
+      request.get(`/d/${UiContext.domainId}/p`, { q: query, limit: 10 }),
       api(gql`
         users(search: ${query}) {
           _id

@@ -98,6 +98,9 @@ export default class Editor extends DOMAttachedObject {
       overviewRulerLanes: 0,
       overviewRulerBorder: false,
       fontFamily: UserContext.codeFontFamily,
+      unicodeHighlight: {
+        ambiguousCharacters: language !== 'markdown',
+      },
     };
     if (autoLayout) cfg.automaticLayout = true;
     let prevHeight = 0;

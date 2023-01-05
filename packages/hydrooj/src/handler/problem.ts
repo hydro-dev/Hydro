@@ -148,7 +148,7 @@ export class ProblemMainHandler extends Handler {
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
-        const category = flattenDeep(decodeURIComponent(q).split(' ')
+        const category = flattenDeep(q.split(' ')
             .filter((i) => i.startsWith('category:'))
             .map((i) => i.split('category:')[1]?.split(',')));
         const text = q.split(' ').filter((i) => !i.startsWith('category:')).join(' ');
@@ -294,7 +294,7 @@ export class ProblemMainHandler extends Handler {
 export class ProblemRandomHandler extends Handler {
     @param('q', Types.Content, true)
     async get(domainId: string, qs = '') {
-        const category = flattenDeep(decodeURIComponent(qs).split(' ')
+        const category = flattenDeep(qs.split(' ')
             .filter((i) => i.startsWith('category:'))
             .map((i) => i.split('category:')[1]?.split(',')));
         const q = buildQuery(this.user);

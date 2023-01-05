@@ -50,8 +50,7 @@ const scripts: UpgradeScript[] = [
     async function _27_28() {
         const _FRESH_INSTALL_IGNORE = 1;
         const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-        while (await cursor.hasNext()) {
-            const data = await cursor.next();
+        for await (const data of cursor) {
             const t = Math.exp(-0.15 * (((new Date().getTime() / 1000) - data._id.generationTime) / 3600));
             const rCount = await discussion.getMultiReply(data.domainId, data.docId).count();
             const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
@@ -61,7 +60,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _28_29() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(['content', 'html'], async (pdoc) => {
+        return await iterateAllProblem(['content', 'html'], async (pdoc) => {
             try {
                 const parsed = JSON.parse(pdoc.content);
                 if (parsed instanceof Array) {
@@ -76,18 +75,15 @@ const scripts: UpgradeScript[] = [
                 await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(res) });
             } catch { }
         });
-        return true;
     },
     async function _29_30() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
-        return true;
+        return await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
     },
     // Add send_message priv to user
     async function _30_31() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllUser((udoc) => user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE));
-        return true;
+        return await iterateAllUser((udoc) => user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE));
     },
     null,
     // Write builtin users to database
@@ -102,16 +98,14 @@ const scripts: UpgradeScript[] = [
     },
     async function _33_34() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(['content'], async (pdoc) => {
+        return await iterateAllProblem(['content'], async (pdoc) => {
             if (typeof pdoc.content !== 'string') return;
             await problem.edit(pdoc.domainId, pdoc.docId, { content: pdoc.content.replace(/%file%:\/\//g, 'file://') });
         });
-        return true;
     },
     async function _34_35() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain((ddoc) => domain.edit(ddoc._id, { lower: ddoc._id.toLowerCase() }));
-        return true;
+        return await iterateAllDomain((ddoc) => domain.edit(ddoc._id, { lower: ddoc._id.toLowerCase() }));
     },
     async function _35_36() {
         const _FRESH_INSTALL_IGNORE = 1;
@@ -120,9 +114,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _36_37() {
         const _FRESH_INSTALL_IGNORE = 1;
-        const cur = document.collStatus.find();
-        while (await cur.hasNext()) {
-            const doc = await cur.next();
+        for await (const doc of document.collStatus.find()) {
             await document.collStatus.deleteMany({
                 ...pick(doc, ['docId', 'domainId', 'uid', 'docType']),
                 _id: { $gt: doc._id },
@@ -132,7 +124,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _37_38() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
+        return await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
             logger.info('%s/%s', pdoc.domainId, pdoc.docId);
             if (typeof pdoc.config !== 'string') return;
             if (!pdoc.config.includes('type: subjective')) return;
@@ -141,26 +133,23 @@ const scripts: UpgradeScript[] = [
                 Buffer.from(pdoc.config.replace('type: subjective', 'type: objective')),
             );
         });
-        return true;
     },
     async function _38_39() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             ddoc.roles.root = '-1';
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
-        return true;
     },
     async function _39_40() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain(async ({ _id }) => {
+        return await iterateAllDomain(async ({ _id }) => {
             const ddocs = await discussion.getMulti(_id, { parentType: document.TYPE_PROBLEM }).toArray();
             for (const ddoc of ddocs) {
                 const pdoc = await problem.get(_id, ddoc.parentId as any);
                 await document.set(_id, document.TYPE_DISCUSSION, ddoc.docId, { parentId: pdoc.docId });
             }
         });
-        return true;
     },
     async function _40_41() {
         const _FRESH_INSTALL_IGNORE = 1;
@@ -174,7 +163,7 @@ const scripts: UpgradeScript[] = [
     },
     async function _41_42() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             const cursor = discussion.getMulti(ddoc._id, { parentType: document.TYPE_CONTEST });
             while (await cursor.hasNext()) {
                 const doc = await cursor.next();
@@ -182,7 +171,6 @@ const scripts: UpgradeScript[] = [
                 if (!tdoc) await discussion.del(ddoc._id, doc.docId);
             }
         });
-        return true;
     },
     async function _42_43() {
         const _FRESH_INSTALL_IGNORE = 1;
@@ -190,7 +178,7 @@ const scripts: UpgradeScript[] = [
             i.status = i.accept ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
             return i;
         };
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             const tdocs = await contest.getMulti(ddoc._id, { rule: 'acm' }).toArray();
             for (const tdoc of tdocs) {
                 const tsdocs = await contest.getMultiStatus(ddoc._id, { docId: tdoc.docId }).toArray();
@@ -204,7 +192,6 @@ const scripts: UpgradeScript[] = [
                 }
             }
         });
-        return true;
     },
     async function _43_44() {
         const _FRESH_INSTALL_IGNORE = 1;
@@ -212,7 +199,7 @@ const scripts: UpgradeScript[] = [
             i.status = i.accept ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
             return i;
         };
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             const tdocs = await contest.getMulti(ddoc._id, { rule: { $ne: 'acm' } }).toArray();
             for (const tdoc of tdocs) {
                 const tsdocs = await contest.getMultiStatus(ddoc._id, { docId: tdoc.docId }).toArray();
@@ -226,16 +213,14 @@ const scripts: UpgradeScript[] = [
                 }
             }
         });
-        return true;
     },
     async function _44_45() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllUser((udoc) => user.setById(udoc._id, { ip: [udoc.regip] }, { regip: '' }));
-        return true;
+        return await iterateAllUser((udoc) => user.setById(udoc._id, { ip: [udoc.regip] }, { regip: '' }));
     },
     async function _45_46() {
         const _FRESH_INSTALL_IGNORE = 1;
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             const ddocs = await discussion.getMulti(ddoc._id, {
                 docType: document.TYPE_DISCUSSION,
                 parentType: { $in: [document.TYPE_CONTEST, 60, document.TYPE_TRAINING] },
@@ -247,7 +232,6 @@ const scripts: UpgradeScript[] = [
                 }
             }
         });
-        return true;
     },
     null,
     async function _47_48() {
@@ -291,8 +275,7 @@ const scripts: UpgradeScript[] = [
             return await problem.get(domainId, docId);
         }
         const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
-        while (await cursor.hasNext()) {
-            const doc = await cursor.next();
+        for await (const doc of cursor) {
             const pids = [];
             let mark = false;
             for (const pid of doc.pids) {
@@ -336,8 +319,7 @@ const scripts: UpgradeScript[] = [
     async function _52_53() {
         const _FRESH_INSTALL_IGNORE = 1;
         const cursor = db.collection('document').find({ docType: document.TYPE_CONTEST });
-        while (await cursor.hasNext()) {
-            const tdoc = await cursor.next();
+        for await (const tdoc of cursor) {
             const pdocs = await problem.getMulti(tdoc.domainId, { docId: { $in: tdoc.pids } }).toArray();
             if (!pdocs.filter((i) => i.reference).length) continue;
             const tsdocs = await contest.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
@@ -505,14 +487,13 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _65_66() {
-        await iterateAllDomain(async (ddoc) => {
+        return await iterateAllDomain(async (ddoc) => {
             Object.keys(ddoc.roles).forEach((role) => {
                 if (['guest', 'root'].includes(role)) return;
                 ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
             });
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
-        return true;
     },
     async function _66_67() {
         const [
@@ -544,8 +525,7 @@ const scripts: UpgradeScript[] = [
     async function _67_68() {
         const _FRESH_INSTALL_IGNORE = 1;
         const rdocs = RecordModel.coll.find({ code: /^@@hydro_submission_file@@/ });
-        let rdoc;
-        while (rdoc = await rdocs.next()) { // eslint-disable-line
+        for await (const rdoc of rdocs) {
             await RecordModel.update(rdoc.domainId, rdoc._id, {
                 files: { code: rdoc.code.split('@@hydro_submission_file@@')[1] },
                 code: '',
@@ -565,17 +545,19 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _70_71() {
-        await iterateAllContest(async (tdoc) => {
+        return await iterateAllContest(async (tdoc) => {
             if (['acm', 'homework'].includes(tdoc.rule)) {
                 await contest.recalcStatus(tdoc.domainId, tdoc.docId);
             }
         });
-        return true;
     },
     async function _71_72() {
-        await iterateAllContest(async (tdoc) => {
+        return await iterateAllContest(async (tdoc) => {
             if (tdoc.rule === 'homework') await contest.recalcStatus(tdoc.domainId, tdoc.docId);
         });
+    },
+    async function _72_73() {
+        await db.collection('oplog').updateMany({}, { $unset: { 'args.verifyPassword': '' } });
         return true;
     },
 ];
