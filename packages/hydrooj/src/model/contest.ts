@@ -372,12 +372,12 @@ const fun = buildContestRule({
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal: AcmJournal[]) {
-        function calcFunNowRatio(naccept :number, isAccept: boolean) {
+        function calcFunNowRatio(naccept: number, isAccept: boolean) {
             const ratioTime = Math.max(0, naccept - +!isAccept);
             return Math.max(0.7, 0.95 ** ratioTime);
         }
 
-        function calcFunScore(naccept :number, beforeScore :number, isAccept: boolean) {
+        function calcFunScore(naccept: number, beforeScore: number, isAccept: boolean) {
             return Math.floor(beforeScore * calcFunNowRatio(naccept, isAccept));
         }
 
