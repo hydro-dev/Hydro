@@ -560,6 +560,11 @@ const scripts: UpgradeScript[] = [
         await db.collection('oplog').updateMany({}, { $unset: { 'args.verifyPassword': '' } });
         return true;
     },
+    async function _73_74() {
+        await db.collection('document').updateMany({ docType: document.TYPE_DISCUSSION }, { $unset: { sort: '' } });
+        await ScheduleModel.deleteMany({ subType: 'discussion.sort' });
+        return true;
+    },
 ];
 
 export default scripts;

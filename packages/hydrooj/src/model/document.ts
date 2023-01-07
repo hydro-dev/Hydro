@@ -433,8 +433,8 @@ export async function apply(ctx: Context) {
         // For problem solution
         { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
         // For discussion
-        { key: { domainId: 1, docType: 1, pin: -1, sort: -1, docId: -1 }, name: 'discussionSort', sparse: true },
-        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, pin: -1, sort: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
+        { key: { domainId: 1, docType: 1, pin: -1, docId: -1 }, name: 'discussionSort', sparse: true },
+        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, pin: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
         // Hidden doc
         { key: { domainId: 1, docType: 1, hidden: 1, docId: -1 }, name: 'hiddenDoc', sparse: true },
         // For contest

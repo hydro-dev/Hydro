@@ -1,5 +1,4 @@
 import { omit } from 'lodash';
-import moment from 'moment-timezone';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
@@ -13,7 +12,6 @@ import { buildProjection } from '../utils';
 import * as contest from './contest';
 import * as document from './document';
 import problem from './problem';
-import ScheduleModel from './schedule';
 import * as training from './training';
 
 export interface DiscussionDoc extends Document { }
@@ -119,7 +117,7 @@ export function count(domainId: string, query: FilterQuery<DiscussionDoc>) {
 
 export function getMulti(domainId: string, query: FilterQuery<DiscussionDoc> = {}, projection = PROJECTION_LIST) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
-        .sort({ pin: -1, sort: -1 })
+        .sort({ pin: -1, docId: -1 })
         .project(buildProjection(projection));
 }
 
@@ -314,50 +312,21 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
     return res;
 }
 
-bus.on('problem/delete', async (domainId, docId) => {
-    const dids = await document.getMulti(
-        domainId, document.TYPE_DISCUSSION,
-        { parentType: document.TYPE_PROBLEM, parentId: docId },
-    ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
-    const drids = await document.getMulti(
-        domainId, document.TYPE_DISCUSSION_REPLY,
-        { parentType: document.TYPE_DISCUSSION, parentId: { $in: dids } },
-    ).project({ docId: 1 }).map((drdoc) => drdoc.docId).toArray();
-    return await Promise.all([
-        document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
-        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
-        document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
-    ]);
-});
-
-const t = Math.exp(-0.15);
-
-async function updateSort() {
-    const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        // eslint-disable-next-line no-await-in-loop
-        const data = await cursor.next();
-        if (!data) return;
-        // eslint-disable-next-line no-await-in-loop
-        const rCount = await getMultiReply(data.domainId, data.docId).count();
-        const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
-        // eslint-disable-next-line no-await-in-loop
-        await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
-    }
-}
-
 export function apply(ctx: Context) {
-    ctx.using(['worker'], async ({ worker }) => {
-        worker.addHandler('discussion.sort', updateSort);
-        if (!await ScheduleModel.count({ type: 'schedule', subType: 'discussion.sort' })) {
-            await ScheduleModel.add({
-                type: 'schedule',
-                subType: 'discussion.sort',
-                executeAfter: moment().minute(0).second(0).millisecond(0).toDate(),
-                interval: [1, 'hour'],
-            });
-        }
+    ctx.on('problem/delete', async (domainId, docId) => {
+        const dids = await document.getMulti(
+            domainId, document.TYPE_DISCUSSION,
+            { parentType: document.TYPE_PROBLEM, parentId: docId },
+        ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
+        const drids = await document.getMulti(
+            domainId, document.TYPE_DISCUSSION_REPLY,
+            { parentType: document.TYPE_DISCUSSION, parentId: { $in: dids } },
+        ).project({ docId: 1 }).map((drdoc) => drdoc.docId).toArray();
+        return await Promise.all([
+            document.deleteMultiStatus(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
+            document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
+            document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
+        ]);
     });
 }
 
