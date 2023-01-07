@@ -708,6 +708,7 @@ export async function unlockScoreboard(domainId: string, tid: ObjectID) {
 }
 
 export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
+    if (this.user.own(tdoc)) return true;
     if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
