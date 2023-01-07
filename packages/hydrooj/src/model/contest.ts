@@ -364,20 +364,24 @@ const ledo = buildContestRule({
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
     stat(tdoc, journal) {
+        const ntry = Counter<number>();
         const detail = {};
+        for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            const vaild = ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status);
+            if (vaild) ntry[j.pid]++;
+            const penaltyScore = vaild ? Math.round(Math.max(0.7, 0.95 ** (ntry[j.pid] - 1)) * j.score) : 0;
+            if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
+                detail[j.pid] = {
+                    ...j,
+                    penaltyScore,
+                    ntry: ntry[j.pid] - 1,
+                };
+            }
+        }
         let score = 0;
         let originalScore = 0;
-        for (const pid of tdoc.pids) {
-            journal.filter((i) => pid === i.pid).forEach((j, id) => {
-                const penaltyScore = Math.round(Math.max(0.7, 0.95 ** id) * j.score);
-                if (!detail[pid] || detail[pid].penaltyScore < penaltyScore) {
-                    detail[pid] = {
-                        ...j,
-                        penaltyScore,
-                        ntry: id,
-                    };
-                }
-            });
+        for (const pid in tdoc.pids) {
+            if (!detail[pid]) continue;
             score += detail[pid].penaltyScore;
             originalScore += detail[pid].score;
         }
