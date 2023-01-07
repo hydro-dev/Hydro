@@ -96,9 +96,14 @@ export class FSDownloadHandler extends Handler {
             target,
             size: file?.size || 0,
         });
-        this.response.redirect = await storage.signDownloadLink(
-            target, noDisposition ? undefined : filename, false, 'user',
-        );
+        try {
+            this.response.redirect = await storage.signDownloadLink(
+                target, noDisposition ? undefined : filename, false, 'user',
+            );
+        } catch (e) {
+            if (e.message.includes('Invalid path')) throw new NotFoundError(filename);
+            throw e;
+        }
     }
 }
 
