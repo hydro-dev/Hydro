@@ -1,3 +1,4 @@
+import path from 'path';
 import yaml from 'js-yaml';
 import { ObjectID } from 'mongodb';
 import { camelCase } from '@hydrooj/utils/lib/utils';
@@ -20,6 +21,7 @@ import domain from '../model/domain';
 import message from '../model/message';
 import ProblemModel from '../model/problem';
 import * as setting from '../model/setting';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import token from '../model/token';
 import * as training from '../model/training';
@@ -288,6 +290,23 @@ class HomeSettingsHandler extends Handler {
     }
 }
 
+class HomeAvatarHandler extends Handler {
+    @param('avatar', Types.String, true)
+    async post(domainId: string, input: string) {
+        if (input) await user.setById(this.user._id, { avatar: input });
+        else if (this.request.files.file) {
+            const file = this.request.files.file;
+            if (file.size > 8 * 1024 * 1024) throw new ValidationError('file');
+            const ext = path.extname(file.originalFilename);
+            if (!['.jpg', '.jpeg', '.png'].includes(ext)) throw new ValidationError('file');
+            await storage.put(`user/${this.user._id}/.avatar${ext}`, file.filepath, this.user._id);
+            // TODO: cached avatar
+            await user.setById(this.user._id, { avatar: `url:/file/${this.user._id}/.avatar${ext}` });
+        } else throw new ValidationError('avatar');
+        this.back();
+    }
+}
+
 class UserChangemailWithCodeHandler extends Handler {
     @param('code', Types.String)
     async get(domainId: string, code: string) {
@@ -444,6 +463,7 @@ export async function apply(ctx: Context) {
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_settings', '/home/settings/:category', HomeSettingsHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_avatar', '/home/avatar', HomeAvatarHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
     if (system.get('server.message')) ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
