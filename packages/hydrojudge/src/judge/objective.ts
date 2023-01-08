@@ -30,7 +30,7 @@ export async function judge({
     }
     let totalScore = 0;
     let totalStatus = 0;
-    if (!Object.keys(answers).length) throw new FormatError('Invalid standard answer.');
+    if (!Object.keys(config.answers).length) throw new FormatError('Invalid standard answer.');
     for (const key in config.answers) {
         const ansInfo = config.answers[key] as [string | string[], number] | Record<string, number>;
         // eslint-disable-next-line @typescript-eslint/no-loop-func
