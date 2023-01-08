@@ -79,11 +79,11 @@ class SolutionModel {
     }
 
     static async getListStatus(domainId: string, psids: ObjectID[], uid: number) {
-        const result: any = {};
+        const result: Record<string, { docId: ObjectID, vote: number }> = {};
         const res = await document.getMultiStatus(
-            domainId, document.TYPE_PROBLEM_SOLUTION, { uid, psid: { $in: psids } },
-        ).toArray();
-        for (const i of res) result[i.psid] = i;
+            domainId, document.TYPE_PROBLEM_SOLUTION, { uid, docId: { $in: psids } },
+        ).project({ docId: 1, vote: 1 }).toArray();
+        for (const i of res) result[i.docId] = i;
         return result;
     }
 }
