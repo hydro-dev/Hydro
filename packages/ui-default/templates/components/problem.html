@@ -6,11 +6,11 @@
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
 {%- if pdoc.domainId !== handler.args.domainId -%}<b>{{ pdoc.domainId }}#</b>{%- endif -%}
-{% if page_name == 'contest_problemlist' and tdoc %}
+{%- if page_name == 'contest_problemlist' and tdoc -%}
   <b>{{ String.fromCharCode(65 + tdoc.pids.indexOf(pdoc.docId)) if tdoc.pids.includes(pdoc.docId) else '#' }}</b>
-{% else %}
+{%- else -%}
   <b>{{ pdoc.pid or ('P'+pdoc.docId if pdoc.domainId === handler.args.domainId else pdoc.docId) }}</b>
-{% endif %}
+{%- endif -%}
 {%- if not small -%}&nbsp;&nbsp;{{ pdoc.title }}{%- endif -%}
 {%- if not invalid -%}
   </a>
