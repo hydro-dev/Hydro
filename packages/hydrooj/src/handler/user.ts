@@ -289,11 +289,12 @@ class UserLostPassHandler extends Handler {
             system.get('session.unsaved_expire_seconds'),
             { uid: udoc._id },
         );
+        const prefix = this.domain.host
+            ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
+            : system.get('server.url');
         const m = await this.renderHTML('user_lostpass_mail.html', {
-            url: `lostpass/${tid}`,
-            url_prefix: this.domain.host
-                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
-                : system.get('server.url'),
+            url: `/lostpass/${tid}`,
+            url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
             uname: udoc.uname,
         });
         await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);
