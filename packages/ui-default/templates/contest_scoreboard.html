@@ -102,7 +102,7 @@
                   {%- endif -%}
                 {%- endfor -%}
               {%- else -%}
-                {{ column.value|string|nl2br|safe }}
+                <span data-tooltip="{{ column.hover }}">{{ column.value|string|nl2br|safe }}</span>
               {%- endif -%}
               </td>
             {%- endfor -%}
