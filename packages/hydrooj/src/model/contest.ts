@@ -380,7 +380,7 @@ const ledo = buildContestRule({
         }
         let score = 0;
         let originalScore = 0;
-        for (const pid in tdoc.pids) {
+        for (const pid of tdoc.pids) {
             if (!detail[pid]) continue;
             score += detail[pid].penaltyScore;
             originalScore += detail[pid].score;
