@@ -162,4 +162,24 @@
     <p>如果您确信您的账号被盗或者忘记了账号和/或密码，请及时<a href="{{ url('user_lostpass') }}">{{ _('Reset Password or Find Username') }}</a>。</p>
   </div>
 </div>
+<div class="section" data-heading-extract-to="#menu-item-wiki_help">
+  <div class="section__header">
+    <h1 class="section__title" id="markdown" data-heading>{{ _('Markdown') }}</h1>
+  </div>
+  <div class="section__body typo">
+    <p>Hydro 的 Markdown 区域使用 <a href="http://commonmark.org/help/">CommonMark</a> 语法，并扩展了以下功能：</p>
+    <ul>
+    <li>基于 <a href="https://onemathematicalcat.org/MathJaxDocumentation/TeXSyntax.htm">Katex</a> 语法的数学公式支持。</li>
+    <li>使用 <code>@[](/user/uid)</code> 提及用户。</li>
+    <li>使用 <code>==text==</code> 高亮文本。</li>
+    <li>使用 <code>![alt](url =100x100)</code> 设置嵌入图片的大小。</li>
+    <li>使用 <code>@[video](https://.../a.mp4)</code> 嵌入视频文件。</li>
+    <li>使用 <code>@[bilibili](BVxxx)</code> 嵌入站外视频。</li>
+    <li>使用 <code>@[pdf](https://.../a.pdf)</code> 嵌入 PDF 文件。</li>
+    <li>在题目/比赛/作业/训练中，可使用 <code>file://文件名</code> 的链接格式引用对应的附件。（推荐）</li>
+    <li>支持使用一部分 HTML 标签。</li>
+    </ul>  
+  </div>
+</div>
+
 {% endblock %}
