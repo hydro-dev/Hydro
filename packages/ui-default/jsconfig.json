@@ -6,7 +6,7 @@
     "resolveJsonModule": true,
     "jsx": "react",
     "allowSyntheticDefaultImports": true,
-    "target": "ES2020",
+    "target": "ESNext",
     "baseUrl": ".",
     "lib": [
       "ES2020"
