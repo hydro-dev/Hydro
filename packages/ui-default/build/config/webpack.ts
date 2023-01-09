@@ -128,7 +128,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
               const p = pathData.module.resource.replace(/\\/g, '/');
               const filename = p.split('/').pop();
               if (p.includes('node_modules')) {
-                const extra = p.split('node_modules')[1];
+                const extra = p.split('node_modules/').pop();
                 const moduleName = extra.split('/')[0];
                 if (extra.includes('@fontsource')) {
                   return `fonts/${filename}?[hash:6]`;
@@ -198,7 +198,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
             test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
             priority: -10,
             name(module) {
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+              const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
               if (packageName === 'monaco-editor-nls') {
                 return `i.monaco.${module.userRequest.split('/').pop().split('.')[0]}`;
               }

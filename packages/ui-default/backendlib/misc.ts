@@ -1,8 +1,7 @@
 import AnsiUp from 'ansi_up';
-import moment from 'moment-timezone';
-import { ObjectID } from 'mongodb';
+import { moment, ObjectID } from 'hydrooj';
 
-export { size, formatSeconds } from '@hydrooj/utils/lib/utils';
+export { size, formatSeconds } from 'hydrooj';
 
 const AU = new AnsiUp();
 

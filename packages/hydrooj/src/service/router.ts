@@ -1,6 +1,5 @@
 import { IncomingMessage } from 'http';
 import KoaRouter from 'koa-router';
-import parseUrl from 'parseurl';
 import { pathToRegexp } from 'path-to-regexp';
 import type WebSocket from 'ws';
 import type { KoaContext } from './server';
@@ -20,7 +19,7 @@ export class WebSocketLayer {
     }
 
     accept(socket: WebSocket, request: IncomingMessage, ctx: KoaContext) {
-        if (!this.regexp.test(parseUrl(request).pathname)) return false;
+        if (!this.regexp.test(new URL(request.url, `http://${request.headers.host}`).pathname)) return false;
         this.clients.add(socket);
         socket.on('close', () => {
             this.clients.delete(socket);

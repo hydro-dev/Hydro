@@ -1,9 +1,11 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const child = require('child_process');
 
-if (fs.existsSync('plugins/patch-package/package.json') && fs.existsSync('node_modules/patch-package/package.json')) {
-    child.execSync('npx patch-package --patch-dir=plugins/patch-package/patches', { stdio: 'inherit' });
+if (process.env.npm_execpath.includes('yarn')) {
+    if (fs.existsSync('plugins/patch-package/package.json') && fs.existsSync('node_modules/patch-package/package.json')) {
+        child.execSync('npx patch-package --patch-dir=plugins/patch-package/patches', { stdio: 'inherit' });
+    }
 }
 
 const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
@@ -96,9 +98,23 @@ const UIConfig = {
     },
 };
 
+const nm = path.resolve(__dirname, '../node_modules');
+fs.ensureDirSync(path.join(nm, '@hydrooj'));
+try {
+    fs.symlinkSync(
+        path.join(process.cwd(), 'packages/ui-default'),
+        path.join(nm, '@hydrooj/ui-default'),
+        'dir',
+    );
+} catch (e) { }
 for (const package of modules) {
     const basedir = path.resolve(process.cwd(), package);
     const files = fs.readdirSync(basedir);
+    try {
+        // eslint-disable-next-line import/no-dynamic-require
+        const name = require(path.join(basedir, 'package.json')).name;
+        fs.symlinkSync(basedir, path.join(nm, name), 'dir');
+    } catch (e) { }
     if (!files.includes('src') && !files.filter((i) => i.endsWith('.ts')).length && package !== 'packages/utils') continue;
     config.references.push({ path: package });
     const expectedConfig = JSON.stringify((files.includes('src') ? configSrc : configFlat)(package));
