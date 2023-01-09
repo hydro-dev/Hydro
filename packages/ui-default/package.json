@@ -10,9 +10,11 @@
   "scripts": {
     "lint": "eslint"
   },
+  "hydro": {
+    "cli": false
+  },
   "devDependencies": {
     "@blueprintjs/core": "4.13.0",
-    "@blueprintjs/select": "4.8.12",
     "@fontsource/dm-mono": "^4.5.10",
     "@fontsource/fira-code": "^4.5.12",
     "@fontsource/inconsolata": "^4.5.9",
@@ -118,7 +120,6 @@
     "markdown-it-mark": "^3.0.1",
     "markdown-it-merge-cells": "^2.0.0",
     "markdown-it-table-of-contents": "^0.6.0",
-    "mongodb": "^3.7.3",
     "nunjucks": "^3.2.3",
     "schemastery-jsonschema": "^1.0.3",
     "streamsaver": "^2.0.6",

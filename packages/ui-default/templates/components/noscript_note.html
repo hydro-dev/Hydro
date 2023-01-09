@@ -1,5 +1,5 @@
 {% macro render() %}
-{% if not isIE(handler.request.headers['user-agent']) %}
+{% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
 <noscript><div class="section__body no-padding">
   <blockquote class="warn">
     <p>{{ _('This page needs JavaScript to work.') }}</p>

@@ -3,8 +3,8 @@
 import crypto from 'crypto';
 import esbuild from 'esbuild';
 import {
-  ContestModel, Context, fs, Handler, Logger, ObjectID, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, UiContextBase, UserModel,
+  ContestModel, Context, fs, Handler, Logger, ObjectID, param, PERM, PRIV, ProblemModel, Schema,
+  SettingModel, SystemModel, SystemSettings, Types, UiContextBase, UserModel,
 } from 'hydrooj';
 import { debounce } from 'lodash';
 import { tmpdir } from 'os';
@@ -135,13 +135,23 @@ class SetThemeHandler extends Handler {
   }
 }
 
+class LegacyModeHandler extends Handler {
+  noCheckPermView = true;
+
+  @param('legacy', Types.Boolean)
+  async get(domainId: string, legacy = false) {
+    this.session.legacy = legacy;
+    this.back();
+  }
+}
+
 class MarkdownHandler extends Handler {
   noCheckPermView = true;
 
-  async post({ text, html = false, inline = false }) {
+  async post({ text, inline = false }) {
     this.response.body = inline
-      ? markdown.renderInline(text, html)
-      : markdown.render(text, html);
+      ? markdown.renderInline(text)
+      : markdown.render(text);
     this.response.type = 'text/html';
     this.response.status = 200;
   }
@@ -247,6 +257,7 @@ export function apply(ctx: Context) {
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
+  ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
