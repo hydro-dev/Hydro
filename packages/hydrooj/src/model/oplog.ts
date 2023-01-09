@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { ObjectID } from 'mongodb';
 import { OplogDoc } from '../interface';
 import * as bus from '../service/bus';
@@ -16,10 +17,28 @@ export async function add(data: Partial<OplogDoc> & { type: string }): Promise<O
     return res.insertedId;
 }
 
+function safeKeys(data: any) {
+    if (['string', 'number', 'boolean'].includes(typeof data)) return data;
+    if (data instanceof Array) data.forEach(safeKeys);
+    else if (data instanceof ObjectID) return data;
+    else if (data instanceof Object) {
+        for (const key in data) {
+            if (['password', 'verifyPassword'].includes(key)) {
+                delete data[key];
+                continue;
+            }
+            safeKeys(data[key]);
+            if (key.includes('$') || key.includes('.')) {
+                data[key.replace(/[$.]/g, '_')] = data[key];
+                delete data[key];
+            }
+        }
+    }
+    return data;
+}
+
 export async function log<T extends Handler>(handler: T, type: string, data: any) {
-    const args = { ...handler.args };
-    delete args.password;
-    delete args.verifyPassword;
+    const args = safeKeys(cloneDeep(handler.args));
     await bus.parallel('oplog/log', type, handler, args, data);
     const res = await coll.insertOne({
         ...data,
