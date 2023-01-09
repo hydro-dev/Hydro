@@ -41,7 +41,6 @@
                required:true
              }) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="hidden" name="operation" value="change_mail">
             <input type="submit" class="rounded primary button" value="{{ _('Change Email') }}">
           </div></div>
@@ -78,7 +77,6 @@
                required:true
              }) }}
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
             <input type="hidden" name="operation" value="change_password">
             <input type="submit" class="rounded primary button" value="{{ _('Change Password') }}">
           </div></div>
@@ -135,7 +133,6 @@
                 <form method="post">
                   <input type="hidden" name="operation" value="delete_token">
                   <input type="hidden" name="tokenDigest" value="{{ session._id }}">
-                  <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
                   <input type="submit" value="{{ _('Logout This Session') }}" class="rounded button">
                 </form>
               </div>
@@ -148,7 +145,6 @@
       <div class="section__body">
         <form method="post">
           <input type="hidden" name="operation" value="delete_all_tokens">
-          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <input type="submit" value="{{ _('Logout All Sessions') }}" class="primary rounded button">
         </form>
         {% if geoipProvider %}

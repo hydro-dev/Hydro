@@ -63,7 +63,6 @@
           <div><textarea data-editor{% if page_name == 'problem_edit' %} autofocus{% endif %} class="textbox auto-resize nojs--hide"></textarea></div>
           <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
           <div class="row"><div class="columns">
-            <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           {% if page_name == 'problem_edit' %}
             <button type="submit" class="rounded primary button">
               {{ _('Update') }}

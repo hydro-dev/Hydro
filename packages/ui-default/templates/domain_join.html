@@ -13,7 +13,6 @@
       </div>
       <div class="section__body typo">
         <form method="post">
-          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         {% if joinSettings['method'] == model.domain.JOIN_METHOD_CODE %}
           {{ form.form_text({
                columns:None,

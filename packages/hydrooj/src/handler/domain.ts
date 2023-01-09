@@ -193,7 +193,6 @@ class DomainPermissionHandler extends ManageHandler {
     @requireSudo
     async post({ domainId }) {
         const roles = {};
-        delete this.request.body.csrfToken;
         for (const role in this.request.body) {
             const perms = this.request.body[role] instanceof Array
                 ? this.request.body[role]

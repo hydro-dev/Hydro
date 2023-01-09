@@ -33,18 +33,14 @@
         <ol class="menu">
           <li class="menu__item">
             <form method="post">
-              <input type="hidden" name="operation" value="rejudge">
-              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-              <button type="submit" class="menu__link">
+              <button type="submit" name="operation" value="rejudge" class="menu__link">
                 <span class="icon icon-refresh"></span> {{ _('Rejudge') }}
               </button>
             </form>
           </li>
           <li class="menu__item">
             <form method="post">
-              <input type="hidden" name="operation" value="cancel">
-              <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-              <button type="submit" class="menu__link">
+              <button type="submit" name="operation" value="cancel" class="menu__link">
                 <span class="icon icon-close"></span> {{ _('Cancel Score') }}
               </button>
             </form>

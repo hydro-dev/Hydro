@@ -27,7 +27,6 @@
     {% if handler.user.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <form action="{{ url('homework_detail', tid=tdoc.docId) }}" method="POST">
           <input type="hidden" name="operation" value="attend">
-          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <button class="menu__link" type="submit">
             <span class="icon icon-add"></span> {{ _('Claim Homework') }}
           </button>

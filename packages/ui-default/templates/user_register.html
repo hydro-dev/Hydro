@@ -13,7 +13,6 @@
       <div class="row"><div class="columns">
         <div class="text-center">
           {{ captcha|safe }}
-          <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
           <input id="submit" type="submit" value="{{ _('Send Verification Email') }}" class="inverse expanded rounded primary button">
         </div>
       </div></div>
