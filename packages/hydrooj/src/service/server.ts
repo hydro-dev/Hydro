@@ -254,16 +254,18 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
 
         const name = HandlerClass.name.replace(/Handler$/, '');
         const steps = [
-            'init', 'handler/init', `handler/before-prepare/${name}`, 'handler/before-prepare',
-            'log/__prepare', '__prepare', '_prepare', 'prepare',
-            'log/__prepareDone', `handler/before/${name}`, 'handler/before',
+            'init', 'handler/init',
+            `handler/before-prepare/${name}#${method}`, `handler/before-prepare/${name}`, 'handler/before-prepare',
+            'log/__prepare', '__prepare', '_prepare', 'prepare', 'log/__prepareDone',
+            `handler/before/${name}#${method}`, `handler/before/${name}`, 'handler/before',
             'log/__method', 'all', method, 'log/__methodDone',
             ...operation ? [
                 `handler/before-operation/${name}`, 'handler/before-operation',
                 `post${operation}`, 'log/__operationDone',
             ] : [], 'after',
-            `handler/after/${name}`, 'handler/after', 'cleanup',
-            `handler/finish/${name}`, 'handler/finish',
+            `handler/after/${name}#${method}`, `handler/after/${name}`, 'handler/after',
+            'cleanup',
+            `handler/finish/${name}#${method}`, `handler/finish/${name}`, 'handler/finish',
         ];
 
         let current = 0;
