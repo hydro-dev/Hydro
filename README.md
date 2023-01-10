@@ -40,6 +40,30 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.5.2 / UI 4.45.1
+- core: 添加乐多赛支持
+- vjudge: 移除 puppeteer 相关依赖
+- judge: 修复客观题未设置答案导致评测结果不返回的问题
+- ui: 默认移除首页右侧搜索模块
+- ui: 添加站内头像上传模块
+- core: 允许比赛创建者查看隐藏的计分板
+- core: 讨论更改为按照创建时间排序
+- ui: 修复题解投票回显
+- core: 修复找回密码链接合成错误的问题
+- judge: 修复文件 IO 题目编译输出限制过小的问题
+- core: 修复 `%` 作为关键词会导致题目搜索出错的问题
+- core: 修复比赛题目列表下方提交记录模块不显示的问题
+- ui: 修复讨论区部分表情预设 ID 和实际图像不匹配的问题
+- install: 默认设置 vm.swappiness=1 以提高性能
+- ui: 允许普通用户在设置了查询条件时按页翻阅评测记录
+- ui: 提交记录列表添加取消成绩按钮
+- core: 修复特定情况下访问日志无法记录的问题
+- workspace: 支持 pnpm
+- workspace: 移除 mocha
+- core: 支持使用形如 `handler/before/Name#method` 的筛选
+- judge: 性能优化
+- ui: 评测记录列表点击重测时页面不再刷新
+
 ### Hydro 4.5.1 / UI 4.45.0
 - ui: 支持全局快捷搜索
 - core: problem_list: 支持 limit 参数
