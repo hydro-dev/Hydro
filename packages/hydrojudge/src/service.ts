@@ -4,7 +4,6 @@ declare module 'hydrooj' {
     interface SystemKeys {
         'hydrojudge.cache_dir': string;
         'hydrojudge.tmp_dir': string;
-        'hydrojudge.tmpfs_size': string;
         'hydrojudge.sandbox_host': string;
         'hydrojudge.memoryMax': string;
         'hydrojudge.testcases_max': number;

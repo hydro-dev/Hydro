@@ -27,7 +27,6 @@ Syncing testdata, please wait...: 正在同步测试数据，请稍候...
 Temp directory: 临时目录
 Testdata cache directory: 测试数据缓存目录
 Testdata configuration incorrect.: 题目配置错误。
-Tmpfs size: tmpfs 分区大小
 Too many files.: 文件过多。
 Too many testcases. Cancelled.: 测试数据过多。评测取消。
 Total time limit longer than {0}s. Cancelled.: 总时限超过{0}s。评测取消。

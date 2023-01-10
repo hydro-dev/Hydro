@@ -10,7 +10,6 @@ const argv = cac().parse();
 const JudgeSettings = Schema.object({
     cache_dir: Schema.string().default(path.resolve(os.homedir(), '.cache', 'hydro', 'judge')),
     tmp_dir: Schema.string().default(path.resolve(os.tmpdir(), 'hydro', 'judge')),
-    tmpfs_size: Schema.string().pattern(/^\d+[kmg]b?$/g).default('256m'),
     stdio_size: Schema.string().pattern(/^\d+[kmg]b?$/g).default('32m'),
     memoryMax: Schema.string().pattern(/^\d+[kmg]b?$/g).default('512m'),
     strict_memory: Schema.boolean().default(false),
