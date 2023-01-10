@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs-extra';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
