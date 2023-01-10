@@ -1,8 +1,9 @@
 import $ from 'jquery';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
+import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import { getAvailableLangs, tpl } from 'vj/utils';
+import { getAvailableLangs, request, tpl } from 'vj/utils';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
@@ -39,6 +40,14 @@ const page = new NamedPage('record_main', async () => {
     (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${availableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');
   if (lang) $('select[name="lang"]').val(lang);
+
+  for (const operation of ['rejudge', 'cancel']) {
+    $(document).on('click', `[name="operation"][value="${operation}"]`, (ev) => {
+      ev.preventDefault();
+      const action = $(ev.target).closest('form').attr('action');
+      request.post(action, { operation }).catch((e) => Notification.error(e));
+    });
+  }
 });
 
 export default page;

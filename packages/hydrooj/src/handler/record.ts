@@ -196,7 +196,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         if (!pdoc?.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -20);
         const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
-        await record.reset(domainId, rid, true);
+        const rdoc = await record.reset(domainId, rid, true);
+        bus.broadcast('record/change', rdoc);
         await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
         this.back();
     }
