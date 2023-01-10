@@ -8,7 +8,7 @@ import {
 import { RecordDoc, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
-import problem from '../model/problem';
+import problem, { ProblemDoc } from '../model/problem';
 import record from '../model/record';
 import { langs } from '../model/setting';
 import storage from '../model/storage';
@@ -318,6 +318,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 
 class RecordDetailConnectionHandler extends ConnectionHandler {
     cleanup: bus.Disposable = () => { };
+    pdoc: ProblemDoc;
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
     throttleSend: any;
@@ -351,6 +352,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 
+        this.pdoc = pdoc;
         this.throttleSend = throttle(this.sendUpdate, 1000, { trailing: true });
         this.rid = rid.toString();
         this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
@@ -359,8 +361,8 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
 
     async sendUpdate(rdoc: RecordDoc) {
         this.send({
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc }),
-            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc }),
+            status_html: await this.renderHTML('record_detail_status.html', { rdoc, pdoc: this.pdoc }),
+            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc, pdoc: this.pdoc }),
         });
     }
 
