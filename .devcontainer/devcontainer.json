@@ -20,9 +20,7 @@
 	"forwardPorts": [
 		2333,
 		27017,
-		8888,
-		9000,
-		9001
+		8888
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2",

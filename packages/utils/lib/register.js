@@ -1,3 +1,4 @@
+/* eslint-disable logical-assignment-operators */
 const map = {};
 require('source-map-support').install({
     handleUncaughtExceptions: false,
@@ -17,7 +18,8 @@ const vm = require('vm');
 const fs = require('fs-extra');
 const esbuild = require('esbuild');
 
-if (!process.env.NODE_APP_INSTANCE) process.env.NODE_APP_INSTANCE = '0';
+// Node14 doesn't support ||= syntax
+process.env.NODE_APP_INSTANCE = process.env.NODE_APP_INSTANCE || '0';
 const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
 

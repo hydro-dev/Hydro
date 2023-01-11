@@ -5,11 +5,13 @@
   <td class="col--problem col--problem-name">
   {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack %}
     <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
-      <input type="hidden" name="operation" value="rejudge">
-      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
-      <button type="submit" class="link text-maroon lighter">
+      <button type="submit" name="operation" value="rejudge" class="link text-maroon lighter">
         <span class="icon icon-refresh"></span>
         {{ _('Rejudge') }}
+      </button> 
+      <button type="submit" name="operation" value="cancel" class="link text-maroon lighter">
+        <span class="icon icon-close"></span>
+        {{ _('Cancel Score') }}
       </button> |
     </form>
   {% endif %}
@@ -32,8 +34,8 @@
       {% endif %}
     </a>
   </td>
-  <td class="col--time">{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</td>
-  <td class="col--memory">{% if rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</td>
+  <td class="col--time">{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</td>
+  <td class="col--memory">{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</td>
   <td class="col--lang">{{ model.setting.langs[rdoc['lang']].display }}</td>
   <td class="col--submit-at">{{ datetimeSpan(rdoc['_id'])|safe }}</td>
 </tr>

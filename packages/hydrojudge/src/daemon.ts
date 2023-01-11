@@ -35,7 +35,7 @@ let exit = false;
 const terminate = async () => {
     log.info('正在保存数据');
     try {
-        await Promise.all(global.onDestroy.map((f: Function) => f()));
+        await Promise.all(global.hosts.map((f) => f.dispose?.()));
         process.exit(1);
     } catch (e) {
         if (exit) process.exit(1);

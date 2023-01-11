@@ -356,6 +356,76 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 }, oi);
 
+const ledo = buildContestRule({
+    TEXT: 'Ledo',
+    check: () => { },
+    submitAfterAccept: false,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    showSelfRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    stat(tdoc, journal) {
+        const ntry = Counter<number>();
+        const detail = {};
+        for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            const vaild = ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status);
+            if (vaild) ntry[j.pid]++;
+            const penaltyScore = vaild ? Math.round(Math.max(0.7, 0.95 ** (ntry[j.pid] - 1)) * j.score) : 0;
+            if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
+                detail[j.pid] = {
+                    ...j,
+                    penaltyScore,
+                    ntry: ntry[j.pid] - 1,
+                };
+            }
+        }
+        let score = 0;
+        let originalScore = 0;
+        for (const pid of tdoc.pids) {
+            if (!detail[pid]) continue;
+            score += detail[pid].penaltyScore;
+            originalScore += detail[pid].score;
+        }
+        return {
+            score, originalScore, detail,
+        };
+    },
+    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+        const tsddict = tsdoc.detail || {};
+        const row: ScoreboardRow = [
+            { type: 'rank', value: rank.toString() },
+            { type: 'user', value: udoc.uname, raw: tsdoc.uid },
+        ];
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({
+            type: 'total_score',
+            value: tsdoc.score || 0,
+            hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
+        });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
+        for (const pid of tdoc.pids) {
+            row.push({
+                type: 'record',
+                value: tsddict[pid]?.penaltyScore || '',
+                hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
+                raw: tsddict[pid]?.rid,
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                    ? 'background-color: rgb(217, 240, 199);'
+                    : undefined,
+            });
+        }
+        return row;
+    },
+}, oi);
+
 const homework = buildContestRule({
     TEXT: 'Assignment',
     hidden: true,
@@ -506,7 +576,7 @@ const homework = buildContestRule({
 });
 
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi,
+    acm, oi, homework, ioi, ledo,
 };
 
 function _getStatusJournal(tsdoc) {

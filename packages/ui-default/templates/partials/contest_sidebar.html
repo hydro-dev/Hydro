@@ -43,7 +43,6 @@
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
         <input type="hidden" name="operation" value="attend">
-        <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
         <button class="menu__link" {% if tdoc._code %}data-contest-code{% endif %} type="submit">
           <span class="icon icon-add"></span> {{ _('Attend Contest') }}
         </button>
@@ -106,7 +105,7 @@
           ({{ _('Attended') }})
         {% endif %}
       </dd>
-      <dt>{{ _('Rule') }}</dt><dd>{{ model.contest.RULES[tdoc.rule].TEXT }}</dd>
+      <dt>{{ _('Rule') }}</dt><dd>{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</dd>
       <dt>{{ _('Problem') }}</dt><dd>{{ tdoc.pids.length }}</dd>
       <dt>{{ _('Start at') }}</dt><dd>{{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</dd>
       <dt>{{ _('End at') }}</dt><dd>{{ contest.render_time(tsdoc.endAt or tdoc.endAt) }}</dd>

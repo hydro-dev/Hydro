@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 require('@hydrooj/utils/lib/register');
 
+const packageBasedir = require('path').resolve(__dirname, '..');
 const { default: hook } = require('require-resolve-hook');
-const { bypass } = hook(/^(hydrooj|@hydrooj\/utils|cordis|schemastery|lodash|js-yaml)/, (id) => {
+const { bypass } = hook(/^(hydrooj|@hydrooj\/utils|cordis|lodash|js-yaml)($|\/)/, (id) => {
     if (id.startsWith('hydrooj/src')) {
         console.log('module require via %s is deprecated.', id);
         if (process.env.DEV) {
@@ -13,7 +14,34 @@ const { bypass } = hook(/^(hydrooj|@hydrooj\/utils|cordis|schemastery|lodash|js-
             );
         }
     }
-    return bypass(() => require.resolve(id));
+    if (id.startsWith('hydrooj')) {
+        return bypass(() => require.resolve(id, { paths: [packageBasedir] }));
+    }
+    return bypass(() => {
+        try {
+            return require.resolve(id);
+        } catch (_) {
+            try {
+                return require.resolve(id, { paths: [`${process.cwd()}/node_modules`] });
+            } catch (e) {
+                return id;
+            }
+        }
+    });
 });
+
+// Replace pnpm paths.
+// Vscode will try to open a local file for links, so this doesn't work for remote-ssh, etc.
+if (process.env.npm_execpath && process.env.npm_execpath.includes('pnpm') && !process.env.SSH_CONNECTION) {
+    const original = Error.prepareStackTrace;
+    Error.prepareStackTrace = function capture(...args) {
+        const res = original.apply(this, args);
+        if (!res.includes('.pnpm')) return res;
+        return res.replace(
+            /([( ])([^( ]+\/\.pnpm\/.+?\/node_modules\/)(.+)(:\d+:[^)\n]+)/g,
+            '$1\u001B]8;;$2$3$4\u0007pnpm:$3$4\u001B]8;;\u0007',
+        );
+    };
+}
 
 require('./commands');

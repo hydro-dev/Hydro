@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs-extra';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
@@ -12,8 +11,7 @@ import { NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
 import { Logger } from './log';
 import { CopyInFile } from './sandbox';
-import * as tmpfs from './tmpfs';
-import { compilerText, Lock, md5 } from './utils';
+import { compilerText, md5 } from './utils';
 
 interface Session {
     getLang: (name: string) => LangConfig;
@@ -32,7 +30,6 @@ export class JudgeTask {
     rid: string;
     lang: string;
     code: CopyInFile;
-    tmpdir: string;
     input?: string;
     clean: (() => Promise<any>)[];
     data: FileInfo[];
@@ -73,11 +70,7 @@ export class JudgeTask {
             };
             this.next = this.session.getNext(this);
             this.end = this.session.getEnd(this);
-            this.tmpdir = path.resolve(getConfig('tmp_dir'), this.rid);
             this.clean = [];
-            await Lock.acquire(`${host}/${this.source}/${this.rid}`);
-            fs.ensureDirSync(this.tmpdir);
-            tmpfs.mount(this.tmpdir, getConfig('tmpfs_size'));
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
             await this.doSubmission();
         } catch (e) {
@@ -100,11 +93,8 @@ export class JudgeTask {
                 });
             }
         } finally {
-            Lock.release(`${host}/${this.source}/${this.rid}`);
             // eslint-disable-next-line no-await-in-loop
             for (const clean of this.clean) await clean()?.catch(() => null);
-            tmpfs.umount(this.tmpdir);
-            fs.removeSync(this.tmpdir);
         }
     }
 

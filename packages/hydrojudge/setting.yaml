@@ -8,11 +8,6 @@ tmp_dir:
   name: tmp_dir
   desc: Temp directory
   default: $TEMP/hydro/judge
-tmpfs_size:
-  type: text
-  name: tmpfs_size
-  desc: Tmpfs size
-  default: 256m
 stdio_size:
   type: text
   name: stdio_size

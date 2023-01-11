@@ -173,7 +173,6 @@ export default class Hydro {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        global.onDestroy.push(() => this.ws.close());
         const content = this.config.minPriority !== undefined
             ? `{"key":"prio","prio":${this.config.minPriority}}`
             : '{"key":"ping"}';
@@ -205,6 +204,10 @@ export default class Hydro {
             });
         });
         log.info(`[${this.config.host}] 已连接`);
+    }
+
+    dispose() {
+        this.ws?.close?.();
     }
 
     async setCookie(cookie: string) {

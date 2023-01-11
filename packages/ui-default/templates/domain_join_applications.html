@@ -60,7 +60,6 @@
         help_text:'The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.',
         value:joinSettings['code']|default('')
       }) }}
-      <input type="hidden" name="csrfToken" value="{{ handler.csrfToken }}">
       <button class="rounded primary button" role="submit">
         {{ _('Update Settings') }}
       </button>

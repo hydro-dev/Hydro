@@ -1,30 +1,17 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
-import findChrome from 'chrome-finder';
 import yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
-import type { Browser, Page } from 'puppeteer';
-import puppeteer from 'puppeteer-extra';
-import PortalPlugin from 'puppeteer-extra-plugin-portal';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import superagent from 'superagent';
 import proxy from 'superagent-proxy';
 import {
-    buildContent, Logger, SettingModel, sleep, STATUS, Time,
+    buildContent, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { normalize, VERDICT } from '../verdict';
 
 proxy(superagent);
 const logger = new Logger('remote/codeforces');
-puppeteer.use(StealthPlugin()).use(PortalPlugin({
-    webPortalConfig: {
-        listenOpts: {
-            port: 3000,
-        },
-        baseUrl: 'http://localhost:3000',
-    },
-}));
 
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
@@ -82,48 +69,6 @@ export default class CodeforcesProvider implements IBasicProvider {
 
     cookie: string[] = [];
     csrf: string;
-    puppeteer: Browser;
-
-    async ensureBrowser() {
-        if (this.puppeteer) return true;
-        try {
-            const executablePath = findChrome();
-            logger.debug(`Using chrome found at ${executablePath}`);
-            const args = ['--disable-gpu', '--disable-setuid-sandbox'];
-            if (this.account.proxy?.startsWith('http://')) args.push(`--proxy-server=${this.account.proxy.split('//')[1]}`);
-            if (process.platform === 'linux' && process.getuid() === 0) args.push('--no-sandbox');
-            this.puppeteer = await puppeteer.launch({ headless: true, executablePath, args });
-            logger.success('Successfully launched browser');
-        } catch (e) {
-            logger.error(e.message);
-            logger.error('Failed to launch browser, using fallback mode');
-            return false;
-        }
-        return true;
-    }
-
-    async getPage() {
-        const page = await this.puppeteer.newPage();
-        const url = await page.openPortal();
-        logger.info('portal=', url);
-        for (const str of this.cookie) {
-            const [name, value] = str.split(';')[0].split('=');
-            await page.setCookie({ name, value, domain: 'codeforces.com' });
-        }
-        return page;
-    }
-
-    async clearPage(page: Page) {
-        let cookies = await page.cookies();
-        while (!cookies.find((i) => i.name === 'evercookie_etag').value) {
-            await sleep(1000);
-            cookies = await page.cookies();
-        }
-        this.cookie = cookies.map((i) => `${i.name}=${i.value}`);
-        logger.debug('Cookie:', this.cookie);
-        await this.save({ cookie: this.cookie });
-        await page.close();
-    }
 
     get(url: string) {
         logger.debug('get', url);
@@ -186,7 +131,9 @@ export default class CodeforcesProvider implements IBasicProvider {
         });
     }
 
-    async normalLogin() {
+    async ensureLogin() {
+        if (await this.loggedIn) return true;
+        logger.info('retry normal login');
         const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
         const res = await this.post('/enter').send({
             csrf_token: csrf,
@@ -202,33 +149,6 @@ export default class CodeforcesProvider implements IBasicProvider {
             await this.save({ cookie });
             this.cookie = cookie;
         }
-    }
-
-    async puppeteerLogin() {
-        await this.ensureBrowser();
-        if (!this.puppeteer) return false;
-        const page = await this.puppeteer.newPage();
-        await page.goto(`${this.account.endpoint}/enter`, { waitUntil: 'networkidle2', timeout: 60000 });
-        const url = await page.openPortal();
-        logger.info(`Login portal opened: ${url}`);
-        await page.waitForRequest((req) => {
-            if (req.method() !== 'POST') return false;
-            // sometimes we have validation query strings, ignore them
-            return req.url().split('?')[0].endsWith('/enter');
-        }, { timeout: Time.day });
-        await page.waitForTimeout(10 * 1000);
-        await this.clearPage(page);
-        await this.puppeteer?.close();
-        return true;
-    }
-
-    async ensureLogin() {
-        if (await this.loggedIn) return true;
-        logger.info('retry normal login');
-        await this.normalLogin();
-        if (await this.loggedIn) return true;
-        logger.info('starting puppeteer login');
-        await this.puppeteerLogin();
         if (await this.loggedIn) {
             logger.success('Logged in');
             return true;

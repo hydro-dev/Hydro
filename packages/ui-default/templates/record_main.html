@@ -101,7 +101,7 @@
           {%- endfor -%}
           </tbody>
         </table>
-        {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) %}
+        {% if handler.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) or filterTid or filterPid or filterUidOrName %}
         <ul class="pager">
           <li>
             <a class="pager__item next link" href="?page={{ page + 1 }}{{

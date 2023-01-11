@@ -1,4 +1,5 @@
 /* eslint-disable no-sequences */
+import { unlinkSync } from 'fs';
 import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
@@ -25,6 +26,7 @@ export async function judge(ctx: Context) {
         compileValidator(session.getLang, config.validator, judgeExtraFiles).then(markCleanup),
         ctx.session.fetchFile(ctx.files.hack),
     ]);
+    ctx.clean.push(async () => unlinkSync(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const validateResult = await run(
         validator.execute,

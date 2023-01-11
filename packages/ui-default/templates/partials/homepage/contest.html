@@ -19,7 +19,7 @@
               <h1 class="contest__title"><a href="{{ url('contest_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
               <ul class="supplementary list">
                 <li>
-                  <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ model.contest.RULES[tdoc.rule].TEXT }}</a>
+                  <a href="{{ url('contest_main', query={rule:tdoc.rule}) }}" class="contest-type-tag"><span class="icon icon-award"></span>{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</a>
                 </li>
                 {% if tdoc.rated %}
                   <li class="contest-tag-rated"><span class="icon icon-star"></span>Rated</li>
