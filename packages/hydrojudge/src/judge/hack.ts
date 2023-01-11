@@ -1,6 +1,6 @@
 /* eslint-disable no-sequences */
-import { basename } from 'path';
 import { unlinkSync } from 'fs';
+import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import compile, { compileChecker, compileValidator } from '../compile';

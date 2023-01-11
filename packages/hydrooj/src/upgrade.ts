@@ -439,10 +439,7 @@ const scripts: UpgradeScript[] = [
         );
         return true;
     },
-    async function _64_65() {
-        await system.set('server.center', 'https://hydro.ac/center');
-        return true;
-    },
+    null,
     async function _65_66() {
         return await iterateAllDomain(async (ddoc) => {
             Object.keys(ddoc.roles).forEach((role) => {
@@ -472,6 +469,7 @@ const scripts: UpgradeScript[] = [
                 endPointForUser,
                 endPointForJudge,
             });
+            await system.set('db.ver', 67);
             await sleep(1000);
             logger.info('Upgrade done. please restart the server.');
             process.exit(0);
