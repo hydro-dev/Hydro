@@ -13,6 +13,7 @@
         "build:ui": "yarn build:ui:gulp && node packages/ui-default/build",
         "build:ui:gulp": "node packages/ui-default/build --gulp",
         "build:ui:dev": "yarn build:ui:gulp && node --trace-deprecation packages/ui-default/build --dev",
+        "build:ui:dev:https": "yarn build:ui:gulp && node --trace-deprecation packages/ui-default/build --dev --https",
         "build:ui:production": "cross-env NODE_OPTIONS=--max_old_space_size=8192 yarn build:ui:gulp && node packages/ui-default/build --production",
         "build:ui:production:webpack": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --production",
         "test": "mocha",

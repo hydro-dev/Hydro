@@ -91,16 +91,53 @@
   <div class="columns">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title" id="tfa" data-heading>{{ _('Two Factor Authentication') }}</h1>
+        <h1 class="section__title" id="authenticator" data-heading>{{ _('Authenticators') }}</h1>
         <div class="section__tools">
-          {% if handler.user.tfa %}
-            <button class="primary rounded button" name="tfa_enabled"><span class="icon icon-check"></span> {{ _('Enabled') }}</button>
-          {% else %}
-            <button class="primary rounded button" name="tfa_enable"><span class="icon icon-wrench"></span> {{ _('Enable') }}</button>
-          {% endif %}
+          <button class="primary rounded button" name="auth_enable"><span class="icon icon-wrench"></span> {{ _('Add authenticator') }}</button>
         </div>
       </div>
-      <div class="section__body"></div>
+      <div class="section__body">
+        <ul class="sessionlist">
+          {%- if handler.user.tfa -%}
+          <li class="sessionlist__item">
+            <div class="media">
+              <div class="media__body medium typo">
+                <p>{{ _('Authenticator') }}: {{ _('Two Factor Authentication') }}</p>
+              </div>
+              <div class="media__right medium" style="width:200px">
+                <form method="POST" action="{{ url('user_auth') }}">
+                  <input type="hidden" name="operation" value="disable">
+                  <input type="hidden" name="type" value="tfa">
+                  <input type="hidden" name="code" value="">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button" name="tfa_disable">
+                </form>
+              </div>
+            </div>
+          </li>
+          {%- endif -%}
+          {%- for authenticator in authenticators -%}
+          <li class="sessionlist__item">
+            <div class="media">
+              <div class="media__body medium-6 typo">
+                <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialId.substring(0, 6) }})</p>
+                <p>{{ _('Type') }}: {{ authenticator.authenticatorAttachment }} </p>
+                <p>{{ _('Transports') }}: {{ authenticator.transports.join(',') }} </p>
+                <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
+              </div>
+              <div class="media__right medium-4">
+                <form method="POST" action="{{ url('user_auth') }}">
+                  <input type="hidden" name="operation" value="disable">
+                  <input type="hidden" name="type" value="authn">
+                  <input type="hidden" name="authnCredentialId" value="{{ authenticator.credentialId }}">
+                  <input type="hidden" name="authnChallenge" value="">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button" name="webauthn_verify">
+                </form>
+              </div>
+            </div>
+          </li>
+          {%- endfor -%}
+        </ul>
+      </div>
     </div>
   </div>
 </div>

@@ -1,7 +1,7 @@
 const Base64 = {
   _keyStr: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
 
-  encode(input) {
+  encode(input, utf8encode = true) {
     let output = '';
     let chr1;
     let chr2;
@@ -11,7 +11,7 @@ const Base64 = {
     let enc3;
     let enc4;
     let i = 0;
-    input = Base64._utf8_encode(input);
+    if (utf8encode) input = Base64._utf8_encode(input);
     while (i < input.length) {
       chr1 = input.charCodeAt(i++);
       chr2 = input.charCodeAt(i++);
@@ -29,7 +29,7 @@ const Base64 = {
     return output;
   },
 
-  decode(input) {
+  decode(input, utf8decode = true) {
     let output = '';
     let chr1;
     let chr2;
@@ -52,7 +52,7 @@ const Base64 = {
       if (enc3 !== 64) output += String.fromCharCode(chr2);
       if (enc4 !== 64) output += String.fromCharCode(chr3);
     }
-    output = Base64._utf8_decode(output);
+    if (utf8decode) output = Base64._utf8_decode(output);
     return output;
   },
 

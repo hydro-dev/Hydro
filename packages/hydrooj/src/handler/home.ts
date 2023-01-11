@@ -167,6 +167,7 @@ class HomeSecurityHandler extends Handler {
         this.response.template = 'home_security.html';
         this.response.body = {
             sessions,
+            authenticators: this.user._authenticators,
             geoipProvider: geoip?.provider,
             icon: useragent.icon,
         };

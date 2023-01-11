@@ -17,14 +17,15 @@ import root from './utils/root';
 const argv = cac().parse();
 
 async function runWebpack({
-  watch, production, measure, dev,
+  watch, production, measure, dev, https,
 }) {
   const compiler = webpack(webpackConfig({ watch, production, measure }));
   if (dev) {
     const server = new WebpackDevServer({
-      port: 8000,
+      port: https ? 8001 : 8000,
       compress: true,
       hot: true,
+      server: https ? 'https' : 'http',
       proxy: {
         context: (p) => p !== '/ws',
         target: 'http://localhost:2333',

@@ -12,20 +12,24 @@
         </label>
       </div></div>
       <div class="row"><div class="columns">
+        <label class="inverse material checkbox" style="color:#fff;">
+          <input type="checkbox" name="rememberme" class="checkbox">{{ _('Remember me') }}
+        </label>
+      </div></div>
+      <div class="row"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Password') }}
           <input name="password" type="password">
         </label>
       </div></div>
+      <div class="row" style="display: none" id="authn_div"><div class="columns">
+        <input type="hidden" name="authnChallenge" value="">
+        <input value="{{ _('Use Authenticator To Sign In') }}" class="expanded rounded primary button" name="webauthn_verify">
+      </div></div>
       <div class="row" style="display: none" id="tfa_div"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Two Factor Authentication Code') }}
           <input name="tfa" type="number">
-        </label>
-      </div></div>
-      <div class="row"><div class="columns">
-        <label class="inverse material checkbox" style="color:#fff;">
-          <input type="checkbox" name="rememberme" class="checkbox">{{ _('Remember me') }}
         </label>
       </div></div>
       <div class="row"><div class="columns">

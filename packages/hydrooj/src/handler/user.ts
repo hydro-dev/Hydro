@@ -1,9 +1,10 @@
+import { Fido2Lib } from 'fido2-lib';
 import moment from 'moment-timezone';
 import notp from 'notp';
 import b32 from 'thirty-two';
 import {
-    BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
-    SystemError, TFAOperationError, UserAlreadyExistError, UserFacingError,
+    AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
+    SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
 import { Udoc, User } from '../interface';
@@ -33,6 +34,26 @@ function verifyToken(secret: string, code?: string) {
     return notp.totp.verify(code.replace(/\W+/g, ''), bin);
 }
 
+const f2l = new Fido2Lib({
+    timeout: 60000,
+    rpId: new URL(system.get('server.url'), 'https://hydro.local').hostname,
+    rpName: system.get('server.name'),
+    challengeSize: 128,
+    attestation: 'none',
+});
+
+function ab2str(buf: ArrayBuffer) {
+    return Buffer.from(String.fromCharCode(...new Uint8Array(buf)), 'binary').toString('base64');
+}
+
+function str2ab(str: string) {
+    return new Uint8Array(Buffer.from(str, 'base64').toString('binary').split('').map((r) => r.charCodeAt(0))).buffer;
+}
+
+function b642b64url(str: string) {
+    return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
 registerValue('User', [
     ['_id', 'Int!'],
     ['uname', 'String!'],
@@ -44,34 +65,9 @@ registerValue('User', [
     ['priv', 'Int!', 'User Privilege'],
     ['avatarUrl', 'String'],
     ['tfa', 'Boolean!'],
+    ['authn', 'Boolean!'],
     ['displayName', 'String'],
 ]);
-
-registerResolver(
-    'User', 'TFA', 'TFAContext', () => ({}),
-    'Two Factor Authentication Config',
-);
-registerResolver(
-    'TFAContext', 'enable(secret: String!, code: String!)', 'Boolean!',
-    async (arg, ctx) => {
-        if (ctx.user._tfa) throw new TFAOperationError('enabled');
-        if (!verifyToken(arg.secret, arg.code)) throw new InvalidTokenError('2FA');
-        await user.setById(ctx.user._id, { tfa: arg.secret });
-        // TODO: return backup codes
-        return true;
-    },
-    'Enable Two Factor Authentication for current user',
-);
-registerResolver(
-    'TFAContext', 'disable(code: String!)', 'Boolean!',
-    async (arg, ctx) => {
-        if (!ctx.user._tfa) throw new TFAOperationError('disabled');
-        if (!verifyToken(ctx.user._tfa, arg.code)) throw new InvalidTokenError('2FA');
-        await user.setById(ctx.user._id, undefined, { tfa: '' });
-        return true;
-    },
-    'Disable Two Factor Authentication for current user',
-);
 
 registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
     if (arg.id) return user.getById(ctx.args.domainId, arg.id);
@@ -116,7 +112,11 @@ class UserLoginHandler extends Handler {
     @param('rememberme', Types.Boolean)
     @param('redirect', Types.String, true)
     @param('tfa', Types.String, true)
-    async post(domainId: string, uname: string, password: string, rememberme = false, redirect = '', tfa = '') {
+    @param('authnChallenge', Types.String, true)
+    async post(
+        domainId: string, uname: string, password: string, rememberme = false, redirect = '',
+        tfa = '', authnChallenge = '',
+    ) {
         if (!system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
@@ -126,7 +126,12 @@ class UserLoginHandler extends Handler {
             this.limitRate(`user_login_${uname}`, 60, 5, false),
             oplog.log(this, 'user.login', { redirect }),
         ]);
-        if (udoc._tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+        if (udoc.tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+        if (udoc.authn && authnChallenge) {
+            const challengeInfo = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+            if (!challengeInfo || challengeInfo.uid !== udoc._id || !this.session.challenge) throw new InvalidTokenError('Authn');
+            if (!udoc.authn || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+        }
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
@@ -148,25 +153,205 @@ class UserSudoHandler extends Handler {
         this.response.template = 'user_sudo.html';
     }
 
-    @param('password', Types.String)
+    @param('password', Types.String, true)
     @param('tfa', Types.String, true)
-    async post(domainId: string, password: string, tfa = '') {
+    @param('authnChallenge', Types.String, true)
+    async post(domainId: string, password: string = '', tfa = '', authnChallenge = '') {
         if (!this.session.sudoArgs?.method) throw new ForbiddenError();
         await Promise.all([
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
         ]);
+        if (authnChallenge) {
+            const challengeInfo = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+            if (!challengeInfo || challengeInfo.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
+            if (!this.user.authn || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+        }
         if (tfa) {
             if (!this.user._tfa || !verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-        } else {
-            this.user.checkPassword(password);
         }
+        if (!authnChallenge) this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
             this.response.body = this.session.sudoArgs;
         } else this.response.redirect = this.session.sudoArgs.redirect;
         this.session.sudoArgs.method = null;
+    }
+}
+
+class UserAuthHandler extends Handler {
+    @param('uname', Types.Username, true)
+    async get(domainId: string, uname: string) {
+        let udoc = this.user;
+        if (uname) {
+            udoc = await user.getByEmail(domainId, uname);
+            udoc ||= await user.getByUname(domainId, uname);
+        }
+        if (!udoc._id) throw new UserNotFoundError(uname || 'user');
+        if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
+        const assertionOptions = await f2l.assertionOptions();
+        const options = {
+            ...assertionOptions,
+            challenge: ab2str(assertionOptions.challenge),
+            allowCredentials: udoc._authenticators.map((c) => ({ id: c.credentialId, type: 'public-key', transports: c.transports })),
+            rpId: this.request.hostname,
+        };
+        await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
+        this.session.challenge = options.challenge;
+        this.response.body.authOptions = options;
+    }
+
+    async postRegister() {
+        this.checkPriv(PRIV.PRIV_USER_PROFILE);
+        const registrationOptions = await f2l.attestationOptions();
+        const options = {
+            ...registrationOptions,
+            challenge: ab2str(registrationOptions.challenge),
+            user: {
+                id: this.user._id.toString(),
+                displayName: this.user.uname,
+                name: `${this.user.uname}(${this.user.mail})`,
+            },
+            rp: {
+                name: system.get('server.name'),
+                id: this.request.hostname,
+            },
+            excludeCredentials: this.user._authenticators.map((c) => ({ id: c.credentialId, type: 'public-key', transports: c.transports })),
+        };
+        await token.add(token.TYPE_WEBAUTHN, 60, { uid: this.user._id }, options.challenge);
+        this.session.challenge = options.challenge;
+        this.response.body.authOptions = options;
+    }
+
+    @param('uname', Types.Username, true)
+    @param('credentialId', Types.String)
+    @param('clientDataJSON', Types.String)
+    @param('authenticatorData', Types.String)
+    @param('signature', Types.String)
+    async postVerify(
+        domainId: string, uname: string, credentialId: string, clientDataJSON: string, authenticatorData: string,
+        signature: string,
+    ) {
+        if (!credentialId) throw new ValidationError('authenticator');
+        let udoc = this.user;
+        if (uname) {
+            udoc = await user.getByEmail(domainId, uname);
+            udoc ||= await user.getByUname(domainId, uname);
+        }
+        if (!udoc._id) throw new UserNotFoundError(uname || 'user');
+        if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
+        const authenticator = udoc._authenticators.find((c) => c.credentialId === credentialId);
+        if (!authenticator) throw new ValidationError('authenticator');
+        const response = {
+            id: str2ab(credentialId),
+            response: {
+                authenticatorData: str2ab(authenticatorData),
+                clientDataJSON: b642b64url(clientDataJSON),
+                signature: b642b64url(signature),
+            },
+        };
+        try {
+            const assertionResult = await f2l.assertionResult(response, {
+                challenge: this.session.challenge,
+                origin: this.request.headers.origin,
+                factor: 'either',
+                publicKey: authenticator.publicKey as string,
+                prevCounter: authenticator.counter as number,
+                userHandle: null,
+            });
+            await user.setById(this.user._id, {
+                authenticators: [...this.user._authenticators.filter((c) => c.credentialId !== credentialId), {
+                    ...authenticator,
+                    counter: assertionResult.authnrData.get('counter'),
+                }],
+            });
+        } catch (error) {
+            throw new ValidationError('authenticator');
+        }
+        await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
+        this.back();
+    }
+
+    @param('type', Types.Range(['tfa', 'authn']))
+    @param('code', Types.String, true)
+    @param('secret', Types.String, true)
+    @param('credentialId', Types.String, true)
+    @param('credentialName', Types.String, true)
+    @param('credentialType', Types.String, true)
+    @param('clientDataJSON', Types.String, true)
+    @param('attestationObject', Types.String, true)
+    @param('transports', Types.CommaSeperatedArray, true)
+    @param('authenticatorAttachment', Types.String, true)
+    async postEnable(
+        domainId: string, type: string, code: string, secret: string, credentialId: string,
+        credentialName: string, credentialType: string, clientDataJSON: string, attestationObject: string, transports: string[],
+        authenticatorAttachment: string,
+    ) {
+        if (type === 'tfa') {
+            if (this.user._tfa) throw new AuthOperationError('TFA', 'enabled');
+            if (!verifyToken(secret, code)) throw new InvalidTokenError('2FA');
+            await user.setById(this.user._id, { tfa: secret });
+        } else if (type === 'authn') {
+            if (!credentialId) throw new ValidationError('authenticator');
+            if (this.user._authenticators.filter((i) => i.credentialId === credentialId).length) {
+                throw new ValidationError('authenticator');
+            }
+            const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
+            if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
+            const response = {
+                id: str2ab(credentialId),
+                type: credentialType,
+                response: {
+                    attestationObject: b642b64url(attestationObject),
+                    clientDataJSON: b642b64url(clientDataJSON),
+                },
+            };
+            try {
+                const verification = await f2l.attestationResult(response, {
+                    challenge: challengeInfo._id,
+                    origin: this.request.headers.origin,
+                    factor: 'either',
+                });
+                await user.setById(this.user._id, {
+                    authenticators: [...this.user._authenticators, {
+                        credentialId: ab2str(verification.authnrData.get('credId')),
+                        name: credentialName || 'New Authenticator',
+                        transports,
+                        authenticatorAttachment,
+                        publicKey: verification.authnrData.get('credentialPublicKeyPem') as string,
+                        counter: verification.authnrData.get('counter') as number,
+                        regat: Date.now(),
+                    }],
+                });
+            } catch (error) {
+                throw new ValidationError('authenticator');
+            }
+        }
+        this.back();
+    }
+
+    @param('type', Types.Range(['authn', 'tfa']))
+    @param('authnChallenge', Types.String, true)
+    @param('authnCredentialId', Types.String, true)
+    @param('code', Types.String, true)
+    async postDisable(domainId: string, type: string, challenge = '', credentialId = '', code = '') {
+        if (type === 'tfa') {
+            if (!this.user._tfa) throw new AuthOperationError('TFA', 'disabled');
+            if (!verifyToken(this.user._tfa, code)) throw new InvalidTokenError('TFA');
+            await user.setById(this.user._id, undefined, { tfa: '' });
+        } else if (type === 'authn') {
+            if (!this.user.authn) throw new AuthOperationError('Authn', 'disabled');
+            if (!credentialId) throw new ValidationError('credentialId');
+            const challengeInfo = await token.get(challenge, token.TYPE_WEBAUTHN);
+            if (!challengeInfo || challengeInfo.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
+            if (!challengeInfo || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+            if (!this.user._authenticators.find((i) => i.credentialId === credentialId)) throw new ValidationError('authenticator');
+            await user.setById(this.user._id, {
+                authenticators: this.user._authenticators.filter((i) => i.credentialId !== credentialId),
+            });
+        }
+        this.back();
     }
 }
 
@@ -464,6 +649,7 @@ export async function apply(ctx) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler);
+    ctx.Route('user_auth', '/user/auth', UserAuthHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
     ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);

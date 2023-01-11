@@ -13,6 +13,7 @@ class TokenModel {
     static TYPE_LOSTPASS = 5;
     static TYPE_EXPORT = 6;
     static TYPE_IMPORT = 7;
+    static TYPE_WEBAUTHN = 8;
     static TYPE_TEXTS = {
         [TokenModel.TYPE_SESSION]: 'Session',
         [TokenModel.TYPE_REGISTRATION]: 'Registration',
@@ -21,6 +22,7 @@ class TokenModel {
         [TokenModel.TYPE_LOSTPASS]: 'Lost Password',
         [TokenModel.TYPE_EXPORT]: 'Export',
         [TokenModel.TYPE_IMPORT]: 'Import',
+        [TokenModel.TYPE_WEBAUTHN]: 'WebAuthn',
     };
 
     static async add(
