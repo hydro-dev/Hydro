@@ -128,9 +128,9 @@ class UserLoginHandler extends Handler {
         ]);
         if (udoc.tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
         if (udoc.authn && authnChallenge) {
-            const challengeInfo = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challengeInfo || challengeInfo.uid !== udoc._id || !this.session.challenge) throw new InvalidTokenError('Authn');
-            if (!udoc.authn || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+            if (!challenge || challenge.uid !== udoc._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
+            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
         }
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
@@ -162,10 +162,10 @@ class UserSudoHandler extends Handler {
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
         ]);
-        if (authnChallenge) {
-            const challengeInfo = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challengeInfo || challengeInfo.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
-            if (!this.user.authn || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+        if (this.user.authn && authnChallenge) {
+            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+            if (!challenge || challenge.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
+            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
         }
         if (tfa) {
             if (!this.user._tfa || !verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
@@ -335,7 +335,7 @@ class UserAuthHandler extends Handler {
     @param('authnChallenge', Types.String, true)
     @param('authnCredentialId', Types.String, true)
     @param('code', Types.String, true)
-    async postDisable(domainId: string, type: string, challenge = '', credentialId = '', code = '') {
+    async postDisable(domainId: string, type: string, authnChallenge = '', credentialId = '', code = '') {
         if (type === 'tfa') {
             if (!this.user._tfa) throw new AuthOperationError('TFA', 'disabled');
             if (!verifyToken(this.user._tfa, code)) throw new InvalidTokenError('TFA');
@@ -343,9 +343,9 @@ class UserAuthHandler extends Handler {
         } else if (type === 'authn') {
             if (!this.user.authn) throw new AuthOperationError('Authn', 'disabled');
             if (!credentialId) throw new ValidationError('credentialId');
-            const challengeInfo = await token.get(challenge, token.TYPE_WEBAUTHN);
-            if (!challengeInfo || challengeInfo.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
-            if (!challengeInfo || !challengeInfo.verified || challengeInfo.expiredAt > new Date()) throw new ValidationError('challenge');
+            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+            if (!challenge || challenge.uid !== this.user._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
+            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
             if (!this.user._authenticators.find((i) => i.credentialId === credentialId)) throw new ValidationError('authenticator');
             await user.setById(this.user._id, {
                 authenticators: this.user._authenticators.filter((i) => i.credentialId !== credentialId),

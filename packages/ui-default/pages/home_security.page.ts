@@ -23,13 +23,13 @@ export default new NamedPage('home_security', () => {
               </a>
             </li>
             <li class="menu__seperator"></li>
-            <li class="menu__item" id="menu-item-home_messages">
+            <li class="menu__item" id="menu-item-platform">
               <a class="menu__link" data-action="platform">
                   <span class="icon icon-fingerprint"></span>
                 ${i18n('Your Device')}
               </a>
             </li>
-            <li class="menu__item" id="menu-item-home_messages">
+            <li class="menu__item" id="menu-item-cross-platform">
               <a class="menu__link" data-action="cross-platform">
                   <span class="icon icon-usb"></span>
                 ${i18n('Multi Platform Authenticator')}

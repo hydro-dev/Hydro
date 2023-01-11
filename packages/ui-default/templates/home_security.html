@@ -99,6 +99,9 @@
           {%- if handler.user.tfa -%}
           <li class="sessionlist__item">
             <div class="media">
+              <div class="media__left medium">
+                <span class="sessionlist__icon icon icon-platform--mobile }}"></span>
+              </div>
               <div class="media__body medium typo">
                 <p>{{ _('Authenticator') }}: {{ _('Two Factor Authentication') }}</p>
               </div>
@@ -116,6 +119,9 @@
           {%- for authenticator in authenticators -%}
           <li class="sessionlist__item">
             <div class="media">
+              <div class="media__left medium">
+                <span class="sessionlist__icon icon icon-{{ 'fingerprint' if authenticator.authenticatorAttachment === 'platform' else 'usb' }}"></span>
+              </div>
               <div class="media__body medium-6 typo">
                 <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialId.substring(0, 6) }})</p>
                 <p>{{ _('Type') }}: {{ authenticator.authenticatorAttachment }} </p>
