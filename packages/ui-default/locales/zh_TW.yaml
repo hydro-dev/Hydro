@@ -1,313 +1,589 @@
 __langname: 正體中文
-'{0} comments': '{0} 條評論'
+'"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
+'[Richtext message]': '[富文本消息]'
+'{0} comments': '{0} 條留言'
 '{0} discussions': '{0} 條討論'
-'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過頻率限制。限制：{1} 秒內最多 {2} 次操作。'
+'{0} is a moderator of this domain.': '{}是這個域的管理者之一。'
+'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過頻率限制。限制：{1} 秒内最多 {2} 次操作。'
+'{0} problems': '{0} 道題'
+'{0} sections': '{0} 部分'
 '{0} solutions': '{0} 條題解'
-'{0} views': '{0} 次檢視'
-'{0}: Permissions': '{0}: 許可權'
+'{0} views': '{0} 次查看'
+'{0}: Groups': '{0}: 小组'
+'{0}: Permissions': '{0}: 權限'
 '{0}: Roles': '{0}: 角色'
 '{0}: Users': '{0}: 使用者'
-'# My Submissions': '我的遞交數'
-'# Submissions': '遞交數'
-'↓ # Comments': '↓ 評論數'
+'# My Submissions': '我的提交數'
+'# Submissions': '提交數'
+'↓ # Comments': '↓ 留言數'
 '↓ # Enrollees': '↓ 參與人數'
-'↓ # Likes': '↓ 贊數'
+'↓ # Likes': '↓ 讚數'
 '↓ # Stars': '↓ 收藏數'
-'↓ Create Time': '↓ 創建時間'
+'↓ Create Time': '↓ 建立時間'
 '↓ Update Time': '↓ 更新時間'
-'A domain ID cannot be changed after creation. It is supposed to be:': '創建後將無法更改 ID。ID 必須滿足以下條件：'
-'Current dataset: {0}': '當前測試資料: {0}'
-'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以點選以下連結來啟用您 {1} 賬戶的新電子郵件地址：
-'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以點選以下連結來重置您 {1} 賬戶的密碼：
-'Hello! You can click following link to sign up your {0} account:': 您好！您可以點選以下連結來註冊您的 {0} 賬戶：
+'A domain ID cannot be changed after creation. It is supposed to be:': '建立後將無法更改 ID。ID 必須滿足以下條件：'
+'Copy "{data}" failed :(': '複製“{data}”失敗 :('
+'Copy failed :(': '複製失敗 :('
+'Current dataset: {0}': '當前測試資料集: {0}'
+'Discussion: Terms Of Service': 討論區服務條款
+'File upload failed: {0}': 文件上傳失敗：{0}
+'Format: category 1, category 2, ..., category n': 格式：分類1, 分類2, ..., 分類n
+'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以點擊以下網址來激活您 {1} 帳號的新電子郵箱地址：
+'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以點擊以下網址來重製您 {1} 帳號的密碼：
+'Hello! You can click following link to sign up your {0} account:': 您好！您可以點擊以下網址來註冊您的 {0} 帳號：
+'Join {0}': '加入 {0}'
 'No': 否
+'Note: Problem title may not be hidden.': 注意：題目標題可能不會被隱藏。
+'Packages have new version: {0}': '以下組件有新版本： {0}'
+'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
+'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已經存在。'
 'Yes': 是
+"{0}'s blog": "{0} 的部落格"
+"Effects only when Difficulty is not 'Use algorithm calculated'.": 僅當難度不為“使用算法計算”時才生效。
+"Split by ', '.": 由“, ”或“，”分隔。
+"What's file?": 甚麼是文件？
+(All Problems):  所有題目)
+(leave blank if none): （若不需要則留空）
 (None): (無)
+(Not changed): 未變更
+Aborted: 已放棄
+About {0}: 關於 {0}
 About Markdown: 關於 Markdown
+About test data: 關於測試資料
+about: 關於
 About: 關於
+AC Message: 通過消息
+Accept: 通過
+Accepted Problems: 通過的題目
 Accepted Ratio: 通過率
 Accepted: 已通過
-Access Control: 訪問控制
+Access Control: 存取控制
+According to the contest rules, you cannot view your submission details at current.: 根據比賽規則，你現在不能查看您的評測紀錄詳情。
+Account Settings: 帳號設定
 Action: 動作
 Active Sessions: 活動會話
-Add new data: 新增新資料
-Add User: 新增使用者
-Add: 新增
+Add File: 添加文件
+Add module: 添加模塊
+Add new data: 添加新資料
+Add User: 添加新使用者
+Add: 添加
 All {0} Contests: 所有 {0} 比賽
 All Contests: 所有比賽
-All Homeworks: 所有功課
+All Homeworks: 所有作業
+All Languages: 所有語言
+All Submissions: 所有提交
+All Training Plans: 所有訓練計畫
+All Users: 所有使用者
 All: 全部
+Allow to maintain this contest: 允許管理此比賽
+Allow user view others code after contest: 允許使用者賽後查看其他人的程式碼
 Always granted all privileges: 總是擁有所有域許可權
 An error has occurred.: 發生了一個錯誤。
+An example of dataset: 測試資料集的一個例子
+Any user is allowed to join this domain with an invitation code: 任何使用者都可以通過邀請碼加入此域
+Any user is allowed to join this domain: 任何使用者都可以加入此域
 API: API
+Argument {0} is invalid.: 非法的參數 {0} 。
 Arguments: 參數
+Assign User or Group: 分配給使用者或小組
+Assign: 分配給
+Assignment: 作業
 At least 4 characters: 至少 4 個字元
 Attend Contest: 參加比賽
 Attend contests: 參加比賽
 Attended: 已參加
+Attendee Manage: 參賽者管理
 author: 作者
+Auto hide problems during the contest: 在比賽過程中自動隱藏題目
+Auto Read Tasks: 自動識別任務
+Basic Info: 基本資訊
+Be Copied: 被複製
+Begin at: 開始於
 Begin Date: 開始日期
 Begin Time: 開始時間
 Belongs to: 屬於
 Bio Visibility: 個人簡介可見性
 Bio: 個人簡介
 Blog: 部落格
+Bold: 加粗
 Boom!: 炸了！
 Browser: 瀏覽器
-Built-in: 內建
-By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.: 註冊一個 {0} 通用賬戶，您就可以在我們提供的所有線上評測服務上提交程式碼、參與討論。
+Built-in: 內置
+Bulletin: 公告
+By clicking the button, you will become a member of the domain {0}.: 點擊按鈕，您將成為域 {0} 的成員。
+By Contest: 由比賽
+By Language: 由語言
+By Problem: 由題目
+By signing up a {0} universal account, you can submit code and join discussions in all online judging services provided by us.: 註冊一個 {0} 通用帳號，您就可以在我們提供的所有線上評測服務上提交程式、參與討論。
+By Status: 由狀態
+By Username / UID: 由使用者名 或 UID
 Calendar View: 日曆視圖
+Calendar: 日曆
 Can be Extended For: 可延期
 Cancel Score: 取消成績
 Cancel: 取消
+Categories: 分類
 Category: 分類
-Change Email: 修改電子郵件
+Change Email: 修改電子郵箱
 Change Password: 修改密碼
-Claim homework: 認領功課
-Claim Homework: 認領功課
-Claimed: 已認領
-Click here to chat with me: 點選這裡與我聊天
+Change Theme: 更換主題
+Check In: 簽到
+Checker: 比較器
+CheckerType: 比較器類型
+Chinese: 中文
+Choose the background image in your profile page.: 選擇您資料頁面的背景圖片。
+Claim homework: 領取作業
+Claim Homework: 領取作業
+Claimed: 已領取
+Clear Marks: 清除標記
+Click here to chat with me: 點擊這裡與我聊天
+click to add: 點擊添加
+Clone: 複製
 CLOSE: 關閉
-Code blocks: 程式碼區塊
-Code language: 程式碼語言
-Code: 程式碼
-Comment: 評論
-Comments: 評論
+Code blocks: 程式區塊
+Code language: 程式語言
+Code: 程式
+codeFontFamily: 程式字體
+collapse: 收縮
+Comment: 留言
+Comments: 留言
 CommonMark Syntax: CommonMark 語法
+Compile Error: 編譯錯誤
+Compilers' Version and Parameters: 編譯器版本及參數
+Complete: 完成
+Completed: 已完成
+Config: 配置
 Confirm deleting the selected roles?: 您確定刪除所選角色嗎？
-Confirm removing the selected users?: 您確定將所選使用者移除嗎？
-Confirmation mail has been sent to your new email.: 確認郵件已經發送到您的新電子郵箱。
-Contact Us: 聯絡我們
-Contact: 聯絡
-content: 內容
-Content: 內容
-Contest scoreboard is not visible.: 當前比賽成績表隱藏，暫不可顯示。
+Confirm deleting this comment? Its replies will be deleted as well.: 確定刪除這個留言嗎？回覆會被同時刪除。
+Confirm deleting this reply?: 確定刪除這個回覆嗎？
+Confirm rejudge this problem?: 確定要重測這道題目嗎？
+Confirm removing the selected users?: 您確定將所選使用者刪除嗎？
+Confirm to delete the selected files?: 確定刪除所選文件嗎？
+Confirm to delete the selected problems?: 確定要刪除所選題目嗎？
+Confirmation mail has been sent to your new email.: 確定電子郵件已經發送到您的新電子郵箱。
+Congratulations! Your submission is accepted.: 恭喜！您的提交已評測通過。
+Contact Us: 聯繫我們
+Contact: 聯繫
+Content copied to clipboard!: 内容已複製到剪貼板！
+content: 内容
+Content: 内容
+Contest Maintainer: 比賽管理員
+Contest scoreboard is not visible.: 目前比賽成績表隱藏，暫不可顯示。
 Contest Scoreboard: 比賽成績表
-contest_create: 創建比賽
-contest_detail_problem_submit: 遞交比賽程式碼
+Contest Settings: 比賽設定
+contest_create: 建立比賽
+contest_detail_problem_submit: 提交比賽題目
 contest_edit: 編輯比賽
 contest_main: 比賽
 contest_scoreboard: 比賽成績表
 Contest: 比賽
-Create a contest: 創建一個比賽
-Create a Discussion: 創建一個討論
-Create a problem: 創建一個題目
-Create Contest: 創建比賽
-Create contests: 創建比賽
-Create Discussion in {0}: 在 {0} 下創建討論
-Create Discussion: 創建討論
-Create discussions: 創建討論
-Create Domain: 創建域
-Create homework: 創建功課
-Create Homework: 創建功課
-Create problem solutions: 創建題解
-Create Problem: 創建題目
-Create problems: 創建題目
-Create Role: 創建角色
-Create Training Plan: 創建訓練計劃
-Create: 創建
-current domain: 當前域
-Current Email: 當前電子郵件
-Current Location: 當前位置
-Current password doesn't match.: 當前密碼輸入錯誤。
-Current Password: 當前密碼
+Continue: 繼續
+Contributed Problems: 貢獻的題目
+Contributions: 貢獻
+Copy Email: 複製電子郵箱
+Copy from: 複製自
+Copy Link: 複製網址
+Copy QQ Number: 複製QQ號
+Copy Selected: 複製選中
+Copy WeChat Account: 複製微信號
+Copy: 複製
+Copyright Complaint: 版權申訴
+CPU Info: CPU資訊
+Create a contest: 建立一個比賽
+Create a Discussion: 建立一個討論
+Create a Post: 建立一個博文
+Create a problem: 建立一個題目
+Create Contest: 建立比賽
+Create contests: 建立比賽
+Create Discussion in {0}: 在 {0} 下建立討論
+Create Discussion: 建立討論
+Create discussions: 建立討論
+Create Domain: 建立域
+Create File: 建立文件
+Create Group: 建立小组
+Create homework: 建立作業
+Create Homework: 建立作業
+Create Link: 建立網址
+Create problem solutions: 建立題目解
+Create Problem: 建立題目
+Create problems: 建立題目
+Create Role: 建立角色
+Create Training Plan: 建立訓練計畫
+Create training plans: 建立訓練計畫
+Create: 建立
+Created By: 建立者
+Current dataset comes from: 目前資料集來自
+current domain: 目前域
+Current Email: 目前電子郵箱
+Current Location: 目前位置
+Current password doesn't match.: 目前密碼輸入錯誤。
+Current Password: 目前密碼
+Current Status: 目前狀態
 currently offline: 目前離線
-Data of Problem {0} not found.: 題目 {0} 的資料缺失。
+Daily update check: 每日自動檢查更新
+Dark: 暗色
+Data of Problem {0} not found.: 題目 {0} 的資料未找到。
+Data of problem {1} not found.: 題目 {1} 的資料未找到。
+Data of record {0} not found.: 紀錄 {0} 的資料未找到。
+Dataset Format: 測試資料集格式
 Dataset: 測試資料
+Day: 日
 Deadline: 截止時間
-Default Code Language: 預設程式碼語言
-Default Code Template: 預設程式碼模板
+Default Code Language: 默認程式語言
+Default Code Template: 默認程式模板
 Delete discussion replies of own discussion: 刪除自己討論中的回覆
 Delete discussion replies: 刪除討論回覆
 Delete discussions: 刪除討論
+Delete Domain: 刪除域
 Delete own discussion replies: 刪除討論中自己的回覆
 Delete own discussions: 刪除自己的討論
-Delete own problem solution replies: 刪除題解中自己的回覆
-Delete own problem solutions: 刪除自己的題解
-Delete problem solution replies: 刪除題解的回覆
-Delete problem solutions: 刪除題解
+Delete own problem solution replies: 刪除題目解中自己的回覆
+Delete own problem solutions: 刪除自己的題目解
+Delete problem solution replies: 刪除題目解的回覆
+Delete problem solutions: 刪除題目解
 Delete Selected Roles: 刪除所選角色
 delete: 刪除
 Delete: 刪除
 Description: 說明
+Destination Domain: 目標域
 Development: 開發
+Difficulty Algorithm: 難度算法
+Difficulty by admin: 管理員設定的難度
+Difficulty by algorithm: 算法計算的難度
+Difficulty displayed: 顯示的難度
 Difficulty: 難度
 Disabled: 關閉
+Disconnected from the server. trying to reconnect...: 服務器的連線斷開。正在重新連線...
 Discussion {1} not found.: 討論 {1} 不存在。
 Discussion category {1} already exists.: 討論分類 {1} 已經存在。
 Discussion category {1} not found.: 討論分類 {1} 不存在。
 Discussion node {1} already exists.: 討論節點 {1} 已經存在。
 Discussion node {1} not found.: 討論節點 {1} 不存在。
 Discussion Nodes: 討論節點
-discussion_create: 創建討論
+discussion_create: 建立討論
 discussion_edit: 編輯討論
 discussion_main: 討論
 discussion_node: 討論
+Discussion: 討論
 Discussions: 討論
+Display name {1} you want to set is used by others.: 您想要設定的顯示名 {1} 已經被其他人使用了。
+Display Name: 顯示名
+display_name: 顯示名
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 請勿討論解法，否則以作弊論處並且將失去參賽資格。
 Document {2} not found.: 文件 {2} 不存在。
 Domain {0} already exists.: 域 {0} 已經存在。
-Domain {0} is bulit-in and cannot be modified.: 域 {0} 為內建，不可修改。
+Domain {0} is bulit-in and cannot be modified.: 域 {0} 為內置，不可修改。
 Domain {0} not found.: 域 {0} 不存在。
-Domain ID cannot be changed once the domain is created.: 在創建後不能更改 ID。
+Domain ID cannot be changed once the domain is created.: 在建立後不能更改 ID。
+Domain ID: 域 ID
+Domain Settings: 域設定
+domain_dashboard: 管理域
+domain_discussion: 討論節點
+domain_edit: 編輯域資料
+domain_join: 加入域
 domain_main: 首頁
-Don't have an account?: 還沒有賬戶？
-Done: 已結束
+domain_permission: 管理權限
+domain_role: 管理角色
+domain_user: 管理使用者
+domain: 域
+Domain: 域
+Don't have an account?: 還沒有帳號？
+Done: 已结束
+Download All: 下載全部
+Download Dataset: 下載資料集
+Download Selected: 下載選中
 Download: 下載
+Downvote: 倒讚
 Duration (hours): 持續時間 (小時)
 Duration: 持續時間
-Edit any homework: 修改任意功課
+Edit any contests: 修改任意的比賽
+Edit any homework: 修改任意的作業
+Edit Contest: 編輯比賽
 Edit description of this domain: 修改此域描述
 Edit discussion replies of own discussion: 修改自己討論中的回覆
 Edit discussion replies: 修改討論的回覆
 Edit discussions: 修改討論
 Edit Domain: 編輯域
-Edit Homework: 編輯功課
+Edit Homework: 編輯作業
+Edit own contests: 修改自己的比賽
 Edit own discussion replies: 修改討論中自己的回覆
 Edit own discussions: 修改自己的討論
-Edit own homework: 修改自己的功課
-Edit own problem solution replies: 修改題解中自己的回覆
-Edit own problem solutions: 修改自己的題解
+Edit own homework: 修改自己的作業
+Edit own problem solution replies: 修改題目解中自己的回覆
+Edit own problem solutions: 修改自己的題目解
 Edit own problems: 修改自己的題目
-Edit permissions of a role: 修改角色許可權
-Edit problem solution replies: 修改題解的回覆
-Edit problem solutions: 修改題解
+Edit own training plans: 修改自己的訓練計畫
+Edit permissions of a role: 修改角色權限
+Edit problem solution replies: 修改題目解的回覆
+Edit problem solutions: 修改題目解
 Edit Problem: 編輯題目
 Edit problems: 修改題目
+Edit Profile: 編輯個人資訊
+Edit training plans: 修改訓練計畫
 Edit: 編輯
+Edited at: 修改於
+Edited: 已修改
 Email Visibility: Email 可見性
-Email: 電子郵件
+Email: 電子郵箱
 Enabled: 開啟
-End at: 結束於
-End Date: 結束日期
-End Time: 結束時間
+End at: 结束於
+End Date: 结束日期
+End Time: 结束時間
+Enroll Training: 參加訓練
 Enrolled: 已參加
+Enrollees: 參加人數
 error: 錯誤
-Export All Code: 導出所有原始碼
-Extension (days): 最長延期（日）
-Extension Score Penalty: 延期遞交扣分規則
-Field {0} or {1} validation failed.: 欄位 {0} 或 {1} 驗證失敗。
-Field {0} validation failed.: 欄位 {0} 驗證失敗。
-Footer: 頁尾
+Evaluated difficulty: 估計的難度
+Exit: 退出
+expand: 展開
+Expire: 過期
+Export All Code: 導出所有程式
+Export as {0}: 導出為 {0}
+Extension (days): 最長延期 (日)
+Extension Score Penalty: 延期提交扣分規則
+Extra Files Config: 額外文件設定
+Failed to join the domain. You are already a member.: 加入域失敗，您已是該域的成員。
+Failed to parse subtask.: 無法解析子任務資訊。
+Failed to parse testcase.: 無法解析測試點資訊。
+Feedback: 反饋
+Field {0} or {1} validation failed.: 字段 {0} 或 {1} 驗證失敗。
+Field {0} validation failed.: 字段 {0} 驗證失敗。
+File saved.: 文件已成功保存。
+file too large: 文件過大
+File uploaded successfully.: 上傳文件成功
+File: 文件
+Filename: 文件名
+Files: 文件
+Filter: 過濾
+fontFamily: 字體
+Footer: 頁腳
+Footnote: 腳註
+Forgot Password and/or Username: 忘記密碼和/或使用者名
 Forgot password or username?: 忘記密碼或者使用者名？
 Formula blocks: 公式區塊
+fs_upload: 上傳文件
 Gender Visibility: 性別可見性
 Gender: 性別
+Gravatar URL Prefix: Gravatar地址前缀
+Group / UID: 小组或 UID
+Group Name: 名稱
 Hard Deadline: 最終截止時間
-Have ALL PERMISSIONS in this domain: 在此域中擁有全部許可權
+Hash: 哈希
+Have ALL PERMISSIONS in this domain: 在此域中擁有全部權限
+He: 他
 Help: 幫助
 Hidden: 隱藏
 Hide all tags: 隱藏所有標籤
 Hide categorical tags: 隱藏分類標籤
+Hide tags: 隱藏標籤
 Highlight discussions: 高亮討論
-Highlight: 高亮討論
-home_account: 賬戶設定
-home_domain_account: 當前域的設定
-home_domain_create: 創建域
+Highlight: 高亮
+Hint: 提示
+Hint::icon::difficulty: Hydro 中題目的難度，根據提交數、通過率以及每個提交的提交時間和評測结果，綜合計算得出，可能不準確。
+Hint::icon::switch_account: 作為超級管理員，您可以直接更換到其他人的帳號。
+Hint::icon::testdata: <a href="https://hydro.js.org/docs/user/testdata/" target="_blank">請参照文件說明</a>
+Hint::page::main: 歡迎來到 Hydro！ 您可在右上角註冊或登陸。此類提示僅會顯示一次。
+Hint::page::problem_detail: 這是題目詳情頁面。您可點擊右側“進入線上編輯模式"開始撰寫您的程式。
+Hint::page::problem_files: 您可以將文件或壓縮包拖曳至對應區域來上傳文件。點擊文件名線上編輯或按住 Ctrl 後點擊文件名下載單個文件。
+Hint::page::problem_main: 這是題目列表頁面。您可在頁面右側進行篩選或搜索。
+Hitokoto: 一言
+home_account: 帳號設定
+home_domain_account: 目前域的設定
+home_domain_create: 建立域
 home_domain: 我的域
-home_messages: 站內訊息
+home_messages: 站内消息
 home_preference: 偏好設定
 home_security: 安全設定
-Homework Introduction: 功課介紹
-Homework scoreboard is not visible.: 目前無法查看功課成績表。
-homework_create: 創建功課
-homework_edit: 編輯功課
-homework_main: 功課
-homework_scoreboard: 成績表
-Homework: 功課
+homepage: 首頁
+Homework Introduction: 作業介绍
+Homework scoreboard is not visible.: 目前無法查看作業成績表。
+homework_create: 建立作業
+homework_detail_problem_submit: 提交作業題目
+homework_edit: 編輯作業
+homework_main: 作業
+homework_scoreboard: 作業成績表
+homework_status: 作業成績表
+Homework: 作業
 Host: 主持人
 hour(s): 小時
-If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您通過題目後，原始碼會以 Email 的形式傳送給您。
-If left blank, the built-in template of the corresponding language will be used.: 若留空，則將使用對應語言的內建程式碼模板。
+If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您通過題目後，正解程式碼會以 Email 的形式發送给您。
+If left blank, the built-in template of the corresponding language will be used.: 若留空，則將使用對應語言的內置程式模板。
+Ignore trailing space and enter.: 忽略行末空格與文件尾回車。
+Images With Size: 指定大小的圖片
 Images: 圖片
-In following homework: 在以下功課中
-In following training plans: 在下列訓練計劃中
+Import from: 導入自
+Import Problem: 導入題目
+Import: 導入
+In 1 day: 一天後
+In 1 month: 一個月後
+In 1 week: 一周後
+In 3 days: 三天後
+In 3 hours: 三個小時後
+In following contests: 在下列比賽中
+In following homework: 在以下作業中
+In following training plans: 在下列訓練計畫中
+In Progress: 進行中
 Information: 資訊
-Inline codes: 行內程式碼
-Inline formulas: 行內公式
-Invalid user {0} or password.: 使用者 {0} 不存在或密碼錯誤。
+Initialize: 初始化
+Inline codes: 行内程式
+Inline formulas: 行内公式
+Input: 輸入
+Insert Code: 插入程式
+Insert Image: 插入圖片
+Installed Modules: 已安装的模組
+Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 雖然測試數據不會被複製，但是系統會將題目的測試數據鏈接到原題。因此在原題的數據被改動的時候，複製後的題目的數據也會同時改動。鏈接後的測試數據的權限以原題為準，比如您可能依舊無法下載數據，但是評測機可以。在題目設置頁面中可以通過上傳新的測試數據的方式，這個數據鏈接會被刪除，以後將使用您的新測試數據。
+Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過 500 個字元，將顯示在列表頁面中。
+Introduce: 簡介
+Invalid password for user {0}.: 使用者 {0} 的密碼錯誤。
+Invalid: 無效
+Invitation Code: 邀請碼
+IO: 輸入輸出
+Is rated: 計入排名
 It works!: 它成了！
+Italic: 斜體
+Join: 加入
+Judge Config: 評測設定
+Judge Status: 評測狀態
+judge_extra_files: 評測額外文件
 judge_playground: 評測遊樂場
 Judged At: 評測時間
-Judging Queue: 評測佇列
-Lang.: 語言
+Judged By: 評測機
+Judging Queue: 評測隊列
+Keep current expiration: 保持目前過期設定
+Langs Config: 語言設定
+langs: 語言
 Language: 語言
 last active at: 最後活動於
-last login at: 最後登入於
-Last Submit At: 最後遞交於
+last login at: 最後登陸於
+Last Submit At: 最後提交於
 Last Update At: 最後活動時間
-LaTeX Expressions: LaTeX 表示式
-Learn More: 瞭解更多
-Links: 連結
+LaTeX Expressions: LaTeX 表達式
+Learn More: 了解更多
+Leave blank to use numeric pid.: 留空來使用數字題目號。
+Ledo: 樂多
+Light: 亮色
+Limit user to finish contest within N hours: 限制使用者在N小時内完成比賽
+Limitations: 限制
+Links: 網址
 List View: 列表視圖
 Live: 正在進行
 Live...: 正在進行…
+Loading editor...: 正在加載編輯器...
+Loading file...: 正在加載文件内容...
 Location: 位置
-Login to Attend Contest: 登入後參加比賽
-Login to Claim Homework: 登錄以認領功課
-Login to Create a Discussion: 登入後創建討論
-Login to Submit: 登入後遞交
-Login: 登入
-Logout All Sessions: 登出所有會話
-Logout This Session: 登出該會話
+Lock scoreboard on last N minutes: 在比賽最後N分鐘時鎖定成績表
+Login to Attend Contest: 登陸後參加比賽
+Login to Claim Homework: 登陸後領取作業
+Login to Create a Discussion: 登陸後建立討論
+Login to Submit: 登陸後提交
+Login with Github: 使用 Github 登陸
+Login with Google: 使用 Google 登陸
+Login: 登陸
+Logout All Sessions: 注銷所有會話
+Logout This Session: 注銷該會話
 Logout: 登出
 Lost Password: 忘記密碼
-manage_dashboard: 概況
-manage_domain: 管理域
-manage_edit: 編輯域資料
+Lucky: 手氣不錯
+manage_config: 配置管理
+manage_dashboard: 控制面板
 manage_join_applications: 加域申請
-manage_permission: 管理許可權
-manage_role: 管理角色
-manage_user: 管理使用者
+manage_module: 管理模組
+manage_script: 腳本管理
+manage_setting: 系统設定
+manage_user_priv: 使用者權限
 manage: 管理
 Manage: 管理
-Memory Cost: 記憶體佔用
+Manager: 管理
+Mark Green: 標綠
+Mark Red: 標紅
+Mark Yellow: 標黃
+Memory Cost: 記憶體占用
+Memory Info: 記憶體資訊
 Memory: 記憶體
-Message {0} not found.: 訊息 {0} 不存在。
-Messages: 訊息
-Most Upvoted Solutions: 最熱題解
+Message {0} not found.: 消息 {0} 不存在。
+Messages: 消息
+Method: 方法
+Microsoft Yahei: 微軟雅黑
+Moderator: 管理員
+Month: 月
+Monthly Popular: 月度最受歡迎
+More: 更多
+Most Upvoted Solutions: 最被贊同的題目解
 My Domains: 我的域
+My Files: 我的文件
 My Profile: 我的資料
-My Recent Submissions: 我最近的遞交記錄
+My Recent Submissions: 我的最近提交紀錄
 My Role: 我的角色
+name: 名稱
 Name: 名稱
-New Email: 新電子郵件
+Nav Logo Dark: 左上角小圖標（暗）
+Nav Logo Dark@2x: 左上角圖標（暗）（大）
+Nav Logo Light: 左上角圖標（亮）
+Nav Logo Light@2x: 左上角圖標（亮）（大）
+Network error: 網路錯誤
+Never expire: 永不過期
+New dataset: 新測試資料
+New Email: 新電子郵箱
+New file: 新文件
 New Password: 新密碼
-New Training Plan: 新訓練計劃
-New: 創建
+New Training Plan: 新訓練計畫
+New: 建立
+No additional file at current: 目前沒有附加文件
+No additional file at current.: 暫無附加文件。
+No comments so far...: 目前還沒有留言...
 no discussion yet...: 目前沒有討論…
-No Permission to Attend Contest: 您沒有許可權參加比賽
-No Permission to Claim Homework: 您沒有權限認領功課
-No Permission to Create a Discussion: 您沒有許可權創建討論
-No Permission to Submit: 您沒有許可權遞交
-No Submissions: 沒有遞交
-no_translation_warn: <blockquote class="warn">這部分內容正在翻譯。</blockquote>
+No Permission to Attend Contest: 您沒有權限參加比賽
+No Permission to Claim Homework: 您沒有權限領取作業
+No Permission to Create a Discussion: 您沒有權限建立討論
+No Permission to Submit: 您沒有權限提交
+No problem.: 沒有題目。
+No solutions so far...: 目前還沒有題解...
+No Submissions: 沒有提交
+No user is allowed to join this domain: 沒有使用者可以自助加入此域
+no_translation_warn: ''
+None: 無
 Not Attended: 未參加
 Not available: 不可用
-Not Claimed: 未認領
+Not Claimed: 未領取
+Not Enrolled: 未參加
 Not started with a number: 不以數字開頭
 Not wrapped with space: 兩側不含空格
-Oh, the user hasn't provide any discussions yet!: 啊哦，此用戶尚未參與討論......
-Oh, the user hasn't provide any problems yet!: 啊哦，此用戶尚未提供題目......
-Oh, the user hasn't provide any solutions yet!: 啊哦，此用戶尚未撰寫解題解......
-Oh, the user hasn't submitted yet!: 啊哦，此用戶尚未遞交......
-Oh, there is no task in the queue!: 喔，佇列中目前沒有任務。
+Numeric PID: 數字題號
+objective: 客觀題
+Oh, the user doesn't have any contributions!: 啊哦，這個使用者還没貢獻過題目~
+Oh, the user hasn't created any discussions yet!: 這個使用者還沒有發布過討論
+Oh, the user hasn't submitted yet!: 這個使用者還沒有交過題目 _(:зゝ∠)_
+Oh, there is no submission!: 喔，還沒有評測紀錄呢！
+Oh, there is no task in the queue!: 喔，隊列中目前沒有任務。
+Oh, there is no task that matches the filter!: 喔，目前沒有符合過濾條件的任務。
 Ok: 確定
-Oops, there are no results.: 呀，沒有結果。
+Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
+Oops, there are no results.: 呀，沒有结果。
 Oops!: Oops!
-Open Scratchpad: 進入線上程式設計模式
+Open in Problem Set: 在題目庫中打開
+Open Scratchpad: 進入線上編輯模式
 Open Since: 開始時間
 Open Source: 開源
-Operating System: 作業系統
-Original Score: 原始得分
+Open: 開放
+Operating System: 操作系统
+Ops: 運維
+Or, with automatically filled invitation code: 或者，這是可以自動填寫邀請碼的
+Ordered List: 有序列表
+Original Score: 原始分數
+OS Info: 系统資訊
+Output: 輸出
+Over {0} problems: 超過 {0} 道題目
 Owner: 所有者
+page.problem_detail.sidebar.show_category: 點擊顯示
+page.training_detail.invalid_when_not_enrolled: 未參加訓練計畫時您不能查看題目詳情。
 pager_first: « 第一頁
 pager_last: 末頁 »
 pager_next: 下一頁 ›
 pager_previous: ‹ 前一頁
+Params: 參數
 Partic.: 參賽人數
-Password reset mail has been sent to your email.: 密碼重置郵件已傳送到您的電子郵箱。
+Password reset mail has been sent to your email.: 密碼重置電子郵件已發送到您的電子郵箱。
 Password: 密碼
 Passwords don't match.: 驗證密碼不匹配。
 Path {0} not found.: 路徑 {0} 不存在。
@@ -315,249 +591,396 @@ Peak Memory: 峰值記憶體
 perm_contest: 比賽
 perm_discussion: 討論
 perm_general: 一般
+perm_homework: 作業
 perm_problem_solution: 題解
 perm_problem: 題庫
-perm_record: 記錄
+perm_record: 紀錄
 perm_training: 訓練
-Permission: 許可權
-Permissions: 許可權
-Please attend contest to see the problems.: 請參加比賽來檢視題目。
-Please claim the assignment to see the problems.: 認領功課后方可查看題目。
+Permission Control: 權限控制
+Permission: 權限
+Permissions: 權限
+Pick a problem randomly based on current filter: 根據目前過濾條件随機選擇一道題目
+Pin: 置頂
+PingFang SC: 蘋方簡體
+Plan: 計畫
+Please attend contest to see the problems.: 請參加比賽來查看題目。
+Please claim the assignment to see the problems.: 領取作業後才可以查看作業内容。
+Please select at least one file to perform this operation.: 請選擇至少一個文件來進行此操作。
 Please select at least one role to perform this operation.: 請選擇至少一個角色來進行操作。
 Please select at least one user to perform this operation.: 請選擇至少一個使用者來進行操作。
+Preference Settings: 偏好設定
+Preparing Upload...: 準備上傳...
 Pretest Data: 自測資料
 Pretest Your Code: 使用自定義資料測試
 Pretest: 自測
 Pretest?: 自測?
 Privacy: 隱私
+Privilege: 權限
 Problem {1} not found.: 題目 {1} 不存在。
 Problem Data: 題目資料
-Problem List: 供題列表
+Problem ID cannot be a pure number. Leave blank if you want to use numberic id.: 題目ID不能為纯數字。 若要自動分配數字ID請將此處留空。
+Problem ID List: 題目 ID 列表
 Problem Set: 題庫
 Problem Settings: 題目設定
-Problem Solution List: 題解列表
-Problem Solution: 題解列表
+Problem Solution List: 題目解列表
+Problem Solution: 題目解列表
 Problem Tags Visibility: 題目標籤可見性
-problem_create: 創建題目
+Problem Tags: 題目標籤
+Problem Type: 題目類型
+problem_config: 評測設定
+problem_create: 建立題目
 problem_edit: 編輯題目
+problem_import: 導入題目
 problem_main: 題庫
 problem_solution: 題解
-problem_submit: 遞交程式碼
+problem_submit: 提交程式
+problem_type.default: 傳統題目
+problem_type.fileio: '文件IO ({0})'
+problem_type.interactive: 交互題目
+problem_type.objective: 客觀題目
+problem_type.remote_judge: 遠端評測題目
+problem_type.submit_answer: 提交答案題目
+problem-category-delim: '|'
+problem-subcategory-delim: 、
 Problem: 題目
-Problems Sets: 題庫
+problem.import.additional_file: '## 附加文件'
+problem.import.hint: '## 提示'
+problem.import.input_format: '## 輸入格式'
+problem.import.limit_and_hint: '## 限制'
+problem.import.output_format: '## 輸出格式'
+problem.import.problem_description: '## 題目描述'
+Problems Sets: 題目庫
 Problems: 題目
+Processing...: 處理中...
+Profile Background Image: 背景圖片
+Progress: 進度
 Properties: 屬性
 Public: 公開
 Published at: 發表於
 QQ Group: QQ 群
 QQ Visibility: QQ 可見性
-Quit Scratchpad: 退出線上程式設計模式
+Quit Scratchpad: 退出線上編輯模式
+Quote: 引用
 Rank: 排名
+Ranked Users: 使用者排名
+ranking: 排名
 Read data of own problems: 讀取自己題目的資料
 Read data of problem: 讀取題目資料
-Read record codes: 讀取記錄的程式碼
+Read record codes: 讀取紀錄的程式
 Ready (☆▽☆): 馬上開始 (☆▽☆)
 Ready: 即將開始
-Recent {0} Records: 最近 {0} 條記錄
+Recent {0} Records: 最近 {0} 條紀錄
 Recent Activities: 最近活動
-Recent Solutions: 最近題解
-Recent Submissions: 最近遞交
-Record {0} not found.: 記錄 {0} 不存在。
-record_detail: 記錄詳情
-record_main: 評測佇列
-Records: 評測記錄
-Refresh Records: 重新整理評測記錄
-Refresh: 重新整理
+Recent Problems: 最新題目
+Recent Solutions: 最近撰寫的題解
+Recent Submissions: 最近提交
+Recently Created Discussions: 最近建立的討論
+Recommended: 推薦
+Record {0} not found.: 紀錄 {0} 不存在。
+record_detail: 紀錄詳情
+record_main: 評測紀錄
+Records: 評測紀錄
+Reference link copied to clipboard!: 引用網址已複製到剪貼板。
+Refresh Records: 刷新評測紀錄
+Refresh: 刷新
 Registered at: 註冊於
+Rejudge all submissions: 重測整題
 Rejudge problems: 重測題目
-Rejudge records: 重測記錄
+Rejudge records: 重測紀錄
 Rejudge: 重測
 Related Discussions: 相關討論
 Related: 相關
 Remember me: 記住我
+Remove Selected Group: 刪除所選小组
 Remove Selected User: 將所選使用者移出
-Remove this data: 移除這組資料
-Remove: 移除
+Remove Selected: 刪除選中
+Remove this data: 刪除這组資料
+Remove: 刪除
 Repeat Password: 重複密碼
 Reply discussions: 回覆討論
 Reply problem solutions: 回覆題解
 reply: 回覆
 Reply: 回覆
-Report: 舉報
+Report: 檢舉
+Require Invitation Code: 需要邀請碼
 required: 必填
-Resent Discussions: 最近討論
+Reset Password or Find Username: 重置密碼或找回使用者名
 Reset Password: 重置密碼
+Reset: 重置
+Restart: 重新啟動
+Role Assignment: 角色分配
 Role has been updated to {0} for selected users.: 所選使用者角色已更新為 {0}。
 Role has been updated to {0}.: 角色已更新為 {0}。
-Role name can only contains numbers, letters and underscores.: 角色名稱只能包含數字、字母和下劃線。
+Role name can only contains numbers, letters and underscores.: 角色名稱只能包含數字、字母和下划線。
 Role: 角色
 Roles: 角色
+RP Algorithm: RP 算法
+rpDetailText_contest: 比賽
+rpDetailText_problem: 題目
 Rule: 規則
 Run Pretest: 運行自測
+Run: 運行
 Sample Input: 輸入資料
 Sample Output: 輸出資料
-Save All Changes: 儲存所有修改
-Saved session: 已儲存的會話
+Save All Changes: 保存所有修改
+Saved session: 已保存的會話
+Saving file...: 正在保存文件...
 score canceled: 成績取消
 Score: 分數
 Scoreboard (Hidden): 成績表 (隱藏)
+Scoreboard locked at {0}: 比賽已於 {0} 封榜。
 Scoreboard: 成績表
+Scripts: 腳本
+Search: 搜索
 Secret (visible to admins): 保密（對管理員可見）
 Secret: 保密
+Section: 章節
 Security: 安全
 Select a node to create discussion.: 選擇一個節點來發表討論。
 Select a role: 選擇一個角色
 Select User: 選擇使用者
+Selected files have been deleted.: 所選文件已被刪除。
+Selected problems have been deleted.: 所選題目已被刪除。
 Selected roles have been deleted.: 所選角色已刪除。
-Selected users have been removed from the domain.: 所選使用者已從此域中移除。
-Send Code after acceptance: 通過題目後傳送原始碼
-Send Password Reset Email: 傳送密碼重置郵件
-Send Verification Email: 傳送驗證郵件
-Send: 傳送
+Selected users have been removed from the domain.: 所選使用者已從此域中刪除。
+Send Code after acceptance: 通過題目後發送源程式
+Send Message: 發送站内資訊
+Send Password Reset Email: 發送密碼重置電子郵件
+Send Verification Email: 發送驗證電子郵件
+Send: 發送
+Seperated with ',': 用 ',' 分隔
 Service Status: 服務狀態
+Set Privilege: 設定權限
 Set Role: 設定角色
 Set Roles for Selected User: 設定所選使用者的角色
 Set Roles for selected users: 為所選使用者設定角色
-setting_customize: 自訂
+setting_customize: 個性化
 setting_display: 顯示偏好
+setting_domain: 域設定
 setting_info_domain: 個人資訊
 setting_info: 個人資訊
 setting_privacy: 隱私
 setting_usage: 使用偏好
 Settings: 設定
 Share: 分享
+She: 她
 Show all tags: 顯示所有標籤
 Show MOD badge: 展示 MOD 徽章
+Show tags: 顯示標籤
 Show: 顯示
-Sign In: 登入
-SIGN IN: 登入
-Sign up mail has been sent to your email.: 註冊郵件已經發送到您的電子郵箱。
-Sign Up Now: 現在註冊
+Sign In: 登陸
+SIGN IN: 登陸
+Sign up mail has been sent to your email.: 註冊電子郵件已經發送到您的電子郵箱。
+Sign Up Now: 现在註冊
 Sign Up: 註冊
-Solutions Liked: 題解被贊
+Size: 大小
+Solutions Liked: 題解被讚
 Solutions: 題解
-Solve: 解決
+Solve: 解决
+Solved: 解决
 Sorry, there is no problem in the problem set: 題庫中沒有題目
+Sorry, there is no training plan.: 目前沒有訓練計畫。
+Sorry, there is no user in this domain.: 對不起，此域中沒有使用者。
 Sorry: 對不起
 Sort by: 排序
+Source type: 來源類型
 Star Topic: 收藏討論
 Star: 收藏
+Starred Users: 關注使用者
 Start at: 開始於
 Statistics: 統計
 Status is hidden: 狀態已隱藏
 Status: 狀態
-Submission Statistics: 遞交統計
-Submission: 遞交
-Submissions: 遞交
-Submit At: 遞交時間
-Submit By: 遞交者
-Submit problem: 遞交題目
-Submit Solution: 遞交評測
-Submit Time: 遞交時間
-Submit to Judge: 遞交以評測
-Submit Your Code: 遞交程式碼進行正式評測
-Submit: 遞交
-Submitted: 已遞交
-Support: 支援
+Submission Statistics: 提交統計
+Submission: 提交
+Submissions: 提交
+Submit At: 提交時間
+Submit By: 提交者
+Submit problem: 提交題目
+Submit Solution: 提交評測
+Submit Time: 提交時間
+Submit to Judge: 提交以評測
+Submit Your Code: 提交程式進行正式評測
+Submit: 提交
+Submitted: 已提交
+SuperUser: 超級管理員
+Support: 支持
+Switch account: 更換帳號
+Tags: 標籤
+Task Settings: 任務設定
+tasks_list: 任務列表
 Technical Information: 技術資訊
 Temporary session: 臨時會話
-Text: 文字
-The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
-Their account will not be deleted and they will be with the default role.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問。
+Terms of Service: 服務條款
+Test data comes from: 測試資料來自
+Testdata Config: 測試資料配置
+Testdata: 測試資料
+Text: 文本
+The 'default' role applies to ALL REGISTERED USER.: default 角色作用於<b 所有已註冊使用者</b>
+The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比賽採用靈活時間模式，你需要在參加後的指定時間内完成比賽。
+The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作業已超過截止時間，但仍在延期時間内。您提交題目將無法獲得全部分數。
+The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀請碼。您只能使用字母和數字，並且不能長於 64 個字元。
+The invitation code you provided is invalid.: 您提供的邀請碼無效。
+The link will be expired at {0}: 網址將於 {0} 過期
+The role to assign when user joining the domain.: 使用者加入此域時分配的角色。
+The uploaded file is too long.: 上傳的文件太長。
+The user is already a member of the domain.: 該使用者已是域的成員。
+The user is too lazy to leave something here...: 該使用者太懶，這裡啥也没寫 (´・ω・｀)
+Their account will not be deleted and they will be with the default role.: 他们的帳號不會被刪除，並且之後將以 default 角色訪問。
+Theme: 主題
 There are no contests...: 沒有比賽…
-There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
+There is no homework so far ╰(*°▽°*)╯: 目前還沒有作業 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
-This email was sent by {0} automatically, and please do not reply directly.: 這封郵件由 {0} 自動傳送，請勿直接回復。
-This homework is not open and you cannot view problems.: 功課尚未開放，不能查看題目。
-This homework is not open.: 功課尚未開放遞交。
-This is the current session: 這是當前的會話
+This email was sent by {0} automatically, and please do not reply directly.: 這封電子郵件由 {0} 自動發送，請勿直接回覆。
+This homework is not open and you cannot view problems.: 該作業還未到開放時間，您無法查看作業題目。
+This homework is not open.: 該作業還未開放提交。
+This is the current session: 這是目前的會話
+This message will be presented to those whose submissions are accepted.: 這條消息將會被展示给通過此題目的使用者。
+This page needs JavaScript to work.: 這個頁面需要 Javascript。
+This section cannot be challenged at present, so please complete the following sections first: 該章節目前不可挑戰，請先完成以下章節
+This type of files are not allowed to be uploaded.: 不允許上傳這種文件。
+This user was banned.: 此使用者已被封禁。
+Time (Seconds): 耗時 (秒)
 Time Cost: 耗時
 Time Extension: 延期
 Time: 時間
-timeago_locale: zh_TW
+timeago_locale: zh_CN
 Timezone: 時區
 title: 標題
 Title: 標題
-Toggle Pretest Panel: 切換自測面板
-Toggle Records Panel: 切換評測記錄面板
-Total Score: 總分
+Toggle Pretest Panel: 更換自測面板
+Toggle Preview: 更換預覽
+Toggle Records Panel: 更換評測紀錄面板
+Tools: 工具
+Total Score: 總分數
+Total Time (Seconds): 總耗時 (秒)
 Total Time: 總耗時
-Training requirement is not satisfied.: 不滿足訓練條件。
+Total: 總計
+Training requirement is not satisfied.: 不满足訓練條件。
+training_create: 建立訓練
+training_edit: 編輯訓練
 training_main: 訓練
+Training: 訓練
+Tried: 嘗試
+Two Factor Authentication: 兩步驗證碼
 Type: 類型
-UI Language: 使用者介面語言
+UI Language: 使用者界面語言
+Uncompleted: 未完成
 Unique: 唯一
-Unknown field {0}.: 未知欄位 {0}。
+Unknown field {0}.: 未知字段 {0}。
 Unknown: 未知
+Unlimited: 無限制
+Unordered List: 無序列表
+Unrank: 打星
 Unstar Topic: 取消收藏
 Unstar: 取消收藏
-Update Permission: 更新許可權
+Unsupported configure this type of problem. Please refer to the documentation.: 暫不支持快捷配置此類題目。請参照文件操作。
+Update Permission: 更新權限
+Update Settings: 更新設定
 Update: 更新
+Upload Failed: 上傳失敗
+Upload File: 上傳文件
 Upload Problem: 上傳題目
 Upload: 上傳
 Uploaded By: 上傳者
+Uploading files...: 正在上傳文件...
+Uploading... ({0}%): 正在上傳... ({0}%)
+Uploading...: 正在上傳...
+Upvote: 好評
+Usage exceeded.: 用量超限。
+Use admin specificed: 由管理員指定
+Use algorithm calculated: 使用算法計算
+Use average of above: 使用上面的平均值
+Use Subtasks Mode: 使用子任務模式
 User {0} already exists.: 使用者 {0} 已存在。
 User {0} not found.: 使用者 {0} 不存在。
+User can join this domain by visiting the following URL: 使用者可以訪問此網址來加入此域
 User ID: 使用者 ID
+User Privilege: 使用者權限
+User will no longer be allowed to join the domain after expiration.: 過期後，使用者將不能加入此域。
 user_detail: 使用者
-user_login: 登入
+user_extra_files: 編譯額外文件
+user_login: 登陸
 user_logout: 登出
 user_lostpass: 忘記密碼
+user_register_with_code: 註冊
 user_register: 註冊
 User-defined role: 使用者定義的角色
 User: 使用者
-Username / UID: 使用者名或 UID
+Username / UID: 使用者名 或 UID
 Username: 使用者名
-Users with those roles will be removed from the domain.: 擁有這些角色的使用者將從此域中移除。
+Users with those roles will be removed from the domain.: 擁有這些角色的使用者將從此域中刪除。
 Users: 使用者
-Using your {0} universal account: 使用您的 {0} 通用賬戶
+Using your {0} universal account: 使用您的 {0} 通用帳號
 Valid for registered users who are not members of the domain: 對域外註冊使用者有效
-Valid for visitors: 對未登入的遊客有效
-View contest scoreboard: 檢視比賽成績表
-View Contest: 檢視比賽
-View contests: 檢視比賽
-View Details: 檢視詳情
-View discussions: 檢視討論
-View hidden contest submission status and scoreboard: 檢視隱藏的比賽遞交狀態和成績表
-View hidden homework submission status and scoreboard: 翻閲隱藏的功課遞交狀態和成績表
-View homework scoreboard: 翻閲功課成績表
-View homework: 翻閲功課
-View Homework: 翻閲功課
-View or create discussion: 檢視與發表討論
-View or submit solution: 檢視與發表題解
-View Owned Training Plans: 檢視自己的訓練計劃
-View problem solutions: 檢視題解
-View Problem: 檢視題目
-View problems: 檢視題目
-View this domain: 檢視此域
-View training: 檢視訓練
-View: 檢視
+Valid for visitors: 對未登陸的游客有效
+Version: 版本
+Videos: 影片
+View contest scoreboard: 查看比賽成績表
+View Contest: 查看比賽
+View contests: 查看比賽
+View Details: 查看詳情
+View discussions: 查看討論
+View hidden contest submission status and scoreboard: 查看隱藏的比賽提交狀態和成績表
+View hidden homework submission status and scoreboard: 查看隱藏的作業提交狀態和成績表
+View hidden problems: 查看隱藏的題目
+View homework scoreboard: 查看作業成績表
+View homework: 查看作業
+View Homework: 查看作業
+View or create discussion: 查看與發表討論
+View or submit solution: 查看與發表題解
+View Owned Problems: 查看自己的題目
+View Owned Training Plans: 查看自己的訓練計畫
+View problem solutions: 查看題解
+View Problem: 查看題目
+View problems: 查看題目
+View this domain: 查看此域
+View training plans: 查看訓練計畫
+View Training: 查看訓練計畫
+View: 查看
 Visible to registered users: 對註冊使用者可見
-Visit: 檢視
+Visit: 查看
 Vote problem solutions: 為題解投票
 Vote: 投票
-We will check code similarity after this contest.: 我們會在賽後檢查程式碼相似度。
+warn::admin:unsupportedbrowser: "身為超級管理員，您仍在使用過於老舊的瀏覽器。 \n這些瀏覽器可能不支持 Hydro 管理面板的部分功能，\n我們強烈建議您升級到最新的 Chrome 瀏覽器。"
+We will check code similarity after this contest.: 我們會在賽後檢查程式相似度。
 WeChat Visibility: 微信可見性
 WeChat: 微信
-What is domain?: 什麼是域?
-What's domain?: 什麼是域？
+Week: 周
+WenQuanYi Micro Hei: 文泉驿
+What is domain?: 甚麼是域?
+What is this?: 這是甚麼？
+What's domain?: 甚麼是域？
+What's script?: 甚麼是腳本？
+What's this?: 這是甚麼？
 Whether to show tags in the problem list.: 是否在題目列表中顯示題目的標籤。
-Will be used as the domain icon.: 將被用作圖示。
-Without slashes or backslashes: 不含斜槓和反斜槓
-Write Your Comment: 發表您的評論
+wiki_help: 幫助
+Will be used as the domain icon.: 將被用作系统圖標。
+With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通過這個功能將某域下您能查看的題目複製到其它域中，題目的標題目、描述、標籤與分類將被複製過來。但是測試資料不會被直接複製。
+Write Your Comment: 發表您的留言
 Write Your Solution: 發表您的題解
-You can create your own training plans and share with others.: 您可以創建您自己的訓練計劃並且與他人分享。
-You cannot submit for this problem because the homework's deadline is due.: 功課已到達截止時間，您無法遞交了。
-You don't have the required permission ({0}) in this domain.: 您在該域中無相應許可權 ({0})。
+Year: 年
+You are not allowed to join the domain. The link is either invalid or expired.: 您無法加入該域，網址無效或已過期。
+You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以將頭像上傳到 <a href="https://gravatar.com/">Gravatar</a>，本站的頭像將自動更新。
+You can create your own training plans and share with others.: 您可以建立您自己的訓練計畫並且與他人分享。
+You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 該比賽已结束，您無法在比賽模式下提交該題目。您可以點擊“在題目庫中打開”以普通模式查看和提交本題目。
+You cannot submit for this problem because the homework's deadline is due.: 作業已超過截止時間，您無法提交本題目。
+You cannot visit this domain.: 您不能訪問此域。
+You don't have permission to upload file.: 您沒有權限上傳文件。
+You don't have the required permission ({0}) in this domain.: 您在該域中無相應權限 ({0})。
 You don't have the required privilege.: 您沒有相應的特權。
-You don't own any domain and don't have privilege to create domain.: 您不擁有任何域也沒有創建域的特權。
-You have not submitted any solutions for this problem: 您在該題下沒有遞交過任何解答
-You have permissions to create problems for this domain.: 您有許可權為此域創建題目。
+You don't own any domain and don't have privilege to create domain.: 您不擁有任何域也沒有建立域的特權。
+You have not submitted any solutions for this problem: 您在該題目下沒有提交過任何解答
+You have permissions to create problems for this domain.: 您有權限為此域建立題目。
+You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 您有未完成的建立域操作。您可以點擊“繼續”來完成建立。
 You haven't attended this contest yet.: 您還沒有參加本次比賽。
-You haven't claimed this homework yet.: 您還未認領該功課。
-You're not logged in.: 您沒有登入。
+You haven't claimed this homework yet.: 您還未領取過該作業。
+You may want to create a new role in 'Manage Role' page.: 您可能希望在右側管理角色面板中添加一個新角色。
+You need to enter the invitation code to join the domain.: 您需要輸入邀請碼來加入此域。
+You received a system message, click here to view.: 您收到一條系统通知，點擊查看。
+You're not logged in.: 您沒有登陸。
 You've already attended this contest.: 您已經參加本次比賽。
-You've already claimed this homework.: 您已認領該功課。
+You've already claimed this homework.: 您已領取過該作業。
 You've already voted.: 您已經投過票。
-Your permission: 您的許可權
+Your permission: 您的權限
 Your role: 您的角色
