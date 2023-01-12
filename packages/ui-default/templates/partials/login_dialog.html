@@ -22,28 +22,20 @@
           </label>
         </div></div>
         <div class="row"><div class="columns">
-          <label class="checkbox">
-            <input type="checkbox" name="rememberme" class="checkbox">{{ _('Remember me') }}
-          </label>
-        </div></div>
-        <div class="row"><div class="columns">
           <label class="material textbox">
             {{ _('Password') }}
             <input name="password" type="password">
           </label>
         </div></div>
-        <div class="row" style="display: none" id="authn_div"><div class="columns">
-          <input type="hidden" name="authnChallenge" value="">
-          <input value="{{ _('Use Authenticator To Login') }}" class="expanded rounded primary button" name="webauthn_verify">
-        </div></div>
-        <div class="row" style="display: none" id="tfa_div"><div class="columns">
-          <label class="material textbox">
-            {{ _('Two Factor Authentication Code') }}
-            <input name="tfa" type="number">
+        <div class="row"><div class="columns">
+          <label class="checkbox">
+            <input type="checkbox" name="rememberme" class="checkbox">{{ _('Remember me') }}
           </label>
         </div></div>
         <div class="row"><div class="columns">
-          <input type="submit" value="{{ _('Login') }}" class="expanded rounded primary button">
+          <input type="hidden" name="tfa" value="">
+          <input type="hidden" name="authnChallenge" value="">
+          <input type="submit" value="{{ _('Login') }}" name="login_submit" class="expanded rounded primary button">
         </div></div>
         {% endif %}
         {%- for v in handler.loginMethods -%}

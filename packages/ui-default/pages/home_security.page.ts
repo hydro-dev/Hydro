@@ -4,7 +4,8 @@ import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  base64, delay, i18n, request, tpl,
+  base64, delay, i18n, randomString,
+  request, substitute, tpl,
 } from 'vj/utils';
 
 export default new NamedPage('home_security', () => {
@@ -64,7 +65,7 @@ export default new NamedPage('home_security', () => {
           return true;
         },
       }).open();
-      const secret = String.random(13, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567');
+      const secret = randomString(13, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567');
       $('#secret').on('click', () => $('#secret').html(secret));
       const uri = `otpauth://totp/Hydro:${UserContext.uname}?secret=${secret}&issuer=Hydro`;
       const canvas = document.getElementById('qrcode');
@@ -93,6 +94,7 @@ export default new NamedPage('home_security', () => {
         Notification.error(i18n('Failed to fetch registration data.'));
         return;
       }
+      Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
       let credential;
       try {
         credential = await navigator.credentials.create({
@@ -113,11 +115,11 @@ export default new NamedPage('home_security', () => {
           },
         }) as PublicKeyCredential;
       } catch (err) {
-        Notification.error([i18n('Failed to get credential:'), err].join(' '));
+        Notification.error(i18n('Failed to get credential: {0}', err));
         return;
       }
       const response = credential.response as AuthenticatorAttestationResponse;
-      let transports = null;
+      let transports = 'unknown';
       if (typeof response.getTransports === 'function') {
         transports = response.getTransports().join(',');
       }

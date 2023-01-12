@@ -8,7 +8,17 @@
       <div class="row"><div class="columns">
         <input type="hidden" name="authnChallenge" value="">
         <button class="inverse expanded rounded primary button" name="webauthn_verify" data-type="sudo" autofocus>{{ _('Use Authenticator To Confirm') }}</button>
-      <p>Or use password to confirm:</p>
+      </div></div>
+      {% endif %}
+      {% if UserContext.tfa %}
+      <div class="row" id="tfa_div"><div class="columns">
+        <label class="inverse material textbox">
+          {{ _('Two Factor Authentication Code') }}
+          <input name="tfa" type="number">
+        </label>
+        <div class="text-center">
+          <input type="submit" value="{{ _('Use TFA Code To Confirm') }}" class="inverse expanded rounded primary button">
+        </div>
       </div></div>
       {% endif %}
       <div class="row"><div class="columns">
@@ -17,17 +27,9 @@
           <input name="password" type="password"{% if not UserContext.authn %} autofocus{% endif %}>
         </label>
       </div></div>
-      {% if UserContext.tfa %}
-      <div class="row" id="tfa_div"><div class="columns">
-        <label class="inverse material textbox">
-          {{ _('Two Factor Authentication Code') }}
-          <input name="tfa" type="number">
-        </label>
-      </div></div>
-      {% endif %}
       <div class="row"><div class="columns">
         <div class="text-center">
-          <input type="submit" value="{{ _('Confirm') }}" class="inverse expanded rounded primary button">
+          <input type="submit" value="{{ _('Use Password To Confirm') }}" class="inverse expanded rounded primary button">
         </div>
       </div></div>
       <div class="row"><div class="columns">
