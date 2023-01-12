@@ -5,7 +5,7 @@ import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
   base64, delay, i18n, randomString,
-  request, substitute, tpl,
+  request, tpl,
 } from 'vj/utils';
 
 export default new NamedPage('home_security', () => {
