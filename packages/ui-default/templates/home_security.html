@@ -95,17 +95,17 @@
         </div>
       </div>
       <div class="section__body">
-        <ul class="sessionlist">
+        <ul class="autherlist">
           {%- if handler.user.tfa -%}
-          <li class="sessionlist__item">
+          <li class="autherlist__item">
             <div class="media">
               <div class="media__left medium">
-                <span class="sessionlist__icon icon icon-platform--mobile }}"></span>
+                <span class="autherlist__icon icon icon-platform--mobile }}"></span>
               </div>
               <div class="media__body medium typo">
                 <p>{{ _('Authenticator') }}: {{ _('Two Factor Authentication') }}</p>
               </div>
-              <div class="media__right medium" style="width:200px">
+              <div class="media__right medium">
                 <form method="POST" action="{{ url('user_auth') }}">
                   <input type="hidden" name="operation" value="disable">
                   <input type="hidden" name="type" value="tfa">
@@ -117,18 +117,18 @@
           </li>
           {%- endif -%}
           {%- for authenticator in authenticators -%}
-          <li class="sessionlist__item">
+          <li class="autherlist__item">
             <div class="media">
               <div class="media__left medium">
-                <span class="sessionlist__icon icon icon-{{ 'fingerprint' if authenticator.authenticatorAttachment === 'platform' else 'usb' }}"></span>
+                <span class="autherlist__icon icon icon-{{ 'fingerprint' if authenticator.authenticatorAttachment === 'platform' else 'usb' }}"></span>
               </div>
-              <div class="media__body medium-6 typo">
+              <div class="media__body medium typo">
                 <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialId.substring(0, 6) }})</p>
                 <p>{{ _('Type') }}: {{ authenticator.authenticatorAttachment }} </p>
-                <p>{{ _('Transports') }}: {{ authenticator.transports.join(',') }} </p>
+                <p>{{ _('Transports') }}: {{ authenticator.transports|default('unknown') }} </p>
                 <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
               </div>
-              <div class="media__right medium-4">
+              <div class="media__right medium">
                 <form method="POST" action="{{ url('user_auth') }}">
                   <input type="hidden" name="operation" value="disable">
                   <input type="hidden" name="type" value="authn">

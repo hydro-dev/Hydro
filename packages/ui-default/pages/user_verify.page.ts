@@ -18,6 +18,7 @@ async function verifywebauthn($form) {
     Notification.error(i18n('Failed to fetch registration data.'));
     return null;
   }
+  Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
   if ($form['authnCredentialId']) {
     authnInfo.authOptions.allowCredentials = authnInfo.authOptions.allowCredentials.filter(
       (cred: any) => cred.id === $form['authnCredentialId'].value,
@@ -32,6 +33,7 @@ async function verifywebauthn($form) {
         allowCredentials: authnInfo.authOptions.allowCredentials.map((cred: any) => ({
           ...cred,
           id: Uint8Array.from(base64.decode(cred.id, false), (c: string) => c.charCodeAt(0)),
+          transports: cred.transports ?? [],
         })),
       },
     }) as PublicKeyCredential;
@@ -39,7 +41,6 @@ async function verifywebauthn($form) {
     Notification.error(i18n('Failed to get credential: {0}', err));
     return null;
   }
-  Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
   const response = credential.response as AuthenticatorAssertionResponse;
   const authn = await request.post('/user/auth', {
     operation: 'verify',
@@ -74,12 +75,12 @@ export default new AutoloadPage('user_verify', () => {
             <h3>${i18n('Two Factor Authentication')}</h3>
             <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
             <div style="${authInfo.authn ? '' : 'display:none;'}">
-              <input value="${i18n('Use Authenticator To Login')}" class="expanded rounded primary button" data-autofocus data-action="webauthn">
+              <input value="${i18n('Use Authenticator To Login')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
             </div>
             <div style="${authInfo.tfa ? '' : 'display:none;'}">
               <label>${i18n('6-Digit Code')}  
                 <div class="textbox-container">
-                  <input class="textbox" type="text" name="tfa_code" data-autofocus autocomplete="off">
+                  <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
                 </div>
               </label>
               <input value="${i18n('Use TFA Code To Login')}" class="expanded rounded primary button" data-action="tfa">

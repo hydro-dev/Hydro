@@ -169,20 +169,18 @@ class UserSudoHandler extends Handler {
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
         ]);
-        const needVerify = this.user.tfa || this.user.authn;
         let verified = false;
-        if (this.user.authn && authnChallenge) {
+        if (this.user.authn && authnChallenge && !verified) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
             if (!challenge || challenge.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
             verified = true;
         }
-        if (!verified) this.user.checkPassword(password);
-        if (this.user.tfa && tfa) {
+        if (this.user.tfa && tfa && !verified) {
             if (!verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
             verified = true;
         }
-        if (needVerify && !verified) throw new ValidationError('2FA', 'Authn');
+        if (!verified) this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -661,7 +659,7 @@ class OauthCallbackHandler extends Handler {
 export async function apply(ctx) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
-    ctx.Route('user_sudo', '/user/sudo', UserSudoHandler);
+    ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_auth', '/user/auth', UserAuthHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);

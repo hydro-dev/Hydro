@@ -95,7 +95,7 @@ export class User {
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
         this.tfa = !!udoc.tfa;
-        this.authn = !!(udoc.authenticators || []).length;
+        this.authn = (udoc.authenticators || []).length > 0;
         if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
 
         for (const key in setting.SETTINGS_BY_KEY) {

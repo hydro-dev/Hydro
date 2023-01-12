@@ -119,7 +119,7 @@ export default new NamedPage('home_security', () => {
         return;
       }
       const response = credential.response as AuthenticatorAttestationResponse;
-      let transports = 'unknown';
+      let transports = null;
       if (typeof response.getTransports === 'function') {
         transports = response.getTransports().join(',');
       }
@@ -150,7 +150,7 @@ export default new NamedPage('home_security', () => {
         credentialType: credential.type,
         clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
         attestationObject: base64.encode(String.fromCharCode(...new Uint8Array(response.attestationObject)), false),
-        transports,
+        transports: transports ?? '',
         authenticatorAttachment: credential.authenticatorAttachment ?? '',
       });
       if (authn.error) {

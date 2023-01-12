@@ -1,5 +1,6 @@
 import path from 'path';
 import yaml from 'js-yaml';
+import { pick } from 'lodash';
 import { ObjectID } from 'mongodb';
 import { camelCase } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
@@ -167,7 +168,7 @@ class HomeSecurityHandler extends Handler {
         this.response.template = 'home_security.html';
         this.response.body = {
             sessions,
-            authenticators: this.user._authenticators,
+            authenticators: this.user._authenticators.map((c) => pick(c, ['credentialId', 'name', 'authenticatorAttachment', 'transports', 'regat'])),
             geoipProvider: geoip?.provider,
             icon: useragent.icon,
         };
