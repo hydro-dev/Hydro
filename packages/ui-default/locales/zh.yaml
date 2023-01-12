@@ -901,8 +901,8 @@ Upvote: 好评
 Usage exceeded.: 用量超限。
 Use admin specificed: 由管理员指定
 Use algorithm calculated: 使用算法计算
-Use Authenticator to Login: 通过认证器登录
-Use Authenticator to Verify: 通过认证器认证
+Use Authenticator To Confirm: 通过认证器认证
+Use Authenticator To Login: 通过认证器登录
 Use average of above: 使用上面的平均值
 Use Subtasks Mode: 使用子任务模式
 User {0} already exists.: 用户 {0} 已存在。
