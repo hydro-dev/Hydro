@@ -196,6 +196,7 @@ class UserAuthHandler extends Handler {
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
         let udoc = this.user;
+        if (udoc._id && uname) throw new UserNotFoundError(uname);
         if (uname) {
             udoc = await user.getByEmail(domainId, uname);
             udoc ||= await user.getByUname(domainId, uname);
@@ -247,6 +248,7 @@ class UserAuthHandler extends Handler {
     ) {
         if (!credentialId) throw new ValidationError('authenticator');
         let udoc = this.user;
+        if (udoc._id && uname) throw new UserNotFoundError(uname);
         if (uname) {
             udoc = await user.getByEmail(domainId, uname);
             udoc ||= await user.getByUname(domainId, uname);
