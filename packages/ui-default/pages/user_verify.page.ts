@@ -42,19 +42,21 @@ async function verifywebauthn($form) {
     return null;
   }
   const response = credential.response as AuthenticatorAssertionResponse;
-  const authn = await request.post('/user/auth', {
-    operation: 'verify',
-    credentialId: base64.encode(String.fromCharCode(...new Uint8Array(credential.rawId)), false),
-    clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
-    authenticatorData: base64.encode(String.fromCharCode(...new Uint8Array(response.authenticatorData)), false),
-    signature: base64.encode(String.fromCharCode(...new Uint8Array(response.signature)), false),
-    uname,
-  });
-  if (authn.error) {
-    Notification.error(authn.error);
-    return null;
+  try {
+    const authn = await request.post('/user/auth', {
+      operation: 'verify',
+      credentialId: base64.encode(String.fromCharCode(...new Uint8Array(credential.rawId)), false),
+      clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
+      authenticatorData: base64.encode(String.fromCharCode(...new Uint8Array(response.authenticatorData)), false),
+      signature: base64.encode(String.fromCharCode(...new Uint8Array(response.signature)), false),
+      uname,
+    });
+    if (!authn.error) return authnInfo.authOptions.challenge;
+  } catch (err) {
+    Notification.error(err.message);
+    console.error(err);
   }
-  return authnInfo.authOptions.challenge;
+  return null;
 }
 
 export default new AutoloadPage('user_verify', () => {

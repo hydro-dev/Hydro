@@ -72,14 +72,16 @@ export default new NamedPage('home_security', () => {
       await QRCode.toCanvas(canvas, uri);
       const tfaAction = await enableTFA;
       if (tfaAction !== 'ok') return;
-      const authn = await request.post('/user/auth', {
-        operation: 'enable',
-        type: 'tfa',
-        code: $('[name="tfa_code"]').val(),
-        secret,
-      });
-      if (authn.error) {
-        Notification.error(authn.error);
+      try {
+        await request.post('/user/auth', {
+          operation: 'enable',
+          type: 'tfa',
+          code: $('[name="tfa_code"]').val(),
+          secret,
+        });
+      } catch (err) {
+        Notification.error(err.message);
+        console.error(err);
         return;
       }
       Notification.success(i18n('Successfully enabled.'));
@@ -142,19 +144,21 @@ export default new NamedPage('home_security', () => {
         },
       }).open();
       if (op !== 'ok') return;
-      const authn = await request.post('/user/auth', {
-        operation: 'enable',
-        type: 'authn',
-        credentialId: base64.encode(String.fromCharCode(...new Uint8Array(credential.rawId)), false),
-        credentialName: $('[name="webauthn_name"]').val(),
-        credentialType: credential.type,
-        clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
-        attestationObject: base64.encode(String.fromCharCode(...new Uint8Array(response.attestationObject)), false),
-        transports: transports ?? '',
-        authenticatorAttachment: credential.authenticatorAttachment ?? '',
-      });
-      if (authn.error) {
-        Notification.error(authn.error);
+      try {
+        await request.post('/user/auth', {
+          operation: 'enable',
+          type: 'authn',
+          credentialId: base64.encode(String.fromCharCode(...new Uint8Array(credential.rawId)), false),
+          credentialName: $('[name="webauthn_name"]').val(),
+          credentialType: credential.type,
+          clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
+          attestationObject: base64.encode(String.fromCharCode(...new Uint8Array(response.attestationObject)), false),
+          transports: transports ?? '',
+          authenticatorAttachment: credential.authenticatorAttachment ?? '',
+        });
+      } catch (err) {
+        Notification.error(err.message);
+        console.error(err);
         return;
       }
       Notification.success(i18n('Successfully enabled.'));

@@ -11,6 +11,7 @@ import { Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
+import { Logger } from '../logger';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as ContestModel from '../model/contest';
@@ -27,6 +28,8 @@ import {
     Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
+
+const logger = new Logger('user');
 
 function verifyToken(secret: string, code?: string) {
     if (!code || !code.length) return null;
@@ -170,7 +173,7 @@ class UserSudoHandler extends Handler {
             oplog.log(this, 'user.sudo', {}),
         ]);
         let verified = false;
-        if (this.user.authn && authnChallenge && !verified) {
+        if (this.user.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
             if (!challenge || challenge.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
@@ -279,6 +282,7 @@ class UserAuthHandler extends Handler {
                 }],
             });
         } catch (error) {
+            logger.error(error);
             throw new ValidationError('authenticator');
         }
         await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
@@ -327,7 +331,7 @@ class UserAuthHandler extends Handler {
                     authenticators: [...this.user._authenticators, {
                         credentialId: ab2str(verification.authnrData.get('credId')),
                         name: credentialName || 'New Authenticator',
-                        transports,
+                        transports: transports || [],
                         authenticatorAttachment,
                         publicKey: verification.authnrData.get('credentialPublicKeyPem') as string,
                         counter: verification.authnrData.get('counter') as number,
@@ -335,6 +339,7 @@ class UserAuthHandler extends Handler {
                     }],
                 });
             } catch (error) {
+                logger.error(error);
                 throw new ValidationError('authenticator');
             }
         }
