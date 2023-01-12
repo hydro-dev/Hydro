@@ -126,12 +126,19 @@ class UserLoginHandler extends Handler {
             this.limitRate(`user_login_${uname}`, 60, 5, false),
             oplog.log(this, 'user.login', { redirect }),
         ]);
-        if (udoc.tfa && !verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+        const needVerify = udoc.tfa || udoc.authn;
+        let verified = false;
+        if (udoc.tfa && tfa) {
+            if (!verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+            verified = true;
+        }
         if (udoc.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
             if (!challenge || challenge.uid !== udoc._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
+            verified = true;
         }
+        if (needVerify && !verified) throw new ValidationError('2FA', 'Authn');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
@@ -162,15 +169,20 @@ class UserSudoHandler extends Handler {
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
         ]);
+        const needVerify = this.user.tfa || this.user.authn;
+        let verified = false;
         if (this.user.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
             if (!challenge || challenge.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
+            verified = true;
         }
-        if (tfa) {
-            if (!this.user._tfa || !verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
+        if (!verified) this.user.checkPassword(password);
+        if (this.user.tfa && tfa) {
+            if (!verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
+            verified = true;
         }
-        if (!authnChallenge) this.user.checkPassword(password);
+        if (needVerify && !verified) throw new ValidationError('2FA', 'Authn');
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -240,7 +252,7 @@ class UserAuthHandler extends Handler {
             udoc ||= await user.getByUname(domainId, uname);
         }
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
-        if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
+        if (!udoc.authn) throw new AuthOperationError('Authn', 'disabled');
         const authenticator = udoc._authenticators.find((c) => c.credentialId === credentialId);
         if (!authenticator) throw new ValidationError('authenticator');
         const response = {
@@ -289,14 +301,12 @@ class UserAuthHandler extends Handler {
         authenticatorAttachment: string,
     ) {
         if (type === 'tfa') {
-            if (this.user._tfa) throw new AuthOperationError('TFA', 'enabled');
+            if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
             if (!verifyToken(secret, code)) throw new InvalidTokenError('2FA');
             await user.setById(this.user._id, { tfa: secret });
         } else if (type === 'authn') {
             if (!credentialId) throw new ValidationError('authenticator');
-            if (this.user._authenticators.filter((i) => i.credentialId === credentialId).length) {
-                throw new ValidationError('authenticator');
-            }
+            if (this.user._authenticators.find((c) => c.credentialId === credentialId)) throw new ValidationError('authenticator');
             const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
             if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
             const response = {
@@ -337,8 +347,8 @@ class UserAuthHandler extends Handler {
     @param('code', Types.String, true)
     async postDisable(domainId: string, type: string, authnChallenge = '', credentialId = '', code = '') {
         if (type === 'tfa') {
-            if (!this.user._tfa) throw new AuthOperationError('TFA', 'disabled');
-            if (!verifyToken(this.user._tfa, code)) throw new InvalidTokenError('TFA');
+            if (!this.user._tfa) throw new AuthOperationError('2FA', 'disabled');
+            if (!verifyToken(this.user._tfa, code)) throw new InvalidTokenError('2FA');
             await user.setById(this.user._id, undefined, { tfa: '' });
         } else if (type === 'authn') {
             if (!this.user.authn) throw new AuthOperationError('Authn', 'disabled');
@@ -346,9 +356,9 @@ class UserAuthHandler extends Handler {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
             if (!challenge || challenge.uid !== this.user._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
-            if (!this.user._authenticators.find((i) => i.credentialId === credentialId)) throw new ValidationError('authenticator');
+            if (!this.user._authenticators.find((c) => c.credentialId === credentialId)) throw new ValidationError('authenticator');
             await user.setById(this.user._id, {
-                authenticators: this.user._authenticators.filter((i) => i.credentialId !== credentialId),
+                authenticators: this.user._authenticators.filter((c) => c.credentialId !== credentialId),
             });
         }
         this.back();
