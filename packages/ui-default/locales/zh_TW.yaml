@@ -28,7 +28,7 @@ __langname: 正體中文
 'Discussion: Terms Of Service': 討論區服務條款
 'File upload failed: {0}': 文件上傳失敗：{0}
 'Format: category 1, category 2, ..., category n': 格式：分類1, 分類2, ..., 分類n
-'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以點選以下連結來啟動您 {1} 賬戶的新電子郵件地址：
+'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以點選以下連結來啟用您 {1} 賬戶的新電子郵件地址：
 'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以點選以下連結來重置您 {1} 賬戶的密碼：
 'Hello! You can click following link to sign up your {0} account:': 您好！您可以點選以下連結來註冊您的 {0} 賬戶：
 'Join {0}': '加入 {0}'
@@ -402,7 +402,7 @@ homework_create: 創建功課
 homework_detail_problem_submit: 提交功課題目
 homework_edit: 編輯功課
 homework_main: 功課
-homework_scoreboard: 功課成績表
+homework_scoreboard: 成績表
 homework_status: 功課成績表
 Homework: 功課
 Host: 主持人
@@ -818,7 +818,7 @@ Testdata: 測試資料
 Text: 文字
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用於<b> 所有已註冊使用者</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本場比賽採用靈活時間模式，你需要在參加後的指定時間內完成比賽。
-The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已超過截止時間，但仍在延期時間內。您此時提交的題目將無法獲得全部分數。
+The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時提交的題目無法獲得全部分數。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀請碼。您只能使用字母和數字，並且不能長於 64 個字元。
 The invitation code you provided is invalid.: 您提供的邀請碼無效。
 The link will be expired at {0}: 連結將於 {0} 過期
@@ -964,7 +964,7 @@ You are not allowed to join the domain. The link is either invalid or expired.: 
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以將頭像上傳到 <a href="https://gravatar.com/">Gravatar</a>，本站的頭像將自動更新。
 You can create your own training plans and share with others.: 您可以創建您自己的訓練計劃並且與他人分享。
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 該比賽已結束，您無法在比賽模式下提交該題。您可以點擊“在題庫中打開”以普通模式查看和提交本題。
-You cannot submit for this problem because the homework's deadline is due.: 功課已超過截止時間，您無法提交本題目。
+You cannot submit for this problem because the homework's deadline is due.: 功課已到達截止時間，您無法提交了。
 You cannot visit this domain.: 您不能訪問此域。
 You don't have permission to upload file.: 您沒有權限上傳文件。
 You don't have the required permission ({0}) in this domain.: 您在該域中無相應權限 ({0})。
