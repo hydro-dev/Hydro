@@ -25,7 +25,8 @@ import * as system from '../model/system';
 import token from '../model/token';
 import user from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, requireSudo,
+    Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
@@ -216,6 +217,7 @@ class UserAuthHandler extends Handler {
         this.response.body.authOptions = options;
     }
 
+    @requireSudo
     async postRegister() {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
         const registrationOptions = await f2l.attestationOptions();
@@ -289,6 +291,7 @@ class UserAuthHandler extends Handler {
         this.back();
     }
 
+    @requireSudo
     @param('type', Types.Range(['tfa', 'authn']))
     @param('code', Types.String, true)
     @param('secret', Types.String, true)
@@ -346,6 +349,7 @@ class UserAuthHandler extends Handler {
         this.back();
     }
 
+    @requireSudo
     @param('type', Types.Range(['authn', 'tfa']))
     @param('authnChallenge', Types.String, true)
     @param('authnCredentialId', Types.String, true)

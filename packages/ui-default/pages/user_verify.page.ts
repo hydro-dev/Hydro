@@ -19,11 +19,6 @@ async function verifywebauthn($form) {
     return null;
   }
   Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
-  if ($form['authnCredentialId']) {
-    authnInfo.authOptions.allowCredentials = authnInfo.authOptions.allowCredentials.filter(
-      (cred: any) => cred.id === $form['authnCredentialId'].value,
-    );
-  }
   let credential;
   try {
     credential = await navigator.credentials.get({
@@ -122,6 +117,7 @@ export default new AutoloadPage('user_verify', () => {
   $(document).on('click', '[name=webauthn_verify]', async (ev) => {
     ev.preventDefault();
     const $form = ev.currentTarget.form;
+    if (!$form) return;
     const challenge = await verifywebauthn($form);
     if (challenge) {
       $form['authnChallenge'].value = challenge;
