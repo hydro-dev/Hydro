@@ -682,7 +682,6 @@ Ready (☆▽☆): 馬上開始 (☆▽☆)
 Ready: 即將開始
 Recent {0} Records: 最近 {0} 條記錄
 Recent Activities: 最近活動
-Resent Discussions: 最近討論
 Recent Problems: 最新題目
 Recent Solutions: 最近題解
 Recent Submissions: 最近提交
@@ -716,6 +715,7 @@ Reply: 回覆
 Report: 檢舉
 Require Invitation Code: 需要邀請碼
 required: 必填
+Resent Discussions: 最近討論
 Reset Password or Find Username: 重置密碼或找回使用者名
 Reset Password: 重置密碼
 Reset: 重置
@@ -947,6 +947,7 @@ View problem solutions: 檢視題解
 View Problem: 檢視題目
 View problems: 檢視題目
 View this domain: 檢視此域
+View training: 檢視訓練
 View training plans: 檢視訓練計劃
 View Training: 檢視訓練
 View: 檢視
