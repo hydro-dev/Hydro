@@ -436,6 +436,7 @@ Instead of copying the test data directly, the test data of the copied problems 
 Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過 500 個字元，將顯示在列表頁面中。
 Introduce: 簡介
 Invalid password for user {0}.: 使用者 {0} 的密碼錯誤。
+Invalid user {0} or password.: 使用者 {0} 不存在或密碼錯誤。
 Invalid: 無效
 Invitation Code: 邀請碼
 IO: 輸入輸出
@@ -451,6 +452,7 @@ Judged At: 評測時間
 Judged By: 評測機
 Judging Queue: 評測佇列
 Keep current expiration: 保持當前過期設定
+Lang.: 語言
 Langs Config: 語言設定
 langs: 語言
 Language: 語言
@@ -486,11 +488,16 @@ Logout: 登出
 Lost Password: 忘記密碼
 Lucky: 手氣不錯
 manage_config: 配置管理
+manage_domain: 管理域
 manage_dashboard: 控制面板
+manage_edit: 編輯域資料
 manage_join_applications: 加域申請
 manage_module: 管理模組
+manage_permission: 管理許可權
+manage_role: 管理角色
 manage_script: 腳本管理
 manage_setting: 系統設定
+manage_user: 管理使用者
 manage_user_priv: 使用者權限
 manage: 管理
 Manage: 管理
@@ -551,6 +558,9 @@ Not started with a number: 不以數字開頭
 Not wrapped with space: 兩側不含空格
 Numeric PID: 數字題號
 objective: 客觀題
+Oh, the user hasn't provide any discussions yet!: 啊哦，此用戶尚未參與討論......
+Oh, the user hasn't provide any problems yet!: 啊哦，此用戶尚未提供題目......
+Oh, the user hasn't provide any solutions yet!: 啊哦，此用戶尚未撰寫解題解......
 Oh, the user doesn't have any contributions!: 啊哦，這個使用者尚未提供題目......
 Oh, the user hasn't created any discussions yet!: 這個使用者尚未參與討論......
 Oh, the user hasn't submitted yet!: 這個使用者還沒有交過題目 _(:зゝ∠)_
@@ -618,6 +628,7 @@ Privacy: 隱私
 Privilege: 權限
 Problem {1} not found.: 題目 {1} 不存在。
 Problem Data: 題目資料
+Problem List: 供題列表
 Problem ID cannot be a pure number. Leave blank if you want to use numberic id.: 題目ID不能為純數字。 若要自動分配數字ID請將此處留空。
 Problem ID List: 題目 ID 列表
 Problem Set: 題庫
@@ -671,6 +682,7 @@ Ready (☆▽☆): 馬上開始 (☆▽☆)
 Ready: 即將開始
 Recent {0} Records: 最近 {0} 條記錄
 Recent Activities: 最近活動
+Resent Discussions: 最近討論
 Recent Problems: 最新題目
 Recent Solutions: 最近題解
 Recent Submissions: 最近提交
@@ -816,7 +828,7 @@ Test data comes from: 測試資料來自
 Testdata Config: 測試資料配置
 Testdata: 測試資料
 Text: 文字
-The 'default' role applies to ALL REGISTERED USER.: default 角色作用於<b> 所有已註冊使用者</b>
+The 'default' role applies to ALL REGISTERED USER.: default 角色作用於<b>所有已註冊使用者</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本場比賽採用靈活時間模式，你需要在參加後的指定時間內完成比賽。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時提交的題目無法獲得全部分數。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀請碼。您只能使用字母和數字，並且不能長於 64 個字元。
@@ -957,6 +969,7 @@ Whether to show tags in the problem list.: 是否在題目列表中顯示題目�
 wiki_help: 幫助
 Will be used as the domain icon.: 將被用作圖示。
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通過這個功能將某域下您能查看的題目複製到其它域中，題目的標題、描述、標籤與分類將被複製過來。但是測試資料不會被直接複製。
+Without slashes or backslashes: 不含斜槓和反斜槓
 Write Your Comment: 發表您的留言
 Write Your Solution: 發表您的題解
 Year: 年
