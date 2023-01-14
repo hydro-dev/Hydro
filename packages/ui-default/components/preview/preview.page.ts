@@ -150,11 +150,13 @@ export async function previewFile(ev, type = '') {
   data.append('file', new Blob([val], { type: 'text/plain' }));
   if (type) data.append('type', type);
   data.append('operation', 'upload_file');
-  const postUrl = !window.location.href.endsWith('/files')
-    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '';
-  await request.postFile(postUrl, data);
+  const endpoint = new URL(!window.location.href.endsWith('/files')
+    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '', window.location.href);
+  const args = $(ev.currentTarget).closest('[data-fragment-id]').data('pjax');
+  if (args) new URLSearchParams(args).forEach((v, k) => endpoint.searchParams.set(k, v));
+  await request.postFile(endpoint.toString(), data);
   Notification.success(i18n('File saved.'));
-  return pjax.request({ push: false });
+  return pjax.request({ url: endpoint.toString(), push: false });
 }
 
 const dataPreviewPage = new AutoloadPage('dataPreview', () => {

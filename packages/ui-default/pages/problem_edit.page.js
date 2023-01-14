@@ -9,7 +9,7 @@ import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  i18n, request, slideDown, slideUp, tpl,
+  i18n, pjax, request, slideDown, slideUp, tpl,
 } from 'vj/utils';
 
 const categories = {};
@@ -207,6 +207,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
         );
       },
     });
+    await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
   }
 
   async function handleClickRemove(ev) {

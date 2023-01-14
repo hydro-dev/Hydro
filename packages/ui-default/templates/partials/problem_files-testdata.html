@@ -1,5 +1,6 @@
 {% import "components/nothing.html" as nothing with context %}
-<div class="section__body no-padding problem-files-testdata" data-fragment-id="problem-files-testdata">
+<div class="section__body no-padding {{ 'problem-sidebar-testdata__detail' if sidebar else 'problem-files-testdata'}}" data-fragment-id="problem-files-testdata" 
+  {% if sidebar %}data-pjax="additional_file=false&sidebar=true"{% endif %}>
   {% if reference %}
     <blockquote class="note">
       <p>{{ _('This is a copy of another problem.') }}</p>
@@ -7,29 +8,35 @@
   {% elif testdata.length %}
     <table class="data-table">
       <colgroup>
-        <col class="col--checkbox">
+        {% if not sidebar %}<col class="col--checkbox">{% endif %}
         <col class="col--name">
         <col class="col--size">
+        {% if sidebar %}<col class="col--operation">{% endif %}
       </colgroup>
       <thead>
         <tr>
+          {% if not sidebar %}
           <th class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" name="select_all" data-checkbox-toggle="testdata">
             </label>
           </th>
+          {% endif %}
           <th class="col--name">{{ _('Filename') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
+          {% if sidebar %}<th class="col--operation"><span class="icon icon-wrench"></span></th>{% endif %}
         </tr>
       </thead>
       <tbody>
         {%- for file in testdata -%}
         <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
+          {% if not sidebar %}
           <td class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" data-checkbox-group="testdata" data-checkbox-range>
             </label>
           </td>
+          {% endif %}
           <td class="col--name" data-preview="testdata">
             {% if handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
               <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:'testdata'} }) }}">{{ file.name }}</a>
@@ -38,11 +45,14 @@
             {% endif %}
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
+          {% if sidebar %}
+            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
+          {% endif %}
         </tr>
         {%- endfor -%}
       </tbody>
     </table>
   {% else %}
-    {{ nothing.render('No testdata at current.') }}
+    {{ nothing.render('No testdata at current.', compact=sidebar) }}
   {% endif %}
 </div>
