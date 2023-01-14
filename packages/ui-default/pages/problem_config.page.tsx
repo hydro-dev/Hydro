@@ -1,4 +1,4 @@
-import { normalizeSubtasks, readSubtasksFromFiles, size } from '@hydrooj/utils/lib/common';
+import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import type { SubtaskType } from 'hydrooj/src/interface';
 import $ from 'jquery';
 import yaml from 'js-yaml';
@@ -25,6 +25,8 @@ const page = new NamedPage('problem_config', () => {
     await new Promise((resolve) => { input.onchange = resolve; });
     await uploadFiles('./files', input.files, {
       type: 'testdata',
+      sidebar: true,
+      pjax: true,
       singleFileUploadCallback: (file) => {
         reduxStore.dispatch({
           type: 'CONFIG_ADD_TESTDATA',
@@ -34,16 +36,8 @@ const page = new NamedPage('problem_config', () => {
             size: file.size,
           },
         });
-        $('.testdata-table tbody').append(
-          $(tpl`<tr data-filename="${file.name}" data-size="${file.size.toString()}">
-            <td class="col--name" title="${file.name}"><a href="./file/${file.name}?type=testdata">${file.name}</a></td>
-            <td class="col--size">${size(file.size)}</td>
-            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
-          </tr>`),
-        );
       },
     });
-    pjax.request({ url: './files?additional_file=false&sidebar=true', push: false });
   }
 
   async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
@@ -63,7 +57,7 @@ const page = new NamedPage('problem_config', () => {
         type: 'CONFIG_DELETE_TESTDATA',
         value: file,
       });
-      $(ev.currentTarget).parent().parent().remove();
+      await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
     } catch (error) {
       Notification.error(error.message);
     }

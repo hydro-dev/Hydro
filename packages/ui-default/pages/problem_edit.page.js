@@ -1,4 +1,3 @@
-import { size } from '@hydrooj/utils/lib/common';
 import $ from 'jquery';
 import _ from 'lodash';
 import { ConfirmDialog } from 'vj/components/dialog';
@@ -197,17 +196,9 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     await new Promise((resolve) => { input.onchange = resolve; });
     await uploadFiles('./files', input.files, {
       type: 'additional_file',
-      singleFileUploadCallback: (file) => {
-        $('.additionalfile-table tbody').append(
-          $(tpl`<tr data-filename="${file.name}" data-size="${file.size.toString()}">
-            <td class="col--name" title="${file.name}"><a href="./file/${file.name}?type=testdata">${file.name}</a></td>
-            <td class="col--size">${size(file.size)}</td>
-            <td class="col--operation"><a href="javascript:;" name="testdata__delete"><span class="icon icon-delete"></span></a></td>
-          </tr>`),
-        );
-      },
+      sidebar: true,
+      pjax: true,
     });
-    await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
   }
 
   async function handleClickRemove(ev) {
@@ -223,7 +214,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
         type: 'additional_file',
       });
       Notification.success(i18n('File have been deleted.'));
-      $(ev.currentTarget).parent().parent().remove();
+      await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
     } catch (error) {
       Notification.error(error.message);
     }

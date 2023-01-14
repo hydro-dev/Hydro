@@ -1,6 +1,6 @@
 {% import "components/nothing.html" as nothing with context %}
 <div class="section__body no-padding {{ 'problem-sidebar-testdata__detail' if sidebar else 'problem-files-testdata'}}" data-fragment-id="problem-files-testdata" 
-  {% if sidebar %}data-pjax="additional_file=false&sidebar=true"{% endif %}>
+  {% if sidebar %}data-type="testdata" data-sidebar{% endif %}>
   {% if reference %}
     <blockquote class="note">
       <p>{{ _('This is a copy of another problem.') }}</p>

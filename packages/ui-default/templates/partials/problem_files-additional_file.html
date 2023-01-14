@@ -1,6 +1,6 @@
 {% import "components/nothing.html" as nothing with context %}
 <div class="section__body no-padding {{ 'problem-sidebar-additional_file__detail' if sidebar else 'problem-files-additional_file' }}" data-fragment-id="problem-files-additional_file"
-  {% if sidebar %}data-pjax="testdata=false&sidebar=true"{% endif %}>
+  {% if sidebar %}data-type="additional_file" data-sidebar{% endif %}>
   {% if additional_file.length %}
     <table class="data-table additionalfile-table">
       <colgroup>
