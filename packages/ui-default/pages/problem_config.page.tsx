@@ -11,7 +11,7 @@ import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  i18n, loadReactRedux, request, tpl,
+  i18n, loadReactRedux, pjax, request, tpl,
 } from 'vj/utils';
 
 const page = new NamedPage('problem_config', () => {
@@ -43,6 +43,7 @@ const page = new NamedPage('problem_config', () => {
         );
       },
     });
+    pjax.request({ url: './files?additional_file=false&sidebar=true', push: false });
   }
 
   async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
