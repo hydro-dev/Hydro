@@ -90,7 +90,6 @@ pjax.request = async (opt) => {
       window.history.replaceState(currentState, null, meta.url);
     }
     if (meta.title) document.title = meta.title;
-    data.fragments = data.fragments || [];
     data.fragments.forEach((fragment) => {
       if (process.env.NODE_ENV !== 'production') {
         if (fragment.html === undefined) {

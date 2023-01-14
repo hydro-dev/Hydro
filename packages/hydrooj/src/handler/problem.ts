@@ -654,6 +654,7 @@ export class ProblemConfigHandler extends ProblemManageHandler {
         this.response.body.testdata = sortFiles(this.pdoc.data || []);
         const configFile = (this.pdoc.data || []).filter((i) => i.name.toLowerCase() === 'config.yaml');
         this.response.body.config = '';
+        this.response.body.fragments = [];
         if (configFile.length > 0) {
             try {
                 this.response.body.config = (await streamToBuffer(
