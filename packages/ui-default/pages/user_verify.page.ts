@@ -7,7 +7,7 @@ import {
 } from 'vj/utils';
 
 async function verifywebauthn($form) {
-  if (!('credentials' in navigator)) {
+  if (!window.isSecureContext || !('credentials' in navigator)) {
     Notification.error(i18n('Your browser does not support WebAuthn or you are not in secure context.'));
     return null;
   }
@@ -72,7 +72,7 @@ export default new AutoloadPage('user_verify', () => {
             <h3>${i18n('Two Factor Authentication')}</h3>
             <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
             <div style="${authInfo.authn ? '' : 'display:none;'}">
-              <input value="${i18n('Use Authenticator To Login')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
+              <input value="${i18n('Use Authenticator')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
             </div>
             <div style="${authInfo.tfa ? '' : 'display:none;'}">
               <label>${i18n('6-Digit Code')}  
@@ -80,7 +80,7 @@ export default new AutoloadPage('user_verify', () => {
                   <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
                 </div>
               </label>
-              <input value="${i18n('Use TFA Code To Login')}" class="expanded rounded primary button" data-action="tfa">
+              <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
             </div>
           </div>
           `,

@@ -4,61 +4,50 @@
   <div class="immersive--content immersive--center">
     <h1>{{ _('Confirm Access') }}</h1>
     <form method="POST">
-      {% set verify_type = handler.request.query.type|default('') %}
-      {% if UserContext.authn and (not verify_type or verify_type === 'authn') %}
-      {% set verify_type = 'authn' %}
-      <div class="row"><div class="columns">
+      {% if UserContext.authn %}
+      <div class="row sudo-div nojs--hide" data-sudo="authn"><div class="columns">
+        <input type="submit" value="{{ _('Use Authenticator') }}" class="inverse expanded rounded primary button" name="webauthn_verify">
         <input type="hidden" name="authnChallenge" value="">
-        <button class="inverse expanded rounded primary button" name="webauthn_verify" autofocus>{{ _('Use Authenticator To Confirm') }}</button>
       </div></div>
-      {% elif UserContext.tfa and (not verify_type or verify_type === 'tfa') %}
-      {% set verify_type = 'tfa' %}
-      <div class="row" id="tfa_div"><div class="columns">
+      {% endif %}
+      {% if UserContext.tfa %}
+      <div class="row sudo-div" data-sudo="tfa"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Two Factor Authentication Code') }}
-          <input name="tfa" type="number" autofocus>
+          <input name="tfa" type="number">
         </label>
-        <div class="text-center">
-          <button type="submit" class="inverse expanded rounded primary button">{{ _('Use TFA Code To Confirm') }}</button>
-        </div>
       </div></div>
-      {% elif UserContext.tfa and (not verify_type or verify_type === 'password') %}
-      {% set verify_type = 'password' %}
-      <div class="row"><div class="columns">
+      {% endif %}
+      <div class="row sudo-div" data-sudo="password"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Password') }}
-          <input name="password" type="password" autofocus>
+          <input name="password" type="password">
         </label>
       </div></div>
-      <div class="row"><div class="columns">
+      <div class="row confirm-div"><div class="columns">
         <div class="text-center">
-          <button type="submit" class="inverse expanded rounded primary button">{{ _('Use Password To Confirm') }}</button>
+          <button type="submit" class="inverse expanded rounded primary button">{{ _('Confirm') }}</button>
         </div>
       </div></div>
-      {% endif %}
-      {% if UserContext.authn or UserContext.tfa %}
-      <div class="row"><div class="columns">
-        <div class="supplementary inverse">
-          <p><strong>{{ _('Or use other methods:') }}</strong></p>
-          <ol class="menu">
-            {% if UserContext.authn and verify_type !== 'authn' %}
-            <li class="menu__item"><a class="menu__link" href="{{ url('user_sudo', query={ type:'authn' }) }}">{{ _('Use Authenticator To Confirm') }}</a></li>
-            {% endif %}
-            {% if UserContext.tfa and verify_type !== 'tfa' %}
-            <li class="menu__item"><a class="menu__link" href="{{ url('user_sudo', query={ type:'tfa' }) }}">{{ _('Use TFA Code To Confirm') }}</a></li>
-            {% endif %}
-            {% if UserContext.tfa and verify_type !== 'password' %}
-            <li class="menu__item"><a class="menu__link" href="{{ url('user_sudo', query={ type:'password' }) }}">{{ _('Use Password To Confirm') }}</a></li>
-            {% endif %}
-          </ol>
-        </div>
-      {% endif %}
       <div class="row"><div class="columns">
         <div class="text-center supplementary inverse">
           <p><strong>Tip:</strong> You are entering <a href="https://docs.github.com/articles/sudo-mode">sudo mode</a>.</p>
           <p>After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.</p>
         </div>
       </div></div>
+      {% if UserContext.authn or UserContext.tfa %}
+      <br>
+      <div class="row nojs--hide"><div class="columns">
+        <div class="supplementary inverse typo">
+          <p><strong>{{ _('Or use other methods:') }}</strong></p>
+          <ol class="menu">
+            {% if UserContext.authn %}<li class="menu__item sudo-switch" data-sudo="authn" name="webauthn_verify"><a class="menu__link">{{ _('Use Authenticator') }}</a></li>{% endif %}
+            {% if UserContext.tfa %}<li class="menu__item sudo-switch" data-sudo="tfa"><a class="menu__link">{{ _('Use TFA Code') }}</a></li>{% endif %}
+            <li class="menu__item sudo-switch" data-sudo="password"><a class="menu__link">{{ _('Use Password') }}</a></li>
+          </ol>
+        </div>
+      </div></div>
+      {% endif %}
     </form>
   </div>
 </div></div>

@@ -17,16 +17,15 @@ export function delay(ms) {
   return new Promise((resolve) => { setTimeout(resolve, ms); });
 }
 
-const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+const secureRandomString = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
-export function randomString(digit = 32, dict = defaultDict) {
+export function randomString(digit = 32, dict = secureRandomString) {
   let result = '';
   const crypto = window.crypto || (window as any).msCrypto;
-  if (crypto && crypto.getRandomValues) {
-    const array = new Uint32Array(digit);
-    crypto.getRandomValues(array);
-    for (let i = 0; i < digit; i++) result += dict[array[i] % dict.length];
-  }
+  if (!crypto?.getRandomValues) throw new Error('crypto.getRandomValues not supported');
+  const array = new Uint32Array(digit);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < digit; i++) result += dict[array[i] % dict.length];
   return result;
 }
 

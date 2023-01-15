@@ -10,7 +10,7 @@ import {
 
 export default new NamedPage('home_security', () => {
   $(document).on('click', '[name="auth_enable"]', async () => {
-    const supportWebauthn = 'credentials' in navigator;
+    const supportWebauthn = window.isSecureContext && 'credentials' in navigator && 'create' in navigator.credentials;
     const authnInfo = supportWebauthn ? await request.post('/user/auth', { operation: 'register' }) : null;
     const chooseAction = await new ActionDialog({
       $body: tpl`

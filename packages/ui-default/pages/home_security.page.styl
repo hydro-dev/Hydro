@@ -31,10 +31,9 @@
   .autherlist__item
     margin: rem(10px 0)
     padding: rem(10px 0)
-    border-bottom: 1px solid #DDD
 
-    &:last-child
-      border-bottom: none
+    &:not(:last-child)
+    border-bottom: 1px solid #DDD
 
     input
       margin: 0
