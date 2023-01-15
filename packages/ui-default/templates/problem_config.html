@@ -13,9 +13,9 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    <div class="section side section--problem-sidebar-testdata">
+    <div class="section side">
       <div class="section__header">
-        <h1 class="section__title">{{ testdata.length if testdata.length else 0 }} {{_('Testdata')}}</h1>
+        <h1 class="section__title">{{ testdata.length|default(0) }} {{_('Testdata')}}</h1>
       </div>
       <ol class="menu">
         <li class="menu__item flex-row">
@@ -29,7 +29,8 @@
         <li class="menu__seperator"></li>
       </ol>
       {% set sidebar = true %}
-      {% include "partials/problem_files-testdata.html" %}
+      {% set filetype = "testdata" %}
+      {% include "partials/problem_files.html" %}
     </div>
     {% set owner_udoc = udoc %}
     {% include "partials/problem_sidebar.html" %}

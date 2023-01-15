@@ -92,7 +92,7 @@
       </div>
     </div>
     {% if page_name == 'problem_edit' %}
-      <div class="section side section--problem-sidebar-additional_file">
+      <div class="section side">
         <div class="section__header">
           <h1 class="section__title">{{ additional_file.length|default(0) }} {{_('Additional File')}}</h1>
         </div>
@@ -107,7 +107,8 @@
           </li>
         </ol>
         {% set sidebar = true %}
-        {% include "partials/problem_files-additional_file.html" %}
+        {% set filetype = "additional_file" %}
+        {% include "partials/problem_files.html" %}
       </div>
       {% set owner_udoc = udoc %}
       {% include "partials/problem_sidebar.html" %}

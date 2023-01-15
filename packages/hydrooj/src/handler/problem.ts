@@ -683,8 +683,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar,
             };
             const tasks = [];
-            if (getTestdata) tasks.push(this.renderHTML('partials/problem_files-testdata.html', args));
-            if (getAdditionalFile) tasks.push(this.renderHTML('partials/problem_files-additional_file.html', args));
+            if (getTestdata) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
+            if (getAdditionalFile) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }));
             if (!sidebar) tasks.push(this.renderHTML('partials/problem-sidebar-information.html', args));
             this.response.body = {
                 fragments: (await Promise.all(tasks)).map((i) => ({ html: i })),

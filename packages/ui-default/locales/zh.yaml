@@ -68,6 +68,7 @@ Add module: 添加模块
 Add new data: 添加新数据
 Add User: 添加用户
 Add: 添加
+additional_file: 附加文件
 All {0} Contests: 所有 {0} 比赛
 All Contests: 所有比赛
 All Homeworks: 所有作业
@@ -529,8 +530,7 @@ New file: 新文件
 New Password: 新密码
 New Training Plan: 新训练计划
 New: 创建
-No additional file at current: 当前没有附加文件
-No additional file at current.: 暂无附加文件。
+No {0} at current.: 当前没有{0}。
 No comments so far...: 目前还没有评论...
 no discussion yet...: 目前没有讨论…
 No Permission to Attend Contest: 您没有权限参加比赛
@@ -814,6 +814,7 @@ Temporary session: 临时会话
 Terms of Service: 服务条款
 Test data comes from: 测试数据来自
 Testdata Config: 测试数据配置
+testdata: 测试数据
 Testdata: 测试数据
 Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>

@@ -14,7 +14,8 @@
         </div>
       </div>
       {{ noscript_note.render() }}
-      {% include "partials/problem_files-testdata.html" %}
+      {% set filetype = "testdata" %}
+      {% include "partials/problem_files.html" %}
       {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
           <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
@@ -36,7 +37,8 @@
           {% endif %}
         </div>
       </div>
-      {% include "partials/problem_files-additional_file.html" %}
+      {% set filetype = "additional_file" %}
+      {% include "partials/problem_files.html" %}
       <div class="section__body">
         <button class="rounded button" name="download_selected_file">{{ _('Download Selected') }}</button>
         {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}

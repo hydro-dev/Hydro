@@ -143,7 +143,6 @@ export async function previewFile(ev, type = '') {
   } else Notification.info(i18n('Loading editor...'));
   const val = await startEdit(filename, content, type || 'file');
   if (typeof val !== 'string') return null;
-  Notification.info(i18n('Saving file...'));
   const file = new File([val], filename, { type: 'text/plain' });
   const endpoint = new URL(!window.location.href.endsWith('/files')
     ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '', window.location.href);
@@ -154,7 +153,6 @@ export async function previewFile(ev, type = '') {
     sidebar,
     pjax: true,
   });
-  Notification.success(i18n('File saved.'));
   return null;
 }
 
