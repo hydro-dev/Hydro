@@ -47,8 +47,8 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
       // Is system message
       try {
         const data = JSON.parse(msg.content);
-        const str = i18n(data.message).replace(/\{([^{}]+)\}/g, (match, key) => `%substitude%${key}%substitude%`);
-        const arr = str.split('%substitude%');
+        const str = i18n(data.message).replace(/\{([^{}]+)\}/g, (match, key) => `%placeholder%${key}%placeholder%`);
+        const arr = str.split('%placeholder%');
         data.params = data.params || {};
         for (let i = 1; i < arr.length; i += 2) {
           if (arr[i].endsWith(':link')) {

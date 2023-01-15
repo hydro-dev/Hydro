@@ -176,7 +176,12 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 ## 开源许可
 
-本项目基于 AGPL-3.0-or-later 开源。  
+本项目中的 examples/ install/ packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。
+项目其余部分使用双重许可：
+
+1. 您可以在遵守 AGPL-3.0 许可证的前提下免费使用这些代码。  
+2. 如确需闭源，您也可以联系我们购买其他授权。
+
 在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
 若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
 鉴于 Mirai 处的 [不和谐事件](https://github.com/mamoe/mirai/issues/850) 对此项目做如下声明：
@@ -188,6 +193,10 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 - 开发组会 **尽可能** 保证用户可以进行平滑升级，但无法保证不在新版本引入影响使用的漏洞，且内部实现可能会在不发布任何通知的情况下进行重命名/修改/删除。  
 
 如果您对以上条目感到不适，建议您停止使用本项目。
+
+## 贡献代码
+
+参照 [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 鸣谢
 
