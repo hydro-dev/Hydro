@@ -181,11 +181,11 @@ class UserSudoHandler extends Handler {
 class UserAuthHandler extends Handler {
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
-        const udoc = this.user._id ? this.user : (await user.getByEmail(domainId, uname) || await user.getByUname(domainId, uname))
+        const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
         const options = generateAuthenticationOptions({
-            allowCredentials: this.user._authenticators.map((authenticator) => ({
+            allowCredentials: udoc._authenticators.map((authenticator) => ({
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
             })),

@@ -70,6 +70,7 @@ export default new AutoloadPage('user_verify', () => {
           </div>
           `,
         $action: [],
+        canCancel: false,
         onDispatch(action) {
           if (action === 'tfa' && $('[name="tfa_code"]').val() === null) {
             $('[name="tfa_code"]').focus();
@@ -79,22 +80,11 @@ export default new AutoloadPage('user_verify', () => {
         },
       }).open();
       if (chooseAction === 'tfa') {
-        if (!authInfo.tfa) {
-          Notification.error(i18n('TFA is not enabled.'));
-          return;
-        }
         $form['tfa'].value = $('[name="tfa_code"]').val() as string;
       } else if (chooseAction === 'webauthn') {
-        if (!authInfo.authn) {
-          Notification.error(i18n('WebAuthn is not enabled.'));
-          return;
-        }
         const challenge = await verifywebauthn($form);
-        if (challenge) {
-          $form['authnChallenge'].value = challenge;
-        } else {
-          return;
-        }
+        if (challenge) $form['authnChallenge'].value = challenge;
+        else return;
       }
     }
     $form.submit();
