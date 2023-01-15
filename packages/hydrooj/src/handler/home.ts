@@ -168,7 +168,10 @@ class HomeSecurityHandler extends Handler {
         this.response.template = 'home_security.html';
         this.response.body = {
             sessions,
-            authenticators: this.user._authenticators.map((c) => pick(c, ['credentialId', 'name', 'authenticatorAttachment', 'transports', 'regat'])),
+            authenticators: this.user._authenticators.map((c) => pick(c, [
+                'credentialID', 'name', 'credentialType', 'credentialDeviceType',
+                'authenticatorAttachment', 'regat', 'fmt',
+            ])),
             geoipProvider: geoip?.provider,
             icon: useragent.icon,
         };

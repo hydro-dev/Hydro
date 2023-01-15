@@ -29,6 +29,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
+        "@simplewebauthn/typescript-types": "^7.0.0",
         "@types/autocannon": "^7.9.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/node": "^18.11.18",

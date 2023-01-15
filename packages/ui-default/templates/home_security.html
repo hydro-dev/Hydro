@@ -107,10 +107,8 @@
               </div>
               <div class="media__right medium">
                 <form method="POST" action="{{ url('user_auth') }}">
-                  <input type="hidden" name="operation" value="disable">
-                  <input type="hidden" name="type" value="tfa">
-                  <input type="hidden" name="code" value="">
-                  <input type="submit" value="{{ _('Remove') }}" class="rounded button" name="tfa_disable">
+                  <input type="hidden" name="operation" value="disable_tfa">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button">
                 </form>
               </div>
             </div>
@@ -123,18 +121,16 @@
                 <span class="autherlist__icon icon icon-{{ 'fingerprint' if authenticator.authenticatorAttachment === 'platform' else 'usb' }}"></span>
               </div>
               <div class="media__body medium typo">
-                <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialId.substring(0, 6) }})</p>
-                <p>{{ _('Type') }}: {{ authenticator.authenticatorAttachment }} </p>
-                <p>{{ _('Transports') }}: {{ authenticator.transports|default('unknown') }} </p>
+                <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialID.buffer.toString('base64')|truncate(6, end='') }})</p>
+                <p>{{ _('Type') }}: {{ authenticator.fmt }} </p>
+                <p>{{ _('Device Type') }}: {{ authenticator.credentialDeviceType }} </p>
                 <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
               </div>
               <div class="media__right medium">
                 <form method="POST" action="{{ url('user_auth') }}">
-                  <input type="hidden" name="operation" value="disable">
-                  <input type="hidden" name="type" value="authn">
-                  <input type="hidden" name="authnCredentialId" value="{{ authenticator.credentialId }}">
-                  <input type="hidden" name="authnChallenge" value="">
-                  <input type="submit" value="{{ _('Remove') }}" class="rounded button" name="webauthn_verify">
+                  <input type="hidden" name="id" value="{{ authenticator.credentialID.buffer.toString('base64') }}">
+                  <input type="hidden" name="operation" value="disable_authn">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button">
                 </form>
               </div>
             </div>

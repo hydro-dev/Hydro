@@ -24,6 +24,7 @@
     "@fontsource/source-code-pro": "^4.5.12",
     "@fontsource/ubuntu-mono": "^4.5.11",
     "@hydrooj/utils": "workspace:*",
+    "@simplewebauthn/browser": "^7.0.0",
     "@svgr/webpack": "^6.5.1",
     "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.16",

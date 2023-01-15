@@ -1,9 +1,10 @@
+import { startAuthentication } from '@simplewebauthn/browser';
 import $ from 'jquery';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
 import {
-  api, base64, gql, i18n, request, tpl,
+  api, gql, i18n, request, tpl,
 } from 'vj/utils';
 
 async function verifywebauthn($form) {
@@ -19,32 +20,16 @@ async function verifywebauthn($form) {
     return null;
   }
   Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
-  let credential;
-  try {
-    credential = await navigator.credentials.get({
-      publicKey: {
-        ...authnInfo.authOptions,
-        challenge: Uint8Array.from(base64.decode(authnInfo.authOptions.challenge, false), (c: string) => c.charCodeAt(0)),
-        allowCredentials: authnInfo.authOptions.allowCredentials.map((cred: any) => ({
-          ...cred,
-          id: Uint8Array.from(base64.decode(cred.id, false), (c: string) => c.charCodeAt(0)),
-          transports: cred.transports ?? [],
-        })),
-      },
-    }) as PublicKeyCredential;
-  } catch (err) {
-    Notification.error(i18n('Failed to get credential: {0}', err));
-    return null;
-  }
-  const response = credential.response as AuthenticatorAssertionResponse;
+  const result = await startAuthentication(authnInfo.authOptions)
+    .catch((e) => {
+      Notification.error(i18n('Failed to get credential: {0}', e));
+      return null;
+    });
+  if (!result) return null;
   try {
     const authn = await request.post('/user/auth', {
       operation: 'verify',
-      credentialId: base64.encode(String.fromCharCode(...new Uint8Array(credential.rawId)), false),
-      clientDataJSON: base64.encode(String.fromCharCode(...new Uint8Array(response.clientDataJSON)), false),
-      authenticatorData: base64.encode(String.fromCharCode(...new Uint8Array(response.authenticatorData)), false),
-      signature: base64.encode(String.fromCharCode(...new Uint8Array(response.signature)), false),
-      uname,
+      result,
     });
     if (!authn.error) return authnInfo.authOptions.challenge;
   } catch (err) {

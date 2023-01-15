@@ -1,5 +1,9 @@
-import { Fido2Lib } from 'fido2-lib';
+import {
+    generateAuthenticationOptions, generateRegistrationOptions,
+    verifyAuthenticationResponse, verifyRegistrationResponse,
+} from '@simplewebauthn/server';
 import moment from 'moment-timezone';
+import { Binary } from 'mongodb';
 import notp from 'notp';
 import b32 from 'thirty-two';
 import {
@@ -36,26 +40,6 @@ function verifyToken(secret: string, code?: string) {
     if (!code || !code.length) return null;
     const bin = b32.decode(secret);
     return notp.totp.verify(code.replace(/\W+/g, ''), bin);
-}
-
-const f2l = new Fido2Lib({
-    timeout: 60000,
-    rpId: new URL(system.get('server.url'), 'https://hydro.local').hostname,
-    rpName: system.get('server.name'),
-    challengeSize: 128,
-    attestation: 'none',
-});
-
-function ab2str(buf: ArrayBuffer) {
-    return Buffer.from(String.fromCharCode(...new Uint8Array(buf)), 'binary').toString('base64');
-}
-
-function str2ab(str: string) {
-    return new Uint8Array(Buffer.from(str, 'base64').toString('binary').split('').map((r) => r.charCodeAt(0))).buffer;
-}
-
-function b642b64url(str: string) {
-    return str.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 registerValue('User', [
@@ -197,179 +181,123 @@ class UserSudoHandler extends Handler {
 class UserAuthHandler extends Handler {
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
-        let udoc = this.user;
-        if (udoc._id && uname) throw new UserNotFoundError(uname);
-        if (uname) {
-            udoc = await user.getByEmail(domainId, uname);
-            udoc ||= await user.getByUname(domainId, uname);
-        }
+        const udoc = this.user._id ? this.user : (await user.getByEmail(domainId, uname) || await user.getByUname(domainId, uname))
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const assertionOptions = await f2l.assertionOptions();
-        const options = {
-            ...assertionOptions,
-            challenge: ab2str(assertionOptions.challenge),
-            allowCredentials: udoc._authenticators.map((c) => ({ id: c.credentialId, type: 'public-key', transports: c.transports })),
-            rpId: this.request.hostname,
-        };
+        const options = generateAuthenticationOptions({
+            allowCredentials: this.user._authenticators.map((authenticator) => ({
+                id: authenticator.credentialID.buffer,
+                type: 'public-key',
+            })),
+            userVerification: 'preferred',
+        });
         await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
         this.session.challenge = options.challenge;
         this.response.body.authOptions = options;
     }
 
-    @requireSudo
-    async postRegister() {
-        this.checkPriv(PRIV.PRIV_USER_PROFILE);
-        const registrationOptions = await f2l.attestationOptions();
-        const options = {
-            ...registrationOptions,
-            challenge: ab2str(registrationOptions.challenge),
-            user: {
-                id: this.user._id.toString(),
-                displayName: this.user.uname,
-                name: `${this.user.uname}(${this.user.mail})`,
-            },
-            rp: {
-                name: system.get('server.name'),
-                id: this.request.hostname,
-            },
-            excludeCredentials: this.user._authenticators.map((c) => ({ id: c.credentialId, type: 'public-key', transports: c.transports })),
-        };
-        await token.add(token.TYPE_WEBAUTHN, 60, { uid: this.user._id }, options.challenge);
-        this.session.challenge = options.challenge;
-        this.response.body.authOptions = options;
-    }
-
-    @param('uname', Types.Username, true)
-    @param('credentialId', Types.String)
-    @param('clientDataJSON', Types.String)
-    @param('authenticatorData', Types.String)
-    @param('signature', Types.String)
-    async postVerify(
-        domainId: string, uname: string, credentialId: string, clientDataJSON: string, authenticatorData: string,
-        signature: string,
-    ) {
-        if (!credentialId) throw new ValidationError('authenticator');
-        let udoc = this.user;
-        if (udoc._id && uname) throw new UserNotFoundError(uname);
-        if (uname) {
-            udoc = await user.getByEmail(domainId, uname);
-            udoc ||= await user.getByUname(domainId, uname);
-        }
-        if (!udoc._id) throw new UserNotFoundError(uname || 'user');
-        if (!udoc.authn) throw new AuthOperationError('Authn', 'disabled');
-        const authenticator = udoc._authenticators.find((c) => c.credentialId === credentialId);
+    async postVerify({ domainId, result }) {
+        const tdoc = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
+        const udoc = await user.getById(domainId, tdoc.uid);
+        const authenticator = udoc._authenticators?.find((c) => c.credentialID.toString('base64url') === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
-        const response = {
-            id: str2ab(credentialId),
-            response: {
-                authenticatorData: str2ab(authenticatorData),
-                clientDataJSON: b642b64url(clientDataJSON),
-                signature: b642b64url(signature),
+        const verification = await verifyAuthenticationResponse({
+            response: result,
+            expectedChallenge: this.session.challenge,
+            expectedOrigin: this.request.headers.origin,
+            expectedRPID: this.request.hostname,
+            authenticator: {
+                ...authenticator,
+                credentialID: authenticator.credentialID.buffer,
+                credentialPublicKey: authenticator.credentialPublicKey.buffer,
             },
-        };
-        try {
-            const assertionResult = await f2l.assertionResult(response, {
-                challenge: this.session.challenge,
-                origin: this.request.headers.origin,
-                factor: 'either',
-                publicKey: authenticator.publicKey as string,
-                prevCounter: authenticator.counter as number,
-                userHandle: null,
-            });
-            await user.setById(this.user._id, {
-                authenticators: [...this.user._authenticators.filter((c) => c.credentialId !== credentialId), {
-                    ...authenticator,
-                    counter: assertionResult.authnrData.get('counter'),
-                }],
-            });
-        } catch (error) {
-            logger.error(error);
+        }).catch((e) => {
+            logger.error(e);
             throw new ValidationError('authenticator');
-        }
+        });
+        if (!verification.verified) throw new ValidationError('authenticator');
+        authenticator.counter = verification.authenticationInfo.newCounter;
+        await user.setById(this.user._id, { authenticators: this.user._authenticators });
         await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
         this.back();
     }
 
     @requireSudo
-    @param('type', Types.Range(['tfa', 'authn']))
-    @param('code', Types.String, true)
-    @param('secret', Types.String, true)
-    @param('credentialId', Types.String, true)
-    @param('credentialName', Types.String, true)
-    @param('credentialType', Types.String, true)
-    @param('clientDataJSON', Types.String, true)
-    @param('attestationObject', Types.String, true)
-    @param('transports', Types.CommaSeperatedArray, true)
-    @param('authenticatorAttachment', Types.String, true)
-    async postEnable(
-        domainId: string, type: string, code: string, secret: string, credentialId: string,
-        credentialName: string, credentialType: string, clientDataJSON: string, attestationObject: string, transports: string[],
-        authenticatorAttachment: string,
-    ) {
-        if (type === 'tfa') {
-            if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
-            if (!verifyToken(secret, code)) throw new InvalidTokenError('2FA');
-            await user.setById(this.user._id, { tfa: secret });
-        } else if (type === 'authn') {
-            if (!credentialId) throw new ValidationError('authenticator');
-            if (this.user._authenticators.find((c) => c.credentialId === credentialId)) throw new ValidationError('authenticator');
-            const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
-            if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
-            const response = {
-                id: str2ab(credentialId),
-                type: credentialType,
-                response: {
-                    attestationObject: b642b64url(attestationObject),
-                    clientDataJSON: b642b64url(clientDataJSON),
-                },
-            };
-            try {
-                const verification = await f2l.attestationResult(response, {
-                    challenge: challengeInfo._id,
-                    origin: this.request.headers.origin,
-                    factor: 'either',
-                });
-                await user.setById(this.user._id, {
-                    authenticators: [...this.user._authenticators, {
-                        credentialId: ab2str(verification.authnrData.get('credId')),
-                        name: credentialName || 'New Authenticator',
-                        transports: transports || [],
-                        authenticatorAttachment,
-                        publicKey: verification.authnrData.get('credentialPublicKeyPem') as string,
-                        counter: verification.authnrData.get('counter') as number,
-                        regat: Date.now(),
-                    }],
-                });
-            } catch (error) {
-                logger.error(error);
-                throw new ValidationError('authenticator');
-            }
-        }
+    @param('code', Types.String)
+    @param('secret', Types.String)
+    async postEnableTfa(domainId: string, code: string, secret: string) {
+        if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
+        if (!verifyToken(secret, code)) throw new InvalidTokenError('2FA');
+        await user.setById(this.user._id, { tfa: secret });
         this.back();
     }
 
     @requireSudo
-    @param('type', Types.Range(['authn', 'tfa']))
-    @param('authnChallenge', Types.String, true)
-    @param('authnCredentialId', Types.String, true)
-    @param('code', Types.String, true)
-    async postDisable(domainId: string, type: string, authnChallenge = '', credentialId = '', code = '') {
-        if (type === 'tfa') {
-            if (!this.user._tfa) throw new AuthOperationError('2FA', 'disabled');
-            if (!verifyToken(this.user._tfa, code)) throw new InvalidTokenError('2FA');
-            await user.setById(this.user._id, undefined, { tfa: '' });
-        } else if (type === 'authn') {
-            if (!this.user.authn) throw new AuthOperationError('Authn', 'disabled');
-            if (!credentialId) throw new ValidationError('credentialId');
-            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challenge || challenge.uid !== this.user._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
-            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
-            if (!this.user._authenticators.find((c) => c.credentialId === credentialId)) throw new ValidationError('authenticator');
-            await user.setById(this.user._id, {
-                authenticators: this.user._authenticators.filter((c) => c.credentialId !== credentialId),
-            });
-        }
+    @param('type', Types.Range(['cross-platform', 'platform']))
+    async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
+        this.checkPriv(PRIV.PRIV_USER_PROFILE);
+        const options = generateRegistrationOptions({
+            rpName: system.get('server.name'),
+            rpID: this.request.hostname,
+            userID: this.user._id.toString(),
+            userDisplayName: this.user.uname,
+            userName: `${this.user.uname}(${this.user.mail})`,
+            attestationType: 'direct',
+            excludeCredentials: this.user._authenticators.map((c) => ({
+                id: c.credentialID.buffer,
+                type: 'public-key',
+            })),
+            authenticatorSelection: {
+                authenticatorAttachment: type,
+            },
+        });
+        await token.add(token.TYPE_WEBAUTHN, 60, { uid: this.user._id }, options.challenge);
+        this.session.challenge = options.challenge;
+        this.response.body.authOptions = options;
+    }
+
+    @requireSudo
+    @param('name', Types.String)
+    async postEnableAuthn(id: string, name: string) {
+        if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id)) throw new ValidationError('authenticator');
+        const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
+        if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
+        const verification = await verifyRegistrationResponse({
+            response: this.args.result,
+            expectedChallenge: challengeInfo._id,
+            expectedOrigin: this.request.headers.origin,
+            expectedRPID: this.request.hostname,
+        }).catch((e) => {
+            logger.error(e);
+            throw new ValidationError('verify');
+        });
+        if (!verification?.verified) throw new ValidationError('verify');
+        const { registrationInfo } = verification;
+        this.user._authenticators.push({
+            ...registrationInfo,
+            credentialID: new Binary(Buffer.from(registrationInfo.credentialID)),
+            credentialPublicKey: new Binary(Buffer.from(registrationInfo.credentialPublicKey)),
+            attestationObject: new Binary(Buffer.from(registrationInfo.attestationObject)),
+            name,
+            regat: Date.now(),
+        });
+        await user.setById(this.user._id, { authenticators: this.user._authenticators });
+        this.back();
+    }
+
+    @requireSudo
+    @param('id', Types.String)
+    async postDisableAuthn(domainId: string, id = '') {
+        const authenticators = this.user._authenticators?.filter((c) => c.credentialID.buffer.toString('base64') !== id);
+        if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
+        await user.setById(this.user._id, { authenticators });
+        this.back();
+    }
+
+    @requireSudo
+    async postDisableTfa() {
+        if (!this.user._tfa) throw new AuthOperationError('2FA', 'disabled');
+        await user.setById(this.user._id, undefined, { tfa: '' });
         this.back();
     }
 }

@@ -3,8 +3,8 @@ import LRU from 'lru-cache';
 import { Collection, FilterQuery, ObjectID } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
-    BaseUserDict, FileInfo, GDoc, ownerInfo,
-    Udict, Udoc, VUdoc,
+    Authenticator, BaseUserDict, FileInfo, GDoc,
+    ownerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
 import * as bus from '../service/bus';
@@ -55,7 +55,7 @@ export class User {
     _regip: string;
     _loginip: string;
     _tfa: string;
-    _authenticators: Record<string, string | number>[];
+    _authenticators: Authenticator[];
 
     mail: string;
     uname: string;
