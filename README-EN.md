@@ -31,6 +31,10 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 AGPL3
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## Thanks to
 
 In dictionary order:
