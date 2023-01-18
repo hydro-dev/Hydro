@@ -64,7 +64,7 @@ export const Types: Types = {
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
     // eslint-disable-next-line no-shadow
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
-    Boolean: [(v) => !!v, null, true],
+    Boolean: [(v) => v && !['false', 'off'].includes(v), null, true],
     Date: [
         (v) => {
             const d = v.split('-');

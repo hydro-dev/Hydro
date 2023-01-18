@@ -1,0 +1,59 @@
+{% import "components/nothing.html" as nothing with context %}
+{% set _files = testdata if filetype == 'testdata' else additional_file %}
+<div class="section__body no-padding problem-{{ 'sidebar' if sidebar else 'files' }}-{{ filetype }}" data-fragment-id="problem-files-{{ filetype }}" 
+  {% if sidebar %}data-type="{{ filetype }}" data-sidebar{% endif %}>
+  {% if reference %}
+    <blockquote class="note">
+      <p>{{ _('This is a copy of another problem.') }}</p>
+    </blockquote>
+  {% elif _files.length %}
+    <table class="data-table {{ filetype }}-table">
+      <colgroup>
+        {% if not sidebar %}<col class="col--checkbox">{% endif %}
+        <col class="col--name">
+        <col class="col--size">
+        {% if sidebar %}<col class="col--operation">{% endif %}
+      </colgroup>
+      <thead>
+        <tr>
+          {% if not sidebar %}
+          <th class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" name="select_all" data-checkbox-toggle="{{ filetype }}">
+            </label>
+          </th>
+          {% endif %}
+          <th class="col--name">{{ _('Filename') }}</th>
+          <th class="col--size">{{ _('Size') }}</th>
+          {% if sidebar %}<th class="col--operation"><span class="icon icon-wrench"></span></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {%- for file in _files -%}
+        <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
+          {% if not sidebar %}
+          <td class="col--checkbox">
+            <label class="compact checkbox">
+              <input type="checkbox" data-checkbox-group="{{ filetype }}" data-checkbox-range>
+            </label>
+          </td>
+          {% endif %}
+          <td class="col--name" data-preview="{{ filetype }}">
+            {% if filetype != 'testdata' or handler.user.own(pdoc) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) %}
+              <a href="{{ url('problem_file_download', {pid: pdoc.docId, filename: file.name, query:{type:filetype} }) }}">{{ file.name }}</a>
+            {% else %}
+              <p>{{ file.name }}</p>
+            {% endif %}
+          </td>
+          <td class="col--size">{{ size(file.size) }}</td>
+          {% if sidebar %}
+            <td class="col--operation"><a href="javascript:;" name="{{ filetype }}__delete"><span class="icon icon-delete"></span></a></td>
+          {% endif %}
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  {% else %}
+    {{ nothing.render('No {0} at current.', compact=sidebar, args=[_(filetype)]) }}
+  {% endif %}
+</div>
