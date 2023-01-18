@@ -92,7 +92,24 @@
       </div>
     </div>
     {% if page_name == 'problem_edit' %}
-      {% include "partials/problem_sidebar_additional_file.html" %}
+      <div class="section side">
+        <div class="section__header">
+          <h1 class="section__title">{{ additional_file.length|default(0) }} {{_('Additional File')}}</h1>
+        </div>
+        <ol class="menu">
+          <li class="menu__item flex-row">
+            <a class="menu__link half" href="javascript:;" name="additional_file__upload">
+              <span class="icon icon-upload"></span> {{ _('Upload') }}
+            </a>
+            <a class="menu__link half" href="javascript:;" name="additional_file__download">
+              <span class="icon icon-download"></span> {{ _('Download All') }}
+            </a>
+          </li>
+        </ol>
+        {% set sidebar = true %}
+        {% set filetype = "additional_file" %}
+        {% include "partials/problem_files.html" %}
+      </div>
       {% set owner_udoc = udoc %}
       {% include "partials/problem_sidebar.html" %}
     {% else %}
