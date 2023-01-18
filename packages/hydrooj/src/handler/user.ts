@@ -217,7 +217,7 @@ class UserAuthHandler extends Handler {
         });
         if (!verification.verified) throw new ValidationError('authenticator');
         authenticator.counter = verification.authenticationInfo.newCounter;
-        await user.setById(this.user._id, { authenticators: this.user._authenticators });
+        await user.setById(udoc._id, { authenticators: udoc._authenticators });
         await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
         this.back();
     }
