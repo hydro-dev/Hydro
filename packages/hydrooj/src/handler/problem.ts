@@ -784,7 +784,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @post('files', Types.Array)
+    @post('files', Types.ArrayOf(Types.Name))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');
