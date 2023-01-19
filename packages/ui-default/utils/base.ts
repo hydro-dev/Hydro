@@ -17,9 +17,9 @@ export function delay(ms) {
   return new Promise((resolve) => { setTimeout(resolve, ms); });
 }
 
-const secureRandomString = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
-export function randomString(digit = 32, dict = secureRandomString) {
+export function secureRandomString(digit = 32, dict = defaultDict) {
   let result = '';
   const crypto = window.crypto || (window as any).msCrypto;
   if (!crypto?.getRandomValues) throw new Error('crypto.getRandomValues not supported');
@@ -158,7 +158,7 @@ Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
   substitute,
-  randomString,
+  secureRandomString,
   request,
   tpl,
   delay,

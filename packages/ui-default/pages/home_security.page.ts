@@ -6,7 +6,7 @@ import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  delay, i18n, randomString, request, tpl,
+  delay, i18n, request, secureRandomString, tpl,
 } from 'vj/utils';
 
 const t = (s) => escape(i18n(s));
@@ -35,7 +35,7 @@ async function enableTfa() {
       return true;
     },
   }).open();
-  const secret = randomString(13, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567');
+  const secret = secureRandomString(13, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567');
   $('#secret').on('click', () => $('#secret').html(secret));
   const uri = `otpauth://totp/Hydro:${UserContext.uname}?secret=${secret}&issuer=Hydro`;
   const canvas = document.getElementById('qrcode');
