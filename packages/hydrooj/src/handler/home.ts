@@ -247,7 +247,6 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
     async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
-        this.checkPriv(PRIV.PRIV_USER_PROFILE);
         const options = generateRegistrationOptions({
             rpName: system.get('server.name'),
             rpID: this.request.hostname,
@@ -263,33 +262,29 @@ class HomeSecurityHandler extends Handler {
                 authenticatorAttachment: type,
             },
         });
-        await token.add(token.TYPE_WEBAUTHN, 60, { uid: this.user._id }, options.challenge);
-        this.session.challenge = options.challenge;
+        this.session.webauthnVerify = options.challenge;
         this.response.body.authOptions = options;
     }
 
     @requireSudo
     @param('name', Types.String)
-    async postEnableAuthn(id: string, name: string) {
-        const challenge = this.session.challenge;
-        if (!challenge) throw new ValidationError('challenge');
-        this.session.challenge = null;
-        const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
-        if (!tdoc || tdoc.uid !== this.user._id || tdoc.expireAt > new Date()) throw new InvalidTokenError('Authn');
-        if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id)) throw new ValidationError('authenticator');
+    async postEnableAuthn(domainId: string, name: string) {
+        if (!this.session.webauthnVerify) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
         const verification = await verifyRegistrationResponse({
             response: this.args.result,
-            expectedChallenge: challenge,
+            expectedChallenge: this.session.webauthnVerify,
             expectedOrigin: this.request.headers.origin,
             expectedRPID: this.request.hostname,
-        }).catch(() => null);
-        if (!verification?.verified) throw new ValidationError('verify');
-        const { registrationInfo } = verification;
+        }).catch(() => { throw new ValidationError('verify'); });
+        if (!verification.verified) throw new ValidationError('verify');
+        const info = verification.registrationInfo;
+        const id = Buffer.from(info.credentialID);
+        if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id.toString())) throw new ValidationError('authenticator');
         this.user._authenticators.push({
-            ...registrationInfo,
-            credentialID: new Binary(Buffer.from(registrationInfo.credentialID)),
-            credentialPublicKey: new Binary(Buffer.from(registrationInfo.credentialPublicKey)),
-            attestationObject: new Binary(Buffer.from(registrationInfo.attestationObject)),
+            ...info,
+            credentialID: new Binary(id),
+            credentialPublicKey: new Binary(Buffer.from(info.credentialPublicKey)),
+            attestationObject: new Binary(Buffer.from(info.attestationObject)),
             name,
             regat: Date.now(),
             authenticatorAttachment: this.args.result.authenticatorAttachment || 'cross-platform',

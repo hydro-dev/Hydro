@@ -76,7 +76,7 @@ async function enableAuthn(type: string) {
   const op = await new ActionDialog({
     $body: tpl`
       <div class="typo">
-        <label>${i18n('Name')}  
+        <label>${i18n('Name')}
           <div class="textbox-container">
             <input class="textbox" type="text" name="webauthn_name" data-focus autocomplete="off"></input>
           </div>
