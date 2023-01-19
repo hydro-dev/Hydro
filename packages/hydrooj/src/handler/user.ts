@@ -110,7 +110,7 @@ class UserLoginHandler extends Handler {
         }
         if (udoc.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challenge || challenge.uid !== udoc._id || this.session.challenge !== authnChallenge) throw new InvalidTokenError('Authn');
+            if (!challenge || challenge.uid !== udoc._id) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
             verified = true;
         }
@@ -148,7 +148,7 @@ class UserSudoHandler extends Handler {
         let verified = false;
         if (this.user.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challenge || challenge.uid !== this.user._id || !this.session.challenge) throw new InvalidTokenError('Authn');
+            if (!challenge || challenge.uid !== this.user._id) throw new InvalidTokenError('Authn');
             if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
             verified = true;
         }
@@ -166,7 +166,7 @@ class UserSudoHandler extends Handler {
     }
 }
 
-class UserAuthHandler extends Handler {
+class UserWebauthnHandler extends Handler {
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
@@ -184,14 +184,18 @@ class UserAuthHandler extends Handler {
         this.response.body.authOptions = options;
     }
 
-    async postVerify({ domainId, result }) {
-        const tdoc = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
+    async post({ domainId, result }) {
+        const challenge = this.session.challenge;
+        if (!challenge) throw new ForbiddenError();
+        this.session.challenge = null;
+        const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
+        if (!tdoc || tdoc.uid !== this.user._id || tdoc.expireAt > new Date()) throw new InvalidTokenError('Authn');
         const udoc = await user.getById(domainId, tdoc.uid);
         const authenticator = udoc._authenticators?.find((c) => c.credentialID.toString('base64url') === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
         const verification = await verifyAuthenticationResponse({
             response: result,
-            expectedChallenge: this.session.challenge,
+            expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
             expectedRPID: this.request.hostname,
             authenticator: {
@@ -206,7 +210,7 @@ class UserAuthHandler extends Handler {
         if (!verification.verified) throw new ValidationError('authenticator');
         authenticator.counter = verification.authenticationInfo.newCounter;
         await user.setById(udoc._id, { authenticators: udoc._authenticators });
-        await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
+        await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
         this.back();
     }
 }
@@ -506,7 +510,7 @@ export async function apply(ctx) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Route('user_auth', '/user/auth', UserAuthHandler);
+    ctx.Route('user_webauthn', '/user/webauthn', UserWebauthnHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
     ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);

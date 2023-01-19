@@ -274,12 +274,15 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('name', Types.String)
     async postEnableAuthn(id: string, name: string) {
+        const challenge = this.session.challenge;
+        if (!challenge) throw new ValidationError('challenge');
+        this.session.challenge = null;
+        const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
+        if (!tdoc || tdoc.uid !== this.user._id || tdoc.expireAt > new Date()) throw new InvalidTokenError('Authn');
         if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id)) throw new ValidationError('authenticator');
-        const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
-        if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
         const verification = await verifyRegistrationResponse({
             response: this.args.result,
-            expectedChallenge: challengeInfo._id,
+            expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
             expectedRPID: this.request.hostname,
         }).catch((e) => {

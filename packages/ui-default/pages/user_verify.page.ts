@@ -14,7 +14,7 @@ async function verifywebauthn($form) {
   }
   let uname = '';
   if ($form['uname']) uname = $form['uname'].value;
-  const authnInfo = await request.get('/user/auth', uname ? { uname } : undefined);
+  const authnInfo = await request.get('/user/webauthn', uname ? { uname } : undefined);
   if (!authnInfo.authOptions) {
     Notification.error(i18n('Failed to fetch registration data.'));
     return null;
@@ -27,8 +27,7 @@ async function verifywebauthn($form) {
     });
   if (!result) return null;
   try {
-    const authn = await request.post('/user/auth', {
-      operation: 'verify',
+    const authn = await request.post('/user/webauthn', {
       result,
     });
     if (!authn.error) return authnInfo.authOptions.challenge;
