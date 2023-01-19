@@ -12,7 +12,7 @@ import type { Handler } from './server';
 type MethodDecorator = (target: any, name: string, obj: any) => any;
 type InputType = string | number | Record<string, any> | any[];
 type Converter<T> = (value: any) => T;
-type Validator = (value: InputType) => boolean;
+type Validator<Loose extends boolean = true> = (value: Loose extends true ? any : InputType) => boolean;
 export interface ParamOption<T> {
     name: string,
     source: 'all' | 'get' | 'post' | 'route',
@@ -21,7 +21,7 @@ export interface ParamOption<T> {
     validate?: Validator,
 }
 
-type Type<T> = [Converter<T>, Validator?, boolean?];
+type Type<T> = [Converter<T>, Validator<false>?, boolean?];
 
 export interface Types {
     Content: Type<string>;
@@ -117,6 +117,7 @@ export const Types: Types = {
             return false;
         },
     ],
+    /** @deprecated suggested to use Types.ArrayOf instead. */
     Array: [(v) => {
         if (v instanceof Array) return v;
         return v ? [v] : [];
