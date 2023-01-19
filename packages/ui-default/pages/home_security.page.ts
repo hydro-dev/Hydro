@@ -43,7 +43,7 @@ async function enableTfa() {
   const tfaAction = await enableTFA;
   if (tfaAction !== 'ok') return;
   try {
-    await request.post('/user/auth', {
+    await request.post('', {
       operation: 'enable_tfa',
       code: $('[name="tfa_code"]').val(),
       secret,
@@ -59,7 +59,7 @@ async function enableTfa() {
 }
 
 async function enableAuthn(type: string) {
-  const authnInfo = await request.post('/user/auth', { operation: 'register', type });
+  const authnInfo = await request.post('', { operation: 'register', type });
   if (!authnInfo.authOptions) {
     Notification.error(i18n('Failed to fetch registration data.'));
     return;
@@ -93,7 +93,7 @@ async function enableAuthn(type: string) {
   }).open();
   if (op !== 'ok') return;
   try {
-    await request.post('/user/auth', {
+    await request.post('', {
       operation: 'enable_authn',
       name: $('[name="webauthn_name"]').val(),
       result: credential,

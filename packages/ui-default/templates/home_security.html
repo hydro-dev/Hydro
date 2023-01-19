@@ -106,7 +106,7 @@
                 <p>{{ _('Authenticator') }}: {{ _('Two Factor Authentication') }}</p>
               </div>
               <div class="media__right medium">
-                <form method="POST" action="{{ url('user_auth') }}">
+                <form method="POST">
                   <input type="hidden" name="operation" value="disable_tfa">
                   <input type="submit" value="{{ _('Remove') }}" class="rounded button">
                 </form>
@@ -127,7 +127,7 @@
                 <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
               </div>
               <div class="media__right medium">
-                <form method="POST" action="{{ url('user_auth') }}">
+                <form method="POST">
                   <input type="hidden" name="id" value="{{ authenticator.credentialID.buffer.toString('base64') }}">
                   <input type="hidden" name="operation" value="disable_authn">
                   <input type="submit" value="{{ _('Remove') }}" class="rounded button">

@@ -1,11 +1,5 @@
-import {
-    generateAuthenticationOptions, generateRegistrationOptions,
-    verifyAuthenticationResponse, verifyRegistrationResponse,
-} from '@simplewebauthn/server';
+import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
-import { Binary } from 'mongodb';
-import notp from 'notp';
-import b32 from 'thirty-two';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -15,6 +9,7 @@ import { Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
+import { verifyTFA } from '../lib/verifyTFA';
 import { Logger } from '../logger';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
@@ -29,18 +24,11 @@ import * as system from '../model/system';
 import token from '../model/token';
 import user from '../model/user';
 import {
-    Handler, param, post, requireSudo,
-    Types,
+    Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
 
 const logger = new Logger('user');
-
-function verifyToken(secret: string, code?: string) {
-    if (!code || !code.length) return null;
-    const bin = b32.decode(secret);
-    return notp.totp.verify(code.replace(/\W+/g, ''), bin);
-}
 
 registerValue('User', [
     ['_id', 'Int!'],
@@ -117,7 +105,7 @@ class UserLoginHandler extends Handler {
         const needVerify = udoc.tfa || udoc.authn;
         let verified = false;
         if (udoc.tfa && tfa) {
-            if (!verifyToken(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+            if (!verifyTFA(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
             verified = true;
         }
         if (udoc.authn && authnChallenge) {
@@ -165,7 +153,7 @@ class UserSudoHandler extends Handler {
             verified = true;
         }
         if (this.user.tfa && tfa && !verified) {
-            if (!verifyToken(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
+            if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
             verified = true;
         }
         if (!verified) this.user.checkPassword(password);
@@ -219,85 +207,6 @@ class UserAuthHandler extends Handler {
         authenticator.counter = verification.authenticationInfo.newCounter;
         await user.setById(udoc._id, { authenticators: udoc._authenticators });
         await token.update(this.session.challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
-        this.back();
-    }
-
-    @requireSudo
-    @param('code', Types.String)
-    @param('secret', Types.String)
-    async postEnableTfa(domainId: string, code: string, secret: string) {
-        if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
-        if (!verifyToken(secret, code)) throw new InvalidTokenError('2FA');
-        await user.setById(this.user._id, { tfa: secret });
-        this.back();
-    }
-
-    @requireSudo
-    @param('type', Types.Range(['cross-platform', 'platform']))
-    async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
-        this.checkPriv(PRIV.PRIV_USER_PROFILE);
-        const options = generateRegistrationOptions({
-            rpName: system.get('server.name'),
-            rpID: this.request.hostname,
-            userID: this.user._id.toString(),
-            userDisplayName: this.user.uname,
-            userName: `${this.user.uname}(${this.user.mail})`,
-            attestationType: 'direct',
-            excludeCredentials: this.user._authenticators.map((c) => ({
-                id: c.credentialID.buffer,
-                type: 'public-key',
-            })),
-            authenticatorSelection: {
-                authenticatorAttachment: type,
-            },
-        });
-        await token.add(token.TYPE_WEBAUTHN, 60, { uid: this.user._id }, options.challenge);
-        this.session.challenge = options.challenge;
-        this.response.body.authOptions = options;
-    }
-
-    @requireSudo
-    @param('name', Types.String)
-    async postEnableAuthn(id: string, name: string) {
-        if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id)) throw new ValidationError('authenticator');
-        const challengeInfo = await token.get(this.session.challenge, token.TYPE_WEBAUTHN);
-        if (!challengeInfo || challengeInfo.uid !== this.user._id) throw new InvalidTokenError('Authn');
-        const verification = await verifyRegistrationResponse({
-            response: this.args.result,
-            expectedChallenge: challengeInfo._id,
-            expectedOrigin: this.request.headers.origin,
-            expectedRPID: this.request.hostname,
-        }).catch((e) => {
-            logger.error(e);
-            throw new ValidationError('verify');
-        });
-        if (!verification?.verified) throw new ValidationError('verify');
-        const { registrationInfo } = verification;
-        this.user._authenticators.push({
-            ...registrationInfo,
-            credentialID: new Binary(Buffer.from(registrationInfo.credentialID)),
-            credentialPublicKey: new Binary(Buffer.from(registrationInfo.credentialPublicKey)),
-            attestationObject: new Binary(Buffer.from(registrationInfo.attestationObject)),
-            name,
-            regat: Date.now(),
-        });
-        await user.setById(this.user._id, { authenticators: this.user._authenticators });
-        this.back();
-    }
-
-    @requireSudo
-    @param('id', Types.String)
-    async postDisableAuthn(domainId: string, id = '') {
-        const authenticators = this.user._authenticators?.filter((c) => c.credentialID.buffer.toString('base64') !== id);
-        if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
-        await user.setById(this.user._id, { authenticators });
-        this.back();
-    }
-
-    @requireSudo
-    async postDisableTfa() {
-        if (!this.user._tfa) throw new AuthOperationError('2FA', 'disabled');
-        await user.setById(this.user._id, undefined, { tfa: '' });
         this.back();
     }
 }
