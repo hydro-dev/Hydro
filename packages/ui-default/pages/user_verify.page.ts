@@ -38,53 +38,56 @@ async function verifywebauthn($form) {
   return null;
 }
 
+async function chooseAction(authn?: boolean) {
+  return await new ActionDialog({
+    $body: tpl`
+      <div class="typo">
+        <h3>${i18n('Two Factor Authentication')}</h3>
+        <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
+        <div style="${authn ? '' : 'display:none;'}">
+          <input value="${i18n('Use Authenticator')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
+        </div>
+        <div>
+          <label>${i18n('6-Digit Code')}  
+            <div class="textbox-container">
+              <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
+            </div>
+          </label>
+          <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
+        </div>
+      </div>
+      `,
+    $action: [],
+    canCancel: false,
+    onDispatch(action) {
+      if (action === 'tfa' && $('[name="tfa_code"]').val() === null) {
+        $('[name="tfa_code"]').focus();
+        return false;
+      }
+      return true;
+    },
+  }).open();
+}
+
 export default new AutoloadPage('user_verify', () => {
   $(document).on('click', '[name="login_submit"]', async (ev) => {
     ev.preventDefault();
     const $form = ev.currentTarget.form;
     const uname = $('[name="uname"]').val() as string;
-    const authInfo = await api(gql`
+    const { tfa, authn } = await api(gql`
       user(uname:${uname}){
         tfa
         authn
       }
     `, ['data', 'user']);
-    if (authInfo.tfa || authInfo.authn) {
-      const chooseAction = await new ActionDialog({
-        $body: tpl`
-          <div class="typo">
-            <h3>${i18n('Two Factor Authentication')}</h3>
-            <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
-            <div style="${authInfo.authn ? '' : 'display:none;'}">
-              <input value="${i18n('Use Authenticator')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
-            </div>
-            <div style="${authInfo.tfa ? '' : 'display:none;'}">
-              <label>${i18n('6-Digit Code')}  
-                <div class="textbox-container">
-                  <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
-                </div>
-              </label>
-              <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
-            </div>
-          </div>
-          `,
-        $action: [],
-        canCancel: false,
-        onDispatch(action) {
-          if (action === 'tfa' && $('[name="tfa_code"]').val() === null) {
-            $('[name="tfa_code"]').focus();
-            return false;
-          }
-          return true;
-        },
-      }).open();
-      if (chooseAction === 'tfa') {
-        $form['tfa'].value = $('[name="tfa_code"]').val() as string;
-      } else if (chooseAction === 'webauthn') {
+    if (authn || tfa) {
+      let action = (authn && tfa) ? await chooseAction(true) : '';
+      if (!action) action = tfa ? await chooseAction(false) : 'webauthn';
+      if (action === 'webauthn') {
         const challenge = await verifywebauthn($form);
         if (challenge) $form['authnChallenge'].value = challenge;
         else return;
-      }
+      } else $form['tfa'].value = $('[name="tfa_code"]').val() as string;
     }
     $form.submit();
   });

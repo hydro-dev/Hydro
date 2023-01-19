@@ -11,7 +11,7 @@
       </div></div>
       {% endif %}
       {% if UserContext.tfa %}
-      <div class="row sudo-div" data-sudo="tfa"><div class="columns">
+      <div class="row sudo-div" data-sudo="tfa" style="display:none"><div class="columns">
         <label class="inverse material textbox">
           {{ _('Two Factor Authentication Code') }}
           <input name="tfa" type="number">
@@ -44,7 +44,7 @@
         <ol>
           {% if UserContext.authn %}<li class="sudo-switch" data-sudo="authn"><a>{{ _('Use Authenticator') }}</a></li>{% endif %}
           {% if UserContext.tfa %}<li class="sudo-switch" data-sudo="tfa"><a>{{ _('Use TFA Code') }}</a></li>{% endif %}
-          <li class="sudo-switch" data-sudo="password"><a>{{ _('Use Password') }}</a></li>
+          <li class="sudo-switch" data-sudo="password" style="display:none"><a>{{ _('Use Password') }}</a></li>
         </ol>
       </div>
     </div></div>
