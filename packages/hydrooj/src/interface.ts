@@ -74,6 +74,7 @@ export interface Authenticator {
     credentialDeviceType: CredentialDeviceType;
     credentialBackedUp: boolean;
     authenticatorExtensionResults?: AuthenticationExtensionsAuthenticatorOutputs;
+    authenticatorAttachment: 'platform' | 'cross-platform';
 }
 
 export interface Udoc extends Dictionary<any> {

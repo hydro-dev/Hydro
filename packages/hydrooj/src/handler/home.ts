@@ -295,6 +295,7 @@ class HomeSecurityHandler extends Handler {
             attestationObject: new Binary(Buffer.from(registrationInfo.attestationObject)),
             name,
             regat: Date.now(),
+            authenticatorAttachment: this.args.result.authenticatorAttachment || 'cross-platform',
         });
         await user.setById(this.user._id, { authenticators: this.user._authenticators });
         this.back();
