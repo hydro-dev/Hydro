@@ -10,7 +10,6 @@ import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { isEmail, isPassword } from '../lib/validator';
 import { verifyTFA } from '../lib/verifyTFA';
-import { Logger } from '../logger';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as ContestModel from '../model/contest';
@@ -27,8 +26,6 @@ import {
     Handler, param, post, Types,
 } from '../service/server';
 import { registerResolver, registerValue } from './api';
-
-const logger = new Logger('user');
 
 registerValue('User', [
     ['_id', 'Int!'],
@@ -102,19 +99,16 @@ class UserLoginHandler extends Handler {
             this.limitRate(`user_login_${uname}`, 60, 5, false),
             oplog.log(this, 'user.login', { redirect }),
         ]);
-        const needVerify = udoc.tfa || udoc.authn;
-        let verified = false;
-        if (udoc.tfa && tfa) {
-            if (!verifyTFA(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
-            verified = true;
+        if (udoc.tfa || udoc.authn) {
+            if (udoc.tfa && tfa) {
+                if (!verifyTFA(udoc._tfa, tfa)) throw new InvalidTokenError('2FA');
+            } else if (udoc.authn && authnChallenge) {
+                const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
+                if (!challenge || challenge.uid !== udoc._id) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
+                if (!challenge.verified) throw new ValidationError('challenge');
+                await token.del(authnChallenge, token.TYPE_WEBAUTHN);
+            } else throw new ValidationError('2FA', 'Authn');
         }
-        if (udoc.authn && authnChallenge) {
-            const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challenge || challenge.uid !== udoc._id) throw new InvalidTokenError('Authn');
-            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
-            verified = true;
-        }
-        if (needVerify && !verified) throw new ValidationError('2FA', 'Authn');
         udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
@@ -139,24 +133,20 @@ class UserSudoHandler extends Handler {
     @param('password', Types.String, true)
     @param('tfa', Types.String, true)
     @param('authnChallenge', Types.String, true)
-    async post(domainId: string, password: string = '', tfa = '', authnChallenge = '') {
+    async post(domainId: string, password = '', tfa = '', authnChallenge = '') {
         if (!this.session.sudoArgs?.method) throw new ForbiddenError();
         await Promise.all([
             this.limitRate('user_sudo', 60, 5, true),
             oplog.log(this, 'user.sudo', {}),
         ]);
-        let verified = false;
         if (this.user.authn && authnChallenge) {
             const challenge = await token.get(authnChallenge, token.TYPE_WEBAUTHN);
-            if (!challenge || challenge.uid !== this.user._id) throw new InvalidTokenError('Authn');
-            if (!challenge.verified || challenge.expiredAt > new Date()) throw new ValidationError('challenge');
-            verified = true;
-        }
-        if (this.user.tfa && tfa && !verified) {
+            if (challenge?.uid !== this.user._id) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
+            if (!challenge.verified) throw new ValidationError('challenge');
+            await token.del(authnChallenge, token.TYPE_WEBAUTHN);
+        } else if (this.user.tfa && tfa) {
             if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-            verified = true;
-        }
-        if (!verified) this.user.checkPassword(password);
+        } else this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -167,6 +157,8 @@ class UserSudoHandler extends Handler {
 }
 
 class UserWebauthnHandler extends Handler {
+    noCheckPermView = true;
+
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
@@ -187,9 +179,8 @@ class UserWebauthnHandler extends Handler {
     async post({ domainId, result }) {
         const challenge = this.session.challenge;
         if (!challenge) throw new ForbiddenError();
-        this.session.challenge = null;
         const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
-        if (!tdoc || tdoc.uid !== this.user._id || tdoc.expireAt > new Date()) throw new InvalidTokenError('Authn');
+        if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
         const udoc = await user.getById(domainId, tdoc.uid);
         const authenticator = udoc._authenticators?.find((c) => c.credentialID.toString('base64url') === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
@@ -203,11 +194,8 @@ class UserWebauthnHandler extends Handler {
                 credentialID: authenticator.credentialID.buffer,
                 credentialPublicKey: authenticator.credentialPublicKey.buffer,
             },
-        }).catch((e) => {
-            logger.error(e);
-            throw new ValidationError('authenticator');
-        });
-        if (!verification.verified) throw new ValidationError('authenticator');
+        }).catch(() => null);
+        if (!verification?.verified) throw new ValidationError('authenticator');
         authenticator.counter = verification.authenticationInfo.newCounter;
         await user.setById(udoc._id, { authenticators: udoc._authenticators });
         await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });

@@ -16,7 +16,6 @@ import * as mail from '../lib/mail';
 import * as useragent from '../lib/useragent';
 import { isDomainId, isEmail, isPassword } from '../lib/validator';
 import { verifyTFA } from '../lib/verifyTFA';
-import { Logger } from '../logger';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -35,8 +34,6 @@ import {
     ConnectionHandler, Handler, param, query, requireSudo, Types,
 } from '../service/server';
 import { md5 } from '../utils';
-
-const logger = new Logger('home');
 
 export class HomeHandler extends Handler {
     uids = new Set<number>();
@@ -285,10 +282,7 @@ class HomeSecurityHandler extends Handler {
             expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
             expectedRPID: this.request.hostname,
-        }).catch((e) => {
-            logger.error(e);
-            throw new ValidationError('verify');
-        });
+        }).catch(() => null);
         if (!verification?.verified) throw new ValidationError('verify');
         const { registrationInfo } = verification;
         this.user._authenticators.push({
