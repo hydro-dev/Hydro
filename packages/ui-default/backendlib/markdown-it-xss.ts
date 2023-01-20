@@ -1,9 +1,9 @@
-import * as Xss from 'xss';
+import { FilterXSS } from 'xss';
 
 const stack = [];
 const voidTags = ['br', 'hr', 'input', 'img', 'link', 'source', 'col', 'area', 'base', 'meta', 'embed', 'param', 'track', 'wbr'];
 
-const tagCheck = new Xss.FilterXSS({
+const tagCheck = new FilterXSS({
   css: false,
   whiteList: {},
   onIgnoreTag(tag, html, options) {
@@ -32,7 +32,7 @@ const tagCheck = new Xss.FilterXSS({
   },
 });
 
-export const xss = new Xss.FilterXSS({
+export const xss = new FilterXSS({
   whiteList: {
     a: ['target', 'href', 'title'],
     abbr: ['title'],
@@ -113,6 +113,7 @@ export const xss = new Xss.FilterXSS({
   safeAttrValue(tag, name, value) {
     if (name === 'id') return `xss-id-${value}`;
     if (name === 'class') return value.replace(/badge/g, 'xss-badge');
+    if (name === 'href') return value.trim().startsWith('javascript:') ? '#' : value;
     return value;
   },
 });
