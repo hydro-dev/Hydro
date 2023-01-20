@@ -167,7 +167,7 @@ export class HandlerCommon {
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
-    __param: Record<string, decorators.ParamOption[]>;
+    __param: Record<string, decorators.ParamOption<any>[]>;
 
     back(body?: any) {
         this.response.body = body || this.response.body || {};

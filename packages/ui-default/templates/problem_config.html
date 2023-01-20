@@ -13,7 +13,25 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    {% include "partials/problem_sidebar_testdata.html" %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ testdata.length|default(0) }} {{_('Testdata')}}</h1>
+      </div>
+      <ol class="menu">
+        <li class="menu__item flex-row">
+          <a class="menu__link half" href="javascript:;" name="testdata__upload">
+            <span class="icon icon-upload"></span> {{ _('Upload') }}
+          </a>
+          <a class="menu__link half" href="javascript:;" name="testdata__download__all">
+            <span class="icon icon-download"></span> {{ _('Download All') }}
+          </a>
+        </li>
+        <li class="menu__seperator"></li>
+      </ol>
+      {% set sidebar = true %}
+      {% set filetype = "testdata" %}
+      {% include "partials/problem_files.html" %}
+    </div>
     {% set owner_udoc = udoc %}
     {% include "partials/problem_sidebar.html" %}
   </div>

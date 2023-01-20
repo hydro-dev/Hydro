@@ -86,13 +86,11 @@
       <div class="vote vote--discussion">
       {% if handler.user.hasPerm(perm.PERM_VOTE_PROBLEM_SOLUTION) %}
         <div class="vote-number rotator--enabled">{{ doc.vote }}</div>
-        <div class="vote-op clearfix">
-          <form method="post">
-            <input type="hidden" name="psid" value="{{ doc._id }}">
-            <button type="submit" name="operation" value="upvote" class="vote-button upvote{% if pssdict[doc._id].vote == 1 %} active{% endif %}" data-tooltip="{{ _('Upvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Upvote') }}"><span class="icon icon-vote--up"></span></button>
-            <button type="submit" name="operation" value="downvote" class="vote-button downvote{% if pssdict[doc._id].vote == -1 %} active{% endif %}" data-tooltip="{{ _('Downvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Downvote') }}"><span class="icon icon-vote--down"></span></button>
-          </form>
-        </div>
+        <form method="post" class="vote-op clearfix">
+          <input type="hidden" name="psid" value="{{ doc._id }}">
+          <button type="submit" name="operation" value="upvote" class="vote-button upvote{% if pssdict[doc._id].vote == 1 %} active{% endif %}" data-tooltip="{{ _('Upvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Upvote') }}"><span class="icon icon-vote--up"></span></button>
+          <button type="submit" name="operation" value="downvote" class="vote-button downvote{% if pssdict[doc._id].vote == -1 %} active{% endif %}" data-tooltip="{{ _('Downvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Downvote') }}"><span class="icon icon-vote--down"></span></button>
+        </form>
       {% else %}
         <div class="vote-number">{{ doc.vote }}</div>
       {% endif %}

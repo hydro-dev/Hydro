@@ -69,7 +69,7 @@ export class FilesHandler extends Handler {
         this.back();
     }
 
-    @post('files', Types.Array)
+    @post('files', Types.ArrayOf(Types.Name))
     async postDeleteFiles(domainId: string, files: string[]) {
         await Promise.all([
             storage.del(files.map((t) => `user/${this.user._id}/${t}`), this.user._id),

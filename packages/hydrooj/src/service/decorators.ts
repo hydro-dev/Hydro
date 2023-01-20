@@ -10,38 +10,41 @@ import { isContent, isTitle } from '../lib/validator';
 import type { Handler } from './server';
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
-type Converter = (value: any) => any;
-type Validator = (value: any) => boolean;
-export interface ParamOption {
+type InputType = string | number | Record<string, any> | any[];
+type Converter<T> = (value: any) => T;
+type Validator<Loose extends boolean = true> = (value: Loose extends true ? any : InputType) => boolean;
+export interface ParamOption<T> {
     name: string,
     source: 'all' | 'get' | 'post' | 'route',
     isOptional?: boolean,
-    convert?: Converter,
+    convert?: Converter<T>,
     validate?: Validator,
 }
 
-type Type = [Converter, Validator, boolean?];
+type Type<T> = [Converter<T>, Validator<false>?, boolean?];
 
 export interface Types {
-    Content: Type,
-    Name: Type,
-    Username: Type,
-    Title: Type,
-    String: Type,
-    Int: Type,
-    UnsignedInt: Type,
-    PositiveInt: Type,
-    Float: Type,
-    ObjectID: Type,
-    Boolean: Type,
-    Date: Type,
-    Time: Type,
-    Range: (range: Array<string | number> | Record<string, any>) => Type,
-    Array: Type,
-    NumericArray: Type,
-    CommaSeperatedArray: Type,
-    Set: Type,
-    Emoji: Type,
+    Content: Type<string>;
+    Name: Type<string>;
+    Username: Type<string>;
+    Title: Type<string>;
+    String: Type<string>;
+    Int: Type<number>;
+    UnsignedInt: Type<number>;
+    PositiveInt: Type<number>;
+    Float: Type<number>;
+    ObjectID: Type<ObjectID>;
+    Boolean: Type<boolean>;
+    Date: Type<string>;
+    Time: Type<string>;
+    Range: <T extends string | number>(range: Array<T> | Record<string, any>) => Type<T>;
+    Array: Type<any[]>;
+    NumericArray: Type<number[]>;
+    CommaSeperatedArray: Type<string[]>;
+    Set: Type<Set<any>>;
+    Emoji: Type<string>;
+    Any: Type<any>;
+    ArrayOf: <T extends Type<any>>(type: T) => (T extends Type<infer R> ? Type<R[]> : never);
 }
 
 const safeSaslprep = (v) => {
@@ -58,13 +61,13 @@ export const Types: Types = {
     Username: [(v) => saslprep(v.toString().trim()), (v) => /^(.{3,31}|[\u4e00-\u9fa5]{2})$/.test(safeSaslprep(v))],
     Title: [(v) => v.toString().trim(), isTitle],
     String: [(v) => v.toString(), null],
-    Int: [(v) => parseInt(v, 10), (v) => isSafeInteger(parseInt(v, 10))],
-    UnsignedInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) >= 0],
-    PositiveInt: [(v) => parseInt(v, 10), (v) => parseInt(v, 10) > 0],
+    Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],
+    UnsignedInt: [(v) => +v, (v) => /^(-0|\+?[0-9]+)$/.test(v.toString().trim()) && isSafeInteger(+v)],
+    PositiveInt: [(v) => +v, (v) => /^\+?[1-9][0-9]*$/.test(v.toString().trim()) && isSafeInteger(+v)],
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
     // eslint-disable-next-line no-shadow
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
-    Boolean: [(v) => !!v, null, true],
+    Boolean: [(v) => v && !['false', 'off'].includes(v), null, true],
     Date: [
         (v) => {
             const d = v.split('-');
@@ -72,7 +75,7 @@ export const Types: Types = {
             return `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
         },
         (v) => {
-            const d = v.split('-');
+            const d = v.toString().split('-');
             if (d.length !== 3) return false;
             const st = `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
             return moment(st).isValid();
@@ -85,7 +88,7 @@ export const Types: Types = {
             return `${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`;
         },
         (v) => {
-            const t = v.split(':');
+            const t = v.toString().split(':');
             if (t.length !== 2) return false;
             return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
         },
@@ -94,9 +97,8 @@ export const Types: Types = {
         (v) => {
             if (range instanceof Array) {
                 for (const item of range) {
-                    if (typeof item === 'number') {
-                        if (item === parseInt(v, 10)) return parseInt(v, 10);
-                    } else if (item === v) return v;
+                    if (typeof item === 'number' && item === +v) return +v;
+                    if (item === v) return v;
                 }
             }
             return v;
@@ -104,11 +106,8 @@ export const Types: Types = {
         (v) => {
             if (range instanceof Array) {
                 for (const item of range) {
-                    if (typeof item === 'string') {
-                        if (item === v) return true;
-                    } else if (typeof item === 'number') {
-                        if (item === parseInt(v, 10)) return true;
-                    }
+                    if (typeof item === 'string' && item === v) return true;
+                    if (typeof item === 'number' && item === +v) return true;
                 }
             } else {
                 for (const key in range) {
@@ -118,6 +117,7 @@ export const Types: Types = {
             return false;
         },
     ],
+    /** @deprecated suggested to use Types.ArrayOf instead. */
     Array: [(v) => {
         if (v instanceof Array) return v;
         return v ? [v] : [];
@@ -127,11 +127,11 @@ export const Types: Types = {
         return v.split(',').map(Number);
     }, (v) => {
         if (v instanceof Array) return v.map(Number).every(Number.isSafeInteger);
-        return v.split(',').map(Number).every(Number.isSafeInteger);
+        return v.toString().split(',').map(Number).every(Number.isSafeInteger);
     }],
     CommaSeperatedArray: [
         (v) => v.toString().replace(/，/g, ',').split(',').map((e) => e.trim()).filter((i) => i),
-        (v) => v.toString(),
+        (v) => !!v.toString(),
     ],
     Set: [(v) => {
         if (v instanceof Array) return new Set(v);
@@ -139,13 +139,25 @@ export const Types: Types = {
     }, null],
     Emoji: [
         (v: string) => v.matchAll(emojiRegex()).next().value[0],
-        (v) => emojiRegex().test(v),
+        (v) => emojiRegex().test(v.toString()),
     ],
+    Any: [(v) => v, null],
+    ArrayOf: (type) => [
+        (v) => {
+            const arr = v instanceof Array ? v : [v];
+            return arr.map((i) => type[0](i));
+        },
+        (v) => {
+            if (!type[1]) return true;
+            const arr = v instanceof Array ? v : [v];
+            return arr.every((i) => type[1](i));
+        },
+    ] as any,
 };
 
-function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type | boolean | Validator | Converter>) {
+function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type<any> | boolean | Validator | Converter<any>>) {
     let cursor = 0;
-    const v: ParamOption = { name, source };
+    const v: ParamOption<any> = { name, source };
     let isValidate = true;
     while (cursor < args.length) {
         const current = args[cursor];
@@ -164,7 +176,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
     return v;
 }
 
-function _descriptor(v: ParamOption) {
+function _descriptor(v: ParamOption<any>) {
     return function desc(this: Handler, target: any, funcName: string, obj: any) {
         target.__param ||= {};
         target.__param[target.constructor.name] ||= {};
@@ -174,7 +186,7 @@ function _descriptor(v: ParamOption) {
             obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
-                const arglist: ParamOption[] = this.__param[target.constructor.name][funcName];
+                const arglist: ParamOption<any>[] = this.__param[target.constructor.name][funcName];
                 for (const item of arglist) {
                     const src = item.source === 'all'
                         ? rawArgs
@@ -200,11 +212,11 @@ function _descriptor(v: ParamOption) {
 }
 
 type DescriptorBuilder =
-    ((name: string, type: Type) => MethodDecorator)
-    & ((name: string, type: Type, validate: null, convert: Converter) => MethodDecorator)
-    & ((name: string, type: Type, validate?: Validator, convert?: Converter) => MethodDecorator)
-    & ((name: string, type?: Type, isOptional?: boolean, validate?: Validator, convert?: Converter) => MethodDecorator)
-    & ((name: string, ...args: Array<Type | boolean | Validator | Converter>) => MethodDecorator);
+    ((name: string, type: Type<any>) => MethodDecorator)
+    & ((name: string, type: Type<any>, validate: null, convert: Converter<any>) => MethodDecorator)
+    & ((name: string, type: Type<any>, validate?: Validator, convert?: Converter<any>) => MethodDecorator)
+    & ((name: string, type?: Type<any>, isOptional?: boolean, validate?: Validator, convert?: Converter<any>) => MethodDecorator)
+    & ((name: string, ...args: Array<Type<any> | boolean | Validator | Converter<any>>) => MethodDecorator);
 
 export const get: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));
 export const query: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'get', ...args));

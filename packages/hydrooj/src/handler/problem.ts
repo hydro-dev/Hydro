@@ -671,19 +671,23 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('testdata', Types.Boolean)
     @param('additional_file', Types.Boolean)
     @param('pjax', Types.Boolean)
-    async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false) {
+    @param('sidebar', Types.Boolean)
+    async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false, sidebar = false) {
         this.response.body.testdata = getTestdata ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.reference = getTestdata ? this.pdoc.reference : '';
         this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
             const owner = await user.getById(domainId, this.pdoc.owner);
+            const args = {
+                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar,
+            };
+            const tasks = [];
+            if (getTestdata) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
+            if (getAdditionalFile) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }));
+            if (!sidebar) tasks.push(this.renderHTML('partials/problem-sidebar-information.html', args));
             this.response.body = {
-                fragments: (await Promise.all([
-                    this.renderHTML('partials/problem_files-testdata.html', { testdata, pdoc: this.pdoc }),
-                    this.renderHTML('partials/problem_files-additional_file.html', { additional_file, pdoc: this.pdoc }),
-                    this.renderHTML('partials/problem-sidebar-information.html', { pdoc: this.pdoc, owner_udoc: owner }),
-                ])).map((i) => ({ html: i })),
+                fragments: (await Promise.all(tasks)).map((i) => ({ html: i })),
             };
             this.response.template = '';
         } else this.response.template = 'problem_files.html';
@@ -780,7 +784,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @post('files', Types.Array)
+    @post('files', Types.ArrayOf(Types.Name))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');

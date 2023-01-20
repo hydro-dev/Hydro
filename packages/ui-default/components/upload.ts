@@ -11,6 +11,7 @@ function onBeforeUnload(e) {
 interface UploadOptions {
   type?: string;
   pjax?: boolean;
+  sidebar?: boolean;
   singleFileUploadCallback?: (file: File) => any;
 }
 export default async function uploadFiles(endpoint = '', files: File[] | FileList = [], options: UploadOptions = {}) {
@@ -65,7 +66,12 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
     }
     window.removeEventListener('beforeunload', onBeforeUnload);
     Notification.success(i18n('File uploaded successfully.'));
-    if (options.pjax) await pjax.request({ push: false });
+    if (options.pjax) {
+      let params = '';
+      if (options.type) params += `?testdata=${options.type === 'testdata'}&additional_file=${options.type === 'additional_file'}`;
+      if (options.sidebar) params += `${params ? '&' : '?'}sidebar=true`;
+      await pjax.request({ push: false, url: `${endpoint}${params || ''}` });
+    }
   } catch (e) {
     console.error(e);
     Notification.error(i18n('File upload failed: {0}', e.toString()));
