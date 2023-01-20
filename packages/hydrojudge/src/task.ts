@@ -31,7 +31,7 @@ export class JudgeTask {
     lang: string;
     code: CopyInFile;
     input?: string;
-    clean: (() => Promise<any>)[];
+    clean: (() => Promise<any>)[] = [];
     data: FileInfo[];
     folder: string;
     config: ParsedConfig;
@@ -65,12 +65,11 @@ export class JudgeTask {
                 HYDRO_DOMAIN: this.request.domainId.toString(),
                 HYDRO_RECORD: this.rid,
                 HYDRO_LANG: this.lang,
-                HYDRO_USER: this.request.uid.toString(),
+                HYDRO_USER: (this.request.uid || 0).toString(),
                 HYDRO_CONTEST: tid,
             };
             this.next = this.session.getNext(this);
             this.end = this.session.getEnd(this);
-            this.clean = [];
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
             await this.doSubmission();
         } catch (e) {
