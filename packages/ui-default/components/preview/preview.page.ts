@@ -4,9 +4,8 @@ import { nanoid } from 'nanoid';
 import { ActionDialog, InfoDialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
-import {
-  i18n, pjax, request, tpl,
-} from 'vj/utils';
+import { i18n, request, tpl } from 'vj/utils';
+import uploadFiles from '../upload';
 
 async function startEdit(filename, value, fileCategory = 'file') {
   const { default: Editor } = await import('vj/components/editor/index');
@@ -144,17 +143,17 @@ export async function previewFile(ev, type = '') {
   } else Notification.info(i18n('Loading editor...'));
   const val = await startEdit(filename, content, type || 'file');
   if (typeof val !== 'string') return null;
-  Notification.info(i18n('Saving file...'));
-  const data = new FormData();
-  data.append('filename', filename);
-  data.append('file', new Blob([val], { type: 'text/plain' }));
-  if (type) data.append('type', type);
-  data.append('operation', 'upload_file');
-  const postUrl = !window.location.href.endsWith('/files')
-    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '';
-  await request.postFile(postUrl, data);
-  Notification.success(i18n('File saved.'));
-  return pjax.request({ push: false });
+  const file = new File([val], filename, { type: 'text/plain' });
+  const endpoint = new URL(!window.location.href.endsWith('/files')
+    ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '', window.location.href);
+  const sidebarType = $(ev.currentTarget).closest('[data-fragment-id]').data('type');
+  const sidebar = $(ev.currentTarget).closest('[data-fragment-id]').data('sidebar') !== undefined;
+  await uploadFiles(endpoint.toString(), [file], {
+    type: sidebarType || type,
+    sidebar,
+    pjax: true,
+  });
+  return null;
 }
 
 const dataPreviewPage = new AutoloadPage('dataPreview', () => {

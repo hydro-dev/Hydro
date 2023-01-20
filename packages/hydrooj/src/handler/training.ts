@@ -279,7 +279,7 @@ export class TrainingFilesHandler extends Handler {
     }
 
     @param('tid', Types.ObjectID)
-    @post('files', Types.Array)
+    @post('files', Types.ArrayOf(Types.Name))
     async postDeleteFiles(domainId: string, tid: ObjectID, files: string[]) {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
