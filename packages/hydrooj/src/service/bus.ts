@@ -59,6 +59,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'domain/before-update': (domainId: string, $set: Partial<DomainDoc>) => VoidReturn
     'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => VoidReturn
     'domain/delete': (domainId: string) => VoidReturn
+    'domain/delete-cache': (domainId: string) => VoidReturn
 
     'document/add': (doc: any) => VoidReturn
     'document/set': <T extends keyof DocType>(
