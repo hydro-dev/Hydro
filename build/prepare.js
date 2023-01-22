@@ -56,27 +56,24 @@ const configFlat = (name) => ({
     exclude: ['public'],
 });
 
-if (!fs.existsSync(path.resolve(process.cwd(), 'plugins'))) {
-    fs.mkdirSync(path.resolve(process.cwd(), 'plugins'));
-    // Write an empty file to make eslint happy
-    fs.writeFileSync(path.resolve(process.cwd(), 'plugins/eslint.ts'), '');
+for (const name of ['plugins', 'modules']) {
+    if (!fs.existsSync(path.resolve(process.cwd(), name))) {
+        fs.mkdirSync(path.resolve(process.cwd(), name));
+        // Write an empty file to make eslint happy
+        fs.writeFileSync(path.resolve(process.cwd(), name, 'eslint.ts'), '');
+    }
 }
 
 const modules = [
     'packages/hydrooj',
-    ...fs.readdirSync(path.resolve(process.cwd(), 'packages')).map((i) => `packages/${i}`),
-    ...fs.readdirSync(path.resolve(process.cwd(), 'plugins')).map((i) => `plugins/${i}`),
+    ...['packages', 'plugins', 'modules'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
 ].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
 
 const UIConfig = {
     exclude: [
         'packages/ui-default/public',
     ],
-    include: ['ts', 'tsx'].flatMap((i) => [
-        `packages/ui-default/**/*.${i}`,
-        `packages/**/public/**/*.${i}`,
-        `plugins/**/public/**/*.${i}`,
-    ]),
+    include: ['ts', 'tsx'].flatMap((ext) => [].map((name) => `${name}/**/public/**/*.${ext}`).concat(`packages/ui-default/**/*.${ext}`)),
     compilerOptions: {
         experimentalDecorators: true,
         esModuleInterop: true,

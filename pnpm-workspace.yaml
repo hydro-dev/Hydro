@@ -1,3 +1,4 @@
 packages:
 - packages/*
 - plugins/*
+- modules/*
