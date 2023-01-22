@@ -1,6 +1,5 @@
-import { defaultsDeep } from 'lodash';
 import {
-    Logger, SettingModel, sleep, STATUS,
+    _, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -93,7 +92,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
     };
 
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        const config = defaultsDeep({ ...defaultConfig }, account);
+        const config = _.defaultsDeep({ ...defaultConfig }, account);
         super(account, '', 'form', logger, {
             post: {
                 headers: {
