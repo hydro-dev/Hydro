@@ -1,3 +1,4 @@
+import { DOMWindow, JSDOM } from 'jsdom';
 import proxy from 'superagent-proxy';
 import { Logger } from '@hydrooj/utils';
 import { superagent } from 'hydrooj';
@@ -17,28 +18,33 @@ export class BasicFetcher {
     constructor(
         public account: RemoteAccount, private defaultEndpoint: string,
         private formType: 'form' | 'json', public logger: Logger,
-        private fetchOptions: FetchOptions = {},
+        public fetchOptions: FetchOptions = {},
     ) {
         if (account.cookie) this.cookie = account.cookie;
     }
 
     get(url: string) {
         this.logger.debug('get', url);
-        if (!url.startsWith('http')) url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.fetchOptions.headers) req.set(this.fetchOptions.headers);
-        if (this.fetchOptions.get.headers) req.set(this.fetchOptions.get.headers);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
+        url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
+        let req = superagent.get(url).set('Cookie', this.cookie);
+        if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
+        if (this.fetchOptions.get?.headers) req = req.set(this.fetchOptions.get.headers);
+        return this.account.proxy ? req.proxy(this.account.proxy) : req;
+    }
+
+    async html(url: string) {
+        const { text: html } = await this.get(url);
+        const $dom = new JSDOM(html);
+        $dom.window.html = html;
+        return $dom.window as DOMWindow & { html: string };
     }
 
     post(url: string) {
         this.logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || this.defaultEndpoint}${url}`;
-        const req = superagent.post(url).set('Cookie', this.cookie).type(this.formType);
-        if (this.fetchOptions.headers) req.set(this.fetchOptions.headers);
-        if (this.fetchOptions.post.headers) req.set(this.fetchOptions.post.headers);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
+        url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
+        let req = superagent.post(url).set('Cookie', this.cookie).type(this.formType);
+        if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
+        if (this.fetchOptions.post?.headers) req = req.set(this.fetchOptions.post.headers);
+        return this.account.proxy ? req.proxy(this.account.proxy) : req;
     }
 }

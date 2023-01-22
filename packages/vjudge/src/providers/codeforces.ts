@@ -83,8 +83,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     async getCsrfToken(url: string) {
-        const { text: html } = await this.get(url);
-        const { window: { document } } = new JSDOM(html);
+        const { document, html } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
             throw new Error(document.body.textContent);
         }
@@ -241,13 +240,12 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         if (resync && page > 1) return [];
         if (resync && listName.startsWith('GYM')) return [];
         if (listName.startsWith('GYM') && page > 1) return [];
-        const res = await this.get(listName === 'main'
+        const { document } = await this.html(listName === 'main'
             ? `/problemset/page/${page}`
             : listName === 'gym'
                 ? `/gyms/page/${page}`
                 : `/gym/${listName.split('GYM')[1]}`,
         );
-        const { window: { document } } = new JSDOM(res.text);
         if (['gym', 'main'].includes(listName)) {
             const index = document.querySelector('.page-index.active').getAttribute('pageindex');
             if (index !== page.toString()) return [];
@@ -310,10 +308,9 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             end({ status: STATUS.STATUS_COMPILE_ERROR, message });
             return null;
         }
-        const { text: status } = await this.get(type !== 'GYM'
+        const { document } = await this.html(type !== 'GYM'
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
-        const { window: { document } } = new JSDOM(status);
         this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
         return document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
     }

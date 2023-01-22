@@ -44,7 +44,10 @@ class AccountService {
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
             await this.api.waitForSubmission(rid, next, end);
         } catch (e) {
-            if (process.env.DEV) logger.error(e);
+            if (process.env.DEV) {
+                logger.error(e);
+                if (e.response) console.error(e.response);
+            }
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: e.message });
         }
     }
@@ -140,6 +143,7 @@ class VJudgeService extends Service {
     }
 
     addProvider(type: string, provider: BasicProvider, override = false) {
+        if (process.env.VJUDGE_DEBUG && process.env.VJUDGE_DEBUG !== type) return;
         if (!override && this.providers[type]) throw new Error(`duplicate provider ${type}`);
         this.providers[type] = provider;
         for (const account of this.accounts.filter((a) => a.type === type)) {

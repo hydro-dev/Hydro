@@ -50,8 +50,7 @@ export default class SPOJProvider extends BasicFetcher implements IBasicProvider
 
     async getProblem(id: string) {
         logger.info(id);
-        const { text } = await this.get(`/problems/${id}/`);
-        const { window: { document } } = new JSDOM(text);
+        const { document } = await this.html(`/problems/${id}/`);
         const files = {};
         document.querySelector('#problem-body').querySelectorAll('img[src]').forEach((ele) => {
             const src = ele.getAttribute('src');
@@ -63,9 +62,8 @@ export default class SPOJProvider extends BasicFetcher implements IBasicProvider
             ele.setAttribute('src', `file://${fid}.png`);
         });
         const meta = document.querySelector('#problem-meta').children[1];
-        const { text: submit } = await this.get(`/submit/${id}/`);
-        const $dom = new JSDOM(submit);
-        const langs = Array.from($dom.window.document.querySelector('#lang').querySelectorAll('option'))
+        const window = await this.html(`/submit/${id}/`);
+        const langs = Array.from(window.document.querySelector('#lang').querySelectorAll('option'))
             .map((i) => `spoj.${i.getAttribute('value')}`);
         let time = meta.children[2].children[1].innerHTML.trim().toLowerCase();
         if (time.includes('-')) time = time.split('-')[1];
@@ -89,8 +87,7 @@ langs: ${JSON.stringify(langs)}`),
 
     async listProblem(page: number, resync = false) {
         if (resync) return [];
-        const res = await this.get(`/problems/classical/sort=0,start=${page * 50 - 50}`);
-        const { window: { document } } = new JSDOM(res.text);
+        const { document } = await this.html(`/problems/classical/sort=0,start=${page * 50 - 50}`);
         const index = document.querySelector('ul.pagination').querySelector('li.active').children[0].innerHTML.trim();
         if (index !== page.toString()) return [];
         return Array.from(document.querySelectorAll('td[align=left]')).map((i) => i.children[0].getAttribute('href').split('/problems/')[1]);
