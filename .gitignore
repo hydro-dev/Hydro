@@ -46,6 +46,7 @@ packages/ui-default/public
 packages/ui-default/misc/.iconfont
 packages/ui-default/static/locale
 plugins/
+modules/
 
 # Data files
 *.mmdb
