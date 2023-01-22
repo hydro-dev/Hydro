@@ -1,15 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import * as superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     Logger, parseMemoryMB, parseTimeMS, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
 
-proxy(superagent as any);
 const logger = new Logger('remote/uoj');
 const MAPPING = {
     一: 1,
@@ -24,29 +22,12 @@ const MAPPING = {
     十: 10,
 };
 
-export default class UOJProvider implements IBasicProvider {
+export default class UOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
+        super(account, 'https://uoj.ac', 'form', logger);
     }
 
-    cookie: string[] = [];
     csrf: string;
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://uoj.ac'}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://uoj.ac'}${url}`;
-        const req = superagent.post(url).set('Cookie', this.cookie).type('form');
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
 
     async getCsrfToken(url: string) {
         const { text: html, header } = await this.get(url);

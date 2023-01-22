@@ -1,14 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     Logger, parseMemoryMB, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent);
 const logger = new Logger('spoj');
 
 const VERDICT = {
@@ -19,27 +17,9 @@ const VERDICT = {
     15: STATUS.STATUS_ACCEPTED,
 };
 
-export default class SPOJProvider implements IBasicProvider {
+export default class SPOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
-    }
-
-    cookie: string[] = [];
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://www.spoj.com'}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://www.spoj.com'}${url}`;
-        const req = superagent.post(url).type('form').set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
+        super(account, 'https://www.spoj.com', 'form', logger);
     }
 
     get loggedIn() {

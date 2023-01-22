@@ -2,15 +2,13 @@
 import { PassThrough } from 'stream';
 import yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
-import superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     buildContent, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { normalize, VERDICT } from '../verdict';
 
-proxy(superagent);
 const logger = new Logger('remote/codeforces');
 
 function parseProblemId(id: string) {
@@ -61,30 +59,12 @@ ${lines.map((i) => i.innerHTML).join('\n').trim()}
 \n`;
     };
 
-export default class CodeforcesProvider implements IBasicProvider {
+export default class CodeforcesProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
-        this.account.endpoint ||= 'https://codeforces.com';
+        super(account, 'https://codeforces.com', 'form', logger);
     }
 
-    cookie: string[] = [];
     csrf: string;
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
-        const req = superagent.post(url).type('form').set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
 
     getCookie(target: string) {
         return this.cookie.find((i) => i.startsWith(`${target}=`))?.split('=')[1]?.split(';')[0];
