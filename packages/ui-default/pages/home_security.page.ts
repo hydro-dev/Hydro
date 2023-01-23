@@ -109,7 +109,7 @@ async function enableAuthn(type: string) {
 }
 
 export default new NamedPage('home_security', () => {
-  const menuLink = (inner:string, action?:string) => `
+  const menuLink = (inner: string, action?: string) => `
     <li class="menu__item" ${action ? '' : 'disabled'}>
       <a class="menu__link" ${action ? `data-action="${action}"` : 'disabled'}>${inner}</a>
     </li>
@@ -139,7 +139,7 @@ export default new NamedPage('home_security', () => {
     }
     $body += '</ol></div>';
     const action = await new ActionDialog({ $body, $action: [] }).open();
-    if (!action) return;
+    if (!action || action === 'cancel') return;
     if (action === 'tfa') enableTfa();
     else enableAuthn(action);
   });
