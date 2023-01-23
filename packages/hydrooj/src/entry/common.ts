@@ -48,7 +48,7 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
                 fail.push(i);
                 app.inject(
                     'Notification', `${name} load fail: {0}`,
-                    { args: [i] }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION,
+                    { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION,
                 );
                 logger.info(`${name} load fail: %s`, i);
                 logger.error(e);

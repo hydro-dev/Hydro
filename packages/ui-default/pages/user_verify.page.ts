@@ -87,7 +87,8 @@ export default new AutoloadPage('user_verify', () => {
         const challenge = await verifywebauthn($form);
         if (challenge) $form['authnChallenge'].value = challenge;
         else return;
-      } else $form['tfa'].value = $('[name="tfa_code"]').val() as string;
+      } else if (action === 'tfa') $form['tfa'].value = $('[name="tfa_code"]').val() as string;
+      else return;
     }
     $form.submit();
   });

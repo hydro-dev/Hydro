@@ -1,8 +1,9 @@
 import { PassThrough } from 'stream';
-import { cloneDeep } from 'lodash';
+import type { Next } from 'koa';
+import { cloneDeep, pick } from 'lodash';
 import * as system from '../../model/system';
 import token from '../../model/token';
-import type { HydroRequest, HydroResponse } from '../server';
+import type { HydroRequest, HydroResponse, KoaContext } from '../server';
 
 export interface UiContextBase {
     cdn_prefix: string;
@@ -15,32 +16,18 @@ export const UiContextBase: UiContextBase = {
     ws_prefix: '/',
 };
 
-export default async (ctx, next) => {
+export default async (ctx: KoaContext, next: Next) => {
     // Base Layer
     const { domainId, domainInfo } = ctx;
-    const isWebsocket = ctx.request.headers.upgrade === 'websocket';
-    const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
-    // ignore reverse_proxy chains
-    const ipHeader = ctx.request.headers[xff?.toLowerCase() || ''] || ctx.request.ip;
-    const ip = (typeof ipHeader === 'string' ? ipHeader : ipHeader[0]).split(',')[0].trim();
-    const host = ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host;
     const request: HydroRequest = {
         method: ctx.request.method.toLowerCase(),
-        host,
-        hostname: ctx.request.hostname,
-        ip,
-        headers: ctx.request.headers,
-        cookies: ctx.cookies,
+        ...pick(ctx.request, ['host', 'hostname', 'ip', 'headers']),
+        ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring', 'cookies']),
         body: ctx.request.body,
         files: ctx.request.files as any,
-        query: ctx.query,
-        querystring: ctx.querystring,
-        path: ctx.path,
-        originalPath: ctx.originalPath,
-        params: ctx.params,
         referer: ctx.request.headers.referer || '',
         json: (ctx.request.headers.accept || '').includes('application/json'),
-        websocket: isWebsocket,
+        websocket: ctx.request.headers.upgrade === 'websocket',
     };
     const response: HydroResponse = {
         body: {},
@@ -78,18 +65,24 @@ export default async (ctx, next) => {
     const expireSeconds = ctx.session.save
         ? system.get('session.saved_expire_seconds')
         : system.get('session.unsaved_expire_seconds');
-    Object.assign(ctx.session, { updateIp: ip, updateUa: ua });
+    Object.assign(ctx.session, { updateIp: request.ip, updateUa: ua });
     if (ctx.session._id) {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, ctx.session);
     } else {
-        Object.assign(ctx.session, { createIp: ip, createUa: ua, createHost: host });
+        Object.assign(ctx.session, { createIp: request.ip, createUa: ua, createHost: request.host });
         [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, ctx.session);
     }
     if (!request.websocket) {
-        ctx.cookies.set('sid', ctx.session._id, {
+        const options: any = {
             expires: new Date(Date.now() + expireSeconds * 1000),
             secure: !!system.get('session.secure'),
             httpOnly: false,
-        });
+        };
+        if (system.get('session.domain')) {
+            options.domain = system.get('session.domain');
+            options.sameSite = 'none';
+            options.secure = true;
+        }
+        ctx.cookies.set('sid', ctx.session._id, options);
     }
 };
