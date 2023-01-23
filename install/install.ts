@@ -146,10 +146,7 @@ const Caddyfile = `\
 # 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
-  reverse_proxy http://127.0.0.1:8888 {
-    header_up x-forwarded-for {remote_host}
-    header_up x-forwarded-host {hostport}
-  }
+  reverse_proxy http://127.0.0.1:8888
 }
 `;
 

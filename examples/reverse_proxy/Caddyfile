@@ -1,6 +1,3 @@
 hydro.ac {
-  reverse_proxy http://localhost:8888 {
-    header_up x-forwarded-for {remote_host}
-    header_up x-forwarded-host {hostport}
-  }
+  reverse_proxy http://localhost:8888
 }
