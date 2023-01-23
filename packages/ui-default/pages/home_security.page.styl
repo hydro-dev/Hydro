@@ -20,6 +20,24 @@
     line-height: rem($form-control-height)
     color: green
 
+  .autherlist
+    font-size: rem($font-size-secondary)
+
+  .autherlist__icon
+    font-size: rem(30px)
+    color: #888
+    margin: rem(0 20px)
+
+  .autherlist__item
+    margin: rem(10px 0)
+    padding: rem(10px 0)
+
+    &:not(:last-child)
+    border-bottom: 1px solid #DDD
+
+    input
+      margin: 0
+
   +mobile()
     .sessionlist__item
       .media__left

@@ -89,16 +89,55 @@
   <div class="columns">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title" id="tfa" data-heading>{{ _('Two Factor Authentication') }}</h1>
+        <h1 class="section__title" id="authenticator" data-heading>{{ _('Authenticators') }}</h1>
         <div class="section__tools">
-          {% if handler.user.tfa %}
-            <button class="primary rounded button" name="tfa_enabled"><span class="icon icon-check"></span> {{ _('Enabled') }}</button>
-          {% else %}
-            <button class="primary rounded button" name="tfa_enable"><span class="icon icon-wrench"></span> {{ _('Enable') }}</button>
-          {% endif %}
+          <button class="primary rounded button" name="auth_enable"><span class="icon icon-wrench"></span> {{ _('Add Authenticator') }}</button>
         </div>
       </div>
-      <div class="section__body"></div>
+      <div class="section__body">
+        <ul class="autherlist">
+          {%- if handler.user.tfa -%}
+          <li class="autherlist__item">
+            <div class="media">
+              <div class="media__left medium">
+                <span class="autherlist__icon icon icon-platform--mobile }}"></span>
+              </div>
+              <div class="media__body medium typo">
+                <p>{{ _('Authenticator') }}: {{ _('Two Factor Authentication') }}</p>
+              </div>
+              <div class="media__right medium">
+                <form method="POST">
+                  <input type="hidden" name="operation" value="disable_tfa">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button">
+                </form>
+              </div>
+            </div>
+          </li>
+          {%- endif -%}
+          {%- for authenticator in authenticators -%}
+          <li class="autherlist__item">
+            <div class="media">
+              <div class="media__left medium">
+                <span class="autherlist__icon icon icon-{{ 'fingerprint' if authenticator.authenticatorAttachment === 'platform' else 'usb' }}"></span>
+              </div>
+              <div class="media__body medium typo">
+                <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialID.buffer.toString('base64')|truncate(6, end='') }})</p>
+                <p>{{ _('Type') }}: {{ authenticator.fmt }} </p>
+                <p>{{ _('Device Type') }}: {{ authenticator.credentialDeviceType }} </p>
+                <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
+              </div>
+              <div class="media__right medium">
+                <form method="POST">
+                  <input type="hidden" name="id" value="{{ authenticator.credentialID.buffer.toString('base64') }}">
+                  <input type="hidden" name="operation" value="disable_authn">
+                  <input type="submit" value="{{ _('Remove') }}" class="rounded button">
+                </form>
+              </div>
+            </div>
+          </li>
+          {%- endfor -%}
+        </ul>
+      </div>
     </div>
   </div>
 </div>

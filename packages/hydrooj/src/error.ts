@@ -117,7 +117,7 @@ export const OnlyOwnerCanDeleteDomainError = Err('OnlyOwnerCanDeleteDomainError'
 export const CannotEditSuperAdminError = Err('CannotEditSuperAdminError', BadRequestError, 'You are not allowed to edit super admin in web.');
 export const ProblemConfigError = Err('ProblemConfigError', BadRequestError, 'Invalid problem config.');
 export const ProblemIsReferencedError = Err('ProblemIsReferencedError', BadRequestError, 'Cannot {0} of a referenced problem.');
-export const TFAOperationError = Err('TFAOperationError', BadRequestError, '2FA is already {0}.');
+export const AuthOperationError = Err('AuthOperationError', BadRequestError, '{0} is already {1}.');
 
 export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');

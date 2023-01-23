@@ -14,6 +14,7 @@
         "build:ui": "node packages/ui-default/build --gulp && node packages/ui-default/build",
         "build:ui:gulp": "node packages/ui-default/build --gulp",
         "build:ui:dev": "node packages/ui-default/build --gulp && node --trace-deprecation packages/ui-default/build --dev",
+        "build:ui:dev:https": "node packages/ui-default/build --gulp && node --trace-deprecation packages/ui-default/build --dev --https",
         "build:ui:production": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --gulp && node packages/ui-default/build --production",
         "build:ui:production:webpack": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --production",
         "test": "node test/entry.js",
@@ -29,6 +30,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
+        "@simplewebauthn/typescript-types": "^7.0.0",
         "@types/autocannon": "^7.9.0",
         "@types/cross-spawn": "^6.0.2",
         "@types/node": "^18.11.18",

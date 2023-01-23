@@ -1,6 +1,9 @@
+import { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
+import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
+import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
-import type { Cursor, ObjectID } from 'mongodb';
+import type { Binary, Cursor, ObjectID } from 'mongodb';
 import type { Context } from './context';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
@@ -54,6 +57,24 @@ export interface OAuthUserResponse {
     bio?: string;
     uname?: string[];
     viewLang?: string;
+}
+
+export interface Authenticator {
+    name: string;
+    regat: number;
+
+    fmt: AttestationFormat;
+    counter: number;
+    aaguid: string;
+    credentialID: Binary;
+    credentialPublicKey: Binary;
+    credentialType: 'public-key';
+    attestationObject: Binary;
+    userVerified: boolean;
+    credentialDeviceType: CredentialDeviceType;
+    credentialBackedUp: boolean;
+    authenticatorExtensionResults?: AuthenticationExtensionsAuthenticatorOutputs;
+    authenticatorAttachment: 'platform' | 'cross-platform';
 }
 
 export interface Udoc extends Dictionary<any> {

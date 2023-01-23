@@ -1,10 +1,12 @@
 import path from 'path';
+import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import yaml from 'js-yaml';
-import { ObjectID } from 'mongodb';
+import { pick } from 'lodash';
+import { Binary, ObjectID } from 'mongodb';
 import { camelCase } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import {
-    BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
+    AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -13,6 +15,7 @@ import avatar from '../lib/avatar';
 import * as mail from '../lib/mail';
 import * as useragent from '../lib/useragent';
 import { isDomainId, isEmail, isPassword } from '../lib/validator';
+import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
 import * as contest from '../model/contest';
@@ -167,6 +170,10 @@ class HomeSecurityHandler extends Handler {
         this.response.template = 'home_security.html';
         this.response.body = {
             sessions,
+            authenticators: this.user._authenticators.map((c) => pick(c, [
+                'credentialID', 'name', 'credentialType', 'credentialDeviceType',
+                'authenticatorAttachment', 'regat', 'fmt',
+            ])),
             geoipProvider: geoip?.provider,
             icon: useragent.icon,
         };
@@ -225,6 +232,81 @@ class HomeSecurityHandler extends Handler {
     async postDeleteAllTokens() {
         await token.delByUid(this.user._id);
         this.response.redirect = this.url('user_login');
+    }
+
+    @requireSudo
+    @param('code', Types.String)
+    @param('secret', Types.String)
+    async postEnableTfa(domainId: string, code: string, secret: string) {
+        if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
+        if (!verifyTFA(secret, code)) throw new InvalidTokenError('2FA');
+        await user.setById(this.user._id, { tfa: secret });
+        this.back();
+    }
+
+    @requireSudo
+    @param('type', Types.Range(['cross-platform', 'platform']))
+    async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
+        const options = generateRegistrationOptions({
+            rpName: system.get('server.name'),
+            rpID: this.request.hostname,
+            userID: this.user._id.toString(),
+            userDisplayName: this.user.uname,
+            userName: `${this.user.uname}(${this.user.mail})`,
+            attestationType: 'direct',
+            excludeCredentials: this.user._authenticators.map((c) => ({
+                id: c.credentialID.buffer,
+                type: 'public-key',
+            })),
+            authenticatorSelection: {
+                authenticatorAttachment: type,
+            },
+        });
+        this.session.webauthnVerify = options.challenge;
+        this.response.body.authOptions = options;
+    }
+
+    @requireSudo
+    @param('name', Types.String)
+    async postEnableAuthn(domainId: string, name: string) {
+        if (!this.session.webauthnVerify) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
+        const verification = await verifyRegistrationResponse({
+            response: this.args.result,
+            expectedChallenge: this.session.webauthnVerify,
+            expectedOrigin: this.request.headers.origin,
+            expectedRPID: this.request.hostname,
+        }).catch(() => { throw new ValidationError('verify'); });
+        if (!verification.verified) throw new ValidationError('verify');
+        const info = verification.registrationInfo;
+        const id = Buffer.from(info.credentialID);
+        if (this.user._authenticators.find((c) => c.credentialID.buffer.toString() === id.toString())) throw new ValidationError('authenticator');
+        this.user._authenticators.push({
+            ...info,
+            credentialID: new Binary(id),
+            credentialPublicKey: new Binary(Buffer.from(info.credentialPublicKey)),
+            attestationObject: new Binary(Buffer.from(info.attestationObject)),
+            name,
+            regat: Date.now(),
+            authenticatorAttachment: this.args.result.authenticatorAttachment || 'cross-platform',
+        });
+        await user.setById(this.user._id, { authenticators: this.user._authenticators });
+        this.back();
+    }
+
+    @requireSudo
+    @param('id', Types.String)
+    async postDisableAuthn(domainId: string, id: string) {
+        const authenticators = this.user._authenticators?.filter((c) => c.credentialID.buffer.toString('base64') !== id);
+        if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
+        await user.setById(this.user._id, { authenticators });
+        this.back();
+    }
+
+    @requireSudo
+    async postDisableTfa() {
+        if (!this.user._tfa) throw new AuthOperationError('2FA', 'disabled');
+        await user.setById(this.user._id, undefined, { tfa: '' });
+        this.back();
     }
 }
 

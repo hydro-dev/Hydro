@@ -17,6 +17,18 @@ export function delay(ms) {
   return new Promise((resolve) => { setTimeout(resolve, ms); });
 }
 
+const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+
+export function secureRandomString(digit = 32, dict = defaultDict) {
+  let result = '';
+  const crypto = window.crypto || (window as any).msCrypto;
+  if (!crypto?.getRandomValues) throw new Error('crypto.getRandomValues not supported');
+  const array = new Uint32Array(digit);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < digit; i++) result += dict[array[i] % dict.length];
+  return result;
+}
+
 type Substitution = string | number | { templateRaw: true, html: string };
 
 export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]) {
@@ -146,6 +158,7 @@ Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
   substitute,
+  secureRandomString,
   request,
   tpl,
   delay,

@@ -24,6 +24,7 @@ const DO_NOT_CACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
 function shouldCache(name: string, request?: Request) {
   if (!name.split('/').pop()) return false;
   if (!name.split('/').pop().includes('.')) return false;
+  if (process.env.NODE_ENV !== 'production' && (name.includes('.hot-update.') || name.includes('?version='))) return false;
   // For files download, a response is formatted as string
   if (request && request.headers.get('Do-Not-Cache')) return false;
   return true;
