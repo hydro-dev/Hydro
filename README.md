@@ -40,6 +40,19 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.6.0 / UI 4.46.0
+- core&ui: 添加 webauthn 支持
+- ui: 修复题解投票
+- ui: 优化比赛详情页布局
+- ui: 修复快捷搜索中评测记录链接
+- core: 添加 `Types.ArrayOf()` 支持
+- ui: 修复侧栏预览保存
+- core: 添加 CookieDomain 设置
+- ui: 修复 dev 模式下页面无限刷新的问题
+- vjudge: 提供 BasicFetcher 组件
+- core: DomainModel 缓存
+- core&ui: 其他漏洞修复
+
 ### Hydro 4.5.2 / UI 4.45.1
 - core: 添加乐多赛支持
 - vjudge: 移除 puppeteer 相关依赖

@@ -3,7 +3,6 @@ import { generateRegistrationOptions, verifyRegistrationResponse } from '@simple
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectID } from 'mongodb';
-import { camelCase } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -33,7 +32,7 @@ import * as bus from '../service/bus';
 import {
     ConnectionHandler, Handler, param, query, requireSudo, Types,
 } from '../service/server';
-import { md5 } from '../utils';
+import { camelCase, md5 } from '../utils';
 
 export class HomeHandler extends Handler {
     uids = new Set<number>();
@@ -175,7 +174,7 @@ class HomeSecurityHandler extends Handler {
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
             geoipProvider: geoip?.provider,
-            icon: useragent.icon,
+            icon: (str = '') => str.split(' ')[0].toLowerCase(),
         };
     }
 

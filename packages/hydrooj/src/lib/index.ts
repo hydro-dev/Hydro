@@ -1,6 +1,5 @@
 import './i18n';
 import './mail';
-import './useragent';
 import './paginate';
 import './hash.hydro';
 import './rank';

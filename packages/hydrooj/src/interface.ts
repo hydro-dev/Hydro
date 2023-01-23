@@ -734,7 +734,6 @@ export interface Lib extends Record<string, any> {
     rank: typeof import('./lib/rank');
     rating: typeof import('./lib/rating');
     testdataConfig: typeof import('./lib/testdataConfig');
-    useragent: typeof import('./lib/useragent');
     validator: typeof import('./lib/validator');
     template?: any;
     problemSearch: ProblemSearch;
