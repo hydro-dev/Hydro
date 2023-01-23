@@ -1,12 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import * as superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import { Logger, sleep, STATUS } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent as any);
 const logger = new Logger('remote/csgoj');
 const statusDict = {
     0: STATUS.STATUS_COMPILING,
@@ -53,33 +51,13 @@ csgoj.3:
 
 const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0';
 
-export default class CSGOJProvider implements IBasicProvider {
+export default class CSGOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
+        super(account, 'https://cpc.csgrandeur.cn', 'form', logger, {
+            headers: { 'User-Agent': userAgent },
+            post: { headers: { 'X-Requested-With': 'XMLHttpRequest' } },
+        });
         if (account.cookie) this.cookie = account.cookie;
-    }
-
-    cookie: string[] = [];
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://cpc.csgrandeur.cn'}${url}`;
-        const req = superagent.get(url)
-            .set('Cookie', this.cookie)
-            .set('User-Agent', userAgent);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://cpc.csgrandeur.cn'}${url}`;
-        const req = superagent.post(url)
-            .set('Cookie', this.cookie)
-            .set('X-Requested-With', 'XMLHttpRequest')
-            .set('User-Agent', userAgent)
-            .type('form');
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
     }
 
     get loggedIn() {

@@ -1,15 +1,13 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import * as superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     htmlEncode, Logger, parseMemoryMB, parseTimeMS, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
 
-proxy(superagent as any);
 const logger = new Logger('remote/poj');
 
 /* langs
@@ -59,27 +57,9 @@ const langs = {
     'zh-CN': 'zh',
 };
 
-export default class POJProvider implements IBasicProvider {
+export default class POJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
-    }
-
-    cookie: string[] = [];
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.startsWith('http')) url = new URL(url, this.account.endpoint || 'http://poj.org').toString();
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'http://poj.org'}${url}`;
-        const req = superagent.post(url).set('Cookie', this.cookie).type('form');
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
+        super(account, 'http://poj.org', 'form', logger);
     }
 
     async getCsrfToken(url: string) {

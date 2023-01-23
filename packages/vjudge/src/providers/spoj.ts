@@ -1,14 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     Logger, parseMemoryMB, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-proxy(superagent);
 const logger = new Logger('spoj');
 
 const VERDICT = {
@@ -19,27 +17,9 @@ const VERDICT = {
     15: STATUS.STATUS_ACCEPTED,
 };
 
-export default class SPOJProvider implements IBasicProvider {
+export default class SPOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
-    }
-
-    cookie: string[] = [];
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://www.spoj.com'}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint || 'https://www.spoj.com'}${url}`;
-        const req = superagent.post(url).type('form').set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
+        super(account, 'https://www.spoj.com', 'form', logger);
     }
 
     get loggedIn() {
@@ -70,8 +50,7 @@ export default class SPOJProvider implements IBasicProvider {
 
     async getProblem(id: string) {
         logger.info(id);
-        const { text } = await this.get(`/problems/${id}/`);
-        const { window: { document } } = new JSDOM(text);
+        const { document } = await this.html(`/problems/${id}/`);
         const files = {};
         document.querySelector('#problem-body').querySelectorAll('img[src]').forEach((ele) => {
             const src = ele.getAttribute('src');
@@ -83,9 +62,8 @@ export default class SPOJProvider implements IBasicProvider {
             ele.setAttribute('src', `file://${fid}.png`);
         });
         const meta = document.querySelector('#problem-meta').children[1];
-        const { text: submit } = await this.get(`/submit/${id}/`);
-        const $dom = new JSDOM(submit);
-        const langs = Array.from($dom.window.document.querySelector('#lang').querySelectorAll('option'))
+        const window = await this.html(`/submit/${id}/`);
+        const langs = Array.from(window.document.querySelector('#lang').querySelectorAll('option'))
             .map((i) => `spoj.${i.getAttribute('value')}`);
         let time = meta.children[2].children[1].innerHTML.trim().toLowerCase();
         if (time.includes('-')) time = time.split('-')[1];
@@ -109,8 +87,7 @@ langs: ${JSON.stringify(langs)}`),
 
     async listProblem(page: number, resync = false) {
         if (resync) return [];
-        const res = await this.get(`/problems/classical/sort=0,start=${page * 50 - 50}`);
-        const { window: { document } } = new JSDOM(res.text);
+        const { document } = await this.html(`/problems/classical/sort=0,start=${page * 50 - 50}`);
         const index = document.querySelector('ul.pagination').querySelector('li.active').children[0].innerHTML.trim();
         if (index !== page.toString()) return [];
         return Array.from(document.querySelectorAll('td[align=left]')).map((i) => i.children[0].getAttribute('href').split('/problems/')[1]);
