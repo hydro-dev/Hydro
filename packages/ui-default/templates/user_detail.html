@@ -20,9 +20,10 @@
             <div class="media__body profile-header__main">
               <h1>
                 {{ udoc['uname'] }}
-                <small>({{ _('UID') }}: {{ udoc['_id'] }})</small>
+                {% if udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
               </h1>
               <p>
+                {{ _('UID') }}: {{ udoc['_id'] }},
                 {{ _('Registered at') }} {{ datetimeSpan(udoc['regat'])|safe }},
                 {{ _('last login at') }} {{ datetimeSpan(udoc['loginat'])|safe }},
               {% if sdoc %}
