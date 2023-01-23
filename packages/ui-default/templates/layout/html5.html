@@ -67,7 +67,7 @@
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}l/{{ _('__id') }}"></script>
     <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
     {% if process.env.DEV %}
-      <script type="text/javascript" src="/hydro.js"></script>
+      <script type="text/javascript" src="/hydro.js?version={{ global.Hydro.version['ui-default'] }}"></script>
     {% else %}
       <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
     {% endif %}

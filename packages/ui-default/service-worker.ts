@@ -26,7 +26,7 @@ function shouldCache(name: string, request?: Request) {
   if (!name.split('/').pop().includes('.')) return false;
   if (process.env.NODE_ENV !== 'production' && (name.includes('.hot-update.') || name.includes('?version='))) return false;
   // For files download, a response is formatted as string
-  if (request && request.headers.get('Do-Not-Cache')) return false;
+  if (request && request.headers.get('Pragma') === 'no-cache') return false;
   return true;
 }
 function shouldPreCache(name: string) {
