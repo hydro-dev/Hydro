@@ -2,15 +2,13 @@
 import { PassThrough } from 'stream';
 import yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
-import superagent from 'superagent';
-import proxy from 'superagent-proxy';
 import {
     buildContent, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { normalize, VERDICT } from '../verdict';
 
-proxy(superagent);
 const logger = new Logger('remote/codeforces');
 
 function parseProblemId(id: string) {
@@ -61,30 +59,12 @@ ${lines.map((i) => i.innerHTML).join('\n').trim()}
 \n`;
     };
 
-export default class CodeforcesProvider implements IBasicProvider {
+export default class CodeforcesProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        if (account.cookie) this.cookie = account.cookie;
-        this.account.endpoint ||= 'https://codeforces.com';
+        super(account, 'https://codeforces.com', 'form', logger);
     }
 
-    cookie: string[] = [];
     csrf: string;
-
-    get(url: string) {
-        logger.debug('get', url);
-        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
-        const req = superagent.get(url).set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
-
-    post(url: string) {
-        logger.debug('post', url, this.cookie);
-        if (!url.includes('//')) url = `${this.account.endpoint}${url}`;
-        const req = superagent.post(url).type('form').set('Cookie', this.cookie);
-        if (this.account.proxy) return req.proxy(this.account.proxy);
-        return req;
-    }
 
     getCookie(target: string) {
         return this.cookie.find((i) => i.startsWith(`${target}=`))?.split('=')[1]?.split(';')[0];
@@ -103,8 +83,7 @@ export default class CodeforcesProvider implements IBasicProvider {
     }
 
     async getCsrfToken(url: string) {
-        const { text: html } = await this.get(url);
-        const { window: { document } } = new JSDOM(html);
+        const { document, html } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
             throw new Error(document.body.textContent);
         }
@@ -261,13 +240,12 @@ export default class CodeforcesProvider implements IBasicProvider {
         if (resync && page > 1) return [];
         if (resync && listName.startsWith('GYM')) return [];
         if (listName.startsWith('GYM') && page > 1) return [];
-        const res = await this.get(listName === 'main'
+        const { document } = await this.html(listName === 'main'
             ? `/problemset/page/${page}`
             : listName === 'gym'
                 ? `/gyms/page/${page}`
                 : `/gym/${listName.split('GYM')[1]}`,
         );
-        const { window: { document } } = new JSDOM(res.text);
         if (['gym', 'main'].includes(listName)) {
             const index = document.querySelector('.page-index.active').getAttribute('pageindex');
             if (index !== page.toString()) return [];
@@ -330,10 +308,9 @@ export default class CodeforcesProvider implements IBasicProvider {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message });
             return null;
         }
-        const { text: status } = await this.get(type !== 'GYM'
+        const { document } = await this.html(type !== 'GYM'
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
-        const { window: { document } } = new JSDOM(status);
         this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
         return document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
     }

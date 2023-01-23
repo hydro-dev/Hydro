@@ -1,7 +1,7 @@
-import { defaultsDeep } from 'lodash';
 import {
-    SettingModel, sleep, STATUS, superagent,
+    _, Logger, SettingModel, sleep, STATUS,
 } from 'hydrooj';
+import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { VERDICT } from '../verdict';
 
@@ -11,6 +11,7 @@ import { VERDICT } from '../verdict';
 
 /* eslint-disable no-await-in-loop */
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36';
+const logger = new Logger('vjudge/hustoj');
 
 interface HustOJRemoteConfig {
     login?: {
@@ -83,32 +84,29 @@ function isProcessing(t: string) {
     return [STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING].includes(VERDICT[t]);
 }
 
-export class HUSTOJ implements IBasicProvider {
-    cookie: string[] = [];
-    config = { ...defaultConfig };
+export class HUSTOJ extends BasicFetcher implements IBasicProvider {
+    config: HustOJRemoteConfig;
     state = {
         username: '',
         pid: '',
     };
 
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        defaultsDeep(this.config, account);
+        const config = _.defaultsDeep({ ...defaultConfig }, account);
+        super(account, '', 'form', logger, {
+            post: {
+                headers: {
+                    Referer: config.server,
+                    'User-Agent': UA,
+                    Accept: 'application/json',
+                },
+            },
+        });
+        this.config = config;
         this.updateConfig();
     }
 
     updateConfig() { }
-
-    get(url: string) {
-        return superagent.get(url).set('Cookie', this.cookie);
-    }
-
-    post(url: string, data: Record<string, any>) {
-        return superagent.post(url)
-            .set('Cookie', this.cookie).send(data).type('form')
-            .set('Referer', this.config.server)
-            .set('User-Agent', UA)
-            .set('Accept', 'application/json');
-    }
 
     getProblem() {
         return null;
@@ -120,7 +118,7 @@ export class HUSTOJ implements IBasicProvider {
 
     async login(username: string, password: string) {
         this.cookie = [];
-        const res = await this.post(this.config.login[0], {
+        const res = await this.post(this.config.login[0]).send({
             [this.config.login.usernameField]: username,
             [this.config.login.passwordField]: password,
             ...this.config.login.extra,
@@ -143,7 +141,7 @@ export class HUSTOJ implements IBasicProvider {
             if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
-        const res = await this.post(this.config.submit.endpoint, {
+        const res = await this.post(this.config.submit.endpoint).send({
             [this.config.submit.idField]: id,
             [this.config.submit.langField]: langId,
             [this.config.submit.codeField]: code,

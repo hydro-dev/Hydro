@@ -5,7 +5,6 @@ import {
     ProblemModel, RecordModel, Service, sleep, STATUS, TaskModel, Time,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
-import { getDifficulty } from './providers/codeforces';
 import providers from './providers/index';
 
 const coll = db.collection('vjudge');
@@ -45,7 +44,10 @@ class AccountService {
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
             await this.api.waitForSubmission(rid, next, end);
         } catch (e) {
-            if (process.env.DEV) logger.error(e);
+            if (process.env.DEV) {
+                logger.error(e);
+                if (e.response) console.error(e.response);
+            }
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: e.message });
         }
     }
@@ -123,21 +125,8 @@ class AccountService {
 }
 
 declare module 'hydrooj' {
-    interface Model {
-        vjudge: VJudgeModel;
-    }
     interface Context {
         vjudge: VJudgeService;
-    }
-}
-
-class VJudgeModel {
-    static async fixCodeforcesDifficulty(domainId = 'codeforces') {
-        const pdocs = await ProblemModel.getMulti(domainId, {}).toArray();
-        for (const pdoc of pdocs) {
-            await ProblemModel.edit(domainId, pdoc.docId, { difficulty: getDifficulty(pdoc.tag) });
-        }
-        return true;
     }
 }
 
@@ -153,8 +142,9 @@ class VJudgeService extends Service {
         this.accounts = await coll.find().toArray();
     }
 
-    addProvider(type: string, provider: BasicProvider) {
-        if (this.providers[type]) throw new Error(`duplicate provider ${type}`);
+    addProvider(type: string, provider: BasicProvider, override = false) {
+        if (process.env.VJUDGE_DEBUG && process.env.VJUDGE_DEBUG !== type) return;
+        if (!override && this.providers[type]) throw new Error(`duplicate provider ${type}`);
         this.providers[type] = provider;
         for (const account of this.accounts.filter((a) => a.type === type)) {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
@@ -165,8 +155,6 @@ class VJudgeService extends Service {
         });
     }
 }
-
-global.Hydro.model.vjudge = VJudgeModel;
 
 Context.service('vjudge', VJudgeService);
 export const name = 'vjudge';
