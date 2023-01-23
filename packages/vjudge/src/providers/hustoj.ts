@@ -85,7 +85,7 @@ function isProcessing(t: string) {
 }
 
 export class HUSTOJ extends BasicFetcher implements IBasicProvider {
-    config = { ...defaultConfig };
+    config: HustOJRemoteConfig;
     state = {
         username: '',
         pid: '',

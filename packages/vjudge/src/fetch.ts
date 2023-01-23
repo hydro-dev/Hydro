@@ -1,6 +1,6 @@
 import { DOMWindow, JSDOM } from 'jsdom';
 import proxy from 'superagent-proxy';
-import { Logger, prochain } from '@hydrooj/utils';
+import { Logger } from '@hydrooj/utils';
 import { superagent } from 'hydrooj';
 import { RemoteAccount } from './interface';
 
@@ -32,15 +32,11 @@ export class BasicFetcher {
         return this.account.proxy ? req.proxy(this.account.proxy) : req;
     }
 
-    private async _html(url: string) {
+    async html(url: string) {
         const { text: html } = await this.get(url);
         const $dom = new JSDOM(html);
         $dom.window.html = html;
         return $dom.window as DOMWindow & { html: string };
-    }
-
-    html(url: string) {
-        return prochain(this._html)(url);
     }
 
     post(url: string) {

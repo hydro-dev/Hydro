@@ -45,7 +45,7 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
     }
 
     async getCsrfToken(url: string) {
-        const csrf = await this.html(url).document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrf = (await this.html(url)).document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         logger.info('csrf-token=', csrf);
         // this.fetchOptions.post.headers['x-csrf-token'] = csrf;
     }
