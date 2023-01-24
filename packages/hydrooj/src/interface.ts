@@ -32,7 +32,6 @@ export interface SystemKeys {
     'limit.problem_files_max': number,
     'problem.categories': string,
     'session.keys': string[],
-    'session.secure': boolean,
     'session.saved_expire_seconds': number,
     'session.unsaved_expire_seconds': number,
     'user.quota': number,

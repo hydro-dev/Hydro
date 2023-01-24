@@ -232,7 +232,6 @@ SystemSetting(
     Setting('setting_basic', 'pagination.training', 10, 'number', 'pagination.training', 'Trainings per page'),
     Setting('setting_basic', 'pagination.reply', 50, 'number', 'pagination.reply', 'Replies per page'),
     Setting('setting_session', 'session.keys', [String.random(32)], 'text', 'session.keys', 'session.keys', FLAG_HIDDEN),
-    Setting('setting_session', 'session.secure', false, 'boolean', 'session.secure', 'session.secure', FLAG_HIDDEN),
     Setting('setting_session', 'session.domain', '', 'text', 'session.domain', 'session.domain', FLAG_HIDDEN),
     Setting('setting_session', 'session.saved_expire_seconds', 3600 * 24 * 30,
         'number', 'session.saved_expire_seconds', 'Saved session expire seconds'),

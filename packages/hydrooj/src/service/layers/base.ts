@@ -75,10 +75,9 @@ export default async (ctx: KoaContext, next: Next) => {
     if (!request.websocket) {
         const options: any = {
             expires: new Date(Date.now() + expireSeconds * 1000),
-            secure: !!system.get('session.secure'),
             httpOnly: false,
         };
-        if (system.get('session.domain')) {
+        if (system.get('session.domain') && ctx.request.secure && ctx.request.host.endsWith(system.get('session.domain'))) {
             options.domain = system.get('session.domain');
             options.sameSite = 'none';
             options.secure = true;
