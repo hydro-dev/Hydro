@@ -74,12 +74,16 @@ export default new AutoloadPage('user_verify', () => {
     ev.preventDefault();
     const $form = ev.currentTarget.form;
     const uname = $('[name="uname"]').val() as string;
-    const { tfa, authn } = await api(gql`
-      user(uname:${uname}){
-        tfa
-        authn
+    const info = await api(gql`
+      uname: user(uname:${uname}){
+        tfa authn
       }
-    `, ['data', 'user']);
+      mail: user(mail:${uname}){
+        tfa authn
+      }
+    `, ['data']);
+    if (!info.uname && !info.mail) Notification.error(i18n('User not found.'));
+    const { authn, tfa } = info.uname || info.mail;
     if (authn || tfa) {
       let action = (authn && tfa) ? await chooseAction(true) : '';
       if (!action) action = tfa ? await chooseAction(false) : 'webauthn';

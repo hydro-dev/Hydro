@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import esbuild from 'esbuild';
 import {
   ContestModel, Context, fs, Handler, Logger, ObjectID, param, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, Types, UiContextBase, UserModel,
+  SettingModel, size, SystemModel, SystemSettings, Types, UiContextBase, UserModel,
 } from 'hydrooj';
 import { debounce } from 'lodash';
 import { tmpdir } from 'os';
@@ -79,7 +79,7 @@ export async function buildUI() {
   const version = c.digest('hex');
   constant = JSON.stringify(payload);
   UiContextBase.constantVersion = hash = version;
-  logger.success('UI addons built in %d ms', Date.now() - start);
+  logger.success('UI addons built in %d ms (%s)', Date.now() - start, size(constant.length));
 }
 function updateLogo() {
   UiContextBase.nav_logo_dark = SystemModel.get('ui-default.nav_logo_dark');
