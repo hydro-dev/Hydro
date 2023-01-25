@@ -12,11 +12,25 @@ export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom/client';
 export * from './misc/Page';
 
+const lazyModules = {};
 export default async function load(name: string) {
   if (window.node_modules[name]) return window.node_modules[name];
   if (name === 'echarts') return import('echarts');
   if (name === 'moment') return import('moment');
-  throw new Error(`Module ${name} not found`);
+  if (!window.lazyloadMetadata?.[`${name}.lazy.js`]) throw new Error(`Module ${name} not found`);
+  if (lazyModules[name]) return lazyModules[name];
+  const tag = document.createElement('script');
+  tag.src = `/lazy/${window.lazyloadMetadata[`${name}.lazy.js`]}/${name}.lazy.js`;
+  lazyModules[name] = new Promise((resolve, reject) => {
+    tag.onerror = reject;
+    const timeout = setTimeout(reject, 30000);
+    window.lazyModuleResolver[name] = (item) => {
+      clearTimeout(timeout);
+      resolve(item);
+    };
+  });
+  document.body.appendChild(tag);
+  return lazyModules[name];
 }
 
 import AutoComplete from './components/autocomplete';
@@ -35,6 +49,8 @@ export function addPage(page: import('./misc/Page').Page | (() => Promise<void> 
 declare global {
   interface Window {
     LANGS: Record<string, any>;
+    lazyloadMetadata: Record<string, string>;
+    lazyModuleResolver: Record<string, any>;
   }
 
   let UserContext: Record<string, any>;

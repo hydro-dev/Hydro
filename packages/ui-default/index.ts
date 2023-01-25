@@ -1,89 +1,10 @@
-/* eslint-disable no-return-await */
-/* eslint-disable camelcase */
-import crypto from 'crypto';
-import esbuild from 'esbuild';
+/* eslint-disable global-require */
 import {
-  ContestModel, Context, fs, Handler, Logger, ObjectID, param, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, size, SystemModel, SystemSettings, Types, UiContextBase, UserModel,
+  ContestModel, Context, Handler, ObjectID, param, PERM, PRIV, ProblemModel, Schema,
+  SettingModel, SystemModel, SystemSettings, Types, UserModel,
 } from 'hydrooj';
-import { debounce } from 'lodash';
-import { tmpdir } from 'os';
-import { join, resolve } from 'path';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
-
-declare module 'hydrooj' {
-  interface UI {
-    esbuildPlugins?: esbuild.Plugin[]
-  }
-  interface SystemKeys {
-    'ui-default.nav_logo_dark': string;
-  }
-  interface UiContextBase {
-    nav_logo_dark?: string;
-    constantVersion?: string;
-  }
-}
-
-let constant = '';
-let hash = '';
-const logger = new Logger('ui');
-
-export async function buildUI() {
-  const start = Date.now();
-  const entryPoints: string[] = [];
-  for (const addon of global.addons) {
-    const publicPath = resolve(addon, 'public');
-    if (fs.existsSync(publicPath)) {
-      const targets = fs.readdirSync(publicPath);
-      for (const target of targets) {
-        if (/\.page\.[jt]sx?$/.test(target)) entryPoints.push(join(publicPath, target));
-      }
-    }
-  }
-  const build = await esbuild.build({
-    format: 'iife',
-    entryPoints,
-    bundle: true,
-    outdir: tmpdir(),
-    splitting: false,
-    write: false,
-    target: [
-      'chrome60',
-    ],
-    plugins: [
-      ...(global.Hydro.ui.esbuildPlugins || []),
-      {
-        name: 'federation',
-        setup(b) {
-          b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
-            path: 'api',
-            namespace: 'ui-default',
-          }));
-          b.onLoad({ filter: /.*/, namespace: 'ui-default' }, () => ({
-            contents: 'module.exports = window.HydroExports;',
-            loader: 'tsx',
-          }));
-        },
-      },
-    ],
-    minify: !process.env.DEV,
-  });
-  if (build.errors.length) console.error(build.errors);
-  if (build.warnings.length) console.warn(build.warnings);
-  const pages = build.outputFiles.map((i) => i.text);
-  const payload = [`window.LANGS=${JSON.stringify(SettingModel.langs)};`, ...pages];
-
-  const c = crypto.createHash('sha1');
-  c.update(JSON.stringify(payload));
-  const version = c.digest('hex');
-  constant = JSON.stringify(payload);
-  UiContextBase.constantVersion = hash = version;
-  logger.success('UI addons built in %d ms (%s)', Date.now() - start, size(constant.length));
-}
-function updateLogo() {
-  UiContextBase.nav_logo_dark = SystemModel.get('ui-default.nav_logo_dark');
-}
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -162,14 +83,6 @@ class ResourceHandler extends Handler {
 
   async prepare() {
     this.response.addHeader('Cache-Control', 'public, max-age=86400');
-  }
-}
-
-class UiConstantsHandler extends ResourceHandler {
-  async all() {
-    this.response.addHeader('ETag', hash);
-    this.response.body = constant;
-    this.response.type = 'application/json';
   }
 }
 
@@ -252,29 +165,19 @@ class RichMediaHandler extends Handler {
   }
 }
 
+// eslint-disable-next-line import/prefer-default-export
 export function apply(ctx: Context) {
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
   ctx.Route('set_theme', '/set_theme/:theme', SetThemeHandler);
   ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
-  ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
   ctx.Route('lang', '/l/:lang', LanguageHandler);
   ctx.Route('sw_config', '/sw-config', SWConfigHandler);
   ctx.Route('media', '/media', RichMediaHandler);
-  ctx.on('app/started', buildUI);
-  ctx.on('app/started', updateLogo);
-  const debouncedBuildUI = debounce(buildUI, 1000);
-  const triggerHotUpdate = (path?: string) => {
-    if (path && !path.includes('/ui-default/') && !path.includes('/public/')) return;
-    debouncedBuildUI();
-    updateLogo();
-  };
-  ctx.on('system/setting', () => triggerHotUpdate());
-  ctx.on('app/watch/change', triggerHotUpdate);
-  ctx.on('app/watch/unlink', triggerHotUpdate);
+  ctx.plugin(require('./backendlib/builder'));
   ctx.on('handler/after/DiscussionRaw', async (that) => {
     if (that.args.render && that.response.type === 'text/markdown') {
       that.response.type = 'text/html';

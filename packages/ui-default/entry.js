@@ -11,6 +11,7 @@ window.Hydro = {
   bus,
 };
 window.externalModules = {};
+window.lazyModuleResolver = {};
 
 console.log(
   '%c%s%c%s',
