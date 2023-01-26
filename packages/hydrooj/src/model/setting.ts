@@ -203,6 +203,7 @@ SystemSetting(
     Setting('setting_server', 'server.xff', null, 'text', 'server.xff', 'IP Header'),
     Setting('setting_server', 'server.xhost', null, 'text', 'server.xhost', 'Hostname Header'),
     Setting('setting_server', 'server.xproxy', false, 'boolean', 'server.xproxy', 'Use reverse_proxy'),
+    Setting('setting_server', 'server.cors', '', 'text', 'server.cors', 'CORS domains'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'server.language', 'Default display language'),
     Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login', FLAG_PRO),
     Setting('setting_server', 'server.message', true, 'boolean', 'server.message', 'Allow users send messages'),

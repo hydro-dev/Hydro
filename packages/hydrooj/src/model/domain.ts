@@ -297,7 +297,7 @@ bus.on('ready', () => Promise.all([
     ),
 ]));
 bus.on('domain/delete-cache', (domainId: string) => {
-    cache.del(`id::${domainId}`);
+    cache.delete(`id::${domainId}`);
 });
 export default DomainModel;
 global.Hydro.model.domain = DomainModel;

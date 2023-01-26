@@ -21,7 +21,7 @@ export default async (ctx: KoaContext, next) => {
         ctx.pendingError = new NotFoundError(args.domainId);
         args.domainId = 'system';
     }
-    if (request.method === 'post' && request.headers.referer) {
+    if (request.method === 'post' && request.headers.referer && !ctx.cors) {
         const host = new URL(request.headers.referer).host;
         if (host !== request.host) ctx.pendingError = new CsrfTokenError(host);
     }

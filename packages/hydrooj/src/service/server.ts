@@ -461,7 +461,22 @@ export async function apply(pluginContext: Context) {
         changeOrigin: true,
         rewrite: (p) => p.replace('/fs', ''),
     });
+    const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
     app.use(async (ctx, next) => {
+        if (ctx.request.headers.origin) {
+            const host = new URL(ctx.request.headers.origin).host;
+            if (host !== ctx.request.headers.host && `,${system.get('server.cors')},`.includes(`,${host},`)) {
+                ctx.set('Access-Control-Allow-Credentials', 'true');
+                ctx.set('Access-Control-Allow-Origin', ctx.request.headers.origin);
+                ctx.set('Access-Control-Allow-Headers', corsAllowHeaders);
+                ctx.set('Vary', 'Origin');
+                ctx.cors = true;
+            }
+        }
+        if (ctx.request.method.toLowerCase() === 'options') {
+            ctx.body = 'ok';
+            return null;
+        }
         for (const key in captureAllRoutes) {
             if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
         }

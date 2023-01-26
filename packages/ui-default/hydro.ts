@@ -53,8 +53,6 @@ async function animate() {
 }
 
 async function load() {
-  for (const page of window.Hydro.preload) await eval(page); // eslint-disable-line no-eval
-
   const pageLoader = new PageLoader();
 
   const currentPageName = document.documentElement.getAttribute('data-page');
