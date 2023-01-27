@@ -28,10 +28,10 @@ function shouldCachePath(path: string) {
   if (process.env.NODE_ENV !== 'production' && (path.includes('.hot-update.') || path.includes('?version='))) return false;
   return true;
 }
-function shouldCache(request?: Request) {
+function shouldCache(request: Request) {
   if (!shouldCachePath(request.url)) return false;
   // For files download, a response is formatted as string
-  if (request && request.headers.get('Pragma') === 'no-cache') return false;
+  if (request.headers.get('Pragma') === 'no-cache') return false;
   return true;
 }
 function shouldPreCache(name: string) {
