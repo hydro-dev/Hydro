@@ -3,7 +3,6 @@ import * as bus from './bus';
 
 window.Hydro = {
   extraPages: [],
-  preload: [],
   components: {},
   utils: {},
   node_modules: {},
@@ -48,13 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 
   const [data, HydroExports] = await Promise.all([
-    fetch(`/constant/${UiContext.constantVersion}`, { cache: 'force-cache' }).then((r) => r.json()),
+    fetch(`/constant/${UiContext.constantVersion}.js`).then((r) => r.text()),
     import('./api'),
   ]);
   Object.assign(window, { HydroExports });
-  eval(data[0]); // eslint-disable-line no-eval
-  data.shift();
-  window.Hydro.preload = data;
+  eval(data); // eslint-disable-line no-eval
 
   import('./hydro');
 }, false);

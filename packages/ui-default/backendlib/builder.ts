@@ -102,8 +102,7 @@ export async function buildUI() {
     ...entryPoints.map((i) => `import '${relative(tmp, i)}';`),
   ].join('\n'));
   const pages = entry.outputFiles.map((i) => i.text);
-  const payload = [`window.LANGS=${JSON.stringify(SettingModel.langs)};`, ...pages];
-  const str = JSON.stringify(payload);
+  const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};${pages.join('\n')}`;
   vfs['entry.js'] = str;
   UiContextBase.constantVersion = hashes['entry.js'] = sha1(str).substring(0, 8);
   logger.info('+ %s-%s: %s', 'entry', hashes['entry.js'].substring(0, 6), size(str.length));
@@ -121,9 +120,8 @@ class UiConstantsHandler extends Handler {
 
   @param('name', Types.Filename, true)
   async all(domainId: string, name: string) {
-    this.response.type = name ? 'application/javascript' : 'application/json';
+    this.response.type = 'application/javascript';
     name ||= 'entry.js';
-    console.log([name, vfs[name], vfs]);
     if (!vfs[name]) throw new NotFoundError(name);
     this.response.addHeader('ETag', hashes[name]);
     this.response.body = vfs[name];
@@ -132,7 +130,6 @@ class UiConstantsHandler extends Handler {
 }
 
 export async function apply(ctx: Context) {
-  buildUI();
   ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
   ctx.on('app/started', updateLogo);
@@ -146,4 +143,5 @@ export async function apply(ctx: Context) {
   ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
+  debouncedBuildUI();
 }
