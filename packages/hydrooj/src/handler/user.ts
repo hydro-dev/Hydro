@@ -8,7 +8,6 @@ import {
 import { Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
-import { isEmail, isPassword } from '../lib/validator';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
@@ -81,7 +80,7 @@ class UserLoginHandler extends Handler {
     }
 
     @param('uname', Types.Username)
-    @param('password', Types.String)
+    @param('password', Types.Password)
     @param('rememberme', Types.Boolean)
     @param('redirect', Types.String, true)
     @param('tfa', Types.String, true)
@@ -225,7 +224,7 @@ export class UserRegisterHandler extends Handler {
         this.response.template = 'user_register.html';
     }
 
-    @post('mail', Types.String, true, isEmail)
+    @post('mail', Types.Email, true)
     @post('phone', Types.String, true, (s) => /^\d{11}$/.test(s))
     async post(domainId: string, mail: string, phoneNumber: string) {
         if (mail) {
@@ -279,8 +278,8 @@ class UserRegisterWithCodeHandler extends Handler {
         this.response.body = tdoc;
     }
 
-    @param('password', Types.String, isPassword)
-    @param('verifyPassword', Types.String)
+    @param('password', Types.Password)
+    @param('verifyPassword', Types.Password)
     @param('uname', Types.Username)
     @param('code', Types.String)
     async post(
@@ -312,7 +311,7 @@ class UserLostPassHandler extends Handler {
         this.response.template = 'user_lostpass.html';
     }
 
-    @param('mail', Types.String, isEmail)
+    @param('mail', Types.Email)
     async post(domainId: string, mail: string) {
         if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
@@ -347,8 +346,8 @@ class UserLostPassWithCodeHandler extends Handler {
     }
 
     @param('code', Types.String)
-    @param('password', Types.String, isPassword)
-    @param('verifyPassword', Types.String)
+    @param('password', Types.Password)
+    @param('verifyPassword', Types.Password)
     async post(domainId: string, code: string, password: string, verifyPassword: string) {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_LOSTPASS], code);
@@ -429,7 +428,7 @@ class UserDeleteHandler extends Handler {
 class OauthHandler extends Handler {
     noCheckPermView = true;
 
-    @param('type', Types.String)
+    @param('type', Types.Key)
     async get(domainId: string, type: string) {
         await global.Hydro.module.oauth[type]?.get.call(this);
     }

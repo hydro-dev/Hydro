@@ -96,7 +96,7 @@ class DomainModel {
     static async edit(domainId: string, $set: Partial<DomainDoc>) {
         domainId = domainId.toLowerCase();
         await bus.parallel('domain/before-update', domainId, $set);
-        const result = await coll.findOneAndUpdate({ _id: domainId }, { $set }, { returnDocument: 'after' });
+        const result = await coll.findOneAndUpdate({ lower: domainId }, { $set }, { returnDocument: 'after' });
         if (result.value) {
             await bus.parallel('domain/update', domainId, $set, result.value);
             cache.delete(`id::${domainId}`);
@@ -199,7 +199,7 @@ class DomainModel {
 
     static async getDomainUser(domainId: string, udoc: DomainUserArg) {
         let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
-        dudoc ||= {};
+        dudoc ||= { domainId, uid: udoc._id };
         if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
         if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
         dudoc.role ||= 'default';

@@ -25,15 +25,15 @@ class RecordListHandler extends ContestDetailBaseHandler {
     tdoc?: Tdoc<30>;
 
     @param('page', Types.PositiveInt, true)
-    @param('pid', Types.Name, true)
+    @param('pid', Types.ProblemId, true)
     @param('tid', Types.ObjectID, true)
-    @param('uidOrName', Types.Name, true)
+    @param('uidOrName', Types.UidOrName, true)
     @param('lang', Types.String, true)
     @param('status', Types.Int, true)
     @param('fullStatus', Types.Boolean)
     @param('allDomain', Types.Boolean, true)
     async get(
-        domainId: string, page = 1, pid?: string, tid?: ObjectID,
+        domainId: string, page = 1, pid?: string | number, tid?: ObjectID,
         uidOrName?: string, lang?: string, status?: number, full = false,
         all = false,
     ) {
@@ -64,10 +64,10 @@ class RecordListHandler extends ContestDetailBaseHandler {
             if (udoc) q.uid = udoc._id;
             else invalid = true;
         }
-        if (pid && tdoc && /^[A-Z]$/.test(pid)) {
-            pid = tdoc.pids[parseInt(pid, 36) - 10];
-        }
         if (pid) {
+            if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {
+                pid = tdoc.pids[parseInt(pid, 36) - 10];
+            }
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) q.pid = pdoc.docId;
             else invalid = true;
@@ -236,13 +236,13 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     tdoc: Tdoc<30>;
 
     @param('tid', Types.ObjectID, true)
-    @param('pid', Types.Name, true)
-    @param('uidOrName', Types.Name, true)
+    @param('pid', Types.ProblemId, true)
+    @param('uidOrName', Types.UidOrName, true)
     @param('status', Types.Int, true)
     @param('pretest', Types.Boolean)
     @param('allDomain', Types.Boolean)
     async prepare(
-        domainId: string, tid?: ObjectID, pid?: string, uidOrName?: string,
+        domainId: string, tid?: ObjectID, pid?: string | number, uidOrName?: string,
         status?: number, pretest = false, all = false,
     ) {
         if (tid) {

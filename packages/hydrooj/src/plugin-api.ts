@@ -38,7 +38,6 @@ export { Collections } from './service/db';
 // export { Collections } from './interface';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
-export * as validator from './lib/validator';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
 export { default as paginate } from './lib/paginate';

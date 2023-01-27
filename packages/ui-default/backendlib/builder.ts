@@ -118,7 +118,7 @@ export async function buildUI() {
 class UiConstantsHandler extends Handler {
   noCheckPermView = true;
 
-  @param('name', Types.String, true)
+  @param('name', Types.Filename, true)
   async all(domainId: string, name: string) {
     this.response.type = 'application/javascript';
     name ||= 'entry.js';

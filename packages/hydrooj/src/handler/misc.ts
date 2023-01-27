@@ -44,7 +44,7 @@ export class FilesHandler extends Handler {
         this.response.template = 'home_files.html';
     }
 
-    @post('filename', Types.Name, true)
+    @post('filename', Types.Filename)
     async postUploadFile(domainId: string, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
@@ -57,9 +57,7 @@ export class FilesHandler extends Handler {
         if (size >= system.get('limit.user_files_size')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('size');
         }
-        filename ||= file.originalFilename || String.random(16);
-        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
-        if (this.user._files.filter((i) => i.name === filename).length) throw new FileExistsError(filename);
+        if (this.user._files.find((i) => i.name === filename)) throw new FileExistsError(filename);
         await storage.put(`user/${this.user._id}/${filename}`, file.filepath, this.user._id);
         const meta = await storage.getMeta(`user/${this.user._id}/${filename}`);
         const payload = { name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
@@ -69,7 +67,7 @@ export class FilesHandler extends Handler {
         this.back();
     }
 
-    @post('files', Types.ArrayOf(Types.Name))
+    @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, files: string[]) {
         await Promise.all([
             storage.del(files.map((t) => `user/${this.user._id}/${t}`), this.user._id),
@@ -83,7 +81,7 @@ export class FSDownloadHandler extends Handler {
     noCheckPermView = true;
 
     @param('uid', Types.Int)
-    @param('filename', Types.Name)
+    @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
         const targetUser = await user.getById('system', uid);
@@ -111,7 +109,7 @@ export class StorageHandler extends Handler {
     noCheckPermView = true;
 
     @param('target', Types.Name)
-    @param('filename', Types.Name, true)
+    @param('filename', Types.Filename, true)
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
     async get(domainId: string, target: string, filename = '', expire: number, secret: string) {
