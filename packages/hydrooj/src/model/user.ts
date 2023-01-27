@@ -161,9 +161,18 @@ function handleMailLower(mail: string) {
     return data;
 }
 
+async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
+    const res = await new User(udoc, dudoc, scope).init();
+    cache.set(`id/${udoc._id}/${dudoc.domainId}`, res);
+    cache.set(`name/${udoc.unameLower}/${dudoc.domainId}`, res);
+    cache.set(`mail/${udoc.mailLower}/${dudoc.domainId}`, res);
+    return res;
+}
+
 class UserModel {
     static coll = coll;
     static User = User;
+    static cache = cache;
     static defaultUser: Udoc = {
         _id: 0,
         uname: 'Unknown User',
@@ -183,7 +192,7 @@ class UserModel {
     };
 
     @ArgMethod
-    static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User | null> {
+    static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User> {
         if (cache.has(`id/${_id}/${domainId}`)) return cache.get(`id/${_id}/${domainId}`) || null;
         const udoc = await (_id < -999 ? collV : coll).findOne({ _id });
         if (!udoc) return null;
@@ -193,11 +202,7 @@ class UserModel {
         ]);
         dudoc.group = groups.map((i) => i.name);
         if (typeof scope === 'string') scope = BigInt(scope);
-        const res = await new User(udoc, dudoc, scope).init();
-        cache.set(`id/${res._id}/${domainId}`, res);
-        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${res.mail.toLowerCase()}/${domainId}`, res);
-        return res;
+        return initAndCache(udoc, dudoc, scope);
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {
@@ -211,30 +216,21 @@ class UserModel {
     @ArgMethod
     static async getByUname(domainId: string, uname: string): Promise<User | null> {
         const unameLower = uname.trim().toLowerCase();
-        if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`) || null;
-        let udoc = await coll.findOne({ unameLower });
-        udoc ||= await collV.findOne({ unameLower });
+        if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`);
+        const udoc = (await coll.findOne({ unameLower })) || await collV.findOne({ unameLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        const res = await new UserModel.User(udoc, dudoc).init();
-        cache.set(`id/${res._id}/${domainId}`, res);
-        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
-        return res;
+        return initAndCache(udoc, dudoc);
     }
 
     @ArgMethod
-    static async getByEmail(domainId: string, mail: string): Promise<User | null> {
+    static async getByEmail(domainId: string, mail: string): Promise<User> {
         const mailLower = handleMailLower(mail);
-        if (cache.has(`mail/${mailLower}/${domainId}`)) return cache.get(`mail/${mailLower}/${domainId}`) || null;
+        if (cache.has(`mail/${mailLower}/${domainId}`)) return cache.get(`mail/${mailLower}/${domainId}`);
         const udoc = await coll.findOne({ mailLower });
         if (!udoc) return null;
         const dudoc = await domain.getDomainUser(domainId, udoc);
-        const res = await new UserModel.User(udoc, dudoc).init();
-        cache.set(`id/${res._id}/${domainId}`, res);
-        cache.set(`name/${res.uname.toLowerCase()}/${domainId}`, res);
-        cache.set(`mail/${handleMailLower(res.mail)}/${domainId}`, res);
-        return res;
+        return initAndCache(udoc, dudoc);
     }
 
     @ArgMethod
@@ -260,7 +256,7 @@ class UserModel {
     }
 
     @ArgMethod
-    static async setPassword(uid: number, password: string): Promise<Udoc | null> {
+    static async setPassword(uid: number, password: string): Promise<Udoc> {
         const salt = String.random();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
@@ -268,7 +264,7 @@ class UserModel {
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
-        return res.value || null;
+        return res.value;
     }
 
     @ArgMethod
@@ -373,20 +369,18 @@ class UserModel {
         const $regex = `^${escapeRegExp(prefix.toLowerCase())}`;
         const udocs = await coll.find({ unameLower: { $regex } })
             .limit(limit).project({ _id: 1 }).toArray();
-        const users = [];
-        for (const { _id } of udocs) users.push(UserModel.getById(domainId, _id));
-        return await Promise.all(users);
+        return await Promise.all(udocs.map(({ _id }) => UserModel.getById(domainId, _id)));
     }
 
     @ArgMethod
-    static async setPriv(uid: number, priv: number): Promise<Udoc | null> {
+    static async setPriv(uid: number, priv: number): Promise<Udoc> {
         const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { priv } },
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
-        return res.value || null;
+        return res.value;
     }
 
     @ArgMethod

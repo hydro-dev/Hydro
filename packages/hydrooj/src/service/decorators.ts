@@ -6,7 +6,6 @@ import { ObjectID } from 'mongodb';
 import saslprep from 'saslprep';
 import { Time } from '@hydrooj/utils';
 import { ValidationError } from '../error';
-import { isContent, isTitle } from '../lib/validator';
 import type { Handler } from './server';
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
@@ -21,51 +20,83 @@ export interface ParamOption<T> {
     validate?: Validator,
 }
 
-type Type<T> = [Converter<T>, Validator<false>?, boolean?];
+type Type<T> = readonly [Converter<T>, Validator<false>?, boolean?];
 
 export interface Types {
+    // String outputs
     Content: Type<string>;
+    Key: Type<string>;
+    /** @deprecated */
     Name: Type<string>;
     Username: Type<string>;
+    Password: Type<string>;
+    UidOrName: Type<string>;
+    Email: Type<string>;
+    Filename: Type<string>;
+    DomainId: Type<string>;
+    ProblemId: Type<string | number>;
+    Role: Type<string>;
     Title: Type<string>;
+    Emoji: Type<string>;
     String: Type<string>;
+
+    // Number outputs
     Int: Type<number>;
     UnsignedInt: Type<number>;
     PositiveInt: Type<number>;
     Float: Type<number>;
+
+    // Other
     ObjectID: Type<ObjectID>;
     Boolean: Type<boolean>;
     Date: Type<string>;
     Time: Type<string>;
     Range: <T extends string | number>(range: Array<T> | Record<string, any>) => Type<T>;
+    /** @deprecated */
     Array: Type<any[]>;
     NumericArray: Type<number[]>;
     CommaSeperatedArray: Type<string[]>;
     Set: Type<Set<any>>;
-    Emoji: Type<string>;
     Any: Type<any>;
     ArrayOf: <T extends Type<any>>(type: T) => (T extends Type<infer R> ? Type<R[]> : never);
+    AnyOf: <T extends Type<any>>(...type: T[]) => (T extends Type<infer R> ? Type<R> : never);
 }
 
-const safeSaslprep = (v) => {
-    try {
-        return saslprep(v.toString().trim());
-    } catch (e) {
-        return '';
-    }
-};
+const saslprepString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
+    convert || ((v) => saslprep(v.toString().trim())),
+    (v) => {
+        try {
+            const res = saslprep(v.toString().trim());
+            if (regex && !regex.test(res)) return false;
+            if (cb && !cb(res)) return false;
+            return !!res.length;
+        } catch (e) {
+            return false;
+        }
+    },
+] as [(v) => string, (v) => boolean];
 
 export const Types: Types = {
-    Content: [(v) => v.toString().trim(), isContent],
-    Name: [(v) => saslprep(v.toString().trim()), (v) => /^.{1,255}$/.test(safeSaslprep(v))],
-    Username: [(v) => saslprep(v.toString().trim()), (v) => /^(.{3,31}|[\u4e00-\u9fa5]{2})$/.test(safeSaslprep(v))],
-    Title: [(v) => v.toString().trim(), isTitle],
+    Content: [(v) => v.toString().trim(), (v) => v && v.toString().trim().length < 65536],
+    Key: saslprepString(/^[a-zA-Z0-9-_]+$/),
+    /** @deprecated */
+    Name: saslprepString(/^.{1,255}$/),
+    Filename: saslprepString(/^[^.\\/?#~]{1,255}$/, (i) => !['con', '.', '..'].includes(i)),
+    UidOrName: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2}|-?[0-9]+)$/),
+    Username: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2})$/),
+    Password: saslprepString(/^.{6,255}$/),
+    ProblemId: saslprepString(/^[a-zA-Z]+[a-zA-Z0-9]*$/i, () => true, (s) => (Number.isSafeInteger(+s) ? +s : s)),
+    Email: saslprepString(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i),
+    DomainId: saslprepString(/^[a-zA-Z][a-zA-Z0-9_]{3,31}$/),
+    Role: saslprepString(/^[_0-9A-Za-z\u4e00-\u9fa5]{1,31}$/i),
+    Title: saslprepString(/^.{1,64}$/),
     String: [(v) => v.toString(), null],
+
     Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],
     UnsignedInt: [(v) => +v, (v) => /^(-0|\+?[0-9]+)$/.test(v.toString().trim()) && isSafeInteger(+v)],
     PositiveInt: [(v) => +v, (v) => /^\+?[1-9][0-9]*$/.test(v.toString().trim()) && isSafeInteger(+v)],
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
-    // eslint-disable-next-line no-shadow
+
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
     Boolean: [(v) => v && !['false', 'off'].includes(v), null, true],
     Date: [
@@ -152,6 +183,10 @@ export const Types: Types = {
             const arr = v instanceof Array ? v : [v];
             return arr.every((i) => type[1](i));
         },
+    ] as any,
+    AnyOf: (...types) => [
+        (v) => types.find((type) => type[1](v))[0](v),
+        (v) => types.some((type) => type[1](v)),
     ] as any,
 };
 

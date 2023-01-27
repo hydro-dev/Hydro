@@ -6,7 +6,6 @@ import * as check from '../check';
 import {
     CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
 } from '../error';
-import { isEmail, isPassword } from '../lib/validator';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
@@ -230,9 +229,9 @@ class SystemUserImportHandler extends SystemHandler {
             let [email, username, password, displayName, extra] = u.split(',').map((t) => t.trim());
             if (!email || !username || !password) [email, username, password, displayName, extra] = u.split('\t').map((t) => t.trim());
             if (email && username && password) {
-                if (!isEmail(email)) messages.push(`Line ${+i + 1}: Invalid email.`);
+                if (!Types.Email[1](email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!Types.Username[1](username)) messages.push(`Line ${+i + 1}: Invalid username`);
-                else if (!isPassword(password)) messages.push(`Line ${+i + 1}: Invalid password`);
+                else if (!Types.Password[1](password)) messages.push(`Line ${+i + 1}: Invalid password`);
                 else if (await user.getByEmail('system', email)) {
                     messages.push(`Line ${+i + 1}: Email ${email} already exists.`);
                 } else if (await user.getByUname('system', username)) {

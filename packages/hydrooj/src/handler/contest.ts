@@ -534,7 +534,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @post('filename', Types.Name, true)
+    @post('filename', Types.Filename, true)
     async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
         if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
             throw new FileLimitExceededError('count');
@@ -557,7 +557,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     }
 
     @param('tid', Types.ObjectID)
-    @post('files', Types.ArrayOf(Types.Name))
+    @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectID, files: string[]) {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
@@ -569,7 +569,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
 
 export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectID)
-    @param('filename', Types.Name)
+    @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, tid: ObjectID, filename: string, noDisposition = false) {
         this.response.addHeader('Cache-Control', 'public');

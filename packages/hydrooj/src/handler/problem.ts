@@ -18,7 +18,6 @@ import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
 import paginate from '../lib/paginate';
-import { isPid, parsePid as convertPid } from '../lib/validator';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -40,7 +39,6 @@ import { registerResolver, registerValue } from './api';
 import { ContestDetailBaseHandler } from './contest';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
-export const parsePid = (value: string) => (isSafeInteger(value) ? +value : value);
 
 registerValue('FileInfo', [
     ['_id', 'String!'],
@@ -312,7 +310,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     udoc: User;
     psdoc: ProblemStatusDoc;
 
-    @route('pid', Types.Name, true, null, parsePid)
+    @route('pid', Types.ProblemId, true)
     @query('tid', Types.ObjectID, true)
     async _prepare(domainId: string, pid: number | string, tid?: ObjectID) {
         this.pdoc = await problem.get(domainId, pid);
@@ -628,17 +626,18 @@ export class ProblemEditHandler extends ProblemManageHandler {
         this.response.template = 'problem_edit.html';
     }
 
-    @route('pid', Types.Name, null, parsePid)
+    @route('pid', Types.ProblemId)
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.Name, isPid, convertPid, true)
+    @post('pid', Types.ProblemId, true)
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     async post(
         domainId: string, pid: string | number, title: string, content: string,
-        newPid: string = '', hidden = false, tag: string[] = [], difficulty = 0,
+        newPid: string | number = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
+        if (typeof newPid !== 'string') newPid = `P${newPid}`;
         if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new ProblemAlreadyExistError(pid);
         const $update: Partial<ProblemDoc> = {
             title, content, pid: newPid, hidden, tag: tag ?? [], difficulty, html: false,
@@ -722,7 +721,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.response.body.links = links;
     }
 
-    @post('filename', Types.Name, true)
+    @post('filename', Types.Filename, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
@@ -784,7 +783,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @post('files', Types.ArrayOf(Types.Name))
+    @post('files', Types.ArrayOf(Types.Filename))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');
@@ -797,7 +796,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @query('type', Types.Range(['additional_file', 'testdata']), true)
-    @param('filename', Types.Name)
+    @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
         if (this.pdoc.reference) {
@@ -966,14 +965,15 @@ export class ProblemCreateHandler extends Handler {
 
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.Name, true, isPid, convertPid)
+    @post('pid', Types.ProblemId, true)
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
     async post(
-        domainId: string, title: string, content: string, pid: string,
+        domainId: string, title: string, content: string, pid: string | number = '',
         hidden = false, difficulty = 0, tag: string[] = [],
     ) {
+        if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));

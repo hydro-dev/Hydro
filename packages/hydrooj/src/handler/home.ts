@@ -13,7 +13,6 @@ import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar from '../lib/avatar';
 import * as mail from '../lib/mail';
 import * as useragent from '../lib/useragent';
-import { isDomainId, isEmail, isPassword } from '../lib/validator';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
@@ -180,8 +179,8 @@ class HomeSecurityHandler extends Handler {
 
     @requireSudo
     @param('current', Types.String)
-    @param('password', Types.String, isPassword)
-    @param('verifyPassword', Types.String)
+    @param('password', Types.Password)
+    @param('verifyPassword', Types.Password)
     async postChangePassword(_: string, current: string, password: string, verify: string) {
         if (password !== verify) throw new VerifyPasswordError();
         this.user.checkPassword(current);
@@ -191,8 +190,8 @@ class HomeSecurityHandler extends Handler {
     }
 
     @requireSudo
-    @param('password', Types.String)
-    @param('mail', Types.Name, isEmail)
+    @param('password', Types.Password)
+    @param('mail', Types.Email)
     async postChangeMail(domainId: string, current: string, email: string) {
         const mailDomain = email.split('@')[1];
         if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
@@ -335,7 +334,7 @@ function set(s: Setting, key: string, value: any) {
 }
 
 class HomeSettingsHandler extends Handler {
-    @param('category', Types.Name)
+    @param('category', Types.Range(['preference', 'account', 'domain']))
     async get(domainId: string, category: string) {
         this.response.template = 'home_settings.html';
         this.response.body = {
@@ -445,7 +444,7 @@ class HomeDomainCreateHandler extends Handler {
         this.response.template = 'domain_create.html';
     }
 
-    @param('id', Types.Name, isDomainId)
+    @param('id', Types.DomainId)
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
     @param('avatar', Types.Content, true)
