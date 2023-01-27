@@ -153,7 +153,7 @@ class RichMediaHandler extends Handler {
 
   async post({ domainId, items }) {
     const res = [];
-    for (const item of items) {
+    for (const item of items || []) {
       if (item.domainId && item.domainId === domainId) delete item.domainId;
       if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));
       else if (item.type === 'problem') res.push(this.renderProblem(domainId, item).catch(() => ''));

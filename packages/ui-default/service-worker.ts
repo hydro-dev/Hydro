@@ -32,7 +32,7 @@ function shouldCache(request: Request) {
   if (!shouldCachePath(request.url)) return false;
   // For files download, a response is formatted as string
   if (request.headers.get('Pragma') === 'no-cache') return false;
-  return true;
+  return ['get', 'head', 'options'].includes(request.method.toLowerCase());
 }
 function shouldPreCache(name: string) {
   if (!shouldCachePath(name)) return false;
@@ -41,20 +41,27 @@ function shouldPreCache(name: string) {
 }
 
 interface ServiceWorkerConfig {
-  base?: string;
-  hosts?: string[];
-  targets?: string[];
+  /** enabled hosts */
+  hosts: string[];
+  /** service domains */
+  domains: string[];
   preload?: string;
 }
 let config: ServiceWorkerConfig = null;
 
+async function initConfig() {
+  const res = await fetch('/sw-config');
+  config = await res.json();
+  config.hosts ||= [];
+  config.domains ||= [location.host];
+}
+
 self.addEventListener('install', (event) => event.waitUntil((async () => {
-  const [cache, manifest, cfg] = await Promise.all([
+  const [cache, manifest] = await Promise.all([
     caches.open(PRECACHE),
     fetch('/manifest.json').then((res) => res.json()),
-    fetch('/sw-config').then((res) => res.json()),
+    initConfig(),
   ]);
-  config = cfg;
   if (process.env.NODE_ENV === 'production' && config?.preload) {
     const files = Object.values(manifest).filter(shouldPreCache)
       .map((i: string) => new URL(i, config.preload).toString());
@@ -66,11 +73,11 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 self.addEventListener('activate', (event) => {
   const valid = [PRECACHE];
   event.waitUntil((async () => {
-    const [names, cfg] = await Promise.all([
+    const [names] = await Promise.all([
       caches.keys(),
-      fetch('/sw-config').then((res) => res.json()),
+      initConfig(),
     ]);
-    config = cfg;
+    config.domains ||= ['beta.hydro.ac', 'next.hydro.ac'];
     console.log('Config: ', config);
     await Promise.all(names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
     self.clients.claim();
@@ -78,22 +85,23 @@ self.addEventListener('activate', (event) => {
 });
 
 async function get(request: Request) {
-  for (const target of config?.targets || []) {
-    const source = request.url.replace(config.base, target);
+  const isResource = shouldCache(request);
+  for (const target of config.domains || []) {
+    const source = new URL(request.url);
+    source.host = target;
     try {
-      console.log('From ', source);
-      const response = fetch(source, {
+      console.log('From ', source.toString());
+      const r = await fetch(source, {
         method: request.method,
-        credentials: 'include',
+        credentials: isResource ? 'same-origin' : 'include',
         headers: request.headers,
       });
-      const r = await response;
       if (r.ok) {
-        console.log('Load success from ', source);
+        console.log('Load success from ', source.toString());
         return r;
       }
     } catch (error) {
-      console.warn(source, ' Load fail ', error);
+      console.warn(source.toString(), ' Load fail ', error);
     }
   }
   return fetch(request);
@@ -116,15 +124,25 @@ async function cachedRespond(request: Request) {
 
 self.addEventListener('fetch', (event: FetchEvent) => {
   if (!['get', 'post', 'head'].includes(event.request.method.toLowerCase())) return;
+  if (!config) return; // Don't do anything when not initialized
   const url = new URL(event.request.url);
-  const rewritable = config?.base && config?.targets?.length
-    && url.hostname === config.base && url.origin === location.origin;
+  const rewritable = config.domains.length > 1
+    && config.domains.includes(url.hostname) && url.origin === location.origin;
+  // Only handle whitelisted origins;
+  if (!config.hosts.some((i) => event.request.url.startsWith(i))) return;
 
-  if (rewritable) event.respondWith(shouldCache(event.request) ? cachedRespond(event.request) : get(event.request));
-  else if (shouldCache(event.request)) {
-    // Only handle whitelisted origins;
-    if (!config?.hosts?.some((i) => event.request.url.startsWith(i))) return;
+  if (shouldCache(event.request)) {
     event.respondWith((async () => {
+      if (rewritable) {
+        const targets = config.domains.map((i) => {
+          const t = new URL(event.request.url);
+          t.host = i;
+          return t.toString();
+        });
+        const results = await Promise.all(targets.map((i) => caches.match(i)));
+        if (results.find((i) => i)) return results.find((i) => i);
+        return cachedRespond(event.request);
+      }
       const cachedResponse = await caches.match(url);
       if (cachedResponse) return cachedResponse;
       console.log(`Caching ${event.request.url}`);
@@ -141,5 +159,5 @@ self.addEventListener('fetch', (event: FetchEvent) => {
       // errors caused by different headers and do not cache them
       return fetch(event.request);
     })());
-  }
+  } else if (rewritable) event.respondWith(get(event.request));
 });
