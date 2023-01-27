@@ -2,7 +2,7 @@ import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import { isBinaryFile } from 'isbinaryfile';
 import {
-    escapeRegExp, flattenDeep, intersection, isSafeInteger, pick, uniqBy,
+    escapeRegExp, flattenDeep, intersection, pick, uniqBy,
 } from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';

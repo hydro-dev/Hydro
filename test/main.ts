@@ -15,17 +15,13 @@ const Root = {
 describe('App', () => {
     let agent: supertest.SuperAgentTest;
     before((done) => {
-        let timeout;
-        const resolve = () => setTimeout(() => {
-            clearTimeout(timeout);
-            agent = supertest.agent(require('hydrooj').httpServer);
-            done();
-        }, 2000);
         process.send = ((send) => (data) => {
-            if (data === 'ready') resolve();
+            if (data === 'ready') {
+                agent = supertest.agent(require('hydrooj').httpServer);
+                done();
+            }
             return send?.(data) || false;
         })(process.send);
-        timeout = setTimeout(resolve, 20000);
     }, { timeout: 30000 });
 
     const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
