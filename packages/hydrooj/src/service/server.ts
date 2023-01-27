@@ -97,7 +97,6 @@ export const httpServer = http.createServer(app.callback());
 export const wsServer = new WebSocket.Server({ server: httpServer });
 export const captureAllRoutes = {};
 app.proxy = !!system.get('server.xproxy') || !!system.get('server.xff');
-app.proxyIpHeader = system.get('server.xff');
 app.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });

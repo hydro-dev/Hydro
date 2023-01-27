@@ -19,10 +19,15 @@ export const UiContextBase: UiContextBase = {
 export default async (ctx: KoaContext, next: Next) => {
     // Base Layer
     const { domainId, domainInfo } = ctx;
+    const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
     const request: HydroRequest = {
         method: ctx.request.method.toLowerCase(),
-        ...pick(ctx.request, ['host', 'hostname', 'ip', 'headers']),
-        ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring', 'cookies']),
+        host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
+        hostname: ctx.request.hostname,
+        ip: ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip,
+        headers: ctx.request.headers,
+        cookies: ctx.cookies,
+        ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring']),
         body: ctx.request.body,
         files: ctx.request.files as any,
         referer: ctx.request.headers.referer || '',
