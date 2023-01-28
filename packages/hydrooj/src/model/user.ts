@@ -37,7 +37,6 @@ export function deleteUserCache(udoc: User | Udoc | string | true | undefined | 
         for (const key of [...cache.keys()].filter((i) => i.endsWith(`/${udoc}`))) cache.delete(key);
         return true;
     }
-    if (!udoc.uname) global.sendMessage?.(`user/delcache: ${JSON.stringify(udoc)}`);
     const id = [`id/${udoc._id.toString()}`, `name/${udoc.uname.toLowerCase()}`, `mail/${udoc.mail.toLowerCase()}`];
     for (const key of [...cache.keys()].filter((k) => id.includes(`${k.split('/')[0]}/${k.split('/')[1]}`))) {
         cache.delete(key);
@@ -164,7 +163,6 @@ function handleMailLower(mail: string) {
 
 async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
     const res = await new User(udoc, dudoc, scope).init();
-    if (!dudoc) global.sendMessage?.(new Error().stack);
     cache.set(`id/${udoc._id}/${dudoc.domainId}`, res);
     cache.set(`name/${udoc.unameLower}/${dudoc.domainId}`, res);
     cache.set(`mail/${udoc.mailLower}/${dudoc.domainId}`, res);
