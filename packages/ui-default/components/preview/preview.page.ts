@@ -105,7 +105,7 @@ async function previewOffice(link, src) {
   if (action === 'download') window.open(link);
 }
 
-export async function previewFile(ev, type = '') {
+export async function previewFile(ev?, type = '') {
   if (ev?.metaKey || ev?.ctrlKey || ev?.shiftKey) return null;
   if (ev) ev.preventDefault();
   const filename = ev
@@ -146,8 +146,8 @@ export async function previewFile(ev, type = '') {
   const file = new File([val], filename, { type: 'text/plain' });
   const endpoint = new URL(!window.location.href.endsWith('/files')
     ? `${window.location.href.substring(0, window.location.href.lastIndexOf('/'))}/files` : '', window.location.href);
-  const sidebarType = $(ev.currentTarget).closest('[data-fragment-id]').data('type');
-  const sidebar = $(ev.currentTarget).closest('[data-fragment-id]').data('sidebar') !== undefined;
+  const sidebarType = type || $(ev.currentTarget).closest('[data-fragment-id]').data('type');
+  const sidebar = ev && $(ev.currentTarget).closest('[data-fragment-id]').data('sidebar') !== undefined;
   await uploadFiles(endpoint.toString(), [file], {
     type: sidebarType || type,
     sidebar,
