@@ -8,6 +8,7 @@ import {
 } from 'vj/utils';
 
 export default new AutoloadPage('omnibar', () => {
+  if (document.documentElement.dataset.layout !== 'basic') return;
   const $search = $(`
     <div class='omnibar' data-hotkey="esc:click" style="opacity:0;display:none;">
       <div class='omnibar-main'>

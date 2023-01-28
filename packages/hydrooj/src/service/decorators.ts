@@ -81,11 +81,11 @@ export const Types: Types = {
     Key: saslprepString(/^[a-zA-Z0-9-_]+$/),
     /** @deprecated */
     Name: saslprepString(/^.{1,255}$/),
-    Filename: saslprepString(/^[^.\\/?#~]{1,255}$/, (i) => !['con', '.', '..'].includes(i)),
+    Filename: saslprepString(/^[^\\/?#~!|*]{1,255}$/, (i) => !['con', '.', '..'].includes(i)),
     UidOrName: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2}|-?[0-9]+)$/),
     Username: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2})$/),
     Password: saslprepString(/^.{6,255}$/),
-    ProblemId: saslprepString(/^[a-zA-Z]+[a-zA-Z0-9]*$/i, () => true, (s) => (Number.isSafeInteger(+s) ? +s : s)),
+    ProblemId: saslprepString(/^[a-zA-Z0-9]+$/i, () => true, (s) => (Number.isSafeInteger(+s) ? +s : s)),
     Email: saslprepString(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i),
     DomainId: saslprepString(/^[a-zA-Z][a-zA-Z0-9_]{3,31}$/),
     Role: saslprepString(/^[_0-9A-Za-z\u4e00-\u9fa5]{1,31}$/i),
