@@ -36,6 +36,9 @@ export function resolveConfig(plugin: any, config: any) {
 }
 Context.service('loader');
 
+const timeout = Symbol.for('loader.timeout');
+const showLoadTime = argv.options.showLoadTime;
+
 export class Loader {
     static readonly Record = Symbol.for('loader.record');
 
@@ -60,11 +63,38 @@ export class Loader {
             fork.update(config);
         } else {
             logger.info('apply plugin %c', key.split('node_modules').pop());
-            const plugin = await this.resolvePlugin(key);
+            let plugin = await this.resolvePlugin(key);
             if (!plugin) return;
             resolveConfig(plugin, config);
             if (asName) plugin.name = asName;
             // fork = parent.plugin(plugin, this.interpolate(config));
+            if (plugin.apply) {
+                const original = plugin.apply;
+                const apply = (...args) => {
+                    const start = Date.now();
+                    const result = Promise.resolve(original(...args)).catch((e) => logger.error(e));
+                    Promise.race([
+                        result,
+                        new Promise((resolve) => {
+                            setTimeout(() => resolve(timeout), 10000);
+                        }),
+                    ]).then((t) => {
+                        if (t === timeout) {
+                            logger.warn('Plugin %s took too long to load', key);
+                        }
+                    });
+                    if (showLoadTime && (typeof showLoadTime !== 'number' || Date.now() - start > showLoadTime)) {
+                        logger.info('Plugin %s loaded in %dms', key, Date.now() - start);
+                    }
+                    return result;
+                };
+                plugin = Object.create(plugin);
+                Object.defineProperty(plugin, 'apply', {
+                    writable: true,
+                    value: apply,
+                    enumerable: true,
+                });
+            }
             fork = parent.plugin(plugin, config);
             if (!fork) return;
             parent.state[Loader.Record] ||= Object.create(null);
