@@ -137,6 +137,7 @@ async function runInDomain(domainId: string, report: Function) {
     const domainIds = [domainId, ...(info.union || [])];
     const results: Record<keyof typeof RpTypes, ND> = {};
     const udict = Counter();
+    await db.collection('domain.user').updateMany({ domainId }, { $set: { rpInfo: {} } });
     for (const type in RpTypes) {
         results[type] = new Proxy({}, { get: (self, key) => self[key] || RpTypes[type].base });
         await RpTypes[type].run(domainIds, results[type], report);

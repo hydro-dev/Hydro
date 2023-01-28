@@ -43,7 +43,7 @@ export const DOMAIN_SETTINGS_BY_KEY: SettingDict = {};
 export const SYSTEM_SETTINGS_BY_KEY: SettingDict = {};
 
 // eslint-disable-next-line max-len
-export type SettingType = 'text' | 'yaml' | 'number' | 'float' | 'markdown' | 'password' | 'boolean' | 'textarea' | [string, string][] | Record<string, string>;
+export type SettingType = 'text' | 'yaml' | 'number' | 'float' | 'markdown' | 'password' | 'boolean' | 'textarea' | [string, string][] | Record<string, string> | 'json';
 
 export const Setting = (
     family: string, key: string, value: any = null,
@@ -170,7 +170,7 @@ DomainUserSetting(
     Setting('setting_storage', 'nSubmit', 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'nLike', 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rp', 0, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rpInfo', '', 'text'/* JSON */, 'RP Detail', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'rpInfo', {}, 'json', 'RP Detail', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rpdelta', 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rank', 0, 'number', 'Rank', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
