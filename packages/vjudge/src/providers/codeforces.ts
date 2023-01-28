@@ -126,7 +126,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const cookie = res.header['set-cookie'];
         if (cookie) {
             await this.save({ cookie });
-            this.cookie = cookie;
+            this.setCookie(cookie);
         }
         if (await this.loggedIn) {
             logger.success('Logged in');

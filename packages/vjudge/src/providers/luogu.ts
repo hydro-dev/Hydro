@@ -41,7 +41,10 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
                 },
             },
         });
-        setInterval(() => this.getCsrfToken('/user/setting'), 5 * 60 * 1000);
+        setInterval(() => {
+            this.ensureLogin();
+            this.getCsrfToken('/user/setting');
+        }, 5 * 60 * 1000);
     }
 
     async getCsrfToken(url: string) {
@@ -60,7 +63,17 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
             return true;
         }
         logger.info('retry login');
-        // TODO login;
+        const res = await this.post(`/api/auth/userPassLogin${this.account.query || ''}`)
+            .set('referer', 'https://www.luogu.com.cn/user/setting')
+            .send({
+                username: this.account.handle,
+                password: this.account.password,
+            });
+        if (res.headers['set-cookie']) this.setCookie(res.headers['set-cookie']);
+        if (await this.loggedIn) {
+            await this.getCsrfToken('/user/setting');
+            return true;
+        }
         return false;
     }
 

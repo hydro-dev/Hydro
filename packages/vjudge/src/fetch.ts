@@ -47,4 +47,9 @@ export class BasicFetcher {
         if (this.fetchOptions.post?.headers) req = req.set(this.fetchOptions.post.headers);
         return this.account.proxy ? req.proxy(this.account.proxy) : req;
     }
+
+    setCookie(cookie: string | string[]) {
+        if (typeof cookie === 'string') this.cookie = [cookie];
+        else this.cookie = cookie;
+    }
 }
