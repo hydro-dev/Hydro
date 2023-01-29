@@ -1,6 +1,7 @@
 import yaml from 'js-yaml';
 
 export interface LangConfig {
+    disabled?: boolean;
     compile?: string;
     execute: string;
     code_file: string;
@@ -41,6 +42,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.execute ||= '/w/foo';
         entry.key = key;
         entry.hidden ||= false;
+        entry.disabled ||= false;
     }
     return file;
 }

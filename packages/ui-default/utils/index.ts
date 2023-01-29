@@ -33,7 +33,8 @@ export function getAvailableLangs(langsList?: string[]) {
   for (const key in window.LANGS) {
     if (prefixes.has(key)) continue;
     if (langsList && langsList.length && langsList.join('') && !langsList.includes(key)) continue;
-    else if (window.LANGS[key].hidden && !langsList?.includes(key)) continue;
+    if (window.LANGS[key].hidden && !langsList?.includes(key)) continue;
+    if (window.LANGS[key].disabled) continue;
     Langs[key] = window.LANGS[key];
   }
   return Langs;
