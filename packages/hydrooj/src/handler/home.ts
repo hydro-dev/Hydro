@@ -27,9 +27,8 @@ import * as system from '../model/system';
 import token from '../model/token';
 import * as training from '../model/training';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
-    ConnectionHandler, Handler, param, query, requireSudo, Types,
+    ConnectionHandler, Handler, param, query, requireSudo, subscribe, Types,
 } from '../service/server';
 import { camelCase, md5 } from '../utils';
 
@@ -519,21 +518,13 @@ class HomeMessagesHandler extends Handler {
 
 class HomeMessagesConnectionHandler extends ConnectionHandler {
     category = '#message';
-    dispose: bus.Disposable;
 
-    async prepare() {
-        this.dispose = bus.on('user/message', this.onMessageReceived.bind(this));
-    }
-
+    @subscribe('user/message')
     async onMessageReceived(uid: number, mdoc: MessageDoc) {
         if (uid !== this.user._id) return;
         const udoc = (await user.getById(this.args.domainId, mdoc.from))!;
         udoc.avatarUrl = avatar(udoc.avatar, 64);
         this.send({ udoc, mdoc });
-    }
-
-    async cleanup() {
-        if (this.dispose) this.dispose();
     }
 }
 

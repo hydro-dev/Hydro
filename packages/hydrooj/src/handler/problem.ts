@@ -30,7 +30,6 @@ import solution from '../model/solution';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
@@ -168,7 +167,7 @@ export class ProblemMainHandler extends Handler {
             });
             sort = result.hits;
         }
-        await bus.parallel('problem/list', query, this);
+        await this.ctx.parallel('problem/list', query, this);
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
@@ -297,7 +296,7 @@ export class ProblemRandomHandler extends Handler {
             .map((i) => i.split('category:')[1]?.split(',')));
         const q = buildQuery(this.user);
         if (category.length) q.$and = category.map((tag) => ({ tag }));
-        await bus.parallel('problem/list', q, this);
+        await this.ctx.parallel('problem/list', q, this);
         const pid = await problem.random(domainId, q);
         if (!pid) throw new NoProblemError();
         this.response.body = { pid };
@@ -352,7 +351,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             this.pdoc.config.langs = intersection(baseLangs, ...t);
         }
-        await bus.parallel('problem/get', this.pdoc, this);
+        await this.ctx.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
             problem.getStatus(domainId, this.pdoc.docId, this.user._id),
             user.getById(domainId, this.pdoc.owner),
@@ -547,7 +546,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),
             ]);
         }
-        bus.broadcast('record/change', rdoc);
+        this.ctx.broadcast('record/change', rdoc);
         if (tid && !pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url(this.tdoc.rule === 'homework' ? 'homework_detail' : 'contest_detail', { tid });
@@ -608,7 +607,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
         );
         const rdoc = await record.get(domainId, rid);
         // TODO contest: update status;
-        bus.broadcast('record/change', rdoc);
+        this.ctx.broadcast('record/change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }

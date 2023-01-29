@@ -524,14 +524,12 @@ const scripts: UpgradeScript[] = [
             if (defaultPriv & list[key]) defaultPriv -= list[key];
         }
         await system.set('default.priv', defaultPriv);
-        return iterateAllUser(async (udoc) => {
-            if (udoc.priv < 0) return;
-            const old = udoc.priv;
-            for (const key in list) {
-                if (udoc.priv & list[key]) udoc.priv -= list[key];
-            }
-            if (old !== udoc.priv) await user.setById(udoc._id, { priv: udoc.priv });
-        });
+        for (const key in list) {
+            await user.coll.updateMany(
+                { priv: { $bitsAllSet: list[key] } },
+                { $inc: { priv: -list[key] } },
+            );
+        }
     },
 ];
 

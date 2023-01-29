@@ -374,22 +374,24 @@ export function Connection(
         await bus.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
+        const disposables = [];
         try {
             checker.call(h);
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
-            if (h.message) {
-                conn.onmessage = (e) => {
-                    h.message(JSON.parse(e.data.toString()));
-                };
-            }
+            // eslint-disable-next-line @typescript-eslint/no-shadow
+            for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
+            conn.onmessage = (e) => h.message?.(JSON.parse(e.data.toString()));
             conn.onclose = () => {
                 bus.emit('connection/close', h);
+                disposables.forEach((d) => d());
                 h.cleanup?.(args);
             };
             await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
+        } finally {
+            disposables.forEach((d) => d());
         }
     });
     return router.disposeLastOp;

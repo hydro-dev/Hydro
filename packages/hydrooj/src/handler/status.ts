@@ -1,9 +1,9 @@
+import { Context } from '../context';
 import { PRIV } from '../model/builtin';
 import * as DocumentModel from '../model/document';
 import DomainModel from '../model/domain';
 import RecordModel from '../model/record';
 import UserModel from '../model/user';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import { Handler } from '../service/server';
 
@@ -70,10 +70,9 @@ class StatusUpdateHandler extends Handler {
     }
 }
 
-bus.on('ready', () => coll.createIndex('updateAt', { expireAfterSeconds: 24 * 3600 }));
-
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('status', '/status', StatusHandler);
     ctx.Route('status_admin', '/.status', AdminStatusHandler);
     ctx.Route('status_update', '/status/update', StatusUpdateHandler);
+    await db.ensureIndexes(coll, { key: { updateAt: 1 }, expireAfterSeconds: 24 * 2600 });
 }

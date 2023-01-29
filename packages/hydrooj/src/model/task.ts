@@ -112,7 +112,6 @@ export async function apply(ctx: Context) {
     });
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    await collEvent.createIndex({ expire: 1 }, { expireAfterSeconds: 0 });
     const stream = collEvent.watch();
     const handleEvent = async (doc: EventDoc) => {
         const payload = JSON.parse(doc.payload);
@@ -138,6 +137,7 @@ export async function apply(ctx: Context) {
             await (res.value ? handleEvent(res.value) : sleep(500));
         }
     });
+    await db.ensureIndexes(collEvent, { name: 'expire', key: { expire: 1 }, expireAfterSeconds: 0 });
     await db.ensureIndexes(coll, { name: 'task', key: { type: 1, subType: 1, priority: -1 } });
 }
 

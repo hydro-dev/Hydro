@@ -1,6 +1,7 @@
 import { Time } from '@hydrooj/utils';
 import { ValidationError } from '../error';
 import { Converter, Type, Validator } from '../lib/validator';
+import { EventMap } from './bus';
 import type { Handler } from './server';
 
 type MethodDecorator = (target: any, name: string, obj: any) => any;
@@ -80,6 +81,12 @@ export const query: DescriptorBuilder = (name, ...args) => _descriptor(_buildPar
 export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'post', ...args));
 export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
 export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
+
+export const subscribe: (name: keyof EventMap) => MethodDecorator = (name) => (target, funcName, obj) => {
+    target.__subscribe ||= [];
+    target.__subscribe.push({ name, target: obj.value });
+    return obj;
+};
 
 export function requireSudo(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
