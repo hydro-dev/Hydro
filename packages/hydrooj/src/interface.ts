@@ -727,7 +727,6 @@ export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearc
 export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty');
     buildContent: typeof import('./lib/content').buildContent;
-    i18n: typeof import('./lib/i18n');
     mail: typeof import('./lib/mail');
     paginate: typeof import('./lib/paginate');
     rank: typeof import('./lib/rank');

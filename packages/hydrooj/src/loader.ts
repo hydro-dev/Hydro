@@ -11,6 +11,7 @@ import path from 'path';
 import './utils';
 import cac from 'cac';
 import './ui';
+import './lib/i18n';
 
 import { Logger } from './logger';
 import { Context } from './context';

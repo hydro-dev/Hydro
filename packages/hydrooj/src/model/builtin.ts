@@ -256,19 +256,10 @@ export const PRIV = {
     PRIV_ALL: -1,
     PRIV_DEFAULT: 0,
     PRIV_NEVER: 1 << 20,
-
-    /** @deprecated */
-    PRIV_READ_PRETEST_DATA: 1 << 5,
-    /** @deprecated */
-    PRIV_READ_PRETEST_DATA_SELF: 1 << 6,
-    /** @deprecated */
-    PRIV_DELETE_FILE_SELF: 1 << 19,
 };
 
 PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE
-    + PRIV.PRIV_READ_PRETEST_DATA_SELF
     + PRIV.PRIV_CREATE_FILE
-    + PRIV.PRIV_DELETE_FILE_SELF
     + PRIV.PRIV_SEND_MESSAGE;
 
 // people whose rank is less than 1% will get Level 10

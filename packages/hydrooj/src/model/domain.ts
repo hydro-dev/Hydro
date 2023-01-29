@@ -277,12 +277,6 @@ class DomainModel {
         await bus.parallel('domain/delete', domainId);
         bus.broadcast('domain/delete-cache', domainId.toLowerCase());
     }
-
-    @ArgMethod
-    /** @deprecated */
-    static async getUnion(domainId: string) {
-        return await coll.findOne({ _id: domainId });
-    }
 }
 
 bus.on('ready', () => Promise.all([

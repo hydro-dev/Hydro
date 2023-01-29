@@ -513,6 +513,26 @@ const scripts: UpgradeScript[] = [
         await ScheduleModel.deleteMany({ subType: 'discussion.sort' });
         return true;
     },
+    async function _74_75() {
+        const list = {
+            READ_PRETEST_DATA: 1 << 5,
+            READ_PRETEST_DATA_SELF: 1 << 6,
+            DELETE_FILE_SELF: 1 << 19,
+        };
+        let defaultPriv = system.get('default.priv') as number;
+        for (const key in list) {
+            if (defaultPriv & list[key]) defaultPriv -= list[key];
+        }
+        await system.set('default.priv', defaultPriv);
+        return iterateAllUser(async (udoc) => {
+            if (udoc.priv < 0) return;
+            const old = udoc.priv;
+            for (const key in list) {
+                if (udoc.priv & list[key]) udoc.priv -= list[key];
+            }
+            if (old !== udoc.priv) await user.setById(udoc._id, udoc);
+        });
+    },
 ];
 
 export default scripts;

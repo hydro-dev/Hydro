@@ -187,11 +187,6 @@ class RemoteStorageService {
         }));
     }
 
-    /** @deprecated use StorageModel.list instead. */
-    async list() {
-        throw new Error('listObjectsAPI was no longer supported in hydrooj@4. Please use hydrooj@3 to migrate your files first.');
-    }
-
     async getMeta(target: string) {
         target = convertPath(target);
         const res = await this.client.send(new HeadObjectCommand({
@@ -318,10 +313,6 @@ class LocalStorageService {
 
     async signUpload() {
         throw new Error('Not implemented');
-    }
-
-    async list() {
-        throw new Error('deprecated');
     }
 
     async copy(src: string, target: string) {

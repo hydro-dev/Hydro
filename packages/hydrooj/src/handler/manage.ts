@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
+import { omit } from 'lodash';
 import Schema from 'schemastery';
 import * as check from '../check';
 import {
@@ -276,9 +277,7 @@ class SystemUserImportHandler extends SystemHandler {
 }
 /* eslint-enable no-await-in-loop */
 
-const Priv = Object.fromEntries(Object.entries(PRIV).filter(
-    (i) => (!i[0].endsWith('SELF') && !['PRIV_DEFAULT', 'PRIV_NEVER', 'PRIV_NONE', 'PRIV_ALL'].includes(i[0])),
-));
+const Priv = omit(PRIV, ['PRIV_DEFAULT', 'PRIV_NEVER', 'PRIV_NONE', 'PRIV_ALL']);
 const allPriv = Math.sum(Object.values(Priv));
 
 class SystemUserPrivHandler extends SystemHandler {

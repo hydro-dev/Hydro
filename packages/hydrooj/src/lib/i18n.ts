@@ -52,13 +52,6 @@ String.prototype.translate = function translate(...languages: string[]) {
     return this.toString();
 };
 
-/** @deprecated use ctx.i18n.load instead. */
-function load(data: Record<string, Record<string, string>>) {
-    for (const i in data) app.i18n.load(i, data[i]);
-}
-
-export = load;
-
 function collect(lang: string) {
     const s = translations[lang];
     if (!(s instanceof Array)) return {};
@@ -81,4 +74,3 @@ global.Hydro.locales = new Proxy(translations, {
         });
     },
 }) as any;
-global.Hydro.lib.i18n = load;
