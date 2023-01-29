@@ -530,7 +530,7 @@ const scripts: UpgradeScript[] = [
             for (const key in list) {
                 if (udoc.priv & list[key]) udoc.priv -= list[key];
             }
-            if (old !== udoc.priv) await user.setById(udoc._id, udoc);
+            if (old !== udoc.priv) await user.setById(udoc._id, { priv: udoc.priv });
         });
     },
 ];
