@@ -10,7 +10,7 @@ import {
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
 import { DomainDoc, MessageDoc, Setting } from '../interface';
-import avatar from '../lib/avatar';
+import avatar, { validate } from '../lib/avatar';
 import * as mail from '../lib/mail';
 import * as useragent from '../lib/useragent';
 import { verifyTFA } from '../lib/verifyTFA';
@@ -373,8 +373,10 @@ class HomeSettingsHandler extends Handler {
 class HomeAvatarHandler extends Handler {
     @param('avatar', Types.String, true)
     async post(domainId: string, input: string) {
-        if (input) await user.setById(this.user._id, { avatar: input });
-        else if (this.request.files.file) {
+        if (input) {
+            if (!validate(input)) throw new ValidationError('avatar');
+            await user.setById(this.user._id, { avatar: input });
+        } else if (this.request.files.file) {
             const file = this.request.files.file;
             if (file.size > 8 * 1024 * 1024) throw new ValidationError('file');
             const ext = path.extname(file.originalFilename);
