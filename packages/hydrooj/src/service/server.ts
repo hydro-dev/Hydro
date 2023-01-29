@@ -17,6 +17,7 @@ import {
     UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
+import { Types } from '../lib/validator';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
@@ -35,6 +36,7 @@ import { Router } from './router';
 import { encodeRFC5987ValueChars } from './storage';
 
 export * from './decorators';
+export * from '../lib/validator';
 
 export interface HydroRequest {
     method: string;
@@ -556,6 +558,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
 
 global.Hydro.service.server = {
     ...decorators,
+    Types,
     app,
     httpServer,
     wsServer,

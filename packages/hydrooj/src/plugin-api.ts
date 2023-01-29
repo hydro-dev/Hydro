@@ -41,6 +41,7 @@ export { buildContent } from './lib/content';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
 export { default as paginate } from './lib/paginate';
+export * from './lib/validator';
 export * from './service/decorators';
 export {
     Handler, ConnectionHandler, captureAllRoutes,
