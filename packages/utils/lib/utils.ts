@@ -63,7 +63,7 @@ String.prototype.format = function formatStr(...args) {
             }
         } else return this.formatFromArray(args);
     }
-    return result;
+    return result.toString();
 };
 
 export function isClass(obj: any, strict = false): obj is new (...args: any) => any {
