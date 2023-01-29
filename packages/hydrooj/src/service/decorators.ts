@@ -4,7 +4,8 @@ import { Converter, Type, Validator } from '../lib/validator';
 import { EventMap } from './bus';
 import type { Handler } from './server';
 
-type MethodDecorator = (target: any, name: string, obj: any) => any;
+type MethodDecorator = (target: any, funcName: string, obj: any) => any;
+type ClassDecorator = <T extends new (...args: any[]) => any>(Class: T) => T extends new (...args: infer R) => infer S ? (...args: R) => S : never;
 export interface ParamOption<T> {
     name: string,
     source: 'all' | 'get' | 'post' | 'route',
@@ -82,10 +83,17 @@ export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildPara
 export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
 export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
 
-export const subscribe: (name: keyof EventMap) => MethodDecorator = (name) => (target, funcName, obj) => {
-    target.__subscribe ||= [];
-    target.__subscribe.push({ name, target: obj.value });
-    return obj;
+export const subscribe: (name: keyof EventMap) => MethodDecorator | ClassDecorator = (name) => (target, funcName, obj) => {
+    if (funcName) {
+        target.__subscribe ||= [];
+        target.__subscribe.push({ name, target: obj.value });
+        return obj;
+    }
+    return (...args) => {
+        const c = new target(...args); // eslint-disable-line new-cap
+        c.__subscribe = [{ name, target: c.send }];
+        return c;
+    };
 };
 
 export function requireSudo(target: any, funcName: string, obj: any) {

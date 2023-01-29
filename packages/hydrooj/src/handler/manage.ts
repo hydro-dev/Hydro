@@ -14,7 +14,6 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
@@ -176,7 +175,7 @@ class SystemSettingHandler extends SystemHandler {
             }
         }
         await Promise.all(tasks);
-        await bus.broadcast('system/setting', args);
+        this.ctx.broadcast('system/setting', args);
         this.back();
     }
 }
@@ -309,7 +308,7 @@ class SystemUserPrivHandler extends SystemHandler {
             const defaultPriv = system.get('default.priv');
             await user.coll.updateMany({ priv: defaultPriv }, { $set: { priv } });
             await system.set('default.priv', priv);
-            bus.broadcast('user/delcache', true);
+            this.ctx.broadcast('user/delcache', true);
         }
         this.back();
     }

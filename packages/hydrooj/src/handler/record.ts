@@ -15,8 +15,9 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
-import * as bus from '../service/bus';
-import { ConnectionHandler, param, Types } from '../service/server';
+import {
+    ConnectionHandler, param, subscribe, Types,
+} from '../service/server';
 import { buildProjection } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
@@ -197,7 +198,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         const priority = await record.submissionPriority(this.user._id, -20);
         const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         const rdoc = await record.reset(domainId, rid, true);
-        bus.broadcast('record/change', rdoc);
+        this.ctx.broadcast('record/change', rdoc);
         await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
         this.back();
     }
@@ -226,7 +227,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 }
 
 class RecordMainConnectionHandler extends ConnectionHandler {
-    cleanup: bus.Disposable = () => { };
     all = false;
     tid: string;
     uid: number;
@@ -273,7 +273,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.all = true;
         }
-        this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
     }
 
     async message(msg: { rids: string[] }) {
@@ -283,6 +282,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         for (const rdoc of rdocs) this.onRecordChange(rdoc);
     }
 
+    @subscribe('record/change')
     async onRecordChange(rdoc: RecordDoc) {
         if (!this.all) {
             if (rdoc.domainId !== this.args.domainId) return;
@@ -318,7 +318,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 }
 
 class RecordDetailConnectionHandler extends ConnectionHandler {
-    cleanup: bus.Disposable = () => { };
     pdoc: ProblemDoc;
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
@@ -356,7 +355,6 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         this.pdoc = pdoc;
         this.throttleSend = throttle(this.sendUpdate, 1000, { trailing: true });
         this.rid = rid.toString();
-        this.cleanup = bus.on('record/change', this.onRecordChange.bind(this));
         this.onRecordChange(rdoc);
     }
 
@@ -367,6 +365,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         });
     }
 
+    @subscribe('record/change')
     // eslint-disable-next-line
     async onRecordChange(rdoc: RecordDoc, $set?: any, $push?: any) {
         if (rdoc._id.toString() !== this.rid) return;

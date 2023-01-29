@@ -18,7 +18,7 @@ import task from '../model/task';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
-    ConnectionHandler, Handler, post, Types,
+    ConnectionHandler, Handler, post, subscribe, Types,
 } from '../service/server';
 import { sleep } from '../utils';
 
@@ -180,15 +180,14 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
-        this.send({ language: setting.langs });
-        this.sendLanguageConfig = this.sendLanguageConfig.bind(this);
-        bus.on('system/setting', this.sendLanguageConfig);
+        this.sendLanguageConfig();
         // Ensure language sent
         await sleep(100);
         this.newTask();
     }
 
-    async sendLanguageConfig() {
+    @subscribe('system/setting')
+    sendLanguageConfig() {
         this.send({ language: setting.langs });
     }
 
@@ -226,7 +225,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
     async cleanup() {
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        bus.off('system/setting', this.sendLanguageConfig);
         if (this.processing) {
             await record.reset(this.processing.domainId, this.processing.rid, false);
             await task.add(this.processing);

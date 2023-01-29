@@ -15,7 +15,6 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
-import * as bus from '../service/bus';
 import {
     Handler, param, post, Types,
 } from '../service/server';
@@ -64,7 +63,7 @@ class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const query: FilterQuery<TrainingDoc> = {};
-        await bus.parallel('training/list', query, this);
+        await this.ctx.parallel('training/list', query, this);
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
@@ -102,7 +101,7 @@ class TrainingDetailHandler extends Handler {
     @param('uid', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectID, uid: number) {
         const tdoc = await training.get(domainId, tid);
-        await bus.parallel('training/get', tdoc, this);
+        await this.ctx.parallel('training/get', tdoc, this);
         let targetUser = this.user._id;
         let enrollUsers: number[] = [];
         let shouldCompare = false;
