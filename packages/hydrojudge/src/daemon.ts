@@ -20,22 +20,13 @@ import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
 import log from './log';
 
-declare global {
-    namespace NodeJS {
-        interface Global {
-            onDestroy: Function[]
-            hosts: any
-        }
-    }
-}
-global.onDestroy ||= [];
-global.hosts ||= {};
+const hosts: Record<string, HydroHost> = {};
 let exit = false;
 
 const terminate = async () => {
     log.info('正在保存数据');
     try {
-        await Promise.all(Object.values(global.hosts).map((f) => f.dispose?.()));
+        await Promise.all(Object.values(hosts).map((f) => f.dispose?.()));
         process.exit(1);
     } catch (e) {
         if (exit) process.exit(1);
@@ -53,7 +44,6 @@ process.on('unhandledRejection', (reason, p) => {
 
 async function daemon() {
     const _hosts = getConfig('hosts');
-    const hosts = {};
     const queue = new PQueue({ concurrency: Infinity });
     queue.on('error', (e) => log.error(e));
     for (const i in _hosts) {
@@ -62,7 +52,6 @@ async function daemon() {
         await hosts[i].init();
     }
     for (const i in hosts) hosts[i].consume(queue);
-    global.hosts = hosts;
 }
 
 if (require.main === module) daemon();
