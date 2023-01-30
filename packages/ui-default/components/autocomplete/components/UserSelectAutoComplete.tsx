@@ -25,8 +25,8 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
         displayName
       }
     `, ['data', 'users'])}
-    itemText={(user) => user.uname + (user.displayName ? ` (${ user.displayName })` : '')}
-    itemKey={(user) => (props.multi ? user._id.toString() : user.uname)}
+    itemText={(user) => user.uname + (user.displayName ? ` (${user.displayName})` : '')}
+    itemKey={(user) => ((props.multi || /^[+-]?\d+$/.test(user.uname.trim())) ? user._id.toString() : user.uname)}
     renderItem={(user) => (
       <div className="media">
         <div className="media__left medium">
