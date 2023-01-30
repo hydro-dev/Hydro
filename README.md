@@ -40,6 +40,23 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.7.0 / UI 4.47.0
+- core: 支持检测导致启动卡死的问题
+- core: 修复特定情况下 rating 信息无法写入的问题
+- core: 添加更多 validator 字段类型支持，移除旧版 validator
+- core&ui: 支持 CORS
+- ui: 支持模块懒加载
+- ui: 修复邮箱登录
+- ui: 修复站内信显示异常的问题
+- vjudge: luogu: 修复登录
+- judge: 修复客观题部分题目未答导致评测出错的问题
+- core: `ConnectionHandler` 支持 `@subscribe(event)`
+- util: 修复 `Message.sendNotification` 格式化异常的问题
+- core: 数据库优化
+- core: 校验用户头像
+- judge: 移除 onDestory 钩子，使用 disposables 替代
+- ui: 优化资源加载
+
 ### Hydro 4.6.0 / UI 4.46.0
 - core&ui: 添加 webauthn 支持
 - ui: 修复题解投票
@@ -217,4 +234,8 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 - [Github](https://github.com/) 为 Hydro 提供了代码托管与自动构建。  
 - [criyle](https://github.com/criyle) 提供评测沙箱实现。  
-- [Vijos](https://github.com/vijos/vj4) 为 Hydro 提供了UI框架。  
+- [Vijos](https://github.com/vijos/vj4) 为 Hydro 提供了 UI 框架。  
+
+## Sponsors
+
+- [云斗学院](https://www.yundouxueyuan.com)

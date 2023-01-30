@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.6.0",
+    "version": "4.7.0",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "engines": {
-        "node": ">=14"
+        "node": ">=18"
     },
     "preferUnplugged": true,
     "dependencies": {
@@ -19,7 +19,7 @@
         "@aws-sdk/s3-request-presigner": "^3.259.0",
         "@graphql-tools/schema": "^9.0.14",
         "@hydrooj/utils": "workspace:*",
-        "@simplewebauthn/server": "^7.0.0",
+        "@simplewebauthn/server": "^7.0.1",
         "adm-zip": "0.5.5",
         "cac": "^6.7.14",
         "cordis": "^2.7.2",
@@ -49,7 +49,7 @@
         "path-to-regexp": "^6.2.1",
         "require-resolve-hook": "^1.1.0",
         "saslprep": "^1.0.3",
-        "schemastery": "^3.6.1",
+        "schemastery": "^3.7.0",
         "semver": "^7.3.8",
         "serialize-javascript": "^6.0.1",
         "superagent": "^8.0.9",

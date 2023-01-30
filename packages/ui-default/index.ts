@@ -91,6 +91,7 @@ class SWConfigHandler extends Handler {
         SystemModel.get('server.url'),
         SystemModel.get('server.cdn'),
       ],
+      domains: SystemModel.get('ui-default.domains') || [],
     };
   }
 }

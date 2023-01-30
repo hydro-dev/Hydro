@@ -53,7 +53,7 @@ async function initConfig() {
   const res = await fetch('/sw-config');
   config = await res.json();
   config.hosts ||= [];
-  config.domains ||= [location.host];
+  if (!config.domains?.length) config.domains = [location.host];
 }
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
@@ -77,7 +77,6 @@ self.addEventListener('activate', (event) => {
       caches.keys(),
       initConfig(),
     ]);
-    config.domains ||= ['beta.hydro.ac', 'next.hydro.ac'];
     console.log('Config: ', config);
     await Promise.all(names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
     self.clients.claim();
