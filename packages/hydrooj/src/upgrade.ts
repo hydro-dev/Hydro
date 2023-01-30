@@ -530,6 +530,16 @@ const scripts: UpgradeScript[] = [
                 { $inc: { priv: -list[key] } },
             );
         }
+        return true;
+    },
+    async function _75_76() {
+        const messages = await db.collection('message').find({ content: { $type: 'object' } }).toArray();
+        for (const m of messages) {
+            let content = '';
+            for (const key in m) content += m[key];
+            await db.collection('message').updateOne({ _id: m._id }, { $set: { content } });
+        }
+        return true;
     },
 ];
 
