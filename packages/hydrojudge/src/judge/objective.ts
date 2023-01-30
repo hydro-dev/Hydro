@@ -51,7 +51,7 @@ export async function judge({
                 },
             });
         };
-        const usrAns = answers[key].toString();
+        const usrAns = (answers[key]?.toString() || '').trim();
         if (ansInfo instanceof Array) {
             const fullScore = (+ansInfo[1]) || 0;
             const stdAns = ansInfo[0];
@@ -60,7 +60,7 @@ export async function judge({
                 if (stdAns.length === ans.size && Set.isSuperset(ans, stdAns)) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
                 else if (ans.size && Set.isSuperset(ans, stdAns)) report(STATUS.STATUS_WRONG_ANSWER, Math.floor(fullScore / 2), 'Partially Correct');
                 else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
-            } else if (stdAns.toString() === usrAns.trim()) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct  ');
+            } else if (stdAns.toString() === usrAns) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
             else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
         } else if (!ansInfo[usrAns]) report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
         else report(STATUS.STATUS_ACCEPTED, +ansInfo[usrAns] || 0, 'Correct');
