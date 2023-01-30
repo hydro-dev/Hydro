@@ -29,13 +29,13 @@ declare global {
     }
 }
 global.onDestroy ||= [];
-global.hosts ||= [];
+global.hosts ||= {};
 let exit = false;
 
 const terminate = async () => {
     log.info('正在保存数据');
     try {
-        await Promise.all(global.hosts.map((f) => f.dispose?.()));
+        await Promise.all(Object.values(global.hosts).map((f) => f.dispose?.()));
         process.exit(1);
     } catch (e) {
         if (exit) process.exit(1);

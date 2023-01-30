@@ -51,7 +51,11 @@ export async function judge({
                 },
             });
         };
-        const usrAns = (answers[key]?.toString() || '').trim();
+        if (!answers[key]) {
+            report(STATUS.STATUS_WRONG_ANSWER, 0, 'No answer');
+            continue;
+        }
+        const usrAns = answers[key].toString().trim();
         if (ansInfo instanceof Array) {
             const fullScore = (+ansInfo[1]) || 0;
             const stdAns = ansInfo[0];
