@@ -120,8 +120,8 @@ async function main() {
     if (fs.existsSync('public/polyfill.js')) {
       fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
     }
-    if (fs.existsSync('public/default.theme.css')) {
-      fs.copyFileSync('public/default.theme.css', `public/default-${pkg.version}.theme.css`);
+    if (fs.existsSync('public/theme.css')) {
+      fs.copyFileSync('public/theme.css', `public/theme-${pkg.version}.css`);
     }
     if (argv.options.production) {
       for (const f of ['echarts', 'graphviz', 'mermaid', 'mathjax']) {

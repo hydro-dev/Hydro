@@ -71,6 +71,7 @@ const build = async (contents: string) => {
 };
 
 export async function buildUI() {
+  console.log(1, 'building');
   const start = Date.now();
   let totalSize = 0;
   const entryPoints: string[] = [];
@@ -85,17 +86,24 @@ export async function buildUI() {
       if (/\.lazy\.[jt]sx?$/.test(target)) lazyModules.push(join(publicPath, target));
     }
   }
+  function addFile(name: string, content: string) {
+    vfs[name] = content;
+    hashes[name] = sha1(content).substring(0, 8);
+    logger.info('+ %s-%s: %s', name, hashes[name].substring(0, 6), size(content.length));
+    newFiles.push(name);
+    totalSize += content.length;
+  }
   for (const m of lazyModules) {
     const name = basename(m).split('.')[0];
     const { outputFiles } = await build(`window.lazyModuleResolver['${name}'](require('${relative(tmp, m)}'))`);
     for (const file of outputFiles) {
-      const key = basename(m).replace(/\.[tj]sx?$/, '.js');
-      vfs[key] = file.text;
-      hashes[key] = sha1(file.text).substring(0, 8);
-      logger.info('+ %s-%s: %s', key.split('.lazy.')[0], hashes[key].substring(0, 6), size(file.text.length));
-      newFiles.push(key);
-      totalSize += file.text.length;
+      addFile(basename(m).replace(/\.[tj]sx?$/, '.js'), file.text);
     }
+  }
+  for (const lang in global.Hydro.locales) {
+    if (!/^[a-zA-Z_]+$/.test(lang)) continue;
+    const str = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
+    addFile(`lang-${lang}.js`, str);
   }
   const entry = await build([
     `window.lazyloadMetadata = ${JSON.stringify(hashes)};`,
@@ -103,10 +111,8 @@ export async function buildUI() {
   ].join('\n'));
   const pages = entry.outputFiles.map((i) => i.text);
   const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};${pages.join('\n')}`;
-  vfs['entry.js'] = str;
-  UiContextBase.constantVersion = hashes['entry.js'] = sha1(str).substring(0, 8);
-  logger.info('+ %s-%s: %s', 'entry', hashes['entry.js'].substring(0, 6), size(str.length));
-  totalSize += str.length;
+  addFile('entry.js', str);
+  UiContextBase.constantVersion = hashes['entry.js'];
   for (const key in vfs) {
     if (newFiles.includes(key)) continue;
     delete vfs[key];
@@ -132,6 +138,7 @@ class UiConstantsHandler extends Handler {
 export async function apply(ctx: Context) {
   ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
+  ctx.Route('constant', '/resource/:version/:name', UiConstantsHandler);
   ctx.on('app/started', updateLogo);
   ctx.on('app/started', buildUI);
   const debouncedBuildUI = debounce(buildUI, 2000, { trailing: true });

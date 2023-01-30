@@ -73,7 +73,9 @@ export class Loader {
                 const original = plugin.apply;
                 const apply = (...args) => {
                     const start = Date.now();
-                    const result = Promise.resolve(original(...args)).catch((e) => logger.error(e));
+                    const result = Promise.resolve()
+                        .then(() => original(...args))
+                        .catch((e) => logger.error(e));
                     Promise.race([
                         result,
                         new Promise((resolve) => {

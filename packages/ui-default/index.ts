@@ -78,24 +78,11 @@ class MarkdownHandler extends Handler {
   }
 }
 
-class ResourceHandler extends Handler {
+class SWConfigHandler extends Handler {
   noCheckPermView = true;
 
-  async prepare() {
-    this.response.addHeader('Cache-Control', 'public, max-age=86400');
-  }
-}
-
-class LanguageHandler extends ResourceHandler {
-  async all({ lang }) {
-    if (!global.Hydro.locales[lang]) lang = SystemModel.get('server.language');
-    this.response.body = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
-    this.response.type = 'application/javascript';
-  }
-}
-
-class SWConfigHandler extends ResourceHandler {
   async get() {
+    this.response.addHeader('Cache-Control', 'public, max-age=86400');
     this.response.body = {
       preload: SystemModel.get('ui-default.preload'),
       hosts: [
@@ -174,7 +161,6 @@ export function apply(ctx: Context) {
   ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
-  ctx.Route('lang', '/l/:lang', LanguageHandler);
   ctx.Route('sw_config', '/sw-config', SWConfigHandler);
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.plugin(require('./backendlib/builder'));

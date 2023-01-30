@@ -37,10 +37,10 @@
     {% endif %}
   </style>
   {% if process.env.DEV %}
-    <link rel="stylesheet" media="all" href="/default.theme.css">
+    <script src="/default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
+    <link rel="stylesheet" media="all" href="/theme.css?version={{ global.Hydro.version['ui-default'] }}">
   {% else %}
-    <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}default-{{ global.Hydro.version['ui-default'] }}.theme.css">
-    <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}hydro.css">
+    <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}theme-{{ global.Hydro.version['ui-default'] }}.css">
   {% endif %}
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
     <script>
@@ -64,11 +64,11 @@
       var UiContext = '{{ UiContext|json|jsesc|safe }}';
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
-    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}l/{{ _('__id') }}"></script>
-    <script src="{{ UiContext.cdn_prefix }}default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
     {% if process.env.DEV %}
+      <script type="text/javascript" src="/resource/hash/lang-{{ _('__id') }}.js?version={{ global.Hydro.version['ui-default'] }}"></script>
       <script type="text/javascript" src="/hydro.js?version={{ global.Hydro.version['ui-default'] }}"></script>
     {% else %}
+      <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
       <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
     {% endif %}
   {% endif %}

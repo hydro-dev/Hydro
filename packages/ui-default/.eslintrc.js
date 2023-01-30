@@ -60,6 +60,7 @@ module.exports = {
     '@typescript-eslint/return-await': 'off',
     '@typescript-eslint/no-shadow': 'warn',
     'no-shadow': 'off',
+    'guard-for-in': 'off',
     '@typescript-eslint/quotes': ['warn', 'single', { avoidEscape: true }],
 
     // FIXME A bug with eslint-parser

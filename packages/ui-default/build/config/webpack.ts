@@ -190,9 +190,11 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         automaticNameDelimiter: '-',
         cacheGroups: {
           style: {
-            test: /\.(css|styl|less|s[ac]ss)$/,
             priority: 99,
-            name: 'style',
+            name: 'theme',
+            type: 'css/mini-extract',
+            chunks: 'all',
+            enforce: true,
           },
           vendors: {
             test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
