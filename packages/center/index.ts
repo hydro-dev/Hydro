@@ -63,8 +63,9 @@ class DataReportHandler extends Handler {
                 sandbox: payload.sandbox,
                 dbVersion: payload.dbVersion,
             },
+            $setOnInsert: { init: new Date() },
         }, { upsert: true });
-        bus.emit('center/report', this, installId, old, payload);
+        this.ctx.emit('center/report', this, installId, old, payload);
         this.response.body = { code: 0 };
     }
 }
