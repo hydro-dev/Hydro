@@ -390,8 +390,6 @@ export function Connection(
             await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
-        } finally {
-            disposables.forEach((d) => d());
         }
     });
     return router.disposeLastOp;

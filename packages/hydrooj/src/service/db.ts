@@ -67,7 +67,7 @@ class MongoService {
             const coll = this.db.collection(c.name);
             const indexes = await coll.listIndexes().toArray();
             for (const i of indexes) {
-                if (!i.expireAfterSeconds) continue;
+                if (typeof i.expireAfterSeconds !== 'number') continue;
                 const key = Object.keys(i.key)[0];
                 await coll.deleteMany({ [key]: { $lt: new Date(Date.now() - i.expireAfterSeconds * 1000) } });
             }

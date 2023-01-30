@@ -1,4 +1,5 @@
 import { hostname } from 'os';
+import cac from 'cac';
 import { FilterQuery, ObjectID } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
@@ -11,6 +12,7 @@ import db from '../service/db';
 const logger = new Logger('model/task');
 const coll = db.collection('task');
 const collEvent = db.collection('event');
+const argv = cac().parse();
 
 async function getFirst(query: FilterQuery<Task>) {
     if (process.env.CI) return null;
@@ -133,6 +135,7 @@ export async function apply(ctx: Context) {
                 { expire: { $gt: new Date() }, ack: { $nin: [id] } },
                 { $push: { ack: id } },
             );
+            if (argv.options.showEvent) logger.info('Event: %o', res.value);
             // eslint-disable-next-line no-await-in-loop
             await (res.value ? handleEvent(res.value) : sleep(500));
         }

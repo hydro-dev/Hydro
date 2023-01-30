@@ -71,7 +71,6 @@ const build = async (contents: string) => {
 };
 
 export async function buildUI() {
-  console.log(1, 'building');
   const start = Date.now();
   let totalSize = 0;
   const entryPoints: string[] = [];
