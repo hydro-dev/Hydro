@@ -74,5 +74,5 @@ export async function apply(ctx: Context) {
     ctx.Route('status', '/status', StatusHandler);
     ctx.Route('status_admin', '/.status', AdminStatusHandler);
     ctx.Route('status_update', '/status/update', StatusUpdateHandler);
-    await db.ensureIndexes(coll, { key: { updateAt: 1 }, expireAfterSeconds: 24 * 2600 });
+    await db.ensureIndexes(coll, { name: 'expire', key: { updateAt: 1 }, expireAfterSeconds: 24 * 2600 });
 }

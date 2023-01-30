@@ -2,6 +2,7 @@
 import {
     Collection, Db, IndexSpecification, MongoClient,
 } from 'mongodb';
+import { Time } from '@hydrooj/utils';
 import { Logger } from '../logger';
 import options from '../options';
 import * as bus from './bus';
@@ -51,11 +52,26 @@ class MongoService {
         });
         this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
+        setInterval(() => this.fixExpireAfter(), Time.hour);
     }
 
     public collection<K extends keyof Collections>(c: K): Collection<Collections[K]> {
         if (this.opts.prefix) return this.db.collection(`${this.opts.prefix}.${c}`);
         return this.db.collection(c);
+    }
+
+    public async fixExpireAfter() {
+        // Sometimes mongo's expireAfterSeconds is not working in non-replica set mode;
+        const collections = await this.db.listCollections().toArray();
+        for (const c of collections) {
+            const coll = this.db.collection(c.name);
+            const indexes = await coll.listIndexes().toArray();
+            for (const i of indexes) {
+                if (!i.expireAfterSeconds) continue;
+                const key = Object.keys(i.key)[0];
+                await coll.deleteMany({ [key]: { $lt: new Date(Date.now() - i.expireAfterSeconds * 1000) } });
+            }
+        }
     }
 
     public async ensureIndexes<T>(coll: Collection<T>, ...args: IndexSpecification[]) {

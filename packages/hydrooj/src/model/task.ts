@@ -130,7 +130,7 @@ export async function apply(ctx: Context) {
         while (true) {
             // eslint-disable-next-line no-await-in-loop
             const res = await collEvent.findOneAndUpdate(
-                { ack: { $nin: [id] } },
+                { expire: { $gt: new Date() }, ack: { $nin: [id] } },
                 { $push: { ack: id } },
             );
             // eslint-disable-next-line no-await-in-loop
