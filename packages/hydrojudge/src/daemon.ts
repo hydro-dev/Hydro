@@ -15,6 +15,7 @@
        ~                   */
 import './utils';
 
+import fs from 'fs-extra';
 import PQueue from 'p-queue';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
@@ -45,6 +46,7 @@ process.on('unhandledRejection', (reason, p) => {
 async function daemon() {
     const _hosts = getConfig('hosts');
     const queue = new PQueue({ concurrency: Infinity });
+    await fs.ensureDir(getConfig('tmp_dir'));
     queue.on('error', (e) => log.error(e));
     for (const i in _hosts) {
         _hosts[i].host ||= i;

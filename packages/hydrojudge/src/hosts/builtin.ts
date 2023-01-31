@@ -75,6 +75,7 @@ const session = {
 
 export async function postInit() {
     if (SystemModel.get('hydrojudge.disable')) return;
+    await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
         (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
