@@ -109,14 +109,6 @@ class HomeworkDetailHandler extends Handler {
         await contest.attend(domainId, tdoc.docId, this.user._id);
         this.back();
     }
-
-    @param('tid', Types.ObjectID)
-    async postDelete(domainId: string, tid: ObjectID) {
-        const tdoc = await contest.get(domainId, tid);
-        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
-        await contest.del(domainId, tid);
-        this.response.redirect = this.url('homework_main');
-    }
 }
 
 class HomeworkEditHandler extends Handler {
@@ -163,7 +155,7 @@ class HomeworkEditHandler extends Handler {
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('assign', Types.CommaSeperatedArray, true)
-    async post(
+    async postUpdate(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
@@ -207,6 +199,14 @@ class HomeworkEditHandler extends Handler {
         }
         this.response.body = { tid };
         this.response.redirect = this.url('homework_detail', { tid });
+    }
+
+    @param('tid', Types.ObjectID)
+    async postDelete(domainId: string, tid: ObjectID) {
+        const tdoc = await contest.get(domainId, tid);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        await contest.del(domainId, tid);
+        this.response.redirect = this.url('homework_main');
     }
 }
 
