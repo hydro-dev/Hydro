@@ -34,6 +34,7 @@ export default async (ctx: KoaContext, next: Next) => {
         json: (ctx.request.headers.accept || '').includes('application/json'),
         websocket: ctx.request.headers.upgrade === 'websocket',
     };
+    request.ip = request.ip.split(',')[0].trim();
     const response: HydroResponse = {
         body: {},
         type: '',

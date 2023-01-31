@@ -8,7 +8,8 @@ export default async (ctx, next) => {
     ctx.originalPath = ctx.request.path;
     ctx.path = ctx.request.path = ctx.request.path.replace(/^\/d\/[^/]+\//, '/');
     const [xff, xhost] = system.getMany(['server.xff', 'server.xhost']);
-    const ip = ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip;
+    let ip = ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip;
+    ip = ip.split(',')[0].trim();
     const host = ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host;
     const header = ctx.request.headers.authorization;
     const sid = header
