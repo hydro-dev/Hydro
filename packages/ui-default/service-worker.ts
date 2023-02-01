@@ -71,13 +71,10 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 })()));
 
 self.addEventListener('activate', (event) => {
-  const valid = [PRECACHE];
   initConfig();
-  event.waitUntil((async () => {
-    const names = await caches.keys();
-    await Promise.all(names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
-    self.clients.claim();
-  })());
+  event.waitUntil(self.clients.claim());
+  const valid = [PRECACHE];
+  caches.keys().then((names) => names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
 });
 
 async function get(request: Request) {
@@ -92,6 +89,11 @@ async function get(request: Request) {
         credentials: isResource ? 'same-origin' : 'include',
         headers: request.headers,
         body: request.body,
+        redirect: request.redirect,
+        keepalive: request.keepalive,
+        referrer: request.referrer,
+        referrerPolicy: request.referrerPolicy,
+        signal: request.signal,
       });
       if (r.ok) {
         console.log('Load success from ', source.toString());
@@ -145,7 +147,14 @@ self.addEventListener('fetch', (event: FetchEvent) => {
       console.log(`Caching ${event.request.url}`);
       const [cache, response] = await Promise.all([
         caches.open(PRECACHE),
-        fetch(url, { headers: event.request.headers }), // Fetch from url to prevent opaque response
+        fetch(url, {
+          headers: event.request.headers,
+          redirect: event.request.redirect,
+          keepalive: event.request.keepalive,
+          referrer: event.request.referrer,
+          referrerPolicy: event.request.referrerPolicy,
+          signal: event.request.signal,
+        }), // Fetch from url to prevent opaque response
       ]);
       if (response.ok) {
         cache.put(url, response.clone());
