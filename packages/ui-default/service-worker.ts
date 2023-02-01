@@ -50,7 +50,7 @@ interface ServiceWorkerConfig {
 let config: ServiceWorkerConfig = null;
 
 function initConfig() {
-  config = JSON.parse(new URL(location).searchParams.get('config'));
+  config = JSON.parse(new URLSearchParams(location.search).get('config'));
   config.hosts ||= [];
   if (!config.domains?.length) config.domains = [location.host];
   console.log('Config:', config);
