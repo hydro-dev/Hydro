@@ -363,7 +363,7 @@ class HomeSettingsHandler extends Handler {
             if (val !== undefined) $set[key] = val;
         }
         for (const key in booleanKeys) if (!args[key]) $set[key] = false;
-        await setter($set);
+        if (Object.keys($set).length) await setter($set);
         if (args.viewLang && args.viewLang !== this.session.viewLang) this.session.viewLang = '';
         this.back();
     }
