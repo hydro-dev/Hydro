@@ -50,6 +50,15 @@ export interface Types {
     AnyOf: <T extends Type<any>>(...type: T[]) => (T extends Type<infer R> ? Type<R> : never);
 }
 
+const basicString = (regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
+    convert || ((v) => v.toString().trim()),
+    (v) => {
+        const res = v.toString().trim();
+        if (regex && !regex.test(res)) return false;
+        if (cb && !cb(res)) return false;
+        return !!res.length;
+    },
+] as [(v) => string, (v) => boolean];
 const saslprepString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
     convert || ((v) => saslprep(v.toString().trim())),
     (v) => {
@@ -65,20 +74,20 @@ const saslprepString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean,
 ] as [(v) => string, (v) => boolean];
 
 export const Types: Types = {
-    Content: [(v) => v.toString().trim(), (v) => v && v.toString().trim().length < 65536],
+    Content: [(v) => v.toString().trim(), (v) => v?.toString()?.trim() && v.toString().trim().length < 65536],
     Key: saslprepString(/^[a-zA-Z0-9-_]+$/),
     /** @deprecated */
     Name: saslprepString(/^.{1,255}$/),
     Filename: saslprepString(/^[^\\/?#~!|*]{1,255}$/, (i) => !['con', '.', '..'].includes(i)),
     UidOrName: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2}|-?[0-9]+)$/),
     Username: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2})$/),
-    Password: saslprepString(/^.{6,255}$/),
+    Password: basicString(/^.{6,255}$/),
     ProblemId: saslprepString(/^[a-zA-Z0-9]+$/i, () => true, (s) => (Number.isSafeInteger(+s) ? +s : s)),
     Email: saslprepString(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i),
     DomainId: saslprepString(/^[a-zA-Z][a-zA-Z0-9_]{3,31}$/),
     Role: saslprepString(/^[_0-9A-Za-z\u4e00-\u9fa5]{1,31}$/i),
-    Title: saslprepString(/^.{1,64}$/),
-    String: [(v) => v.toString(), null],
+    Title: basicString(/^.{1,64}$/),
+    String: basicString(),
 
     Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],
     UnsignedInt: [(v) => +v, (v) => /^(-0|\+?[0-9]+)$/.test(v.toString().trim()) && isSafeInteger(+v)],
