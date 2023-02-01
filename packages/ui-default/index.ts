@@ -78,24 +78,6 @@ class MarkdownHandler extends Handler {
   }
 }
 
-class SWConfigHandler extends Handler {
-  noCheckPermView = true;
-
-  async get() {
-    this.response.addHeader('Cache-Control', 'public, max-age=86400');
-    this.response.body = {
-      preload: SystemModel.get('ui-default.preload'),
-      hosts: [
-        `http://${this.request.host}`,
-        `https://${this.request.host}`,
-        SystemModel.get('server.url'),
-        SystemModel.get('server.cdn'),
-      ],
-      domains: SystemModel.get('ui-default.domains') || [],
-    };
-  }
-}
-
 class SystemConfigSchemaHandler extends Handler {
   async get() {
     const schema = convert(Schema.intersect(SystemSettings) as any, true);
@@ -162,7 +144,6 @@ export function apply(ctx: Context) {
   ctx.Route('set_legacy', '/legacy', LegacyModeHandler);
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
-  ctx.Route('sw_config', '/sw-config', SWConfigHandler);
   ctx.Route('media', '/media', RichMediaHandler);
   ctx.plugin(require('./backendlib/builder'));
   ctx.on('handler/after/DiscussionRaw', async (that) => {
@@ -170,5 +151,17 @@ export function apply(ctx: Context) {
       that.response.type = 'text/html';
       that.response.body = await markdown.render(that.response.body);
     }
+  });
+  ctx.on('handler/after', async (that) => {
+    that.UiContext.SWConfig = {
+      preload: SystemModel.get('ui-default.preload'),
+      hosts: [
+        `http://${that.request.host}`,
+        `https://${that.request.host}`,
+        SystemModel.get('server.url'),
+        SystemModel.get('server.cdn'),
+      ],
+      domains: SystemModel.get('ui-default.domains') || [],
+    };
   });
 }

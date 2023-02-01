@@ -27,9 +27,11 @@ console.log(
 `,
 );
 
+window.UiContext = JSON.parse(window.UiContext);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+    const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
+    navigator.serviceWorker.register(`/service-worker.js?config=${encodedConfig}`).then((registration) => {
       console.log('SW registered: ', registration);
     }).catch((registrationError) => {
       console.log('SW registration failed: ', registrationError);
@@ -38,8 +40,6 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  window.UiContext = JSON.parse(window.UiContext);
-
   const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
   $('body').prepend(PageLoader);
   $('.page-loader').fadeIn(500);

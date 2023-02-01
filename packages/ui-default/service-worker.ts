@@ -49,20 +49,20 @@ interface ServiceWorkerConfig {
 }
 let config: ServiceWorkerConfig = null;
 
-async function initConfig() {
-  const res = await fetch('/sw-config');
-  config = await res.json();
+function initConfig() {
+  config = JSON.parse(new URL(location).searchParams.get('config'));
   config.hosts ||= [];
   if (!config.domains?.length) config.domains = [location.host];
+  console.log('Config:', config);
 }
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
-  const [cache, manifest] = await Promise.all([
-    caches.open(PRECACHE),
-    fetch('/manifest.json').then((res) => res.json()),
-    initConfig(),
-  ]);
+  initConfig();
   if (process.env.NODE_ENV === 'production' && config?.preload) {
+    const [cache, manifest] = await Promise.all([
+      caches.open(PRECACHE),
+      fetch('/manifest.json').then((res) => res.json()),
+    ]);
     const files = Object.values(manifest).filter(shouldPreCache)
       .map((i: string) => new URL(i, config.preload).toString());
     await cache.addAll(files); // NOTE: CORS header
@@ -72,12 +72,9 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 
 self.addEventListener('activate', (event) => {
   const valid = [PRECACHE];
+  initConfig();
   event.waitUntil((async () => {
-    const [names] = await Promise.all([
-      caches.keys(),
-      initConfig(),
-    ]);
-    console.log('Config: ', config);
+    const names = await caches.keys();
     await Promise.all(names.filter((name) => !valid.includes(name)).map((p) => caches.delete(p)));
     self.clients.claim();
   })());
@@ -94,6 +91,7 @@ async function get(request: Request) {
         method: request.method,
         credentials: isResource ? 'same-origin' : 'include',
         headers: request.headers,
+        body: request.body,
       });
       if (r.ok) {
         console.log('Load success from ', source.toString());
