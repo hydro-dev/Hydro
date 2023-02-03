@@ -199,7 +199,7 @@ export class Handler extends HandlerCommon {
     async onerror(error: HydroError) {
         error.msg ||= () => error.message;
         if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
-        if (!(error instanceof NotFoundError)) {
+        if (!(error instanceof NotFoundError) && !('nolog' in error)) {
             // eslint-disable-next-line max-len
             logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
             if (error.stack) logger.error(error.stack);
