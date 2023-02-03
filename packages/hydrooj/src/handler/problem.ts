@@ -506,7 +506,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (config.type === 'objective') {
             lang = '_';
-        } else if ((config.langs && !config.langs.includes(lang)) || setting.langs[lang].disabled) {
+        } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
             throw new ProblemNotAllowLanguageError();
         }
         if (pretest) {
