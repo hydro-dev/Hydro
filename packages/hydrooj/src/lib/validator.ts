@@ -50,7 +50,7 @@ export interface Types {
     AnyOf: <T extends Type<any>>(...type: T[]) => (T extends Type<infer R> ? Type<R> : never);
 }
 
-const basicString = (regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
+const basicString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
     convert || ((v) => v.toString().trim()),
     (v) => {
         const res = v.toString().trim();
