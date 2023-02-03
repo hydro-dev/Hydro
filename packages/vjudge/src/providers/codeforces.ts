@@ -283,7 +283,10 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             ? '/problemset/submit'
             : `/gym/${contestId}/submit`);
         // TODO check submit time to ensure submission
-        const { text: submit } = await this.post(`/${type !== 'GYM' ? 'problemset' : `gym/${contestId}`}/submit?csrf_token=${csrf}`).send({
+        const endpoint = type === 'GYM'
+            ? `/gym/${contestId}/submit?csrf_token=${csrf}`
+            : `/problemset/submit/${contestId}/${problemId}?csrf_token=${csrf}`;
+        const { text: submit } = await this.post(endpoint).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
@@ -298,6 +301,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
                     submittedProblemCode: contestId + problemId,
                     sourceCodeConfirmed: true,
                 } : {
+                    contestId,
                     submittedProblemIndex: problemId,
                 },
         });
