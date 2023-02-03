@@ -40,6 +40,15 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.7.2 / UI 4.47.2
+- core: 修复提交答案题
+- ui: 修复作业页面编辑与删除操作
+- vjudge: 适配 codeforces 新接口
+- core: 过滤空 `$set` 操作
+- ui: domain_dashboard 页显示域创建者
+- judge: 修复 hack
+- core: 提交时检查所选语言是否存在
+
 ### Hydro 4.7.0 / UI 4.47.0
 - core: 支持检测导致启动卡死的问题
 - core: 修复特定情况下 rating 信息无法写入的问题
