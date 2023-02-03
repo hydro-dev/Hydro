@@ -60,7 +60,14 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
     cli.command('db').action(() => {
         const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
         const url = buildUrl(JSON.parse(dbConfig));
-        child.spawn('mongo', [url], { stdio: 'inherit' });
+        try {
+            console.log('Detecting mongosh...');
+            const mongosh = child.execSync('mongosh --version').toString();
+            if (/\d+\.\d+\.\d+/.test(mongosh)) child.spawn('mongosh', [url], { stdio: 'inherit' });
+        } catch (e) {
+            console.log('Cannot run mongosh. Trying legacy mongo client...');
+            child.spawn('mongo', [url], { stdio: 'inherit' });
+        }
     });
     cli.command('backup').action(() => {
         const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');
