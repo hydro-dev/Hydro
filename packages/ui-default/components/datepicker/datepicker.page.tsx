@@ -11,13 +11,15 @@ const datepickerPage = new AutoloadPage('datepickerPage', async () => {
     flatpickr(this, { allowInput: true });
   });
   $('[data-pick-time]').each(function () {
-    if (!$(this).data('pickatime')) {
+    const $this = $(this);
+    if (!$this.data('pickatime')) {
       // eslint-disable-next-line no-new
       new Picker(this, 'pickatime', TimePicker, {
         format: 'H:i',
         editable: true,
         interval: 15,
         clear: false,
+        onSet() { $this.trigger('change'); },
       });
     }
   });
