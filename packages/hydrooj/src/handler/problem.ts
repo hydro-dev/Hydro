@@ -504,7 +504,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectID) {
         const config = this.pdoc.config;
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
-        if (config.type === 'objective') {
+        if (['submit_answer', 'objective'].includes(config.type)) {
             lang = '_';
         } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
             throw new ProblemNotAllowLanguageError();
