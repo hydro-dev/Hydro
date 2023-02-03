@@ -6,12 +6,12 @@ import AutoComplete from '.';
 import DomainSelectAutoCompleteFC from './components/DomainSelectAutoComplete';
 
 const Component = React.forwardRef((props: { value: string, multi: boolean, onChange: (v: string) => void }, ref) => {
-  const [value, setValue] = React.useState(props.value);
+  const [value, setValue] = React.useState(props.value ?? '');
   return (
     <DomainSelectAutoCompleteFC
       ref={ref as any}
       height="34px"
-      selectedKeys={value.split(',').map((i) => i.trim())}
+      selectedKeys={value.split(',').map((i) => i.trim()).filter((i) => i)}
       onChange={(v) => {
         setValue(v);
         props.onChange(v);

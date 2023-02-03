@@ -6,7 +6,7 @@ import AutoComplete from '.';
 import ProblemSelectAutoCompleteFC from './components/ProblemSelectAutoComplete';
 
 const Component = React.forwardRef<any, any>((props, ref) => {
-  const [value, setValue] = React.useState(props.value);
+  const [value, setValue] = React.useState(props.value ?? '');
   return (
     <ProblemSelectAutoCompleteFC
       ref={ref as any}
