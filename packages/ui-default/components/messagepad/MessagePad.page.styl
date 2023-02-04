@@ -20,11 +20,21 @@ $send-button-width = 50px
   overflow: auto
   height: rem($list-height)
 
-.messagepad__content
+.messagepad__header
   position: absolute
   left: rem($sidebar-width)
   right: 0
   top: 0
+  height: rem(30px)
+  padding: rem(5px)
+  text-align: center
+  border-bottom: 1px solid #eee;
+
+.messagepad__content
+  position: absolute
+  left: rem($sidebar-width)
+  right: 0
+  top: rem(30px)
   bottom: rem($input-height)
   overflow: auto
   padding: rem(30px)

@@ -90,9 +90,16 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
 
   render() {
     return (
-      <ol className="messagepad__content" ref="list">
-        {this.renderInner()}
-      </ol>
+      <>
+        <div className="messagepad__header">
+          <span className="messagepad__content__header__title">
+            {this.props.item ? `${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})` : ''}
+          </span>
+        </div>
+        <ol className="messagepad__content" ref="list">
+          {this.renderInner()}
+        </ol>
+      </>
     );
   }
 });
