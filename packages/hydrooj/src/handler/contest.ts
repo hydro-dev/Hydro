@@ -385,12 +385,12 @@ export class ContestEditHandler extends Handler {
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
-    @param('autoHide', Types.Boolean, true)
+    @param('autoHide', Types.Boolean)
     @param('assign', Types.CommaSeperatedArray, true)
     @param('lock', Types.UnsignedInt, true)
     @param('contestDuration', Types.Float, true)
     @param('maintainer', Types.NumericArray, true)
-    @param('allowViewCode', Types.Boolean, true)
+    @param('allowViewCode', Types.Boolean)
     async postUpdate(
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,

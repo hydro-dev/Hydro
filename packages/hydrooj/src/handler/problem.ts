@@ -379,7 +379,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     }
 
     @query('tid', Types.ObjectID, true)
-    @query('pjax', Types.Boolean, true)
+    @query('pjax', Types.Boolean)
     async get(...args: any[]) {
         // Navigate to current additional file download
         // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)

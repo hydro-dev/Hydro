@@ -8,7 +8,7 @@ import saslprep from 'saslprep';
 type InputType = string | number | Record<string, any> | any[];
 export type Converter<T> = (value: any) => T;
 export type Validator<Loose extends boolean = true> = (value: Loose extends true ? any : InputType) => boolean;
-export type Type<T> = readonly [Converter<T>, Validator<false>?, boolean?];
+export type Type<T> = readonly [Converter<T>, Validator<false>?, (boolean | 'convert')?];
 
 export interface Types {
     // String outputs
@@ -95,7 +95,7 @@ export const Types: Types = {
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
 
     ObjectID: [(v) => new ObjectID(v), ObjectID.isValid],
-    Boolean: [(v) => v && !['false', 'off'].includes(v), null, true],
+    Boolean: [(v) => !!(v && !['false', 'off'].includes(v)), null, 'convert'],
     Date: [
         (v) => {
             const d = v.split('-');

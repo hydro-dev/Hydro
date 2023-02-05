@@ -297,7 +297,7 @@ class SystemUserPrivHandler extends SystemHandler {
     @requireSudo
     @param('uid', Types.Int)
     @param('priv', Types.UnsignedInt)
-    @param('system', Types.Boolean, true)
+    @param('system', Types.Boolean)
     async post(domainId: string, uid: number, priv: number, editSystem: boolean) {
         if (!editSystem) {
             const udoc = await user.getById(domainId, uid);

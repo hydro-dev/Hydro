@@ -9,7 +9,7 @@ type ClassDecorator = <T extends new (...args: any[]) => any>(Class: T) => T ext
 export interface ParamOption<T> {
     name: string,
     source: 'all' | 'get' | 'post' | 'route',
-    isOptional?: boolean,
+    isOptional?: boolean | 'convert',
     convert?: Converter<T>,
     validate?: Validator,
 }
@@ -60,6 +60,8 @@ function _descriptor(v: ParamOption<any>) {
                         if (item.validate && !item.validate(value)) throw new ValidationError(item.name);
                         if (item.convert) c.push(item.convert(value));
                         else c.push(value);
+                    } else if (item.isOptional === 'convert') {
+                        c.push(item.convert ? item.convert(value) : value);
                     } else c.push(undefined);
                 }
                 return originalMethod.call(this, ...c);

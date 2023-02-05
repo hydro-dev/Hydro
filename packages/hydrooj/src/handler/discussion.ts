@@ -358,7 +358,7 @@ class DiscussionRawHandler extends DiscussionHandler {
     @param('drid', Types.ObjectID, true)
     @param('drrid', Types.ObjectID, true)
     @param('time', Types.UnsignedInt, true)
-    @param('all', Types.Boolean, true)
+    @param('all', Types.Boolean)
     async get(domainId: string, did: ObjectID, drid: ObjectID, drrid: ObjectID, ts: number, all = false) {
         if (all) {
             this.response.body.history = await discussion.getHistory(domainId, drrid || drid || did);

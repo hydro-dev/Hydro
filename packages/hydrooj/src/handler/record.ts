@@ -32,7 +32,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
     @param('lang', Types.String, true)
     @param('status', Types.Int, true)
     @param('fullStatus', Types.Boolean)
-    @param('allDomain', Types.Boolean, true)
+    @param('allDomain', Types.Boolean)
     async get(
         domainId: string, page = 1, pid?: string | number, tid?: ObjectID,
         uidOrName?: string, lang?: string, status?: number, full = false,
