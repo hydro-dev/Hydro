@@ -279,31 +279,23 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
         const [type, contestId, problemId] = parseProblemId(id);
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken(type !== 'GYM'
-            ? '/problemset/submit'
-            : `/gym/${contestId}/submit`);
-        // TODO check submit time to ensure submission
         const endpoint = type === 'GYM'
-            ? `/gym/${contestId}/submit?csrf_token=${csrf}`
-            : `/problemset/submit/${contestId}/${problemId}?csrf_token=${csrf}`;
-        const { text: submit } = await this.post(endpoint).send({
+            ? `/gym/${contestId}/submit`
+            : `/problemset/submit/${contestId}/${problemId}`;
+        const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
+        // TODO check submit time to ensure submission
+        const { text: submit } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
             source: code,
-            tabsize: 4,
+            tabSize: 4,
             sourceFile: '',
             ftaa,
             bfaa,
             _tta: this.tta(this.getCookie('39ce7')),
-            ...(type !== 'GYM')
-                ? {
-                    submittedProblemCode: contestId + problemId,
-                    sourceCodeConfirmed: true,
-                } : {
-                    contestId,
-                    submittedProblemIndex: problemId,
-                },
+            contestId,
+            submittedProblemIndex: problemId,
         });
         const { window: { document: statusDocument } } = new JSDOM(submit);
         const message = Array.from(statusDocument.querySelectorAll('.error'))
