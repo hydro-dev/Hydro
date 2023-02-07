@@ -17,6 +17,7 @@ import {
     UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
+import serializer from '../lib/serializer';
 import { Types } from '../lib/validator';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
@@ -109,12 +110,6 @@ wsServer.on('error', (error) => {
 });
 
 const ignoredLimit = `,${argv.options.ignoredLimit},`;
-const serializer = (showDisplayName = false) => (k: string, v: any) => {
-    if (k.startsWith('_') && k !== '_id') return undefined;
-    if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
-    if (v instanceof User && !showDisplayName) delete v.displayName;
-    return v;
-};
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
@@ -336,7 +331,9 @@ export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer(this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME))));
+        this.conn.send(JSON.stringify(data, serializer({
+            showDisplayName: this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
+        })));
     }
 
     close(code: number, reason: string) {
