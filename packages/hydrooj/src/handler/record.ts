@@ -1,4 +1,6 @@
-import { omit, pick, throttle } from 'lodash';
+import {
+    omit, pick, throttle, uniqBy,
+} from 'lodash';
 import { FilterQuery, ObjectID } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError,
@@ -91,8 +93,8 @@ class RecordListHandler extends ContestDetailBaseHandler {
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
                 canViewProblem
-                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false)
-                    : Object.fromEntries([rdocs.map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])]),
+                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false, problem.PROJECTION_LIST)
+                    : Object.fromEntries(uniqBy(rdocs, 'pid').map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])),
             ]);
         this.response.body = {
             page,
