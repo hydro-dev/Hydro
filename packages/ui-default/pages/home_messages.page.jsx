@@ -29,6 +29,7 @@ const page = new NamedPage('home_messages', () => {
     const { Provider, store } = await loadReactRedux(MessagePadReducer);
 
     reduxStore = store;
+    window.store = reduxStore;
 
     const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
     sock.onmessage = (message) => {
