@@ -1,3 +1,5 @@
+/* eslint-disable import/order */
+/* eslint-disable import/first */
 export * from './utils';
 export { default as Notification } from './components/notification';
 export * from './components/dialog';
@@ -53,12 +55,11 @@ declare global {
     lazyModuleResolver: Record<string, any>;
   }
 
-  let UserContext: Record<string, any>;
-  let UiContext: Record<string, any>;
+  let UserContext: Record<string, any>; // eslint-disable-line
+  let UiContext: Record<string, any>; // eslint-disable-line
 }
 
 // Below are old version api compat
-/* eslint-disable import/order */
 import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';

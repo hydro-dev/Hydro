@@ -16,7 +16,7 @@ export interface EventMap extends Record<string, any> {
 }
 
 function getHooks<K extends keyof EventMap>(name: K) {
-  const hooks = _hooks[name] || (_hooks[name] = []);
+  const hooks = (_hooks[name] ||= []);
   if (hooks.length >= 2048) {
     console.warn(
       'max listener count (2048) for event "%s" exceeded, which may be caused by a memory leak',

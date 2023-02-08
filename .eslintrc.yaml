@@ -1,18 +1,6 @@
 root: true
 extends:
-  - airbnb-base
-  - airbnb-typescript/base
-env:
-  es6: true
-globals:
-  Atomics: readonly
-  SharedArrayBuffer: readonly
-  BigInt: readonly
-parser: '@typescript-eslint/parser'
-plugins:
-  - '@typescript-eslint'
-  - simple-import-sort
-  - eslint-plugin-import
+  - '@hydrooj/eslint-config'
 ignorePatterns:
   - public/**/*.js
   - packages/ui-default
@@ -36,116 +24,7 @@ overrides:
       LOCALES: true
       LANGS: true
 rules:
-  '@typescript-eslint/no-shadow': 1
-
-  function-call-argument-newline: 0
-  react/function-component-definition: 0
-  '@typescript-eslint/dot-notation': 0
-  '@typescript-eslint/no-implied-eval': 0
-  '@typescript-eslint/no-throw-literal': 0
-  '@typescript-eslint/return-await': 0
-
-  no-implicit-coercion:
-    - warn
-    - allow: ["!!", "+"]
-  no-extra-boolean-cast:
-    - warn
-    - enforceForLogicalOperands: true
-  no-multi-str: 0
   '@typescript-eslint/no-invalid-this': 1
-  '@typescript-eslint/type-annotation-spacing': 1 
-  '@typescript-eslint/indent':
-    - warn
-    - 4
-  '@typescript-eslint/lines-between-class-members':
-    - error
-    - always
-    - exceptAfterSingleLine: true
-  '@typescript-eslint/naming-convention':
-    - warn
-    - selector: default
-      format: [camelCase]
-      leadingUnderscore: allowSingleOrDouble
-    - selector: default
-      filter:
-        regex: '^([A-Z]|_+id|__call__)$'
-        match: true
-      format: null
-    - selector: variable
-      modifiers: [destructured]
-      filter:
-        regex: '^_id$'
-        match: false
-      format: [camelCase, PascalCase, UPPER_CASE, snake_case]
-    - selector: variable
-      format: [camelCase, PascalCase, UPPER_CASE]
-      modifiers: [const]
-      leadingUnderscore: allowSingleOrDouble
-    - selector: property
-      format: [camelCase, PascalCase, UPPER_CASE, snake_case]
-      leadingUnderscore: allowSingleOrDouble
-    - selector: [function, parameter, parameterProperty, objectLiteralMethod]
-      filter:
-        regex: __call__
-        match: false
-      format: [camelCase, PascalCase]
-      leadingUnderscore: allowSingleOrDouble
-    - selector: [objectLiteralProperty]
-      filter:
-        regex: '^[\d]+$'
-        match: true
-      format: null
-    - selector: [typeProperty, objectLiteralProperty]
-      modifiers: [requiresQuotes]
-      format: null
-    - selector: enum
-      format: [PascalCase]
-    - selector: [class, interface, typeAlias, enumMember]
-      format: [PascalCase, camelCase, UPPER_CASE]
-    - selector: typeParameter
-      format: [camelCase, PascalCase, UPPER_CASE]
-
-  '@typescript-eslint/no-redeclare': 0
-  '@typescript-eslint/default-param-last': 0
-  
-
-  class-methods-use-this: 0
-  global-require: 0
-  guard-for-in: 0
-  implicit-arrow-linebreak: 0
-  import/extensions: 0
-  import/newline-after-import: 0
-  import/no-cycle: 0
-  import/no-extraneous-dependencies: 0
-  import/no-named-as-default: 0
-  import/prefer-default-export: 0
-  logical-assignment-operators:
-    - warn
-    - always
-    - enforceForIfStatements: true
-  max-classes-per-file: 0
-  max-len:
-    - warn
-    - 150
-  newline-per-chained-call: 0
-  no-bitwise: 0
-  no-console: 0
-  no-continue: 0
-  no-extend-native: 0
-  no-empty:
-    - warn
-    - allowEmptyCatch: true
-  no-multi-assign: 0
-  no-nested-ternary: 0
-  no-param-reassign: 0
-  no-plusplus: 0
-  no-restricted-syntax: 0
-  no-return-await: 0
-  no-shadow: 0
-  no-underscore-dangle: 0
-  no-unmodified-loop-condition: 1
-  prefer-destructuring: 0
-  function-paren-newline: 0
   simple-import-sort/imports:
    - warn
    - groups:
@@ -156,7 +35,6 @@ rules:
       - "^@?hydrooj"
       - "^"
       - "^\\."
-  simple-import-sort/exports: 0
 settings:
   import/parsers:
     '@typescript-eslint/parser':

@@ -34,7 +34,7 @@ const votePage = new AutoloadPage('votePage', () => {
         setVoteState($container, data.vote, data.user_vote);
       })
       .catch((e) => {
-        Notification.error(`Failed to vote: ${ e.message}`);
+        Notification.error(`Failed to vote: ${e.message}`);
       });
     return false;
   });
