@@ -86,7 +86,7 @@ export default new AutoloadPage('user_verify', () => {
     const { authn, tfa } = info.uname || info.mail;
     if (authn || tfa) {
       let action = (authn && tfa) ? await chooseAction(true) : '';
-      if (!action) action = tfa ? await chooseAction(false) : 'webauthn';
+      action ||= tfa ? await chooseAction(false) : 'webauthn';
       if (action === 'webauthn') {
         const challenge = await verifywebauthn($form);
         if (challenge) $form['authnChallenge'].value = challenge;

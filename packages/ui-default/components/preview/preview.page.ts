@@ -120,7 +120,7 @@ export async function previewFile(ev?, type = '') {
   if (ev) {
     const link = $(ev.currentTarget).find('a').attr('href');
     if (!link) return null;
-    if (!type) type = ev.currentTarget.getAttribute('data-preview');
+    type ||= ev.currentTarget.getAttribute('data-preview');
     const ext = filename.split('.').pop();
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
       const action = await new ActionDialog({

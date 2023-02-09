@@ -771,13 +771,9 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             }
         }
         for (const entry of files) {
-            if (entry.type === 'testdata') {
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addTestdata(domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
-            } else {
-                // eslint-disable-next-line no-await-in-loop
-                await problem.addAdditionalFile(domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
-            }
+            const method = entry.type === 'testdata' ? 'addTestdata' : 'addAdditionalFile';
+            // eslint-disable-next-line no-await-in-loop
+            await problem[method](domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
         }
         this.back();
     }

@@ -49,7 +49,7 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
         const data = JSON.parse(msg.content);
         const str = i18n(data.message).replace(/\{([^{}]+)\}/g, (match, key) => `%placeholder%${key}%placeholder%`);
         const arr = str.split('%placeholder%');
-        data.params = data.params || {};
+        data.params ||= {};
         for (let i = 1; i < arr.length; i += 2) {
           if (arr[i].endsWith(':link')) {
             const link = data.params[arr[i].split(':link')[0]];

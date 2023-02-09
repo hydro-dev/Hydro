@@ -59,7 +59,6 @@ function renderInline(text) {
   return md.renderInline(text);
 }
 
-// eslint-disable-next-line no-multi-assign
 global.Hydro.lib.markdown = module.exports = {
   md, plugin, render, renderInline,
 };

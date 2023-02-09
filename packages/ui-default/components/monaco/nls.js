@@ -16,7 +16,7 @@ function format(message, args) {
 
 export const getConfiguredDefaultLocale = () => 'zh';
 
-let CURRENT_LOCALE_DATA = {};
+let CURRENT_LOCALE_DATA = {}; // eslint-disable-line @typescript-eslint/naming-convention
 
 function find(path, message) {
   for (const key of Object.keys(CURRENT_LOCALE_DATA)) {
