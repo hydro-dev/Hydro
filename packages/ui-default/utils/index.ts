@@ -67,7 +67,6 @@ export async function pipeStream(read, write, abort) {
 }
 
 // https://github.com/andrasq/node-mongoid-js/blob/master/mongoid.js
-/* eslint-disable */
 export function mongoId(idstring: string) {
   if (typeof idstring !== 'string') idstring = String(idstring);
   return {
@@ -77,7 +76,6 @@ export function mongoId(idstring: string) {
     sequence: parseInt(idstring.slice(18, 18 + 6), 16),
   };
 }
-/* eslint-enable */
 
 const loaded = {};
 

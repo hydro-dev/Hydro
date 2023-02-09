@@ -135,7 +135,6 @@ class RichMediaHandler extends Handler {
   }
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export function apply(ctx: Context) {
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);

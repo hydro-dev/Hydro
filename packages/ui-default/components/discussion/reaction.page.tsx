@@ -38,7 +38,6 @@ function Reaction({ payload, ele }) {
   const [finish, updateFinish] = React.useState(false);
   if (finish) setTimeout(() => updateFinish(false), 1000);
   return (
-    // eslint-disable-next-line no-nested-ternary
     <Popover usePortal interactionKind="hover" isOpen={finish ? false : (focus ? true : undefined)}>
       <span className="icon icon-emoji"></span>
       <div>

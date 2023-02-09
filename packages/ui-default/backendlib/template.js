@@ -13,10 +13,9 @@ const { buildContent, avatar } = global.Hydro.lib;
 
 let { template } = argv.options;
 if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
-else if (template) template = findFileSync(template);
+else template &&= findFileSync(template);
 
 class Loader extends nunjucks.Loader {
-  // eslint-disable-next-line class-methods-use-this
   getSource(name) {
     if (!template) {
       if (!global.Hydro.ui.template[name]) throw new Error(`Cannot get template ${name}`);
@@ -116,13 +115,7 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
   if ((obj || {})._original) obj = obj._original;
   if (obj === undefined || obj === null) return undefined;
   if (typeof obj[val] === 'function') {
-    const fn = function () {
-      // eslint-disable-next-line
-      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        // eslint-disable-next-line prefer-rest-params
-        args[_key2] = arguments[_key2];
-      }
-      // eslint-disable-next-line block-scoped-var
+    const fn = function (...args) {
       return obj[val].call(obj, ...args);
     };
     fn._original = obj[val];
@@ -169,7 +162,6 @@ env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template)
 env.addGlobal('templateExists', (name) => !!global.Hydro.ui.template[name]);
 
 async function render(name, state) {
-  // eslint-disable-next-line no-return-await
   return await new Promise((resolve, reject) => {
     env.render(name, {
       page_name: name.split('.')[0],

@@ -31,7 +31,6 @@ loadLanguages();
 languageMeta.forEach((meta) => {
   for (let i = 0; i < meta.ext.length; ++i) {
     if (Prism.languages[meta.ext[i]] !== undefined) {
-      // eslint-disable-next-line no-param-reassign
       meta.target = meta.ext[i];
       break;
     }
@@ -44,7 +43,7 @@ languageMeta.forEach((meta) => {
 // Copy to Clipboard
 Prism.plugins.toolbar.registerButton('copy-to-clipboard', (env) => {
   const linkCopy = document.createElement('a');
-  linkCopy.href = 'javascript:;'; // eslint-disable-line no-script-url
+  linkCopy.href = 'javascript:;';
   linkCopy.textContent = 'Copy';
   const clip = new Clipboard(linkCopy, { text: () => env.code });
   clip.on('success', () => {

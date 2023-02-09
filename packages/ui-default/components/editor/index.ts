@@ -26,7 +26,6 @@ export const config = {
       inlineDigit: true,
     },
     theme: {
-      // eslint-disable-next-line no-template-curly-in-string
       path: `${UiContext.cdn_prefix}vditor/dist/css/content-theme`,
       current: 'light',
     },
@@ -81,7 +80,6 @@ export default class Editor extends DOMAttachedObject {
     $dom.hide();
     origin.parentElement.appendChild(ele);
     const value = this.options.value || $dom.val();
-    // eslint-disable-next-line no-nested-ternary
     this.model = typeof model === 'string'
       ? monaco.editor.getModel(monaco.Uri.parse(model))
       || monaco.editor.createModel(value, language === 'auto' ? undefined : language, monaco.Uri.parse(model))

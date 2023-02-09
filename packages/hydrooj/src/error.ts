@@ -33,7 +33,6 @@ export class HydroError extends Error {
         this.params = params;
     }
 
-    // eslint-disable-next-line class-methods-use-this
     msg() {
         return 'HydroError';
     }

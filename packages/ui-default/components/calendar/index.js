@@ -349,7 +349,7 @@ export default class Calendar {
               };
               banner.endAt = banner.event.maskFrom.clone().subtract(1, 'day');
               banner.endSnap = true;
-              bannerSpans[i].span -= newBannerSpan.span; // eslint-disable-line no-param-reassign
+              bannerSpans[i].span -= newBannerSpan.span;
               bannerSpans.splice(i + 1, 0, newBannerSpan);
               i++;
             }

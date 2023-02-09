@@ -79,7 +79,6 @@ function resourceUrl(service: string, src: string, url: string, options) {
   return src;
 }
 
-// eslint-disable-next-line import/prefer-default-export
 export function Media(md: MarkdownIt) {
   const options = {
     url: resourceUrl,

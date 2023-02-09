@@ -26,7 +26,6 @@ class RatingCalculator {
         }
     }
 
-    // eslint-disable-next-line class-methods-use-this
     calP(a: User, b: User) {
         return 1 / (1 + 10 ** ((b.old - a.old) / 400));
     }
