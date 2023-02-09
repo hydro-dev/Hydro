@@ -89,8 +89,8 @@ function handlerInvisiblesToken(tokens, name) {
   } else if (type === 'Array') {
     for (let i = 0, l = value.length; i < l; i++) handlerInvisiblesToken(value, i);
   } else {
-    const inside = (value.inside ||= {});
-    addInvisibles(inside);
+    value.inside ||= {};
+    addInvisibles(value.inside);
   }
 }
 
