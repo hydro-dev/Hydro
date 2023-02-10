@@ -51,9 +51,9 @@ export interface Types {
 }
 
 const basicString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
-    convert || ((v) => v.toString().trim()),
+    convert || ((v) => v.toString()),
     (v) => {
-        const res = v.toString().trim();
+        const res = v.toString();
         if (regex && !regex.test(res)) return false;
         if (cb && !cb(res)) return false;
         return !!res.length;
