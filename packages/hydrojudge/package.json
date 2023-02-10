@@ -10,7 +10,7 @@
         "cac": "^6.7.14",
         "fs-extra": "^11.1.0",
         "mongodb": "^3.7.3",
-        "p-queue": "^7.3.0",
+        "p-queue": "^7.3.4",
         "schemastery": "^3.7.0",
         "shell-quote": "^1.8.0",
         "superagent": "^8.0.9",

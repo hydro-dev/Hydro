@@ -40,6 +40,15 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.7.3 / UI 4.47.3
+- core: 修复无输入自测
+- core: 修复 endpointForUser 域名不一致导致的 token 无效问题
+- core: 移除 isBinaryFile 检查
+- core: 修复 allowViewCode 设置
+- core: cli: 优先使用 mongosh
+- workspace: 提供 `@hydrooj/eslint-config` 包
+- 其他漏洞修复和体验优化
+
 ### Hydro 4.7.2 / UI 4.47.2
 - core: 修复提交答案题
 - ui: 修复作业页面编辑与删除操作
