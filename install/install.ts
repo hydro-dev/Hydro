@@ -331,7 +331,7 @@ connect-timeout = 10`);
                 pwd: password,
                 roles: [{ role: 'readWrite', db: 'hydro' }],
             })})`),
-            [`mongo 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
+            [`mongosh 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/config.json`, JSON.stringify({
                 uri: `mongodb://hydro:${password}@127.0.0.1:27017/hydro`,
             })),
