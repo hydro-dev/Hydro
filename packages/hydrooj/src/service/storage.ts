@@ -20,17 +20,6 @@ import { md5, streamToBuffer } from '../utils';
 
 const logger = new Logger('storage');
 
-interface StorageOptions {
-    endPoint: string;
-    accessKey: string;
-    secretKey: string;
-    bucket: string;
-    region?: string;
-    pathStyle: boolean;
-    endPointForUser?: string;
-    endPointForJudge?: string;
-}
-
 function parseAlternativeEndpointUrl(endpoint: string): (originalUrl: string) => string {
     if (!endpoint) return (originalUrl) => originalUrl;
     const pathonly = endpoint.startsWith('/');
@@ -71,8 +60,12 @@ const convertPath = (p: string) => {
 class RemoteStorageService {
     public client: S3Client;
     public error = '';
-    public opts: StorageOptions;
+    public bucket = 'hydro';
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+    private alternatives: Record<'user' | 'judge', S3Client> = {
+        user: null,
+        judge: null,
+    };
 
     async start() {
         try {
@@ -87,29 +80,35 @@ class RemoteStorageService {
                 endPointForUser,
                 endPointForJudge,
             } = builtinConfig.file;
-            this.opts = {
-                endPoint,
-                accessKey,
-                secretKey,
-                bucket,
+            this.bucket = bucket;
+            const base = {
                 region,
-                pathStyle,
-                endPointForUser,
-                endPointForJudge,
+                forcePathStyle: pathStyle,
+                credentials: {
+                    accessKeyId: accessKey,
+                    secretAccessKey: secretKey,
+                },
             };
             this.client = new S3Client({
-                endpoint: this.opts.endPoint,
-                region: this.opts.region,
-                forcePathStyle: this.opts.pathStyle,
-                credentials: {
-                    accessKeyId: this.opts.accessKey,
-                    secretAccessKey: this.opts.secretKey,
-                },
+                endpoint: endPoint,
+                ...base,
             });
             this.replaceWithAlternativeUrlFor = {
-                user: parseAlternativeEndpointUrl(this.opts.endPointForUser),
-                judge: parseAlternativeEndpointUrl(this.opts.endPointForJudge),
+                user: parseAlternativeEndpointUrl(endPointForUser),
+                judge: parseAlternativeEndpointUrl(endPointForJudge),
             };
+            if (/^https?:\/\//.test(endPointForUser)) {
+                this.alternatives.user = new S3Client({
+                    endpoint: endPointForUser,
+                    ...base,
+                });
+            }
+            if (/^https?:\/\//.test(endPointForJudge)) {
+                this.alternatives.judge = new S3Client({
+                    endpoint: endPointForJudge,
+                    ...base,
+                });
+            }
             logger.success('Storage connected.');
             this.error = null;
         } catch (e) {
@@ -124,7 +123,7 @@ class RemoteStorageService {
         target = convertPath(target);
         if (typeof file === 'string') file = createReadStream(file);
         const params: PutObjectCommandInput = {
-            Bucket: this.opts.bucket,
+            Bucket: this.bucket,
             Key: target,
             Body: file,
             Metadata: meta,
@@ -148,7 +147,7 @@ class RemoteStorageService {
     async get(target: string, path?: string) {
         target = convertPath(target);
         const res = await this.client.send(new GetObjectCommand({
-            Bucket: this.opts.bucket,
+            Bucket: this.bucket,
             Key: target,
         }));
         if (!res.Body) throw new Error();
@@ -175,12 +174,12 @@ class RemoteStorageService {
         else target = target.map(convertPath);
         if (typeof target === 'string') {
             return await this.client.send(new DeleteObjectCommand({
-                Bucket: this.opts.bucket,
+                Bucket: this.bucket,
                 Key: target,
             }));
         }
         return await this.client.send(new DeleteObjectsCommand({
-            Bucket: this.opts.bucket,
+            Bucket: this.bucket,
             Delete: {
                 Objects: target.map((i) => ({ Key: i })),
             },
@@ -190,7 +189,7 @@ class RemoteStorageService {
     async getMeta(target: string) {
         target = convertPath(target);
         const res = await this.client.send(new HeadObjectCommand({
-            Bucket: this.opts.bucket,
+            Bucket: this.bucket,
             Key: target,
         }));
         return {
@@ -203,8 +202,9 @@ class RemoteStorageService {
 
     async signDownloadLink(target: string, filename?: string, noExpire = false, useAlternativeEndpointFor?: 'user' | 'judge'): Promise<string> {
         target = convertPath(target);
-        const url = await getSignedUrl(this.client, new GetObjectCommand({
-            Bucket: this.opts.bucket,
+        const client = this.alternatives[useAlternativeEndpointFor] || this.client;
+        const url = await getSignedUrl(client, new GetObjectCommand({
+            Bucket: this.bucket,
             Key: target,
             ResponseContentDisposition: filename ? `attachment; filename="${encodeRFC5987ValueChars(filename)}"` : '',
         }), {
@@ -215,13 +215,14 @@ class RemoteStorageService {
     }
 
     async signUpload(target: string, size: number) {
-        const { url, fields } = await createPresignedPost(this.client, {
-            Bucket: this.opts.bucket,
+        const client = this.alternatives.user || this.client;
+        const { url, fields } = await createPresignedPost(client, {
+            Bucket: this.bucket,
             Key: target,
             Conditions: [
                 { $key: target },
                 { acl: 'public-read' },
-                { bucket: this.opts.bucket },
+                { bucket: this.bucket },
                 ['content-length-range', size - 50, size + 50],
             ],
             Fields: {
@@ -239,7 +240,7 @@ class RemoteStorageService {
         src = convertPath(src);
         target = convertPath(target);
         return await this.client.send(new CopyObjectCommand({
-            Bucket: this.opts.bucket,
+            Bucket: this.bucket,
             Key: target,
             CopySource: src,
         }));
