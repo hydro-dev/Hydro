@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
     FileLimitExceededError, FileUploadError, ProblemNotFoundError, ValidationError,
@@ -62,19 +62,19 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
 class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
-        const query: FilterQuery<TrainingDoc> = {};
+        const query: Filter<TrainingDoc> = {};
         await this.ctx.parallel('training/list', query, this);
         const [tdocs, tpcount] = await paginate(
             training.getMulti(domainId),
             page,
             system.get('pagination.training'),
         );
-        const tids: Set<ObjectID> = new Set();
+        const tids: Set<ObjectId> = new Set();
         for (const tdoc of tdocs) tids.add(tdoc.docId);
         const tsdict = {};
         let tdict = {};
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            const enrolledTids: Set<ObjectID> = new Set();
+            const enrolledTids: Set<ObjectId> = new Set();
             const tsdocs = await training.getMultiStatus(domainId, {
                 uid: this.user._id,
                 $or: [{ docId: { $in: Array.from(tids) } }, { enroll: 1 }],
@@ -97,9 +97,9 @@ class TrainingMainHandler extends Handler {
 }
 
 class TrainingDetailHandler extends Handler {
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectId)
     @param('uid', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, uid: number) {
+    async get(domainId: string, tid: ObjectId, uid: number) {
         const tdoc = await training.get(domainId, tid);
         await this.ctx.parallel('training/get', tdoc, this);
         let targetUser = this.user._id;
@@ -164,16 +164,16 @@ class TrainingDetailHandler extends Handler {
         this.response.template = 'training_detail.html';
     }
 
-    @param('tid', Types.ObjectID)
-    async postEnroll(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async postEnroll(domainId: string, tid: ObjectId) {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
         const tdoc = await training.get(domainId, tid);
         await training.enroll(domainId, tdoc.docId, this.user._id);
         this.back();
     }
 
-    @param('tid', Types.ObjectID)
-    async postDelete(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await training.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         await training.del(domainId, tid);
@@ -184,8 +184,8 @@ class TrainingDetailHandler extends Handler {
 class TrainingEditHandler extends Handler {
     tdoc: TrainingDoc;
 
-    @param('tid', Types.ObjectID, true)
-    async prepare(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    async prepare(domainId: string, tid: ObjectId) {
         if (tid) {
             this.tdoc = await training.get(domainId, tid);
             if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
@@ -202,14 +202,14 @@ class TrainingEditHandler extends Handler {
         }
     }
 
-    @param('tid', Types.ObjectID, true)
+    @param('tid', Types.ObjectId, true)
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.Content)
     @param('pin', Types.Boolean)
     @param('description', Types.Content)
     async post(
-        domainId: string, tid: ObjectID,
+        domainId: string, tid: ObjectId,
         title: string, content: string,
         _dag: string, pin = false, description: string,
     ) {
@@ -233,15 +233,15 @@ class TrainingEditHandler extends Handler {
 export class TrainingFilesHandler extends Handler {
     tdoc: TrainingDoc;
 
-    @param('tid', Types.ObjectID)
-    async prepare(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async prepare(domainId: string, tid: ObjectId) {
         this.tdoc = await training.get(domainId, tid);
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         else this.checkPerm(PERM.PERM_EDIT_TRAINING_SELF);
     }
 
-    @param('tid', Types.ObjectID)
-    async get(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async get(domainId: string, tid: ObjectId) {
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
         this.response.body = {
             tdoc: this.tdoc,
@@ -254,9 +254,9 @@ export class TrainingFilesHandler extends Handler {
         this.response.template = 'training_files.html';
     }
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectId)
     @post('filename', Types.Filename, true)
-    async postUploadFile(domainId: string, tid: ObjectID, filename: string) {
+    async postUploadFile(domainId: string, tid: ObjectId, filename: string) {
         if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
             throw new FileLimitExceededError('count');
         }
@@ -275,9 +275,9 @@ export class TrainingFilesHandler extends Handler {
         this.back();
     }
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectId)
     @post('files', Types.ArrayOf(Types.Filename))
-    async postDeleteFiles(domainId: string, tid: ObjectID, files: string[]) {
+    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
@@ -286,10 +286,10 @@ export class TrainingFilesHandler extends Handler {
     }
 }
 export class TrainingFileDownloadHandler extends Handler {
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectId)
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
-    async get(domainId: string, tid: ObjectID, filename: string, noDisposition = false) {
+    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false) {
         this.response.addHeader('Cache-Control', 'public');
         const target = `training/${domainId}/${tid}/${filename}`;
         const file = await storage.getMeta(target);

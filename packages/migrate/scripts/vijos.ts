@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-await-in-loop */
-import mongodb, { Cursor, Db } from 'mongodb';
+import mongodb, { Db, FindCursor } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
@@ -268,7 +268,7 @@ const tasks = {
     }),
 };
 
-type CursorGetter = (s: Db) => Cursor<any>;
+type CursorGetter = (s: Db) => FindCursor<any>;
 
 const cursor: NodeJS.Dict<CursorGetter> = {
     user: (s) => s.collection('user').find(),
@@ -344,8 +344,8 @@ async function fixProblem(report: Function) {
 
 function objid(ts: Date) {
     const p = Math.floor(ts.getTime() / 1000).toString(16);
-    const id = new mongodb.ObjectID();
-    return new mongodb.ObjectID(p + id.toHexString().slice(8, 8 + 6 + 4 + 6));
+    const id = new mongodb.ObjectId();
+    return new mongodb.ObjectId(p + id.toHexString().slice(8, 8 + 6 + 4 + 6));
 }
 
 // FIXME this seems not working
@@ -473,12 +473,10 @@ export async function run({
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;
-    const Database = await mongodb.MongoClient.connect(mongourl, {
-        useNewUrlParser: true, useUnifiedTopology: true,
-    });
+    const Database = await mongodb.MongoClient.connect(mongourl, {});
     const src = Database.db(name);
     await report({ progress: 0, message: 'Database connected.' });
-    const userCounter = await src.collection('system').findOne({ _id: 'user_counter' });
+    const userCounter = await src.collection<any>('system').findOne({ _id: 'user_counter' });
     if (!userCounter) {
         report({ message: 'No valid installation found' });
         return false;

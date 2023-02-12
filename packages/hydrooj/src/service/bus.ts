@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import type {
-    Db, FilterQuery, ObjectID, OnlyFieldsOfType,
+    Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
@@ -54,7 +54,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'user/delcache': (content: string | true) => void
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn
-    'domain/before-get': (query: FilterQuery<DomainDoc>) => VoidReturn
+    'domain/before-get': (query: Filter<DomainDoc>) => VoidReturn
     'domain/get': (ddoc: DomainDoc) => VoidReturn
     'domain/before-update': (domainId: string, $set: Partial<DomainDoc>) => VoidReturn
     'domain/update': (domainId: string, $set: Partial<DomainDoc>, ddoc: DomainDoc) => VoidReturn
@@ -80,7 +80,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/edit': (doc: ProblemDoc) => VoidReturn
     'problem/before-del': (domainId: string, docId: number) => VoidReturn
     'problem/del': (domainId: string, docId: number) => VoidReturn
-    'problem/list': (query: FilterQuery<ProblemDoc>, handler: any) => VoidReturn
+    'problem/list': (query: Filter<ProblemDoc>, handler: any) => VoidReturn
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
@@ -89,12 +89,12 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
     'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
-    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectID) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectId) => VoidReturn
     'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 
-    'training/list': (query: FilterQuery<TrainingDoc>, handler: any) => VoidReturn
+    'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any) => void

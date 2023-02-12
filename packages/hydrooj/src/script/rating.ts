@@ -1,7 +1,7 @@
 /* eslint-disable no-cond-assign */
 /* eslint-disable no-await-in-loop */
 import { NumericDictionary, unionWith } from 'lodash';
-import { FilterQuery } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import { Counter } from '@hydrooj/utils';
 import { Tdoc, Udoc } from '../interface';
@@ -107,7 +107,9 @@ export async function calcLevel(domainId: string, report: Function) {
     let count = 0;
     const coll = db.collection('domain.user');
     const filter = { rp: { $gt: 0 }, uid: { $nin: [0, 1], $gt: -1000 } };
-    const ducur = domain.getMultiUserInDomain(domainId, filter).project({ rp: 1 }).sort({ rp: -1 });
+    const ducur = domain.getMultiUserInDomain(domainId, filter)
+        .project<{ _id: ObjectId, rp: number }>({ rp: 1 })
+        .sort({ rp: -1 });
     let bulk = coll.initializeUnorderedBulkOp();
     for await (const dudoc of ducur) {
         count++;
@@ -122,7 +124,7 @@ export async function calcLevel(domainId: string, report: Function) {
     const levels = global.Hydro.model.builtin.LEVELS;
     bulk = coll.initializeUnorderedBulkOp();
     for (let i = 0; i < levels.length; i++) {
-        const query: FilterQuery<Udoc> = {
+        const query: Filter<Udoc> = {
             domainId,
             $and: [{ rank: { $lte: (levels[i] * count) / 100 } }],
         };
@@ -148,14 +150,14 @@ async function runInDomain(domainId: string, report: Function) {
             bulk.find({ domainId, uid: +uid }).updateOne({ $set: { [`rpInfo.${type}`]: results[type][uid] } });
             udict[+uid] += results[type][uid];
         }
-        if (bulk.length) await bulk.execute();
+        if (bulk.batches.length) await bulk.execute();
     }
     await domain.setMultiUserInDomain(domainId, {}, { rp: 0 });
     const bulk = db.collection('domain.user').initializeUnorderedBulkOp();
     for (const uid in udict) {
         bulk.find({ domainId, uid: +uid }).upsert().update({ $set: { rp: Math.max(0, udict[uid]) } });
     }
-    if (bulk.length) await bulk.execute();
+    if (bulk.batches.length) await bulk.execute();
     await calcLevel(domainId, report);
 }
 

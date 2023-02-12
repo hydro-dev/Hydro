@@ -1,6 +1,6 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import LRU from 'lru-cache';
-import { Collection, FilterQuery, ObjectID } from 'mongodb';
+import { Collection, Filter, ObjectId } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -23,7 +23,7 @@ export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
 const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
 
-export function deleteUserCache(udoc: User | Udoc | string | true | undefined | null, receiver = false) {
+export function deleteUserCache(udoc: { _id: number, uname: string, mail: string } | string | true | undefined | null, receiver = false) {
     if (!udoc) return false;
     if (!receiver) {
         bus.broadcast(
@@ -340,15 +340,15 @@ class UserModel {
         return uid;
     }
 
-    static getMulti(params: FilterQuery<Udoc> = {}, projection?: (keyof Udoc)[]) {
-        return projection ? coll.find(params).project(buildProjection(projection)) : coll.find(params);
+    static getMulti(params: Filter<Udoc> = {}, projection?: (keyof Udoc)[]) {
+        return projection ? coll.find(params).project<Udoc>(buildProjection(projection)) : coll.find(params);
     }
 
     static async getListForRender(domainId: string, uids: number[]) {
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: 1, displayName: 1 }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: true }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
@@ -409,7 +409,7 @@ class UserModel {
         const groups = await collGroup.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
         if (uid) {
             groups.push({
-                _id: new ObjectID(), domainId, uids: [uid], name: uid.toString(),
+                _id: new ObjectId(), domainId, uids: [uid], name: uid.toString(),
             });
         }
         return groups;

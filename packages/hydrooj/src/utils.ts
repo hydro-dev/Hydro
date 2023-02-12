@@ -1,6 +1,6 @@
-export function buildProjection(fields: readonly (string | number)[]): Record<string, 1> {
-    const o = {};
-    for (const k of fields) o[k] = 1;
+export function buildProjection<T extends string | number = string>(fields: readonly T[]): Record<T, true> {
+    const o: Record<T, true> = {} as any;
+    for (const k of fields) o[k] = true;
     return o;
 }
 

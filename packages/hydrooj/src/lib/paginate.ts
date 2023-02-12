@@ -1,8 +1,8 @@
-import { Cursor } from 'mongodb';
+import { FindCursor } from 'mongodb';
 import { ValidationError } from '../error';
 
 async function paginate<T>(
-    cursor: Cursor<T>, page: number, pageSize: number,
+    cursor: FindCursor<T>, page: number, pageSize: number,
 ): Promise<[docs: T[], numPages: number, count: number]> {
     if (page <= 0) throw new ValidationError('page');
     const [count, pageDocs] = await Promise.all([

@@ -1,6 +1,6 @@
 import yaml from 'js-yaml';
 import moment from 'moment-timezone';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, HomeworkNotLiveError, NotAssignedError, ValidationError,
@@ -42,8 +42,8 @@ class HomeworkMainHandler extends Handler {
 }
 
 class HomeworkDetailHandler extends Handler {
-    @param('tid', Types.ObjectID)
-    async prepare(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async prepare(domainId: string, tid: ObjectId) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         if (tdoc.assign?.length && !this.user.own(tdoc)) {
@@ -53,9 +53,9 @@ class HomeworkDetailHandler extends Handler {
         }
     }
 
-    @param('tid', Types.ObjectID)
+    @param('tid', Types.ObjectId)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, page = 1) {
+    async get(domainId: string, tid: ObjectId, page = 1) {
         const [tdoc, tsdoc] = await Promise.all([
             contest.get(domainId, tid),
             contest.getStatus(domainId, tid, this.user._id),
@@ -101,8 +101,8 @@ class HomeworkDetailHandler extends Handler {
         Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
-    @param('tid', Types.ObjectID)
-    async postAttend(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async postAttend(domainId: string, tid: ObjectId) {
         this.checkPerm(PERM.PERM_ATTEND_HOMEWORK);
         const tdoc = await contest.get(domainId, tid);
         if (contest.isDone(tdoc)) throw new HomeworkNotLiveError(tdoc.docId);
@@ -112,8 +112,8 @@ class HomeworkDetailHandler extends Handler {
 }
 
 class HomeworkEditHandler extends Handler {
-    @param('tid', Types.ObjectID, true)
-    async get(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    async get(domainId: string, tid: ObjectId) {
         const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
@@ -143,7 +143,7 @@ class HomeworkEditHandler extends Handler {
         };
     }
 
-    @param('tid', Types.ObjectID, true)
+    @param('tid', Types.ObjectId, true)
     @param('beginAtDate', Types.Date)
     @param('beginAtTime', Types.Time)
     @param('penaltySinceDate', Types.Date)
@@ -156,7 +156,7 @@ class HomeworkEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('assign', Types.CommaSeperatedArray, true)
     async postUpdate(
-        domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string,
+        domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
         assign: string[] = [],
@@ -201,8 +201,8 @@ class HomeworkEditHandler extends Handler {
         this.response.redirect = this.url('homework_detail', { tid });
     }
 
-    @param('tid', Types.ObjectID)
-    async postDelete(domainId: string, tid: ObjectID) {
+    @param('tid', Types.ObjectId)
+    async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
         await contest.del(domainId, tid);

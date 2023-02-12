@@ -57,7 +57,7 @@
         "latest-version": "7.0.0",
         "mini-css-extract-plugin": "^2.7.2",
         "monaco-editor-webpack-plugin": "^7.0.1",
-        "mongodb": "^3.7.3",
+        "mongodb": "^5.0.1",
         "mongodb-memory-server": "^8.11.4",
         "nyc": "^15.1.0",
         "ora": "^6.1.2",

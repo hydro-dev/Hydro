@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
@@ -10,7 +10,7 @@ const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1
 export async function udoc(report) {
     report({ message: 'Udoc' });
     const pipeline = [
-        { $match: { contest: { $ne: new ObjectID('000000000000000000000000') } } },
+        { $match: { contest: { $ne: new ObjectId('000000000000000000000000') } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -38,18 +38,18 @@ export async function udoc(report) {
                 nAccept: adoc.nAccept,
             },
         });
-        if (bulk.length > 100) {
+        if (bulk.batches.length > 100) {
             await bulk.execute();
             bulk = db.collection('domain.user').initializeUnorderedBulkOp();
         }
     }
-    if (bulk.length) await bulk.execute();
+    if (bulk.batches.length) await bulk.execute();
 }
 
 export async function psdoc(report) {
     report({ message: 'Psdoc' });
     const pipeline = [
-        { $match: { contest: { $ne: new ObjectID('000000000000000000000000') } } },
+        { $match: { contest: { $ne: new ObjectId('000000000000000000000000') } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -68,7 +68,7 @@ export async function pdoc(report) {
     const pipeline = [
         {
             $match: {
-                contest: { $ne: new ObjectID('000000000000000000000000') },
+                contest: { $ne: new ObjectId('000000000000000000000000') },
                 status: { $ne: STATUS.STATUS_CANCELED },
             },
         },
@@ -139,14 +139,14 @@ export async function pdoc(report) {
             docType: document.TYPE_PROBLEM,
             docId: adoc._id.pid,
         }).updateOne({ $set });
-        if (bulk.length > 100) {
+        if (bulk.batches.length > 100) {
             await bulk.execute();
             cnt++;
             report({ message: `${cnt * 100} pdocs updated` });
             bulk = db.collection('document').initializeUnorderedBulkOp();
         }
     }
-    if (bulk.length) await bulk.execute();
+    if (bulk.batches.length) await bulk.execute();
 }
 
 export const apply = (ctx) => ctx.addScript(

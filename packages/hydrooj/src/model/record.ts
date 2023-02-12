@@ -2,9 +2,8 @@
 import { sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    FilterQuery, MatchKeysAndValues,
-    ObjectID, OnlyFieldsOfType, PushOperator,
-    UpdateQuery,
+    Filter, MatchKeysAndValues,
+    ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
@@ -36,9 +35,9 @@ export default class RecordModel {
         return base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1);
     }
 
-    static async get(_id: ObjectID): Promise<RecordDoc | null>;
-    static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null>;
-    static async get(arg0: string | ObjectID, arg1?: any) {
+    static async get(_id: ObjectId): Promise<RecordDoc | null>;
+    static async get(domainId: string, _id: ObjectId): Promise<RecordDoc | null>;
+    static async get(arg0: string | ObjectId, arg1?: any) {
         const _id = arg1 || arg0;
         const domainId = arg1 ? arg0 : null;
         const res = await RecordModel.coll.findOne({ _id });
@@ -63,7 +62,7 @@ export default class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rids: MaybeArray<ObjectID>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
+    static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
         const rdoc = await RecordModel.get(domainId, rids[0]);
@@ -112,7 +111,7 @@ export default class RecordModel {
         domainId: string, pid: number, uid: number,
         lang: string, code: string, addTask: boolean,
         args: {
-            contest?: ObjectID,
+            contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
             type: 'judge' | 'contest' | 'pretest' | 'hack',
@@ -120,7 +119,7 @@ export default class RecordModel {
     ) {
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
-            _id: new ObjectID(),
+            _id: new ObjectId(),
             uid,
             code,
             lang,
@@ -140,7 +139,7 @@ export default class RecordModel {
         if (args.files) data.files = args.files;
         if (args.type === 'pretest') {
             data.input = args.input || '';
-            data.contest = new ObjectID('000000000000000000000000');
+            data.contest = new ObjectId('000000000000000000000000');
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
@@ -156,13 +155,13 @@ export default class RecordModel {
     }
 
     static async update(
-        domainId: string, _id: MaybeArray<ObjectID>,
+        domainId: string, _id: MaybeArray<ObjectId>,
         $set?: MatchKeysAndValues<RecordDoc>,
         $push?: PushOperator<RecordDoc>,
         $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
         $inc?: Partial<Record<NumberKeys<RecordDoc>, number>>,
     ): Promise<RecordDoc | null> {
-        const $update: UpdateQuery<RecordDoc> = {};
+        const $update: UpdateFilter<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -183,12 +182,12 @@ export default class RecordModel {
     }
 
     static async updateMulti(
-        domainId: string, $match: FilterQuery<RecordDoc>,
+        domainId: string, $match: Filter<RecordDoc>,
         $set?: MatchKeysAndValues<RecordDoc>,
         $push?: PushOperator<RecordDoc>,
         $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
     ) {
-        const $update: UpdateQuery<RecordDoc> = {};
+        const $update: UpdateFilter<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -196,7 +195,7 @@ export default class RecordModel {
         return res.modifiedCount;
     }
 
-    static async reset(domainId: string, rid: MaybeArray<ObjectID>, isRejudge: boolean) {
+    static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -218,7 +217,7 @@ export default class RecordModel {
     }
 
     static async getList(
-        domainId: string, rids: ObjectID[], fields?: (keyof RecordDoc)[],
+        domainId: string, rids: ObjectId[], fields?: (keyof RecordDoc)[],
     ): Promise<Record<string, Partial<RecordDoc>>> {
         const r: Record<string, RecordDoc> = {};
         rids = Array.from(new Set(rids));

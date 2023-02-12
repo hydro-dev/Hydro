@@ -3,7 +3,7 @@
 import mysql from 'mysql';
 import TurndownService from 'turndown';
 import {
-    buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectID, postJudge, ProblemModel,
+    buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
     RecordDoc, RecordModel, SolutionModel, STATUS, SystemModel, Time, UserModel,
 } from 'hydrooj';
 
@@ -269,7 +269,7 @@ export async function run({
             const [source] = await query(`SELECT \`source\` FROM \`source_code\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
             if (source[0]?.source) data.code = source[0].source;
             if (rdoc.contest_id) {
-                data.contest = new ObjectID(tidMap[rdoc.contest_id]);
+                data.contest = new ObjectId(tidMap[rdoc.contest_id]);
                 await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
             await RecordModel.coll.insertOne(data);

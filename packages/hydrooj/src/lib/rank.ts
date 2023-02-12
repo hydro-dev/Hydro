@@ -1,6 +1,6 @@
-import { Cursor } from 'mongodb';
+import { FindCursor } from 'mongodb';
 
-type ranked = <T extends Record<string, any>>(cursor: Cursor<T>, equ: ((a: T, b: T) => boolean)) => Promise<[number, T][]>;
+type ranked = <T extends Record<string, any>>(cursor: FindCursor<T>, equ: ((a: T, b: T) => boolean)) => Promise<[number, T][]>;
 
 const ranked: ranked = async (cursor, equ) => {
     let last = null;

@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { FilterQuery } from 'mongodb';
+import { Filter } from 'mongodb';
 import type {
     DomainDoc, ProblemStatusDoc, RecordDoc,
     Tdoc, Udoc,
@@ -18,7 +18,7 @@ export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, t
 }
 
 export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
-    const udocs = await user.getMulti().toArray();
+    const udocs = await user.getMulti({}).toArray();
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
     return true;
 }
@@ -32,7 +32,7 @@ export async function iterateAllContest(cb: (tdoc: Tdoc) => Promise<any>) {
     });
 }
 
-export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
+export async function iterateAllPsdoc(filter: Filter<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
     return await iterateAllDomain(async ({ _id: domainId }) => {
         const cursor = document.getMultiStatus(domainId, document.TYPE_PROBLEM, filter);
         while (await cursor.hasNext()) {

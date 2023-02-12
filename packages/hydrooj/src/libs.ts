@@ -3,7 +3,7 @@ import _ from 'lodash';
 import Schema from 'schemastery';
 import superagent from 'superagent';
 import { Context } from './context';
-export { ObjectID, ObjectId, FilterQuery } from 'mongodb';
+export { ObjectId, Filter } from 'mongodb';
 export { WebSocket, WebSocketServer } from 'ws';
 export * from './utils';
 export * from './interface';

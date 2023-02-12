@@ -85,11 +85,9 @@ async function post(ctx: Context) {
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;
     try {
-        const Database = await mongodb.MongoClient.connect(mongourl, {
-            useNewUrlParser: true, useUnifiedTopology: true,
-        });
+        const Database = await mongodb.MongoClient.connect(mongourl, {});
         const db = Database.db(name);
-        const coll = db.collection('system');
+        const coll = db.collection<any>('system');
         await Promise.all([
             coll.updateOne(
                 { _id: 'server.url' },
