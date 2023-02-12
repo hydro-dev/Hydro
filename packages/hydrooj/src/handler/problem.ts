@@ -666,23 +666,22 @@ export class ProblemConfigHandler extends ProblemManageHandler {
 export class ProblemFilesHandler extends ProblemDetailHandler {
     notUsage = true;
 
-    @param('testdata', Types.Boolean)
-    @param('additional_file', Types.Boolean)
     @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
-    async get(domainId: string, getTestdata = true, getAdditionalFile = true, pjax = false, sidebar = false) {
-        this.response.body.testdata = getTestdata ? sortFiles(this.pdoc.data || []) : [];
-        this.response.body.reference = getTestdata ? this.pdoc.reference : '';
-        this.response.body.additional_file = getAdditionalFile ? sortFiles(this.pdoc.additional_file || []) : [];
+    async get(domainId: string, pjax = false, sidebar = false) {
+        this.response.body.testdata = sortFiles(this.pdoc.data || []);
+        this.response.body.reference = this.pdoc.reference;
+        this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
             const owner = await user.getById(domainId, this.pdoc.owner);
             const args = {
                 testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar,
             };
-            const tasks = [];
-            if (getTestdata) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
-            if (getAdditionalFile) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }));
+            const tasks = [
+                this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }),
+                this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }),
+            ];
             if (!sidebar) tasks.push(this.renderHTML('partials/problem-sidebar-information.html', args));
             this.response.body = {
                 fragments: (await Promise.all(tasks)).map((i) => ({ html: i })),

@@ -282,7 +282,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     async exportGhost(domainId: string, tid: ObjectID) {
         const tdoc = this.tdoc;
         const [pdict, teams] = await Promise.all([
-            problem.getList(domainId, tdoc.pids, true, false, undefined, true),
+            problem.getList(domainId, tdoc.pids, true, false, problem.PROJECTION_LIST, true),
             contest.getMultiStatus(domainId, { docId: tid }).toArray(),
         ]);
         const udict = await user.getList(domainId, teams.map((i) => i.uid));
@@ -309,7 +309,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             `@teams ${tdoc.attend}`,
             `@submissions ${submissions.length}`,
         ].concat(
-            tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i].title)},20,0`),
+            tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
             teams.map((i, idx) => `@t ${idx + 1},0,1,${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].uname)}`),
             submissions,
         );
@@ -395,7 +395,7 @@ export class ContestEditHandler extends Handler {
         domainId: string, tid: ObjectID, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = null, lock: number = null,
-        contestDuration: number = null, maintainer: number[] = null, allowViewCode = true,
+        contestDuration: number = null, maintainer: number[] = null, allowViewCode = false,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
