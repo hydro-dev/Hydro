@@ -669,10 +669,10 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('d', Types.CommaSeperatedArray, true)
     @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
-    async get(domainId: string, d = ['testdata', 'additional_files'], pjax = false, sidebar = false) {
+    async get(domainId: string, d = ['testdata', 'additional_file'], pjax = false, sidebar = false) {
         this.response.body.testdata = d.includes('testdata') ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.reference = this.pdoc.reference;
-        this.response.body.additional_file = d.includes('testdata') ? sortFiles(this.pdoc.additional_file || []) : [];
+        this.response.body.additional_file = d.includes('additional_file') ? sortFiles(this.pdoc.additional_file || []) : [];
         if (pjax) {
             const { testdata, additional_file } = this.response.body;
             const owner = await user.getById(domainId, this.pdoc.owner);
@@ -681,7 +681,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             };
             const tasks = [];
             if (d.includes('testdata')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
-            if (d.includes('additional_files')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_files' }));
+            if (d.includes('additional_file')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }));
             if (!sidebar) tasks.push(this.renderHTML('partials/problem-sidebar-information.html', args));
             this.response.body = {
                 fragments: (await Promise.all(tasks)).map((i) => ({ html: i })),
