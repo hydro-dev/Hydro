@@ -214,7 +214,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
         type: 'additional_file',
       });
       Notification.success(i18n('File have been deleted.'));
-      await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
+      await pjax.request({ url: './files?d=additional_file&sidebar=true', push: false });
     } catch (error) {
       Notification.error(error.message);
     }

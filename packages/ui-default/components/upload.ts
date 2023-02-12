@@ -68,7 +68,7 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
     Notification.success(i18n('File uploaded successfully.'));
     if (options.pjax) {
       let params = '';
-      if (options.type) params += `?testdata=${options.type === 'testdata'}&additional_file=${options.type === 'additional_file'}`;
+      if (options.type) params += `?d=${options.type}`;
       if (options.sidebar) params += `${params ? '&' : '?'}sidebar=true`;
       await pjax.request({ push: false, url: `${endpoint}${params || ''}` });
     }
