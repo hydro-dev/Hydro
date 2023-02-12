@@ -6,6 +6,7 @@ export * from './components/dialog';
 export * as bus from './bus';
 export { default as AnsiUp } from 'ansi_up';
 export { default as loadMonaco } from './components/monaco/loader';
+export { default as uploadFiles } from './components/upload';
 export * as redux from 'react-redux';
 export * from './components/zipDownloader';
 export { default as $ } from 'jquery';

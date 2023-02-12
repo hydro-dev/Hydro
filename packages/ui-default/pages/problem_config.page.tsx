@@ -57,7 +57,7 @@ const page = new NamedPage('problem_config', () => {
         type: 'CONFIG_DELETE_TESTDATA',
         value: file,
       });
-      await pjax.request({ url: './files?testdata=false&sidebar=true', push: false });
+      await pjax.request({ url: './files?d=testdata&sidebar=true', push: false });
     } catch (error) {
       Notification.error(error.message);
     }
