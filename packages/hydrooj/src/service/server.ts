@@ -12,9 +12,9 @@ import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
-    HydroError, InvalidOperationError, MethodNotAllowedError,
-    NotFoundError, PermissionError, PrivilegeError,
-    UserFacingError,
+    CsrfTokenError, HydroError, InvalidOperationError,
+    MethodNotAllowedError, NotFoundError, PermissionError,
+    PrivilegeError, UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
 import { Types } from '../lib/validator';
@@ -170,6 +170,7 @@ export class HandlerCommon {
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
+    allowCors = false;
     __param: Record<string, decorators.ParamOption<any>[]>;
 
     back(body?: any) {
@@ -185,6 +186,10 @@ export class Handler extends HandlerCommon {
     }
 
     async init() {
+        if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
+            const host = new URL(this.request.headers.referer).host;
+            if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+        }
         if (!argv.options.benchmark) await this.limitRate('global', 5, 100);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         this.loginMethods = Object.keys(global.Hydro.module.oauth)
