@@ -153,7 +153,7 @@ export class ProblemMainHandler extends Handler {
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;
         if (text) {
-            const result = await search(domainId, q, { skip: (page - 1) * limit });
+            const result = await search(domainId, q, { skip: (page - 1) * limit, limit });
             total = result.total;
             pcountRelation = result.countRelation;
             if (!result.hits.length) fail = true;
