@@ -29,7 +29,7 @@ export default new AutoloadPage('omnibar', () => {
   $(document.body).append($entry);
   const $input = $('.omnibar input') as JQuery<HTMLInputElement>;
 
-  const prefix = window.location.href.startsWith('/d/') ? `/d/${UiContext.domainId}` : '';
+  const prefix = window.location.pathname.startsWith('/d/') ? `/d/${UiContext.domainId}` : '';
   let setSearching;
   let pdocs = [];
   let psdict = {};
