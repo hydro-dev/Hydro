@@ -87,8 +87,8 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         if (document.body.children.length < 2 && html.length < 512) {
             throw new Error(document.body.textContent);
         }
-        const ftaa = this.getCookie('70a7c28f3de');
-        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa');
+        const ftaa = this.getCookie('70a7c28f3de') || 'n/a';;
+        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';;
         return [
             (
                 document.querySelector('meta[name="X-Csrf-Token"]')
@@ -114,6 +114,10 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         if (await this.loggedIn) return true;
         logger.info('retry normal login');
         const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
+        const { header } = await this.get('/enter');
+        if (header['set-cookie']) {
+            this.setCookie(header['set-cookie']);
+        }
         const res = await this.post('/enter').send({
             csrf_token: csrf,
             action: 'enter',
