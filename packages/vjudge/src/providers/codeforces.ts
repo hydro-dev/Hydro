@@ -83,19 +83,24 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     async getCsrfToken(url: string) {
-        const { document, html } = await this.html(url);
-        if (document.body.children.length < 2 && html.length < 512) {
-            throw new Error(document.body.textContent);
-        }
-        const ftaa = this.getCookie('70a7c28f3de') || 'n/a';;
-        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';;
-        return [
-            (
-                document.querySelector('meta[name="X-Csrf-Token"]')
-                || document.querySelector('input[name="csrf_token"]')
-            )?.getAttribute('content'),
-            ftaa, bfaa,
-        ];
+      const { text: html, header } = await this.get(url);
+      const {
+        window: { document },
+      } = new JSDOM(html);
+      if (document.body.children.length < 2 && html.length < 512) {
+        throw new Error(document.body.textContent!);
+      }
+      const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
+      const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
+      return [
+        (
+          document.querySelector('meta[name="X-Csrf-Token"]') ||
+          document.querySelector('input[name="csrf_token"]')
+        )?.getAttribute('content'),
+        ftaa,
+        bfaa,
+        header,
+      ];
     }
 
     get loggedIn() {
@@ -113,8 +118,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry normal login');
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
-        const { header } = await this.get('/enter');
+        const [csrf, ftaa, bfaa, header] = await this.getCsrfToken('/enter');
         if (header['set-cookie']) {
             this.setCookie(header['set-cookie']);
         }
