@@ -389,7 +389,7 @@ connect-timeout = 10`);
         skip: () => installAsJudge,
         operations: [
             () => {
-                password = require(`${process.env.HOME}/.hydro/config.json`).password;
+                password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
             },
             () => log.info('extra.dbUser'),
             () => log.info('extra.dbPassword', password),
