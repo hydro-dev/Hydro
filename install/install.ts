@@ -4,8 +4,6 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
-import os from 'os';
-import path from 'path';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -217,8 +215,6 @@ function rollbackResolveField() {
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
     return true;
 }
-
-const tmpFile = path.join(os.tmpdir(), `${Math.random().toString()}.js`);
 
 const Steps = () => [
     {
