@@ -149,7 +149,7 @@ class TrainingDetailHandler extends Handler {
             if (nsdoc.isDone) doneNids.add(node._id);
             nsdict[node._id] = nsdoc;
         }
-        const tsdoc = await training.setStatus(domainId, tdoc.docId, udoc._id, {
+        const tsdoc = await training.setStatus(domainId, tdoc.docId, uid, {
             doneNids: Array.from(doneNids),
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,

@@ -6,8 +6,7 @@ ignorePatterns:
   - packages/ui-default
 overrides:
   - files: 
-      - '**/public/**/*.ts'
-      - '**/public/**/*.page.js'
+      - '**/public/**/*.{ts,tsx,page.js}'
     rules:
       '@typescript-eslint/indent':
         - warn
