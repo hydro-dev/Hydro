@@ -4,8 +4,6 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
-import os from 'os';
-import path from 'path';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -191,7 +189,7 @@ function removeOptionalEsbuildDeps() {
     if (!yarnGlobalPath) return false;
     const pkgjson = `${yarnGlobalPath}/package.json`;
     const data = existsSync(pkgjson) ? require(pkgjson) : {};
-    data.resolutions = data.resolutions || {};
+    data.resolutions ||= {};
     Object.assign(data.resolutions, Object.fromEntries([
         '@esbuild/linux-loong64',
         'esbuild-windows-32',
@@ -217,8 +215,6 @@ function rollbackResolveField() {
     writeFileSync(pkgjson, JSON.stringify(data, null, 2));
     return true;
 }
-
-const tmpFile = path.join(os.tmpdir(), `${Math.random().toString()}.js`);
 
 const Steps = () => [
     {
@@ -326,12 +322,20 @@ connect-timeout = 10`);
         operations: [
             'pm2 start mongod',
             () => sleep(3000),
-            () => writeFileSync(tmpFile, `db.createUser(${JSON.stringify({
-                user: 'hydro',
-                pwd: password,
-                roles: [{ role: 'readWrite', db: 'hydro' }],
-            })})`),
-            [`mongosh 127.0.0.1:27017/hydro ${tmpFile}`, { retry: true }],
+            async () => {
+                // eslint-disable-next-line import/no-absolute-path
+                const { MongoClient } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb');
+                const client = await MongoClient.connect('mongodb://127.0.0.1', {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                    readPreference: 'nearest',
+                    writeConcern: 'majority',
+                });
+                await client.db('hydro').addUser('hydro', password, {
+                    roles: [{ role: 'readWrite', db: 'hydro' }],
+                });
+                await client.close();
+            },
             () => writeFileSync(`${process.env.HOME}/.hydro/config.json`, JSON.stringify({
                 uri: `mongodb://hydro:${password}@127.0.0.1:27017/hydro`,
             })),
