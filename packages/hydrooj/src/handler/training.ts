@@ -99,27 +99,23 @@ class TrainingMainHandler extends Handler {
 class TrainingDetailHandler extends Handler {
     @param('tid', Types.ObjectID)
     @param('uid', Types.PositiveInt, true)
-    async get(domainId: string, tid: ObjectID, uid: number) {
+    async get(domainId: string, tid: ObjectID, uid = this.user._id) {
         const tdoc = await training.get(domainId, tid);
         await this.ctx.parallel('training/get', tdoc, this);
-        let targetUser = this.user._id;
         let enrollUsers: number[] = [];
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
-            if (uid) {
-                targetUser = uid;
-                shouldCompare = targetUser !== this.user._id;
-            }
-        }
+            shouldCompare = uid !== this.user._id;
+        } else uid = this.user._id;
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             user.getListForRender(domainId, enrollUsers),
             problem.getList(domainId, pids, canViewHidden, true),
-            problem.getListStatus(domainId, targetUser, pids),
+            problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
         ]);
         const donePids = new Set<number>();

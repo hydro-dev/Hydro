@@ -77,7 +77,8 @@ export async function buildUI() {
   const lazyModules: string[] = [];
   const newFiles = ['entry.js'];
   for (const addon of global.addons) {
-    const publicPath = resolve(addon, 'public');
+    let publicPath = resolve(addon, 'frontend');
+    if (!fs.existsSync(publicPath)) publicPath = resolve(addon, 'public');
     if (!fs.existsSync(publicPath)) continue;
     const targets = fs.readdirSync(publicPath);
     for (const target of targets) {
