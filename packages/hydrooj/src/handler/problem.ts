@@ -339,8 +339,6 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 const p = this.pdoc.config.subType;
                 const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
                 baseLangs = dl;
-            } else if (['objective', 'submit_answer'].includes(this.pdoc.config.type)) {
-                baseLangs = ['_'];
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
             }
@@ -348,7 +346,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            this.pdoc.config.langs = intersection(baseLangs, ...t);
+            this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
