@@ -24,20 +24,25 @@ import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 
-export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectID(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
+function parseCaseResult(body: TestCase): Required<TestCase> {
+    return {
+        ...body,
+        id: body.id || 0,
+        subtaskId: body.subtaskId || 0,
+        score: body.score || 0,
+        message: body.message || '',
+    };
+}
+
+function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
-    if (body.case) {
-        const c: Required<TestCase> = {
-            ...body.case,
-            id: body.case.id || 0,
-            subtaskId: body.case.subtaskId || 0,
-            score: body.case.score || 0,
-            message: body.case.message || '',
-        };
+    if (body.cases?.length) {
+        const c = body.cases.map(parseCaseResult);
+        rdoc.testCases.push(...c);
+        $push.testCases = { $each: c };
+    } else if (body.case) {
+        const c = parseCaseResult(body.case);
         rdoc.testCases.push(c);
         $push.testCases = c;
     }
@@ -50,10 +55,18 @@ export async function next(body: Partial<JudgeResultBody>) {
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
-    if (body.score !== undefined) $set.score = body.score;
-    if (body.time !== undefined) $set.time = body.time;
-    if (body.memory !== undefined) $set.memory = body.memory;
+    if (Number.isFinite(body.score)) $set.score = Math.floor(body.score * 100) / 100;
+    if (Number.isFinite(body.time)) $set.time = body.time;
+    if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
+    return { $set, $push };
+}
+
+export async function next(body: Partial<JudgeResultBody>) {
+    body.rid = new ObjectID(body.rid);
+    let rdoc = await record.get(body.rid);
+    if (!rdoc) return;
+    const { $set, $push } = processPayload(rdoc, body);
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
     bus.broadcast('record/change', rdoc!, $set, $push);
 }
@@ -118,21 +131,8 @@ export async function end(body: Partial<JudgeResultBody>) {
     body.rid &&= new ObjectID(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;
-    const $set: Partial<RecordDoc> = {};
-    const $push: any = {};
+    const { $set, $push } = processPayload(rdoc, body);
     const $unset: any = { progress: '' };
-    if (body.message) {
-        rdoc.judgeTexts.push(body.message);
-        $push.judgeTexts = body.message;
-    }
-    if (body.compilerText) {
-        rdoc.compilerTexts.push(body.compilerText);
-        $push.compilerTexts = body.compilerText;
-    }
-    if (body.status) $set.status = body.status;
-    if (Number.isFinite(body.score)) $set.score = Math.floor(body.score * 100) / 100;
-    if (Number.isFinite(body.time)) $set.time = body.time;
-    if (Number.isFinite(body.memory)) $set.memory = body.memory;
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
     await sleep(100); // Make sure that all 'next' event already triggered

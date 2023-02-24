@@ -567,7 +567,8 @@ export interface JudgeResultBody {
     judger?: number;
     progress?: number;
     addProgress?: number;
-    case?: TestCase,
+    case?: TestCase;
+    cases?: TestCase[];
     status?: number;
     score?: number;
     /** in miliseconds */

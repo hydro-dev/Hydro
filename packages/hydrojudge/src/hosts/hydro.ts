@@ -155,13 +155,19 @@ export default class Hydro {
     getNext(t: JudgeTask) {
         return (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
-            this.send(t.request.rid, 'next', data);
+            if (getConfig('performance') && data.case && !data.compilerText && !data.message) {
+                t.callbackCache ||= [];
+                t.callbackCache.push(data.case);
+            } else {
+                this.send(t.request.rid, 'next', data);
+            }
         };
     }
 
     getEnd(t: JudgeTask) {
         return (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
+            if (t.callbackCache) data.cases = t.callbackCache;
             this.send(t.request.rid, 'end', data);
         };
     }

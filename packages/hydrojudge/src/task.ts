@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
-    FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody,
+    FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
 import { getConfig } from './config';
@@ -40,6 +40,7 @@ export class JudgeTask {
     next: (data: Partial<JudgeResultBody>) => void;
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
+    callbackCache?: TestCase[];
 
     constructor(public session: Session, public request: JudgeRequest) {
         this.stat = {};
