@@ -1,7 +1,16 @@
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 
-const page = new NamedPage('contest_scoreboard', () => {
+function compactScoreboard(tdoc) {
+  if (!$('.scoreboard--compact,.scoreboard--acm').length && $('.data-table').width() > window.innerWidth) {
+    $(`.scoreboard--${tdoc.rule}`).addClass('scoreboard--compact');
+  }
+  if (!$('th.col--user').width()) {
+    $('.col--user').addClass('compact');
+  }
+}
+
+const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => {
   const { tdoc } = UiContext;
   const key = `scoreboard-star/${tdoc.domainId}/${tdoc.docId}`;
   const read = () => JSON.parse(localStorage.getItem(key) || '[]');
@@ -34,6 +43,9 @@ const page = new NamedPage('contest_scoreboard', () => {
       $('.rank--unrank').closest('tr').hide();
     }
   });
+
+  compactScoreboard(tdoc);
+  $(window).on('resize', () => compactScoreboard(tdoc));
 });
 
 export default page;
