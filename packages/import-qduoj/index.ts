@@ -79,7 +79,10 @@ class ImportQduojHandler extends Handler {
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const n = await ProblemModel.get(domainId, pdoc.display_id);
                 if (n) pdoc.display_id = null;
-                const pid = await ProblemModel.add(domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'), this.user._id, pdoc.tags);
+                const pid = await ProblemModel.add(
+                    domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'),
+                    this.user._id, pdoc.tags || [],
+                );
                 const config: ProblemConfigFile = {
                     time: `${pdoc.time_limit}ms`,
                     memory: `${pdoc.memory_limit}m`,

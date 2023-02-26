@@ -81,7 +81,7 @@ All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All Users: 所有用户
 All: 全部
-Allow to maintain this contest: 允许管理此比赛
+Allow to maintain this {0}: 允许管理此{0}
 Allow user view others code after contest: 允许用户赛后查看其他人的代码
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
@@ -406,6 +406,7 @@ home_preference: 偏好设置
 home_security: 安全设置
 homepage: 首页
 Homework Introduction: 作业介绍
+Homework Maintainer: 作业管理员
 Homework scoreboard is not visible.: 目前无法查看作业成绩表。
 homework_create: 创建作业
 homework_detail_problem_submit: 递交作业题目

@@ -339,8 +339,6 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 const p = this.pdoc.config.subType;
                 const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
                 baseLangs = dl;
-            } else if (['objective', 'submit_answer'].includes(this.pdoc.config.type)) {
-                baseLangs = ['_'];
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
             }
@@ -348,7 +346,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            this.pdoc.config.langs = intersection(baseLangs, ...t);
+            this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
@@ -443,8 +441,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
         await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
         await Promise.all([
-            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }),
-            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}),
+            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }, { rejudge: true }),
+            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}, { rejudge: true }),
         ]);
         this.back();
     }

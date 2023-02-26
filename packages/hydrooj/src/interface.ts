@@ -336,6 +336,7 @@ export interface RecordDoc {
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
+    rejudge?: boolean;
 }
 
 export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
@@ -567,7 +568,8 @@ export interface JudgeResultBody {
     judger?: number;
     progress?: number;
     addProgress?: number;
-    case?: TestCase,
+    case?: TestCase;
+    cases?: TestCase[];
     status?: number;
     score?: number;
     /** in miliseconds */

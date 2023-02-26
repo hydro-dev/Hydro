@@ -26,6 +26,7 @@ const JudgeSettings = Schema.object({
     secret: Schema.string().description('Judge Token Secret').default(String.random(32)),
     disable: Schema.boolean().description('Disable builtin judge').default(false),
     detail: Schema.boolean().description('Show diff detail').default(true),
+    performance: Schema.boolean().description('Performance mode').default(false),
 });
 
 const oldPath = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');

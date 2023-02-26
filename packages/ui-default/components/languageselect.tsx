@@ -44,11 +44,17 @@ export default function LanguageSelect({
           <label>
             {i18n('Code language')}
             <div className="select-container">
-              <select value={sub} onChange={(ev) => setSub(ev.target.value)} className="select">
-                {Object.keys(options).map((i) => (
-                  <option value={i} key={i}>{options[i]}</option>
-                ))}
-              </select>
+              {Object.keys(options).length
+                ? <select value={sub} onChange={(ev) => setSub(ev.target.value)} className="select">
+                  {Object.keys(options).map((i) => (
+                    <option value={i} key={i}>{options[i]}</option>
+                  ))}
+                </select>
+                : <select value={main} onChange={(ev) => setMain(ev.target.value)} className="select">
+                  {Object.keys(mainLangs).map((i) => (
+                    <option value={i} key={i}>{mainLangs[i]}</option>
+                  ))}
+                </select>}
             </div>
           </label>
         </div>

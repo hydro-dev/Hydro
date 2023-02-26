@@ -154,12 +154,13 @@ class HomeworkEditHandler extends Handler {
     @param('content', Types.Content)
     @param('pids', Types.Content)
     @param('rated', Types.Boolean)
+    @param('maintainer', Types.NumericArray, true)
     @param('assign', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
-        assign: string[] = [],
+        maintainer: number[] = [], assign: string[] = [],
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
@@ -188,6 +189,7 @@ class HomeworkEditHandler extends Handler {
                 penaltySince: penaltySince.toDate(),
                 penaltyRules,
                 rated,
+                maintainer,
                 assign,
             });
             if (tdoc.beginAt !== beginAt.toDate()

@@ -7,6 +7,7 @@ import {
     ownerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
 import pwhash from '../lib/hash.hydro';
+import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
@@ -47,6 +48,7 @@ bus.on('user/delcache', (content) => deleteUserCache(typeof content === 'string'
 
 export class User {
     _id: number;
+    _isPrivate = false;
 
     _udoc: Udoc;
     _dudoc: any;
@@ -148,6 +150,21 @@ export class User {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             UserModel.setPassword(this._id, password);
         }
+    }
+
+    async private() {
+        const user = await new User(this._udoc, this._dudoc, this.scope).init();
+        user._isPrivate = true;
+        return user;
+    }
+
+    serialize(options) {
+        if (!this._isPrivate) {
+            const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
+            if (options.showDisplayName) fields.push('displayName');
+            return pick(this, fields);
+        }
+        return JSON.stringify(this, serializer({ showDisplayName: options.showDisplayName }, true));
     }
 }
 
