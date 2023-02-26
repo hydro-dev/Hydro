@@ -6,6 +6,7 @@ async function paginate<T>(
 ): Promise<[docs: T[], numPages: number, count: number]> {
     if (page <= 0) throw new ValidationError('page');
     const [count, pageDocs] = await Promise.all([
+        // FIXME a better way for document count
         cursor.count(),
         cursor.skip((page - 1) * pageSize).limit(pageSize).toArray(),
     ]);

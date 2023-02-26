@@ -110,7 +110,7 @@ class ScheduleModel {
     }
 
     static count(query: Filter<Schedule>) {
-        return coll.find(query).count();
+        return coll.countDocuments(query);
     }
 
     static del(_id: ObjectId) {

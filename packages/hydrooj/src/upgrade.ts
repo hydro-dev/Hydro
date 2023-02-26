@@ -53,16 +53,7 @@ const scripts: UpgradeScript[] = [
     null,
     // Init
     ...new Array(26).fill(unsupportedUpgrade),
-    async function _27_28() {
-        const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-        for await (const data of cursor) {
-            const t = Math.exp(-0.15 * (((new Date().getTime() / 1000) - data._id.generationTime) / 3600));
-            const rCount = await discussion.getMultiReply(data.domainId, data.docId).count();
-            const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
-            await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
-        }
-        return true;
-    },
+    null,
     async function _28_29() {
         return await iterateAllProblem(['content', 'html'], async (pdoc) => {
             try {

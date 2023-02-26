@@ -19,6 +19,9 @@ interface DomainUserArg {
 }
 
 class DomainModel {
+    static coll = coll;
+    static collUser = collUser;
+
     static JOIN_METHOD_NONE = 0;
     static JOIN_METHOD_ALL = 1;
     static JOIN_METHOD_CODE = 2;
@@ -124,8 +127,8 @@ class DomainModel {
     }
 
     static async countUser(domainId: string, role?: string) {
-        if (role) return await collUser.find({ domainId, role }).count();
-        return await collUser.find({ domainId }).count();
+        if (role) return await collUser.countDocuments({ domainId, role });
+        return await collUser.countDocuments({ domainId });
     }
 
     @ArgMethod

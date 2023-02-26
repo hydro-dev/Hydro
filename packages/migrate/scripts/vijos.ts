@@ -283,7 +283,7 @@ const cursor: NodeJS.Dict<CursorGetter> = {
 };
 
 async function discussionNode(src: Db, report: Function) {
-    const count = await src.collection('document').find({ doc_type: 20 }).count();
+    const count = await src.collection('document').countDocuments({ doc_type: 20 });
     await report({ progress: 1, message: `discussion.node: ${count}` });
     const total = Math.floor(count / 5);
     for (let i = 0; i <= total; i++) {
@@ -328,7 +328,7 @@ async function fix(doc) {
 }
 
 async function fixProblem(report: Function) {
-    const count = await dst.collection('document').find({ docType: 10 }).count();
+    const count = await dst.collection('document').countDocuments({ docType: 10 });
     await report({ progress: 1, message: `Fix pid: ${count}` });
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
@@ -350,7 +350,7 @@ function objid(ts: Date) {
 
 // FIXME this seems not working
 async function message(src: Db, report: Function) {
-    const count = await src.collection('message').find().count();
+    const count = await src.collection('message').countDocuments();
     await report({ progress: 1, message: `Messages: ${count}` });
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
@@ -375,7 +375,7 @@ async function message(src: Db, report: Function) {
 }
 
 async function removeInvalidPid(report: Function) {
-    const count = await dst.collection('document').find({ docType: 10 }).count();
+    const count = await dst.collection('document').countDocuments({ docType: 10 });
     const bulk = dst.collection('document').initializeUnorderedBulkOp();
     await report({ progress: 1, message: `Remove pid: ${count}` });
     const total = Math.floor(count / 50);
@@ -394,12 +394,11 @@ async function removeInvalidPid(report: Function) {
 }
 
 async function task(name: any, src: Db, report: Function) {
-    const count = await cursor[name](src).count();
-    await report({ progress: 1, message: `${name}: ${count}` });
-    const total = Math.floor(count / 50);
+    await report({ progress: 1, message: `${name}` });
     let lastProgress = -1;
-    for (let i = 0; i <= total; i++) {
+    for (let i = 0; ; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
+        if (!docs.length) break;
         const res = [];
         for (const doc of docs) {
             let d: any = {};
@@ -459,10 +458,9 @@ async function task(name: any, src: Db, report: Function) {
             }
         }
         await Promise.all(res).catch((e) => report({ message: `${e}\n${e.stack}` }));
-        const progress = Math.round(100 * ((i + 1) / (total + 1)));
-        if (progress > lastProgress) {
-            await report({ progress });
-            lastProgress = progress;
+        if (i > lastProgress) {
+            await report({ progress: i });
+            lastProgress = i;
         }
     }
 }

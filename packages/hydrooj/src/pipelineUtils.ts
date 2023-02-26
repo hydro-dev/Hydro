@@ -54,7 +54,7 @@ export async function iterateAllProblemInDomain(
     if (!fields.includes('domainId')) fields.push('domainId');
     if (!fields.includes('docId')) fields.push('docId');
     const cursor = problem.getMulti(domainId, {}, fields as any);
-    const total = await problem.getMulti(domainId, {}).count();
+    const total = await problem.count(domainId, {});
     let i = 0;
     for await (const doc of cursor) {
         i++;
@@ -76,7 +76,7 @@ export async function iterateAllProblem(
 export async function iterateAllRecord(
     cb: (rdoc: RecordDoc, current: number, total: number) => any,
 ) {
-    const total = await RecordModel.coll.count();
+    const total = await RecordModel.coll.countDocuments();
     let i = 0;
     const cursor = RecordModel.coll.find().sort('_id', 1);
     for await (const rdoc of cursor) {

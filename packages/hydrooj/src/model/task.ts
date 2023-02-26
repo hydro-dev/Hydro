@@ -82,7 +82,7 @@ class TaskModel {
     }
 
     static count(query: Filter<Task>) {
-        return coll.find(query).count();
+        return coll.countDocuments(query);
     }
 
     static del(_id: ObjectId) {

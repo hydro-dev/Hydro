@@ -18,11 +18,11 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
     const [mid, $update, inf] = await sysinfo.update();
     const [installId, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
     const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
-        domain.getMulti().count(),
-        user.getMulti().count(),
-        document.coll.find({ docType: document.TYPE_PROBLEM }).count(),
-        document.coll.find({ docType: document.TYPE_DISCUSSION }).count(),
-        record.coll.find().count(),
+        domain.coll.countDocuments(),
+        user.coll.countDocuments(),
+        document.coll.countDocuments({ docType: document.TYPE_PROBLEM }),
+        document.coll.countDocuments({ docType: document.TYPE_DISCUSSION }),
+        record.coll.countDocuments(),
     ]);
     const info: Record<string, any> = {
         mid: mid.toString(),

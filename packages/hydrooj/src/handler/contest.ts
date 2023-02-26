@@ -44,7 +44,7 @@ registerValue('Contest', [
 ]);
 
 registerResolver(
-    'Query', 'contest(id: ObjectId!)', 'Contest',
+    'Query', 'contest(id: ObjectID!)', 'Contest',
     async (arg, ctx) => {
         ctx.checkPerm(PERM.PERM_VIEW);
         arg.id = new ObjectId(arg.id);

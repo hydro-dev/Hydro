@@ -162,7 +162,7 @@ export class ProblemModel {
                 if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
             }
             // eslint-disable-next-line no-await-in-loop
-            const ccount = await document.getMulti(id, document.TYPE_PROBLEM, query).count();
+            const ccount = await document.count(id, document.TYPE_PROBLEM, query);
             if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
                 // eslint-disable-next-line no-await-in-loop
                 pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
@@ -287,10 +287,10 @@ export class ProblemModel {
     }
 
     static async random(domainId: string, query: Filter<ProblemDoc>) {
-        const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
-        const pcount = await cursor.count();
+        const pcount = await document.count(domainId, document.TYPE_PROBLEM, query);
         if (!pcount) return null;
-        const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
+        const pdoc = await document.getMulti(domainId, document.TYPE_PROBLEM, query)
+            .skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
         return pdoc[0].pid || pdoc[0].docId;
     }
 

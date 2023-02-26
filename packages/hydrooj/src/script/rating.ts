@@ -60,11 +60,12 @@ export const RpTypes: Record<string, RpDef> = {
             if (contests.length) await report({ message: `Found ${contests.length} contests in ${domainIds[0]}` });
             for (const tdoc of contests.reverse()) {
                 const start = Date.now();
-                const cursor = contest.getMultiStatus(tdoc.domainId, {
+                const query = {
                     docId: tdoc.docId,
                     journal: { $ne: null },
-                }).sort(contest.RULES[tdoc.rule].statusSort);
-                if (!await cursor.count()) continue;
+                };
+                if (!await contest.count(tdoc.domainId, query)) continue;
+                const cursor = contest.getMultiStatus(tdoc.domainId, query).sort(contest.RULES[tdoc.rule].statusSort);
                 const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
                 const users = rankedTsdocs.map((i) => ({ uid: i[1].uid, rank: i[0], old: udict[i[1].uid] }));
                 // FIXME sum(rating.new) always less than sum(rating.old)

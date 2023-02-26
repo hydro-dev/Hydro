@@ -293,7 +293,7 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('id', Types.String)
     async postDisableAuthn(domainId: string, id: string) {
-        const authenticators = this.user._authenticators?.filter((c) => c.credentialID.buffer.toString('base64') !== id);
+        const authenticators = this.user._authenticators?.filter((c) => Buffer.from(c.credentialID.buffer).toString('base64') !== id);
         if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
         await user.setById(this.user._id, { authenticators });
         this.back();
