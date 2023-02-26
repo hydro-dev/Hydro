@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "mariadb": "^3.1.0",
-        "mongodb": "^5.0.1",
+        "mongodb": "^5.1.0",
         "mysql": "^2.18.1",
         "turndown": "^7.1.1"
     }
