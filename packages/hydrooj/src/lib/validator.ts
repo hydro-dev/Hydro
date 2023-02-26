@@ -95,7 +95,7 @@ export const Types: Types = {
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
 
     ObjectId: [(v) => new ObjectId(v), ObjectId.isValid],
-    Boolean: [(v) => !!(v && !['false', 'off'].includes(v)), null],
+    Boolean: [(v) => !!(v && !['false', 'off'].includes(v)), null, true],
     Date: [
         (v) => {
             const d = v.split('-');
