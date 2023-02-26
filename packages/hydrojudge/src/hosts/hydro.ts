@@ -155,7 +155,8 @@ export default class Hydro {
     getNext(t: JudgeTask) {
         return (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
-            if (getConfig('performance') && data.case && !data.compilerText && !data.message) {
+            const performanceMode = getConfig('performance') || t.meta.rejudge || t.meta.hackRejudge;
+            if (performanceMode && data.case && !data.compilerText && !data.message) {
                 t.callbackCache ||= [];
                 t.callbackCache.push(data.case);
             } else {

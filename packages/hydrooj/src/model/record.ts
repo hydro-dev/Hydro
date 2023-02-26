@@ -115,7 +115,7 @@ export default class RecordModel {
             contest?: ObjectID,
             input?: string,
             files?: Record<string, string>,
-            type: 'judge' | 'contest' | 'pretest' | 'hack',
+            type: 'judge' | 'rejudge' | 'contest' | 'pretest' | 'hack',
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
@@ -138,14 +138,17 @@ export default class RecordModel {
         };
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
-        if (args.type === 'pretest') {
+        if (args.type === 'rejudge') {
+            args.type = 'judge';
+            data.rejudged = true;
+        } else if (args.type === 'pretest') {
             data.input = args.input || '';
             data.contest = new ObjectID('000000000000000000000000');
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {});
+            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {}, { rejudge: data.rejudged });
         }
         return res.insertedId;
     }

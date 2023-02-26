@@ -336,6 +336,7 @@ export interface RecordDoc {
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
+    rejudge?: boolean;
 }
 
 export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {

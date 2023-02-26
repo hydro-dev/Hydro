@@ -441,8 +441,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
         await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
         await Promise.all([
-            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }),
-            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}),
+            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }, { rejudge: true }),
+            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}, { rejudge: true }),
         ]);
         this.back();
     }
