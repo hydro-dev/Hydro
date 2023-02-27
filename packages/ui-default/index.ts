@@ -1,6 +1,6 @@
 /* eslint-disable global-require */
 import {
-  ContestModel, Context, Handler, ObjectID, param, PERM, PRIV, ProblemModel, Schema,
+  ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
   SettingModel, SystemModel, SystemSettings, Types, UserModel,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
@@ -106,7 +106,7 @@ class RichMediaHandler extends Handler {
   async renderContest(domainId, payload) {
     const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_CONTEST)
-      ? await ContestModel.get(payload.domainId || domainId, new ObjectID(payload.id))
+      ? await ContestModel.get(payload.domainId || domainId, new ObjectId(payload.id))
       : null;
     if (tdoc) return await this.renderHTML('partials/contest.html', { tdoc });
     return '';
@@ -115,7 +115,7 @@ class RichMediaHandler extends Handler {
   async renderHomework(domainId, payload) {
     const cur = payload.domainId ? await UserModel.getById(payload.domainId, this.user._id) : this.user;
     const tdoc = cur.hasPerm(PERM.PERM_VIEW | PERM.PERM_VIEW_HOMEWORK)
-      ? await ContestModel.get(payload.domainId || domainId, new ObjectID(payload.id))
+      ? await ContestModel.get(payload.domainId || domainId, new ObjectId(payload.id))
       : null;
     if (tdoc) return await this.renderHTML('partials/homework.html', { tdoc });
     return '';

@@ -41,7 +41,6 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
-"{0}'s blog": "{0} 的博客"
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
@@ -81,7 +80,7 @@ All Submissions: 所有递交
 All Training Plans: 所有训练计划
 All Users: 所有用户
 All: 全部
-Allow to maintain this contest: 允许管理此比赛
+Allow to maintain this {0}: 允许管理此{0}
 Allow user view others code after contest: 允许用户赛后查看其他人的代码
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
@@ -112,7 +111,6 @@ Begin Time: 开始时间
 Belongs to: 属于
 Bio Visibility: 个人简介可见性
 Bio: 个人简介
-Blog: 博客
 Bold: 加粗
 Boom!: 炸了！
 Browser: 浏览器
@@ -406,6 +404,7 @@ home_preference: 偏好设置
 home_security: 安全设置
 homepage: 首页
 Homework Introduction: 作业介绍
+Homework Maintainer: 作业管理员
 Homework scoreboard is not visible.: 目前无法查看作业成绩表。
 homework_create: 创建作业
 homework_detail_problem_submit: 递交作业题目

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-await-in-loop */
-import mongodb, { Cursor, Db } from 'mongodb';
+import mongodb, { Db, FindCursor } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
@@ -268,7 +268,7 @@ const tasks = {
     }),
 };
 
-type CursorGetter = (s: Db) => Cursor<any>;
+type CursorGetter = (s: Db) => FindCursor<any>;
 
 const cursor: NodeJS.Dict<CursorGetter> = {
     user: (s) => s.collection('user').find(),
@@ -283,7 +283,7 @@ const cursor: NodeJS.Dict<CursorGetter> = {
 };
 
 async function discussionNode(src: Db, report: Function) {
-    const count = await src.collection('document').find({ doc_type: 20 }).count();
+    const count = await src.collection('document').countDocuments({ doc_type: 20 });
     await report({ progress: 1, message: `discussion.node: ${count}` });
     const total = Math.floor(count / 5);
     for (let i = 0; i <= total; i++) {
@@ -328,7 +328,7 @@ async function fix(doc) {
 }
 
 async function fixProblem(report: Function) {
-    const count = await dst.collection('document').find({ docType: 10 }).count();
+    const count = await dst.collection('document').countDocuments({ docType: 10 });
     await report({ progress: 1, message: `Fix pid: ${count}` });
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
@@ -344,13 +344,13 @@ async function fixProblem(report: Function) {
 
 function objid(ts: Date) {
     const p = Math.floor(ts.getTime() / 1000).toString(16);
-    const id = new mongodb.ObjectID();
-    return new mongodb.ObjectID(p + id.toHexString().slice(8, 8 + 6 + 4 + 6));
+    const id = new mongodb.ObjectId();
+    return new mongodb.ObjectId(p + id.toHexString().slice(8, 8 + 6 + 4 + 6));
 }
 
 // FIXME this seems not working
 async function message(src: Db, report: Function) {
-    const count = await src.collection('message').find().count();
+    const count = await src.collection('message').countDocuments();
     await report({ progress: 1, message: `Messages: ${count}` });
     const total = Math.floor(count / 50);
     for (let i = 0; i <= total; i++) {
@@ -375,7 +375,7 @@ async function message(src: Db, report: Function) {
 }
 
 async function removeInvalidPid(report: Function) {
-    const count = await dst.collection('document').find({ docType: 10 }).count();
+    const count = await dst.collection('document').countDocuments({ docType: 10 });
     const bulk = dst.collection('document').initializeUnorderedBulkOp();
     await report({ progress: 1, message: `Remove pid: ${count}` });
     const total = Math.floor(count / 50);
@@ -394,12 +394,11 @@ async function removeInvalidPid(report: Function) {
 }
 
 async function task(name: any, src: Db, report: Function) {
-    const count = await cursor[name](src).count();
-    await report({ progress: 1, message: `${name}: ${count}` });
-    const total = Math.floor(count / 50);
+    await report({ progress: 1, message: `${name}` });
     let lastProgress = -1;
-    for (let i = 0; i <= total; i++) {
+    for (let i = 0; ; i++) {
         const docs = await cursor[name](src).skip(i * 50).limit(50).toArray();
+        if (!docs.length) break;
         const res = [];
         for (const doc of docs) {
             let d: any = {};
@@ -459,10 +458,9 @@ async function task(name: any, src: Db, report: Function) {
             }
         }
         await Promise.all(res).catch((e) => report({ message: `${e}\n${e.stack}` }));
-        const progress = Math.round(100 * ((i + 1) / (total + 1)));
-        if (progress > lastProgress) {
-            await report({ progress });
-            lastProgress = progress;
+        if (i > lastProgress) {
+            await report({ progress: i });
+            lastProgress = i;
         }
     }
 }
@@ -473,12 +471,10 @@ export async function run({
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;
-    const Database = await mongodb.MongoClient.connect(mongourl, {
-        useNewUrlParser: true, useUnifiedTopology: true,
-    });
+    const Database = await mongodb.MongoClient.connect(mongourl, {});
     const src = Database.db(name);
     await report({ progress: 0, message: 'Database connected.' });
-    const userCounter = await src.collection('system').findOne({ _id: 'user_counter' });
+    const userCounter = await src.collection<any>('system').findOne({ _id: 'user_counter' });
     if (!userCounter) {
         report({ message: 'No valid installation found' });
         return false;

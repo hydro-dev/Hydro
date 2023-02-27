@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import fs from 'fs-extra';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
@@ -143,8 +143,8 @@ export default class Hydro {
         return null;
     }
 
-    send(rid: string | ObjectID, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
-        data.rid = new ObjectID(rid);
+    send(rid: string | ObjectId, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
+        data.rid = new ObjectId(rid);
         data.key = key;
         if (data.case && typeof data.case.message === 'string') data.case.message = removeNixPath(data.case.message);
         if (typeof data.message === 'string') data.message = removeNixPath(data.message);
@@ -155,7 +155,8 @@ export default class Hydro {
     getNext(t: JudgeTask) {
         return (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
-            if (getConfig('performance') && data.case && !data.compilerText && !data.message) {
+            const performanceMode = getConfig('performance') || t.meta.rejudge || t.meta.hackRejudge;
+            if (performanceMode && data.case && !data.compilerText && !data.message) {
                 t.callbackCache ||= [];
                 t.callbackCache.push(data.case);
             } else {

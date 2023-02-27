@@ -2,9 +2,8 @@
 import { sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    FilterQuery, MatchKeysAndValues,
-    ObjectID, OnlyFieldsOfType, PushOperator,
-    UpdateQuery,
+    Filter, MatchKeysAndValues,
+    ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
@@ -36,9 +35,9 @@ export default class RecordModel {
         return base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1);
     }
 
-    static async get(_id: ObjectID): Promise<RecordDoc | null>;
-    static async get(domainId: string, _id: ObjectID): Promise<RecordDoc | null>;
-    static async get(arg0: string | ObjectID, arg1?: any) {
+    static async get(_id: ObjectId): Promise<RecordDoc | null>;
+    static async get(domainId: string, _id: ObjectId): Promise<RecordDoc | null>;
+    static async get(arg0: string | ObjectId, arg1?: any) {
         const _id = arg1 || arg0;
         const domainId = arg1 ? arg0 : null;
         const res = await RecordModel.coll.findOne({ _id });
@@ -50,20 +49,20 @@ export default class RecordModel {
     @ArgMethod
     static async stat(domainId?: string) {
         const [d5min, d1h, day, week, month, year, total] = await Promise.all([
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find(domainId ? { domainId } : {}).count(),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments(domainId ? { domainId } : {}),
         ]);
         return {
             d5min, d1h, day, week, month, year, total,
         };
     }
 
-    static async judge(domainId: string, rids: MaybeArray<ObjectID>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
+    static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
         const rdoc = await RecordModel.get(domainId, rids[0]);
@@ -112,15 +111,15 @@ export default class RecordModel {
         domainId: string, pid: number, uid: number,
         lang: string, code: string, addTask: boolean,
         args: {
-            contest?: ObjectID,
+            contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
-            type: 'judge' | 'contest' | 'pretest' | 'hack',
+            type: 'judge' | 'rejudge' | 'contest' | 'pretest' | 'hack',
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
             status: STATUS.STATUS_WAITING,
-            _id: new ObjectID(),
+            _id: new ObjectId(),
             uid,
             code,
             lang,
@@ -138,14 +137,17 @@ export default class RecordModel {
         };
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
-        if (args.type === 'pretest') {
+        if (args.type === 'rejudge') {
+            args.type = 'judge';
+            data.rejudged = true;
+        } else if (args.type === 'pretest') {
             data.input = args.input || '';
-            data.contest = new ObjectID('000000000000000000000000');
+            data.contest = new ObjectId('000000000000000000000000');
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {});
+            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {}, { rejudge: data.rejudged });
         }
         return res.insertedId;
     }
@@ -156,13 +158,13 @@ export default class RecordModel {
     }
 
     static async update(
-        domainId: string, _id: MaybeArray<ObjectID>,
+        domainId: string, _id: MaybeArray<ObjectId>,
         $set?: MatchKeysAndValues<RecordDoc>,
         $push?: PushOperator<RecordDoc>,
         $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
         $inc?: Partial<Record<NumberKeys<RecordDoc>, number>>,
     ): Promise<RecordDoc | null> {
-        const $update: UpdateQuery<RecordDoc> = {};
+        const $update: UpdateFilter<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -183,12 +185,12 @@ export default class RecordModel {
     }
 
     static async updateMulti(
-        domainId: string, $match: FilterQuery<RecordDoc>,
+        domainId: string, $match: Filter<RecordDoc>,
         $set?: MatchKeysAndValues<RecordDoc>,
         $push?: PushOperator<RecordDoc>,
         $unset?: OnlyFieldsOfType<RecordDoc, any, true | '' | 1>,
     ) {
-        const $update: UpdateQuery<RecordDoc> = {};
+        const $update: UpdateFilter<RecordDoc> = {};
         if ($set && Object.keys($set).length) $update.$set = $set;
         if ($push && Object.keys($push).length) $update.$push = $push;
         if ($unset && Object.keys($unset).length) $update.$unset = $unset;
@@ -196,7 +198,7 @@ export default class RecordModel {
         return res.modifiedCount;
     }
 
-    static async reset(domainId: string, rid: MaybeArray<ObjectID>, isRejudge: boolean) {
+    static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -214,11 +216,11 @@ export default class RecordModel {
     }
 
     static count(domainId: string, query: any) {
-        return RecordModel.coll.find({ domainId, ...query }).count();
+        return RecordModel.coll.countDocuments({ domainId, ...query });
     }
 
     static async getList(
-        domainId: string, rids: ObjectID[], fields?: (keyof RecordDoc)[],
+        domainId: string, rids: ObjectId[], fields?: (keyof RecordDoc)[],
     ): Promise<Record<string, Partial<RecordDoc>>> {
         const r: Record<string, RecordDoc> = {};
         rids = Array.from(new Set(rids));

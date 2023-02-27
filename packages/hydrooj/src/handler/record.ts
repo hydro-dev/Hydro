@@ -1,7 +1,7 @@
 import {
     omit, pick, throttle, uniqBy,
 } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError,
     PermissionError, ProblemConfigError,
@@ -29,14 +29,14 @@ class RecordListHandler extends ContestDetailBaseHandler {
 
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.ProblemId, true)
-    @param('tid', Types.ObjectID, true)
+    @param('tid', Types.ObjectId, true)
     @param('uidOrName', Types.UidOrName, true)
     @param('lang', Types.String, true)
     @param('status', Types.Int, true)
     @param('fullStatus', Types.Boolean)
     @param('allDomain', Types.Boolean)
     async get(
-        domainId: string, page = 1, pid?: string | number, tid?: ObjectID,
+        domainId: string, page = 1, pid?: string | number, tid?: ObjectId,
         uidOrName?: string, lang?: string, status?: number, full = false,
         all = false,
     ) {
@@ -44,7 +44,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
         let tdoc = null;
         let invalid = false;
         this.response.template = 'record_main.html';
-        const q: FilterQuery<RecordDoc> = { contest: tid };
+        const q: Filter<RecordDoc> = { contest: tid };
         if (full) uidOrName = this.user._id.toString();
         if (tid) {
             tdoc = await contest.get(domainId, tid);
@@ -120,8 +120,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     rdoc: RecordDoc;
     tdoc?: Tdoc<30>;
 
-    @param('rid', Types.ObjectID)
-    async prepare(domainId: string, rid: ObjectID) {
+    @param('rid', Types.ObjectId)
+    async prepare(domainId: string, rid: ObjectId) {
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc) throw new RecordNotFoundError(rid);
     }
@@ -140,10 +140,10 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         this.response.disposition = `attachment; filename="${langs[lang]?.code_file || `foo.${this.rdoc.lang}`}"`;
     }
 
-    @param('rid', Types.ObjectID)
+    @param('rid', Types.ObjectId)
     @param('download', Types.Boolean)
     // eslint-disable-next-line consistent-return
-    async get(domainId: string, rid: ObjectID, download = false) {
+    async get(domainId: string, rid: ObjectId, download = false) {
         const rdoc = this.rdoc;
         let canViewDetail = true;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
@@ -187,14 +187,14 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         };
     }
 
-    @param('rid', Types.ObjectID)
+    @param('rid', Types.ObjectId)
     async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
         if (this.rdoc.files?.hack) throw new HackRejudgeFailedError();
     }
 
-    @param('rid', Types.ObjectID)
-    async postRejudge(domainId: string, rid: ObjectID) {
+    @param('rid', Types.ObjectId)
+    async postRejudge(domainId: string, rid: ObjectId) {
         const pdoc = await problem.get(domainId, this.rdoc.pid);
         if (!pdoc?.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -20);
@@ -205,8 +205,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         this.back();
     }
 
-    @param('rid', Types.ObjectID)
-    async postCancel(domainId: string, rid: ObjectID) {
+    @param('rid', Types.ObjectId)
+    async postCancel(domainId: string, rid: ObjectId) {
         const $set = {
             status: STATUS.STATUS_CANCELED,
             score: 0,
@@ -237,14 +237,14 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pretest = false;
     tdoc: Tdoc<30>;
 
-    @param('tid', Types.ObjectID, true)
+    @param('tid', Types.ObjectId, true)
     @param('pid', Types.ProblemId, true)
     @param('uidOrName', Types.UidOrName, true)
     @param('status', Types.Int, true)
     @param('pretest', Types.Boolean)
     @param('allDomain', Types.Boolean)
     async prepare(
-        domainId: string, tid?: ObjectID, pid?: string | number, uidOrName?: string,
+        domainId: string, tid?: ObjectId, pid?: string | number, uidOrName?: string,
         status?: number, pretest = false, all = false,
     ) {
         if (tid) {
@@ -279,8 +279,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 
     async message(msg: { rids: string[] }) {
         if (!(msg.rids instanceof Array)) return;
-        const rids = msg.rids.map((id) => new ObjectID(id));
-        const rdocs = await record.getMulti(this.args.domainId, { _id: { $in: rids } }).project(buildProjection(record.PROJECTION_LIST)).toArray();
+        const rids = msg.rids.map((id) => new ObjectId(id));
+        const rdocs = await record.getMulti(this.args.domainId, { _id: { $in: rids } })
+            .project<RecordDoc>(buildProjection(record.PROJECTION_LIST)).toArray();
         for (const rdoc of rdocs) this.onRecordChange(rdoc);
     }
 
@@ -303,7 +304,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.args.domainId, rdoc.uid),
             problem.get(rdoc.domainId, rdoc.pid),
         ]);
-        const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectID(this.tid)) : null;
+        const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectId(this.tid)) : null;
         if (pdoc && !rdoc.contest) {
             if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
@@ -325,8 +326,8 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     disconnectTimeout: NodeJS.Timeout;
     throttleSend: any;
 
-    @param('rid', Types.ObjectID)
-    async prepare(domainId: string, rid: ObjectID) {
+    @param('rid', Types.ObjectId)
+    async prepare(domainId: string, rid: ObjectId) {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {

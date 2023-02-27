@@ -1,6 +1,6 @@
 import { hostname } from 'os';
 import cac from 'cac';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
@@ -14,7 +14,7 @@ const coll = db.collection('task');
 const collEvent = db.collection('event');
 const argv = cac().parse();
 
-async function getFirst(query: FilterQuery<Task>) {
+async function getFirst(query: Filter<Task>) {
     if (process.env.CI) return null;
     const q = { ...query };
     const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
@@ -66,7 +66,7 @@ class TaskModel {
         const t: Task = {
             ...task,
             priority: task.priority ?? 0,
-            _id: new ObjectID(),
+            _id: new ObjectId(),
         };
         const res = await coll.insertOne(t);
         return res.insertedId;
@@ -77,19 +77,19 @@ class TaskModel {
         return res.insertedIds;
     }
 
-    static get(_id: ObjectID) {
+    static get(_id: ObjectId) {
         return coll.findOne({ _id });
     }
 
-    static count(query: FilterQuery<Task>) {
-        return coll.find(query).count();
+    static count(query: Filter<Task>) {
+        return coll.countDocuments(query);
     }
 
-    static del(_id: ObjectID) {
+    static del(_id: ObjectId) {
         return coll.deleteOne({ _id });
     }
 
-    static deleteMany(query: FilterQuery<Task>) {
+    static deleteMany(query: Filter<Task>) {
         return coll.deleteMany(query);
     }
 

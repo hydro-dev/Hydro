@@ -3,7 +3,7 @@ import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/se
 import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
-import type { Binary, Cursor, ObjectID } from 'mongodb';
+import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type { Context } from './context';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
@@ -76,7 +76,7 @@ export interface Authenticator {
     authenticatorAttachment: 'platform' | 'cross-platform';
 }
 
-export interface Udoc extends Dictionary<any> {
+export interface Udoc extends Record<string, any> {
     _id: number;
     mail: string;
     mailLower: string;
@@ -109,14 +109,14 @@ export interface VUdoc {
 }
 
 export interface GDoc {
-    _id: ObjectID;
+    _id: ObjectId;
     domainId: string;
     name: string;
     uids: number[];
 }
 
 export interface UserPreferenceDoc {
-    _id: ObjectID;
+    _id: ObjectId;
     filename: string;
     uid: number;
     content: string;
@@ -238,7 +238,7 @@ export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode
 export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
 
 export interface Document {
-    _id: ObjectID;
+    _id: ObjectId;
     docId: any;
     docType: number;
     domainId: string;
@@ -277,7 +277,7 @@ export type { ProblemDoc } from './model/problem';
 export type ProblemDict = NumericDictionary<ProblemDoc>;
 
 export interface StatusDocBase {
-    _id: ObjectID,
+    _id: ObjectId,
     docId: any,
     docType: number,
     domainId: string,
@@ -287,7 +287,7 @@ export interface StatusDocBase {
 export interface ProblemStatusDoc extends StatusDocBase {
     docId: number;
     docType: 10;
-    rid?: ObjectID;
+    rid?: ObjectId;
     score?: number;
     status?: number;
     nSubmit?: number;
@@ -306,7 +306,7 @@ export interface TestCase {
 }
 
 export interface RecordDoc {
-    _id: ObjectID;
+    _id: ObjectId;
     domainId: string;
     pid: number;
     uid: number;
@@ -328,7 +328,7 @@ export interface RecordDoc {
     /** pretest & hack */
     input?: string;
     /** 0 if pretest&script */
-    contest?: ObjectID;
+    contest?: ObjectId;
 
     files?: Record<string, string>
 }
@@ -336,12 +336,13 @@ export interface RecordDoc {
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
+    rejudge?: boolean;
 }
 
 export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
     priority: number;
     type: 'judge';
-    rid: ObjectID;
+    rid: ObjectId;
     config: ProblemConfigFile;
     meta: JudgeMeta;
     data: FileInfo[];
@@ -368,7 +369,7 @@ export interface TrainingNode {
 }
 
 export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
-    docId: ObjectID;
+    docId: ObjectId;
     docType: docType & number;
     beginAt: Date;
     endAt: Date;
@@ -421,7 +422,7 @@ export interface DomainDoc extends Record<string, any> {
 
 // Message
 export interface MessageDoc {
-    _id: ObjectID,
+    _id: ObjectId,
     from: number,
     to: number,
     content: string,
@@ -443,9 +444,9 @@ export type { DiscussionDoc } from './model/discussion';
 declare module './model/discussion' {
     interface DiscussionDoc {
         docType: document['TYPE_DISCUSSION'];
-        docId: ObjectID;
+        docId: ObjectId;
         parentType: number;
-        parentId: ObjectID | number | string;
+        parentId: ObjectId | number | string;
         title: string;
         content: string;
         ip: string;
@@ -465,9 +466,9 @@ declare module './model/discussion' {
 
 export interface DiscussionReplyDoc extends Document {
     docType: document['TYPE_DISCUSSION_REPLY'];
-    docId: ObjectID;
+    docId: ObjectId;
     parentType: document['TYPE_DISCUSSION'];
-    parentId: ObjectID;
+    parentId: ObjectId;
     ip: string;
     content: string;
     reply: DiscussionTailReplyDoc[];
@@ -477,26 +478,12 @@ export interface DiscussionReplyDoc extends Document {
 }
 
 export interface DiscussionTailReplyDoc {
-    _id: ObjectID;
+    _id: ObjectId;
     owner: number;
     content: string;
     ip: string;
     edited?: boolean;
     editor?: number;
-}
-
-export interface BlogDoc {
-    docType: document['TYPE_BLOG'];
-    docId: ObjectID;
-    owner: number;
-    title: string;
-    content: string;
-    ip: string;
-    updateAt: Date;
-    nReply: number;
-    views: number;
-    reply: any[];
-    react: Record<string, number>;
 }
 
 export interface TokenDoc {
@@ -509,7 +496,7 @@ export interface TokenDoc {
 }
 
 export interface OplogDoc extends Record<string, any> {
-    _id: ObjectID,
+    _id: ObjectId,
     type: string,
 }
 
@@ -540,9 +527,9 @@ export interface ContestRule<T = any> {
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: Cursor<ContestStat & T>,
+        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
-    ranked: (tdoc: Tdoc<30>, cursor: Cursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    ranked: (tdoc: Tdoc<30>, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
@@ -563,7 +550,7 @@ export interface JudgeMessage {
 export interface JudgeResultBody {
     key: string;
     domainId: string;
-    rid: ObjectID;
+    rid: ObjectId;
     judger?: number;
     progress?: number;
     addProgress?: number;
@@ -581,7 +568,7 @@ export interface JudgeResultBody {
 }
 
 export interface Task {
-    _id: ObjectID;
+    _id: ObjectId;
     type: string;
     subType?: string;
     priority: number;
@@ -589,7 +576,7 @@ export interface Task {
 }
 
 export interface Schedule {
-    _id: ObjectID;
+    _id: ObjectId;
     type: string;
     subType?: string;
     executeAfter: Date;
@@ -621,7 +608,7 @@ export interface EventDoc {
 }
 
 export interface OpCountDoc {
-    _id: ObjectID;
+    _id: ObjectId;
     op: string;
     ident: string;
     expireAt: Date;
@@ -639,7 +626,7 @@ export interface DiscussionHistoryDoc {
     title?: string;
     content: string;
     domainId: string;
-    docId: ObjectID;
+    docId: ObjectId;
     /** Create time */
     time: Date;
     uid: number;
@@ -676,7 +663,6 @@ declare module './service/db' {
 
 export interface Model {
     blacklist: typeof import('./model/blacklist').default,
-    blog: typeof import('./model/blog'),
     builtin: typeof import('./model/builtin'),
     contest: typeof import('./model/contest'),
     discussion: typeof import('./model/discussion'),
@@ -729,7 +715,6 @@ export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty');
     buildContent: typeof import('./lib/content').buildContent;
     mail: typeof import('./lib/mail');
-    paginate: typeof import('./lib/paginate');
     rank: typeof import('./lib/rank');
     rating: typeof import('./lib/rating');
     testdataConfig: typeof import('./lib/testdataConfig');

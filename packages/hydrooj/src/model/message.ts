@@ -1,4 +1,4 @@
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { MessageDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -18,34 +18,33 @@ class MessageModel {
     static async send(
         from: number, to: number,
         content: string, flag: number = MessageModel.FLAG_UNREAD,
-    ): Promise<MessageDoc> {
-        const res = await coll.insertOne({
-            from, to, content, flag,
-        });
-        const mdoc = {
-            from, to, content, _id: res.insertedId, flag,
+    ) {
+        const _id = new ObjectId();
+        const mdoc: MessageDoc = {
+            _id, from, to, content, flag,
         };
+        await coll.insertOne(mdoc);
         if (from !== to) bus.broadcast('user/message', to, mdoc);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }
 
-    static async get(_id: ObjectID): Promise<MessageDoc | null> {
+    static async get(_id: ObjectId) {
         return await coll.findOne({ _id });
     }
 
     @ArgMethod
-    static async getByUser(uid: number): Promise<MessageDoc[]> {
+    static async getByUser(uid: number) {
         return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', -1).limit(1000).toArray();
     }
 
-    static async getMany(query: FilterQuery<MessageDoc>, sort: any, page: number, limit: number): Promise<MessageDoc[]> {
+    static async getMany(query: Filter<MessageDoc>, sort: any, page: number, limit: number) {
         return await coll.find(query).sort(sort)
             .skip((page - 1) * limit).limit(limit)
             .toArray();
     }
 
-    static async setFlag(messageId: ObjectID, flag: number): Promise<MessageDoc | null> {
+    static async setFlag(messageId: ObjectId, flag: number) {
         const result = await coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
@@ -54,13 +53,13 @@ class MessageModel {
         return result.value || null;
     }
 
-    static async del(_id: ObjectID) {
+    static async del(_id: ObjectId) {
         return await coll.deleteOne({ _id });
     }
 
     @ArgMethod
-    static count(query: FilterQuery<MessageDoc> = {}) {
-        return coll.find(query).count();
+    static count(query: Filter<MessageDoc> = {}) {
+        return coll.countDocuments(query);
     }
 
     static getMulti(uid: number) {

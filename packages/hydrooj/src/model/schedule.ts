@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import { Schedule } from '../interface';
@@ -10,7 +10,7 @@ import db from '../service/db';
 const logger = new Logger('model/schedule');
 const coll = db.collection('schedule');
 
-async function getFirst(query: FilterQuery<Schedule>) {
+async function getFirst(query: Filter<Schedule>) {
     if (process.env.CI) return null;
     const q = { ...query };
     q.executeAfter ||= { $lt: new Date() };
@@ -100,24 +100,24 @@ class ScheduleModel {
         const res = await coll.insertOne({
             ...task,
             executeAfter: task.executeAfter || new Date(),
-            _id: new ObjectID(),
+            _id: new ObjectId(),
         });
         return res.insertedId;
     }
 
-    static get(_id: ObjectID) {
+    static get(_id: ObjectId) {
         return coll.findOne({ _id });
     }
 
-    static count(query: FilterQuery<Schedule>) {
-        return coll.find(query).count();
+    static count(query: Filter<Schedule>) {
+        return coll.countDocuments(query);
     }
 
-    static del(_id: ObjectID) {
+    static del(_id: ObjectId) {
         return coll.deleteOne({ _id });
     }
 
-    static deleteMany(query: FilterQuery<Schedule>) {
+    static deleteMany(query: Filter<Schedule>) {
         return coll.deleteMany(query);
     }
 
@@ -136,7 +136,7 @@ export async function apply(ctx: Context) {
     ctx.worker = Worker;
 
     Worker.addHandler('task.daily', async () => {
-        await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectID('000000000000000000000000') });
+        await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectId('000000000000000000000000') });
         await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
         await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
         if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {

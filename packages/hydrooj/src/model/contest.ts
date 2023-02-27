@@ -1,5 +1,5 @@
 import { sumBy } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotFoundError,
@@ -20,7 +20,7 @@ import RecordModel from './record';
 import user, { User } from './user';
 
 interface AcmJournal {
-    rid: ObjectID;
+    rid: ObjectId;
     pid: number;
     score: number;
     status: number;
@@ -167,7 +167,7 @@ const acm = buildContestRule({
                     value,
                     hover: accept ? formatSeconds(doc.time) : '',
                     raw: doc.rid,
-                    style: accept && doc.rid.generationTime === meta?.first?.[pid]
+                    style: accept && doc.rid.getTimestamp().getTime() === meta?.first?.[pid]
                         ? 'background-color: rgb(217, 240, 199);'
                         : undefined,
                 });
@@ -195,7 +195,7 @@ const acm = buildContestRule({
             { $match: { 'r.v.status': STATUS.STATUS_ACCEPTED } },
             { $group: { _id: '$r.v.pid', first: { $min: '$r.v.rid' } } },
         ]).toArray() as any[];
-        for (const t of data) first[t._id] = t.first.generationTime;
+        for (const t of data) first[t._id] = t.first.getTimestamp().getTime();
 
         const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [
@@ -299,7 +299,7 @@ const oi = buildContestRule({
                     value: tsddict[pid]?.score ?? '-',
                     raw: tsddict[pid]?.rid || null,
                 };
-            if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]) {
+            if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]) {
                 node.style = 'background-color: rgb(217, 240, 199);';
             }
             row.push(node);
@@ -319,7 +319,7 @@ const oi = buildContestRule({
                 docId: tdoc.docId,
                 [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
             }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
-            first[pid] = data ? data.detail[pid].rid.generationTime : new ObjectID().generationTime;
+            first[pid] = data ? data.detail[pid].rid.getTimestamp().getTime() : Date.now() / 1000;
         }));
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
@@ -580,7 +580,7 @@ export const RULES: ContestRules = {
 };
 
 function _getStatusJournal(tsdoc) {
-    return tsdoc.journal.sort((a, b) => (a.rid.generationTime - b.rid.generationTime));
+    return tsdoc.journal.sort((a, b) => (a.rid.getTimestamp() - b.rid.getTimestamp()));
 }
 
 export async function add(
@@ -602,7 +602,7 @@ export async function add(
     return res;
 }
 
-export async function edit(domainId: string, tid: ObjectID, $set: Partial<Tdoc>) {
+export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>) {
     if ($set.rule && !RULES[$set.rule]) throw new ValidationError('rule');
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
@@ -610,7 +610,7 @@ export async function edit(domainId: string, tid: ObjectID, $set: Partial<Tdoc>)
     return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
 }
 
-export async function del(domainId: string, tid: ObjectID) {
+export async function del(domainId: string, tid: ObjectId) {
     await Promise.all([
         document.deleteOne(domainId, document.TYPE_CONTEST, tid),
         document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
@@ -618,7 +618,7 @@ export async function del(domainId: string, tid: ObjectID) {
     ]);
 }
 
-export async function get(domainId: string, tid: ObjectID): Promise<Tdoc<30>> {
+export async function get(domainId: string, tid: ObjectId): Promise<Tdoc<30>> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
@@ -629,11 +629,11 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
-export async function getStatus(domainId: string, tid: ObjectID, uid: number) {
+export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
-async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: number, status: STATUS, score: number) {
+async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     if (isLocked(tdoc)) {
         status = STATUS.STATUS_WAITING;
@@ -648,21 +648,21 @@ async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectID, pid: nu
 }
 
 export async function updateStatus(
-    domainId: string, tid: ObjectID, uid: number, rid: ObjectID, pid: number,
+    domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0,
 ) {
     const tdoc = await get(domainId, tid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score);
 }
 
-export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
+export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {
     const r = {};
     // eslint-disable-next-line no-await-in-loop
     for (const tid of tids) r[tid.toHexString()] = await getStatus(domainId, tid, uid);
     return r;
 }
 
-export async function attend(domainId: string, tid: ObjectID, uid: number, payload: any = {}) {
+export async function attend(domainId: string, tid: ObjectId, uid: number, payload: any = {}) {
     try {
         await document.cappedIncStatus(domainId, document.TYPE_CONTEST, tid, uid, 'attend', 1, 0, 1, payload);
     } catch (e) {
@@ -715,7 +715,7 @@ export function isExtended(tdoc: Tdoc) {
     return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
-export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: any) {
+export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
 
@@ -724,12 +724,12 @@ export function count(domainId: string, query: any) {
 }
 
 export function getMulti(
-    domainId: string, query: FilterQuery<document.DocType['30']> = {},
+    domainId: string, query: Filter<document.DocType['30']> = {},
 ) {
     return document.getMulti(domainId, document.TYPE_CONTEST, query).sort({ beginAt: -1 });
 }
 
-export async function getAndListStatus(domainId: string, tid: ObjectID): Promise<[Tdoc, any[]]> {
+export async function getAndListStatus(domainId: string, tid: ObjectId): Promise<[Tdoc, any[]]> {
     // TODO(iceboy): projection, pagination.
     const tdoc = await get(domainId, tid);
     const tsdocs = await document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid })
@@ -737,7 +737,7 @@ export async function getAndListStatus(domainId: string, tid: ObjectID): Promise
     return [tdoc, tsdocs];
 }
 
-export async function recalcStatus(domainId: string, tid: ObjectID) {
+export async function recalcStatus(domainId: string, tid: ObjectId) {
     const [tdoc, tsdocs] = await Promise.all([
         document.get(domainId, document.TYPE_CONTEST, tid),
         document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
@@ -758,7 +758,7 @@ export async function recalcStatus(domainId: string, tid: ObjectID) {
     return await Promise.all(tasks);
 }
 
-export async function unlockScoreboard(domainId: string, tid: ObjectID) {
+export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
     const rdocs = await RecordModel.getMulti(domainId, { contest: tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
@@ -802,7 +802,7 @@ export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPer
 }
 
 export async function getScoreboard(
-    this: Handler, domainId: string, tid: ObjectID, isExport = false,
+    this: Handler, domainId: string, tid: ObjectId, isExport = false,
 ): Promise<[Tdoc<30>, ScoreboardRow[], BaseUserDict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);

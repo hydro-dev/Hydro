@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { OplogDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -7,20 +7,20 @@ import type { Handler } from '../service/server';
 
 export const coll = db.collection('oplog');
 
-export async function add(data: Partial<OplogDoc> & { type: string }): Promise<ObjectID> {
+export async function add(data: Partial<OplogDoc> & { type: string }): Promise<ObjectId> {
     const _data = { ...data };
     if (_data._id) {
         _data.id = _data._id;
         delete _data._id;
     }
-    const res = await coll.insertOne({ _id: new ObjectID(), ..._data });
+    const res = await coll.insertOne({ _id: new ObjectId(), ..._data });
     return res.insertedId;
 }
 
 function safeKeys(data: any) {
     if (['string', 'number', 'boolean'].includes(typeof data)) return data;
     if (data instanceof Array) data.forEach(safeKeys);
-    else if (data instanceof ObjectID) return data;
+    else if (data instanceof ObjectId) return data;
     else if (data instanceof Object) {
         for (const key in data) {
             if (['password', 'verifyPassword'].includes(key)) {
@@ -42,7 +42,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
     await bus.parallel('oplog/log', type, handler, args, data);
     const res = await coll.insertOne({
         ...data,
-        _id: new ObjectID(),
+        _id: new ObjectId(),
         type,
         time: new Date(),
         domainId: handler.args.domainId,
@@ -55,7 +55,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
     return res.insertedId;
 }
 
-export async function get(id: ObjectID): Promise<OplogDoc | null> {
+export async function get(id: ObjectId) {
     return await coll.findOne({ _id: id });
 }
 

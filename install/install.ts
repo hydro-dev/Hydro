@@ -38,7 +38,11 @@ const locales = {
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
         'info.skip': '步骤已跳过。',
-        'warn.bt': '检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Ubuntu 22.04 系统进行安装。',
+        'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Ubuntu 22.04 系统进行安装。
+要忽略该警告，请使用 --shamefully-unsafe-bt-panel 参数重新运行此脚本。`,
+        'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Ubuntu 22.04 系统进行安装。
+开发者对因为使用宝塔面板的数据丢失不承担任何责任。
+要取消安装，请使用 Ctrl-C 退出。安装程序将在五秒后继续。`,
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
@@ -57,7 +61,11 @@ const locales = {
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
         'info.skip': 'Step skipped.',
-        'warn.bt': 'BT-Panel detected, the installation script may not work properly. It is recommended to use a pure Ubuntu 22.04 OS.',
+        'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a pure Ubuntu 22.04 OS.
+To ignore this warning, please run this script again with '--shamefully-unsafe-bt-panel' flag.`,
+        'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a pure Ubuntu 22.04 OS.
+The developer is not responsible for any data loss caused by using BT-Panel.
+To cancel the installation, please use Ctrl-C to exit. The installation program will continue in five seconds.`,
     },
 };
 
@@ -68,7 +76,7 @@ const installTarget = installAsJudge
     : 'hydrooj @hydrooj/hydrojudge @hydrooj/ui-default @hydrooj/fps-importer';
 const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer'];
 
-let locale = process.env.LANG?.includes('zh') ? 'zh' : 'en';
+let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
 const processLog = (orig) => (str, ...args) => (orig(locales[locale][str] || str, ...args), 0);
 const log = {
@@ -224,8 +232,12 @@ const Steps = () => [
                 if (process.env.IGNORE_BT) return;
                 const res = exec('bt default');
                 if (!res.code) {
-                    log.warn('warn.bt');
-                    process.exit(1);
+                    if (!process.argv.includes('--shamefully-unsafe-bt-panel')) {
+                        log.warn('error.bt');
+                        process.exit(1);
+                    } else {
+                        log.warn('warn.bt');
+                    }
                 }
             },
             () => {
@@ -323,13 +335,11 @@ connect-timeout = 10`);
             'pm2 start mongod',
             () => sleep(3000),
             async () => {
-                // eslint-disable-next-line import/no-absolute-path
-                const { MongoClient } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb');
+                // eslint-disable-next-line
+                const { MongoClient, WriteConcern } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
                 const client = await MongoClient.connect('mongodb://127.0.0.1', {
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true,
                     readPreference: 'nearest',
-                    writeConcern: 'majority',
+                    writeConcern: new WriteConcern('majority'),
                 });
                 await client.db('hydro').addUser('hydro', password, {
                     roles: [{ role: 'readWrite', db: 'hydro' }],

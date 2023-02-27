@@ -50,7 +50,6 @@ Begin Time: 開始時間
 Belongs to: 屬於
 Bio Visibility: 個人簡介可見性
 Bio: 個人簡介
-Blog: 部落格
 Boom!: 炸了！
 Browser: 瀏覽器
 Built-in: 內建
@@ -86,6 +85,7 @@ contest_detail_problem_submit: 遞交比賽程式碼
 contest_edit: 編輯比賽
 contest_main: 比賽
 contest_scoreboard: 比賽成績表
+contest: 比賽
 Contest: 比賽
 Create a contest: 創建一個比賽
 Create a Discussion: 創建一個討論

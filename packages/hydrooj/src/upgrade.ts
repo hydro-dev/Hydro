@@ -4,7 +4,7 @@
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { sleep } from '@hydrooj/utils';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
@@ -53,16 +53,7 @@ const scripts: UpgradeScript[] = [
     null,
     // Init
     ...new Array(26).fill(unsupportedUpgrade),
-    async function _27_28() {
-        const cursor = document.coll.find({ docType: document.TYPE_DISCUSSION });
-        for await (const data of cursor) {
-            const t = Math.exp(-0.15 * (((new Date().getTime() / 1000) - data._id.generationTime) / 3600));
-            const rCount = await discussion.getMultiReply(data.domainId, data.docId).count();
-            const sort = ((data.sort || 100) + Math.max(rCount - (data.lastRCount || 0), 0) * 10) * t;
-            await document.coll.updateOne({ _id: data._id }, { $set: { sort, lastRCount: rCount } });
-        }
-        return true;
-    },
+    null,
     async function _28_29() {
         return await iterateAllProblem(['content', 'html'], async (pdoc) => {
             try {
@@ -197,8 +188,8 @@ const scripts: UpgradeScript[] = [
                 parentId: { $type: 'string' },
             }).toArray();
             for (const doc of ddocs) {
-                if (ObjectID.isValid(doc.parentId)) {
-                    await document.set(ddoc._id, document.TYPE_DISCUSSION, doc.docId, { parentId: new ObjectID(doc.parentId) });
+                if (ObjectId.isValid(doc.parentId)) {
+                    await document.set(ddoc._id, document.TYPE_DISCUSSION, doc.docId, { parentId: new ObjectId(doc.parentId) });
                 }
             }
         });
@@ -215,7 +206,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     async function _48_49() {
-        await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectID('000000000000000000000000') } });
+        await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectId('000000000000000000000000') } });
         return true;
     },
     async function _49_50() {
@@ -316,7 +307,7 @@ const scripts: UpgradeScript[] = [
         await iterateAllProblem(['pid', '_id'], async (pdoc) => {
             bulk.find({ _id: pdoc._id }).updateOne({ $set: { sort: sortable(pdoc.pid || `P${pdoc.docId}`) } });
         });
-        if (bulk.length) await bulk.execute();
+        if (bulk.batches.length) await bulk.execute();
         return true;
     },
     async function _55_56() {

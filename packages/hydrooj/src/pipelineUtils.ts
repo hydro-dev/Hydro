@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { FilterQuery } from 'mongodb';
+import { Filter } from 'mongodb';
 import type {
     DomainDoc, ProblemStatusDoc, RecordDoc,
     Tdoc, Udoc,
@@ -18,7 +18,7 @@ export async function iterateAllDomain(cb: (ddoc: DomainDoc, current?: number, t
 }
 
 export async function iterateAllUser(cb: (udoc: Udoc, current?: number, total?: number) => Promise<any>) {
-    const udocs = await user.getMulti().toArray();
+    const udocs = await user.getMulti({}).toArray();
     for (const i in udocs) await cb(udocs[i], +i, udocs.length);
     return true;
 }
@@ -32,7 +32,7 @@ export async function iterateAllContest(cb: (tdoc: Tdoc) => Promise<any>) {
     });
 }
 
-export async function iterateAllPsdoc(filter: FilterQuery<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
+export async function iterateAllPsdoc(filter: Filter<ProblemStatusDoc>, cb: (psdoc: ProblemStatusDoc) => Promise<any>) {
     return await iterateAllDomain(async ({ _id: domainId }) => {
         const cursor = document.getMultiStatus(domainId, document.TYPE_PROBLEM, filter);
         while (await cursor.hasNext()) {
@@ -54,7 +54,7 @@ export async function iterateAllProblemInDomain(
     if (!fields.includes('domainId')) fields.push('domainId');
     if (!fields.includes('docId')) fields.push('docId');
     const cursor = problem.getMulti(domainId, {}, fields as any);
-    const total = await problem.getMulti(domainId, {}).count();
+    const total = await problem.count(domainId, {});
     let i = 0;
     for await (const doc of cursor) {
         i++;
@@ -76,7 +76,7 @@ export async function iterateAllProblem(
 export async function iterateAllRecord(
     cb: (rdoc: RecordDoc, current: number, total: number) => any,
 ) {
-    const total = await RecordModel.coll.count();
+    const total = await RecordModel.coll.countDocuments();
     let i = 0;
     const cursor = RecordModel.coll.find().sort('_id', 1);
     for await (const rdoc of cursor) {

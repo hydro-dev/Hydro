@@ -5,7 +5,7 @@ import { Duplex } from 'stream';
 import { inspect } from 'util';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import Logger from 'reggol';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
@@ -128,7 +128,7 @@ export namespace Time {
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
-        return new ObjectID(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectID().toHexString().substr(8)}`);
+        return new ObjectId(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectId().toHexString().substr(8)}`);
     }
 }
 

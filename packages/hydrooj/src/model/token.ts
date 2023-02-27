@@ -1,4 +1,4 @@
-import { FilterQuery } from 'mongodb';
+import { Filter } from 'mongodb';
 import { TokenDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -29,15 +29,16 @@ class TokenModel {
         tokenType: number, expireSeconds: number, data: any, id = String.random(32),
     ): Promise<[string, TokenDoc]> {
         const now = new Date();
-        const res = await TokenModel.coll.insertOne({
+        const payload = {
             ...data,
             _id: id,
             tokenType,
             createAt: now,
             updateAt: now,
             expireAt: new Date(now.getTime() + expireSeconds * 1000),
-        });
-        return [id, res.ops[0]];
+        };
+        await TokenModel.coll.insertOne(payload);
+        return [id, payload];
     }
 
     @ArgMethod
@@ -45,7 +46,7 @@ class TokenModel {
         return await TokenModel.coll.findOne({ _id: tokenId, tokenType });
     }
 
-    static getMulti(tokenType: number, query: FilterQuery<TokenDoc> = {}) {
+    static getMulti(tokenType: number, query: Filter<TokenDoc> = {}) {
         return TokenModel.coll.find({ tokenType, ...query });
     }
 

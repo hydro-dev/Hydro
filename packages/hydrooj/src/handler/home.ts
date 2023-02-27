@@ -2,7 +2,7 @@ import path from 'path';
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
-import { Binary, ObjectID } from 'mongodb';
+import { Binary, ObjectId } from 'mongodb';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -293,7 +293,7 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('id', Types.String)
     async postDisableAuthn(domainId: string, id: string) {
-        const authenticators = this.user._authenticators?.filter((c) => c.credentialID.buffer.toString('base64') !== id);
+        const authenticators = this.user._authenticators?.filter((c) => Buffer.from(c.credentialID.buffer).toString('base64') !== id);
         if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
         await user.setById(this.user._id, { authenticators });
         this.back();
@@ -498,16 +498,16 @@ class HomeMessagesHandler extends Handler {
         this.back({ mdoc, udoc });
     }
 
-    @param('messageId', Types.ObjectID)
-    async postDeleteMessage(domainId: string, messageId: ObjectID) {
+    @param('messageId', Types.ObjectId)
+    async postDeleteMessage(domainId: string, messageId: ObjectId) {
         const msg = await message.get(messageId);
         if ([msg.from, msg.to].includes(this.user._id)) await message.del(messageId);
         else throw new PermissionError();
         this.back();
     }
 
-    @param('messageId', Types.ObjectID)
-    async postRead(domainId: string, messageId: ObjectID) {
+    @param('messageId', Types.ObjectId)
+    async postRead(domainId: string, messageId: ObjectId) {
         const msg = await message.get(messageId);
         if ([msg.from, msg.to].includes(this.user._id)) {
             await message.setFlag(messageId, message.FLAG_UNREAD);
