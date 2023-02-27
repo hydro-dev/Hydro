@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import {
-    _, Logger, SettingModel, sleep, STATUS,
+    _, Logger, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -87,7 +87,6 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         let enableO2 = 0;
-        const comment = SettingModel.langs[lang]?.comment;
         if (code.length < 10) {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message: 'Code too short' });
             return null;
@@ -95,11 +94,6 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
         if (!lang.startsWith('luogu.')) {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
             return null;
-        }
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${new Date().toLocaleString()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
         }
         if (lang.endsWith('o2')) {
             enableO2 = 1;

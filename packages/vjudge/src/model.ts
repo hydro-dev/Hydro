@@ -2,7 +2,7 @@
 import os from 'os';
 import {
     Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, RecordModel, Service, sleep, STATUS, TaskModel, Time,
+    ProblemModel, RecordModel, Service, SettingModel, sleep, STATUS, TaskModel, Time,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
@@ -39,6 +39,12 @@ class AccountService {
         const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid });
         await next({ status: STATUS.STATUS_FETCHED });
         try {
+            const comment = SettingModel.langs[task.lang].comment;
+            if (comment) {
+                const msg = `Hydro submission #${task.rid}@${new Date().getTime()}`;
+                if (typeof comment === 'string') task.code = `${comment} ${msg}\n${task.code}`;
+                else if (comment instanceof Array) task.code = `${comment[0]} ${msg} ${comment[1]}\n${task.code}`;
+            }
             const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
             if (!rid) return;
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });

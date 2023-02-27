@@ -1,5 +1,5 @@
 import {
-    _, Logger, SettingModel, sleep, STATUS,
+    _, Logger, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -134,16 +134,9 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next) {
-        const langId = lang.split('.')[1];
-        const comment = SettingModel.langs[lang].comment;
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${Date.now()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
-        }
         const res = await this.post(this.config.submit.endpoint).send({
             [this.config.submit.idField]: id,
-            [this.config.submit.langField]: langId,
+            [this.config.submit.langField]: lang.split('.')[1],
             [this.config.submit.codeField]: code,
             ...this.config.submit.extra,
         });

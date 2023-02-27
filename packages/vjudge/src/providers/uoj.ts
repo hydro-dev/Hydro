@@ -2,7 +2,7 @@
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-    Logger, parseMemoryMB, parseTimeMS, SettingModel, sleep, STATUS,
+    Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -142,15 +142,9 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
         return Array.from($dom.window.document.querySelectorAll('tbody>tr>td>a')).map((i) => `P${i.getAttribute('href').split('/')[4]}`);
     }
 
-    async submitProblem(id: string, lang: string, code: string, info) {
+    async submitProblem(id: string, lang: string, code: string) {
         let programTypeId = lang.includes('uoj.') ? lang.split('uoj.')[1] : 'C++11';
         if (programTypeId === 'Python27') programTypeId = 'Python2.7';
-        const comment = SettingModel.langs[lang].comment;
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
-        }
         const _token = await this.getCsrfToken(`/problem/${id.split('P')[1]}`);
         const { text } = await this.post(`/problem/${id.split('P')[1]}`).send({
             _token,

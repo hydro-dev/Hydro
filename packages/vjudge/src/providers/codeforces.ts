@@ -3,7 +3,7 @@ import { PassThrough } from 'stream';
 import yaml from 'js-yaml';
 import { JSDOM } from 'jsdom';
 import {
-    buildContent, Logger, SettingModel, sleep, STATUS,
+    buildContent, Logger, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -272,12 +272,6 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
-        const comment = SettingModel.langs[lang].comment;
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
-        }
         const [type, contestId, problemId] = parseProblemId(id);
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`

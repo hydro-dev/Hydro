@@ -2,7 +2,7 @@
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-    htmlEncode, Logger, parseMemoryMB, parseTimeMS, SettingModel, sleep, STATUS,
+    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -195,15 +195,9 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
             .map((i) => `P${+i.children[0].innerHTML ? i.children[0].innerHTML : i.children[1].innerHTML}`);
     }
 
-    async submitProblem(id: string, lang: string, code: string, info) {
+    async submitProblem(id: string, lang: string, code: string) {
         await this.ensureLogin();
         const language = lang.includes('poj.') ? lang.split('poj.')[1] : '0';
-        const comment = SettingModel.langs[lang].comment;
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
-        }
         code = Buffer.from(code).toString('base64');
         const { text } = await this.post('/submit').send({
             problem_id: id.split('P')[1],

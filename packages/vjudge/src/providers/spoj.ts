@@ -2,7 +2,7 @@
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-    Logger, parseMemoryMB, SettingModel, sleep, STATUS,
+    Logger, parseMemoryMB, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -94,12 +94,6 @@ langs: ${JSON.stringify(langs)}`),
     }
 
     async submitProblem(problemcode: string, lang: string, code: string, info, next, end) {
-        const comment = SettingModel.langs[lang]?.comment;
-        if (comment) {
-            const msg = `Hydro submission #${info.rid}@${new Date().getTime()}`;
-            if (typeof comment === 'string') code = `${comment} ${msg}\n${code}`;
-            else if (comment instanceof Array) code = `${comment[0]} ${msg} ${comment[1]}\n${code}`;
-        }
         // TODO check submit time to ensure submission
         const { text } = await this.post('/submit/complete/').send({
             submit: 'Submit!',
