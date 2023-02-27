@@ -41,7 +41,6 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
-"{0}'s blog": "{0} 的博客"
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
@@ -112,7 +111,6 @@ Begin Time: 开始时间
 Belongs to: 属于
 Bio Visibility: 个人简介可见性
 Bio: 个人简介
-Blog: 博客
 Bold: 加粗
 Boom!: 炸了！
 Browser: 浏览器

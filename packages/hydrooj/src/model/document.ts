@@ -5,7 +5,7 @@ import {
 } from 'mongodb';
 import { Context } from '../context';
 import {
-    BlogDoc, Content, DiscussionDoc,
+    Content, DiscussionDoc,
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
     Tdoc, TrainingDoc,
 } from '../interface';
@@ -30,7 +30,6 @@ export const TYPE_CONTEST: 30 = 30;
 export const TYPE_TRAINING: 40 = 40;
 /** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
 export const TYPE_HOMEWORK: 60 = 60;
-export const TYPE_BLOG: 70 = 70;
 
 export interface DocType {
     [TYPE_PROBLEM]: ProblemDoc;
@@ -41,7 +40,6 @@ export interface DocType {
     [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc;
     [TYPE_CONTEST]: Tdoc;
     [TYPE_TRAINING]: TrainingDoc;
-    [TYPE_BLOG]: BlogDoc;
 }
 
 export interface DocStatusType {
@@ -499,5 +497,4 @@ global.Hydro.model.document = {
     TYPE_PROBLEM_LIST,
     TYPE_PROBLEM_SOLUTION,
     TYPE_TRAINING,
-    TYPE_BLOG,
 };

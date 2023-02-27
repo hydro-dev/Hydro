@@ -79,18 +79,11 @@
               </a>
             </li>
           {% endif %}
-          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) and model.system.get('server.blog') %}
-            <li class="menu__item">
-              <a href="{{ url('blog_main', uid=handler.user._id) }}" class="menu__link">
-                <span class="icon icon-book"></span> {{ _('Blog') }}
-              </a>
-            </li>
-          {% endif %}
           {% if ui.getNodes('UserDropdown').length %}
             <li class="menu__seperator"></li>
             {%- for item in ui.getNodes('UserDropdown') -%}
             <li class="menu__item nojs--hide">
-              <a href="{{ url(item.name) }}" class="menu__link">
+              <a href="{{ url(item.name, (item.args(handler) if typeof(item.args)=='function' else item.args) or {}) }}" class="menu__link">
                 <span class="icon icon-{{ item.args.icon }}"></span> {{ _(item.args.displayName or item.name) }}
               </a>
             </li>
