@@ -39,11 +39,11 @@ class AdminStatusHandler extends Handler {
         const record = await RecordModel.stat();
         const status = await getStatus();
         const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
-            DomainModel.getMulti().count(),
-            UserModel.getMulti().count(),
-            DocumentModel.coll.find({ docType: DocumentModel.TYPE_PROBLEM }).count(),
-            DocumentModel.coll.find({ docType: DocumentModel.TYPE_DISCUSSION }).count(),
-            RecordModel.coll.find().count(),
+            DomainModel.coll.countDocuments(),
+            UserModel.coll.countDocuments(),
+            DocumentModel.coll.countDocuments({ docType: DocumentModel.TYPE_PROBLEM }),
+            DocumentModel.coll.countDocuments({ docType: DocumentModel.TYPE_DISCUSSION }),
+            RecordModel.coll.countDocuments(),
         ]);
         this.response.body = {
             record,

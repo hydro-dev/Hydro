@@ -3,7 +3,7 @@ import { readFile, statSync } from 'fs-extra';
 import {
     escapeRegExp, flattenDeep, intersection, pick, uniqBy,
 } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
@@ -101,7 +101,7 @@ registerResolver(
 );
 
 function buildQuery(udoc: User) {
-    const q: FilterQuery<ProblemDoc> = {};
+    const q: Filter<ProblemDoc> = {};
     if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) {
         q.$or = [
             { hidden: false },
@@ -309,8 +309,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     psdoc: ProblemStatusDoc;
 
     @route('pid', Types.ProblemId, true)
-    @query('tid', Types.ObjectID, true)
-    async _prepare(domainId: string, pid: number | string, tid?: ObjectID) {
+    @query('tid', Types.ObjectId, true)
+    async _prepare(domainId: string, pid: number | string, tid?: ObjectId) {
         this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (tid) {
@@ -375,7 +375,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.UiContext.extraTitleContent = this.pdoc.title;
     }
 
-    @query('tid', Types.ObjectID, true)
+    @query('tid', Types.ObjectId, true)
     @query('pjax', Types.Boolean)
     async get(...args: any[]) {
         // Navigate to current additional file download
@@ -433,7 +433,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         const rdocs = await record.getMulti(domainId, {
             pid,
-            contest: { $ne: new ObjectID('0'.repeat(24)) },
+            contest: { $ne: new ObjectId('0'.repeat(24)) },
             status: { $ne: STATUS.STATUS_CANCELED },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
@@ -469,8 +469,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
-    @param('tid', Types.ObjectID, true)
-    async prepare(domainId: string, tid?: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    async prepare(domainId: string, tid?: ObjectId) {
         if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         if (typeof this.pdoc.config === 'string') throw new ProblemConfigError();
     }
@@ -497,8 +497,8 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('code', Types.Content, true)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
-    @param('tid', Types.ObjectID, true)
-    async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectId) {
         const config = this.pdoc.config;
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (['submit_answer', 'objective'].includes(config.type)) {
@@ -558,9 +558,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
 export class ProblemHackHandler extends ProblemDetailHandler {
     rdoc: RecordDoc;
 
-    @param('rid', Types.ObjectID)
-    @param('tid', Types.ObjectID, true)
-    async prepare(domainId: string, rid: ObjectID, tid?: ObjectID) {
+    @param('rid', Types.ObjectId)
+    @param('tid', Types.ObjectId, true)
+    async prepare(domainId: string, rid: ObjectId, tid?: ObjectId) {
         if (typeof this.pdoc.config !== 'object' || !this.pdoc.config.hackable) throw new HackFailedError('This problem is not hackable.');
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc || this.rdoc.pid !== this.pdoc.docId
@@ -586,8 +586,8 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     }
 
     @param('input', Types.String, true)
-    @param('tid', Types.ObjectID, true)
-    async post(domainId: string, input = '', tid?: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    async post(domainId: string, input = '', tid?: ObjectId) {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         const id = `${this.user._id}/${nanoid()}`;
@@ -814,9 +814,9 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
 
 export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('page', Types.PositiveInt, true)
-    @param('tid', Types.ObjectID, true)
-    @param('sid', Types.ObjectID, true)
-    async get(domainId: string, page = 1, tid?: ObjectID, sid?: ObjectID) {
+    @param('tid', Types.ObjectId, true)
+    @param('sid', Types.ObjectId, true)
+    async get(domainId: string, page = 1, tid?: ObjectId, sid?: ObjectId) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.response.template = 'problem_solution.html';
         const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
@@ -857,8 +857,8 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     }
 
     @param('content', Types.Content)
-    @param('psid', Types.ObjectID)
-    async postEditSolution(domainId: string, content: string, psid: ObjectID) {
+    @param('psid', Types.ObjectId)
+    async postEditSolution(domainId: string, content: string, psid: ObjectId) {
         let psdoc = await solution.get(domainId, psid);
         if (!this.user.own(psdoc)) this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_EDIT_PROBLEM_SOLUTION_SELF);
@@ -866,8 +866,8 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.back({ psdoc });
     }
 
-    @param('psid', Types.ObjectID)
-    async postDeleteSolution(domainId: string, psid: ObjectID) {
+    @param('psid', Types.ObjectId)
+    async postDeleteSolution(domainId: string, psid: ObjectId) {
         const psdoc = await solution.get(domainId, psid);
         if (!this.user.own(psdoc)) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
         else this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_SELF);
@@ -875,19 +875,19 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @param('psid', Types.ObjectID)
+    @param('psid', Types.ObjectId)
     @param('content', Types.Content)
-    async postReply(domainId: string, psid: ObjectID, content: string) {
+    async postReply(domainId: string, psid: ObjectId, content: string) {
         this.checkPerm(PERM.PERM_REPLY_PROBLEM_SOLUTION);
         const psdoc = await solution.get(domainId, psid);
         await solution.reply(domainId, psdoc.docId, this.user._id, content);
         this.back();
     }
 
-    @param('psid', Types.ObjectID)
-    @param('psrid', Types.ObjectID)
+    @param('psid', Types.ObjectId)
+    @param('psrid', Types.ObjectId)
     @param('content', Types.Content)
-    async postEditReply(domainId: string, psid: ObjectID, psrid: ObjectID, content: string) {
+    async postEditReply(domainId: string, psid: ObjectId, psrid: ObjectId, content: string) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(domainId, psid);
         if (!(this.user.own(psrdoc)
@@ -898,9 +898,9 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @param('psid', Types.ObjectID)
-    @param('psrid', Types.ObjectID)
-    async postDeleteReply(domainId: string, psid: ObjectID, psrid: ObjectID) {
+    @param('psid', Types.ObjectId)
+    @param('psrid', Types.ObjectId)
+    async postDeleteReply(domainId: string, psid: ObjectId, psrid: ObjectId) {
         const [psdoc, psrdoc] = await solution.getReply(domainId, psid, psrid);
         if ((!psdoc) || psdoc.parentId !== this.pdoc.docId) throw new SolutionNotFoundError(psid);
         if (!(this.user.own(psrdoc)
@@ -911,24 +911,24 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         this.back();
     }
 
-    @param('psid', Types.ObjectID)
-    async postUpvote(domainId: string, psid: ObjectID) {
+    @param('psid', Types.ObjectId)
+    async postUpvote(domainId: string, psid: ObjectId) {
         const [psdoc, pssdoc] = await solution.vote(domainId, psid, this.user._id, 1);
         this.back({ vote: psdoc.vote, user_vote: pssdoc.vote });
     }
 
-    @param('psid', Types.ObjectID)
-    async postDownvote(domainId: string, psid: ObjectID) {
+    @param('psid', Types.ObjectId)
+    async postDownvote(domainId: string, psid: ObjectId) {
         const [psdoc, pssdoc] = await solution.vote(domainId, psid, this.user._id, -1);
         this.back({ vote: psdoc.vote, user_vote: pssdoc.vote });
     }
 }
 
 export class ProblemSolutionRawHandler extends ProblemDetailHandler {
-    @param('psid', Types.ObjectID)
-    @route('psrid', Types.ObjectID, true)
-    @param('tid', Types.ObjectID, true)
-    async get(domainId: string, psid: ObjectID, psrid?: ObjectID, tid?: ObjectID) {
+    @param('psid', Types.ObjectId)
+    @route('psrid', Types.ObjectId, true)
+    @param('tid', Types.ObjectId, true)
+    async get(domainId: string, psid: ObjectId, psrid?: ObjectId, tid?: ObjectId) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
         if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
@@ -1001,7 +1001,7 @@ export class ProblemPrefixListHandler extends Handler {
             const search = global.Hydro.lib.problemSearch || defaultSearch;
             const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
             const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } })
-                .project(buildProjection(projection)).toArray();
+                .project<ProblemDoc>(buildProjection(projection)).toArray();
             pdocs.push(...docs);
         }
         this.response.body = uniqBy(pdocs, 'docId');

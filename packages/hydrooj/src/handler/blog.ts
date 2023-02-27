@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { DiscussionNotFoundError } from '../error';
 import { BlogDoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -12,8 +12,8 @@ import { Handler, param, Types } from '../service/server';
 class BlogHandler extends Handler {
     ddoc?: BlogDoc;
 
-    @param('did', Types.ObjectID, true)
-    async _prepare(domainId: string, did: ObjectID) {
+    @param('did', Types.ObjectId, true)
+    async _prepare(domainId: string, did: ObjectId) {
         if (did) {
             this.ddoc = await blog.get(did);
             if (!this.ddoc) throw new DiscussionNotFoundError(domainId, did);
@@ -42,8 +42,8 @@ class BlogUserHandler extends BlogHandler {
 }
 
 class BlogDetailHandler extends BlogHandler {
-    @param('did', Types.ObjectID)
-    async get(domainId: string, did: ObjectID) {
+    @param('did', Types.ObjectId)
+    async get(domainId: string, did: ObjectId) {
         const dsdoc = this.user.hasPriv(PRIV.PRIV_USER_PROFILE)
             ? await blog.getStatus(did, this.user._id)
             : null;
@@ -64,14 +64,14 @@ class BlogDetailHandler extends BlogHandler {
         this.checkPriv(PRIV.PRIV_USER_PROFILE);
     }
 
-    @param('did', Types.ObjectID)
-    async postStar(domainId: string, did: ObjectID) {
+    @param('did', Types.ObjectId)
+    async postStar(domainId: string, did: ObjectId) {
         await blog.setStar(did, this.user._id, true);
         this.back({ star: true });
     }
 
-    @param('did', Types.ObjectID)
-    async postUnstar(domainId: string, did: ObjectID) {
+    @param('did', Types.ObjectId)
+    async postUnstar(domainId: string, did: ObjectId) {
         await blog.setStar(did, this.user._id, false);
         this.back({ star: false });
     }
@@ -92,10 +92,10 @@ class BlogEditHandler extends BlogHandler {
         this.response.redirect = this.url('blog_detail', { uid: this.user._id, did });
     }
 
-    @param('did', Types.ObjectID)
+    @param('did', Types.ObjectId)
     @param('title', Types.Title)
     @param('content', Types.Content)
-    async postUpdate(domainId: string, did: ObjectID, title: string, content: string) {
+    async postUpdate(domainId: string, did: ObjectId, title: string, content: string) {
         if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await Promise.all([
             blog.edit(did, title, content),
@@ -105,8 +105,8 @@ class BlogEditHandler extends BlogHandler {
         this.response.redirect = this.url('blog_detail', { uid: this.user._id, did });
     }
 
-    @param('did', Types.ObjectID)
-    async postDelete(domainId: string, did: ObjectID) {
+    @param('did', Types.ObjectId)
+    async postDelete(domainId: string, did: ObjectId) {
         if (!this.user.own(this.ddoc)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await Promise.all([
             blog.del(did),

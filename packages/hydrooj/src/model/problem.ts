@@ -1,5 +1,5 @@
 import { escapeRegExp, pick } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
 import { streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
@@ -50,7 +50,7 @@ export class ProblemModel {
     ];
 
     static default = {
-        _id: new ObjectID(),
+        _id: new ObjectId(),
         domainId: 'system',
         docType: document.TYPE_PROBLEM,
         docId: 0,
@@ -71,7 +71,7 @@ export class ProblemModel {
     };
 
     static deleted = {
-        _id: new ObjectID(),
+        _id: new ObjectId(),
         domainId: 'system',
         docType: document.TYPE_PROBLEM,
         docId: -1,
@@ -141,12 +141,12 @@ export class ProblemModel {
         return res;
     }
 
-    static getMulti(domainId: string, query: FilterQuery<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
+    static getMulti(domainId: string, query: Filter<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
     }
 
     static async list(
-        domainId: string, query: FilterQuery<ProblemDoc>,
+        domainId: string, query: Filter<ProblemDoc>,
         page: number, pageSize: number,
         projection = ProblemModel.PROJECTION_LIST, uid?: number,
     ): Promise<[ProblemDoc[], number, number]> {
@@ -162,7 +162,7 @@ export class ProblemModel {
                 if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
             }
             // eslint-disable-next-line no-await-in-loop
-            const ccount = await document.getMulti(id, document.TYPE_PROBLEM, query).count();
+            const ccount = await document.count(id, document.TYPE_PROBLEM, query);
             if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
                 // eslint-disable-next-line no-await-in-loop
                 pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
@@ -178,7 +178,7 @@ export class ProblemModel {
         return document.getStatus(domainId, document.TYPE_PROBLEM, docId, uid);
     }
 
-    static getMultiStatus(domainId: string, query: FilterQuery<ProblemDoc>) {
+    static getMultiStatus(domainId: string, query: Filter<ProblemStatusDoc>) {
         return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
     }
 
@@ -222,7 +222,7 @@ export class ProblemModel {
         return document.inc(domainId, document.TYPE_PROBLEM, _id, field as any, n);
     }
 
-    static count(domainId: string, query: FilterQuery<ProblemDoc>) {
+    static count(domainId: string, query: Filter<ProblemDoc>) {
         return document.count(domainId, document.TYPE_PROBLEM, query);
     }
 
@@ -286,11 +286,11 @@ export class ProblemModel {
         await bus.emit('problem/delAdditionalFile', domainId, pid, names);
     }
 
-    static async random(domainId: string, query: FilterQuery<ProblemDoc>) {
-        const cursor = document.getMulti(domainId, document.TYPE_PROBLEM, query);
-        const pcount = await cursor.count();
+    static async random(domainId: string, query: Filter<ProblemDoc>) {
+        const pcount = await document.count(domainId, document.TYPE_PROBLEM, query);
         if (!pcount) return null;
-        const pdoc = await cursor.skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
+        const pdoc = await document.getMulti(domainId, document.TYPE_PROBLEM, query)
+            .skip(Math.floor(Math.random() * pcount)).limit(1).toArray();
         return pdoc[0].pid || pdoc[0].docId;
     }
 
@@ -303,7 +303,7 @@ export class ProblemModel {
         const l: Record<string, ProblemDoc> = {};
         const q: any = { docId: { $in: pids } };
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
-            .project(buildProjection(projection)).toArray();
+            .project<ProblemDoc>(buildProjection(projection)).toArray();
         if (canViewHidden !== true) {
             pdocs = pdocs.filter((i) => i.owner === canViewHidden || i.maintainer?.includes(canViewHidden as any) || !i.hidden);
         }
@@ -350,9 +350,9 @@ export class ProblemModel {
 
     static async updateStatus(
         domainId: string, pid: number, uid: number,
-        rid: ObjectID, status: number, score: number,
+        rid: ObjectId, status: number, score: number,
     ) {
-        const filter: FilterQuery<ProblemStatusDoc> = { rid: { $ne: rid }, status: STATUS.STATUS_ACCEPTED };
+        const filter: Filter<ProblemStatusDoc> = { rid: { $ne: rid }, status: STATUS.STATUS_ACCEPTED };
         const res = await document.setStatusIfNotCondition(
             domainId, document.TYPE_PROBLEM, pid, uid,
             filter, { rid, status, score },

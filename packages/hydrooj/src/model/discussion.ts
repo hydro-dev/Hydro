@@ -1,5 +1,5 @@
 import { omit } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { Context } from '../context';
 import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import {
@@ -41,10 +41,10 @@ export const typeDisplay = {
 export const coll = db.collection('discussion.history');
 
 export async function add(
-    domainId: string, parentType: number, parentId: ObjectID | number | string,
+    domainId: string, parentType: number, parentId: ObjectId | number | string,
     owner: number, title: string, content: string,
     ip: string | null = null, highlight: boolean, pin: boolean,
-): Promise<ObjectID> {
+): Promise<ObjectId> {
     const time = new Date();
     const payload: Partial<DiscussionDoc> = {
         domainId,
@@ -76,12 +76,12 @@ export async function add(
 }
 
 export async function get<T extends Field>(
-    domainId: string, did: ObjectID, projection: T[] = PROJECTION_PUBLIC as any,
+    domainId: string, did: ObjectId, projection: T[] = PROJECTION_PUBLIC as any,
 ): Promise<Pick<DiscussionDoc, T>> {
     return await document.get(domainId, document.TYPE_DISCUSSION, did, projection);
 }
 
-export async function edit(domainId: string, did: ObjectID, $set: Partial<DiscussionDoc>) {
+export async function edit(domainId: string, did: ObjectId, $set: Partial<DiscussionDoc>) {
     await coll.insertOne({
         domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
     });
@@ -89,12 +89,12 @@ export async function edit(domainId: string, did: ObjectID, $set: Partial<Discus
 }
 
 export function inc(
-    domainId: string, did: ObjectID, key: NumberKeys<DiscussionDoc>, value: number,
+    domainId: string, did: ObjectId, key: NumberKeys<DiscussionDoc>, value: number,
 ): Promise<DiscussionDoc | null> {
     return document.inc(domainId, document.TYPE_DISCUSSION, did, key, value);
 }
 
-export async function del(domainId: string, did: ObjectID): Promise<void> {
+export async function del(domainId: string, did: ObjectId): Promise<void> {
     const [ddoc, drdocs] = await Promise.all([
         document.get(domainId, document.TYPE_DISCUSSION, did),
         document.getMulti(domainId, document.TYPE_DISCUSSION_REPLY, {
@@ -111,20 +111,20 @@ export async function del(domainId: string, did: ObjectID): Promise<void> {
     ]) as any;
 }
 
-export function count(domainId: string, query: FilterQuery<DiscussionDoc>) {
+export function count(domainId: string, query: Filter<DiscussionDoc>) {
     return document.count(domainId, document.TYPE_DISCUSSION, query);
 }
 
-export function getMulti(domainId: string, query: FilterQuery<DiscussionDoc> = {}, projection = PROJECTION_LIST) {
+export function getMulti(domainId: string, query: Filter<DiscussionDoc> = {}, projection = PROJECTION_LIST) {
     return document.getMulti(domainId, document.TYPE_DISCUSSION, query)
         .sort({ pin: -1, docId: -1 })
-        .project(buildProjection(projection));
+        .project<DiscussionDoc>(buildProjection(projection));
 }
 
 export async function addReply(
-    domainId: string, did: ObjectID, owner: number,
+    domainId: string, did: ObjectId, owner: number,
     content: string, ip: string,
-): Promise<ObjectID> {
+): Promise<ObjectId> {
     const time = new Date();
     const [drid] = await Promise.all([
         document.add(
@@ -139,12 +139,12 @@ export async function addReply(
     return drid;
 }
 
-export function getReply(domainId: string, drid: ObjectID): Promise<DiscussionReplyDoc | null> {
+export function getReply(domainId: string, drid: ObjectId): Promise<DiscussionReplyDoc | null> {
     return document.get(domainId, document.TYPE_DISCUSSION_REPLY, drid);
 }
 
 export async function editReply(
-    domainId: string, drid: ObjectID, content: string, uid: number, ip: string,
+    domainId: string, drid: ObjectId, content: string, uid: number, ip: string,
 ): Promise<DiscussionReplyDoc | null> {
     await coll.insertOne({
         domainId, docId: drid, content, uid, ip, time: new Date(),
@@ -152,7 +152,7 @@ export async function editReply(
     return document.set(domainId, document.TYPE_DISCUSSION_REPLY, drid, { content, edited: true, editor: uid });
 }
 
-export async function delReply(domainId: string, drid: ObjectID) {
+export async function delReply(domainId: string, drid: ObjectId) {
     const drdoc = await getReply(domainId, drid);
     if (!drdoc) throw new DocumentNotFoundError(domainId, drid);
     return await Promise.all([
@@ -162,18 +162,18 @@ export async function delReply(domainId: string, drid: ObjectID) {
     ]);
 }
 
-export function getMultiReply(domainId: string, did: ObjectID) {
+export function getMultiReply(domainId: string, did: ObjectId) {
     return document.getMulti(
         domainId, document.TYPE_DISCUSSION_REPLY,
         { parentType: document.TYPE_DISCUSSION, parentId: did },
     ).sort('_id', -1);
 }
 
-export function getListReply(domainId: string, did: ObjectID): Promise<DiscussionReplyDoc[]> {
+export function getListReply(domainId: string, did: ObjectId): Promise<DiscussionReplyDoc[]> {
     return getMultiReply(domainId, did).toArray();
 }
 
-export async function react(domainId: string, docType: keyof document.DocType, did: ObjectID, id: string, uid: number, reverse = false) {
+export async function react(domainId: string, docType: keyof document.DocType, did: ObjectId, id: string, uid: number, reverse = false) {
     let doc;
     const sdoc = await document.setIfNotStatus(domainId, docType, did, uid, `react.${id}`, reverse ? 0 : 1, reverse ? 0 : 1, {});
     if (sdoc) doc = await document.inc(domainId, docType, did, `react.${id}`, reverse ? -1 : 1);
@@ -181,15 +181,15 @@ export async function react(domainId: string, docType: keyof document.DocType, d
     return [doc, sdoc];
 }
 
-export async function getReaction(domainId: string, docType: keyof document.DocType, did: ObjectID, uid: number) {
+export async function getReaction(domainId: string, docType: keyof document.DocType, did: ObjectId, uid: number) {
     const doc = await document.getStatus(domainId, docType, did, uid);
     return doc?.react || {};
 }
 
 export async function addTailReply(
-    domainId: string, drid: ObjectID,
+    domainId: string, drid: ObjectId,
     owner: number, content: string, ip: string,
-): Promise<[DiscussionReplyDoc, ObjectID]> {
+): Promise<[DiscussionReplyDoc, ObjectId]> {
     const time = new Date();
     const [drdoc, subId] = await document.push(
         domainId, document.TYPE_DISCUSSION_REPLY, drid,
@@ -208,13 +208,13 @@ export async function addTailReply(
 }
 
 export function getTailReply(
-    domainId: string, drid: ObjectID, drrid: ObjectID,
+    domainId: string, drid: ObjectId, drrid: ObjectId,
 ): Promise<[DiscussionReplyDoc, DiscussionTailReplyDoc] | [null, null]> {
     return document.getSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid);
 }
 
 export async function editTailReply(
-    domainId: string, drid: ObjectID, drrid: ObjectID, content: string, uid: number, ip: string,
+    domainId: string, drid: ObjectId, drrid: ObjectId, content: string, uid: number, ip: string,
 ): Promise<DiscussionTailReplyDoc> {
     const [, drrdoc] = await Promise.all([
         coll.insertOne({
@@ -226,7 +226,7 @@ export async function editTailReply(
     return drrdoc;
 }
 
-export async function delTailReply(domainId: string, drid: ObjectID, drrid: ObjectID) {
+export async function delTailReply(domainId: string, drid: ObjectId, drrid: ObjectId) {
     return Promise.all([
         document.deleteSub(domainId, document.TYPE_DISCUSSION_REPLY, drid, 'reply', drrid),
         coll.deleteMany({ domainId, docId: drrid }),
@@ -234,7 +234,7 @@ export async function delTailReply(domainId: string, drid: ObjectID, drrid: Obje
 }
 
 export function getHistory(
-    domainId: string, docId: ObjectID, query: FilterQuery<DiscussionHistoryDoc> = {},
+    domainId: string, docId: ObjectId, query: Filter<DiscussionHistoryDoc> = {},
     projection = HISTORY_PROJECTION_PUBLIC,
 ) {
     return coll.find({ domainId, docId, ...query })
@@ -242,15 +242,15 @@ export function getHistory(
         .toArray();
 }
 
-export function setStar(domainId: string, did: ObjectID, uid: number, star: boolean) {
+export function setStar(domainId: string, did: ObjectId, uid: number, star: boolean) {
     return document.setStatus(domainId, document.TYPE_DISCUSSION, did, uid, { star });
 }
 
-export function getStatus(domainId: string, did: ObjectID, uid: number) {
+export function getStatus(domainId: string, did: ObjectId, uid: number) {
     return document.getStatus(domainId, document.TYPE_DISCUSSION, did, uid);
 }
 
-export function setStatus(domainId: string, did: ObjectID, uid: number, $set) {
+export function setStatus(domainId: string, did: ObjectId, uid: number, $set) {
     return document.setStatus(domainId, document.TYPE_DISCUSSION, did, uid, $set);
 }
 
@@ -278,7 +278,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
-        const _id = new ObjectID(id);
+        const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
         if (!tdoc) throw new DiscussionNodeNotFoundError(id);
         if (uid) {

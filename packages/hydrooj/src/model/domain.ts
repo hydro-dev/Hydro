@@ -1,6 +1,6 @@
 import { Dictionary } from 'lodash';
 import LRU from 'lru-cache';
-import { FilterQuery } from 'mongodb';
+import { Filter } from 'mongodb';
 import { DomainDoc } from '../interface';
 import * as bus from '../service/bus';
 import db from '../service/db';
@@ -19,6 +19,9 @@ interface DomainUserArg {
 }
 
 class DomainModel {
+    static coll = coll;
+    static collUser = collUser;
+
     static JOIN_METHOD_NONE = 0;
     static JOIN_METHOD_ALL = 1;
     static JOIN_METHOD_CODE = 2;
@@ -64,7 +67,7 @@ class DomainModel {
         domainId = domainId.toLowerCase();
         const key = `id::${domainId}`;
         if (cache.has(key)) return cache.get(key);
-        const query: FilterQuery<DomainDoc> = { lower: domainId };
+        const query: Filter<DomainDoc> = { lower: domainId };
         await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
         if (result) {
@@ -79,7 +82,7 @@ class DomainModel {
         const key = `host::${host}`;
         // Note: cache by host might not be updated immediately
         if (cache.has(key)) return cache.get(key);
-        const query: FilterQuery<DomainDoc> = { host };
+        const query: Filter<DomainDoc> = { host };
         await bus.parallel('domain/before-get', query);
         const result = await coll.findOne(query);
         if (result) {
@@ -89,7 +92,7 @@ class DomainModel {
         return result;
     }
 
-    static getMulti(query: FilterQuery<DomainDoc> = {}) {
+    static getMulti(query: Filter<DomainDoc> = {}) {
         return coll.find(query);
     }
 
@@ -124,8 +127,8 @@ class DomainModel {
     }
 
     static async countUser(domainId: string, role?: string) {
-        if (role) return await collUser.find({ domainId, role }).count();
-        return await collUser.find({ domainId }).count();
+        if (role) return await collUser.countDocuments({ domainId, role });
+        return await collUser.countDocuments({ domainId });
     }
 
     @ArgMethod
@@ -136,7 +139,9 @@ class DomainModel {
             deleteUserCache(udoc);
             return res;
         }
-        const affected = await UserModel.getMulti({ _id: { $in: uid } }).project({ mail: 1, uname: 1 }).toArray();
+        const affected = await UserModel.getMulti({ _id: { $in: uid } })
+            .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
+            .toArray();
         affected.forEach((udoc) => deleteUserCache(udoc));
         return await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
     }

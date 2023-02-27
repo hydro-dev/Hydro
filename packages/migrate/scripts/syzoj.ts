@@ -2,7 +2,7 @@
 import mariadb from 'mariadb';
 import {
     buildContent, ContestModel, DiscussionDoc, DiscussionReplyDoc, DocumentModel, DomainModel,
-    fs, noop, NotFoundError, ObjectID, PERM, postJudge, ProblemModel, RecordDoc, RecordModel,
+    fs, noop, NotFoundError, ObjectId, PERM, postJudge, ProblemModel, RecordDoc, RecordModel,
     STATUS, SystemModel, Time, UserModel, yaml,
 } from 'hydrooj';
 
@@ -345,7 +345,7 @@ export async function run({
                 }
             }
             if (rdoc.type) {
-                data.contest = new ObjectID(tidMap[rdoc.type_info]);
+                data.contest = new ObjectId(tidMap[rdoc.type_info]);
                 await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
             await RecordModel.coll.insertOne(data);

@@ -1,7 +1,7 @@
 import assert from 'assert';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
-import { ObjectID } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import {
     JudgeResultBody, ProblemConfigFile, RecordDoc, TestCase,
 } from '../interface';
@@ -63,7 +63,7 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectID(body.rid);
+    body.rid = new ObjectId(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;
     const { $set, $push } = processPayload(rdoc, body);
@@ -113,7 +113,7 @@ export async function postJudge(rdoc: RecordDoc) {
                 const rdocs = await record.getMulti(rdoc.domainId, {
                     pid: rdoc.pid,
                     status: STATUS.STATUS_ACCEPTED,
-                    contest: { $ne: new ObjectID('0'.repeat(24)) },
+                    contest: { $ne: new ObjectId('0'.repeat(24)) },
                 }).project({ _id: 1, contest: 1 }).toArray();
                 const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
                 await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
@@ -128,7 +128,7 @@ export async function postJudge(rdoc: RecordDoc) {
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid &&= new ObjectID(body.rid);
+    body.rid &&= new ObjectId(body.rid);
     let rdoc = await record.get(body.rid);
     if (!rdoc) return;
     const { $set, $push } = processPayload(rdoc, body);

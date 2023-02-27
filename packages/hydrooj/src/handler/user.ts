@@ -1,5 +1,6 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
+import type { Binary } from 'mongodb';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -181,7 +182,8 @@ class UserWebauthnHandler extends Handler {
         const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
         const udoc = await user.getById(domainId, tdoc.uid);
-        const authenticator = udoc._authenticators?.find((c) => c.credentialID.toString('base64url') === result.id);
+        const parseId = (id: Binary) => Buffer.from(id.toString('hex'), 'hex').toString('base64url');
+        const authenticator = udoc._authenticators?.find((c) => parseId(c.credentialID) === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
         const verification = await verifyAuthenticationResponse({
             response: result,

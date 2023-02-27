@@ -1,18 +1,18 @@
 import { flatten } from 'lodash';
-import { FilterQuery, ObjectID } from 'mongodb';
+import { Filter, ObjectId } from 'mongodb';
 import { TrainingAlreadyEnrollError, TrainingNotFoundError } from '../error';
 import { TrainingDoc, TrainingNode } from '../interface';
 import * as document from './document';
 
-export function getStatus(domainId: string, tid: ObjectID, uid: number) {
+export function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
 }
 
-export function getMultiStatus(domainId: string, query: FilterQuery<TrainingDoc>) {
+export function getMultiStatus(domainId: string, query: Filter<TrainingDoc>) {
     return document.getMultiStatus(domainId, document.TYPE_TRAINING, query);
 }
 
-export async function getListStatus(domainId: string, uid: number, tids: ObjectID[]) {
+export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {
     const tsdocs = await getMultiStatus(
         domainId, { uid, docId: { $in: Array.from(new Set(tids)) } },
     ).toArray();
@@ -21,7 +21,7 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
     return r;
 }
 
-export async function enroll(domainId: string, tid: ObjectID, uid: number) {
+export async function enroll(domainId: string, tid: ObjectId, uid: number) {
     try {
         await document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, { enroll: 1 });
     } catch (e) {
@@ -30,7 +30,7 @@ export async function enroll(domainId: string, tid: ObjectID, uid: number) {
     return await document.inc(domainId, document.TYPE_TRAINING, tid, 'attend', 1);
 }
 
-export function setStatus(domainId: string, tid: ObjectID, uid: number, $set: any) {
+export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
     return document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, $set);
 }
 
@@ -46,11 +46,11 @@ export function add(
     });
 }
 
-export function edit(domainId: string, tid: ObjectID, $set: Partial<TrainingDoc>) {
+export function edit(domainId: string, tid: ObjectId, $set: Partial<TrainingDoc>) {
     return document.set(domainId, document.TYPE_TRAINING, tid, $set);
 }
 
-export function del(domainId: string, tid: ObjectID) {
+export function del(domainId: string, tid: ObjectId) {
     return Promise.all([
         document.deleteOne(domainId, document.TYPE_TRAINING, tid),
         document.deleteMultiStatus(domainId, document.TYPE_TRAINING, { docId: tid }),
@@ -87,11 +87,11 @@ export function isOpen(node: TrainingNode, doneNids: Set<number> | number[], don
 export const isInvalid = (node: TrainingNode, doneNids: Set<number> | number[]) =>
     !Set.isSuperset(new Set(doneNids), new Set(node.requireNids));
 
-export async function count(domainId: string, query: FilterQuery<TrainingDoc>) {
+export async function count(domainId: string, query: Filter<TrainingDoc>) {
     return await document.count(domainId, document.TYPE_TRAINING, query);
 }
 
-export async function get(domainId: string, tid: ObjectID) {
+export async function get(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_TRAINING, tid);
     if (!tdoc) throw new TrainingNotFoundError(domainId, tid);
     for (const i in tdoc.dag) {
@@ -104,10 +104,10 @@ export async function get(domainId: string, tid: ObjectID) {
     return tdoc;
 }
 
-export const getMulti = (domainId: string, query: FilterQuery<TrainingDoc> = {}) =>
+export const getMulti = (domainId: string, query: Filter<TrainingDoc> = {}) =>
     document.getMulti(domainId, document.TYPE_TRAINING, query).sort({ pin: -1, _id: -1 });
 
-export async function getList(domainId: string, tids: ObjectID[]) {
+export async function getList(domainId: string, tids: ObjectId[]) {
     const tdocs = await getMulti(
         domainId, { _id: { $in: Array.from(new Set(tids)) } },
     ).toArray();
