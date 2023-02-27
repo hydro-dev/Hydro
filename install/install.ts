@@ -335,13 +335,11 @@ connect-timeout = 10`);
             'pm2 start mongod',
             () => sleep(3000),
             async () => {
-                // eslint-disable-next-line import/no-absolute-path
-                const { MongoClient } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb');
+                // eslint-disable-next-line
+                const { MongoClient, WriteConcern } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
                 const client = await MongoClient.connect('mongodb://127.0.0.1', {
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true,
                     readPreference: 'nearest',
-                    writeConcern: 'majority',
+                    writeConcern: new WriteConcern('majority'),
                 });
                 await client.db('hydro').addUser('hydro', password, {
                     roles: [{ role: 'readWrite', db: 'hydro' }],

@@ -5,7 +5,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
-import mongodb from 'mongodb';
+import { MongoClient, WriteConcern } from 'mongodb';
 import { Logger } from '../logger';
 
 const logger = new Logger('setup');
@@ -85,7 +85,10 @@ async function post(ctx: Context) {
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;
     try {
-        const Database = await mongodb.MongoClient.connect(mongourl, {});
+        const Database = await MongoClient.connect(mongourl, {
+            readPreference: 'nearest',
+            writeConcern: new WriteConcern('majority'),
+        });
         const db = Database.db(name);
         const coll = db.collection<any>('system');
         await Promise.all([
