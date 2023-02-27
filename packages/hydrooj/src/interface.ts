@@ -730,7 +730,6 @@ export interface Lib extends Record<string, any> {
     difficulty: typeof import('./lib/difficulty');
     buildContent: typeof import('./lib/content').buildContent;
     mail: typeof import('./lib/mail');
-    paginate: typeof import('./lib/paginate');
     rank: typeof import('./lib/rank');
     rating: typeof import('./lib/rating');
     testdataConfig: typeof import('./lib/testdataConfig');
