@@ -16,7 +16,12 @@ function sudoSwitch(type, init = false) {
     $('.confirm-div input[name=webauthn_verify]').prop({ type: '', disabled: true }).hide();
     $('.confirm-div input[name=confirm]').prop({ type: 'submit', disabled: false }).show();
   }
-  $('.sudo-div:visible input:visible').first().trigger('focus');
+  const firstAction = $('.sudo-div:visible input:visible').first();
+  if (firstAction.attr('name') === 'webauthn_verify') {
+    firstAction.trigger('click');
+  } else {
+    firstAction.trigger('focus');
+  }
 }
 
 export default new NamedPage('user_sudo', () => {
