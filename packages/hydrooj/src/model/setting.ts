@@ -1,11 +1,12 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
+import cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import { LangConfig, parseLang } from '@hydrooj/utils/lib/lang';
 import { retry } from '@hydrooj/utils/lib/utils';
-import { Context } from '../context';
+import { Context, Service } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from './builtin';
@@ -75,6 +76,17 @@ export const PreferenceSetting = (...settings: _Setting[]) => {
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
     }
+    return () => {
+        for (const setting of settings) {
+            delete SETTINGS_BY_KEY[setting.key];
+            if (PREFERENCE_SETTINGS.includes(setting)) {
+                PREFERENCE_SETTINGS.splice(PREFERENCE_SETTINGS.indexOf(setting), 1);
+            }
+            if (SETTINGS.includes(setting)) {
+                SETTINGS.splice(SETTINGS.indexOf(setting), 1);
+            }
+        }
+    };
 };
 export const AccountSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
@@ -83,6 +95,17 @@ export const AccountSetting = (...settings: _Setting[]) => {
         SETTINGS.push(setting);
         SETTINGS_BY_KEY[setting.key] = setting;
     }
+    return () => {
+        for (const setting of settings) {
+            delete SETTINGS_BY_KEY[setting.key];
+            if (ACCOUNT_SETTINGS.includes(setting)) {
+                ACCOUNT_SETTINGS.splice(ACCOUNT_SETTINGS.indexOf(setting), 1);
+            }
+            if (SETTINGS.includes(setting)) {
+                SETTINGS.splice(SETTINGS.indexOf(setting), 1);
+            }
+        }
+    };
 };
 export const DomainUserSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
@@ -90,6 +113,14 @@ export const DomainUserSetting = (...settings: _Setting[]) => {
         DOMAIN_USER_SETTINGS.push(setting);
         DOMAIN_USER_SETTINGS_BY_KEY[setting.key] = setting;
     }
+    return () => {
+        for (const setting of settings) {
+            delete DOMAIN_USER_SETTINGS_BY_KEY[setting.key];
+            if (DOMAIN_USER_SETTINGS.includes(setting)) {
+                DOMAIN_USER_SETTINGS.splice(DOMAIN_USER_SETTINGS.indexOf(setting), 1);
+            }
+        }
+    };
 };
 export const DomainSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
@@ -97,6 +128,14 @@ export const DomainSetting = (...settings: _Setting[]) => {
         DOMAIN_SETTINGS.push(setting);
         DOMAIN_SETTINGS_BY_KEY[setting.key] = setting;
     }
+    return () => {
+        for (const setting of settings) {
+            delete DOMAIN_SETTINGS_BY_KEY[setting.key];
+            if (DOMAIN_SETTINGS.includes(setting)) {
+                DOMAIN_SETTINGS.splice(DOMAIN_SETTINGS.indexOf(setting), 1);
+            }
+        }
+    };
 };
 export const SystemSetting = (...settings: _Setting[]) => {
     for (const setting of settings) {
@@ -104,6 +143,14 @@ export const SystemSetting = (...settings: _Setting[]) => {
         SYSTEM_SETTINGS.push(setting);
         SYSTEM_SETTINGS_BY_KEY[setting.key] = setting;
     }
+    return () => {
+        for (const setting of settings) {
+            delete SYSTEM_SETTINGS_BY_KEY[setting.key];
+            if (SYSTEM_SETTINGS.includes(setting)) {
+                SYSTEM_SETTINGS.splice(SYSTEM_SETTINGS.indexOf(setting), 1);
+            }
+        }
+    };
 };
 
 const LangSettingNode = {
@@ -273,8 +320,34 @@ export async function apply(ctx: Context) {
     });
 }
 
+declare module '../context' {
+    interface Context {
+        setting: SettingService;
+    }
+}
+
+const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
+    function method(this: cordis.Service, ...args: Parameters<F>) {
+        const res = origFunc(...args);
+        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+    };
+
+export class SettingService extends Service {
+    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
+    PreferenceSetting = T(PreferenceSetting);
+    AccountSetting = T(AccountSetting);
+    DomainSetting = T(DomainSetting);
+    DomainUserSetting = T(DomainUserSetting);
+    SystemSetting = T(SystemSetting);
+    constructor(ctx: Context) {
+        super(ctx, 'setting', true);
+    }
+}
+Context.service('setting', SettingService);
+
 global.Hydro.model.setting = {
     apply,
+    SettingService,
     Setting,
     PreferenceSetting,
     AccountSetting,
