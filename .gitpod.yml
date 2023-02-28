@@ -7,6 +7,9 @@ tasks:
     init: |
       mkdir -p /home/gitpod/.hydro
       echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >/home/gitpod/.hydro/config.json && \
+      nvm install 18
+      nvm use 18
+      nvm alias default 18
       yarn
       yarn build:ui:production
       npx hydrooj cli system set server.port 2333

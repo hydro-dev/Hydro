@@ -1,17 +1,15 @@
 version: '3.8'
 
 services:
-  app:
+  hydro:
     build: 
       context: .
       dockerfile: Dockerfile
-      args:
-        VARIANT: 16
+    privileged: true
     volumes:
       - ..:/workspace:cached
       - testdata:/data/file
     command: sleep infinity
-    network_mode: service:db
   db:
     image: mongo:latest
     restart: unless-stopped

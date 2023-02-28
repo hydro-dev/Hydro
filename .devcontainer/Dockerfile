@@ -1,20 +1,9 @@
-# [Choice] Node.js version (use -bullseye variants on local arm64/Apple Silicon): 18, 16, 14, 18-bullseye, 16-bullseye, 14-bullseye, 18-buster, 16-buster, 14-buster
-ARG VARIANT=16-bullseye
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
-
-# Install MongoDB command line tools if on buster and x86_64 (arm64 not supported)
-ARG MONGO_TOOLS_VERSION=5.0
-RUN . /etc/os-release \
-    && if [ "${VERSION_CODENAME}" = "buster" ] && [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-        curl -sSL "https://www.mongodb.org/static/pgp/server-${MONGO_TOOLS_VERSION}.asc" | gpg --dearmor > /usr/share/keyrings/mongodb-archive-keyring.gpg \
-        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] http://repo.mongodb.org/apt/debian $(lsb_release -cs)/mongodb-org/${MONGO_TOOLS_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGO_TOOLS_VERSION}.list \
-        && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-        && apt-get install -y mongodb-database-tools mongodb-mongosh \
-        && apt-get clean -y && rm -rf /var/lib/apt/lists/*; \
-    fi
-
-RUN npm i pm2 yarn -g && \
-    sudo apt-get update && \
-    sudo apt-get install clang -y --no-install-recommends && \
-    mkdir -p ~/.hydro && \
-    echo '{"host":"127.0.0.1","port":"27017","name":"hydro","username":"","password":""}' >~/.hydro/config.json && \
+FROM mcr.microsoft.com/vscode/devcontainers/typescript-node:18-bullseye
+ADD https://github.com/criyle/go-judge/releases/download/v1.6.3/executorserver_1.6.3_linux_amd64 /usr/bin/sandbox
+RUN npm install -g yarn && \
+    sudo apt-get update && sudo apt-get install gcc g++ && \
+    mkdir -p /root/.hydro /data/file && \
+    chmod 777 /root /root/.hydro /data/file /usr/bin/sandbox && \
+    echo '{"uri":"mongodb://mongo/hydro"}' > /root/.hydro/config.json && \
+    echo '["@hydrooj/ui-default","@hydrooj/hydrojudge"]' > /root/.hydro/addon.json
+ENTRYPOINT sandbox
