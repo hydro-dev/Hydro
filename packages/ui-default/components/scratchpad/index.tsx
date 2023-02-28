@@ -1,11 +1,13 @@
 import ProblemIcon from '@vscode/codicons/src/icons/file.svg?react';
 import $ from 'jquery';
 import _ from 'lodash';
+import type * as monaco from 'monaco-editor';
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import SplitPane from 'react-split-pane';
 import Dom from 'vj/components/react/DomComponent';
 import SplitPaneFillOverlay from 'vj/components/react-splitpane/SplitPaneFillOverlayComponent';
+import { Context, ctx, Service } from 'vj/context';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
@@ -40,23 +42,51 @@ const pages = {
 };
 
 let rerenderCallback = null;
-export function addPage(key, icon, component) {
-  pages[key] = {
-    icon,
-    component,
-  };
-  rerenderCallback?.();
+class ScratchpadService extends Service {
+  constructor(public store) {
+    super(ctx, 'scratchpad', true);
+    this.load = new Promise((resolve) => {
+      this.loadCallback = resolve;
+    });
+  }
+
+  pages = pages;
+  load: Promise<void>;
+  loadCallback: () => void;
+  editor: monaco.editor.IStandaloneCodeEditor;
+  monaco: typeof import('monaco-editor');
+
+  init(editor: monaco.editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) {
+    this.editor = editor;
+    this.monaco = monaco;
+    this.loadCallback();
+  }
+
+  addPage(key, icon, component) {
+    pages[key] = {
+      icon,
+      component,
+    };
+    rerenderCallback?.();
+  }
 }
-window.Hydro.scratchpad = { addPage, pages };
+Context.service('scratchpad', ScratchpadService);
+declare module '../../context' {
+  interface Context {
+    scratchpad: ScratchpadService;
+  }
+}
 
 export default function ScratchpadContainer() {
-  const [, updateState] = React.useState();
+  const store = useStore();
+  ctx.scratchpad ||= new ScratchpadService(store);
+  const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   React.useEffect(() => {
     rerenderCallback = forceUpdate;
   }, []);
   const dispatch = useDispatch();
-  const ui = useSelector((state) => state.ui, _.isEqual);
+  const ui = useSelector<any, any>((state) => state.ui, _.isEqual);
 
   const handleChangeSize = _.debounce((uiElement, size) => {
     dispatch({

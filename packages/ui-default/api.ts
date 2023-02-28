@@ -3,7 +3,7 @@
 export * from './utils';
 export { default as Notification } from './components/notification';
 export * from './components/dialog';
-export * as bus from './bus';
+export { Context, Service, ctx } from './context';
 export { default as AnsiUp } from 'ansi_up';
 export { default as loadMonaco } from './components/monaco/loader';
 export { default as uploadFiles } from './components/upload';
@@ -35,6 +35,8 @@ export default async function load(name: string) {
   document.body.appendChild(tag);
   return lazyModules[name];
 }
+
+export interface EventMap { }
 
 import AutoComplete from './components/autocomplete';
 import CustomSelectAutoComplete from './components/autocomplete/CustomSelectAutoComplete';

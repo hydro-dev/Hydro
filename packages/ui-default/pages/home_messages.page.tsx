@@ -3,8 +3,21 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import VjNotification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
+import { Context, ctx, Service } from 'vj/context';
 import { NamedPage } from 'vj/misc/Page';
 import { api, gql, loadReactRedux } from 'vj/utils';
+
+class MessagePadService extends Service {
+  constructor(public store, public WebSocket: typeof import('../components/socket').default) {
+    super(ctx, 'messagepad', true);
+  }
+}
+Context.service('messagepad', MessagePadService);
+declare module '../context' {
+  interface Context {
+    messagepad: MessagePadService;
+  }
+}
 
 const page = new NamedPage('home_messages', () => {
   let reduxStore;
@@ -29,7 +42,8 @@ const page = new NamedPage('home_messages', () => {
     const { Provider, store } = await loadReactRedux(MessagePadReducer);
 
     reduxStore = store;
-    window.store = reduxStore;
+    (window as any).store = reduxStore;
+    ctx.messagepad = new MessagePadService(store, WebSocket);
 
     const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
     sock.onmessage = (message) => {

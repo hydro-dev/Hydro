@@ -2,6 +2,7 @@ import type * as monaco from 'monaco-editor';
 import React from 'react';
 import { connect } from 'react-redux';
 import { load } from 'vj/components/monaco/loader';
+import { ctx } from 'vj/context';
 
 interface ScratchpadOptions {
   value?: string;
@@ -59,7 +60,7 @@ export default connect((state: any) => ({
       );
       (window as any).editor = this.editor;
       (window as any).monaco = monaco;
-      window.Hydro.bus.emit('scratchpadEditorCreate', this.editor, monaco);
+      ctx.scratchpad.init(this.editor, monaco);
     }
   }
 
