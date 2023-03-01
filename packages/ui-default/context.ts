@@ -8,7 +8,6 @@ export interface Context {
   [Context.events]: Events<Context>;
   setTimeout: typeof setTimeout;
   setInterval: typeof setInterval;
-  setImmediate: typeof setImmediate;
   api: ApiMixin;
 }
 
@@ -37,10 +36,9 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
   };
 export class ApiMixin extends Service {
-  static readonly methods = ['addScript', 'setInterval', 'setTimeout', 'setImmediate', 'provideModule', 'inject', 'broadcast'];
+  static readonly methods = ['setInterval', 'setTimeout'];
   setInterval = T(setInterval, clearInterval);
   setTimeout = T(setTimeout, clearTimeout);
-  setImmediate = T(setImmediate, clearImmediate);
   constructor(ctx) {
     super(ctx, 'api', true);
   }
