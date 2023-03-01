@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import * as bus from './bus';
 
 window.Hydro = {
   extraPages: [],
@@ -7,7 +6,6 @@ window.Hydro = {
   utils: {},
   node_modules: {},
   version: process.env.VERSION,
-  bus,
 };
 window.externalModules = {};
 window.lazyModuleResolver = {};
