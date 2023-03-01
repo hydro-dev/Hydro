@@ -67,6 +67,7 @@ export default function ScratchpadContainer() {
   const ui = useSelector<any, any>((state) => state.ui, _.isEqual);
 
   const handleChangeSize = _.debounce(() => {
+    ctx.scratchpad.editor?.layout?.();
     $('#scratchpad').trigger('vjScratchpadRelayout');
     forceUpdate();
   }, 500);
@@ -77,12 +78,10 @@ export default function ScratchpadContainer() {
     });
   };
 
-  const showSidebar = Object.keys(pages).length > 1;
-
   return (
     <Allotment onChange={handleChangeSize}>
-      <Allotment.Pane visible={showSidebar} minSize={50} maxSize={50}>
-        <div className="scratchpad__tablist" style={{ display: showSidebar ? 'block' : 'none' }}>
+      <Allotment.Pane visible={Object.keys(pages).length > 1} minSize={50} maxSize={50}>
+        <div className="scratchpad__tablist">
           {Object.keys(pages).map((key) => {
             const Component = pages[key].icon;
             return (

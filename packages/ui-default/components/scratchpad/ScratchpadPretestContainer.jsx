@@ -1,3 +1,4 @@
+import { Allotment } from 'allotment';
 import AnsiUp from 'ansi_up';
 import React from 'react';
 import { connect } from 'react-redux';
@@ -38,7 +39,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadPret
           </span>
         )}
       >
-        <div className="flex-row flex-fill">
+        <Allotment>
           <DataInput
             title={i18n('Input')}
             value={this.props.input}
@@ -49,7 +50,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadPret
             value={AU.ansi_to_html(this.props.output)}
             html
           />
-        </div>
+        </Allotment>
       </Panel>
     );
   }
