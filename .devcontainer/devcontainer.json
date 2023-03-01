@@ -4,8 +4,8 @@
 	"service": "hydro",
 	"workspaceFolder": "/workspace",
 	"customizations": {
-        "vscode": {
-            "extensions": [
+		"vscode": {
+			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"gruntfuggly.todo-tree",
 				"ronnidc.nunjucks",
@@ -13,7 +13,7 @@
 				"vscode-icons-team.vscode-icons",
 				"sysoev.language-stylus"
 			]
-        }
+		}
 	},
 	"remoteUser": "root",
 	"forwardPorts": [
