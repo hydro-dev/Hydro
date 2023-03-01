@@ -3,13 +3,17 @@
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "hydro",
 	"workspaceFolder": "/workspace",
-	"extensions": [
-		"dbaeumer.vscode-eslint",
-		"gruntfuggly.todo-tree",
-		"ronnidc.nunjucks",
-		"sysoev.language-stylus",
-		"vscode-icons-team.vscode-icons"
-	],
+	"customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+				"gruntfuggly.todo-tree",
+                "ronnidc.nunjucks",
+                "eamodio.gitlens",
+				"vscode-icons-team.vscode-icons"
+            ]
+        }
+	},
 	"remoteUser": "root",
 	"forwardPorts": [
 		2333,

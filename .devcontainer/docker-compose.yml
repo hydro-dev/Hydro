@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  db:
+  mongo:
     image: mongo:4-focal
     restart: unless-stopped
     volumes:
