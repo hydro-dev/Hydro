@@ -6,18 +6,19 @@
 	"customizations": {
         "vscode": {
             "extensions": [
-                "dbaeumer.vscode-eslint",
+				"dbaeumer.vscode-eslint",
 				"gruntfuggly.todo-tree",
-                "ronnidc.nunjucks",
-                "eamodio.gitlens",
-				"vscode-icons-team.vscode-icons"
-            ]
+				"ronnidc.nunjucks",
+				"eamodio.gitlens",
+				"vscode-icons-team.vscode-icons",
+				"sysoev.language-stylus"
+			]
         }
 	},
 	"remoteUser": "root",
 	"forwardPorts": [
 		2333,
-		8888
+		8000
 	],
-	"postCreateCommand": "yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2"
+	"postCreateCommand": "git submodule update --init && yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2"
 }
