@@ -1,32 +1,24 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.233.0/containers/javascript-node-mongo
-// Update the VARIANT arg in docker-compose.yml to pick a Node.js version
 {
-	"name": "Node.js & Mongo DB",
+	"name": "Hydro Dev Container",
 	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
+	"service": "hydro",
 	"workspaceFolder": "/workspace",
-	// Set *default* container specific settings.json values on container create.
-	"settings": {},
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"dbaeumer.vscode-eslint",
-		"gruntfuggly.todo-tree",
-		"ronnidc.nunjucks",
-		"sysoev.language-stylus",
-		"vscode-icons-team.vscode-icons"
-	],
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"gruntfuggly.todo-tree",
+				"ronnidc.nunjucks",
+				"eamodio.gitlens",
+				"vscode-icons-team.vscode-icons",
+				"sysoev.language-stylus"
+			]
+		}
+	},
+	"remoteUser": "root",
 	"forwardPorts": [
 		2333,
-		27017,
-		8888
+		8000
 	],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2",
-	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	"remoteUser": "root",
-	"features": {
-		"ghcr.io/devcontainers/features/git:1": {}
-	}
+	"postCreateCommand": "git submodule update --init && yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2"
 }

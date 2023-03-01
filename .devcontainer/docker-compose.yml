@@ -1,22 +1,21 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  app:
-    build: 
-      context: .
-      dockerfile: Dockerfile
-      args:
-        VARIANT: 16
-    volumes:
-      - ..:/workspace:cached
-      - testdata:/data/file
-    command: sleep infinity
-    network_mode: service:db
-  db:
-    image: mongo:latest
+  mongo:
+    image: mongo:4-focal
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
+  hydro:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    depends_on:
+      - mongo
+    volumes:
+      - ..:/workspace:cached
+      - testdata:/data/file
 
 volumes:
   mongodb-data:
