@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import SplitPaneFillOverlay from 'vj/components/react-splitpane/SplitPaneFillOverlayComponent';
 
 export default function PanelComponent(props) {
   const {
@@ -12,10 +11,10 @@ export default function PanelComponent(props) {
   } = props;
   const cn = classNames(className, 'flex-col');
   return (
-    <SplitPaneFillOverlay {...rest} className={cn}>
+    <div {...rest} className={`${cn} splitpane-fill`}>
       <div className="scratchpad__panel-title">{title}</div>
       <div className="flex-col flex-fill">{children}</div>
-    </SplitPaneFillOverlay>
+    </div>
   );
 }
 

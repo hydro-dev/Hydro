@@ -2,19 +2,13 @@ import Notification from 'vj/components/notification';
 import { i18n } from 'vj/utils';
 
 export default function reducer(state = {
-  main: {
-    size: '50%',
-    savedSize: '50%',
-  },
   pretest: {
     visible: ['default', 'fileio'].includes(UiContext.pdoc.config?.type)
       ? localStorage.getItem('scratchpad/pretest') === 'true'
       : false,
-    size: 200,
   },
   records: {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
-    size: 100,
     isLoading: false,
   },
   isPosting: false,
@@ -24,16 +18,6 @@ export default function reducer(state = {
   activePage: 'problem',
 }, action: any = {}) {
   switch (action.type) {
-    case 'SCRATCHPAD_UI_CHANGE_SIZE': {
-      const { uiElement, size } = action.payload;
-      return {
-        ...state,
-        [uiElement]: {
-          ...state[uiElement],
-          size,
-        },
-      };
-    }
     case 'SCRATCHPAD_UI_SET_VISIBILITY': {
       const { uiElement, visibility } = action.payload;
       localStorage.setItem(`scratchpad/${uiElement}`, visibility.toString());
@@ -130,20 +114,9 @@ export default function reducer(state = {
     }
     case 'SCRATCHPAD_SWITCH_TO_PAGE': {
       let newPage = action.payload;
-      let { size } = state.main;
-      if (newPage === state.activePage) {
-        newPage = null;
-        (size as any) = 0;
-      } else if (state.activePage === null) {
-        size = state.main.savedSize;
-      }
+      if (newPage === state.activePage) newPage = null;
       return {
         ...state,
-        main: {
-          ...state.main,
-          size,
-          savedSize: state.main.size,
-        },
         activePage: newPage,
       };
     }

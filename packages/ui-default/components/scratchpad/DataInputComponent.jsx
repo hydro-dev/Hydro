@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
 export default function DataInputComponent(props) {
@@ -10,9 +9,8 @@ export default function DataInputComponent(props) {
     className,
     ...rest
   } = props;
-  const cn = classNames(className, 'flex-col flex-fill');
   return (
-    <div {...rest} className={cn}>
+    <div {...rest} className={className} style={{ height: '100%', width: '100%' }}>
       {html ? (
         <div
           className="scratchpad__data-input"
