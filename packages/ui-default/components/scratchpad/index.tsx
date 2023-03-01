@@ -13,7 +13,7 @@ import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
 import ScratchpadToolbar from './ScratchpadToolbarContainer';
 
-function buildNestedPane([a, ...panes], mode = 'horizontal') {
+function buildNestedPane([a, ...panes], mode: 'horizontal' | 'vertical' = 'horizontal') {
   const elements = [
     a,
     ...panes.filter((p) => p.props.visible),
