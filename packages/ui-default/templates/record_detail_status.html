@@ -30,7 +30,10 @@
       <thead>
         <tr>
           <th class="col--case record-status--border">#</th>
-          <th class="col--status">{{ _('Status') }}</th>
+          <th class="col--status">
+            {{ _('Status') }}
+            <span class="score">{{ _('Score') }}</span>
+          </th>
           <th class="col--time">{{ _('Time Cost') }}</th>
           <th class="col--memory">{{ _('Memory Cost') }}</th>
         </tr>
@@ -43,6 +46,17 @@
           <td class="col--case">
             #{{ subtaskId|int|default(1) }}
           </td>
+          {% if rdoc.subtasks %}
+          <td class="col--status">
+            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}"></span>
+            <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
+              {{ model.builtin.STATUS_TEXTS[rcdocs[0]['status']] }}
+            </span>
+            <span class="score record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">{{ rdoc.subtasks[subtaskId]['score']|default(0) }}</span>
+          </td>
+          <td class="col--time"></td>
+          <td class="col--memory"></td>
+          {% endif %}
         </tr>
         {% endif %}
         {%- for rcdoc in rcdocs|sort(false,false,'id') -%}
@@ -55,6 +69,11 @@
               <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
                 {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
               </span>
+              {% if rcdocs.length == 1 %}
+              <span class="score record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status'] if _key != 'id' else rcdoc.status] }}">
+                {{ (rdoc.subtasks[subtaskId]['score'] if _key != 'id' else rcdoc.score)|default(0) }}
+              </span>
+              {% endif %}
               <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
             </td>
             <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>

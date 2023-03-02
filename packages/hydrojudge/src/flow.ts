@@ -63,7 +63,10 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
             throw e;
         }
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
-        return ctxSubtask.score;
+        return {
+            score: ctxSubtask.score,
+            status: ctxSubtask.status,
+        };
     };
 }
 
@@ -100,10 +103,10 @@ export const runFlow = async (ctx: Context, task: Task) => {
             ctx.end({ nop: true });
         }
     } else {
-        const scores = {};
+        const infos = {};
         await Promise.all(Object.entries(ctx.config.subtasks).map(async ([key, value]) => {
             const sid = value.id?.toString() || key;
-            scores[sid] = await judgeSubtask(value, sid, task.judgeCase)(ctx);
+            infos[sid] = await judgeSubtask(value, sid, task.judgeCase)(ctx);
         }));
         for (const [key, value] of Object.entries(ctx.config.subtasks)) {
             let effective = true;
@@ -111,14 +114,18 @@ export const runFlow = async (ctx: Context, task: Task) => {
             for (const required of value.if || []) {
                 if (ctx.failed[required.toString()]) effective = false;
             }
-            if (effective) ctx.total_score += scores[sid];
-            else ctx.failed[sid] = true;
+            if (effective) ctx.total_score += infos[sid].score;
+            else {
+                ctx.failed[sid] = true;
+                delete infos[sid];
+            }
         }
         ctx.end({
             status: ctx.total_status,
             score: ctx.total_score,
             time: Math.floor(ctx.total_time * 1000000) / 1000000,
             memory: ctx.total_memory,
+            subtasks: infos,
         });
     }
     ctx.stat.done = new Date();
