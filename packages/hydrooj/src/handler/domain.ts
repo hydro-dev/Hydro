@@ -99,14 +99,6 @@ class DomainEditHandler extends ManageHandler {
         await domain.edit(args.domainId, $set);
         this.response.redirect = this.url('domain_dashboard');
     }
-
-    @requireSudo
-    async postDelete({ domainId }) {
-        if (domainId === 'system') throw new CannotDeleteSystemDomainError();
-        if (this.domain.owner !== this.user._id) throw new OnlyOwnerCanDeleteDomainError();
-        await domain.del(domainId);
-        this.response.redirect = this.url('home_domain', { domainId: 'system' });
-    }
 }
 
 class DomainDashboardHandler extends ManageHandler {
@@ -128,6 +120,14 @@ class DomainDashboardHandler extends ManageHandler {
             }
         }
         this.back();
+    }
+
+    @requireSudo
+    async postDelete({ domainId }) {
+        if (domainId === 'system') throw new CannotDeleteSystemDomainError();
+        if (this.domain.owner !== this.user._id) throw new OnlyOwnerCanDeleteDomainError();
+        await domain.del(domainId);
+        this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
 
