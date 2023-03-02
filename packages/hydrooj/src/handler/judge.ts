@@ -59,6 +59,7 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     if (Number.isFinite(body.time)) $set.time = body.time;
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
+    if (body.subtasks) $set.subtasks = body.subtasks;
     return { $set, $push };
 }
 

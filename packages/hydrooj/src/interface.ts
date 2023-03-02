@@ -331,6 +331,7 @@ export interface RecordDoc {
     contest?: ObjectId;
 
     files?: Record<string, string>
+    subtasks?: Record<number, SubtaskResult>;
 }
 
 export interface JudgeMeta {
@@ -547,6 +548,11 @@ export interface JudgeMessage {
     stack?: string;
 }
 
+export interface SubtaskResult {
+    score: number;
+    status: number;
+}
+
 export interface JudgeResultBody {
     key: string;
     domainId: string;
@@ -565,6 +571,7 @@ export interface JudgeResultBody {
     message?: string | JudgeMessage;
     compilerText?: string;
     nop?: boolean;
+    subtasks?: Record<number, SubtaskResult>;
 }
 
 export interface Task {
