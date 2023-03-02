@@ -1,4 +1,4 @@
-import { sumBy } from 'lodash';
+import { maxBy, sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
@@ -13,7 +13,7 @@ import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
 import { buildProjection } from '../utils';
-import { PERM, STATUS } from './builtin';
+import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
 import RecordModel from './record';
@@ -356,6 +356,64 @@ const ioi = buildContestRule({
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
 }, oi);
 
+const strictioi = buildContestRule({
+    TEXT: 'IOI(Strict)',
+    submitAfterAccept: false,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    showSelfRecord: () => true,
+    showScoreboard: (tdoc, now) => now > tdoc.endAt,
+    stat(tdoc, journal) {
+        const detail = {};
+        let score = 0;
+        for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            const subtasks = {};
+            Object.keys(j.subtasks).forEach((i) => {
+                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) {
+                    subtasks[i] = j.subtasks[i];
+                    subtasks[i].rid = j.rid;
+                }
+            });
+            j.penaltyScore = sumBy(Object.values(subtasks), 'score');
+            j.status = maxBy(Object.values(subtasks), 'status');
+            j.subtasks = subtasks;
+            if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = j;
+        }
+        for (const i in detail) score += detail[i].penaltyScore;
+        return { score, detail };
+    },
+    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+        const tsddict = tsdoc.detail || {};
+        const row: ScoreboardNode[] = [
+            { type: 'rank', value: rank.toString() },
+            { type: 'user', value: udoc.uname, raw: tsdoc.uid },
+        ];
+        if (isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({ type: 'total_score', value: tsdoc.score || 0 });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
+        for (const pid of tdoc.pids) {
+            row.push({
+                type: 'record',
+                value: tsddict[pid]?.penaltyScore || '',
+                hover: tsddict[pid]?.subtasks.map((i) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
+                raw: tsddict[pid]?.rid,
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                    ? 'background-color: rgb(217, 240, 199);'
+                    : undefined,
+            });
+        }
+        return row;
+    },
+}, ioi);
+
 const ledo = buildContestRule({
     TEXT: 'Ledo',
     check: () => { },
@@ -576,7 +634,7 @@ const homework = buildContestRule({
 });
 
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi, ledo,
+    acm, oi, homework, ioi, ledo, strictioi,
 };
 
 function _getStatusJournal(tsdoc) {
