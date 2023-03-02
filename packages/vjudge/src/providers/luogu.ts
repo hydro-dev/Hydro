@@ -100,15 +100,30 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
             lang = lang.slice(0, -2);
         }
         lang = lang.split('luogu.')[1];
-        const result = await this.post(`/fe/api/problem/submit/${id}${this.account.query || ''}`)
-            .set('referer', `https://www.luogu.com.cn/problem/${id}`)
-            .send({
-                code,
-                lang: +lang,
-                enableO2,
-            });
-        logger.info('RecordID:', result.body.rid);
-        return result.body.rid;
+        try {
+            const result = await this.post(`/fe/api/problem/submit/${id}${this.account.query || ''}`)
+                .set('referer', `https://www.luogu.com.cn/problem/${id}`)
+                .send({
+                    code,
+                    lang: +lang,
+                    enableO2,
+                });
+            logger.info('RecordID:', result.body.rid);
+            return result.body.rid;
+        } catch (e) {
+            let parsed = e;
+            if (e.text) {
+                try {
+                    const message = JSON.parse(e.text).errorMessage;
+                    if (!message) throw e;
+                    parsed = new Error(message);
+                    parsed.stack = e.stack;
+                } catch (err) {
+                    throw e;
+                }
+            }
+            throw parsed;
+        }
     }
 
     async waitForSubmission(id: string, next, end) {
