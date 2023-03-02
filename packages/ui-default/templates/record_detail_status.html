@@ -54,7 +54,7 @@
             <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
               {{ model.builtin.STATUS_TEXTS[rcdocs[0]['status']] }}
             </span>
-            <span class="score record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">{{ rdoc.subtasks[subtaskId]['score']|default(0) }}</span>
+            <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">{{ rdoc.subtasks[subtaskId]['score']|default(0) }}</span>
           </td>
           <td class="col--time"></td>
           <td class="col--memory"></td>
@@ -72,7 +72,7 @@
                 {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
               </span>
               {% if rcdocs.length == 1 and _key != 'id' %}
-              <span class="score record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
+              <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
                 {{ rdoc.subtasks[subtaskId]['score']|default(0) }}
               </span>
               {% endif %}
