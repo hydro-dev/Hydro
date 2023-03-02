@@ -239,6 +239,7 @@ export class ProblemModel {
     }
 
     static async addTestdata(domainId: string, pid: number, name: string, f: Readable | Buffer | string, operator = 1) {
+        name = name.trim();
         if (!name) throw new ValidationError('name');
         const [[, fileinfo]] = await Promise.all([
             document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', name),
@@ -266,6 +267,7 @@ export class ProblemModel {
         domainId: string, pid: number, name: string,
         f: Readable | Buffer | string, operator = 1, skipUpload = false,
     ) {
+        name = name.trim();
         const [[, fileinfo]] = await Promise.all([
             document.getSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', name),
             skipUpload ? '' : storage.put(`problem/${domainId}/${pid}/additional_file/${name}`, f, operator),
