@@ -19,6 +19,7 @@
   </div>
 {% endif %}
 {% if rdoc.testCases.length %}
+  {% set _key = 'id' if rdoc.testCases|groupby('subtaskId')|length == 1 else 'subtaskId' %}
   <div class="section__body no-padding">
     <table class="data-table record_detail__table">
       <colgroup>
@@ -32,7 +33,7 @@
           <th class="col--case record-status--border">#</th>
           <th class="col--status">
             {{ _('Status') }}
-            {% if rdoc.subtasks %}
+            {% if rdoc.subtasks and _key != 'id' %}
             <span class="float-right">{{ _('Score') }}</span>
             {% endif %}
           </th>
@@ -41,7 +42,6 @@
         </tr>
       </thead>
       <tbody>
-      {% set _key = 'id' if rdoc.testCases|groupby('subtaskId')|length == 1 else 'subtaskId' %}
       {%- for subtaskId, rcdocs in rdoc.testCases|sort(false,false,_key)|groupby(_key) -%}
         {% if rcdocs.length > 1 %}
         <tr class="subtask">
