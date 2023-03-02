@@ -496,13 +496,13 @@ const homework = buildContestRule({
             if (tdoc.pids.includes(j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
-            const real = jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime() / 1000;
+            const real = (jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000;
             return Math.floor(real);
         }
 
         function penaltyScore(jdoc) {
             const exceedSeconds = Math.floor(
-                jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime() / 1000,
+                (jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime()) / 1000,
             );
             if (exceedSeconds < 0) return jdoc.score;
             let coefficient = 1;
