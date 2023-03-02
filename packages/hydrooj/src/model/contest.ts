@@ -1,4 +1,4 @@
-import { maxBy, sumBy } from 'lodash';
+import { sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
 import {
@@ -7,7 +7,7 @@ import {
 } from '../error';
 import {
     BaseUserDict, ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, Tdoc,
+    ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
@@ -365,8 +365,8 @@ const strictioi = buildContestRule({
     stat(tdoc, journal) {
         const detail = {};
         let score = 0;
+        const subtasks: Record<number, SubtaskResult> = {};
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            const subtasks = {};
             Object.keys(j.subtasks).forEach((i) => {
                 if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) {
                     subtasks[i] = j.subtasks[i];
@@ -374,7 +374,7 @@ const strictioi = buildContestRule({
                 }
             });
             j.penaltyScore = sumBy(Object.values(subtasks), 'score');
-            j.status = maxBy(Object.values(subtasks), 'status');
+            j.status = Math.max(...Object.values(subtasks).map((i) => i.status));
             j.subtasks = subtasks;
             if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = j;
         }
@@ -403,9 +403,9 @@ const strictioi = buildContestRule({
             row.push({
                 type: 'record',
                 value: tsddict[pid]?.penaltyScore || '',
-                hover: tsddict[pid]?.subtasks.map((i) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
+                hover: Object.values(tsddict[pid]?.subtasks).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
@@ -475,7 +475,7 @@ const ledo = buildContestRule({
                 value: tsddict[pid]?.penaltyScore || '',
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
@@ -496,13 +496,13 @@ const homework = buildContestRule({
             if (tdoc.pids.includes(j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
-            const real = jdoc.rid.generationTime - tdoc.beginAt.getTime() / 1000;
+            const real = jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime() / 1000;
             return Math.floor(real);
         }
 
         function penaltyScore(jdoc) {
             const exceedSeconds = Math.floor(
-                jdoc.rid.generationTime - tdoc.penaltySince.getTime() / 1000,
+                jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime() / 1000,
             );
             if (exceedSeconds < 0) return jdoc.score;
             let coefficient = 1;
@@ -691,14 +691,18 @@ export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
-async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number) {
+async function _updateStatus(
+    tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
+    subtasks: Record<number, SubtaskResult>,
+) {
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
     if (isLocked(tdoc)) {
         status = STATUS.STATUS_WAITING;
         score = 0;
+        subtasks = {};
     }
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
-        rid, pid, status, score,
+        rid, pid, status, score, subtasks,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
@@ -707,10 +711,10 @@ async function _updateStatus(tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: nu
 
 export async function updateStatus(
     domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
-    status = STATUS.STATUS_WRONG_ANSWER, score = 0,
+    status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
 ) {
     const tdoc = await get(domainId, tid);
-    return await _updateStatus(tdoc, uid, rid, pid, status, score);
+    return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {
