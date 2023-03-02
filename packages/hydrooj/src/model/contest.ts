@@ -417,7 +417,7 @@ const ledo = buildContestRule({
                 value: tsddict[pid]?.penaltyScore || '',
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.generationTime === meta?.first?.[pid]
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
@@ -438,13 +438,13 @@ const homework = buildContestRule({
             if (tdoc.pids.includes(j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
-            const real = jdoc.rid.generationTime - tdoc.beginAt.getTime() / 1000;
+            const real = (jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000;
             return Math.floor(real);
         }
 
         function penaltyScore(jdoc) {
             const exceedSeconds = Math.floor(
-                jdoc.rid.generationTime - tdoc.penaltySince.getTime() / 1000,
+                (jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime()) / 1000,
             );
             if (exceedSeconds < 0) return jdoc.score;
             let coefficient = 1;
