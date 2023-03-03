@@ -162,6 +162,10 @@ class VJudgeService extends Service {
     }
 }
 
+export { BasicFetcher } from './fetch';
+export { VERDICT } from './verdict';
+export * from './interface';
+
 Context.service('vjudge', VJudgeService);
 export const name = 'vjudge';
 export async function apply(ctx: Context) {
