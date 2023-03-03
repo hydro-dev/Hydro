@@ -1,6 +1,5 @@
 import assert from 'assert';
-import { readFile } from 'fs-extra';
-import { yaml } from '@hydrooj/utils';
+import { fs, yaml } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { FormatError } from '../error';
 import { Context } from './interface';
@@ -10,7 +9,7 @@ export async function judge({
 }: Context) {
     next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const answer = ('src' in code)
-        ? await readFile(code.src, 'utf-8')
+        ? await fs.readFile(code.src, 'utf-8')
         : ('content' in code)
             ? code.content.toString().replace(/\r/g, '')
             : '';

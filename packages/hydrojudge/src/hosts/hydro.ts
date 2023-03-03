@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import fs from 'fs-extra';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
+import { fs } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';

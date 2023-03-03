@@ -1,7 +1,6 @@
 import path from 'path';
-import fs from 'fs-extra';
 import { parse } from 'shell-quote';
-import { sleep } from '@hydrooj/utils/lib/utils';
+import { fs, sleep } from '@hydrooj/utils';
 import { FormatError } from './error';
 
 const EMPTY_STR = /^[ \r\n\t]*$/i;

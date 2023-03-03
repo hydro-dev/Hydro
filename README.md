@@ -40,6 +40,25 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### HYdro 4.8.0 / UI 4.47.6
+- core: 升级至 mongodb@5
+- ui: 评测详情中显示子任务得分
+- core: 修复测试数据文件名以空格开头导致操作异常的问题
+- dev: 升级 devcontainer 环境
+- ui: 优化 IDE 页面布局
+- ui: 使用 cordis 进行生命周期管理（移除旧 bus）
+- blog: 移动功能到独立的 `@hydrooj/blog` 插件
+- core: 支持动态设置
+- judge: 性能模式（关闭单点回调）
+- ui: 支持为作业设置维护者
+- core: 放行提交答案题至提交语言白名单
+- import-qduoj: 修复空标签导致无法导入的问题
+- ui: 精简 serviceworker 逻辑
+- ui: 修复训练计划加入失败的问题
+- core: 简化 user 返回字段列表
+- core&ui: contest.rule.ioi.strict
+- 其他漏洞修复和体验优化
+
 ### Hydro 4.7.3 / UI 4.47.3
 - core: 修复无输入自测
 - core: 修复 endpointForUser 域名不一致导致的 token 无效问题

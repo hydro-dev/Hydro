@@ -94,7 +94,7 @@ monaco.languages.registerCompletionItemProvider('markdown', {
         suggestions: users.map((i) => ({
           label: { label: `@${i.uname}`, description: `UID=${i._id}` },
           kind: monaco.languages.CompletionItemKind.Property,
-          documentation: { value: `[](#loader) ![avatar](${i.avatarUrl})`, isTrusted: true },
+          documentation: { value: `[](#loader) ![avatar](${new URL(i.avatarUrl, window.location.href)})`, isTrusted: true },
           insertText: `@[](/user/${i._id}) `,
           range,
           sortText: i.priv === 0 ? '0' : '1',

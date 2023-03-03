@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import { fs } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {

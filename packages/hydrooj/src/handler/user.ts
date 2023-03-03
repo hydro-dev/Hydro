@@ -94,8 +94,12 @@ class UserLoginHandler extends Handler {
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
-        if (system.get('system.contestmode') && udoc._loginip && udoc._loginip !== this.request.ip) {
-            if (!udoc.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) throw new ValidationError('ip');
+        if (system.get('system.contestmode') && !udoc.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
+            if (udoc._loginip && udoc._loginip !== this.request.ip) throw new ValidationError('ip');
+            if (system.get('system.contestmode') === 'strict') {
+                const udocs = await user.getMulti({ loginip: this.request.ip, _id: { $ne: udoc._id } }).toArray();
+                if (udocs.length) throw new ValidationError('ip');
+            }
         }
         await Promise.all([
             this.limitRate('user_login', 60, 30, false),

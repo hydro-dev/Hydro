@@ -1,7 +1,7 @@
 // Hydro Integration
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import fs from 'fs-extra';
+import { fs } from '@hydrooj/utils';
 import {
     JudgeResultBody, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,

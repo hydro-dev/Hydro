@@ -15,8 +15,8 @@
        ~                   */
 import './utils';
 
-import fs from 'fs-extra';
 import PQueue from 'p-queue';
+import { fs } from '@hydrooj/utils';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
 import log from './log';

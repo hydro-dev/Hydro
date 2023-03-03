@@ -2,7 +2,7 @@ import './utils';
 
 import path from 'path';
 import cac from 'cac';
-import fs from 'fs-extra';
+import { fs } from '@hydrooj/utils';
 import { getConfig } from './config';
 import { Logger } from './log';
 
