@@ -21,7 +21,7 @@ import ScheduleModel from '../model/schedule';
 import SolutionModel from '../model/solution';
 import * as system from '../model/system';
 import token from '../model/token';
-import user from '../model/user';
+import user, { deleteUserCache } from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
@@ -94,6 +94,9 @@ class UserLoginHandler extends Handler {
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
+        if (system.get('system.contestmode') && udoc._loginip && udoc._loginip !== this.request.ip) {
+            if (!udoc.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) throw new ValidationError('ip');
+        }
         await Promise.all([
             this.limitRate('user_login', 60, 30, false),
             this.limitRate(`user_login_${uname}`, 60, 5, false),
@@ -495,6 +498,24 @@ class OauthCallbackHandler extends Handler {
     }
 }
 
+class ContestModeHandler extends Handler {
+    async get() {
+        const bindings = await user.getMulti({ loginip: { $exists: true } })
+            .project<{ _id: number, loginip: string }>({ _id: 1, loginip: 1 }).toArray();
+        this.response.body = { bindings };
+        this.response.template = 'contest_mode.html';
+    }
+
+    @param('uid', Types.Int, true)
+    async postReset(domainId: string, uid: number) {
+        if (uid) await user.setById(uid, {}, { loginip: '' });
+        else {
+            await user.coll.updateMany({}, { $unset: { loginip: 1 } });
+            deleteUserCache(true);
+        }
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
@@ -508,4 +529,7 @@ export async function apply(ctx) {
     ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);
     ctx.Route('user_delete', '/user/delete', UserDeleteHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_detail', '/user/:uid(-?\\d+)', UserDetailHandler);
+    if (system.get('server.contestmode')) {
+        ctx.Route('contest_mode', '/contestmode', ContestModeHandler, PRIV.PRIV_EDIT_SYSTEM);
+    }
 }
