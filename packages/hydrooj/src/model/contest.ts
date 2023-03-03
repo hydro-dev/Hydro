@@ -373,12 +373,12 @@ const strictioi = buildContestRule({
                     subtasks[i].rid = j.rid;
                 }
             });
-            j.penaltyScore = sumBy(Object.values(subtasks), 'score');
+            j.score = sumBy(Object.values(subtasks), 'score');
             j.status = Math.max(...Object.values(subtasks).map((i) => i.status));
             j.subtasks = subtasks;
             if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = j;
         }
-        for (const i in detail) score += detail[i].penaltyScore;
+        for (const i in detail) score += detail[i].score;
         return { score, detail };
     },
     async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
