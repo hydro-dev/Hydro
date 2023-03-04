@@ -31,6 +31,24 @@
         </ol>
       </li>
     {% else %}
+      <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-domain" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
+        <span class="nav__item">{{ UiContext.domain.name }} <span class="icon icon-expand_more nojs--hide"></span></span>
+        <ol class="dropdown-target menu" id="menu-nav-domain">
+          {%- for ddoc in handler.user.domains -%}
+          <li class="menu__item">
+            <a href="{{ url('homepage', domainId=ddoc['_id']) }}" class="menu__link">
+              {{ ddoc['name'] }}({{ ddoc['_id'] }})
+            </a>
+          </li>
+          {%- endfor -%}
+          <li class="menu__seperator"></li>
+          <li class="menu__item">
+            <a href="{{ url('home_domain') }}" class="menu__link">
+              <span class="icon icon-web"></span> {{ _('My Domains') }}
+            </a>
+          </li>
+        </ol>
+      </li>
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
         <a href="{{ url('user_detail', uid=handler.user._id) }}" class="nav__item">{{ handler.user.uname }} <span class="icon icon-expand_more nojs--hide"></span></a>
         <ol class="dropdown-target menu" id="menu-nav-user">
@@ -64,12 +82,6 @@
           <li class="menu__item">
             <a href="{{ url('home_security') }}" class="menu__link">
               <span class="icon icon-security"></span> {{ _('home_security') }}
-            </a>
-          </li>
-          <li class="menu__seperator"></li>
-          <li class="menu__item">
-            <a href="{{ url('home_domain') }}" class="menu__link">
-              <span class="icon icon-web"></span> {{ _('My Domains') }}
             </a>
           </li>
           {% if handler.user.hasPriv(PRIV.PRIV_CREATE_FILE) %}

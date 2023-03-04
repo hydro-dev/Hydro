@@ -96,6 +96,7 @@ export class User {
         this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
+        this.domains = dudoc.userDomains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
         if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
