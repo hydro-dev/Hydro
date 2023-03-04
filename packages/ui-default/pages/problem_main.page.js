@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
+import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
@@ -176,19 +177,33 @@ async function handleOperation(operation) {
     }).open();
     if (action !== 'yes') return;
   } else if (operation === 'copy') {
-    const action = await new ActionDialog({
-      $body: tpl`
-        <div class="typo">
-          <label>
-            ${i18n('Target')}
-            <div class="textbox-container">
-              <input name="target" type="text" class="textbox" data-autofocus>
-            </div>
-          </label>
+    $(tpl`<div style="display: none" class="dialog__body--problem-copy">
+  <div class="row"><div class="columns">
+    <h1 name="select_user_hint">${i18n('Copy Problems')}</h1>
+  </div></div>
+  <div class="row">
+    <div class="columns">
+      <label>
+      ${i18n('Target')}
+        <div class="textbox-container">
+          <input name="target" type="text" class="textbox" data-autofocus>
         </div>
-      `,
+      </label>
+    </div>
+  </div>
+</div>`).appendTo(document.body);
+    const domainSelector = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
+    const copyDialog = await new ActionDialog({
+      $body: $('.dialog__body--problem-copy > div'),
+      onDispatch(action) {
+        if (action === 'ok' && domainSelector.value() === null) {
+          domainSelector.focus();
+          return false;
+        }
+        return true;
+      },
     }).open();
-    if (action !== 'ok') return;
+    if (copyDialog !== 'ok') return;
     const target = $('[name="target"]').val();
     if (!target) return;
     payload.target = target;
