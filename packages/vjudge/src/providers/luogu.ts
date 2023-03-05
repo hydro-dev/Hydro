@@ -145,9 +145,10 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
                     });
                 }
                 logger.info('Fetched with length', JSON.stringify(body).length);
-                const total = _.flattenDeep(body.currentData.testCaseGroup).length;
-                // TODO sorted
                 if (!data.detail.judgeResult?.subtasks) continue;
+                const total = _.flattenDeep(body.currentData.testCaseGroup).length;
+                const cases = [];
+                let progress = (finished / total) * 100;
                 for (const key in data.detail.judgeResult.subtasks) {
                     const subtask = data.detail.judgeResult.subtasks[key];
                     for (const cid in subtask.testCases || {}) {
@@ -155,20 +156,18 @@ export default class LuoguProvider extends BasicFetcher implements IBasicProvide
                         finished++;
                         done[`${subtask.id}.${cid}`] = true;
                         const testcase = subtask.testCases[cid];
-                        await next({
-                            status: STATUS.STATUS_JUDGING,
-                            case: {
-                                id: +cid || 0,
-                                subtaskId: +subtask.id || 0,
-                                status: STATUS_MAP[testcase.status],
-                                time: testcase.time,
-                                memory: testcase.memory,
-                                message: testcase.description,
-                            },
-                            progress: (finished / total) * 100,
+                        cases.push({
+                            id: +cid || 0,
+                            subtaskId: +subtask.id || 0,
+                            status: STATUS_MAP[testcase.status],
+                            time: testcase.time,
+                            memory: testcase.memory,
+                            message: testcase.description,
                         });
+                        progress = (finished / total) * 100;
                     }
                 }
+                if (cases.length) await next({ status: STATUS.STATUS_JUDGING, cases, progress });
                 if (data.status < 2) continue;
                 logger.info('RecordID:', id, 'done');
                 // TODO calc total status
