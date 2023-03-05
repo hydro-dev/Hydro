@@ -64,6 +64,7 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
         }
         ctx.total_status = Math.max(ctx.total_status, ctxSubtask.status);
         return {
+            type: ctxSubtask.subtask.type,
             score: ctxSubtask.score,
             status: ctxSubtask.status,
         };
