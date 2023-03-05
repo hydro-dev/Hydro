@@ -87,11 +87,11 @@ async function runWebpack({
 }
 
 async function runGulp() {
-  function handleError(err) {
+  function errorHandler(err) {
     log(chalk.red('Error: %s'), chalk.reset(err.toString() + err.stack));
     process.exit(1);
   }
-  const gulpTasks = gulpConfig({ production: true, errorHandler: handleError });
+  const gulpTasks = gulpConfig({ errorHandler });
   return new Promise((resolve) => {
     const taskList = {};
 
