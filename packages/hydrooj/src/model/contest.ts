@@ -785,6 +785,10 @@ export function count(domainId: string, query: any) {
     return document.count(domainId, document.TYPE_CONTEST, query);
 }
 
+export function countStatus(domainId: string, query: any) {
+    return document.countStatus(domainId, document.TYPE_CONTEST, query);
+}
+
 export function getMulti(
     domainId: string, query: Filter<document.DocType['30']> = {},
 ) {
@@ -900,6 +904,7 @@ global.Hydro.model.contest = {
     updateStatus,
     getStatus,
     count,
+    countStatus,
     getMulti,
     setStatus,
     getAndListStatus,
