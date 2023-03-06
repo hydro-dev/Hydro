@@ -85,7 +85,11 @@ export default function ScratchpadContainer() {
           {Object.keys(pages).map((key) => {
             const Component = pages[key].icon;
             return (
-              <div key={key} className={key === ui.activePage ? 'scratchpad__tab-active' : ''} onClick={() => switchToPage(key)}>
+              <div
+                key={key}
+                className={`scratchpad__tabicon-${key}${key === ui.activePage ? ' scratchpad__tab-active' : ''}`}
+                onClick={() => switchToPage(key)}
+              >
                 <Component />
               </div>
             );

@@ -173,6 +173,12 @@ export function count<K extends keyof DocType>(
     return coll.countDocuments({ ...query, docType, domainId });
 }
 
+export function countStatus<K extends keyof DocStatusType>(
+    domainId: string, docType: K, query?: Filter<DocStatusType[K]>,
+) {
+    return collStatus.countDocuments({ ...query, docType, domainId });
+}
+
 export async function push<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     key: ArrayKeys<DocType[K]>, value: DocType[K][0],
@@ -463,6 +469,7 @@ global.Hydro.model.document = {
     addToSet,
     cappedIncStatus,
     count,
+    countStatus,
     deleteMulti,
     deleteMultiStatus,
     deleteOne,
