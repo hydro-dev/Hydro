@@ -470,7 +470,6 @@ class OauthCallbackHandler extends Handler {
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
             r.uname ||= [];
-            r.uname.push(String.random(16));
             const mailDomain = r.email.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             for (const uname of r.uname) {
