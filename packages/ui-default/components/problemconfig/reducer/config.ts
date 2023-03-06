@@ -1,4 +1,4 @@
-import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
+import { parseMemoryMB, parseTimeMS, sortFiles } from '@hydrooj/utils/lib/common';
 import type { ProblemConfigFile } from 'hydrooj/src/interface';
 import yaml from 'js-yaml';
 import { cloneDeep } from 'lodash';
@@ -54,13 +54,33 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
           subsubtasks.cases = subsubtasks.cases.filter((k, v) => v !== action.value);
         }
       } else if (action.key === 'add') {
-        return { ...state, subtasks: [...subtasks, { time: state.time || '1s', memory: state.memory || '256m', cases: [] }] };
+        subtasks.push({
+          time: state.time || '1s',
+          memory: state.memory || '256m',
+          cases: [],
+          score: 0,
+          id: Object.keys(subtasks).map((i) => subtasks[i].id).reduce((a, b) => Math.max(+a, +b), 0) + 1,
+        });
+        return { ...state, subtasks };
       } else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
       else {
         if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];
         else subsubtasks[action.key] = action.value;
       }
       subtasks[action.id] = subsubtasks;
+      return { ...state, subtasks };
+    }
+    case 'problemconfig/moveTestcases': {
+      const testcases = action.payload.cases;
+      const subtasks = cloneDeep(state.subtasks);
+      for (const key in subtasks) {
+        const subtask = subtasks[key];
+        if (subtask.id !== action.payload.subtaskId) {
+          subtask.cases = subtask.cases.filter((i) => !testcases.find((j) => i.input === j.input));
+        } else {
+          subtask.cases = sortFiles(subtask.cases.concat(testcases), 'input');
+        }
+      }
       return { ...state, subtasks };
     }
     default:

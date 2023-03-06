@@ -109,7 +109,6 @@ export default function ProblemConfigForm() {
       {Type === 'default' && <FileIOConfig />}
       {!['submit_answer', 'objective'].includes(Type) && (
         <>
-          <TaskConfig />
           <ExtraFilesConfig />
           <LangConfig />
         </>

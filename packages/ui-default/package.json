@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "4.17.4",
+    "@blueprintjs/popover2": "^1.13.8",
     "@fontsource/dm-mono": "^4.5.10",
     "@fontsource/fira-code": "^4.5.13",
     "@fontsource/inconsolata": "^4.5.10",
