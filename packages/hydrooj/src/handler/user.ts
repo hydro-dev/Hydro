@@ -302,10 +302,11 @@ class UserRegisterWithCodeHandler extends Handler {
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = tdoc.mail.split('@');
-        const $set: any = {};
+        const $set: any = tdoc.set || {};
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
+        if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.scope = PERM.PERM_ALL.toString();
@@ -454,6 +455,7 @@ class OauthCallbackHandler extends Handler {
             await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });
             this.session.uid = uid;
             this.session.scope = PERM.PERM_ALL.toString();
+            this.response.redirect = '/';
         } else {
             if (r.email) {
                 const udoc = await user.getByEmail('system', r.email);
@@ -479,26 +481,23 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const _id = await user.create(
-                r.email, username, String.random(32),
-                undefined, this.request.ip,
+            const set: Partial<Udoc> = { oauth: args.type };
+            if (r.bio) set.bio = r.bio;
+            if (r.viewLang) set.viewLang = r.viewLang;
+            if (r.avatar) set.avatar = r.avatar;
+            const [t] = await token.add(
+                token.TYPE_REGISTRATION,
+                system.get('session.unsaved_expire_seconds'),
+                {
+                    mail: r.email,
+                    username,
+                    redirect: this.domain.registerRedirect,
+                    set,
+                    oauth: [args.type, r.email],
+                },
             );
-            const $set: Partial<Udoc> = {
-                oauth: args.type,
-                loginat: new Date(),
-                loginip: this.request.ip,
-            };
-            if (r.bio) $set.bio = r.bio;
-            if (r.viewLang) $set.viewLang = r.viewLang;
-            if (r.avatar) $set.avatar = r.avatar;
-            await Promise.all([
-                user.setById(_id, $set),
-                oauth.set(r.email, _id),
-            ]);
-            this.session.uid = _id;
-            this.session.scope = PERM.PERM_ALL.toString();
+            this.response.redirect = this.url('user_register_with_code', { code: t });
         }
-        this.response.redirect = '/';
     }
 }
 
