@@ -37,6 +37,7 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
         result.type = 'fileio';
         result.subType = cfg.filename;
     }
+    if (cfg.subType === 'multi_file') result.submit_files = cfg.submit_files;
     return result;
 }
 

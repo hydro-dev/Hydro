@@ -28,8 +28,8 @@ interface Props {
 const configKey = [
   'type', 'subType', 'target', 'score', 'time',
   'memory', 'filename', 'checker_type', 'checker', 'interactor',
-  'validator', 'user_extra_files', 'judge_extra_files', 'detail', 'outputs',
-  'redirect', 'cases', 'subtasks', 'langs',
+  'validator', 'submit_files', 'user_extra_files', 'judge_extra_files', 'detail',
+  'outputs', 'redirect', 'cases', 'subtasks', 'langs',
 ];
 
 const subtasksKey = [

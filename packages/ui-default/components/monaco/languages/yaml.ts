@@ -50,6 +50,7 @@ const problemConfigSchema = {
     checker: { type: 'string', pattern: '\\.' },
     interactor: { type: 'string', pattern: '\\.' },
     validator: { type: 'string', pattern: '\\.' },
+    submit_files: { type: 'array', items: { type: 'string' } },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },
     cases: { $ref: '#/def/cases' },

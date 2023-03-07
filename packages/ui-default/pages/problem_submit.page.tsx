@@ -26,13 +26,16 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     if (window.LANGS[key].pretest?.split('.')[0] === preferences[0].split('.')[0]) preferences.push(key);
   }
 
-  renderLanguageSelect(
-    document.getElementById('codelang-selector'),
-    '[name="lang"]',
-    availableLangs,
-    mainLangs,
-    preferences,
-  );
+  $('.codelang-selector').each((i, e) => {
+    console.log('renderLanguageSelect', e);
+    renderLanguageSelect(
+      e,
+      `[name="lang.${e.id}"]`,
+      availableLangs,
+      mainLangs,
+      preferences,
+    );
+  });
 });
 
 export default page;

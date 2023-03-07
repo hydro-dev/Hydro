@@ -191,6 +191,7 @@ export interface ProblemConfigFile {
     checker_type?: string;
     checker?: string;
     interactor?: string;
+    submit_files?: string[];
     user_extra_files?: string[];
     judge_extra_files?: string[];
     detail?: boolean;
@@ -214,6 +215,7 @@ export interface ProblemConfig {
     subType?: string;
     target?: string;
     hackable?: boolean;
+    submit_files?: string[];
 }
 
 export interface PlainContentNode {

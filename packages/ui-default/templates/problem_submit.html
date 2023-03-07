@@ -9,22 +9,30 @@
       </div>
       <div class="section__body">
         <form method="post" enctype="multipart/form-data">
-          <div class="hasjs--hide">
-            {{ form.form_select({
-                label:'Code language',
-                options:langRange,
-                name:'lang',
-                value:handler.user.codeLang
-              }) }}
-          </div>
-          <div class="row nojs--hide" id="codelang-selector"></div>
-          {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
-          <div class="row">
-            <div class="medium-12 columns">
-              <p>{{ _('Or upload a file:') }} <input type="file" name="file"></p>
-              <br />
+          {% set files = pdoc.config.submit_files or ['code'] %}
+          {% for file in files %}
+            <div class="submit-file__{{ file }}">
+            {% if files.length !== 1 %}
+              <p>{{ _('Submit File:')}} {{ file }}</p>
+            {% endif %}
+              <div class="hasjs--hide">
+              {{ form.form_select({
+                  label:'Code language',
+                  options:langRange,
+                  name:'lang.' + file,
+                  value:handler.user.codeLang
+                }) }}
+              </div>
+              <div class="row nojs--hide codelang-selector" id="{{ file }}"></div>
+              {{ form.form_textarea({label:'Code', columns:12, name:'code.' + file, extra_class:'monospace', autofocus:true}) }}
+              <div class="row">
+                <div class="medium-12 columns">
+                  <p>{{ _('Or upload a file:') }} <input type="file" name="file.{{ file }}"></p>
+                  <br />
+                </div>
+              </div>
             </div>
-          </div>
+          {% endfor %}
           <div class="row"><div class="columns">
             <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
           </div></div>
