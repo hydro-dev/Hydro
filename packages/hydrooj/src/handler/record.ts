@@ -5,7 +5,7 @@ import { Filter, ObjectId } from 'mongodb';
 import {
     ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError,
     PermissionError, ProblemConfigError,
-    ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
+    ProblemNotFoundError, RecordNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
@@ -124,27 +124,29 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async prepare(domainId: string, rid: ObjectId) {
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc) throw new RecordNotFoundError(rid);
+        if (Object.keys(this.rdoc.files).length > 1) this.rdoc.lang = JSON.parse(this.rdoc.lang);
     }
 
-    async download() {
-        for (const file of ['code', 'hack']) {
-            if (!this.rdoc.files?.[file]) continue;
-            const [id, filename] = this.rdoc.files?.[file]?.split('#') || [];
-            // eslint-disable-next-line no-await-in-loop
-            this.response.redirect = await storage.signDownloadLink(`submission/${id}`, filename || file, true, 'user');
+    async download(filename: string) {
+        const fileList = ['code', ...Object.keys(this.rdoc.files || {})];
+        if (!fileList.includes(filename)) throw new ValidationError(filename);
+        if (['code', 'hack'].includes(filename) && this.rdoc.files.filename) {
+            const [id, file] = this.rdoc.files?.filename?.split('#') || [];
+            this.response.redirect = await storage.signDownloadLink(`submission/${id}`, file || filename, true, 'user');
             return;
         }
-        const lang = langs[this.rdoc.lang]?.pretest || this.rdoc.lang;
-        this.response.body = this.rdoc.code;
+        const lang = this.rdoc.lang?.[filename] || langs[this.rdoc.lang]?.pretest || this.rdoc.lang;
+        this.response.body = this.rdoc.code || this.rdoc.files[filename];
         this.response.type = 'text/plain';
-        this.response.disposition = `attachment; filename="${langs[lang]?.code_file || `foo.${this.rdoc.lang}`}"`;
+        this.response.disposition = `attachment; filename="${filename === 'code' ? langs[lang]?.code_file || `foo.${lang}` : filename}"`;
     }
 
     @param('rid', Types.ObjectId)
-    @param('download', Types.Boolean)
+    @param('download', Types.String, true)
     // eslint-disable-next-line consistent-return
-    async get(domainId: string, rid: ObjectId, download = false) {
+    async get(domainId: string, rid: ObjectId, download = '') {
         const rdoc = this.rdoc;
+        let fileList = ['code', ...Object.keys(this.rdoc.files || {})];
         let canViewDetail = true;
         if (rdoc.contest?.toString() === '000000000000000000000000') {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
@@ -180,10 +182,11 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             rdoc.code = '';
             rdoc.files = {};
             rdoc.compilerTexts = [];
-        } else if (download) return await this.download();
+            fileList = [];
+        } else if (download) return await this.download(download);
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
+            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc, fileList,
         };
     }
 

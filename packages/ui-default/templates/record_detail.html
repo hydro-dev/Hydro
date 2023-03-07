@@ -9,16 +9,41 @@
     {% if typeof(rdoc['status']) === 'number' %}
       {% include 'record_detail_status.html' %}
     {% endif %}
-    {% if rdoc['code'] or rdoc.files.code %}
+    {% if fileList %}
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Code') }}</h1>
+        {% if fileList|length < 2 %}
         <div class="section__tools">
-          <a class="primary rounded button" href="?download=true"><span class="icon icon-download"></span> {{ _('Download') }}</a>
+          <a class="primary rounded button" href="?download=code"><span class="icon icon-download"></span> {{ _('Download') }}</a>
         </div>
+        {% endif %}
       </div>
       <div class="section__body">
+      {% if fileList|length == 1 %}
+        {% if rdoc.code %}
         <pre><code class="line-numbers language-{{ model.setting.langs[rdoc.lang].highlight }}">{{ rdoc['code'] }}</code></pre>
+        {% else %}
+        <p>{{ _('No code available, Please download the file.') }}</p>
+        {% endif %}
+      {% else %}
+         <div class="section__tab-container">
+          <ul class="section__tabs">
+            {% for file in fileList %}
+            {% if (file == 'code' and rdoc.code) or rdoc.files[file] %}
+            <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ file }}</h1>
+              <div class="section__tab-main submit-file__{{ file }}">
+                {% set lang = rdoc.lang[file] if typeof(rdoc.lang) == 'object' else (rdoc.lang if file == 'code' else 'plain') %}
+                <pre><code class="line-numbers language-{{ model.setting.langs[lang].highlight }}">{{ rdoc.code if (file == 'code' and rdoc.code) else rdoc.files[file] }}</code></pre>
+                <a class="primary rounded button" href="?download={{ file }}"><span class="icon icon-download"></span> {{ _('Download') }}</a>
+              </div>
+            </li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
       </div>
     </div>
     {% endif %}
