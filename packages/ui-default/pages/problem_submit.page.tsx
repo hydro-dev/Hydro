@@ -26,8 +26,9 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     if (window.LANGS[key].pretest?.split('.')[0] === preferences[0].split('.')[0]) preferences.push(key);
   }
 
+  if (!config.submit_files) $('.section__tab-header-wrapper').hide();
+
   $('.codelang-selector').each((i, e) => {
-    console.log('renderLanguageSelect', e);
     renderLanguageSelect(
       e,
       `[name="lang.${e.id}"]`,
