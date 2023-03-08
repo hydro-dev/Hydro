@@ -99,7 +99,7 @@ export class User {
         this.domains = dudoc.userDomains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
-        if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
+        if (dudoc.group) this.group = dudoc.group;
 
         for (const key in setting.SETTINGS_BY_KEY) {
             this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
