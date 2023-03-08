@@ -494,10 +494,18 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     }
 
     async post(args: any) {
-        console.log(args);
         const config = this.pdoc.config;
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (config.subType === 'multi_file' && !config.submit_files) throw new ProblemConfigError();
+        for (const arg of Object.keys(args)) {
+            if (arg.startsWith('__')) continue;
+            let check: any = Types.String;
+            if (arg.startsWith('code.')) check = Types.Content;
+            if (arg === 'pretest') check = Types.Boolean;
+            if (arg === 'tid') check = Types.ObjectId;
+            if (!check[1](args[arg])) throw new ValidationError(arg);
+            args[arg] = check[0](args[arg]);
+        }
         const {
             domainId, tid, pretest, input,
         } = args;
@@ -505,7 +513,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const files: Record<string, string> = {};
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'), false);
-        const langs: Record<string, string> = {};
         let lang = '';
         let code = '';
         const allFiles = this.request.files.allFiles;
@@ -519,6 +526,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         for (const filename of submitFiles) {
             lang = args[`lang.${filename}`];
             code = args[`code.${filename}`];
+            if (!lang) throw new ValidationError('lang');
             if (['submit_answer', 'objective'].includes(config.type)) {
                 lang = '_';
             } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
@@ -538,15 +546,10 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 // eslint-disable-next-line no-await-in-loop
                 code = await readFile(file.filepath, 'utf-8');
             }
-            if (submitFiles.length > 1) {
-                langs[filename] = lang;
-                if (!files.code) files[filename] = code;
-            }
+            if (!code) throw new ValidationError('code');
+            if (submitFiles.length > 1 && !files.code) files[filename] = code;
         }
-        if (submitFiles.length > 1) {
-            lang = JSON.stringify(langs);
-            code = '';
-        }
+        if (submitFiles.length > 1) code = '';
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
             pretest ? { input, type: 'pretest' } : { contest: tid, files, type: tid ? 'contest' : 'judge' },
