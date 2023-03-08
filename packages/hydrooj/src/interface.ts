@@ -549,6 +549,7 @@ export interface JudgeMessage {
 }
 
 export interface SubtaskResult {
+    type: SubtaskType;
     score: number;
     status: number;
 }

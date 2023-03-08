@@ -1,6 +1,7 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
+import { Time } from '@hydrooj/utils';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -264,13 +265,15 @@ export class UserRegisterHandler extends Handler {
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
             await this.limitRate('send_sms', 60, 3);
-            const t = await token.add(
+            const id = String.random(6, '0123456789');
+            await token.add(
                 token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
+                10 * Time.minute,
                 { phone: phoneNumber },
-                String.random(6),
+                id,
             );
-            await global.Hydro.lib.sendSms(phoneNumber, 'register', t[0]);
+            await global.Hydro.lib.sendSms(phoneNumber, 'register', id);
+            this.response.body = { phone: phoneNumber };
             this.response.template = 'user_register_sms.html';
         } else throw new ValidationError('mail');
     }
@@ -302,10 +305,11 @@ class UserRegisterWithCodeHandler extends Handler {
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = tdoc.mail.split('@');
-        const $set: any = {};
+        const $set: any = tdoc.set || {};
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
+        if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.scope = PERM.PERM_ALL.toString();
@@ -454,6 +458,7 @@ class OauthCallbackHandler extends Handler {
             await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });
             this.session.uid = uid;
             this.session.scope = PERM.PERM_ALL.toString();
+            this.response.redirect = '/';
         } else {
             if (r.email) {
                 const udoc = await user.getByEmail('system', r.email);
@@ -468,7 +473,6 @@ class OauthCallbackHandler extends Handler {
             this.checkPriv(PRIV.PRIV_REGISTER_USER);
             let username = '';
             r.uname ||= [];
-            r.uname.push(String.random(16));
             const mailDomain = r.email.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             for (const uname of r.uname) {
@@ -479,26 +483,23 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const _id = await user.create(
-                r.email, username, String.random(32),
-                undefined, this.request.ip,
+            const set: Partial<Udoc> = { oauth: args.type };
+            if (r.bio) set.bio = r.bio;
+            if (r.viewLang) set.viewLang = r.viewLang;
+            if (r.avatar) set.avatar = r.avatar;
+            const [t] = await token.add(
+                token.TYPE_REGISTRATION,
+                system.get('session.unsaved_expire_seconds'),
+                {
+                    mail: r.email,
+                    username,
+                    redirect: this.domain.registerRedirect,
+                    set,
+                    oauth: [args.type, r.email],
+                },
             );
-            const $set: Partial<Udoc> = {
-                oauth: args.type,
-                loginat: new Date(),
-                loginip: this.request.ip,
-            };
-            if (r.bio) $set.bio = r.bio;
-            if (r.viewLang) $set.viewLang = r.viewLang;
-            if (r.avatar) $set.avatar = r.avatar;
-            await Promise.all([
-                user.setById(_id, $set),
-                oauth.set(r.email, _id),
-            ]);
-            this.session.uid = _id;
-            this.session.scope = PERM.PERM_ALL.toString();
+            this.response.redirect = this.url('user_register_with_code', { code: t });
         }
-        this.response.redirect = '/';
     }
 }
 

@@ -1,9 +1,10 @@
 {% import "components/record.html" as record with context %}
 {% import "components/problem.html" as problem with context %}
 <tr data-rid="{{ rdoc['_id'] }}">
+  {% set _isPretest = rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}
   {{ record.render_status_td(rdoc, allDomain = all) }}
   <td class="col--problem col--problem-name">
-  {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack %}
+  {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack and not _isPretest %}
     <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
       <button type="submit" name="operation" value="rejudge" class="link text-maroon lighter">
         <span class="icon icon-refresh"></span>
@@ -23,7 +24,7 @@
     *
   {% endif %}
   {% if rdoc.files.hack %}<span class="text-orange">({{ _('Hack') }})</span>{% endif %}
-  {% if rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}<span class="text-orange">({{ _('Pretest') }})</span>{% endif %}
+  {% if _isPretest %}<span class="text-orange">({{ _('Pretest') }})</span>{% endif %}
   </td>
   <td class="col--submit-by">
     <a href="{{ url('user_detail', uid=rdoc.uid) }}">

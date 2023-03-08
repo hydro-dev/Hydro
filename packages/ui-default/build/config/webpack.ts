@@ -1,9 +1,8 @@
 /* eslint-disable global-require */
-/* eslint-disable import/no-extraneous-dependencies */
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { ESBuildMinifyPlugin } from 'esbuild-loader';
-import FriendlyErrorsPlugin from 'friendly-errors-webpack-plugin';
+import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import { dirname } from 'path';
@@ -55,7 +54,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       options: {
         stylusOptions: {
           preferPathResolver: 'webpack',
-          use: [require('rupture')()], // eslint-disable-line global-require
+          use: [require('rupture')()],
           import: ['~vj/common/common.inc.styl'],
         },
       },
@@ -244,7 +243,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         filename: '[name].css?[fullhash:6]',
       }),
       new WebpackManifestPlugin({}),
-      new FriendlyErrorsPlugin(),
+      new DuplicatesPlugin(),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
       new CopyWebpackPlugin({
         patterns: [

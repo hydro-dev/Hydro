@@ -40,7 +40,7 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### HYdro 4.8.0 / UI 4.47.6
+### Hydro 4.8.0 / UI 4.47.6
 - core: 升级至 mongodb@5
 - ui: 评测详情中显示子任务得分
 - core: 修复测试数据文件名以空格开头导致操作异常的问题

@@ -64,7 +64,7 @@ export const RpTypes: Record<string, RpDef> = {
                     docId: tdoc.docId,
                     journal: { $ne: null },
                 };
-                if (!await contest.count(tdoc.domainId, query)) continue;
+                if (!await contest.countStatus(tdoc.domainId, query)) continue;
                 const cursor = contest.getMultiStatus(tdoc.domainId, query).sort(contest.RULES[tdoc.rule].statusSort);
                 const rankedTsdocs = await contest.RULES[tdoc.rule].ranked(tdoc, cursor);
                 const users = rankedTsdocs.map((i) => ({ uid: i[1].uid, rank: i[0], old: udict[i[1].uid] }));

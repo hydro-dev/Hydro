@@ -315,27 +315,29 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
                 submissionId: id,
             });
             if (body.compilationError === 'true') {
-                await next({ compilerText: body['checkerStdoutAndStderr#1'] });
                 return await end({
-                    status: STATUS.STATUS_COMPILE_ERROR, score: 0, time: 0, memory: 0,
+                    compilerText: body['checkerStdoutAndStderr#1'],
+                    status: STATUS.STATUS_COMPILE_ERROR,
+                    score: 0,
+                    time: 0,
+                    memory: 0,
                 });
             }
             const time = Math.sum(Object.keys(body).filter((k) => k.startsWith('timeConsumed#')).map((k) => +body[k]));
             const memory = Math.max(...Object.keys(body).filter((k) => k.startsWith('memoryConsumed#')).map((k) => +body[k])) / 1024;
+            const cases = [];
             for (; i <= +body.testCount; i++) {
                 const status = VERDICT[body[`verdict#${i}`]] || STATUS.STATUS_WRONG_ANSWER;
-                await next({
-                    status: STATUS.STATUS_JUDGING,
-                    case: {
-                        id: +i,
-                        subtaskId: 1,
-                        status,
-                        time: +body[`timeConsumed#${i}`],
-                        memory: +body[`memoryConsumed#${i}`] / 1024,
-                        message: body[`checkerStdoutAndStderr#${i}`] || body[`verdict#${i}`],
-                    },
+                cases.push({
+                    id: +i,
+                    subtaskId: 1,
+                    status,
+                    time: +body[`timeConsumed#${i}`],
+                    memory: +body[`memoryConsumed#${i}`] / 1024,
+                    message: body[`checkerStdoutAndStderr#${i}`] || body[`verdict#${i}`],
                 });
             }
+            if (cases.length) await next({ status: STATUS.STATUS_JUDGING, cases });
             if (body.waiting === 'true') continue;
             const status = VERDICT[Object.keys(VERDICT).find((k) => normalize(body.verdict).includes(k))];
             return await end({

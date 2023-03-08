@@ -377,7 +377,7 @@ class UserModel {
             udict[key].school ||= '';
             udict[key].studentId ||= '';
             udict[key].displayName ||= udict[key].uname;
-            udict[key].avatar = `gravatar:${udict[key].mail}`;
+            udict[key].avatar ||= `gravatar:${udict[key].mail}`;
         }
         return udict as BaseUserDict;
     }
