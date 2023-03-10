@@ -47,7 +47,7 @@
           {%- endif -%}
           <li class="menu__item">
             <a href="{{ url('home_domain') }}" class="menu__link">
-              <span class="icon icon-web"></span> {{ _('My Domains') }}
+              <span class="icon icon-wrench"></span> {{ _('Manage') }}
             </a>
           </li>
         </ol>
@@ -85,6 +85,12 @@
           <li class="menu__item">
             <a href="{{ url('home_security') }}" class="menu__link">
               <span class="icon icon-security"></span> {{ _('home_security') }}
+            </a>
+          </li>
+          <li class="menu__seperator"></li>
+          <li class="menu__item">
+            <a href="{{ url('home_domain') }}" class="menu__link">
+              <span class="icon icon-web"></span> {{ _('My Domains') }}
             </a>
           </li>
           {% if handler.user.hasPriv(PRIV.PRIV_CREATE_FILE) %}
