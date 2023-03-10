@@ -212,7 +212,7 @@ class DomainModel {
         dudoc.perm = ddoc?.roles[dudoc.role]
             ? BigInt(ddoc?.roles[dudoc.role])
             : BUILTIN_ROLES[dudoc.role];
-        const dudict = await collUser.find({ uid: udoc._id }).toArray();
+        const dudict = await collUser.find({ uid: udoc._id, show: true }).toArray();
         dudoc.userDomains = await coll.find({ _id: { $in: dudict.map((d) => d.domainId) } })
             .project({ _id: 1, name: 1, avatar: 1 }).toArray();
         return dudoc;

@@ -438,6 +438,13 @@ class HomeDomainHandler extends Handler {
         this.response.template = 'home_domain.html';
         this.response.body = { ddocs, dudict, canManage };
     }
+
+    @param('domainId', Types.String)
+    @param('show', Types.Boolean)
+    async postShowNav(domainId: string, id: string, show = false) {
+        await domain.setUserInDomain(id, this.user._id, { show });
+        this.back();
+    }
 }
 
 class HomeDomainCreateHandler extends Handler {
