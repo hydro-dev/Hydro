@@ -1,6 +1,6 @@
 {% import "components/form.html" as form with context %}
 <div class="row">
-  <div class="medium-8 columns">
+  <div class="medium-9 columns">
     <label>
       {{ _('Title') }}
       <input 
@@ -9,28 +9,30 @@
         class="textbox" autofocus>
     </label>
   </div>
-  <div class="medium-2 columns">
-    <label>
-      <br>
-      <label class="checkbox">
-        <input type="checkbox" name="highlight" value="on" class="checkbox"
-          {%- if ddoc.highlight %} checked{% endif -%}
-          {%- if not handler.user.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION) %} disabled{% endif -%}
-        >{{ _('Highlight') }}
-      </label>
-    </label>
-  </div>
-  <div class="medium-2 columns">
-    <label>
-      <br>
-      <label class="checkbox">
-        <input type="checkbox" name="pin" value="on" class="checkbox"
-          {%- if ddoc.pin %} checked{% endif -%}
-          {%- if not handler.user.hasPerm(perm.PERM_PIN_DISCUSSION) %} disabled{% endif -%}
-        >{{ _('Pin') }}
-      </label>
-    </label>
-  </div>
+  {{ form.form_checkbox({
+    columns:1,
+    label:'Highlight',
+    name:'highlight',
+    value:ddoc.highlight|default(false),
+    disabled:not handler.user.hasPerm(perm.PERM_HIGHLIGHT_DISCUSSION),
+    row:false
+  }) }}
+  {{ form.form_checkbox({
+    columns:1,
+    label:'Pin',
+    name:'pin',
+    value:ddoc.pin|default(false),
+    disabled:not handler.user.hasPerm(perm.PERM_PIN_DISCUSSION),
+    row:false
+  }) }}
+  {{ form.form_checkbox({
+    columns:1,
+    label:'Hidden',
+    name:'hidden',
+    value:(ddoc and ddoc.hidden) or vnode.hidden|default(false),
+    disabled:not handler.user.hasPerm(perm.PERM_EDIT_DISCUSSION),
+    row:false
+  }) }}
 </div>
 {{ form.form_textarea({
       columns:12,

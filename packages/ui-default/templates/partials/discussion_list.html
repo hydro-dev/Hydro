@@ -35,6 +35,9 @@
               @
               {{ datetimeSpan(ddoc.updateAt)|safe }}
             </li>
+            {%- if ddoc.hidden -%}
+            <li class="text-orange">({{ _('Hidden') }})</li>
+            {%- endif -%}
           </ul>
         </div>
       </div>

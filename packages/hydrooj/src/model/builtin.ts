@@ -46,6 +46,7 @@ export const PERM = {
 
     // Discussion
     PERM_VIEW_DISCUSSION: 1n << 27n,
+    PERM_VIEW_DISCUSSION_HIDDEN: 1n << 68n,
     PERM_CREATE_DISCUSSION: 1n << 28n,
     PERM_HIGHLIGHT_DISCUSSION: 1n << 29n,
     PERM_PIN_DISCUSSION: 1n << 61n,
