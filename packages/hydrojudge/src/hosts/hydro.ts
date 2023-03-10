@@ -8,7 +8,6 @@ import { fs } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
-import { processTestdata } from '../cases';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import log from '../log';
@@ -117,7 +116,6 @@ export default class Hydro {
             queue.start();
             await Promise.all(tasks);
             await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
-            await processTestdata(filePath);
         }
         await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;

@@ -36,17 +36,6 @@ async function collectFiles(folder: string) {
     return files;
 }
 
-export async function processTestdata(folder: string) {
-    let files = await fs.readdir(folder);
-    if (files.length <= 2) {
-        if (files.length === 2) files.splice(files.indexOf('version'), 1);
-        if (fs.statSync(path.resolve(folder, files[0])).isDirectory()) {
-            folder = path.resolve(folder, files[0]);
-            files = await fs.readdir(folder);
-        }
-    }
-}
-
 interface Args {
     next: NextFunction;
     key: string;
