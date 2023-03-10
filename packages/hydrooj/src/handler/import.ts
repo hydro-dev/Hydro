@@ -76,7 +76,7 @@ class ProblemImportHydroHandler extends Handler {
                             const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
                             for (const s of sub) {
                                 const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name, s));
-                                await problem.addTestdata(domainId, docId, `${f.name}/${s}`, stream);
+                                await problem.addTestdata(domainId, docId, s, stream);
                             }
                         } else if (f.isFile()) {
                             const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name));

@@ -17,6 +17,7 @@ import MessageModel from './model/message';
 import problem from './model/problem';
 import RecordModel from './model/record';
 import ScheduleModel from './model/schedule';
+import StorageModel from './model/storage';
 import * as system from './model/system';
 import TaskModel from './model/task';
 import user from './model/user';
@@ -531,6 +532,24 @@ const scripts: UpgradeScript[] = [
             await db.collection('message').updateOne({ _id: m._id }, { $set: { content } });
         }
         return true;
+    },
+    async function _76_77() {
+        return await iterateAllProblem(['domainId', 'title', 'docId', 'data'], async (pdoc, current, total) => {
+            if (!pdoc.data?.find((i) => i.name.includes('/'))) return;
+            logger.info(pdoc.domainId, pdoc.docId, pdoc.title, pdoc.data.map((i) => i._id));
+            const prefix = `problem/${pdoc.domainId}/${pdoc.docId}/testdata/`;
+            for (const file of pdoc.data) {
+                if (!file._id.includes('/')) continue;
+                let newName = file._id.split('/')[1].toLowerCase();
+                if (pdoc.data.find((i) => i._id === newName)) {
+                    newName = file._id.replace(/\//g, '_').toLowerCase();
+                }
+                await StorageModel.rename(`${prefix}${file._id}`, `${prefix}${newName}`);
+                file._id = newName;
+                file.name = newName;
+            }
+            await problem.edit(pdoc.domainId, pdoc.docId, { data: pdoc.data });
+        });
     },
 ];
 
