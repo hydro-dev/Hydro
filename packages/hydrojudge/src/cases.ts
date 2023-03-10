@@ -36,32 +36,6 @@ async function collectFiles(folder: string) {
     return files;
 }
 
-export async function processTestdata(folder: string) {
-    let files = await fs.readdir(folder);
-    if (files.length <= 2) {
-        if (files.length === 2) files.splice(files.indexOf('version'), 1);
-        if (fs.statSync(path.resolve(folder, files[0])).isDirectory()) {
-            folder = path.resolve(folder, files[0]);
-            files = await fs.readdir(folder);
-        }
-    }
-    const ini = files.filter((i) => i.toLowerCase() === 'config.ini')[0];
-    if (!ini) return;
-    const t = await fs.readFile(path.resolve(folder, ini), 'utf8');
-    await fs.writeFile(path.resolve(folder, 'config.ini'), t.toLowerCase());
-    for (const i of files) {
-        if (i.toLowerCase() === 'input') await fs.rename(`${folder}/${i}`, `${folder}/input`);
-        if (i.toLowerCase() === 'output') await fs.rename(`${folder}/${i}`, `${folder}/output`);
-    }
-    await Promise.all(['input', 'output'].flatMap(async (f) => {
-        const dir = path.resolve(folder, f);
-        const sf = await fs.readdir(dir);
-        return sf
-            .filter((i) => i !== i.toLowerCase())
-            .map((i) => fs.rename(`${dir}/${i}`, `${dir}/${i.toLowerCase()}`));
-    }));
-}
-
 interface Args {
     next: NextFunction;
     key: string;
