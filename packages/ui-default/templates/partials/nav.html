@@ -32,13 +32,13 @@
       </li>
     {% else %}
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-domain" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
-        <span class="nav__item"><span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20"></span> {{ UiContext.domain.name }} <span class="icon icon-expand_more nojs--hide"></span></span>
+        <span class="nav__item"><span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(UiContext.domain.avatar|default('')) }}" width="20" height="20"></span> {{ UiContext.domain.name }} <span class="icon icon-expand_more nojs--hide"></span></span>
         <ol class="dropdown-target menu" id="menu-nav-domain">
           {%- if handler.user.domains|length -%}
           {%- for ddoc in handler.user.domains -%}
           <li class="menu__item">
             <a href="{{ url('homepage', domainId=ddoc['_id']) }}" class="menu__link">
-              <span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20"></span>
+              <span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(ddoc.avatar|default('')) }}" width="20" height="20"></span>
                {{ ddoc['name'] }}{% if ddoc['name'] != ddoc['_id']%} ({{ ddoc['_id'] }}){% endif %}
             </a>
           </li>
