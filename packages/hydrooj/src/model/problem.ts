@@ -443,13 +443,7 @@ export class ProblemModel {
                 if (files.includes('testdata')) {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
                     for (const f of datas) {
-                        if (f.isDirectory()) {
-                            const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
-                            for (const s of sub) {
-                                const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name, s));
-                                await ProblemModel.addTestdata(domainId, docId, `${f.name}/${s}`, stream);
-                            }
-                        } else if (f.isFile()) {
+                        if (f.isFile()) {
                             const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name));
                             await ProblemModel.addTestdata(domainId, docId, f.name, stream);
                         }
@@ -525,7 +519,7 @@ export class ProblemModel {
         if (res.error) throw res.error;
         if (res.status) throw new Error(`Error: Exited with code ${res.status}`);
         const stat = fs.statSync(target);
-        console.log(`Database export saved at ${target} , size: ${size(stat.size)}`);
+        console.log(`Domain ${domainId} problems export saved at ${target} , size: ${size(stat.size)}`);
     }
 }
 

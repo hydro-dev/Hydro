@@ -12,7 +12,7 @@ class ProblemImportHydroHandler extends Handler {
     async post({ domainId, keepUser }) {
         if (keepUser) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         if (!this.request.files.file) throw new ValidationError('file');
-        await problem.import(domainId, this.request.files.file.filepath, keepUser ? this.user._id : null);
+        await problem.import(domainId, this.request.files.file.filepath, keepUser ? null : this.user._id);
         this.response.redirect = this.url('problem_main');
     }
 }
