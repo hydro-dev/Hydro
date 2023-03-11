@@ -324,7 +324,7 @@ export function checkVNodeVisibility(domainId: string, type: number, vnode: any,
         if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;
     }
     if (type === document.TYPE_DISCUSSION_NODE) {
-        if (vnode.hidden && !user.hasPerm(PERM.PERM_VIEW_DISCUSSION_HIDDEN)) return false;
+        if (vnode.hidden) return false;
     }
     return true;
 }
@@ -344,6 +344,13 @@ export function apply(ctx: Context) {
             document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
             document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
         ]);
+    });
+    ctx.on('problem/edit', async (result) => {
+        const dids = await document.getMulti(
+            result.domainId, document.TYPE_DISCUSSION,
+            { parentType: document.TYPE_PROBLEM, parentId: result.docId },
+        ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
+        return await Promise.all(dids.map((did) => document.set(result.domainId, document.TYPE_DISCUSSION, did, { hidden: result.hidden })));
     });
 }
 

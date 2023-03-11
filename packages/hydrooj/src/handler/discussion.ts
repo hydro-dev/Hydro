@@ -42,7 +42,6 @@ class DiscussionHandler extends Handler {
         if (did) {
             this.ddoc = await discussion.get(domainId, did);
             if (!this.ddoc) throw new DiscussionNotFoundError(domainId, did);
-            if (this.ddoc.hidden) this.checkPerm(PERM.PERM_VIEW_DISCUSSION_HIDDEN);
             type = discussion.typeDisplay[this.ddoc.parentType];
             name = this.ddoc.parentId.toString();
             if (drrid) {
@@ -73,7 +72,7 @@ class DiscussionMainHandler extends Handler {
     async get(domainId: string, page = 1, all = false) {
         // Limit to known types
         const parentType = { $in: Object.keys(typeMapper).map((i) => typeMapper[i]) };
-        if (all) this.checkPerm(PERM.PERM_VIEW_DISCUSSION_HIDDEN);
+        if (all) this.checkPerm(PERM.PERM_MOD_BADGE);
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId, { parentType, ...all ? {} : { hidden: false } }),
             page,
@@ -144,16 +143,14 @@ class DiscussionCreateHandler extends DiscussionHandler {
     @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
-    @param('hidden', Types.Boolean)
     async post(
         domainId: string, type: string, title: string,
         content: string, highlight = false, pin = false,
-        _hidden = false,
     ) {
         await this.limitRate('add_discussion', 3600, 60);
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
-        const hidden = this.user.own(this.vnode) || this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION) ? _hidden : this.vnode.hidden;
+        const hidden = this.vnode.hidden ?? false;
         const did = await discussion.add(
             domainId, typeMapper[type], this.vnode.id, this.user._id,
             title, content, this.request.ip, highlight, pin, hidden,
@@ -391,16 +388,15 @@ class DiscussionEditHandler extends DiscussionHandler {
     @param('content', Types.Content)
     @param('highlight', Types.Boolean)
     @param('pin', Types.Boolean)
-    @param('hidden', Types.Boolean)
     async postUpdate(
         domainId: string, did: ObjectId, title: string, content: string,
-        highlight = false, pin = false, _hidden = false,
+        highlight = false, pin = false,
     ) {
         if (!this.user.own(this.ddoc)) this.checkPerm(PERM.PERM_EDIT_DISCUSSION);
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
-        const hidden = this.user.own(this.vnode) || this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION) ? _hidden : this.vnode.hidden;
+        const hidden = this.vnode.hidden ?? false;
         await Promise.all([
             discussion.edit(domainId, did, {
                 title, highlight, pin, content, editor: this.user._id, edited: true, hidden,
