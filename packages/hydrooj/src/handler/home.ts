@@ -442,7 +442,15 @@ class HomeDomainHandler extends Handler {
     @param('domainId', Types.String)
     @param('show', Types.Boolean)
     async postShowNav(domainId: string, id: string, show = false) {
-        await domain.setUserInDomain(id, this.user._id, { show });
+        let domains = this.user.domains;
+        if (show) {
+            if (domains.includes(id)) this.back();
+            domains = [...domains, id];
+        } else {
+            if (!domains.includes(id)) this.back();
+            domains = domains.filter((did) => did !== id);
+        }
+        await user.setById(this.user._id, { domains });
         this.back();
     }
 }

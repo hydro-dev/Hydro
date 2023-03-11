@@ -97,7 +97,7 @@ export class User {
         this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
-        this.domains = dudoc.userDomains || [];
+        this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
         if (dudoc.group) this.group = dudoc.group;
@@ -157,6 +157,7 @@ export class User {
     async private() {
         const user = await new User(this._udoc, this._dudoc, this.scope).init();
         user.avatarUrl = avatar(user.avatar, 128);
+        user.domains = await domain.getMulti({ _id: { $in: user.domains } }).project({ _id: 1, name: 1, avatar: 1 }).toArray();
         user._isPrivate = true;
         return user;
     }
