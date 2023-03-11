@@ -6,6 +6,7 @@ import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
     ownerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
+import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
 import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
@@ -155,6 +156,7 @@ export class User {
 
     async private() {
         const user = await new User(this._udoc, this._dudoc, this.scope).init();
+        user.avatarUrl = avatar(user.avatar, 128);
         user._isPrivate = true;
         return user;
     }
