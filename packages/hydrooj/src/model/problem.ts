@@ -443,7 +443,13 @@ export class ProblemModel {
                 if (files.includes('testdata')) {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
                     for (const f of datas) {
-                        if (f.isFile()) {
+                        if (f.isDirectory()) {
+                            const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
+                            for (const s of sub) {
+                                const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name, s));
+                                await ProblemModel.addTestdata(domainId, docId, s, stream);
+                            }
+                        } else if (f.isFile()) {
                             const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name));
                             await ProblemModel.addTestdata(domainId, docId, f.name, stream);
                         }
