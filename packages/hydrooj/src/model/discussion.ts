@@ -316,15 +316,12 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
     return res;
 }
 
-export function checkVNodeVisibility(domainId: string, type: number, vnode: any, user: User) {
+export function checkVNodeVisibility(type: number, vnode: any, user: User) {
     if (type === document.TYPE_PROBLEM) {
         if (vnode.hidden && !(user.own(vnode) || user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) return false;
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
         if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;
-    }
-    if (type === document.TYPE_DISCUSSION_NODE) {
-        if (vnode.hidden) return false;
     }
     return true;
 }
@@ -350,7 +347,7 @@ export function apply(ctx: Context) {
             result.domainId, document.TYPE_DISCUSSION,
             { parentType: document.TYPE_PROBLEM, parentId: result.docId },
         ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
-        return await Promise.all(dids.map((did) => document.set(result.domainId, document.TYPE_DISCUSSION, did, { hidden: result.hidden })));
+        return await coll.updateMany({ _id: { $in: dids } }, { $set: { hidden: result.hidden } });
     });
 }
 

@@ -58,7 +58,7 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
         this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this.user._id);
-        if (!discussion.checkVNodeVisibility(domainId, typeMapper[type], this.vnode, this.user)) throw new DiscussionNodeNotFoundError(this.vnode.id);
+        if (!discussion.checkVNodeVisibility(typeMapper[type], this.vnode, this.user)) throw new DiscussionNodeNotFoundError(this.vnode.id);
         if (this.ddoc) {
             this.ddoc.parentType ||= this.vnode.type;
             this.ddoc.parentId ||= this.vnode.id;
@@ -72,7 +72,7 @@ class DiscussionMainHandler extends Handler {
     async get(domainId: string, page = 1, all = false) {
         // Limit to known types
         const parentType = { $in: Object.keys(typeMapper).map((i) => typeMapper[i]) };
-        if (all) this.checkPerm(PERM.PERM_MOD_BADGE);
+        all &&= this.user.hasPerm(PERM.PERM_MOD_BADGE);
         const [ddocs, dpcount] = await paginate(
             discussion.getMulti(domainId, { parentType, ...all ? {} : { hidden: false } }),
             page,
