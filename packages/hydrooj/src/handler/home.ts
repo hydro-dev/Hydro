@@ -440,14 +440,15 @@ class HomeDomainHandler extends Handler {
     }
 
     @param('id', Types.String)
-    @param('show', Types.Boolean)
-    async postShowNav(domainId: string, id: string, show = false) {
-        const domains: string[] = this.user.pinnedDomains || [];
-        this.back();
-        if (!!show === domains.includes(id)) return;
-        await user.setById(this.user._id, {
-            pinnedDomains: show ? domains.concat(id) : domains.filter((did) => did !== id),
-        });
+    async postStar(domainId: string, id: string) {
+        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.concat(id) });
+        this.back({ star: true });
+    }
+
+    @param('id', Types.String)
+    async postUnstar(domainId: string, id: string) {
+        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        this.back({ star: false });
     }
 }
 
