@@ -10,10 +10,10 @@
         "cac": "^6.7.14",
         "mongodb": "^5.1.0",
         "p-queue": "^7.3.4",
-        "schemastery": "^3.7.1",
+        "schemastery": "^3.7.2",
         "shell-quote": "^1.8.0",
         "superagent": "^8.0.9",
-        "ws": "^8.12.1"
+        "ws": "^8.13.0"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
