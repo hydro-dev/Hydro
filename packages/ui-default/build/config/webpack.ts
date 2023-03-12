@@ -243,7 +243,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         filename: '[name].css?[fullhash:6]',
       }),
       new WebpackManifestPlugin({}),
-      // new DuplicatesPlugin(),
+      new DuplicatesPlugin(),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
       new CopyWebpackPlugin({
         patterns: [
