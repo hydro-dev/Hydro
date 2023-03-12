@@ -445,13 +445,9 @@ export class ProblemModel {
                     for (const f of datas) {
                         if (f.isDirectory()) {
                             const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
-                            for (const s of sub) {
-                                const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name, s));
-                                await ProblemModel.addTestdata(domainId, docId, s, stream);
-                            }
+                            for (const s of sub) await ProblemModel.addTestdata(domainId, docId, s, path.join(tmpdir, i, 'testdata', f.name, s));
                         } else if (f.isFile()) {
-                            const stream = fs.createReadStream(path.join(tmpdir, i, 'testdata', f.name));
-                            await ProblemModel.addTestdata(domainId, docId, f.name, stream);
+                            await ProblemModel.addTestdata(domainId, docId, f.name, path.join(tmpdir, i, 'testdata', f.name));
                         }
                     }
                 }
@@ -459,8 +455,7 @@ export class ProblemModel {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'additional_file'), { withFileTypes: true });
                     for (const f of datas) {
                         if (f.isFile()) {
-                            const stream = fs.createReadStream(path.join(tmpdir, i, 'additional_file', f.name));
-                            await ProblemModel.addAdditionalFile(domainId, docId, f.name, stream);
+                            await ProblemModel.addAdditionalFile(domainId, docId, f.name, path.join(tmpdir, i, 'additional_file', f.name));
                         }
                     }
                 }
