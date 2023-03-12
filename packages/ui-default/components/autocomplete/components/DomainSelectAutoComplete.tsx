@@ -44,7 +44,7 @@ DomainSelectAutoComplete.defaultProps = {
   listStyle: {},
   multi: false,
   selectedKeys: [],
-  allowEmptyQuery: false,
+  allowEmptyQuery: true,
   freeSolo: false,
   freeSoloConverter: (input) => input,
 };
