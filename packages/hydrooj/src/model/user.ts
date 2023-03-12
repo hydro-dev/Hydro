@@ -6,6 +6,7 @@ import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
     ownerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
+import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
 import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
@@ -96,9 +97,10 @@ export class User {
         this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
+        this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
-        if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
+        if (dudoc.group) this.group = dudoc.group;
 
         for (const key in setting.SETTINGS_BY_KEY) {
             this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
@@ -154,6 +156,11 @@ export class User {
 
     async private() {
         const user = await new User(this._udoc, this._dudoc, this.scope).init();
+        user.avatarUrl = avatar(user.avatar, 128);
+        if (user.pinnedDomains instanceof Array) {
+            const result = await Promise.allSettled(user.pinnedDomains.slice(0, 10).map((i) => domain.get(i)));
+            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i);
+        }
         user._isPrivate = true;
         return user;
     }
@@ -251,11 +258,12 @@ class UserModel {
     }
 
     @ArgMethod
-    static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>) {
+    static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>, $push?: any) {
         if (uid < -999) return null;
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
+        if ($push && Object.keys($push).length) op.$push = $push;
         if (op.$set?.loginip) op.$addToSet = { ip: op.$set.loginip };
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
         deleteUserCache(res.value);

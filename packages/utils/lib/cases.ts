@@ -47,7 +47,7 @@ export function convertIniConfig(ini: string) {
         if (!f[i] || !f[i].trim()) throw new Error('Testcada count incorrect.');
         const [input, output, time, score, memory] = f[i].split('|');
         const cur = {
-            cases: [{ input: `input/${input.toLowerCase()}`, output: `output/${output.toLowerCase()}` }],
+            cases: [{ input, output }],
             score: parseInt(score, 10),
             time: `${time}s`,
             memory: '256m',

@@ -334,9 +334,14 @@ class DomainJoinHandler extends Handler {
 }
 
 class DomainSearchHandler extends Handler {
-    @param('q', Types.Content)
-    async get(domainId: string, q: string) {
-        const ddocs = await domain.getPrefixSearch(q, 20);
+    @param('q', Types.Content, true)
+    async get(domainId: string, q: string = '') {
+        let ddocs: DomainDoc[] = [];
+        if (!q) {
+            const dudict = await domain.getDictUserByDomainId(this.user._id);
+            const dids = Object.keys(dudict);
+            ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
+        } else ddocs = await domain.getPrefixSearch(q, 20);
         for (let i = 0; i < ddocs.length; i++) {
             ddocs[i].avatarUrl = ddocs[i].avatar ? avatar(ddocs[i].avatar, 64) : '/img/team_avatar.png';
         }

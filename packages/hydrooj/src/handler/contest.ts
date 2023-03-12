@@ -72,10 +72,13 @@ ScheduleModel.Worker.addHandler('contest', async (doc) => {
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, rule = '', page = 1) {
+    @param('all', Types.Boolean)
+    async get(domainId: string, rule = '', page = 1, all = false) {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        const cursor = contest.getMulti(domainId, rule ? { rule } : { rule: { $in: rules } });
+        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
+        const q = { ...all ? { assign: { $in: [...this.user.group, null] } } : {}, ...rule ? { rule } : { rule: { $in: rules } } };
+        const cursor = contest.getMulti(domainId, q);
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const tids = [];

@@ -1,6 +1,7 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
+import { Time } from '@hydrooj/utils';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -264,13 +265,15 @@ export class UserRegisterHandler extends Handler {
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
             await this.limitRate('send_sms', 60, 3);
-            const t = await token.add(
+            const id = String.random(6, '0123456789');
+            await token.add(
                 token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
+                10 * Time.minute,
                 { phone: phoneNumber },
-                String.random(6),
+                id,
             );
-            await global.Hydro.lib.sendSms(phoneNumber, 'register', t[0]);
+            await global.Hydro.lib.sendSms(phoneNumber, 'register', id);
+            this.response.body = { phone: phoneNumber };
             this.response.template = 'user_register_sms.html';
         } else throw new ValidationError('mail');
     }

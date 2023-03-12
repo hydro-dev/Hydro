@@ -462,6 +462,7 @@ declare module './model/discussion' {
         sort: number;
         lastRCount: number;
         lock?: boolean;
+        hidden?: boolean;
     }
 }
 
