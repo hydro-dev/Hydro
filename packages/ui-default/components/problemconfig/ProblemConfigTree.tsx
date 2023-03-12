@@ -1,10 +1,10 @@
 import {
-  Button, Checkbox, ControlGroup,
+  Button, ControlGroup,
   Dialog, DialogBody, DialogFooter,
   Icon, InputGroup, Menu, MenuItem, TreeNode,
 } from '@blueprintjs/core';
 import { ContextMenu2 } from '@blueprintjs/popover2';
-import { SubtaskConfig, TestCaseConfig } from 'hydrooj';
+import { TestCaseConfig } from 'hydrooj';
 import { omit } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -83,85 +83,92 @@ export function TestcaseGroup(props: TestcaseGroupProps) {
   }), [JSON.stringify(cases), subtaskId]);
   return <div ref={drag} onClick={onClick} style={{ opacity: collected.isDragging ? 0.5 : 1 }}>
     {cases.map((c, id) => (
-      <TestcaseNode c={c} key={c.input} {...omit(props, 'onClick')} index={index + id} />
+      <TestcaseNode c={c} key={`${c.input}@${index + id}`} {...omit(props, 'onClick')} index={index + id} />
     ))}
   </div>;
 }
 
-interface SubtaskSettingsDialogProps {
-  subtask: SubtaskConfig;
+interface SubtaskSettingsProps {
+  subtaskId: number;
   time: string;
   memory: string;
 }
 
-export function SubtaskSettings(props: SubtaskSettingsDialogProps) {
-  const { subtask } = props;
-  const [inheritLimits, setInheritLimits] = React.useState(true);
+export function SubtaskSettings(props: SubtaskSettingsProps) {
   const [open, setOpen] = React.useState(false);
+  const score = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).score);
+  const time = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).time);
+  const memory = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).memory);
+
+  const [ctime, setTime] = React.useState(time);
+  const [cmemory, setMemory] = React.useState(memory);
+  const [cscore, setScore] = React.useState(score);
+  const dispatcher = (func, key) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | number) => {
+    let value = typeof ev !== 'object' ? ev : ev.currentTarget?.value;
+    if (key === 'score') value = +value;
+    func(value);
+  };
 
   const dispatch = useDispatch();
-  const dispatcher = (key: string, suffix = '') => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | number) => {
-    let value = typeof ev !== 'object' ? ev : ev.currentTarget?.value;
-    if (value === 0) value = '';
-    if (value && suffix) value += suffix;
+  function onConfirm() {
     dispatch({
-      type: 'CONFIG_SUBTASK_UPDATE', id: subtask.id, key, value,
+      type: 'problemconfig/updateSubtaskConfig',
+      id: props.subtaskId,
+      time: ctime,
+      memory: cmemory,
+      score: cscore,
     });
-  };
+    setOpen(false);
+  }
 
   return (<>
     <Dialog title="Set limits" icon="cog" minimal isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
-        <Checkbox checked={inheritLimits} onChange={(ev) => setInheritLimits((ev.target as any).checked)}>
-          Inherit limits
-        </Checkbox>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
-            disabled={inheritLimits}
             large={false}
             leftElement={<Icon icon="time" />}
-            onChange={dispatcher('time')}
-            placeholder="Time limit"
+            onChange={dispatcher(setTime, 'time')}
+            placeholder={`Inherit (${props.time})`}
             readOnly={false}
             small={false}
-            value={inheritLimits ? props.time : subtask.time || props.time}
+            value={ctime || ''}
           />
           <InputGroup
-            disabled={inheritLimits}
             large={false}
             leftElement={<Icon icon="comparison" />}
-            onChange={dispatcher('memory')}
-            placeholder="Memory limit"
+            onChange={dispatcher(setMemory, 'memory')}
+            placeholder={`Inherit (${props.memory})`}
             readOnly={false}
             small={false}
-            value={inheritLimits ? props.memory : subtask.memory || props.memory}
+            value={cmemory || ''}
           />
           <InputGroup
             large={false}
             leftElement={<Icon icon="star" />}
-            onChange={dispatcher('score')}
+            onChange={dispatcher(setScore, 'score')}
             placeholder="Score"
             readOnly={false}
             type="number"
             small={false}
-            value={subtask.score.toString()}
+            value={cscore.toString()}
           />
         </ControlGroup>
       </DialogBody>
-      <DialogFooter actions={<Button intent="primary" text="Save" />} />
+      <DialogFooter actions={<Button onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
     <li className="bp4-tree-node" onClick={() => setOpen(true)}>
       <div className="bp4-tree-node-content">
         <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{subtask.time || props.time}</span>
+        <span className="bp4-tree-node-label">{time || props.time}</span>
         <Icon icon="comparison" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{subtask.memory || props.memory}</span>
+        <span className="bp4-tree-node-label">{memory || props.memory}</span>
         <Icon icon="star" />
         {' '}
-        <span className="bp4-tree-node-secondary-label">{subtask.score || 0}</span>
+        <span className="bp4-tree-node-secondary-label">{score || 0}</span>
       </div>
     </li>
   </>);
@@ -189,9 +196,9 @@ function collide(rect1: any, rect2: any): boolean {
 
 export function SubtaskNode(props: SubtaskNodeProps) {
   const {
-    time, memory, subtaskIds,
+    time, memory, subtaskIds, subtaskId,
   } = props;
-  const subtask = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId));
+  const cases = JSON.parse(useSelector((state: RootState) => JSON.stringify(state.config.subtasks.find((i) => i.id === subtaskId).cases || [])));
   const dispatch = useDispatch();
   const [expand, setExpand] = React.useState(true);
   // Don't need to trigger a re-render for this property change
@@ -203,13 +210,13 @@ export function SubtaskNode(props: SubtaskNodeProps) {
   const [, drop] = useDrop<TestcasesDndItem>(() => ({
     accept: 'cases',
     canDrop(item) {
-      return subtask.id && item.subtaskId !== subtask.id;
+      return subtaskId && item.subtaskId !== subtaskId;
     },
     drop(item) {
       dispatch({
         type: 'problemconfig/moveTestcases',
         payload: {
-          subtaskId: subtask.id,
+          subtaskId,
           cases: item.cases,
         },
       });
@@ -218,13 +225,12 @@ export function SubtaskNode(props: SubtaskNodeProps) {
   React.useEffect(() => {
     setStart(0);
     setEnd(0);
-  }, [JSON.stringify(subtask.cases)]);
+  }, [JSON.stringify(cases)]);
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLUListElement, MouseEvent>) => {
     pos.x = event.pageX;
     pos.y = event.pageY;
     // Check if clicking on a selected testcase
     const selected = Array.from($('[data-selected="true"]'));
-    console.log(selected);
     for (const el of selected) {
       if (collide(el, { ...pos, width: 1, height: 1 })) return;
     }
@@ -239,7 +245,7 @@ export function SubtaskNode(props: SubtaskNodeProps) {
       left: event.pageX,
       zIndex: 9999999,
     }).fadeTo(12, 0.2);
-  }, []);
+  }, [JSON.stringify(cases)]);
   const handleMouseMove = React.useCallback((event) => {
     pos.endX = event.pageX;
     pos.endY = event.pageY;
@@ -249,44 +255,45 @@ export function SubtaskNode(props: SubtaskNodeProps) {
       height: Math.abs(event.pageY - pos.y),
       width: Math.abs(event.pageX - pos.x),
     });
-  }, []);
+  }, [JSON.stringify(cases)]);
   const handleMouseUp = React.useCallback(() => {
     document.body.removeEventListener('mousemove', handleMouseMove);
     document.body.removeEventListener('mouseup', handleMouseUp);
-    const cases = Array.from($(`[data-subtaskid="${subtask.id}"]`));
+    const caseEntries = Array.from($(`[data-subtaskid="${subtaskId}"]`));
     const selected = [];
-    for (let i = 0; i < cases.length; i += 1) {
-      if (collide(cases[i], $('#divSelectArea')[0])) {
-        selected.push(subtask.cases.indexOf(subtask.cases.find((c) => c.input === cases[i].dataset.index)));
+    for (let i = 0; i < caseEntries.length; i += 1) {
+      if (collide(caseEntries[i], $('#divSelectArea')[0])) {
+        selected.push(cases.indexOf(cases.find((c) => c.input === caseEntries[i].dataset.index)));
       }
     }
     const sorted = selected.sort((a, b) => a - b);
-    setStart(sorted[0]);
-    setEnd(sorted[selected.length - 1] + 1);
     $('#divSelectArea').remove();
     $('body').css('cursor', 'default');
     pos.x = pos.y = pos.endX = pos.endY = 0;
-  }, []);
+    if (!sorted.length) return;
+    setStart(sorted[0]);
+    setEnd(sorted[selected.length - 1] + 1);
+  }, [JSON.stringify(cases)]);
 
   return (
     <li className="bp4-tree-node bp4-tree-node-expanded">
       <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
         <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
-        <span className="bp4-tree-node-label">Subtask {subtask.id}</span>
+        <span className="bp4-tree-node-label">Subtask {subtaskId}</span>
         <span className="bp4-tree-node-secondary-label">
           <Icon icon="trash"></Icon>
         </span>
       </div>
       <ul className="bp4-tree-node-list" ref={drop} onMouseDown={handleMouseDown}>
-        <SubtaskSettings subtask={subtask} time={time} memory={memory} />
+        <SubtaskSettings subtaskId={subtaskId} time={time} memory={memory} />
         {expand
           ? <>
-            {end > start && subtask.cases.slice(0, start).map((c, id) => (
+            {end > start && cases.slice(0, start).map((c, id) => (
               <TestcaseGroup
                 c={c}
-                subtaskId={subtask.id}
+                subtaskId={subtaskId}
                 cases={[c]}
-                key={c.input}
+                key={`${c.input}@${id}`}
                 selected={false}
                 subtaskIds={subtaskIds}
                 index={id}
@@ -298,18 +305,18 @@ export function SubtaskNode(props: SubtaskNodeProps) {
             ))}
             {start <= end && (
               <TestcaseGroup
-                cases={subtask.cases.slice(start, end)}
-                subtaskId={subtask.id}
+                cases={cases.slice(start, end)}
+                subtaskId={subtaskId}
                 subtaskIds={subtaskIds}
                 selected={true}
                 index={start}
               />
             )}
-            {end < subtask.cases.length && subtask.cases.slice(end).map((c, id) => (
+            {end < cases.length && cases.slice(end).map((c, id) => (
               <TestcaseGroup
-                c={c} subtaskId={subtask.id}
+                c={c} subtaskId={subtaskId}
                 cases={[c]}
-                key={c.input}
+                key={`${c.input}@${id}`}
                 subtaskIds={subtaskIds}
                 selected={false}
                 index={id + end}
@@ -324,11 +331,11 @@ export function SubtaskNode(props: SubtaskNodeProps) {
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
               <Icon icon="layers" />&nbsp;
-              <span className="bp4-tree-node-label">{subtask.cases.length} testcases.</span>
+              <span className="bp4-tree-node-label">{cases.length} testcases.</span>
             </div>
           </li>
         }
-        {!subtask.cases?.length && (
+        {!cases?.length && (
           <li className="bp4-tree-node">
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
@@ -361,6 +368,7 @@ export function ProblemConfigTree() {
           </li>
           {ids.map((id) => (
             <SubtaskNode
+              key={id}
               subtaskId={id}
               time={time}
               memory={memory}

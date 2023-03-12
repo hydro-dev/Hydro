@@ -42,16 +42,16 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     }
     case 'CONFIG_SUBTASK_UPDATE': {
       const subtasks = cloneDeep(state.subtasks);
-      const subsubtasks = cloneDeep(state.subtasks[action.id]);
+      const subtask = state.subtasks.find((i) => i.id === action.id);
       if (action.value !== '' && ['score', 'id'].includes(action.key)) action.value = +action.value;
       if (action.key === 'if' && action.value.join('') !== '') action.value = action.value.map((i) => +i);
       if (action.key.split('-')[0] === 'cases') {
-        if (action.key === 'cases-add') subsubtasks.cases.push(action.value);
+        if (action.key === 'cases-add') subtask.cases.push(action.value);
         else if (action.key === 'cases-edit') {
-          if (action.value === '' && !['input', 'output'].includes(action.casesKey)) delete subsubtasks.cases[action.casesId][action.casesKey];
-          else subsubtasks.cases[action.casesId][action.casesKey] = action.value;
+          if (action.value === '' && !['input', 'output'].includes(action.casesKey)) delete subtask.cases[action.casesId][action.casesKey];
+          else subtask.cases[action.casesId][action.casesKey] = action.value;
         } else if (action.key === 'cases-delete') {
-          subsubtasks.cases = subsubtasks.cases.filter((k, v) => v !== action.value);
+          subtask.cases = subtask.cases.filter((k, v) => v !== action.value);
         }
       } else if (action.key === 'add') {
         subtasks.push({
@@ -64,11 +64,19 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
         return { ...state, subtasks };
       } else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
       else {
-        if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subsubtasks[action.key];
-        else subsubtasks[action.key] = action.value;
+        if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subtask[action.key];
+        else subtask[action.key] = action.value;
       }
-      subtasks[action.id] = subsubtasks;
       return { ...state, subtasks };
+    }
+    case 'problemconfig/updateSubtaskConfig': {
+      const subtask = state.subtasks.find((i) => i.id === action.id);
+      subtask.time = action.time;
+      subtask.memory = action.memory;
+      subtask.score = +action.score || 0;
+      if (!subtask.time) delete subtask.time;
+      if (!subtask.memory) delete subtask.memory;
+      return state;
     }
     case 'problemconfig/moveTestcases': {
       const testcases = action.payload.cases;
