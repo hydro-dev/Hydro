@@ -131,7 +131,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         const fileList = ['code', ...Object.keys(this.rdoc.files || {})];
         if (!fileList.includes(filename)) throw new ValidationError(filename);
         if (['code', 'hack'].includes(filename) && this.rdoc.files.filename) {
-            const [id, file] = this.rdoc.files?.filename?.split('#') || [];
+            const [id, file] = this.rdoc.files.filename.split('#') || [];
             this.response.redirect = await storage.signDownloadLink(`submission/${id}`, file || filename, true, 'user');
             return;
         }

@@ -510,7 +510,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             domainId, tid, pretest, input,
         } = args;
         const submitFiles = config.subType === 'multi_file' ? config.submit_files : ['code'];
-        const files: Record<string, string> = {};
+        let files: Record<string, string> = {};
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         let lang = '';
@@ -522,34 +522,44 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             const id = nanoid();
             await storage.put(`submission/${this.user._id}/${id}`, allFiles.filepath, this.user._id);
             files['code'] = `${this.user._id}/${id}#${allFiles.originalFilename}`;
-        }
-        for (const filename of submitFiles) {
-            lang = args[`lang.${filename}`];
-            code = args[`code.${filename}`];
-            if (!lang) throw new ValidationError('lang');
-            if (['submit_answer', 'objective'].includes(config.type)) {
-                lang = '_';
-            } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
-                throw new ProblemNotAllowLanguageError();
-            }
-            if (pretest) {
-                if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-                if (setting.langs[lang]?.pretest === false) throw new ProblemNotAllowPretestError('language');
-                if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
-                    throw new ProblemNotAllowPretestError('type');
+        } else {
+            for (const filename of submitFiles) {
+                lang = args[`lang.${filename}`];
+                code = args[`code.${filename}`];
+                if (!lang) throw new ValidationError('lang');
+                if (['submit_answer', 'objective'].includes(config.type)) {
+                    lang = '_';
+                } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
+                    throw new ProblemNotAllowLanguageError();
                 }
+                if (pretest) {
+                    if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
+                    if (setting.langs[lang]?.pretest === false) throw new ProblemNotAllowPretestError('language');
+                    if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+                        throw new ProblemNotAllowPretestError('type');
+                    }
+                }
+                if (!code) {
+                    const file = this.request.files?.[`file.${filename}`];
+                    if (!file || file.size === 0) throw new ValidationError('code');
+                    if (file.size > 65535) throw new ValidationError('file');
+                    // eslint-disable-next-line no-await-in-loop
+                    code = await readFile(file.filepath, 'utf-8');
+                }
+                if (!code) throw new ValidationError('code');
+                if (submitFiles.length > 1) files[`${filename}.${lang}`] = code;
             }
-            if (!files.code && !code) {
-                const file = this.request.files?.[`file.${filename}`];
-                if (!file || file.size === 0) throw new ValidationError('code');
-                if (file.size > 65535) throw new ValidationError('file');
-                // eslint-disable-next-line no-await-in-loop
-                code = await readFile(file.filepath, 'utf-8');
-            }
-            if (!code) throw new ValidationError('code');
-            if (submitFiles.length > 1 && !files.code) files[filename] = code;
+            if (submitFiles.length > 1) code = '';
         }
-        if (submitFiles.length > 1) code = '';
+        if (submitFiles.length > 1 && JSON.stringify(files).length > 65535) {
+            const zip = new AdmZip();
+            for (const [filename, content] of Object.entries(files)) {
+                zip.addFile(filename, Buffer.from(content));
+            }
+            const id = nanoid();
+            await storage.put(`submission/${this.user._id}/${id}`, zip.toBuffer(), this.user._id);
+            files = { code: `${this.user._id}/${id}#allFiles.zip` };
+        }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
             pretest ? { input, type: 'pretest' } : { contest: tid, files, type: tid ? 'contest' : 'judge' },
