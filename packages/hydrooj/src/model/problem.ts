@@ -1,7 +1,14 @@
+/* eslint-disable no-await-in-loop */
+import child from 'child_process';
+import os from 'os';
+import path from 'path';
+import AdmZip from 'adm-zip';
+import fs from 'fs-extra';
+import yaml from 'js-yaml';
 import { escapeRegExp, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
-import { streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
@@ -23,6 +30,24 @@ export type Field = keyof ProblemDoc;
 
 function sortable(source: string) {
     return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
+}
+
+function findOverrideContent(dir: string) {
+    let files = fs.readdirSync(dir);
+    if (files.includes('problem.md')) return fs.readFileSync(path.join(dir, 'problem.md'), 'utf8');
+    const languages = {};
+    files = files.filter((i) => /^problem_[a-zA-Z_]+\.md$/.test(i));
+    if (!files.length) return null;
+    for (const file of files) {
+        const lang = file.slice(8, -3);
+        let content: string | any[] = fs.readFileSync(path.join(dir, file), 'utf8');
+        try {
+            content = JSON.parse(content);
+            if (!(content instanceof Array)) content = JSON.stringify(content);
+        } catch (e) { }
+        languages[lang] = content;
+    }
+    return JSON.stringify(languages);
 }
 
 export class ProblemModel {
@@ -379,6 +404,122 @@ export class ProblemModel {
         if (udoc.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return true;
         if (pdoc.hidden) return false;
         return true;
+    }
+
+    static async import(domainId: string, filepath: string, operator: number) {
+        const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
+        let zip: AdmZip;
+        try {
+            zip = new AdmZip(filepath);
+        } catch (e) {
+            throw new ValidationError('zip', null, e.message);
+        }
+        await new Promise((resolve, reject) => {
+            zip.extractAllToAsync(tmpdir, true, (err) => {
+                if (err) reject(err);
+                resolve(null);
+            });
+        });
+        try {
+            const problems = await fs.readdir(tmpdir, { withFileTypes: true });
+            for (const p of problems) {
+                const i = p.name;
+                if (!p.isDirectory()) continue;
+                const files = await fs.readdir(path.join(tmpdir, i));
+                if (!files.includes('problem.yaml')) continue;
+                const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
+                const pdoc: ProblemDoc = yaml.load(content) as any;
+                if (!pdoc) continue;
+                let pid = pdoc.pid;
+                if (pid) {
+                    const current = await ProblemModel.get(domainId, pid);
+                    if (current) pid = undefined;
+                }
+                const overrideContent = findOverrideContent(path.join(tmpdir, i));
+                const docId = await ProblemModel.add(
+                    domainId, pid, pdoc.title, overrideContent || pdoc.content,
+                    operator || pdoc.owner, pdoc.tag, pdoc.hidden,
+                );
+                if (files.includes('testdata')) {
+                    const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
+                    for (const f of datas) {
+                        if (f.isDirectory()) {
+                            const sub = await fs.readdir(path.join(tmpdir, i, 'testdata', f.name));
+                            for (const s of sub) await ProblemModel.addTestdata(domainId, docId, s, path.join(tmpdir, i, 'testdata', f.name, s));
+                        } else if (f.isFile()) {
+                            await ProblemModel.addTestdata(domainId, docId, f.name, path.join(tmpdir, i, 'testdata', f.name));
+                        }
+                    }
+                }
+                if (files.includes('additional_file')) {
+                    const datas = await fs.readdir(path.join(tmpdir, i, 'additional_file'), { withFileTypes: true });
+                    for (const f of datas) {
+                        if (f.isFile()) {
+                            await ProblemModel.addAdditionalFile(domainId, docId, f.name, path.join(tmpdir, i, 'additional_file', f.name));
+                        }
+                    }
+                }
+            }
+        } finally {
+            await fs.remove(tmpdir);
+        }
+    }
+
+    static async export(domainId: string) {
+        console.log('Exporting problems...');
+        const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.export`);
+        await fs.mkdir(tmpdir);
+        const pdocs = await ProblemModel.getMulti(domainId, {}, ProblemModel.PROJECTION_PUBLIC).toArray();
+        for (const pdoc of pdocs) {
+            const problemPath = path.join(tmpdir, `${pdoc.docId}`);
+            await fs.mkdir(problemPath);
+            const problemYaml = path.join(problemPath, 'problem.yaml');
+            const problemYamlContent = yaml.dump({
+                pid: pdoc.pid,
+                owner: pdoc.owner,
+                title: pdoc.title,
+                tag: pdoc.tag,
+                nSubmit: pdoc.nSubmit,
+                nAccept: pdoc.nAccept,
+            });
+            await fs.writeFile(problemYaml, problemYamlContent);
+            try {
+                const c = JSON.parse(pdoc.content);
+                for (const key of Object.keys(c)) {
+                    const problemContent = path.join(problemPath, `problem_${key}.md`);
+                    await fs.writeFile(problemContent, typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]));
+                }
+            } catch (e) {
+                const problemContent = path.join(problemPath, 'problem.md');
+                await fs.writeFile(problemContent, pdoc.content);
+            }
+            if ((pdoc.data || []).length) {
+                const testdataPath = path.join(problemPath, 'testdata');
+                await fs.mkdir(testdataPath);
+                for (const file of pdoc.data) {
+                    const stream = await storage.get(`problem/${domainId}/${pdoc.docId}/testdata/${file.name}`);
+                    const buf = await streamToBuffer(stream);
+                    const testdataFile = path.join(testdataPath, file.name);
+                    await fs.writeFile(testdataFile, buf);
+                }
+            }
+            if ((pdoc.additional_file || []).length) {
+                const additionalPath = path.join(problemPath, 'additional_file');
+                await fs.mkdir(additionalPath);
+                for (const file of pdoc.additional_file) {
+                    const stream = await storage.get(`problem/${domainId}/${pdoc.docId}/additional_file/${file.name}`);
+                    const buf = await streamToBuffer(stream);
+                    const additionalFile = path.join(additionalPath, file.name);
+                    await fs.writeFile(additionalFile, buf);
+                }
+            }
+        }
+        const target = `${process.cwd()}/problem-${domainId}-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
+        const res = child.spawnSync('zip', ['-r', target, '.'], { cwd: tmpdir, stdio: 'inherit' });
+        if (res.error) throw res.error;
+        if (res.status) throw new Error(`Error: Exited with code ${res.status}`);
+        const stat = fs.statSync(target);
+        console.log(`Domain ${domainId} problems export saved at ${target} , size: ${size(stat.size)}`);
     }
 }
 
