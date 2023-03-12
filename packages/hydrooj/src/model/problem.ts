@@ -485,7 +485,6 @@ export class ProblemModel {
             await fs.writeFile(problemYaml, problemYamlContent);
             try {
                 const c = JSON.parse(pdoc.content);
-                if (c instanceof Array || typeof c === 'string') throw new Error();
                 for (const key of Object.keys(c)) {
                     const problemContent = path.join(problemPath, `problem_${key}.md`);
                     await fs.writeFile(problemContent, typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]));
