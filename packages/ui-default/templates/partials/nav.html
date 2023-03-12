@@ -36,12 +36,12 @@
         <ol class="dropdown-target menu" id="menu-nav-domain">
           {%- if handler.user.domains|length -%}
           {%- for ddoc in handler.user.domains -%}
-          <li class="menu__item">
-            <a href="{{ url('homepage', domainId=ddoc['_id']) }}" class="menu__link">
-              <span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(ddoc.avatar|default('')) }}" width="20" height="20"></span>
-               {{ ddoc['name'] }}{% if ddoc['name'] != ddoc['_id']%} ({{ ddoc['_id'] }}){% endif %}
-            </a>
-          </li>
+            <li class="menu__item">
+              <a href="{{ url('homepage', domainId=ddoc['_id']) }}" class="menu__link">
+                <span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(ddoc.avatar|default('')) }}" width="20" height="20"></span>
+                {{ ddoc['name'] }}{% if ddoc['name'] != ddoc['_id']%} ({{ ddoc['_id'] }}){% endif %}
+              </a>
+            </li>
           {%- endfor -%}
           <li class="menu__seperator"></li>
           {%- endif -%}

@@ -41,7 +41,7 @@
           <td class="col--action">
             <a class="typo-a" href="{{ url('homepage', domainId=ddoc['_id']) }}">{{ _('Visit') }}</a>
             · <form method="POST">
-              <input type="hidden" name="domainId" value="{{ ddoc['_id'] }}">
+              <input type="hidden" name="id" value="{{ ddoc['_id'] }}">
               <input type="hidden" name="operation" value="show_nav">
               <button class="typo-a" type="submit" name="show" value="{{ not dudict[ddoc._id].show }}">{{ _('Hide on Nav' if dudict[ddoc._id].show else 'Show on Nav') }}</button>
             </form>

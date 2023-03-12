@@ -439,19 +439,15 @@ class HomeDomainHandler extends Handler {
         this.response.body = { ddocs, dudict, canManage };
     }
 
-    @param('domainId', Types.String)
+    @param('id', Types.String)
     @param('show', Types.Boolean)
     async postShowNav(domainId: string, id: string, show = false) {
-        let domains = this.user.domains;
-        if (show) {
-            if (domains.includes(id)) this.back();
-            domains = [...domains, id];
-        } else {
-            if (!domains.includes(id)) this.back();
-            domains = domains.filter((did) => did !== id);
-        }
-        await user.setById(this.user._id, { domains });
+        const domains: string[] = this.user.pinnedDomains || [];
         this.back();
+        if (!!show === domains.includes(id)) return;
+        await user.setById(this.user._id, {
+            pinnedDomains: show ? domains.concat(id) : domains.filter((did) => did !== id),
+        });
     }
 }
 
@@ -470,8 +466,11 @@ class HomeDomainCreateHandler extends Handler {
         if (doc) throw new DomainAlreadyExistsError(id);
         avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
-        await domain.edit(domainId, { avatar });
-        await domain.setUserRole(domainId, this.user._id, 'root');
+        await Promise.all([
+            domain.edit(domainId, { avatar }),
+            domain.setUserRole(domainId, this.user._id, 'root'),
+            user.setById(this.user._id, undefined, undefined, { pinnedDomains: [domainId] }),
+        ]);
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
     }
