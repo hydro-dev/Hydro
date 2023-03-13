@@ -1,7 +1,8 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
-import DOMServer from 'react-dom/server.browser';
+import ReactDOM from 'react-dom/client';
+import DOMServer from 'react-dom/server';
 
 export function substitute(str: string, obj: any) {
   return str.replace(/\{([^{}]+)\}/g, (match, key) => {
@@ -33,8 +34,17 @@ export function secureRandomString(digit = 32, dict = defaultDict) {
 
 type Substitution = string | number | { templateRaw: true, html: string };
 
-export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]) {
-  if (React.isValidElement(pieces)) return DOMServer.renderToStaticMarkup(pieces);
+export function tpl(node: React.ReactNode, reactive?: boolean);
+export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]);
+export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitutions: Substitution[] | boolean[]) {
+  if (React.isValidElement(pieces)) {
+    if (substitutions[0]) {
+      const div = document.createElement('div');
+      ReactDOM.createRoot(div).render(pieces);
+      return div;
+    }
+    return DOMServer.renderToStaticMarkup(pieces);
+  }
   let result = pieces[0];
   for (let i = 0; i < substitutions.length; ++i) {
     const subst = substitutions[i];
