@@ -1,11 +1,17 @@
 import { parseMemoryMB, parseTimeMS, sortFiles } from '@hydrooj/utils/lib/common';
+import Ajv from 'ajv';
 import type { ProblemConfigFile } from 'hydrooj/src/interface';
 import yaml from 'js-yaml';
 import { cloneDeep } from 'lodash';
+import schema from '../../monaco/schema/problemconfig';
 
-type State = ProblemConfigFile & { __loaded: boolean };
+type State = ProblemConfigFile & { __loaded: boolean, __valid: boolean, __errors: string[] };
+const ajv = new Ajv();
+const validate = ajv.compile(schema);
 
-export default function reducer(state = { type: 'default', __loaded: false } as State, action: any = {}): State {
+export default function reducer(state = {
+  type: 'default', __loaded: false, __valid: true, __errors: [],
+} as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
       return { ...state, ...yaml.load(action.payload.config) as object, __loaded: true };
@@ -19,9 +25,15 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
     }
     case 'CONFIG_CODE_UPDATE': {
       try {
-        return { ...state, ...yaml.load(action.payload) as object };
-      } catch {
-        return state;
+        const data = yaml.load(action.payload);
+        if (!validate(data)) {
+          return { ...state, __valid: false, __errors: validate.errors.map((i) => i.message) };
+        }
+        return {
+          ...state, ...data as object, __valid: true, __errors: [],
+        };
+      } catch (e) {
+        return { ...state, __valid: false, __errors: [e.message] };
       }
     }
     case 'CONFIG_AUTOCASES_UPDATE': {

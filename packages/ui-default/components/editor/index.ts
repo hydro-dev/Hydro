@@ -41,6 +41,7 @@ interface MonacoOptions {
   autoLayout?: boolean;
   value?: string;
   hide?: string[];
+  lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
 }
 interface VditorOptions {
   theme?: 'classic' | 'dark'
@@ -68,7 +69,7 @@ export default class Editor extends DOMAttachedObject {
       theme = UserContext.monacoTheme || 'vs-light',
       model = `file://model-${Math.random().toString(16)}`,
       autoResize = true, autoLayout = true,
-      hide = [],
+      hide = [], lineNumbers = 'on',
     } = this.options;
     const { monaco, registerAction } = await load([language]);
     const { $dom } = this;
@@ -87,7 +88,7 @@ export default class Editor extends DOMAttachedObject {
     if (!this.options.model) this.model.setValue(value);
     const cfg: import('../monaco').default.editor.IStandaloneEditorConstructionOptions = {
       theme,
-      lineNumbers: 'on',
+      lineNumbers,
       glyphMargin: true,
       lightbulb: { enabled: true },
       model: this.model,
