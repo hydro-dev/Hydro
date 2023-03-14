@@ -23,11 +23,10 @@ export default function ProblemConfig(props: Props) {
       </div>
       <div className="medium-8 columns">
         <Tabs onChange={(t) => (t !== 'errors' && setSelected(t.toString()))} selectedTabId={valid ? selected : 'errors'}>
-          <Tab id="basic" title="Basic" panel={<ProblemConfigForm />} />
-          <Tab id="subtasks" title="Subtasks" panel={<ProblemConfigTree />} />
-          <Tab id="errors" hidden title="Errors" panel={valid
-            ? <div>No errors</div>
-            : <div>{errors.map((i) => (<pre>{i}</pre>))}</div>} />
+          <Tab id="basic" disabled={!valid} title="Basic" panel={<ProblemConfigForm />} />
+          <Tab id="subtasks" disabled={!valid} title="Subtasks" panel={<ProblemConfigTree />} />
+          <Tab id="errors" disabled={valid} title={errors.length ? `Errors(${errors.length})` : 'No Errors' } panel={
+            <div>{errors.map((i) => (<pre key={i}>{i}</pre>))}</div>} />
         </Tabs>
       </div>
     </div>

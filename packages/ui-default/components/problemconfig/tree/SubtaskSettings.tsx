@@ -47,13 +47,13 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
           <InputGroup
             leftElement={<Icon icon="time" />}
             onChange={dispatcher(setTime, 'time')}
-            placeholder={`Inherit (${props.time})`}
+            placeholder={`Inherit (${props.time || '1s'})`}
             value={ctime || ''}
           />
           <InputGroup
             leftElement={<Icon icon="comparison" />}
             onChange={dispatcher(setMemory, 'memory')}
-            placeholder={`Inherit (${props.memory})`}
+            placeholder={`Inherit (${props.memory || '256m'})`}
             value={cmemory || ''}
           />
           <InputGroup
@@ -72,10 +72,10 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{time || props.time}</span>
+        <span className={`bp4-tree-node-label${!(time || props.time) ? ' text-gray' : ''}`}>{time || props.time || '1s'}</span>
         <Icon icon="comparison" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{memory || props.memory}</span>
+        <span className={`bp4-tree-node-label${!(memory || props.memory) ? ' text-gray' : ''}`}>{memory || props.memory || '256m'}</span>
         <Icon icon="star" />
         {' '}
         <span className="bp4-tree-node-secondary-label">{score || 0}</span>
@@ -129,10 +129,10 @@ export function GlobalSettings() {
       <div className="bp4-tree-node-content">
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{time}</span>
+        <span className={`bp4-tree-node-label${!time ? ' text-gray' : ''}`}>{time || '1s'}</span>
         <Icon icon="comparison" />
         {' '}
-        <span className="bp4-tree-node-secondary-label">{memory}</span>
+        <span className={`bp4-tree-node-secondary-label${!memory ? ' text-gray' : ''}`}>{memory || '256m'}</span>
       </div>
     </li>
   </>);
