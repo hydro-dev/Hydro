@@ -116,9 +116,9 @@ langs:
       highlight: haskell
       display: Haskell
     js:
-      execute: /usr/bin/jsc /w/foo.js
+      execute: /usr/bin/node /w/foo.js
       highlight: javascript
-      display: Javascript (JSC)
+      display: NodeJS
     go:
       compile: /usr/bin/go build -o foo foo.go
       display: Golang

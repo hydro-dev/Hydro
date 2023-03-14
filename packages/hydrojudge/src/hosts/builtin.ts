@@ -76,6 +76,10 @@ export async function postInit() {
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
+        if (!rdoc) {
+            logger.debug('Record not found: %o', t);
+            return;
+        }
         (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
     };
     TaskModel.consume({ type: 'judge' }, handle);

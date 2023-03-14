@@ -14,6 +14,7 @@ export { default as _ } from 'lodash';
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom/client';
 export * from './misc/Page';
+export { initPageLoader } from './hydro';
 
 const lazyModules = {};
 export default async function load(name: string) {

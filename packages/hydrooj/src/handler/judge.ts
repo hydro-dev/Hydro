@@ -195,14 +195,16 @@ class JudgeConnectionHandler extends ConnectionHandler {
     async newTask() {
         if (this.processing) return;
         let t;
+        let rdoc: RecordDoc;
         while (!t) {
             if (this.closed) return;
-            // eslint-disable-next-line no-await-in-loop
+            /* eslint-disable no-await-in-loop */
             t = await task.getFirst(this.query);
-            // eslint-disable-next-line no-await-in-loop
             if (!t) await sleep(500);
+            else rdoc = await record.get(t.domainId, t.rid);
+            /* eslint-enable no-await-in-loop */
+            if (!rdoc) t = null;
         }
-        let rdoc = await record.get(t.domainId, t.rid);
         this.send({ task: { ...rdoc, ...t } });
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
