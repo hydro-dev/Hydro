@@ -55,6 +55,7 @@ export function TestcaseNode(props: TestcaseNodeProps) {
 
 interface TestcaseGroupProps extends Omit<TestcaseNodeProps, 'c'> {
   cases: TestCaseConfig[];
+  onMouseDown?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 }
 
 export function TestcaseGroup(props: TestcaseGroupProps) {
@@ -69,7 +70,7 @@ export function TestcaseGroup(props: TestcaseGroupProps) {
     canDrag: props.selected,
     item: { cases, subtaskId },
   }), [JSON.stringify(cases), subtaskId]);
-  return <div ref={drag} onClick={onClick} style={{ opacity: collected.isDragging ? 0.5 : 1 }}>
+  return <div ref={drag} onClick={onClick} onMouseDown={props.onMouseDown} style={{ opacity: collected.isDragging ? 0.5 : 1 }}>
     {cases.map((c, id) => (
       <TestcaseNode c={c} key={`${c.input}@${index + id}`} {...omit(props, 'onClick')} index={index + id} />
     ))}

@@ -209,7 +209,6 @@ export function sortFiles<T extends Record<string, any>>(files: T[], key: String
 export function sortFiles(files: Record<string, any>[] | string[], key = '_id') {
     if (!files?.length) return [];
     const isString = typeof files[0] === 'string';
-    console.log(files);
     const result = files
         .map((i) => (isString ? { name: i, _weights: i.match(fSortR) } : { ...i, _weights: (i[key] || i.name).match(fSortR) }))
         .sort((a, b) => {
@@ -228,7 +227,7 @@ export function sortFiles(files: Record<string, any>[] | string[], key = '_id') 
             }
             return weightA ? 1 : -1;
         });
-    return isString ? result.map((x) => x.name) : result;
+    return result.map((x) => (isString ? x.name : (delete x._weights && x)));
 }
 
 interface MatchRule {

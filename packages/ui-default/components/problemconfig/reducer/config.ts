@@ -69,14 +69,23 @@ export default function reducer(state = { type: 'default', __loaded: false } as 
       }
       return { ...state, subtasks };
     }
+    case 'problemconfig/updateGlobalConfig': {
+      const n = { ...state, time: action.time, memory: action.memory };
+      if (!n.time) delete n.time;
+      if (!n.memory) delete n.memory;
+      return n;
+    }
     case 'problemconfig/updateSubtaskConfig': {
-      const subtask = state.subtasks.find((i) => i.id === action.id);
+      if (!state.subtasks.find((i) => i.id === action.id)) return state;
+      const subtask = { ...state.subtasks.find((i) => i.id === action.id) };
+      const subtasks = [...state.subtasks];
+      subtasks.splice(state.subtasks.findIndex((i) => i.id === action.id), 1, subtask);
       subtask.time = action.time;
       subtask.memory = action.memory;
       subtask.score = +action.score || 0;
       if (!subtask.time) delete subtask.time;
       if (!subtask.memory) delete subtask.memory;
-      return state;
+      return { ...state, subtasks };
     }
     case 'problemconfig/moveTestcases': {
       const testcases = action.payload.cases;

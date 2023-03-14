@@ -15,10 +15,7 @@ function collide(rect1: any, rect2: any): boolean {
   const maxY = Math.max(rect1.y + rect1.height, rect2.y + rect2.height);
   const minX = Math.min(rect1.x, rect2.x);
   const minY = Math.min(rect1.y, rect2.y);
-  if (maxX - minX <= rect1.width + rect2.width && maxY - minY <= rect1.height + rect2.height) {
-    return true;
-  }
-  return false;
+  return maxX - minX <= rect1.width + rect2.width && maxY - minY <= rect1.height + rect2.height;
 }
 
 export function SelectionManager(props: SelectionManagerProps) {
@@ -35,7 +32,7 @@ export function SelectionManager(props: SelectionManagerProps) {
     setEnd(0);
   }, [JSON.stringify(cases)]);
 
-  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLUListElement, MouseEvent>) => {
+  const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     pos.x = event.pageX;
     pos.y = event.pageY;
     // Check if clicking on a selected testcase

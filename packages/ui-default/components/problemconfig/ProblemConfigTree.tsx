@@ -1,7 +1,7 @@
 import {
   Button, ControlGroup,
   Dialog, DialogBody, DialogFooter,
-  Icon, InputGroup,
+  Icon, InputGroup, TreeNode,
 } from '@blueprintjs/core';
 import { TestCaseConfig } from 'hydrooj';
 import React from 'react';
@@ -54,31 +54,22 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
-            large={false}
             leftElement={<Icon icon="time" />}
             onChange={dispatcher(setTime, 'time')}
             placeholder={`Inherit (${props.time})`}
-            readOnly={false}
-            small={false}
             value={ctime || ''}
           />
           <InputGroup
-            large={false}
             leftElement={<Icon icon="comparison" />}
             onChange={dispatcher(setMemory, 'memory')}
             placeholder={`Inherit (${props.memory})`}
-            readOnly={false}
-            small={false}
             value={cmemory || ''}
           />
           <InputGroup
-            large={false}
             leftElement={<Icon icon="star" />}
             onChange={dispatcher(setScore, 'score')}
             placeholder="Score"
-            readOnly={false}
             type="number"
-            small={false}
             value={cscore.toString()}
           />
         </ControlGroup>
@@ -145,14 +136,14 @@ export function SubtaskNode(props: SubtaskNodeProps) {
         <SubtaskSettings subtaskId={subtaskId} time={time} memory={memory} />
         {expand
           ? <SelectionManager subtaskId={subtaskId} subtaskIds={subtaskIds} />
-          : <li className="bp4-tree-node">
-            <div className="bp4-tree-node-content">
-              <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
-              <Icon icon="layers" />&nbsp;
-              <span className="bp4-tree-node-label">{clen} testcases.</span>
-            </div>
-          </li>
-        }
+          : <TreeNode
+            depth={0}
+            id={`s${subtaskId}`}
+            onClick={() => setExpand(false)}
+            icon="layers"
+            label={<>&nbsp;{clen} testcases.</>}
+            path={[0]}
+          />}
         {!clen && (
           <li className="bp4-tree-node">
             <div className="bp4-tree-node-content">
@@ -170,7 +161,24 @@ export function ProblemConfigTree() {
   const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id));
   const time = useSelector((s: RootState) => s.config?.time);
   const memory = useSelector((s: RootState) => s.config?.memory);
+  const [open, setOpen] = React.useState(false);
+  const [ctime, setTime] = React.useState(time);
+  const [cmemory, setMemory] = React.useState(memory);
+  React.useEffect(() => {
+    setTime(time);
+  }, [time]);
+  React.useEffect(() => {
+    setMemory(memory);
+  }, [memory]);
   const dispatch = useDispatch();
+  function onConfirm() {
+    dispatch({
+      type: 'problemconfig/updateGlobalConfig',
+      time: ctime,
+      memory: cmemory,
+    });
+    setOpen(false);
+  }
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="bp4-tree">
@@ -182,6 +190,35 @@ export function ProblemConfigTree() {
             <div className="bp4-tree-node-content bp4-tree-node-content-0">
               <Icon icon="clean" />&nbsp;
               <span className="bp4-tree-node-label">Auto Configure</span>
+            </div>
+          </li>
+          <Dialog title="Set limits" icon="cog" minimal isOpen={open} onClose={() => setOpen(false)}>
+            <DialogBody>
+              <ControlGroup fill={true} vertical={false}>
+                <InputGroup
+                  leftElement={<Icon icon="time" />}
+                  onChange={(ev) => setTime(ev.currentTarget.value)}
+                  placeholder="1s"
+                  value={ctime || ''}
+                />
+                <InputGroup
+                  leftElement={<Icon icon="comparison" />}
+                  onChange={(ev) => setMemory(ev.currentTarget.value)}
+                  placeholder="256m"
+                  value={cmemory || ''}
+                />
+              </ControlGroup>
+            </DialogBody>
+            <DialogFooter actions={<Button onClick={onConfirm} intent="primary" text="Save" />} />
+          </Dialog>
+          <li className="bp4-tree-node" onClick={() => setOpen(true)}>
+            <div className="bp4-tree-node-content">
+              <Icon icon="time" />
+              &nbsp;&nbsp;
+              <span className="bp4-tree-node-label">{time}</span>
+              <Icon icon="comparison" />
+              {' '}
+              <span className="bp4-tree-node-secondary-label">{memory}</span>
             </div>
           </li>
           {ids.map((id) => (
