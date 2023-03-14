@@ -1,5 +1,7 @@
 import { $, addPage, AutoloadPage } from '@hydrooj/ui-default';
 
+/* global DocsAPI */
+
 let loaded = false;
 async function load() {
   if (loaded) return Promise.resolve();
@@ -21,7 +23,7 @@ const loader = (mode) => async (element) => {
   const t = new URL(url, window.location.href).pathname.split('.');
   const n = new URL(url, window.location.href).pathname.split('/');
   const lang = UserContext.viewLang.includes('_') ? UserContext.viewLang.split('_')[0] : UserContext.viewLang;
-  // eslint-disable-next-line no-undef
+  // @ts-ignore
   window.editor = new DocsAPI.DocEditor(id, {
     document: {
       fileType: t[t.length - 1],

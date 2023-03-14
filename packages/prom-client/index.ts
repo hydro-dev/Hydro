@@ -1,5 +1,5 @@
 import { hostname } from 'os';
-import { AggregatorRegistry, metric } from 'prom-client';
+import { AggregatorRegistry, Metric } from 'prom-client';
 import { Context, Handler, SystemModel } from 'hydrooj';
 import { createRegistry } from './metrics';
 
@@ -14,7 +14,7 @@ declare module 'hydrooj' {
     }
 }
 
-const instances: Record<string, metric[]> = {};
+const instances: Record<string, Metric[]> = {};
 
 class MetricsHandler extends Handler {
     noCheckPermView = true;
