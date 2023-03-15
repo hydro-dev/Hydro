@@ -1,11 +1,13 @@
 import { Icon, TreeNode } from '@blueprintjs/core';
+import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import { TestCaseConfig } from 'hydrooj';
 import { isEqual } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { RootState } from './reducer';
+import { AddTestcase } from './tree/AddTestcase';
 import { SelectionManager } from './tree/SelectionManager';
 import { GlobalSettings, SubtaskSettings } from './tree/SubtaskSettings';
 
@@ -14,14 +16,12 @@ interface TestcasesDndItem {
   subtaskId: number;
 }
 
-interface SubtaskNodeProps {
-  subtaskId: number;
-}
-
-export function SubtaskNode(props: SubtaskNodeProps) {
+export function SubtaskNode(props: { subtaskId: number }) {
   const { subtaskId } = props;
   const subtaskIds = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
-  const clen = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === subtaskId).cases?.length || 0);
+  const clen = useSelector((state: RootState) => (subtaskId === -1
+    ? state.config.__cases.length
+    : state.config.subtasks.find((i) => i.id === subtaskId).cases?.length || 0));
   const time = useSelector((s: RootState) => s.config?.time);
   const memory = useSelector((s: RootState) => s.config?.memory);
   const dispatch = useDispatch();
@@ -45,15 +45,15 @@ export function SubtaskNode(props: SubtaskNodeProps) {
 
   return (
     <li className="bp4-tree-node bp4-tree-node-expanded">
-      <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
+      {subtaskId !== -1 && <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
         <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
         <span className="bp4-tree-node-label">Subtask {subtaskId}</span>
         <span className="bp4-tree-node-secondary-label">
           <Icon icon="trash"></Icon>
         </span>
-      </div>
+      </div>}
       <ul className="bp4-tree-node-list" ref={drop}>
-        <SubtaskSettings subtaskId={subtaskId} time={time} memory={memory} />
+        {subtaskId !== -1 && <SubtaskSettings subtaskId={subtaskId} time={time} memory={memory} />}
         {expand
           ? <SelectionManager subtaskId={subtaskId} subtaskIds={subtaskIds} />
           : <TreeNode
@@ -68,7 +68,9 @@ export function SubtaskNode(props: SubtaskNodeProps) {
           <li className="bp4-tree-node">
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
-              <span className="bp4-tree-node-label">Drag and drop testcases here:</span>
+              <span className="bp4-tree-node-label">{subtaskId === -1
+                ? 'No testcase here'
+                : 'Drag and drop testcases here:'}</span>
             </div>
           </li>
         )}
@@ -80,12 +82,21 @@ export function SubtaskNode(props: SubtaskNodeProps) {
 export function SubtaskConfigTree() {
   const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
   const dispatch = useDispatch();
+  const store = useStore<RootState>();
+  function autoConfigure() {
+    const state = store.getState();
+    const subtasks = readSubtasksFromFiles(state.testdata, state.config);
+    dispatch({
+      type: 'CONFIG_AUTOCASES_UPDATE',
+      subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
+    });
+  }
   return (
     <div className="bp4-tree">
       <ul className="bp4-tree-node-list bp4-tree-root">
         <li
           className="bp4-tree-node"
-          onClick={() => dispatch({ type: 'AUTO_CONFIGURE' })}
+          onClick={autoConfigure}
         >
           <div className="bp4-tree-node-content bp4-tree-node-content-0">
             <Icon icon="clean" />&nbsp;
@@ -108,23 +119,6 @@ export function SubtaskConfigTree() {
   );
 }
 
-function TestcaseConfigTree() {
-  return (<div className="bp4-tree">
-    <ul className="bp4-tree-node-list bp4-tree-root">
-      <li
-        className="bp4-tree-node"
-        onClick={() => ({})}
-      >
-        <div className="bp4-tree-node-content bp4-tree-node-content-0">
-          <Icon icon="clean" />&nbsp;
-          <span className="bp4-tree-node-label">Magic</span>
-        </div>
-      </li>
-      <SubtaskNode subtaskId={-1} />
-    </ul>
-  </div>);
-}
-
 export function ProblemConfigTree() {
   return (
     <DndProvider backend={HTML5Backend}>
@@ -133,7 +127,12 @@ export function ProblemConfigTree() {
           <SubtaskConfigTree />
         </div>
         <div className="medium-6 columns">
-          <TestcaseConfigTree />
+          <div className="bp4-tree">
+            <ul className="bp4-tree-node-list bp4-tree-root">
+              <AddTestcase />
+              <SubtaskNode subtaskId={-1} />
+            </ul>
+          </div>
         </div>
       </div>
     </DndProvider>

@@ -21,8 +21,8 @@ function collide(rect1: any, rect2: any): boolean {
 export function SelectionManager(props: SelectionManagerProps) {
   const { subtaskIds, subtaskId } = props;
   const cases = useSelector((state: RootState) => (subtaskId === -1
-    ? state.config.subtasks.find((i) => i.id === subtaskId).cases || []
-    : state.config.__cases || []));
+    ? state.config.__cases || []
+    : state.config.subtasks.find((i) => i.id === subtaskId).cases || []));
   // Don't need to trigger a re-render for this property change
   const pos = React.useMemo(() => ({
     x: 0, y: 0, endX: 0, endY: 0,

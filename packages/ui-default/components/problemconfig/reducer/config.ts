@@ -104,6 +104,9 @@ export default function reducer(state = {
       if (!subtask.memory) delete subtask.memory;
       return { ...state, subtasks };
     }
+    case 'problemconfig/addTestcases': {
+      return { ...state, __cases: sortFiles([...state.__cases, ...action.cases], 'input') };
+    }
     case 'problemconfig/moveTestcases': {
       const testcases = action.payload.cases;
       const subtasks = cloneDeep(state.subtasks);

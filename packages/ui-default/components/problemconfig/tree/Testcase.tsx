@@ -47,8 +47,7 @@ export function TestcaseNode(props: TestcaseNodeProps) {
         icon="document"
         label={<>&nbsp;{c.input} / {c.output}</>}
         path={[0]}
-      >
-      </TreeNode>
+      />
     </ContextMenu2>
   );
 }
