@@ -1,9 +1,10 @@
 import {
-  Button, ControlGroup, Dialog, DialogBody, DialogFooter, Icon, InputGroup,
+  Button, Dialog, DialogBody, DialogFooter, Icon,
 } from '@blueprintjs/core';
 import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector, useStore } from 'react-redux';
+import FileSelectAutoComplete from '../../autocomplete/components/FileSelectAutoComplete';
 import { RootState } from '../reducer';
 
 export function AddTestcase() {
@@ -13,9 +14,28 @@ export function AddTestcase() {
   const [valid, setValid] = React.useState(false);
   const testdata = useSelector((state: RootState) => state.testdata);
   const store = useStore<RootState>();
+  const refInput = useRef();
+  const refOutput = useRef();
 
   useEffect(() => {
     setValid(testdata.find((i) => i.name === input) && testdata.find((i) => i.name === output));
+    if (input && !output) {
+      const filename = input.substring(0, input.lastIndexOf('.'));
+      let outputFile = '';
+      if (testdata.find((i) => i.name === `${filename}.out`)) outputFile = `${filename}.out`;
+      else if (testdata.find((i) => i.name === `${filename}.ans`)) outputFile = `${filename}.ans`;
+      // @ts-ignore
+      refOutput.current!.setSelectedItems([outputFile]);
+      setOutput(outputFile);
+    }
+    if (output && !input) {
+      const filename = output.substring(0, output.lastIndexOf('.'));
+      if (testdata.find((i) => i.name === `${filename}.in`)) {
+        // @ts-ignore
+        refInput.current!.setSelectedItems([`${filename}.in`]);
+        setInput(`${filename}.in`);
+      }
+    }
   }, [input, output]);
 
   function onConfirm() {
@@ -57,32 +77,52 @@ export function AddTestcase() {
     </li>
     <li
       className="bp4-tree-node"
-      onClick={() => setOpen(true)}
+      onClick={() => {
+        setInput('');
+        setOutput('');
+        setOpen(true);
+      }}
     >
       <div className="bp4-tree-node-content bp4-tree-node-content-0">
         <Icon icon="clean" />&nbsp;
         <span className="bp4-tree-node-label">Add testcase</span>
       </div>
     </li>
-    <Dialog title="Add testcasse" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title="Add testcase" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
-        <ControlGroup fill={true} vertical={false}>
-          {/* TODO: autocomplete */}
-          <InputGroup
-            leftElement={<Icon icon="import" />}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Input"
-            value={input || ''}
-          />
-          <InputGroup
-            leftElement={<Icon icon="export" />}
-            onChange={(e) => setOutput(e.target.value)}
-            placeholder="Output"
-            value={output || ''}
-          />
-        </ControlGroup>
+        <div className="row">
+          <div className="columns medium-6">
+            <FileSelectAutoComplete
+              ref={refInput}
+              data={testdata}
+              label="Input"
+              width="100%"
+              onChange={(e) => setInput(e)}
+              placeholder="Input"
+              value={input || ''}
+            />
+          </div>
+          <div className="columns medium-6">
+            <FileSelectAutoComplete
+              ref={refOutput}
+              data={testdata}
+              label="Output"
+              width="100%"
+              onChange={(e) => setOutput(e)}
+              placeholder="Output"
+              value={input || ''}
+            />
+          </div>
+        </div>
       </DialogBody>
-      <DialogFooter actions={<Button onClick={onConfirm} disabled={!valid} intent="primary" text="Save" />} />
+      <DialogFooter actions={
+        <Button
+          className={`primary rounded button${valid ? '' : ' disabled'}`}
+          onClick={onConfirm}
+          disabled={!valid}
+          intent="primary"
+          text="Save"
+        />} />
     </Dialog>
   </>);
 }

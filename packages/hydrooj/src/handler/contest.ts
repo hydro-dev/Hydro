@@ -322,6 +322,11 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     async exportScoreboard(domainId: string, tid: ObjectId, ext: string) {
         await this.limitRate('scoreboard_download', 60, 3);
         if (ext === 'ghost') {
+            if ((contest.isDone(this.tdoc) || contest.isLocked(this.tdoc)) && !this.tdoc.unlocked) {
+                if (!this.user.own(this.tdoc)) {
+                    this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+                }
+            }
             await this.exportGhost(domainId, tid);
             return;
         }

@@ -40,6 +40,23 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.0 / UI 4.48.0
+- core: 优化讨论鉴权
+- judge: 优化统一回调评测状态回显
+- judge: 移除 `processTestdata` 步骤
+- judge: 客观题子任务分数回显
+- core: 压平测试数据结构
+- core: rp: 修复比赛分数
+- core&ui: 首次使用 OAuth 时要求设置密码
+- ui: 评测设置 UI 升级
+- install: 根据系统内存调整 wtCacheSize
+- ui: 加载速度优化
+- core: 检测域 ID 大小写
+- ui: 导航栏域索引
+- ui: 支持按权限组过滤作业/比赛
+- judge: 将 Javascript 默认解释器设置为 node
+- judge: 修复删除未评测完成的题目导致评测队列卡死的问题
+
 ### Hydro 4.8.0 / UI 4.47.6
 - core: 升级至 mongodb@5
 - ui: 评测详情中显示子任务得分

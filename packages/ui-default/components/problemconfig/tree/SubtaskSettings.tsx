@@ -65,7 +65,7 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
           />
         </ControlGroup>
       </DialogBody>
-      <DialogFooter actions={<Button onClick={onConfirm} intent="primary" text="Save" />} />
+      <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
     <li className="bp4-tree-node" onClick={() => setOpen(true)}>
       <div className="bp4-tree-node-content">
@@ -123,7 +123,7 @@ export function GlobalSettings() {
           />
         </ControlGroup>
       </DialogBody>
-      <DialogFooter actions={<Button onClick={onConfirm} intent="primary" text="Save" />} />
+      <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
     <li className="bp4-tree-node" onClick={() => setOpen(true)}>
       <div className="bp4-tree-node-content">
