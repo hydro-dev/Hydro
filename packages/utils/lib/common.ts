@@ -199,6 +199,37 @@ export function size(s: number, base = 1) {
     return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
+export type StringKeys<O> = {
+    [K in keyof O]: string extends O[K] ? K : never
+}[keyof O];
+const fSortR = /[^\d]+|\d+/g;
+export function sortFiles(files: string[]): string[];
+export function sortFiles(files: { _id: string }[], key?: '_id'): { _id: string }[];
+export function sortFiles<T extends Record<string, any>>(files: T[], key: StringKeys<T>): T[];
+export function sortFiles(files: Record<string, any>[] | string[], key = '_id') {
+    if (!files?.length) return [];
+    const isString = typeof files[0] === 'string';
+    const result = files
+        .map((i) => (isString ? { name: i, _weights: i.match(fSortR) } : { ...i, _weights: (i[key] || i.name).match(fSortR) }))
+        .sort((a, b) => {
+            let pos = 0;
+            const weightsA = a._weights;
+            const weightsB = b._weights;
+            let weightA = weightsA[pos];
+            let weightB = weightsB[pos];
+            while (weightA && weightB) {
+                const v = weightA - weightB;
+                if (!Number.isNaN(v) && v !== 0) return v;
+                if (weightA !== weightB) return weightA > weightB ? 1 : -1;
+                pos += 1;
+                weightA = weightsA[pos];
+                weightB = weightsB[pos];
+            }
+            return weightA ? 1 : -1;
+        });
+    return result.map((x) => (isString ? x.name : (delete x._weights && x)));
+}
+
 interface MatchRule {
     regex: RegExp;
     output: ((a: RegExpExecArray) => string)[];

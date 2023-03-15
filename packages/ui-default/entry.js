@@ -47,7 +47,7 @@ const prefetch = Promise.all([
 ]);
 
 document.addEventListener('DOMContentLoaded', async () => {
-  Object.assign(window.UiContext, JSON.parse(window.UiContextNew))
+  Object.assign(window.UiContext, JSON.parse(window.UiContextNew));
   const [data, HydroExports] = await prefetch;
   Object.assign(window, { HydroExports });
   eval(data); // eslint-disable-line no-eval

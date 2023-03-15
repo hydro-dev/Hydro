@@ -71,8 +71,8 @@
               <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
                 {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
               </span>
-              {% if (rdoc.subtask && _key != 'id' and rcdocs.length == 1 ) or (_key == 'id' and rdoc.subtasks[rcdoc.subtaskId].type == 'sum') %}
-              <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status'] if _key != 'id' else rcdoc.status] }}">
+              {% if (rdoc.subtask and _key != 'id' and rcdocs.length == 1) or (_key == 'id' and rdoc.subtasks[rcdoc.subtaskId].type == 'sum') %}
+              <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[(rdoc.subtasks[subtaskId]['status'] if _key != 'id' else rcdoc.status)] }}">
                 {{ (rdoc.subtasks[subtaskId]['score'] if _key != 'id' else rcdoc.score)|default(0) }}
               </span>
               {% endif %}
