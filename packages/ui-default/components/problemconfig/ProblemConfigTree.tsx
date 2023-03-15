@@ -1,5 +1,6 @@
 import { Icon, TreeNode } from '@blueprintjs/core';
 import { TestCaseConfig } from 'hydrooj';
+import { isEqual } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -10,33 +11,32 @@ import { GlobalSettings, SubtaskSettings } from './tree/SubtaskSettings';
 
 interface TestcasesDndItem {
   cases: TestCaseConfig[];
-  subtaskId?: number;
+  subtaskId: number;
 }
 
 interface SubtaskNodeProps {
   subtaskId: number;
-  time?: string;
-  memory?: string;
-  subtaskIds: number[];
 }
 
 export function SubtaskNode(props: SubtaskNodeProps) {
-  const {
-    time, memory, subtaskIds, subtaskId,
-  } = props;
+  const { subtaskId } = props;
+  const subtaskIds = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
   const clen = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === subtaskId).cases?.length || 0);
+  const time = useSelector((s: RootState) => s.config?.time);
+  const memory = useSelector((s: RootState) => s.config?.memory);
   const dispatch = useDispatch();
   const [expand, setExpand] = React.useState(true);
   const [, drop] = useDrop<TestcasesDndItem>(() => ({
     accept: 'cases',
     canDrop(item) {
-      return subtaskId && item.subtaskId !== subtaskId;
+      return item.subtaskId !== subtaskId;
     },
     drop(item) {
       dispatch({
         type: 'problemconfig/moveTestcases',
         payload: {
-          subtaskId,
+          target: subtaskId,
+          source: item.subtaskId,
           cases: item.cases,
         },
       });
@@ -78,9 +78,7 @@ export function SubtaskNode(props: SubtaskNodeProps) {
 }
 
 export function SubtaskConfigTree() {
-  const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id));
-  const time = useSelector((s: RootState) => s.config?.time);
-  const memory = useSelector((s: RootState) => s.config?.memory);
+  const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
   const dispatch = useDispatch();
   return (
     <div className="bp4-tree">
@@ -95,15 +93,7 @@ export function SubtaskConfigTree() {
           </div>
         </li>
         <GlobalSettings />
-        {ids.map((id) => (
-          <SubtaskNode
-            key={id}
-            subtaskId={id}
-            time={time}
-            memory={memory}
-            subtaskIds={ids}
-          />
-        ))}
+        {ids.map((id) => <SubtaskNode key={id} subtaskId={id} />)}
         <li
           className="bp4-tree-node"
           onClick={() => dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: 0, key: 'add' })}
@@ -119,8 +109,20 @@ export function SubtaskConfigTree() {
 }
 
 function TestcaseConfigTree() {
-  return (<>
-  </>);
+  return (<div className="bp4-tree">
+    <ul className="bp4-tree-node-list bp4-tree-root">
+      <li
+        className="bp4-tree-node"
+        onClick={() => ({})}
+      >
+        <div className="bp4-tree-node-content bp4-tree-node-content-0">
+          <Icon icon="clean" />&nbsp;
+          <span className="bp4-tree-node-label">Magic</span>
+        </div>
+      </li>
+      <SubtaskNode subtaskId={-1} />
+    </ul>
+  </div>);
 }
 
 export function ProblemConfigTree() {

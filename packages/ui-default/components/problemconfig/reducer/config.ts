@@ -1,16 +1,21 @@
 import { parseMemoryMB, parseTimeMS, sortFiles } from '@hydrooj/utils/lib/common';
 import Ajv from 'ajv';
-import type { ProblemConfigFile } from 'hydrooj/src/interface';
+import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
 import yaml from 'js-yaml';
 import { cloneDeep } from 'lodash';
 import schema from '../../monaco/schema/problemconfig';
 
-type State = ProblemConfigFile & { __loaded: boolean, __valid: boolean, __errors: string[] };
+type State = ProblemConfigFile & {
+  __loaded: boolean;
+  __valid: boolean;
+  __errors: string[];
+  __cases: TestCaseConfig[];
+};
 const ajv = new Ajv();
 const validate = ajv.compile(schema);
 
 export default function reducer(state = {
-  type: 'default', __loaded: false, __valid: true, __errors: [],
+  type: 'default', __loaded: false, __valid: true, __errors: [], __cases: [],
 } as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
@@ -102,15 +107,20 @@ export default function reducer(state = {
     case 'problemconfig/moveTestcases': {
       const testcases = action.payload.cases;
       const subtasks = cloneDeep(state.subtasks);
+      const __cases = action.payload.source === -1
+        ? state.__cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output))
+        : action.payload.target === -1
+          ? sortFiles([...state.__cases, ...testcases], 'input')
+          : state.__cases;
       for (const key in subtasks) {
         const subtask = subtasks[key];
-        if (subtask.id !== action.payload.subtaskId) {
-          subtask.cases = subtask.cases.filter((i) => !testcases.find((j) => i.input === j.input));
-        } else {
-          subtask.cases = sortFiles(subtask.cases.concat(testcases), 'input');
+        if (subtask.id === action.payload.source) {
+          subtask.cases = subtask.cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output));
+        } else if (subtask.id === action.payload.target) {
+          subtask.cases = sortFiles([...subtask.cases, ...testcases], 'input');
         }
       }
-      return { ...state, subtasks };
+      return { ...state, subtasks, __cases };
     }
     default:
       return state;
