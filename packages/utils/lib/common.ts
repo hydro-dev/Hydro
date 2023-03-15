@@ -204,7 +204,7 @@ export type StringKeys<O> = {
 }[keyof O];
 const fSortR = /[^\d]+|\d+/g;
 export function sortFiles(files: string[]): string[];
-export function sortFiles(files: { _id: string[] }[], key?: '_id'): { _id: string[] }[];
+export function sortFiles(files: { _id: string }[], key?: '_id'): { _id: string }[];
 export function sortFiles<T extends Record<string, any>>(files: T[], key: StringKeys<T>): T[];
 export function sortFiles(files: Record<string, any>[] | string[], key = '_id') {
     if (!files?.length) return [];
