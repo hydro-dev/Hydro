@@ -41,7 +41,7 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
   }
 
   return (<>
-    <Dialog title="Set limits" icon="cog" minimal isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title="Set limits" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
@@ -106,7 +106,7 @@ export function GlobalSettings() {
     setOpen(false);
   }
   return (<>
-    <Dialog title="Set limits" icon="cog" minimal isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title="Set limits" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup

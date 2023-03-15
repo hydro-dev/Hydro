@@ -87,7 +87,6 @@ export function SelectionManager(props: SelectionManagerProps) {
     <>
       {end > start && cases.slice(0, start).map((c, id) => (
         <TestcaseGroup
-          c={c}
           subtaskId={subtaskId}
           cases={[c]}
           key={`${c.input}@${id}`}
@@ -113,7 +112,7 @@ export function SelectionManager(props: SelectionManagerProps) {
       )}
       {end < cases.length && cases.slice(end).map((c, id) => (
         <TestcaseGroup
-          c={c} subtaskId={subtaskId}
+          subtaskId={subtaskId}
           cases={[c]}
           key={`${c.input}@${id}`}
           subtaskIds={subtaskIds}

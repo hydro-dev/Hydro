@@ -64,7 +64,7 @@ export function AddTestcase() {
         <span className="bp4-tree-node-label">Add testcase</span>
       </div>
     </li>
-    <Dialog title="Add testcasse" icon="cog" minimal isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title="Add testcasse" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           {/* TODO: autocomplete */}
