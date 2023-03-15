@@ -4,6 +4,7 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
+import os from 'os';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -224,6 +225,19 @@ function rollbackResolveField() {
     return true;
 }
 
+const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
+const wtsize = Math.floor((mem / 6) * 10) / 10;
+
+const printInfo = [
+    'echo "扫码加入QQ群：',
+    'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
+    () => {
+        password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
+        log.info('extra.dbUser');
+        log.info('extra.dbPassword', password);
+    },
+];
+
 const Steps = () => [
     {
         init: 'install.preparing',
@@ -360,7 +374,8 @@ connect-timeout = 10`);
             () => writeFileSync(`${process.env.HOME}/.hydro/mount.yaml`, mount),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
             ...installAsJudge ? [] : [
-                'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
+                () => console.log(`WiredTiger cache size: ${wtsize}GB`),
+                `pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
                 'pm2 start hydrooj',
                 async () => {
@@ -401,13 +416,7 @@ connect-timeout = 10`);
     {
         init: 'install.done',
         skip: () => installAsJudge,
-        operations: [
-            () => {
-                password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
-            },
-            () => log.info('extra.dbUser'),
-            () => log.info('extra.dbPassword', password),
-        ],
+        operations: printInfo,
     },
     {
         init: 'install.postinstall',
@@ -425,6 +434,7 @@ connect-timeout = 10`);
     {
         init: 'install.alldone',
         operations: [
+            ...printInfo,
             () => log.info('install.alldone'),
             () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
         ],
