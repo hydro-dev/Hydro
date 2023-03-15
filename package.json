@@ -77,8 +77,9 @@
         "wtfnode": "^0.9.1"
     },
     "resolutions": {
-        "@types/node": "18.11.18",
+        "@types/node": "18.14.1",
         "@types/react": "18.0.28",
-        "cosmokit": "1.4.1"
+        "cosmokit": "1.4.1",
+        "prettier": "npm:not-installable-package@1.0.0"
     }
 }

@@ -6,7 +6,7 @@ setDiagnosticsOptions({
   enableSchemaRequest: true,
   hover: true,
   completion: true,
-  format: true,
+  format: false,
   schemas: [
     {
       uri: 'https://hydro.js.org/schema/problemConfig.json',

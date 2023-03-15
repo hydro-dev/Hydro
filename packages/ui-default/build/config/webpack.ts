@@ -262,6 +262,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minChunkSize: 128000,
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
+      new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
       new MonacoWebpackPlugin({
         filename: '[name].[hash:6].worker.js',
         customLanguages: [{
