@@ -71,10 +71,10 @@ async function previewPDF(link) {
   const id = nanoid();
   const dialog = new InfoDialog({
     $body: tpl`
-      <div class="typo">
+      <div class="typo" style="height: 100%;">
         <object classid="clsid:${(uuid.substring(uuid.lastIndexOf('/') + 1))}">
           <param name="SRC" value="${link}" >
-          <embed width="100%" style="height: 70vh;border: none;" src="${link}">
+          <embed width="100%" style="height: 100%;border: none;" src="${link}">
             <noembed></noembed>
           </embed>
         </object>
