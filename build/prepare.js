@@ -62,7 +62,7 @@ for (const name of ['plugins', 'modules']) {
     if (!fs.existsSync(path.resolve(process.cwd(), name))) {
         fs.mkdirSync(path.resolve(process.cwd(), name));
         // Write an empty file to make eslint happy
-        fs.writeFileSync(path.resolve(process.cwd(), name, 'eslint.ts'), '');
+        fs.writeFileSync(path.resolve(process.cwd(), name, 'nop.ts'), 'export default {};\n');
     }
 }
 
