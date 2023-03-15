@@ -347,7 +347,7 @@ export function apply(ctx: Context) {
             result.domainId, document.TYPE_DISCUSSION,
             { parentType: document.TYPE_PROBLEM, parentId: result.docId },
         ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
-        return await coll.updateMany({ _id: { $in: dids } }, { $set: { hidden: result.hidden } });
+        return await document.coll.updateMany({ _id: { $in: dids } }, { $set: { hidden: result.hidden } });
     });
 }
 
