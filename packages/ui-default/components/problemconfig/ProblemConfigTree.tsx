@@ -1,4 +1,5 @@
-import { Icon, TreeNode } from '@blueprintjs/core';
+import { Button, Icon, TreeNode } from '@blueprintjs/core';
+import { Popover2 } from '@blueprintjs/popover2';
 import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import { TestCaseConfig } from 'hydrooj';
 import { isEqual } from 'lodash';
@@ -19,9 +20,9 @@ interface TestcasesDndItem {
 export function SubtaskNode(props: { subtaskId: number }) {
   const { subtaskId } = props;
   const subtaskIds = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
-  const clen = useSelector((state: RootState) => (subtaskId === -1
-    ? state.config.__cases.length
-    : state.config.subtasks.find((i) => i.id === subtaskId).cases?.length || 0));
+  const cases = useSelector((state: RootState) => (subtaskId === -1
+    ? state.config.__cases
+    : state.config.subtasks.find((i) => i.id === subtaskId).cases || []));
   const time = useSelector((s: RootState) => s.config?.time);
   const memory = useSelector((s: RootState) => s.config?.memory);
   const dispatch = useDispatch();
@@ -43,13 +44,37 @@ export function SubtaskNode(props: { subtaskId: number }) {
     },
   }));
 
+  function deleteSubtask() {
+    dispatch({
+      type: 'problemconfig/moveTestcases',
+      payload: {
+        target: -1,
+        source: subtaskId,
+        cases,
+      },
+    });
+    dispatch({
+      type: 'problemconfig/deleteSubtask',
+      id: subtaskId,
+    });
+  }
+
   return (
     <li className="bp4-tree-node bp4-tree-node-expanded">
       {subtaskId !== -1 && <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
         <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
         <span className="bp4-tree-node-label">Subtask {subtaskId}</span>
-        <span className="bp4-tree-node-secondary-label">
-          <Icon icon="trash"></Icon>
+        <span className="bp4-tree-node-secondary-label" onClick={(ev) => ev.stopPropagation()}>
+          <Popover2
+            content={<div style={{ padding: 20 }}>
+              <b>Are you sure you want to delete this subtask?</b>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
+                <Button intent="danger" onClick={deleteSubtask}>Delete</Button>
+              </div>
+            </div>}
+          >
+            <Icon icon="trash" />
+          </Popover2>
         </span>
       </div>}
       <ul className="bp4-tree-node-list" ref={drop}>
@@ -61,10 +86,10 @@ export function SubtaskNode(props: { subtaskId: number }) {
             id={`s${subtaskId}`}
             onClick={() => setExpand(false)}
             icon="layers"
-            label={<>&nbsp;{clen} testcases.</>}
+            label={<>&nbsp;{cases.length} testcases.</>}
             path={[0]}
           />}
-        {!clen && (
+        {!cases.length && (
           <li className="bp4-tree-node">
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
