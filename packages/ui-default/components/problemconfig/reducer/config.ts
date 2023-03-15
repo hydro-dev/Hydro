@@ -27,7 +27,7 @@ export default function reducer(state = {
       try {
         const data = yaml.load(action.payload);
         if (!validate(data)) {
-          return { ...state, __valid: false, __errors: validate.errors.map((i) => i.message) };
+          return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
         }
         return {
           ...state, ...data as object, __valid: true, __errors: [],
