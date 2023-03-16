@@ -248,7 +248,7 @@ const SubtaskMatcher: MatchRule[] = [
             (a) => (a[1].includes('input') ? `${a[1] + a[2]}.txt`.replace(/input/g, 'output') : null),
         ],
         id: (a) => +a[2],
-        subtask: () => 0,
+        subtask: () => 1,
         preferredScorerType: 'sum',
     },
     {
@@ -258,7 +258,7 @@ const SubtaskMatcher: MatchRule[] = [
             (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
         ],
         id: (a) => +a[2],
-        subtask: () => 0,
+        subtask: () => 1,
         preferredScorerType: 'sum',
     },
     {

@@ -111,10 +111,15 @@ export function SubtaskConfigTree() {
   const store = useStore<RootState>();
   function autoConfigure() {
     const state = store.getState();
-    const subtasks = readSubtasksFromFiles(state.testdata, state.config);
+    const subtasks = readSubtasksFromFiles(state.testdata.map((t) => t.name), state.config);
+    const cases = subtasks.reduce((a, b) => a.concat(b.cases), []);
     dispatch({
       type: 'CONFIG_AUTOCASES_UPDATE',
       subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
+    });
+    dispatch({
+      type: 'problemconfig/delTestcases',
+      cases,
     });
   }
   return (

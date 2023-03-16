@@ -161,6 +161,10 @@ export default function reducer(state = {
       }
       return { ...state, subtasks, __cases };
     }
+    case 'problemconfig/delTestcases': {
+      const testcases = action.cases;
+      return { ...state, __cases: state.__cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output)) };
+    }
     case 'problemconfig/deleteSubtask': {
       const subtasks = state.subtasks.filter((i) => i.id !== action.id);
       return { ...state, subtasks };
