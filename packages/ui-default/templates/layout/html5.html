@@ -64,6 +64,7 @@
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
     {% set UiContext = Object.create(UiContext) %}
+    {% set UserContext = Object.create(UserContext) %}
     {% if process.env.DEV %}
       <script type="text/javascript" src="/resource/hash/lang-{{ _('__id') }}.js?version={{ global.Hydro.version['ui-default'] }}"></script>
       <script type="text/javascript" src="/hydro.js?version={{ global.Hydro.version['ui-default'] }}"></script>
@@ -75,7 +76,10 @@
   {% block body %}{% endblock %}
   {% block script %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
-    <script>var UiContextNew = '{{ UiContext|json|jsesc|safe }}';</script>
+    <script>
+      var UiContextNew = '{{ UiContext|json|jsesc|safe }}';
+      var UserContextNew = '{{ UserContext|json|jsesc|safe }}';
+    </script>
   {% endif %}
 </body>
 </html>
