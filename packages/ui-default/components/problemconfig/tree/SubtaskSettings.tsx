@@ -64,15 +64,15 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
           <InputGroup
             leftElement={<Icon icon="time" />}
             rightElement={<Tag minimal>ms</Tag>}
-            onChange={(ev) => setTime(`${ev.currentTarget.value}ms`)}
-            placeholder={`Inherit (${parseTimeMS(props.time, false) || '1000'})`}
+            onChange={(ev) => setTime(ev.currentTarget.value ? `${ev.currentTarget.value}ms` : '')}
+            placeholder={parseTimeMS(props.time, false).toString() || '1000'}
             value={ctime ? parseTimeMS(ctime, false).toString() || '' : ''}
           />
           <InputGroup
             leftElement={<Icon icon="comparison" />}
             rightElement={<Tag minimal>MB</Tag>}
-            onChange={(ev) => setMemory(`${ev.currentTarget.value}MB`)}
-            placeholder={`Inherit (${parseMemoryMB(props.memory, false) || '256'})`}
+            onChange={(ev) => setMemory(ev.currentTarget.value ? `${ev.currentTarget.value}MB` : '')}
+            placeholder={parseMemoryMB(props.memory, false).toString() || '256'}
             value={cmemory ? parseMemoryMB(cmemory, false).toString() || '' : ''}
           />
           <InputGroup
@@ -167,14 +167,14 @@ export function GlobalSettings() {
           <InputGroup
             leftElement={<Icon icon="time" />}
             rightElement={<Tag minimal>ms</Tag>}
-            onChange={(ev) => setTime(`${ev.currentTarget.value}ms`)}
+            onChange={(ev) => setTime(ev.currentTarget.value ? `${ev.currentTarget.value}ms` : '')}
             placeholder="1000"
             value={ctime ? parseTimeMS(ctime, false).toString() || '' : ''}
           />
           <InputGroup
             leftElement={<Icon icon="comparison" />}
             rightElement={<Tag minimal>MB</Tag>}
-            onChange={(ev) => setMemory(`${ev.currentTarget.value}MB`)}
+            onChange={(ev) => setMemory(ev.currentTarget.value ? `${ev.currentTarget.value}MB` : '')}
             placeholder="256"
             value={cmemory ? parseMemoryMB(cmemory, false).toString() || '' : ''}
           />
