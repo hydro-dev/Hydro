@@ -551,6 +551,10 @@ const scripts: UpgradeScript[] = [
             await problem.edit(pdoc.domainId, pdoc.docId, { data: pdoc.data });
         });
     },
+    async function _77_78() {
+        await document.coll.updateMany({ docType: document.TYPE_DISCUSSION }, { $set: { hidden: false } });
+        return true;
+    },
 ];
 
 export default scripts;
