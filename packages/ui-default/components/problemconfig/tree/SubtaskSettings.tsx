@@ -126,7 +126,7 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
         <span className="bp4-tree-node-label">{i18n('Scoring method')}</span>
         <span className="bp4-tree-node-secondary-label">
-          <select value={ctype} onChange={(e) => setType(e.target.value)}>
+          <select className="compact select" value={ctype} onChange={(e) => setType(e.target.value)}>
             <option value="min">Min</option>
             <option value="max">Max</option>
             <option value="sum">Sum</option>

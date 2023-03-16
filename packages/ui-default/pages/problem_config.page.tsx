@@ -104,7 +104,12 @@ const page = new NamedPage('problem_config', () => {
       if (!state.config.__loaded) return;
       if (state.config.cases) {
         const score = state.config.score * state.config.cases.length;
-        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: score && score < 100 ? score : 100, cases: state.config.cases }];
+        state.config.subtasks = [{
+          type: 'sum' as SubtaskType,
+          score: score && score < 100 ? score : 100,
+          cases: state.config.cases,
+          id: 1,
+        }];
         delete state.config.cases;
         delete state.config.score;
       }

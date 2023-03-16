@@ -25,7 +25,7 @@ export default function reducer(state = {
           return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
         }
         const subtasks = (data as any).subtasks;
-        for (const subtask of subtasks) {
+        for (const subtask of subtasks || []) {
           if (typeof subtask.id !== 'number') {
             for (let i = 1; ; i++) {
               if (!subtasks.find((s) => s.id === i)) {
