@@ -19,7 +19,28 @@ export default function reducer(state = {
 } as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
-      return { ...state, ...yaml.load(action.payload.config) as object, __loaded: true };
+      try {
+        const data = yaml.load(action.payload.config) as any;
+        if (!validate(data)) {
+          return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
+        }
+        const subtasks = (data as any).subtasks;
+        for (const subtask of subtasks) {
+          if (typeof subtask.id !== 'number') {
+            for (let i = 1; ; i++) {
+              if (!subtasks.find((s) => s.id === s)) {
+                subtask.id = i;
+                break;
+              }
+            }
+          }
+        }
+        return {
+          ...state, ...data as any, __valid: true, __errors: [], __loaded: true,
+        };
+      } catch (e) {
+        return { ...state, __valid: false, __errors: [e.message] };
+      }
     }
     case 'CONFIG_FORM_UPDATE': {
       const next = { ...state, [action.key]: action.value };
@@ -32,13 +53,20 @@ export default function reducer(state = {
       try {
         const data = yaml.load(action.payload);
         if (!validate(data)) {
-          return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
+          return {
+            ...state,
+            __valid: false,
+            __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`),
+            __loaded: true,
+          };
         }
         return {
-          ...state, ...data as object, __valid: true, __errors: [],
+          ...state, ...data as object, __valid: true, __errors: [], __loaded: true,
         };
       } catch (e) {
-        return { ...state, __valid: false, __errors: [e.message] };
+        return {
+          ...state, __valid: false, __errors: [e.message], __loaded: true,
+        };
       }
     }
     case 'CONFIG_AUTOCASES_UPDATE': {
@@ -49,6 +77,14 @@ export default function reducer(state = {
         if (subtask.memory === parseMemoryMB(state.memory || '256m')) delete subtask.memory;
         if (subtask.time) subtask.time += 'ms';
         if (subtask.memory) subtask.memory += 'MB';
+        if (typeof subtask.id !== 'number') {
+          for (let i = 1; ; i++) {
+            if (!subtasks.find((s) => s.id === s)) {
+              subtask.id = i;
+              break;
+            }
+          }
+        }
       }
       if (subtasks.length === 0) next.subtasks = [];
       else {

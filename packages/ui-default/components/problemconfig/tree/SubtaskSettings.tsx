@@ -1,8 +1,9 @@
 import {
   Button, ControlGroup,
   Dialog, DialogBody, DialogFooter,
-  Icon, InputGroup,
+  Icon, InputGroup, Tag,
 } from '@blueprintjs/core';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
@@ -47,15 +48,17 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
             leftElement={<Icon icon="time" />}
-            onChange={dispatcher(setTime, 'time')}
-            placeholder={`Inherit (${props.time || '1s'})`}
-            value={ctime || ''}
+            rightElement={<Tag minimal>ms</Tag>}
+            onChange={(ev) => setTime(`${ev.currentTarget.value}ms`)}
+            placeholder={`Inherit (${parseTimeMS(props.time, false) || '1000'})`}
+            value={ctime ? parseTimeMS(ctime, false).toString() || '' : ''}
           />
           <InputGroup
             leftElement={<Icon icon="comparison" />}
-            onChange={dispatcher(setMemory, 'memory')}
-            placeholder={`Inherit (${props.memory || '256m'})`}
-            value={cmemory || ''}
+            rightElement={<Tag minimal>MB</Tag>}
+            onChange={(ev) => setMemory(`${ev.currentTarget.value}MB`)}
+            placeholder={`Inherit (${parseMemoryMB(props.memory, false) || '256'})`}
+            value={cmemory ? parseMemoryMB(cmemory, false).toString() || '' : ''}
           />
           <InputGroup
             leftElement={<Icon icon="star" />}
@@ -112,15 +115,17 @@ export function GlobalSettings() {
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
             leftElement={<Icon icon="time" />}
-            onChange={(ev) => setTime(ev.currentTarget.value)}
-            placeholder="1s"
-            value={ctime || ''}
+            rightElement={<Tag minimal>ms</Tag>}
+            onChange={(ev) => setTime(`${ev.currentTarget.value}ms`)}
+            placeholder="1000"
+            value={ctime ? parseTimeMS(ctime, false).toString() || '' : ''}
           />
           <InputGroup
             leftElement={<Icon icon="comparison" />}
-            onChange={(ev) => setMemory(ev.currentTarget.value)}
-            placeholder="256m"
-            value={cmemory || ''}
+            rightElement={<Tag minimal>MB</Tag>}
+            onChange={(ev) => setMemory(`${ev.currentTarget.value}MB`)}
+            placeholder="256"
+            value={cmemory ? parseMemoryMB(cmemory, false).toString() || '' : ''}
           />
         </ControlGroup>
       </DialogBody>
@@ -133,7 +138,7 @@ export function GlobalSettings() {
         <span className={`bp4-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
         <Icon icon="comparison" />
         {' '}
-        <span className={`bp4-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256m'}</span>
+        <span className={`bp4-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256MB'}</span>
       </div>
     </li>
   </>);
