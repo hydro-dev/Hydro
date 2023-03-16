@@ -26,6 +26,7 @@ __langname: 简体中文
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
+'Drag and drop testcases here:': '拖拽测试点到此处：'
 'Failed to get credential: {0}': '获取认证数据失败: {0}'
 'File upload failed: {0}': 文件上传失败：{0}
 'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
@@ -69,6 +70,8 @@ Add Authenticator: 添加认证器
 Add File: 添加文件
 Add module: 添加模块
 Add new data: 添加新数据
+Add new subtask: 添加新子任务
+Add testcase: 添加测试点
 Add User: 添加用户
 Add: 添加
 additional_file: 附加文件
@@ -88,6 +91,7 @@ An example of dataset: 测试数据集的一个例子
 Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
 Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
+Are you sure you want to delete this subtask?: 确认删除此子任务？
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
 Assign User or Group: 分配给用户或小组
@@ -101,9 +105,12 @@ Attendee Manage: 参赛者管理
 Authenticator: 认证器
 Authenticators: 认证器
 author: 作者
+Auto configure: 自动配置
+Auto detect: 自动检测
 Auto hide problems during the contest: 在比赛过程中自动隐藏题目
 Auto Read Tasks: 自动识别任务
 Basic Info: 基础信息
+Basic: 基础
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -340,6 +347,7 @@ Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
 error: 错误
+Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
 Evaluated difficulty: 估计的难度
 Exit: 退出
 expand: 展开
@@ -519,6 +527,7 @@ Month: 月
 Monthly Popular: 月度最受欢迎
 More: 更多
 Most Upvoted Solutions: 最被赞同的题解
+Move to subtask: 移动到子任务
 Multi Platform Authenticator: 跨平台认证器
 My Domains: 我的域
 My Files: 我的文件
@@ -549,6 +558,8 @@ No Permission to Submit: 您没有权限递交
 No problem.: 没有题目。
 No solutions so far...: 目前还没有题解...
 No Submissions: 没有递交
+No target available: 无可用目标
+No testcase here: 此处没有测试点
 No user is allowed to join this domain: 没有用户可以自助加入此域
 no_translation_warn: ''
 None: 无
@@ -764,6 +775,7 @@ Set Privilege: 设置权限
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
 Set Roles for selected users: 为所选用户设置角色
+Set time and memory limits: 设置时空限制
 setting_customize: 个性化
 setting_display: 显示偏好
 setting_domain: 域设置
@@ -813,6 +825,8 @@ Submit to Judge: 递交以评测
 Submit Your Code: 递交代码进行正式评测
 Submit: 递交
 Submitted: 已递交
+Subtask {0}: 子任务 {0}
+Subtasks: 子任务
 SuperUser: 超级管理员
 Support: 支持
 Switch account: 切换账户

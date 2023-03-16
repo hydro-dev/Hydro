@@ -5,6 +5,7 @@ import {
 } from '@blueprintjs/core';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { i18n } from 'vj/utils';
 import { RootState } from '../reducer';
 
 interface SubtaskSettingsProps {
@@ -41,7 +42,7 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
   }
 
   return (<>
-    <Dialog title="Set limits" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title={i18n('Set time and memory limits')} icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
@@ -72,10 +73,10 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${!(time || props.time) ? ' text-gray' : ''}`}>{time || props.time || '1s'}</span>
+        <span className={`bp4-tree-node-label${time ? '' : ' text-gray'}`}>{time || props.time || '1s'}</span>
         <Icon icon="comparison" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${!(memory || props.memory) ? ' text-gray' : ''}`}>{memory || props.memory || '256m'}</span>
+        <span className={`bp4-tree-node-label${memory ? '' : ' text-gray'}`}>{memory || props.memory || '256m'}</span>
         <Icon icon="star" />
         {' '}
         <span className="bp4-tree-node-secondary-label">{score || 0}</span>
@@ -106,7 +107,7 @@ export function GlobalSettings() {
     setOpen(false);
   }
   return (<>
-    <Dialog title="Set limits" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
+    <Dialog title={i18n('Set time and memory limits')} icon="cog" isOpen={open} onClose={() => setOpen(false)}>
       <DialogBody>
         <ControlGroup fill={true} vertical={false}>
           <InputGroup
@@ -129,10 +130,10 @@ export function GlobalSettings() {
       <div className="bp4-tree-node-content">
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${!time ? ' text-gray' : ''}`}>{time || '1s'}</span>
+        <span className={`bp4-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
         <Icon icon="comparison" />
         {' '}
-        <span className={`bp4-tree-node-secondary-label${!memory ? ' text-gray' : ''}`}>{memory || '256m'}</span>
+        <span className={`bp4-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256m'}</span>
       </div>
     </li>
   </>);

@@ -4,6 +4,7 @@ import {
 import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useStore } from 'react-redux';
+import { i18n } from 'vj/utils';
 import FileSelectAutoComplete from '../../autocomplete/components/FileSelectAutoComplete';
 import { RootState } from '../reducer';
 
@@ -72,7 +73,7 @@ export function AddTestcase() {
     >
       <div className="bp4-tree-node-content bp4-tree-node-content-0">
         <Icon icon="clean" />&nbsp;
-        <span className="bp4-tree-node-label">Auto detect</span>
+        <span className="bp4-tree-node-label">{i18n('Auto detect')}</span>
       </div>
     </li>
     <li
@@ -85,7 +86,7 @@ export function AddTestcase() {
     >
       <div className="bp4-tree-node-content bp4-tree-node-content-0">
         <Icon icon="clean" />&nbsp;
-        <span className="bp4-tree-node-label">Add testcase</span>
+        <span className="bp4-tree-node-label">{i18n('Add testcase')}</span>
       </div>
     </li>
     <Dialog title="Add testcase" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
@@ -98,7 +99,7 @@ export function AddTestcase() {
               label="Input"
               width="100%"
               onChange={(e) => setInput(e)}
-              placeholder="Input"
+              placeholder={i18n('Input')}
               value={input || ''}
             />
           </div>
@@ -109,20 +110,21 @@ export function AddTestcase() {
               label="Output"
               width="100%"
               onChange={(e) => setOutput(e)}
-              placeholder="Output"
+              placeholder={i18n('Output')}
               value={input || ''}
             />
           </div>
         </div>
       </DialogBody>
-      <DialogFooter actions={
-        <Button
+      <DialogFooter
+        actions={<Button
           className={`primary rounded button${valid ? '' : ' disabled'}`}
           onClick={onConfirm}
           disabled={!valid}
           intent="primary"
           text="Save"
-        />} />
+        />}
+      />
     </Dialog>
   </>);
 }

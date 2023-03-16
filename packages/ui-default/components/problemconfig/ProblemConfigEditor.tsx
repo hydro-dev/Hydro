@@ -162,8 +162,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor e
           width: '100%',
         }}
         className="ConfigMonacoEditor"
-      >
-      </div>
+      />
     );
   }
 });

@@ -4,6 +4,7 @@ import { TestCaseConfig } from 'hydrooj';
 import { omit } from 'lodash';
 import React from 'react';
 import { useDrag } from 'react-dnd';
+import { i18n } from 'vj/utils';
 
 interface TestcaseNodeProps {
   c: TestCaseConfig;
@@ -28,12 +29,12 @@ export function TestcaseNode(props: TestcaseNodeProps) {
       data-selected={selected}
       content={
         <Menu>
-          <MenuItem icon="drawer-left" text="Move to subtask" >
+          <MenuItem icon="drawer-left" text={i18n('Move to subtask')} >
             {subtaskIds.filter((i) => i !== subtaskId).map((i) => (
-              <MenuItem key={i} text={`Subtask ${i}`} />
+              <MenuItem key={i} text={i18n('Subtask {0}', i)} />
             ))}
             {subtaskIds.length <= 1 && (
-              <MenuItem icon="disable" disabled text="No target available" />
+              <MenuItem icon="disable" disabled text={i18n('No target available')} />
             )}
           </MenuItem>
         </Menu>

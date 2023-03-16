@@ -72,8 +72,6 @@ export default function reducer(state = {
         }
       } else if (action.key === 'add') {
         subtasks.push({
-          time: state.time || '1s',
-          memory: state.memory || '256m',
           cases: [],
           score: 0,
           id: Object.keys(subtasks).map((i) => subtasks[i].id).reduce((a, b) => Math.max(+a, +b), 0) + 1,

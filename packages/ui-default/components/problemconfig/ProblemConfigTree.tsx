@@ -7,6 +7,7 @@ import React from 'react';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDispatch, useSelector, useStore } from 'react-redux';
+import { i18n } from 'vj/utils';
 import { RootState } from './reducer';
 import { AddTestcase } from './tree/AddTestcase';
 import { SelectionManager } from './tree/SelectionManager';
@@ -63,13 +64,13 @@ export function SubtaskNode(props: { subtaskId: number }) {
     <li className="bp4-tree-node bp4-tree-node-expanded">
       {subtaskId !== -1 && <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
         <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
-        <span className="bp4-tree-node-label">Subtask {subtaskId}</span>
+        <span className="bp4-tree-node-label">{i18n('Subtask {0}', subtaskId)}</span>
         <span className="bp4-tree-node-secondary-label" onClick={(ev) => ev.stopPropagation()}>
           <Popover2
             content={<div style={{ padding: 20 }}>
-              <b>Are you sure you want to delete this subtask?</b>
+              <b>{i18n('Are you sure you want to delete this subtask?')}</b>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
-                <Button intent="danger" onClick={deleteSubtask}>Delete</Button>
+                <Button intent="danger" onClick={deleteSubtask}>{i18n('Delete')}</Button>
               </div>
             </div>}
           >
@@ -94,8 +95,8 @@ export function SubtaskNode(props: { subtaskId: number }) {
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
               <span className="bp4-tree-node-label">{subtaskId === -1
-                ? 'No testcase here'
-                : 'Drag and drop testcases here:'}</span>
+                ? i18n('No testcase here')
+                : i18n('Drag and drop testcases here:')}</span>
             </div>
           </li>
         )}
@@ -119,13 +120,10 @@ export function SubtaskConfigTree() {
   return (
     <div className="bp4-tree">
       <ul className="bp4-tree-node-list bp4-tree-root">
-        <li
-          className="bp4-tree-node"
-          onClick={autoConfigure}
-        >
+        <li className="bp4-tree-node" onClick={autoConfigure}>
           <div className="bp4-tree-node-content bp4-tree-node-content-0">
             <Icon icon="clean" />&nbsp;
-            <span className="bp4-tree-node-label">Auto Configure</span>
+            <span className="bp4-tree-node-label">{i18n('Auto configure')}</span>
           </div>
         </li>
         <GlobalSettings />
@@ -136,7 +134,7 @@ export function SubtaskConfigTree() {
         >
           <div className="bp4-tree-node-content bp4-tree-node-content-0">
             <Icon icon="folder-new" />&nbsp;
-            <span className="bp4-tree-node-label">Add New Subtask</span>
+            <span className="bp4-tree-node-label">{i18n('Add new subtask')}</span>
           </div>
         </li>
       </ul>
