@@ -215,7 +215,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.back();
     }
 
-    @param('type', Types.Range(['did', 'drid']))
+    @param('nodeType', Types.Range(['did', 'drid']))
     @param('id', Types.ObjectId)
     @param('emoji', Types.Emoji)
     @param('reverse', Types.Boolean)
