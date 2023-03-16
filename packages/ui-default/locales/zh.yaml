@@ -258,6 +258,7 @@ Delete problem solutions: 删除题解
 Delete Selected Roles: 删除所选角色
 delete: 删除
 Delete: 删除
+Dependencies: 依赖
 Description: 说明
 Destination Domain: 目标域
 Development: 开发
@@ -751,6 +752,7 @@ Score: 分数
 Scoreboard (Hidden): 成绩表 (隐藏)
 Scoreboard locked at {0}: 比赛已于 {0} 封榜。
 Scoreboard: 成绩表
+Scoring method: 评分方式
 Scripts: 脚本
 Search: 搜索
 Secret (visible to admins): 保密（对管理员可见）

@@ -4,7 +4,8 @@ import {
   Icon, InputGroup, Tag,
 } from '@blueprintjs/core';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
-import React from 'react';
+import { isEqual } from 'lodash';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import { RootState } from '../reducer';
@@ -17,29 +18,43 @@ interface SubtaskSettingsProps {
 
 export function SubtaskSettings(props: SubtaskSettingsProps) {
   const [open, setOpen] = React.useState(false);
+  const [depsOpen, setDepsOpen] = React.useState(false);
   const score = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).score);
   const time = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).time);
   const memory = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).memory);
+  const deps = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).if || [], isEqual);
+  const type = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).type || 'min');
 
   const [ctime, setTime] = React.useState(time);
   const [cmemory, setMemory] = React.useState(memory);
   const [cscore, setScore] = React.useState(score);
-  const dispatcher = (func, key) => (ev: React.ChangeEvent<HTMLInputElement | HTMLSelectElement> | number) => {
-    let value = typeof ev !== 'object' ? ev : ev.currentTarget?.value;
-    if (key === 'score') value = +value;
-    func(value);
-  };
+  const [cdeps, setDeps] = React.useState(deps.join(', '));
+  const [ctype, setType] = React.useState(type);
 
   const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch({
+      type: 'problemconfig/updateSubtaskConfig',
+      id: props.subtaskId,
+      payload: {
+        type: ctype,
+      },
+    });
+  }, [ctype]);
+
   function onConfirm() {
     dispatch({
       type: 'problemconfig/updateSubtaskConfig',
       id: props.subtaskId,
-      time: ctime,
-      memory: cmemory,
-      score: cscore,
+      payload: {
+        time: ctime,
+        memory: cmemory,
+        score: cscore,
+        if: cdeps.split(',').map((i) => i.trim()).filter((i) => +i).map((i) => +i),
+      },
     });
     setOpen(false);
+    setDepsOpen(false);
   }
 
   return (<>
@@ -62,10 +77,23 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
           />
           <InputGroup
             leftElement={<Icon icon="star" />}
-            onChange={dispatcher(setScore, 'score')}
+            onChange={(ev) => setScore(+ev.target.value || 0)}
             placeholder="Score"
             type="number"
             value={cscore.toString()}
+          />
+        </ControlGroup>
+      </DialogBody>
+      <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
+    </Dialog>
+    <Dialog title={i18n('Set dependencies')} icon="cog" isOpen={depsOpen} onClose={() => setDepsOpen(false)}>
+      <DialogBody>
+        <ControlGroup fill={true} vertical={false}>
+          <InputGroup
+            leftElement={<Icon icon="diagram-tree" />}
+            onChange={(ev) => setDeps(ev.currentTarget.value)}
+            placeholder={'Dependencies'}
+            value={cdeps || ''}
           />
         </ControlGroup>
       </DialogBody>
@@ -83,6 +111,27 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
         <Icon icon="star" />
         {' '}
         <span className="bp4-tree-node-secondary-label">{score || 0}</span>
+      </div>
+    </li>
+    <li className="bp4-tree-node" onClick={() => setDepsOpen(true)}>
+      <div className="bp4-tree-node-content">
+        <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
+        <Icon icon="diagram-tree" />
+        &nbsp;&nbsp;
+        <span className="bp4-tree-node-label">{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</span>
+      </div>
+    </li>
+    <li className="bp4-tree-node">
+      <div className="bp4-tree-node-content">
+        <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
+        <span className="bp4-tree-node-label">{i18n('Scoring method')}</span>
+        <span className="bp4-tree-node-secondary-label">
+          <select value={ctype} onChange={(e) => setType(e.target.value)}>
+            <option value="min">Min</option>
+            <option value="max">Max</option>
+            <option value="sum">Sum</option>
+          </select>
+        </span>
       </div>
     </li>
   </>);

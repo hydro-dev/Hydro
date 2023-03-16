@@ -131,9 +131,11 @@ export default function reducer(state = {
       const subtask = { ...state.subtasks.find((i) => i.id === action.id) };
       const subtasks = [...state.subtasks];
       subtasks.splice(state.subtasks.findIndex((i) => i.id === action.id), 1, subtask);
-      subtask.time = action.time;
-      subtask.memory = action.memory;
-      subtask.score = +action.score || 0;
+      if (action.payload.time) subtask.time = action.payload.time;
+      if (action.payload.memory) subtask.memory = action.payload.memory;
+      if (action.payload.score) subtask.score = +action.payload.score || 0;
+      if (action.payload.if) subtask.if = action.payload.if;
+      if (action.payload.type) subtask.type = action.payload.type;
       if (!subtask.time) delete subtask.time;
       if (!subtask.memory) delete subtask.memory;
       return { ...state, subtasks };

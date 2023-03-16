@@ -94,7 +94,7 @@ export function SubtaskNode(props: { subtaskId: number }) {
           <li className="bp4-tree-node">
             <div className="bp4-tree-node-content">
               <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
-              <span className="bp4-tree-node-label">{subtaskId === -1
+              <span className="bp4-tree-node-label text-gray">{subtaskId === -1
                 ? i18n('No testcase here')
                 : i18n('Drag and drop testcases here:')}</span>
             </div>
