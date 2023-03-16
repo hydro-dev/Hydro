@@ -1,6 +1,7 @@
 import {
   Card, InputGroup, Tag,
 } from '@blueprintjs/core';
+import { isEqual } from 'lodash';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
@@ -35,8 +36,8 @@ function FileIOConfig() {
 
 function ExtraFilesConfig() {
   const Files = useSelector((state: RootState) => state.testdata);
-  const userExtraFiles = useSelector((state: RootState) => state.config.user_extra_files) || [];
-  const judgeExtraFiles = useSelector((state: RootState) => state.config.judge_extra_files) || [];
+  const userExtraFiles = useSelector((state: RootState) => state.config.user_extra_files || [], isEqual);
+  const judgeExtraFiles = useSelector((state: RootState) => state.config.judge_extra_files || [], isEqual);
   const dispatch = useDispatch();
   const userRef = React.useRef<any>();
   const judgeRef = React.useRef<any>();
