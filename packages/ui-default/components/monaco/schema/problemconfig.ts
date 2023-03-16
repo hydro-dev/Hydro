@@ -1,5 +1,11 @@
 import type { JSONSchema7 } from 'json-schema';
 
+export const testlibCheckers = [
+  'acmp', 'caseicmp', 'casencmp', 'casewcmp', 'dcmp', 'fcmp', 'hcmp',
+  'icmp', 'lcmp', 'ncmp', 'nyesno', 'pointscmp', 'pointsinfo',
+  'rcmp', 'rcmp4', 'rcmp6', 'rcmp9', 'rncmp', 'uncmp', 'wcmp', 'yesno',
+];
+
 const problemConfigSchema: JSONSchema7 = {
   type: 'object',
   definitions: {
@@ -43,7 +49,12 @@ const problemConfigSchema: JSONSchema7 = {
     langs: { type: 'array', items: { type: 'string' } },
     target: { type: 'string' },
     checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj'] },
-    checker: { type: 'string', pattern: '\\.' },
+    checker: {
+      oneOf: [
+        { type: 'string', pattern: '\\.' },
+        { type: 'string', enum: testlibCheckers },
+      ],
+    },
     interactor: { type: 'string', pattern: '\\.' },
     validator: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },

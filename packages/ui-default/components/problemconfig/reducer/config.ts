@@ -28,7 +28,7 @@ export default function reducer(state = {
         for (const subtask of subtasks) {
           if (typeof subtask.id !== 'number') {
             for (let i = 1; ; i++) {
-              if (!subtasks.find((s) => s.id === s)) {
+              if (!subtasks.find((s) => s.id === i)) {
                 subtask.id = i;
                 break;
               }
