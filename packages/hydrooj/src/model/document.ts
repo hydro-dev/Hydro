@@ -44,6 +44,7 @@ export interface DocType {
 
 export interface DocStatusType {
     [TYPE_PROBLEM]: ProblemStatusDoc,
+    // FIXME: this need to be typed
     [key: number]: any
 }
 
@@ -396,6 +397,7 @@ export async function revPushStatus<T extends keyof DocStatusType>(
     if (!res.value) {
         res = await collStatus.findOneAndUpdate(
             { domainId, docType, docId, uid },
+            // @ts-ignore
             { $push: { [key]: value }, $inc: { rev: 1 } },
             { upsert: true, returnDocument: 'after' },
         );

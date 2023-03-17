@@ -79,7 +79,7 @@ export function SubtaskNode(props: { subtaskId: number }) {
         </span>
       </div>}
       <ul className="bp4-tree-node-list" ref={drop}>
-        {subtaskId !== -1 && <SubtaskSettings subtaskId={subtaskId} time={time} memory={memory} />}
+        {subtaskId !== -1 && <SubtaskSettings subtaskId={subtaskId} subtaskIds={subtaskIds} time={time} memory={memory} />}
         {expand
           ? <SelectionManager subtaskId={subtaskId} subtaskIds={subtaskIds} />
           : <TreeNode

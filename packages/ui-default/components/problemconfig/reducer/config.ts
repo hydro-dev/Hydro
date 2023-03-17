@@ -15,17 +15,18 @@ const ajv = new Ajv();
 const validate = ajv.compile(schema);
 
 export default function reducer(state = {
-  type: 'default', __loaded: false, __valid: true, __errors: [], __cases: [],
+  type: 'default', __loaded: false, __valid: true, __errors: [], __cases: [], subtasks: [],
 } as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
       try {
-        const data = yaml.load(action.payload.config) as any;
+        let data = yaml.load(action.payload.config) as any;
+        if (typeof data !== 'object') data = { subtasks: [] };
         if (!validate(data)) {
           return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
         }
         const subtasks = (data as any).subtasks;
-        for (const subtask of subtasks || []) {
+        for (const subtask of subtasks) {
           if (typeof subtask.id !== 'number') {
             for (let i = 1; ; i++) {
               if (!subtasks.find((s) => s.id === i)) {

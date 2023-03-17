@@ -34,6 +34,7 @@ export interface AutoCompleteProps<Item> {
   allowEmptyQuery?: boolean;
   freeSolo?: boolean;
   freeSoloConverter?: (value: string) => string;
+  alwaysShowList?: boolean;
 }
 
 export interface AutoCompleteHandle<Item> {
@@ -97,6 +98,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const allowEmptyQuery = props.allowEmptyQuery ?? false;
   const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
+  const alwaysShowList = props.alwaysShowList ?? false;
 
   const [focused, setFocused] = useState(false); // is focused
   const [selected, setSelected] = useState([]); // selected items
@@ -152,7 +154,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const handleInputChange = debounce((e?) => queryList(e ? e.target.value : ''), 300);
 
   const toggleItem = (item: T, key = itemKey(item), preserve = false) => {
-    const shouldKeepOpen = allowEmptyQuery && inputRef.current.value === '' && !multi;
+    const shouldKeepOpen = (multi ? alwaysShowList : allowEmptyQuery) && inputRef.current.value === '';
     if (multi) {
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {

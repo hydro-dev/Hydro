@@ -13,31 +13,47 @@ export function AddTestcase() {
   const [input, setInput] = React.useState('');
   const [output, setOutput] = React.useState('');
   const [valid, setValid] = React.useState(false);
+  const [autoInput, setAutoInput] = React.useState(true);
+  const [autoOutput, setAutoOutput] = React.useState(true);
   const testdata = useSelector((state: RootState) => state.testdata);
   const store = useStore<RootState>();
   const refInput = useRef();
   const refOutput = useRef();
 
   useEffect(() => {
-    setValid(testdata.find((i) => i.name === input) && testdata.find((i) => i.name === output));
-    if (input && !output) {
+    const inputValid = testdata.find((i) => i.name === input);
+    if (input) setAutoInput(false);
+    else setAutoInput(true);
+    setValid(inputValid);
+    if (inputValid && autoOutput) {
       const filename = input.substring(0, input.lastIndexOf('.'));
       let outputFile = '';
       if (testdata.find((i) => i.name === `${filename}.out`)) outputFile = `${filename}.out`;
       else if (testdata.find((i) => i.name === `${filename}.ans`)) outputFile = `${filename}.ans`;
-      // @ts-ignore
-      refOutput.current!.setSelectedItems([outputFile]);
-      setOutput(outputFile);
+      if (outputFile) {
+        // @ts-ignore
+        refOutput.current!.setSelectedItems([outputFile]);
+        setOutput(outputFile);
+        setAutoOutput(true);
+      }
     }
-    if (output && !input) {
+  }, [input]);
+
+  useEffect(() => {
+    const outputValid = testdata.find((i) => i.name === output);
+    if (output) setAutoOutput(false);
+    else setAutoOutput(true);
+    setValid(outputValid);
+    if (outputValid && autoInput) {
       const filename = output.substring(0, output.lastIndexOf('.'));
       if (testdata.find((i) => i.name === `${filename}.in`)) {
         // @ts-ignore
         refInput.current!.setSelectedItems([`${filename}.in`]);
         setInput(`${filename}.in`);
+        setAutoInput(true);
       }
     }
-  }, [input, output]);
+  }, [output]);
 
   function onConfirm() {
     store.dispatch({
@@ -81,6 +97,8 @@ export function AddTestcase() {
       onClick={() => {
         setInput('');
         setOutput('');
+        setAutoInput(true);
+        setAutoOutput(true);
         setOpen(true);
       }}
     >

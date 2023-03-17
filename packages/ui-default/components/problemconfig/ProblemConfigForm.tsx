@@ -85,7 +85,7 @@ function LangConfig() {
             <CustomSelectAutoComplete
               ref={ref}
               data={data}
-              placeholder={i18n('Unlimited')}
+              placeholder={!selectedKeys.length ? i18n('Unlimited') : i18n('Code language')}
               selectedKeys={selectedKeys}
               onChange={(val) => {
                 const value = val.split(',');

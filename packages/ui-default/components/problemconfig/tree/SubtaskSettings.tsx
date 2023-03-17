@@ -8,9 +8,11 @@ import { isEqual } from 'lodash';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
+import CustomSelectAutoComplete from '../../autocomplete/components/CustomSelectAutoComplete';
 import { RootState } from '../reducer';
 
 interface SubtaskSettingsProps {
+  subtaskIds: number[];
   subtaskId: number;
   time: string;
   memory: string;
@@ -19,6 +21,7 @@ interface SubtaskSettingsProps {
 export function SubtaskSettings(props: SubtaskSettingsProps) {
   const [open, setOpen] = React.useState(false);
   const [depsOpen, setDepsOpen] = React.useState(false);
+  const subtaskIds = props.subtaskIds.filter((i) => i !== props.subtaskId);
   const score = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).score);
   const time = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).time);
   const memory = useSelector((state: RootState) => state.config.subtasks.find((i) => i.id === props.subtaskId).memory);
@@ -88,14 +91,13 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
     </Dialog>
     <Dialog title={i18n('Set dependencies')} icon="cog" isOpen={depsOpen} onClose={() => setDepsOpen(false)}>
       <DialogBody>
-        <ControlGroup fill={true} vertical={false}>
-          <InputGroup
-            leftElement={<Icon icon="diagram-tree" />}
-            onChange={(ev) => setDeps(ev.currentTarget.value)}
-            placeholder={'Dependencies'}
-            value={cdeps || ''}
-          />
-        </ControlGroup>
+        <CustomSelectAutoComplete
+          data={subtaskIds.map((i) => ({ _id: i, name: `${i18n('Subtask {0}', i)}` }))}
+          setSelectItems={cdeps.split(',').map((i) => i.trim()).filter((i) => +i).map((i) => +i)}
+          onChange={(items) => setDeps(items)}
+          placeholder="dependencies"
+          multi
+        />
       </DialogBody>
       <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>

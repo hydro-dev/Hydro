@@ -46,6 +46,7 @@ CustomSelectAutoComplete.defaultProps = {
   selectedKeys: [],
   freeSolo: false,
   freeSoloConverter: (input) => input,
+  alwaysShowList: true,
 };
 
 export default CustomSelectAutoComplete;

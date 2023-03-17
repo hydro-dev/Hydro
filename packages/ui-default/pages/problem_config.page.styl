@@ -29,6 +29,9 @@
       .button
         margin: 0
 
+  input::placeholder
+    color: rgba(95,107,124,.6)!important
+
   .bp4-input-group
     input
       appearance: none
@@ -46,6 +49,12 @@
       transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1)
       box-shadow: none
 
+  .bp4-tag.bp4-minimal
+    background: transparent
+  
+  .bp4-input-action
+      pointer-events: none
+
   .problem-config-form
     font-family: var(--code-font-family)
   
@@ -54,25 +63,6 @@
     input[type="number"]
       -moz-appearance: textfield
 
-    .bp4-tag.bp4-minimal
-      background: transparent
-    .bp4-input-action
-      pointer-events: none
-
-    .data-table
-      tr
-        border-top: 0
-        border-bottom: 0
-        height: auto
-      td
-        padding: 0
-      .thead td
-        text-align: center
-      td input, td div
-        background: transparent
-
   .hover-row.status-bar
     display: none
   
-  input::placeholder
-    color: rgba(95,107,124,.6)!important

@@ -5,6 +5,7 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type { Context } from './context';
+import type { DocStatusType } from './model/document';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
@@ -649,7 +650,9 @@ declare module './service/db' {
         'domain.user': any;
         'record': RecordDoc;
         'document': any;
-        'document.status': StatusDocBase;
+        'document.status': StatusDocBase & {
+            [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
+        }[keyof DocStatusType];
         'discussion.history': DiscussionHistoryDoc;
         'user': Udoc;
         'user.preference': UserPreferenceDoc;
