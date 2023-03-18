@@ -23,7 +23,7 @@ function FileIOConfig() {
               rightElement={<Tag minimal>.in/.out</Tag>}
               value={filename || ''}
               onChange={(ev) => {
-                dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'filename', value: ev.currentTarget.value });
+                dispatch({ type: 'problemconfig/updateFileIO', filename: ev.currentTarget.value });
               }}
               fill
             />

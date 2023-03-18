@@ -34,7 +34,6 @@ export interface AutoCompleteProps<Item> {
   allowEmptyQuery?: boolean;
   freeSolo?: boolean;
   freeSoloConverter?: (value: string) => string;
-  alwaysShowList?: boolean;
 }
 
 export interface AutoCompleteHandle<Item> {
@@ -83,22 +82,17 @@ function DraggableSelection({
 
 // eslint-disable-next-line prefer-arrow-callback
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
-  const width = props.width ?? '100%';
-  const height = props.height ?? 'auto';
-  const disabled = props.disabled ?? false;
-  const disabledHint = props.disabledHint ?? '';
-  const listStyle = props.listStyle ?? {};
+  const {
+    multi = false, width = '100%', height = 'auto',
+    freeSolo = false, allowEmptyQuery = false, listStyle = {},
+    disabled = false, disabledHint = '', draggable = multi,
+  } = props;
   const queryItems = props.queryItems ?? (() => []);
   const renderItem = props.renderItem ?? ((item) => item);
   const itemText = props.itemText ?? ((item) => item.toString());
   const itemKey = props.itemKey ?? itemText;
   const onChange = props.onChange ?? (() => { });
-  const multi = props.multi ?? false;
-  const draggable = props.draggable ?? props.multi;
-  const allowEmptyQuery = props.allowEmptyQuery ?? false;
-  const freeSolo = props.freeSolo ?? false;
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
-  const alwaysShowList = props.alwaysShowList ?? false;
 
   const [focused, setFocused] = useState(false); // is focused
   const [selected, setSelected] = useState([]); // selected items
@@ -142,6 +136,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   useEffect(() => {
     if (first) first = false;
     else dispatchChange();
+    if (!multi) return; // Load pre-selected items only in multi mode
     const ids = [];
     for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
     if (!ids.length) return;
@@ -154,7 +149,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const handleInputChange = debounce((e?) => queryList(e ? e.target.value : ''), 300);
 
   const toggleItem = (item: T, key = itemKey(item), preserve = false) => {
-    const shouldKeepOpen = (multi ? alwaysShowList : allowEmptyQuery) && inputRef.current.value === '';
+    const shouldKeepOpen = multi && allowEmptyQuery && inputRef.current.value === '';
     if (multi) {
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {

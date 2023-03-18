@@ -135,7 +135,7 @@ export function SubtaskConfigTree() {
         {ids.map((id) => <SubtaskNode key={id} subtaskId={id} />)}
         <li
           className="bp4-tree-node"
-          onClick={() => dispatch({ type: 'CONFIG_SUBTASK_UPDATE', id: 0, key: 'add' })}
+          onClick={() => dispatch({ type: 'problemconfig/addSubtask' })}
         >
           <div className="bp4-tree-node-content bp4-tree-node-content-0">
             <Icon icon="folder-new" />&nbsp;

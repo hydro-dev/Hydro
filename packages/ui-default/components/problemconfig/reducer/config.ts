@@ -15,15 +15,19 @@ const ajv = new Ajv();
 const validate = ajv.compile(schema);
 
 export default function reducer(state = {
-  type: 'default', __loaded: false, __valid: true, __errors: [], __cases: [], subtasks: [],
+  type: 'default', __loaded: false, __valid: false, __errors: [], __cases: [], subtasks: [],
 } as State, action: any = {}): State {
   switch (action.type) {
     case 'CONFIG_LOAD_FULFILLED': {
+      const c = { ...state, __loaded: true };
       try {
         let data = yaml.load(action.payload.config) as any;
         if (typeof data !== 'object') data = { subtasks: [] };
+        else data.subtasks ||= [];
         if (!validate(data)) {
-          return { ...state, __valid: false, __errors: validate.errors.map((i) => `${i.instancePath}: ${i.message}`) };
+          Object.assign(c, data);
+          c.__errors = validate.errors.map((i) => `${i.instancePath}: ${i.message}`);
+          return c;
         }
         const subtasks = (data as any).subtasks;
         for (const subtask of subtasks) {
@@ -36,12 +40,12 @@ export default function reducer(state = {
             }
           }
         }
-        return {
-          ...state, ...data as any, __valid: true, __errors: [], __loaded: true,
-        };
+        Object.assign(c, data);
+        c.__valid = true;
       } catch (e) {
-        return { ...state, __valid: false, __errors: [e.message] };
+        c.__errors.push(e.message);
       }
+      return c;
     }
     case 'CONFIG_FORM_UPDATE': {
       const next = { ...state, [action.key]: action.value };
@@ -94,38 +98,25 @@ export default function reducer(state = {
       }
       return next;
     }
-    case 'CONFIG_SUBTASK_UPDATE': {
-      const subtasks = cloneDeep(state.subtasks);
-      const subtask = state.subtasks.find((i) => i.id === action.id);
-      if (action.value !== '' && ['score', 'id'].includes(action.key)) action.value = +action.value;
-      if (action.key === 'if' && action.value.join('') !== '') action.value = action.value.map((i) => +i);
-      if (action.key.split('-')[0] === 'cases') {
-        if (action.key === 'cases-add') subtask.cases.push(action.value);
-        else if (action.key === 'cases-edit') {
-          if (action.value === '' && !['input', 'output'].includes(action.casesKey)) delete subtask.cases[action.casesId][action.casesKey];
-          else subtask.cases[action.casesId][action.casesKey] = action.value;
-        } else if (action.key === 'cases-delete') {
-          subtask.cases = subtask.cases.filter((k, v) => v !== action.value);
-        }
-      } else if (action.key === 'add') {
-        subtasks.push({
-          cases: [],
-          score: 0,
-          id: Object.keys(subtasks).map((i) => subtasks[i].id).reduce((a, b) => Math.max(+a, +b), 0) + 1,
-        });
-        return { ...state, subtasks };
-      } else if (action.key === 'delete') return { ...state, subtasks: subtasks.filter((k, v) => v !== action.id) };
-      else {
-        if (action.value === '' || (action.key === 'if' && action.value.join('') === '')) delete subtask[action.key];
-        else subtask[action.key] = action.value;
-      }
-      return { ...state, subtasks };
+    case 'problemconfig/updateFileIO': {
+      const n = { ...state, filename: action.filename };
+      if (!n.filename) delete n.filename;
+      return n;
     }
     case 'problemconfig/updateGlobalConfig': {
       const n = { ...state, time: action.time, memory: action.memory };
       if (!n.time) delete n.time;
       if (!n.memory) delete n.memory;
       return n;
+    }
+    case 'problemconfig/addSubtask': {
+      const subtasks = cloneDeep(state.subtasks);
+      subtasks.push({
+        cases: [],
+        score: 0,
+        id: Object.keys(subtasks).map((i) => subtasks[i].id).reduce((a, b) => Math.max(+a, +b), 0) + 1,
+      });
+      return { ...state, subtasks };
     }
     case 'problemconfig/updateSubtaskConfig': {
       if (!state.subtasks.find((i) => i.id === action.id)) return state;
