@@ -201,6 +201,8 @@ export interface ProblemConfigFile {
     subtasks?: SubtaskConfig[];
     langs?: string[];
     validator?: string;
+    time_limit_rate?: Record<string, number>;
+    memory_limit_rate?: Record<string, number>;
 }
 
 export interface ProblemConfig {

@@ -4,6 +4,7 @@ import {
     changeErrorType, fs, normalizeSubtasks, readSubtasksFromFiles, yaml,
 } from '@hydrooj/utils';
 import readYamlCases, { convertIniConfig } from '@hydrooj/utils/lib/cases';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { ProblemConfigFile } from 'hydrooj';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
@@ -40,6 +41,8 @@ interface Args {
     next: NextFunction;
     key: string;
     isSelfSubmission: boolean;
+    lang: string;
+    langConfig: LangConfig;
 }
 
 export default async function readCases(folder: string, cfg: ProblemConfigFile = {}, args: Args): Promise<ParsedConfig> {
@@ -54,6 +57,8 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
         user_extra_files: [],
         ...cfg,
     };
+    const timeRate = +(config.time_limit_rate?.[args.lang] || args.langConfig.time_limit_rate) || 1;
+    const memoryRate = +(config.memory_limit_rate?.[args.lang] || args.langConfig.memory_limit_rate) || 1;
     try {
         if (fs.existsSync(yamlConfig)) {
             Object.assign(config, yaml.load(await fs.readFile(yamlConfig, 'utf-8')));
@@ -78,7 +83,7 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
             throw new SystemError('Cannot parse testdata.', [e.message, ...(e.params || [])]);
         }
     }
-    result.subtasks = normalizeSubtasks(result.subtasks || [], checkFile, config.time, config.memory);
+    result.subtasks = normalizeSubtasks(result.subtasks || [], checkFile, config.time, config.memory, false, timeRate, memoryRate);
     if (result.key && args.key !== result.key) throw new FormatError('Incorrect secret key');
     if (!result.key) isValidConfig(result);
     return result;

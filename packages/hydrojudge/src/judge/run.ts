@@ -52,14 +52,14 @@ export const judge = async (ctx: Context) => {
             stdin: { content: ctx.input },
             copyIn: ctx.execute.copyIn,
             // Allow 2x limits for better debugging
-            time: parseTimeMS(ctx.config.time || '1s') * ctx.execute.time * 2,
+            time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
         },
     );
     const { code, time, memory } = res;
     let { status } = res;
     const message: string[] = [];
-    if (time > parseTimeMS(ctx.config.time || '1s') * ctx.execute.time) {
+    if (time > parseTimeMS(ctx.config.time || '1s')) {
         status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
     } else if (memory > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
         status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
