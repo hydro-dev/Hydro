@@ -76,6 +76,8 @@ const installTarget = installAsJudge
     ? '@hydrooj/hydrojudge'
     : 'hydrooj @hydrooj/hydrojudge @hydrooj/ui-default @hydrooj/fps-importer';
 const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer'];
+const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
+const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -182,6 +184,12 @@ env: |
     HOME=/w
 `;
 
+const nixConfBase = `
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydro.ac:EytfvyReWHFwhY9MCGimCIn46KQNfmv9y8E2NqlNfxQ=
+connect-timeout = 10
+experimental-features = nix-command flakes
+`;
+
 const isPortFree = async (port: number) => {
     const server = net.createServer();
     const res = await new Promise((resolve) => {
@@ -229,7 +237,7 @@ const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
 const wtsize = Math.floor((mem / 6) * 10) / 10;
 
 const printInfo = [
-    'echo "扫码加入QQ群：',
+    'echo "扫码加入QQ群："',
     'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
     () => {
         password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
@@ -255,12 +263,16 @@ const Steps = () => [
                 }
             },
             () => {
+                if (substituters.length) {
+                    writeFileSync('/etc/nix/nix.conf', `substituters = ${substituters.join(' ')}
+${nixConfBase}`);
+                } else if (!CN) {
+                    writeFileSync('/etc/nix/nix.conf', `substituters = https://cache.nixos.org/ https://nix.hydro.ac/cache
+${nixConfBase}`);
+                }
                 if (CN) return;
                 // rollback mirrors
-                writeFileSync('/etc/nix/nix.conf', `substituters = https://cache.nixos.org/ https://nix.hydro.ac/cache
-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydro.ac:EytfvyReWHFwhY9MCGimCIn46KQNfmv9y8E2NqlNfxQ=
-connect-timeout = 10`);
-                exec('nix-channel --del nixpkgs', { stdio: 'inherit' });
+                exec('nix-channel --remove nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --add nixpkgs https://nixos.org/channels/nixpkgs-unstable', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
