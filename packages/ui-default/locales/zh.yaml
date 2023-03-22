@@ -490,7 +490,7 @@ Live...: 正在进行…
 Loading editor...: 正在加载编辑器...
 Loading file...: 正在加载文件内容...
 Location: 位置
-Lock scoreboard on last N minutes: 在赛事最后N分钟时锁定成绩表
+Freeze scoreboard with N minutes remaining: 在赛事剩余N分钟时封榜
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -630,6 +630,7 @@ Please follow the instructions on your device to complete the verification.: 请
 Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
+Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
 Preference Settings: 偏好设置
 Preparing Upload...: 准备上传...
 Pretest Data: 自测数据
@@ -750,7 +751,6 @@ Saving file...: 正在保存文件...
 score canceled: 成绩取消
 Score: 分数
 Scoreboard (Hidden): 成绩表 (隐藏)
-Scoreboard locked at {0}: 比赛已于 {0} 封榜。
 Scoreboard: 成绩表
 Scoring method: 评分方式
 Scripts: 脚本
@@ -850,6 +850,7 @@ The invitation code to enter to successfully join the domain. You can only use l
 The invitation code you provided is invalid.: 您提供的邀请码无效。
 The link will be expired at {0}: 链接将于 {0} 过期
 The role to assign when user joining the domain.: 用户加入此域时分配的角色。
+The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the last {0} minutes of the contest are still shown as pending.: 比赛已于 {1} 在剩余 {0} 分钟时封榜 - 比赛最后 {0} 分钟的提交将显示为待定。
 The uploaded file is too long.: 上传的文件太长。
 The user is already a member of the domain.: 该用户已是域的成员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)

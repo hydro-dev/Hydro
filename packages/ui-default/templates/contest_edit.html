@@ -165,7 +165,7 @@
               name:'lock',
               placeholder:_('(leave blank if none)'),
               value:(((tdoc.endAt - tdoc.lockAt)/60000)|int) if tdoc.lockAt else '',
-              help_text:_('Lock scoreboard on last N minutes'),
+              help_text:_('Freeze scoreboard with N minutes remaining'),
               disabled:true,
               row:false
             }) }}

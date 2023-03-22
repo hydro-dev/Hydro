@@ -510,6 +510,11 @@ export interface ContestStat extends Record<string, any> {
     unrank?: boolean,
 }
 
+export interface ScoreboardConfig {
+    isExport: boolean;
+    lockAt?: Date;
+}
+
 export interface ContestRule<T = any> {
     _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
@@ -522,16 +527,16 @@ export interface ContestRule<T = any> {
     showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
     ranked: (tdoc: Tdoc<30>, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
