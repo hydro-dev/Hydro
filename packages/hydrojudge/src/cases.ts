@@ -10,6 +10,7 @@ import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { NextFunction, ParsedConfig } from './interface';
 import { ensureFile, parseMemoryMB } from './utils';
+import { logger } from 'hydrooj/src/logger';
 
 function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
@@ -57,8 +58,6 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
         user_extra_files: [],
         ...cfg,
     };
-    const timeRate = +(config.time_limit_rate?.[args.lang] || args.langConfig.time_limit_rate) || 1;
-    const memoryRate = +(config.memory_limit_rate?.[args.lang] || args.langConfig.memory_limit_rate) || 1;
     try {
         if (fs.existsSync(yamlConfig)) {
             Object.assign(config, yaml.load(await fs.readFile(yamlConfig, 'utf-8')));
@@ -70,6 +69,8 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
+    const timeRate = +(config.time_limit_rate?.[args.lang] || args.langConfig.time_limit_rate) || 1;
+    const memoryRate = +(config.memory_limit_rate?.[args.lang] || args.langConfig.memory_limit_rate) || 1;
     const checkFile = ensureFile(folder);
     const result = await readYamlCases(config, checkFile)
         .catch((e) => { throw changeErrorType(e, FormatError); });
