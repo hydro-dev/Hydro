@@ -10,7 +10,6 @@ import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { NextFunction, ParsedConfig } from './interface';
 import { ensureFile, parseMemoryMB } from './utils';
-import { logger } from 'hydrooj/src/logger';
 
 function isValidConfig(config) {
     if (config.count > (getConfig('testcases_max') || 100)) {
