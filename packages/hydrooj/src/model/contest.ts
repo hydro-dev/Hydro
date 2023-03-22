@@ -57,7 +57,6 @@ const acm = buildContestRule({
     stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
         const npending = Counter<number>();
-        const effective: Record<number, AcmJournal> = {};
         const display: Record<number, AcmJournal> = {};
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
@@ -65,13 +64,12 @@ const acm = buildContestRule({
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal) {
-            if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
-            display[j.pid] = j;
+            if (!this.submitAfterAccept && display[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             if (lockAt && j.rid.getTimestamp() > lockAt) {
                 npending[j.pid]++;
                 continue;
             }
-            effective[j.pid] = j;
+            display[j.pid] = j;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
             }
@@ -233,15 +231,16 @@ const oi = buildContestRule({
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
             if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) {
                 detail[j.pid] = j;
+                display[j.pid] ||= {};
                 if (lockAt && j.rid.getTimestamp() > lockAt) {
                     npending[j.pid]++;
+                    display[j.pid].npending = npending[j.pid];
                     continue;
                 }
                 display[j.pid] = j;
-                display[j.pid].npending = npending[j.pid];
             }
         }
-        for (const i in display) score += display[i].score;
+        for (const i in display) score += display[i].score || 0;
         return { score, detail, display };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
@@ -314,7 +313,8 @@ const oi = buildContestRule({
                     }],
                 } : {
                     type: 'record',
-                    value: `${tsddict[pid]?.score ?? '-'} <span style="color:orange">+${tsddict[pid]?.npending || 0}</span>`,
+                    value: `${tsddict[pid]?.score ?? '-'}${tsddict[pid]?.npending
+                        ? `<span style="color:orange">+${tsddict[pid]?.npending}</span>` : ''}`,
                     raw: tsddict[pid]?.rid || null,
                 };
             if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]) {
