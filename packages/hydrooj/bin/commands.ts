@@ -164,7 +164,10 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
                 throw new Error('Cannot fetch package info.');
             }
         }
-        // TODO: install from npm and check for update
+        if (src.startsWith('@hydrooj/')) {
+            src = child.execSync(`npm info ${src} dist.tarball`, { cwd: os.tmpdir() }).toString().trim();
+            if (!src.startsWith('http')) throw new Error('Cannot fetch package info.');
+        }
         if (src.startsWith('http')) {
             const url = new URL(src);
             const filename = url.pathname.split('/').pop()!;
