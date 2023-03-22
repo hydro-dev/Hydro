@@ -446,7 +446,7 @@ ${nixConfBase}`);
                     domainId: 'system',
                 };
                 console.log(config);
-                exec(`hydrooj cli script migrateHustoj '${JSON.stringify(config)}'`);
+                exec(`hydrooj cli script migrateHustoj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
                 if (!getConfig('OJ_REGISTER')) exec('hydrooj cli user setPriv 0 0');
             },
             'pm2 restart hydrooj',
