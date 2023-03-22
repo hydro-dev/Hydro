@@ -242,7 +242,8 @@ function rollbackResolveField() {
 }
 
 const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
-const wtsize = Math.floor((mem / 6) * 10) / 10;
+// TODO: refuse to install if mem < 1.5
+const wtsize = Math.max(0.25, Math.floor((mem / 6) * 100) / 100);
 
 const printInfo = [
     'echo "扫码加入QQ群："',
