@@ -343,6 +343,7 @@ export interface NormalizedSubtask extends Required<ParsedSubtask> {
 export function normalizeSubtasks(
     subtasks: ParsedSubtask[], checkFile: (name: string, errMsg: string) => string,
     time: number | string = '1000ms', memory: number | string = '256m', ignoreParseError = false,
+    timeRate = 1, memoryRate = 1,
 ): NormalizedSubtask[] {
     subtasks.sort((a, b) => (a.id - b.id));
     const subtaskScore = getScore(
@@ -362,14 +363,14 @@ export function normalizeSubtasks(
             if: [],
             ...s,
             score,
-            time: parseTimeMS(s.time || time, !ignoreParseError),
-            memory: parseMemoryMB(s.memory || memory, !ignoreParseError),
+            time: parseTimeMS(s.time || time, !ignoreParseError) * timeRate,
+            memory: parseMemoryMB(s.memory || memory, !ignoreParseError) * memoryRate,
             cases: s.cases.map((c, index) => ({
                 id: index + 1,
                 ...c,
                 score: c.score || (s.type === 'sum' ? caseScore.next().value as number : score),
-                time: parseTimeMS(c.time || s.time || time, !ignoreParseError),
-                memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError),
+                time: parseTimeMS(c.time || s.time || time, !ignoreParseError) * timeRate,
+                memory: parseMemoryMB(c.memory || s.memory || memory, !ignoreParseError) * memoryRate,
                 input: c.input ? checkFile(c.input, 'Cannot find input file {0}.') : '/dev/null',
                 output: c.output ? checkFile(c.output, 'Cannot find output file {0}.') : '/dev/null',
             })) as NormalizedCase[],

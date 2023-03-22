@@ -40,6 +40,14 @@ const problemConfigSchema: JSONSchema7 = {
     time: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([mu]?)s?$' },
     memory: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([kKmMgG])[bB]?$' },
     score: { type: 'integer', maximum: 100, minimum: 1 },
+    rateConfig: {
+      type: 'object',
+      patternProperties: {
+        '^.+$': {
+          type: 'number',
+        },
+      },
+    },
   },
   properties: {
     redirect: { type: 'string', pattern: '[0-9a-zA-Z_-]+\\/[0-9]+' },
@@ -89,6 +97,8 @@ const problemConfigSchema: JSONSchema7 = {
       },
       additionalProperties: false,
     },
+    time_limit_rate: { $ref: '#/definitions/rateConfig' },
+    memory_limit_rate: { $ref: '#/definitions/rateConfig' },
   },
   additionalProperties: false,
 };

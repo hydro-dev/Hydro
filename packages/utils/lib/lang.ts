@@ -8,6 +8,7 @@ export interface LangConfig {
     highlight: string;
     monaco: string;
     time_limit_rate: number;
+    memory_limit_rate: number;
     domain: string[];
     display: string;
     target?: string;
@@ -38,6 +39,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.highlight ||= key;
         entry.monaco ||= entry.highlight;
         entry.time_limit_rate ||= 1;
+        entry.memory_limit_rate ||= 1;
         entry.code_file ||= `foo.${key}`;
         entry.execute ||= '/w/foo';
         entry.key = key;

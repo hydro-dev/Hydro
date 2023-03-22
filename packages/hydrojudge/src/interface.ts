@@ -6,7 +6,6 @@ export interface Execute {
     execute: string;
     clean: () => Promise<any>;
     copyIn: Record<string, CopyInFile>;
-    time?: number;
 }
 
 export type NextFunction = (body: Partial<JudgeResultBody>) => Promise<void> | void;

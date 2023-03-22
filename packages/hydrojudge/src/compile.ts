@@ -14,7 +14,6 @@ export default async function compile(
 ): Promise<Execute> {
     const target = lang.target || 'foo';
     const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
-    const time = lang.time_limit_rate || 1;
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
@@ -33,14 +32,12 @@ export default async function compile(
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
             clean: () => del(fileIds[target]),
-            time,
         };
     }
     return {
         execute,
         copyIn: { ...copyIn, [lang.code_file]: code },
         clean: () => Promise.resolve(null),
-        time,
     };
 }
 

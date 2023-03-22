@@ -17,13 +17,13 @@ function judgeCase(c: NormalizedCase) {
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
-                time: c.time * ctx.executeUser.time,
+                time: c.time,
                 memory: c.memory,
             },
             {
                 execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
                 copyIn: ctx.executeInteractor.copyIn,
-                time: c.time * 2 * ctx.executeInteractor.time,
+                time: c.time * 2,
                 memory: c.memory * 2,
                 copyOut: ['/w/tout?'],
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
@@ -33,7 +33,7 @@ function judgeCase(c: NormalizedCase) {
         let status: number;
         let score = 0;
         let message: any = '';
-        if (time > c.time * ctx.executeUser.time) {
+        if (time > c.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > c.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;

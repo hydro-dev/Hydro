@@ -20,7 +20,7 @@ function judgeCase(c: NormalizedCase) {
                 stdin: { src: c.input },
                 copyIn: ctx.execute.copyIn,
                 filename: ctx.config.filename,
-                time: c.time * ctx.execute.time,
+                time: c.time,
                 memory: c.memory,
                 cacheStdoutAndStderr: true,
             },
@@ -32,7 +32,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
-            if (time > c.time * ctx.execute.time) {
+            if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
             } else if (memory > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
