@@ -280,7 +280,6 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             config.lockAt = this.tdoc.lockAt;
         }
         const [, rows, udict, pdict] = await contest.getScoreboard.call(this, domainId, tid, config);
-        this.response.template = 'contest_scoreboard.html';
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
@@ -288,6 +287,8 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         this.response.body = {
             tdoc: this.tdoc, rows, udict, pdict, page_name,
         };
+        this.response.pjax = 'partials/scoreboard.html';
+        this.response.template = 'contest_scoreboard.html';
     }
 
     async exportGhost(domainId: string, tid: ObjectId) {

@@ -1,3 +1,11 @@
+{% import "components/user.html" as user with context %}
+{% macro renderRecord(cell, canView) %}
+  <a href="{{ url('record_detail', rid=cell.raw) if canView else '' }}"{% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %}>
+    {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
+    <span style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
+  </a>
+{% endmacro %}
+
 <div data-fragment-id="scoreboard">
   {% if model.contest.isLocked(tdoc) %}
     <div class="section__body no-padding">

@@ -40,10 +40,10 @@ const page = new NamedPage('contest_scoreboard', () => {
   const endAt = new Date(UiContext.tdoc.endAt).getTime();
   function updateScoreboard() {
     const now = Date.now();
-    if (beginAt <= now && now <= endAt) pjax(UiContext.scoreboardUrl || '', { push: false });
+    if (beginAt <= now && now <= endAt) pjax.request(UiContext.scoreboardUrl || '', { push: false });
   }
 
-  setInterval(() => updateScoreboard, 180000);
+  setInterval(updateScoreboard, 180000);
 });
 
 export default page;
