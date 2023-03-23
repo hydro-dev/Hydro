@@ -2,8 +2,9 @@
 require('@hydrooj/utils/lib/register');
 
 const packageBasedir = require('path').resolve(__dirname, '..');
+const { homedir } = require('os');
 const { default: hook } = require('require-resolve-hook');
-const { bypass } = hook(/^(hydrooj|@hydrooj\/utils|cordis|lodash|js-yaml)($|\/)/, (id) => {
+const { bypass } = hook(/^(hydrooj|@hydrooj|cordis|lodash|js-yaml)($|\/)/, (id) => {
     if (id.startsWith('hydrooj/src')) {
         console.log('module require via %s is deprecated.', id);
         if (process.env.DEV) {
@@ -24,7 +25,11 @@ const { bypass } = hook(/^(hydrooj|@hydrooj\/utils|cordis|lodash|js-yaml)($|\/)/
             try {
                 return require.resolve(id, { paths: [`${process.cwd()}/node_modules`] });
             } catch (e) {
-                return id;
+                try {
+                    return require.resolve(id.replace(/^@hydrooj\//, './'), { paths: [`${homedir()}/.hydro/addons`] });
+                } catch (er) {
+                    return id;
+                }
             }
         }
     });

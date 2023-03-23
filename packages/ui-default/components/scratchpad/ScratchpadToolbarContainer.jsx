@@ -83,8 +83,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
     super(props);
     if (!availableLangs[this.props.editorLang]) {
       // preference not allowed
-      const key = keys.filter((i) => availableLangs[i].pretest)
-        .find((i) => availableLangs[i].pretest.split('.')[0] === this.props.editorLang.split('.')[0]);
+      const key = this.props.editorLang ? keys.filter((i) => availableLangs[i].pretest)
+        .find((i) => availableLangs[i].pretest.split('.')[0] === this.props.editorLang.split('.')[0]) : '';
       this.props.setEditorLanguage(key || keys[0]);
     }
   }
