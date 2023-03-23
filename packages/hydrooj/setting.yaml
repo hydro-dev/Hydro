@@ -92,6 +92,20 @@ langs:
       highlight: java astyle-java
       monaco: java
       display: Java
+    kt:
+      compile: echo "Invalid language selection"
+      code_file: foo.kt
+      execute: echo "Invalid language selection"
+      time_limit_rate: 2
+      highlight: kotlin
+      monaco: kotlin
+      display: Kotlin
+    kt.jvm:
+      compile: kotlinc -include-runtime -d foo.jar foo.kt
+      target: foo.jar
+      execute: /usr/bin/java -jar foo.jar
+      display: Kotlin/JVM
+      compile_time_limit: 30000
     py:
       compile: /usr/bin/python -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       code_file: foo.py
@@ -104,6 +118,10 @@ langs:
       compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       execute: /usr/bin/python3 foo
       display: Python 3
+    py.pypy3:
+      compile: /bin/bash -c "/usr/bin/pypy3 -c \"import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)\" && mv foo.py foo"
+      execute: /bin/bash -c 'mv foo foo.py && /usr/bin/pypy3 -B foo.py'
+      display: PyPy3
     php:
       execute: /usr/bin/php foo.php
       display: PHP
