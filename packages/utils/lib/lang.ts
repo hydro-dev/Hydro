@@ -18,6 +18,8 @@ export interface LangConfig {
     remote?: string;
     pretest?: string | false;
     comment?: string | [string, string];
+    compile_time_limit?: number;
+    compile_memory_limit?: number;
 }
 
 export function parseLang(config: string): Record<string, LangConfig> {

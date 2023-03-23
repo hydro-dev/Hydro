@@ -9,6 +9,6 @@ import spoj from './spoj';
 import uoj from './uoj';
 
 const vjudge: Record<string, any> = {
-    codeforces, csgoj, luogu, poj, spoj, uoj, hustoj, bzoj, xjoi, ybt,
+    codeforces, csgoj, 'luogu.legacy': luogu, poj, spoj, uoj, hustoj, bzoj, xjoi, ybt,
 };
 export default vjudge;

@@ -109,8 +109,8 @@ class AccountService {
         const res = await this.login();
         if (!res) return;
         setInterval(() => this.login(), Time.hour);
-        TaskModel.consume({ type: 'remotejudge', subType: this.account.type }, this.judge.bind(this), false);
-        const ddocs = await DomainModel.getMulti({ mount: this.account.type }).toArray();
+        TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
+        const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
         do {
             this.listUpdated = false;
             for (const listName of this.problemLists) {
@@ -173,8 +173,10 @@ export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
     const vjudge = new VJudgeService(ctx);
     await vjudge.start();
+    // ctx.on('app/started', () => {
     for (const [k, v] of Object.entries(providers)) {
         vjudge.addProvider(k, v);
     }
+    // });
     ctx.vjudge = vjudge;
 }
