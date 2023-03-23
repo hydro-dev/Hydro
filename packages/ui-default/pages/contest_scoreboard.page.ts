@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
+import { pjax } from 'vj/utils';
 
 const page = new NamedPage('contest_scoreboard', () => {
   const { tdoc } = UiContext;
@@ -34,6 +35,15 @@ const page = new NamedPage('contest_scoreboard', () => {
       $('.rank--unrank').closest('tr').hide();
     }
   });
+
+  const beginAt = new Date(UiContext.tdoc.beginAt).getTime();
+  const endAt = new Date(UiContext.tdoc.endAt).getTime();
+  function updateScoreboard() {
+    const now = Date.now();
+    if (beginAt <= now && now <= endAt) pjax.request(UiContext.scoreboardUrl || '', { push: false });
+  }
+
+  setInterval(updateScoreboard, 180000);
 });
 
 export default page;
