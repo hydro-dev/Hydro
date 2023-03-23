@@ -23,8 +23,12 @@ export default async function compile(
                 copyIn: { ...copyIn, [lang.code_file]: code },
                 copyOutCached: [target],
                 env: { HYDRO_LANG: lang.key },
+                time: lang.compile_time_limit || 10000,
+                memory: lang.compile_memory_limit || 256 * 1024 * 1024,
             },
         );
+        if (status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) next?.({ message: 'Compile timeout.' });
+        if (status === STATUS.STATUS_MEMORY_LIMIT_EXCEEDED) next?.({ message: 'Compile memory limit exceeded.' });
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
         next?.({ compilerText: compilerText(stdout, stderr) });
