@@ -42,7 +42,7 @@ interface Args {
     key: string;
     isSelfSubmission: boolean;
     lang: string;
-    langConfig: LangConfig;
+    langConfig?: LangConfig;
 }
 
 export default async function readCases(folder: string, cfg: ProblemConfigFile = {}, args: Args): Promise<ParsedConfig> {
@@ -68,8 +68,8 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
     } catch (e) {
         throw changeErrorType(e, FormatError);
     }
-    const timeRate = +(config.time_limit_rate?.[args.lang] || args.langConfig.time_limit_rate) || 1;
-    const memoryRate = +(config.memory_limit_rate?.[args.lang] || args.langConfig.memory_limit_rate) || 1;
+    const timeRate = +(config.time_limit_rate?.[args.lang] || args.langConfig?.time_limit_rate || 1) || 1;
+    const memoryRate = +(config.memory_limit_rate?.[args.lang] || args.langConfig?.memory_limit_rate || 1) || 1;
     const checkFile = ensureFile(folder);
     const result = await readYamlCases(config, checkFile)
         .catch((e) => { throw changeErrorType(e, FormatError); });

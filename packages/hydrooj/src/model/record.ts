@@ -70,6 +70,7 @@ export default class RecordModel {
         let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
         meta = { ...meta, problemOwner: 1 };
+        await task.deleteMany({ rid: { $in: rids } });
         if (rdoc.pid) {
             let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
             if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
@@ -81,8 +82,8 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            config.type = pdoc.config.type as any;
             if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
-                await task.deleteMany({ rid: { $in: rids } });
                 return await task.addMany(rids.map((rid) => ({
                     ...(pdoc.config as any),
                     priority,
@@ -94,7 +95,6 @@ export default class RecordModel {
                 } as any)));
             }
         }
-        await task.deleteMany({ rid: { $in: rids } });
         return await task.addMany(rids.map((rid) => ({
             priority,
             type: 'judge',
