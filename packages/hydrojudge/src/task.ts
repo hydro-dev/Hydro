@@ -118,7 +118,7 @@ export class JudgeTask {
                 isSelfSubmission: this.meta.problemOwner === this.request.uid,
                 key: md5(`${this.source}/${getConfig('secret')}`),
                 lang: this.lang,
-                langConfig: this.session.getLang(this.lang),
+                langConfig: this.request.config.type === 'objective' ? null : this.session.getLang(this.lang),
             },
         );
         this.stat.judge = new Date();
