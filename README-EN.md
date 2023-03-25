@@ -22,7 +22,6 @@ Feel free to create an account and then navigate to `MyAccount > MyDomains > Cre
 
 ## Contact US
 
-QQ [3402182471](https://wpa.qq.com/msgrd?v=3&uin=3402182471&site=qq&menu=yes)  
 Hydro QQ User Group: 1085853538  
 Telegram Group [@hydrodev](https://t.me/hydrodev)
 Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
