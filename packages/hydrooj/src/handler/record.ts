@@ -51,13 +51,14 @@ class RecordListHandler extends ContestDetailBaseHandler {
             this.tdoc = tdoc;
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!contest.canShowRecord.call(this, tdoc, true)) {
+                throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            }
             if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
-                if (contest.canShowRecord.call(this, tdoc, true)) {
-                    const name = tdoc.rule === 'homework'
-                        ? "You haven't claimed this homework yet."
-                        : "You haven't attended this contest yet.";
-                    notification.push({ name, args: { type: 'note' }, checker: () => true });
-                } else throw new ContestNotAttendedError(domainId, tid);
+                const name = tdoc.rule === 'homework'
+                    ? "You haven't claimed this homework yet."
+                    : "You haven't attended this contest yet.";
+                notification.push({ name, args: { type: 'note' }, checker: () => true });
             }
         }
         if (uidOrName) {
@@ -250,7 +251,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
             if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
-            if (pretest || contest.canShowScoreboard.call(this, this.tdoc, true)) this.tid = tid.toHexString();
+            if (pretest || contest.canShowScoreboard.call(this, this.tdoc, true, true)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
         if (pretest) {

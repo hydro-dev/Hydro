@@ -53,7 +53,8 @@ const acm = buildContestRule({
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
         const npending = Counter<number>();
@@ -245,7 +246,8 @@ const oi = buildContestRule({
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: (tdoc, now) => now > tdoc.endAt,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     async scoreboardHeader(config, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: '#' },
@@ -781,7 +783,7 @@ export function isDone(tdoc: Tdoc, tsdoc?: any) {
 export function isLocked(tdoc: Tdoc) {
     if (!tdoc.lockAt) return false;
     const now = new Date();
-    return (tdoc.lockAt < now && now < tdoc.endAt);
+    return tdoc.lockAt < now && !tdoc.unlocked;
 }
 
 export function isExtended(tdoc: Tdoc) {

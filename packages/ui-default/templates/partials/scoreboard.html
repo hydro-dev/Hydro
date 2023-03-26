@@ -10,13 +10,11 @@
   {% if model.contest.isLocked(tdoc) %}
     <div class="section__body no-padding">
       <blockquote class="note">
-        {{ _('The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the last {0} minutes of the contest are still shown as pending.').format((tdoc.endAt - tdoc.lockAt) / 1000 / 60, datetimeSpan(tdoc.lockAt))|safe }}
-      </blockquote>
-    </div>
-  {% elif model.contest.isDone(tdoc) and tdoc.lockAt and not tdoc.unlocked %}
-    <div class="section__body no-padding">
-      <blockquote class="note">
-        {{ _('Please wait until contest host unfreeze the scoreboard.') }}
+        {% if model.contest.isDone(tdoc) %}
+          {{ _('Please wait until contest host unfreeze the scoreboard.') }}
+        {% else %}
+          {{ _('The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the last {0} minutes of the contest are still shown as pending.').format((tdoc.endAt - tdoc.lockAt) / 1000 / 60, datetimeSpan(tdoc.lockAt))|safe }}
+        {% endif %}
       </blockquote>
     </div>
   {% endif %}
