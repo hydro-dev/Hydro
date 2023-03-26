@@ -28,11 +28,12 @@ export default class RecordModel {
 
     static async submissionPriority(uid: number, base: number = 0) {
         const timeRecent = await RecordModel.coll
-            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid }).project({ time: 1, status: 1 }).toArray();
+            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid, rejudged: { $ne: true } })
+            .project({ time: 1, status: 1 }).toArray();
         const pending = timeRecent.filter((i) => [
             STATUS.STATUS_WAITING, STATUS.STATUS_FETCHED, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING,
         ].includes(i.status)).length;
-        return base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1);
+        return Math.max(base - 10000, base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1));
     }
 
     static async get(_id: ObjectId): Promise<RecordDoc | null>;
