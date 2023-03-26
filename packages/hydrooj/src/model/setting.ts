@@ -228,6 +228,7 @@ const ignoreUA = [
     'bingbot',
     'Gatus',
     'Googlebot',
+    'Prometheus',
     'Uptime',
     'YandexBot',
 ].join('\n');
