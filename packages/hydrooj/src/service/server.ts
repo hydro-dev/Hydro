@@ -388,9 +388,9 @@ export function Connection(
                 if (Date.now() - lastHeartbeat > 40000) conn.close(4000, 'Heartbeat timeout');
             }, 40000);
             conn.onmessage = (e) => {
+                lastHeartbeat = Date.now();
                 if (e.data === 'ping') {
                     conn.send('pong');
-                    lastHeartbeat = Date.now();
                     return;
                 }
                 h.message?.(JSON.parse(e.data.toString()));
