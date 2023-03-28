@@ -383,9 +383,21 @@ export function Connection(
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
             for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
-            conn.onmessage = (e) => h.message?.(JSON.parse(e.data.toString()));
+            let lastHeartbeat = Date.now();
+            const interval = setInterval(() => {
+                if (Date.now() - lastHeartbeat > 40000) conn.close(4000, 'Heartbeat timeout');
+            }, 40000);
+            conn.onmessage = (e) => {
+                if (e.data === 'ping') {
+                    conn.send('pong');
+                    lastHeartbeat = Date.now();
+                    return;
+                }
+                h.message?.(JSON.parse(e.data.toString()));
+            };
             conn.onclose = () => {
                 bus.emit('connection/close', h);
+                clearInterval(interval);
                 disposables.forEach((d) => d());
                 h.cleanup?.(args);
             };
