@@ -1,6 +1,7 @@
 import { PassThrough } from 'stream';
 import type { Next } from 'koa';
 import { cloneDeep, pick } from 'lodash';
+import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import token from '../../model/token';
 import type { HydroRequest, HydroResponse, KoaContext } from '../server';
@@ -65,12 +66,19 @@ export default async (ctx: KoaContext, next: Next) => {
     ctx.HydroContext = {
         request, response, UiContext, domain: domainInfo, user: null, args,
     };
+    const header = ctx.request.headers.authorization;
+    const sid = header
+        ? header.split(' ')[1] // Accept bearer token
+        : ctx.cookies.get('sid') || ctx.query.sid; // FIXME maybe a better way for shared conn?
+    const session = sid ? await token.get(sid instanceof Array ? sid[0] : sid, token.TYPE_SESSION) : null;
+    ctx.session = Object.create(session || { uid: 0, scope: PERM.PERM_ALL.toString() });
     await next();
     const ua = request.headers['user-agent'] || '';
     if (!ctx.session.uid && system.get('server.ignoreUA').replace(/\r/g, '').split('\n').filter((i) => i && ua.includes(i)).length) return;
     const expireSeconds = ctx.session.save
         ? system.get('session.saved_expire_seconds')
         : system.get('session.unsaved_expire_seconds');
+    if (!ctx.session._id && !Object.getOwnPropertyNames(ctx.session).length) return;
     Object.assign(ctx.session, { updateIp: request.ip, updateUa: ua });
     if (ctx.session._id) {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, ctx.session);
