@@ -387,12 +387,9 @@ const strictioi = buildContestRule({
         let score = 0;
         const subtasks: Record<number, SubtaskResult> = {};
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            Object.keys(j.subtasks).forEach((i) => {
-                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) {
-                    subtasks[i] = j.subtasks[i];
-                    subtasks[i].rid = j.rid;
-                }
-            });
+            for (const i in j.subtasks) {
+                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) subtasks[i] = j.subtasks[i];
+            }
             j.score = sumBy(Object.values(subtasks), 'score');
             j.status = Math.max(...Object.values(subtasks).map((i) => i.status));
             j.subtasks = subtasks;
@@ -422,7 +419,7 @@ const strictioi = buildContestRule({
         for (const pid of tdoc.pids) {
             row.push({
                 type: 'record',
-                value: tsddict[pid]?.penaltyScore || '',
+                value: tsddict[pid]?.score || '',
                 hover: Object.values(tsddict[pid]?.subtasks).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
