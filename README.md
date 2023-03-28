@@ -39,6 +39,21 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.7 / UI 4.48.10
+- ui: websocket: 添加心跳包
+- judge: 修复客观题和文件 IO 题提交
+- judge: 添加 compile_time_limit 选项
+- core: 添加 kotlin 和 pypy3 预设
+- ui: scoreboard: 支持自动更新
+- core: contest: 封榜后允许管理员查看实时分数
+- judge: 支持按题目设置语言时空限制倍率
+- install: 支持自动导入 hustoj 数据
+- install: 支持指定安装源
+- core: 支持从 npmjs 自动安装插件
+- core&ui: 漏洞修复
+- judge: 设置最低评测优先级
+- core: 修复部分赛制下封榜时仍能查看提交列表的问题
+
 ### Hydro 4.9.0 / UI 4.48.0
 - core: 优化讨论鉴权
 - judge: 优化统一回调评测状态回显

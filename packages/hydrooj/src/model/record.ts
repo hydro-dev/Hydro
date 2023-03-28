@@ -83,7 +83,7 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-            config.type = pdoc.config.type as any;
+            config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
             if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
                 return await task.addMany(rids.map((rid) => ({
                     ...(pdoc.config as any),
