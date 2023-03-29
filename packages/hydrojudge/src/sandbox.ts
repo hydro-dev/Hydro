@@ -126,6 +126,10 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     ret.files = result.files || {};
     ret.fileIds = result.fileIds || {};
     if (ret.fileIds[outname]) ret.fileIds.stdout = ret.fileIds[outname];
+    if (params.filename && !ret.fileIds[outname] && !ret.files[outname]) {
+        result.error = 'Output file not found';
+        ret.status = STATUS.STATUS_RUNTIME_ERROR;
+    }
     ret.stdout = ret.files[outname] || '';
     ret.stderr = ret.files.stderr || result.error || '';
     if (result.error) ret.error = result.error;
