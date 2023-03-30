@@ -40,16 +40,6 @@ const addonPath = path.resolve(hydroPath, 'addon.json');
 if (!fs.existsSync(addonPath)) fs.writeFileSync(addonPath, '[]');
 let addons = JSON.parse(fs.readFileSync(addonPath).toString());
 
-if (!addons.includes('@hydrooj/ui-default')) {
-    try {
-        const ui = argv.options.ui || '@hydrooj/ui-default';
-        require.resolve(ui);
-        addons.push(ui);
-    } catch (e) {
-        console.error('Please also install @hydrooj/ui-default');
-    }
-}
-
 addons = Array.from(new Set(addons));
 if (!argv.args[0] || argv.args[0] === 'cli') {
     const hydro = require('../src/loader');
