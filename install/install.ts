@@ -163,7 +163,33 @@ const Caddyfile = `\
 # 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
-  reverse_proxy http://127.0.0.1:8888
+  log {
+    output file /data/access.log {
+      roll_size 1gb
+      roll_keep_for 72h
+    }
+    format json
+  }
+  # Handle static files directly, for better performance.
+  root * /root/.hydro/static
+  @static {
+    file {
+      try_files {path}
+    }
+  }
+  @notStatic {
+    not {
+      file {
+        try_files {path}
+      }
+    }
+  }
+  handle @notStatic {
+    reverse_proxy http://127.0.0.1:8888
+  }
+  handle @static {
+    file_server
+  }
 }
 `;
 

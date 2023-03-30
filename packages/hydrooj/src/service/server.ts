@@ -556,7 +556,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         socket.close();
     });
     const port = system.get('server.port');
-    pluginContext.on('app/ready', async () => {
+    pluginContext.on('app/listen', async () => {
         await new Promise((r) => {
             httpServer.listen(argv.options.port || port, () => {
                 logger.success('Server listening at: %d', argv.options.port || port);
