@@ -420,7 +420,7 @@ const strictioi = buildContestRule({
             row.push({
                 type: 'record',
                 value: tsddict[pid]?.score || '',
-                hover: Object.values(tsddict[pid]?.subtasks).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
+                hover: Object.values(tsddict[pid]?.subtasks || {}).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
