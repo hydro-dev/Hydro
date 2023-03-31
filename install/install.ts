@@ -80,10 +80,8 @@ If you have any questions about the migration process, please add QQ group 10858
 
 const installAsJudge = process.argv.includes('--judge');
 const noCaddy = process.argv.includes('--no-caddy');
-const installTarget = installAsJudge
-    ? '@hydrooj/hydrojudge'
-    : 'hydrooj @hydrooj/hydrojudge @hydrooj/ui-default @hydrooj/fps-importer';
-const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer'];
+const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer', '@hydrooj/a11y'];
+const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
 
