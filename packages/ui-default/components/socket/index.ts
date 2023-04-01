@@ -26,6 +26,10 @@ export default class Sock {
     };
     this.sock.onmessage = (message) => {
       if (message.data === 'pong') return;
+      if (message.data === 'ping') {
+        this.sock.send('pong');
+        return;
+      }
       if (process.env.NODE_ENV !== 'production') console.log('Sock.onmessage: ', message);
       const msg = JSON.parse(message.data);
       if (msg.error === 'PermissionError' || msg.error === 'PrivilegeError') this.close();
