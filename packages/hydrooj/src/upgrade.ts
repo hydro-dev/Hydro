@@ -555,6 +555,22 @@ const scripts: UpgradeScript[] = [
         await document.coll.updateMany({ docType: document.TYPE_DISCUSSION }, { $set: { hidden: false } });
         return true;
     },
+    async function _78_79() {
+        const t = await document.collStatus.find({
+            docType: document.TYPE_CONTEST, journal: { $elemMatch: { rid: null } },
+        }).toArray();
+        for (const r of t) {
+            r.journal = r.journal.filter((i) => i.rid !== null);
+            await document.collStatus.updateOne({ _id: r._id }, { $set: { journal: r.journal } });
+        }
+        await iterateAllContest(async (tdoc) => {
+            if (tdoc.rule !== 'acm') return;
+            logger.info(tdoc.domainId, tdoc.title);
+            await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+            if (contest.isDone(tdoc)) await contest.unlockScoreboard(tdoc.domainId, tdoc.docId);
+        });
+        return true;
+    },
 ];
 
 export default scripts;

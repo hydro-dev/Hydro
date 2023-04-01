@@ -76,6 +76,9 @@ const acm = buildContestRule({
             }
             if (lockAt && j.rid.getTimestamp() > lockAt) {
                 npending[j.pid]++;
+                // FIXME this is tricky
+                // @ts-ignore
+                display[j.pid] ||= {};
                 display[j.pid].npending = npending[j.pid];
                 continue;
             }
