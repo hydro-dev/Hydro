@@ -4,7 +4,7 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
-import os from 'os';
+import os, { cpus } from 'os';
 import { createInterface } from 'readline/promises';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
@@ -114,7 +114,7 @@ if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
-let migration;
+let migration = '';
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -157,7 +157,7 @@ gid: 1536
 const Caddyfile = `\
 # 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
 # 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
-# 仅需将 :80 改为你的域名（如 hydro.ac）后直接重载配置即可自动签发 ssl 证书。
+# 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
 # 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
@@ -175,18 +175,11 @@ const Caddyfile = `\
       try_files {path}
     }
   }
-  @notStatic {
-    not {
-      file {
-        try_files {path}
-      }
-    }
-  }
-  handle @notStatic {
-    reverse_proxy http://127.0.0.1:8888
-  }
   handle @static {
     file_server
+  }
+  handle {
+    reverse_proxy http://127.0.0.1:8888
   }
 }
 `;
@@ -207,12 +200,12 @@ processLimit: 128
 testcases_max: 60
 total_time_limit: 300
 retry_delay_sec: 3
-parallelism: 10
+parallelism: ${Math.floor(cpus().length / 2)}
 rate: 1.00
 rerun: 0
-secret: examplesecret
+secret: Hydro-Judge-Secret
 env: |
-    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nodejs/bin
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
 `;
 
@@ -273,6 +266,7 @@ const printInfo = [
     'echo "扫码加入QQ群："',
     'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
     () => {
+        if (installAsJudge) return;
         password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
         log.info('extra.dbUser');
         log.info('extra.dbPassword', password);
@@ -312,20 +306,35 @@ ${nixConfBase}`);
             'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
-                if (existsSync('/home/judge/src')) {
-                    log.info('migrate.hustojFound');
-                    const res = await rl.question('>');
-                    if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
+                try {
+                    if (existsSync('/home/judge/src')) {
+                        log.info('migrate.hustojFound');
+                        const res = await rl.question('>');
+                        if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
+                    }
+                    if (migration) return;
+                    const docker = !exec('docker -v').code;
+                    if (!docker) return;
+                    const containers = exec('docker ps -a --format json').output?.split('\n')
+                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
+                    const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
+                    if (uoj) {
+                        // not ready for production
+                        return;
+                        log.info('migrate.uojFound');
+                        const res = await rl.question('>');
+                        if (res.toLowerCase().trim() === 'y') migration = 'uoj';
+                    }
+                    // // TODO check more places
+                    // if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
+                    //     const res = cli.prompt('migrate.qduojFound');
+                    //     if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
+                    // }
+                } catch (e) {
+                    console.error('Failed migration detection');
+                } finally {
+                    rl.close();
                 }
-
-                // const docker = !exec1('docker -v').code;
-                // if (!docker) return;
-                // // TODO check more places
-                // if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
-                //     const res = cli.prompt('migrate.qduojFound');
-                //     if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
-                // }
-                rl.close();
             },
         ],
     },
@@ -443,12 +452,19 @@ ${nixConfBase}`);
         ],
     },
     {
-        init: 'install.migrateHustoj',
-        skip: () => migration !== 'hustoj',
+        init: 'install.migrate',
+        skip: () => !migration,
         silent: true,
         operations: [
             ['yarn global add @hydrooj/migrate', { retry: true }],
             'hydrooj addon add @hydrooj/migrate',
+        ],
+    },
+    {
+        init: 'install.migrateHustoj',
+        skip: () => migration !== 'hustoj',
+        silent: true,
+        operations: [
             () => {
                 const dbInc = readFileSync('/home/judge/src/web/include/db_info.inc.php', 'utf-8');
                 const l = dbInc.split('\n');
@@ -475,6 +491,43 @@ ${nixConfBase}`);
                 if (!getConfig('OJ_REGISTER')) exec('hydrooj cli user setPriv 0 0');
             },
             'pm2 restart hydrooj',
+        ],
+    },
+    {
+        init: 'install.migrateUoj',
+        skip: () => migration !== 'uoj',
+        silent: true,
+        operations: [
+            () => {
+                const containers = exec('docker ps -a --format json').output?.split('\n')
+                    .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
+                const uoj = containers!.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running')!;
+                const info = JSON.parse(exec(`docker inspect ${uoj.Id}`).output!);
+                const dir = info[0].GraphDriver.Data.MergedDir;
+                exec(`sed s/127.0.0.1/0.0.0.0/g -i ${dir}/etc/mysql/mysql.conf.d/mysqld.cnf`);
+                exec(`docker exec -i ${uoj.Id} /etc/init.d/mysql restart`);
+                const passwd = readFileSync(`${dir}/etc/mysql/debian.cnf`, 'utf-8')
+                    .split('\n').find((i) => i.startsWith('password'))?.split('=')[1].trim();
+                const script = [
+                    `CREATE USER 'hydromigrate'@'%' IDENTIFIED BY '${password}';`,
+                    'GRANT ALL PRIVILEGES ON *.* TO \'hydromigrate\'@\'%\' WITH GRANT OPTION;',
+                    'FLUSH PRIVILEGES;',
+                    '',
+                ].join('\n');
+                exec(`docker exec -i ${uoj.Id} mysql -u debian-sys-maint -p${passwd} -e "${script}"`);
+                const config = {
+                    host: info[0].NetworkSettings.IPAddress,
+                    port: 3306,
+                    name: 'app_uoj233',
+                    dataDir: `${dir}/var/uoj_data`,
+                    username: 'hydromigrate',
+                    password,
+                    domainId: 'system',
+                };
+                console.log(config);
+                // TODO mail config
+                exec(`hydrooj cli script migrateUoj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
+            },
         ],
     },
     {
