@@ -39,6 +39,15 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.8 / UI 4.48.11
+- core: 修复 strictioi 下的计分板显示问题
+- core: 允许普通用户查看比赛讨论
+- core: 启动时自动建立静态资源文件夹
+- core: 允许使用其他 UI 模块
+- judge: 修复文件 IO 题目输出重定向的问题
+- core: 不再向 Guest 用户分配 sessionId
+- judge: 修复提交答案题
+
 ### Hydro 4.9.7 / UI 4.48.10
 - ui: websocket: 添加心跳包
 - judge: 修复客观题和文件 IO 题提交
