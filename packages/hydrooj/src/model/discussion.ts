@@ -278,7 +278,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
         return { ...pdoc, type, id: pdoc.docId };
     }
-    if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
+    if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
         const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
@@ -287,8 +287,9 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             const tsdoc = await model.getStatus(domainId, _id, uid);
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
-        if (type === document.TYPE_CONTEST) tdoc.hidden = !(contest.isDone(tdoc));
-        return { ...tdoc, type, id: _id };
+        return {
+            ...tdoc, type, id, hidden: false,
+        };
     }
     return {
         title: id,
@@ -320,7 +321,7 @@ export function checkVNodeVisibility(type: number, vnode: any, user: User) {
     if (type === document.TYPE_PROBLEM) {
         if (vnode.hidden && !(user.own(vnode) || user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) return false;
     }
-    if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
+    if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;
     }
     return true;
