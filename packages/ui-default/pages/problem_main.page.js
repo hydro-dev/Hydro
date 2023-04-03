@@ -240,16 +240,16 @@ function processElement(ele) {
 }
 
 const page = new NamedPage(['problem_main'], () => {
-  const doc = document.body;
-  doc.className += ' display-mode';
+  const $body = $('body');
+  $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   parseCategorySelection();
   $(document).on('click', '[name="leave-edit-mode"]', () => {
-    doc.className = doc.className.replace(' edit-mode', ' display-mode');
+    $body.removeClass('edit-mode').addClass('display-mode');
   });
   $(document).on('click', '[name="enter-edit-mode"]', () => {
-    doc.className = doc.className.replace(' display-mode', ' edit-mode');
+    $body.removeClass('display-mode').addClass('edit-mode');
   });
   ['delete', 'hide', 'unhide', 'copy'].forEach((op) => {
     $(document).on('click', `[name="${op}_selected_problems"]`, () => handleOperation(op));
