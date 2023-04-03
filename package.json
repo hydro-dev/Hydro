@@ -25,7 +25,8 @@
         "lint:ui:ci": "yarn workspace @hydrooj/ui-default lint --ext .js,.ts,.jsx,.tsx .",
         "debug": "node --trace-warnings --async-stack-traces --trace-deprecation packages/hydrooj/bin/hydrooj --debug --template",
         "start": "packages/hydrooj/bin/hydrooj",
-        "postinstall": "node build/prepare.js"
+        "postinstall": "node build/prepare.js",
+        "gen-patch": "node -r @hydrooj/utils/lib/register build/gen-patch.ts"
     },
     "version": "1.0.0",
     "license": "AGPL-3.0-only",

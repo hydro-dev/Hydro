@@ -204,6 +204,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         fs.removeSync(newAddonPath);
         console.log(`Successfully uninstalled ${name}.`);
     });
+    require('../src/commands/patch').register(cli);
     cli.help();
     cli.parse();
     if (!cli.matchedCommand) {
