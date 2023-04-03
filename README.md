@@ -7,33 +7,98 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/hydro-dev/Hydro)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/hydro-dev/Hydro)
 
-Hydro 是一个高效的信息学在线测评系统。特点：易于部署（且提供安装脚本），轻量，功能强大且易于扩展。  
-我们提供了一套在线服务供用户直接使用或是体验系统功能而无需自行部署安装。  
+Hydro 是一个高效信息学在线测评系统。易安装，跨平台，多功能，可扩展，有题库。
+
+对于不熟悉 Linux 或是懒得运维的老师，我们也提供了免费开通即用的在线版本，  
 详情前往 [https://hydro.ac](https://hydro.ac) 查看 [操作指引](https://hydro.ac/discuss/6172ceeed850d38c79ae18f9)  
 
-
-一键部署脚本（兼容多数主流 Linux 发行版，推荐使用 Ubuntu 22.04，详见下方文档）：
+将安装命令粘贴到控制台一键安装，安装后注册首个用户自动获得超级管理员权限。
+兼容主流 Linux 发行版，推荐使用 Ubuntu 22.04，支持 arm64 设备（树莓派等）
 
 ```sh
 LANG=zh . <(curl https://hydro.ac/setup.sh)
 ```
 
-[中文文档](https://hydro.js.org/)  
+[中文文档](https://hydro.js.org/)  [English](./README-EN.md)  
 
-[English](./README-EN.md)  
-
-如果觉得本项目对你有帮助，不妨点一下右上角的 star 哦（）  
-项目的开发与维护需要资金，欢迎[进行捐助](https://pay.undefined.moe) 。  
-Hydro 提供收费的功能定制服务，如您需要可与我们联系。  
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
 
-[在 Gitpod 打开测试环境](https://gitpod.io/#https://github.com/hydro-dev/Hydro)  
+## 系统特点
+
+### 模块化设计，插件系统，功能热插拔
+
+Hydro 设计了一套模块化的插件系统，可以方便地扩展系统功能。  
+使用插件系统，可以在修改功能后，仍然保证系统的可升级性。  
+Hydro 的所有历史版本均可平滑升级到最新版本。  
+
+插件使用和开发指南，请前往文档 [插件](https://docs.hydro.ac/plugins/) 和 [开发](https://docs.hydro.ac/dev/typescript/) 章节。
+
+### 跨平台兼容，数据一键备份/导入
+
+Hydro 支持所有主流的 Linux 发行版，兼容 x86_64 和 arm64 架构设备，且均可一键安装。  
+Hydro 可在 树莓派 / Apple M1 上正常运行。
+
+使用 `hydrooj backup` 即可备份系统全部数据，使用 `hydrooj restore 文件名` 即可导入备份数据。
+整个过程无需手工干预。
+
+### 单系统多空间，不同班级/院校，分开管理
+
+Hydro 提供了单系统多空间支持，可以方便地为不同的班级/年级/院校等创建独立的空间。  
+不同空间内除用户外数据默认隔离，且可分配独立管理员，互不干扰。  
+题目可跨域复制，在系统内仅占用一份空间。
+
+### 粒度精细的权限系统，灵活调节
+
+Hydro 的权限可以按比赛/作业分配给对应的用户，也可以将用户分组（班级），按组分配权限。
+有关权限节点，可以查看 [介绍](https://docs.hydro.ac/docs/) 下方截图。
+
+### 规模化支持，上千用户无压力，伸缩组秒级自动扩展
+
+Hydro 系统本身是无状态的，这意味着你可以随意增删服务节点，而不会影响系统的正常运行。
+评测队列会自动在当前在线的所有评测机间均衡分配。接入弹性伸缩组后，可根据服务器负载情况自动增删评测机。
+不像其他系统，Hydro 会管理不同服务器间的测试数据缓存，按需拉取，做到评测机上线即用，无需手动同步数据。
+
+### 全题型支持，跟随时代潮流
+
+Hydro 支持所有题型。无论是传统题型，Special Judge，还是文件输入输出，提交答案题，IO 交互，函数交互，乃至选择填空题等，
+Hydro 都有相应的支持。安装相关运行环境后，Hydro 甚至可以做到：
+
+- 调用小海龟画图，与标准图片比对；
+- 调用 GPU 进行机器学习模型的评测；
+
+更多的样例可前往 [样例区](https://hydro.ac/d/system_test/) 查看并下载。
+
+### 丰富的题库
+
+Hydro 支持导入常见格式的题库文件，包括 Hydro 通用的 zip 格式，HUSTOJ 导出的 FPS (xml) 格式题目，QDUOJ 导出的压缩包。  
+可以在 [Hydro 题库](https://hydro.ac/d/tk/p) 下载免费题库使用。  
+Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他平台的题目，修改题面后编入自己的作业或比赛，快速搭建自己的题库体系。  
+当前支持的平台有：  
+
+- [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
+- [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
+- [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
+- [洛谷](https://www.luogu.com.cn)：使用此功能需要向洛谷购买授权；
+- [CSGOJ](https://cpc.csgrandeur.cn)；
+- [POJ](https://poj.org)：较为古董，服务器稳定性差；
+- HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
+
+### 多赛制支持
+
+Hydro 支持多种赛制，包括 ACM/ICPC 赛制（支持封榜），OI 赛制，IOI 赛制，乐多赛制，以及作业功能。  
+在 IOI 和 OI 赛制下，支持订正题目功能，学生在赛后可以在题库中提交对应题目，其分数会在榜单旁边显示。  
+在 IOI 和 OI 赛制下，支持灵活时间功能，学生可以在设定的时间范围内，自选 X 小时参赛。  
+
+### 轻松添加其他编程语言
+
+Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件。
+只要能写出对应语言的编译命令和运行命令，Hydro 都可以进行判题。
 
 ## 联系我们
 
+Email：i@undefined.moe
 Hydro 用户群：1085853538  
-Telegram 群 [@hydrodev](https://t.me/hydrodev)
 Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
 
 <details>

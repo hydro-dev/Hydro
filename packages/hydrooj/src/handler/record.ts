@@ -46,12 +46,19 @@ class RecordListHandler extends ContestDetailBaseHandler {
         this.response.template = 'record_main.html';
         const q: Filter<RecordDoc> = { contest: tid };
         if (full) uidOrName = this.user._id.toString();
+        if (uidOrName) {
+            const udoc = await user.getById(domainId, +uidOrName)
+                || await user.getByUname(domainId, uidOrName)
+                || await user.getByEmail(domainId, uidOrName);
+            if (udoc) q.uid = udoc._id;
+            else invalid = true;
+        }
         if (tid) {
             tdoc = await contest.get(domainId, tid);
             this.tdoc = tdoc;
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!contest.canShowRecord.call(this, tdoc, true)) {
+            if (!contest[q.uid === this.user._id ? 'canShowSelfRecord' : 'canShowRecord'].call(this, tdoc, true)) {
                 throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
             }
             if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
@@ -60,13 +67,6 @@ class RecordListHandler extends ContestDetailBaseHandler {
                     : "You haven't attended this contest yet.";
                 notification.push({ name, args: { type: 'note' }, checker: () => true });
             }
-        }
-        if (uidOrName) {
-            const udoc = await user.getById(domainId, +uidOrName)
-                || await user.getByUname(domainId, uidOrName)
-                || await user.getByEmail(domainId, uidOrName);
-            if (udoc) q.uid = udoc._id;
-            else invalid = true;
         }
         if (pid) {
             if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {
