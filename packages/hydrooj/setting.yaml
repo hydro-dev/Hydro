@@ -32,14 +32,16 @@ langs:
       - ~ Compiling be be ignored if compile option wasn't set
       - ~ Key marked with a ? means the option is optional
       - (name):
+          disabled?: whether to disable this language
           compile?: Compile Command
-          code_file?: Where to write code file when compiling
-          execute?: Command to execute the program
+          code_file?: Where to write code file when compiling, defaults to `foo.[name]`
+          execute: Command to execute the program
           highlight?: PrismJS highlight mode
           monaco?: Monaco editor mode
-          time_limit_rate: Time limit rate
-          target: Compiler output file
+          time_limit_rate?: Time limit rate
+          target?: Compiler output file, defaults to `foo`
           display: Display name
+          compile_time_limit?: Compile time limit, in milliseconds
     bash:
       display: Bash
       code_file: foo.sh
@@ -92,6 +94,7 @@ langs:
       highlight: java astyle-java
       monaco: java
       display: Java
+      compile_time_limit: 30000
     kt:
       compile: echo "Invalid language selection"
       code_file: foo.kt
@@ -114,6 +117,7 @@ langs:
       display: Python
     py.py2:
       display: Python 2
+      disabled: true
     py.py3:
       compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       execute: /usr/bin/python3 foo
