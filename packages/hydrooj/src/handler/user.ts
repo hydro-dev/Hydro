@@ -301,11 +301,12 @@ class UserRegisterWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_REGISTRATION);
         if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
         if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
+        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = tdoc.mail.split('@');
         const $set: any = tdoc.set || {};
+        if (tdoc.phone) $set.phone = tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);

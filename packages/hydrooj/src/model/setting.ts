@@ -293,7 +293,33 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export const langs: Record<string, LangConfig> = {};
 
+declare module '../context' {
+    interface Context {
+        setting: SettingService;
+    }
+}
+
+const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
+    function method(this: cordis.Service, ...args: Parameters<F>) {
+        const res = origFunc(...args);
+        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+    };
+
+export class SettingService extends Service {
+    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
+    PreferenceSetting = T(PreferenceSetting);
+    AccountSetting = T(AccountSetting);
+    DomainSetting = T(DomainSetting);
+    DomainUserSetting = T(DomainUserSetting);
+    SystemSetting = T(SystemSetting);
+    constructor(ctx: Context) {
+        super(ctx, 'setting', true);
+    }
+}
+
 export async function apply(ctx: Context) {
+    Context.service('setting', SettingService);
+    ctx.setting = new SettingService(ctx);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
@@ -319,31 +345,6 @@ export async function apply(ctx: Context) {
         ServerLangSettingNode.range = range;
     });
 }
-
-declare module '../context' {
-    interface Context {
-        setting: SettingService;
-    }
-}
-
-const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
-    function method(this: cordis.Service, ...args: Parameters<F>) {
-        const res = origFunc(...args);
-        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
-    };
-
-export class SettingService extends Service {
-    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
-    PreferenceSetting = T(PreferenceSetting);
-    AccountSetting = T(AccountSetting);
-    DomainSetting = T(DomainSetting);
-    DomainUserSetting = T(DomainUserSetting);
-    SystemSetting = T(SystemSetting);
-    constructor(ctx: Context) {
-        super(ctx, 'setting', true);
-    }
-}
-Context.service('setting', SettingService);
 
 global.Hydro.model.setting = {
     apply,
