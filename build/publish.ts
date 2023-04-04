@@ -1,13 +1,11 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable import/no-dynamic-require */
-require('@hydrooj/utils/lib/register');
-
-const { gt } = require('semver');
-const { default: latest } = require('latest-version');
-const path = require('path');
-const { default: ora } = require('ora');
-const { writeFileSync } = require('fs');
-const { getWorkspaces, spawnAsync } = require('./utils');
+import { writeFileSync } from 'fs';
+import path from 'path';
+import latest from 'latest-version';
+import ora from 'ora';
+import { gt } from 'semver';
+import { getWorkspaces, spawnAsync } from './utils';
 
 const {
     CI, GITHUB_EVENT_NAME, GITHUB_REF,
