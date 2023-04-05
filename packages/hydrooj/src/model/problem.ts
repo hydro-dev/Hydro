@@ -438,7 +438,7 @@ export class ProblemModel {
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
                     domainId, pid, pdoc.title, overrideContent || pdoc.content,
-                    operator || pdoc.owner, pdoc.tag, pdoc.hidden,
+                    operator || pdoc.owner, pdoc.tag || [], pdoc.hidden,
                 );
                 if (files.includes('testdata')) {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
