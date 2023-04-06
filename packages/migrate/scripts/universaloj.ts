@@ -323,7 +323,7 @@ export async function run({
         const maintainer = permissions.map((p) => uidMap[p.username]).slice(1);
         const info = JSON.parse(tdoc.extra_config) || {};
         const startAt = moment(tdoc.start_time);
-        const endAt = moment(tdoc.end_time).add(tdoc.last_min, 'minutes');
+        const endAt = startAt.clone().add(tdoc.last_min, 'minutes');
         const tid = await ContestModel.add(
             domainId, tdoc.name, content, uidMap[permissions[0]?.username] || 1, info.contest_type?.toLowerCase() || 'oi',
             startAt.toDate(), endAt.toDate(), pids, !Object.keys(info).includes('unrated'), { maintainer },
@@ -414,7 +414,7 @@ export async function run({
                             });
                             return;
                         }
-                        data.testCases.push(subtask.test.map((curCase, caseIndex) => ({
+                        data.testCases.concat(subtask.test.map((curCase, caseIndex) => ({
                             subtaskId: subtask.$.num,
                             id: caseIndex + 1,
                             score: curCase.$.score,
@@ -425,7 +425,7 @@ export async function run({
                         })));
                     });
                 } else if (details.tests.test) {
-                    data.testCases.push(details.tests.test.map((curCase) => ({
+                    data.testCases.concat(details.tests.test.map((curCase) => ({
                         subtaskId: 1,
                         id: curCase.$.num,
                         score: curCase.$.score,
@@ -444,6 +444,7 @@ export async function run({
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
+        report({ message: `Synced ${pageId * step} / ${rcount} records` });
     }
     report({ message: 'record finished' });
 
