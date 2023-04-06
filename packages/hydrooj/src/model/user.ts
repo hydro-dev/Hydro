@@ -441,10 +441,12 @@ class UserModel {
     }
 
     static delGroup(domainId: string, name: string) {
+        deleteUserCache(domainId);
         return collGroup.deleteOne({ domainId, name });
     }
 
     static updateGroup(domainId: string, name: string, uids: number[]) {
+        deleteUserCache(domainId);
         return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });
     }
 }
