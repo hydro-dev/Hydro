@@ -440,21 +440,14 @@ class UserModel {
         return groups;
     }
 
-    static async delGroup(domainId: string, name: string) {
-        const gdoc = await collGroup.findOne({ domainId, name });
-        const udocs = await UserModel.getMulti({ _id: { $in: gdoc.uids } }).toArray();
-        return Promise.all([
-            collGroup.deleteOne({ domainId, name }),
-            ...udocs.map((udoc) => deleteUserCache(udoc)),
-        ]);
+    static delGroup(domainId: string, name: string) {
+        deleteUserCache(domainId);
+        return collGroup.deleteOne({ domainId, name });
     }
 
-    static async updateGroup(domainId: string, name: string, uids: number[]) {
-        const udocs = await UserModel.getMulti({ _id: { $in: uids } }).toArray();
-        return Promise.all([
-            collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true }),
-            ...udocs.map((udoc) => deleteUserCache(udoc)),
-        ]);
+    static updateGroup(domainId: string, name: string, uids: number[]) {
+        deleteUserCache(domainId);
+        return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });
     }
 }
 
