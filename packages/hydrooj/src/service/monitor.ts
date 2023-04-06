@@ -61,6 +61,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         .then((res) => {
             if (res.body.updateUrl?.startsWith('https://')) system.set('server.center', res.body.updateUrl);
             if (res.body.notification) global.Hydro.model.message.sendNotification(res.body.notification);
+            if (res.body.reassignId) system.set('installid', res.body.reassignId);
         })
         .catch(() => logger.debug('Cannot connect to hydro center.'));
     return [mid, $update];
