@@ -123,7 +123,7 @@ export async function run({
                 phone: udoc.cellphone || null,
             });
             if (udoc.usergroup === 'S') await UserModel.setSuperAdmin(uid);
-            uidMap[udoc.id] = uid;
+            uidMap[udoc.username] = uid;
             await DomainModel.setUserInDomain(domainId, uid, {
                 displayName: udoc.nickname || '',
                 nAccept: udoc.ac_num,
@@ -159,7 +159,7 @@ export async function run({
         from: uidMap[msg.sender],
         to: uidMap[msg.receiver],
         content: msg.message,
-        flag: null,
+        flag: 0,
     })));
     const systemMessages = await query('SELECT * FROM `user_system_msg`');
     await Promise.all(systemMessages.map((msg) => MessageModel.coll.insertOne({
@@ -167,7 +167,7 @@ export async function run({
         from: 1,
         to: uidMap[msg.receiver],
         content: msg.content,
-        flag: null,
+        flag: 0,
     })));
     report({ message: 'message finished' });
 
@@ -221,20 +221,14 @@ export async function run({
             }
             if (!pidMap[pdoc.id]) {
                 const content = await query(`SELECT * FROM \`problems_contents\` WHERE \`id\` = ${pdoc.id}`);
-                const pid = await ProblemModel.add(
-                    domainId,
-                    `P${pdoc.id}`,
-                    pdoc.title,
-                    content[0].statement_md || '',
-                    1);
+                const pid = await ProblemModel.add(domainId, `P${pdoc.id}`, pdoc.title, content[0].statement_md || '', 1);
                 pidMap[pdoc.id] = pid;
             }
             const [permissions, tags] = await Promise.all([
                 query(`SELECT * FROM \`problems_permissions\` WHERE \`problem_id\` = ${pdoc.id}`),
                 query(`SELECT * FROM \`problems_tags\` WHERE \`problem_id\` = ${pdoc.id}`),
             ]);
-            const maintainer = [];
-            for (let i = 1; i < permissions.length; i++) maintainer.push(uidMap[permissions[i].username]);
+            const maintainer = permissions.map((p) => uidMap[p.username]).slice(1);
             await ProblemModel.edit(domainId, pidMap[pdoc.id], {
                 nAccept: pdoc.ac_num || 0,
                 nSubmit: pdoc.submit_num || 0,
@@ -326,8 +320,7 @@ export async function run({
             content += `## Notice: ${notice.title}\n${notice.content}\n${moment(notice.start_time).format('YYYY-MM-DD HH:mm:ss')}\n`;
         }
         const pids = problems.map((p) => pidMap[p.problem_id]);
-        const maintainer = [];
-        for (let i = 1; i < permissions.length; i++) maintainer.push(uidMap[permissions[i].username]);
+        const maintainer = permissions.map((p) => uidMap[p.username]).slice(1);
         const info = JSON.parse(tdoc.extra_config) || {};
         const startAt = moment(tdoc.start_time);
         const endAt = moment(tdoc.end_time).add(tdoc.last_min, 'minutes');
@@ -421,30 +414,26 @@ export async function run({
                             });
                             return;
                         }
-                        subtask.test.forEach((curCase, caseIndex) => {
-                            data.testCases.push({
-                                subtaskId: subtask.$.num,
-                                id: caseIndex + 1,
-                                score: curCase.$.score,
-                                time: curCase.$.time === '-1' ? 0 : curCase.time,
-                                memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
-                                message: curCase.res[0] || '',
-                                status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
-                            });
-                        });
-                    });
-                } else if (details.tests.test) {
-                    details.tests.test.forEach((curCase) => {
-                        data.testCases.push({
-                            subtaskId: 1,
-                            id: curCase.$.num,
+                        data.testCases.push(subtask.test.map((curCase, caseIndex) => ({
+                            subtaskId: subtask.$.num,
+                            id: caseIndex + 1,
                             score: curCase.$.score,
                             time: curCase.$.time === '-1' ? 0 : curCase.time,
                             memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
                             message: curCase.res[0] || '',
                             status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
-                        });
+                        })));
                     });
+                } else if (details.tests.test) {
+                    data.testCases.push(details.tests.test.map((curCase) => ({
+                        subtaskId: 1,
+                        id: curCase.$.num,
+                        score: curCase.$.score,
+                        time: curCase.$.time === '-1' ? 0 : curCase.time,
+                        memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
+                        message: curCase.res[0] || '',
+                        status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
+                    })));
                 }
                 data.status = Math.max(...data.testCases.map((x) => x.status));
             }
