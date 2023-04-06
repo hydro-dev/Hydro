@@ -84,7 +84,7 @@ class DataReportHandler extends Handler {
         }
         this.ctx.emit('center/report', this, installId, old, payload);
         // TODO deliver messages
-        this.response.body = { code: 0, u: lt(payload.version, old.version) };
+        this.response.body = { code: 0 };
     }
 }
 
