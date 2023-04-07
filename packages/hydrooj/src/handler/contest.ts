@@ -15,6 +15,8 @@ import { ScoreboardConfig, Tdoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
+import * as discussion from '../model/discussion';
+import document from '../model/document';
 import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
@@ -460,11 +462,17 @@ export class ContestEditHandler extends Handler {
     @param('tid', Types.ObjectId)
     async postDelete(domainId: string, tid: ObjectId) {
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
-        await contest.del(domainId, tid);
-        await record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' });
-        await ScheduleModel.deleteMany({
-            type: 'schedule', subType: 'contest', domainId, tid,
-        });
+        const [ddocs] = await Promise.all([
+            discussion.getMulti(domainId, { parentType: document.TYPE_CONTEST, parentId: tid }).project({ _id: 1 }).toArray(),
+            contest.del(domainId, tid),
+        ]);
+        const tasks: any[] = ddocs.map((i) => discussion.del(domainId, i._id));
+        await Promise.all(tasks.concat([
+            record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' }),
+            ScheduleModel.deleteMany({
+                type: 'schedule', subType: 'contest', domainId, tid,
+            }),
+        ]));
         this.response.redirect = this.url('contest_main');
     }
 }

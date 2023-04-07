@@ -563,13 +563,21 @@ const scripts: UpgradeScript[] = [
             r.journal = r.journal.filter((i) => i.rid !== null);
             await document.collStatus.updateOne({ _id: r._id }, { $set: { journal: r.journal } });
         }
-        await iterateAllContest(async (tdoc) => {
+        return await iterateAllContest(async (tdoc) => {
             if (tdoc.rule !== 'acm') return;
             logger.info(tdoc.domainId, tdoc.title);
             await contest.recalcStatus(tdoc.domainId, tdoc.docId);
             if (contest.isDone(tdoc)) await contest.unlockScoreboard(tdoc.domainId, tdoc.docId);
         });
-        return true;
+    },
+    async function _79_80() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                const tdoc = await contest.get(_id, ddoc.parentId as ObjectId);
+                if (!tdoc) await discussion.del(_id, ddoc.docId);
+            }
+        });
     },
 ];
 
