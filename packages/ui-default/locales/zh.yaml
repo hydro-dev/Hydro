@@ -281,6 +281,7 @@ discussion_main: 讨论
 discussion_node: 讨论
 Discussion: 讨论
 Discussions: 讨论
+Dismiss: 忽略
 Display name {1} you want to set is used by others.: 您想要设置的显示名 {1} 已经被其他人使用了。
 Display Name: 显示名
 display_name: 显示名
@@ -303,6 +304,7 @@ domain_user: 管理用户
 domain: 域
 Domain: 域
 Don't have an account?: 还没有账户？
+Don't show again: 不再显示
 Done: 已结束
 Download All: 下载全部
 Download Dataset: 下载数据集
@@ -378,6 +380,7 @@ Footnote: 脚注
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
+Freeze scoreboard with N minutes remaining: 在赛事剩余N分钟时封榜
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
@@ -490,7 +493,6 @@ Live...: 正在进行…
 Loading editor...: 正在加载编辑器...
 Loading file...: 正在加载文件内容...
 Location: 位置
-Freeze scoreboard with N minutes remaining: 在赛事剩余N分钟时封榜
 Login to Attend Contest: 登录后参加比赛
 Login to Claim Homework: 登录后认领作业
 Login to Create a Discussion: 登录后创建讨论
@@ -864,6 +866,7 @@ This homework is not open and you cannot view problems.: 该作业还未到开�
 This homework is not open.: 该作业还未开放递交。
 This is the current session: 这是当前的会话
 This message will be presented to those whose submissions are accepted.: 这条消息将会被展示给通过此题的用户。
+This page is only for pasting code from other sources.: 此页面仅用于粘贴代码。
 This page needs JavaScript to work.: 这个页面需要 Javascript。
 This section cannot be challenged at present, so please complete the following sections first: 该章节目前不可挑战，请先完成以下章节
 This type of files are not allowed to be uploaded.: 不允许上传这种文件。
@@ -876,6 +879,7 @@ timeago_locale: zh_CN
 Timezone: 时区
 title: 标题
 Title: 标题
+To get a better editing experience, with code highlighting and test runs, please go back to the problem detail page and use 'Open Scratchpad' button.: 为了获得更好的编辑体验，包括代码高亮和测试运行功能，请返回题目详情页面并点击“进入在线编程模式”按钮。
 Toggle Pretest Panel: 切换自测面板
 Toggle Preview: 切换预览
 Toggle Records Panel: 切换评测记录面板
