@@ -16,7 +16,7 @@ import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import document from '../model/document';
+import * as document from '../model/document';
 import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
