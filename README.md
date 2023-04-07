@@ -19,7 +19,7 @@ Hydro 是一个高效信息学在线测评系统。易安装，跨平台，多�
 LANG=zh . <(curl https://hydro.ac/setup.sh)
 ```
 
-[中文文档](https://hydro.js.org/)  [English](./README-EN.md)  
+[中文文档](https://hydro.js.org/) / [English](./README-EN.md)  
 
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
@@ -351,20 +351,16 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 本项目中的 examples/ install/ packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。
 项目其余部分使用双重许可：
 
-1. 您可以在遵守 AGPL-3.0 许可证的前提下免费使用这些代码。  
+1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  
 2. 如确需闭源，您也可以联系我们购买其他授权。
 
 在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
 若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
-鉴于 Mirai 处的 [不和谐事件](https://github.com/mamoe/mirai/issues/850) 对此项目做如下声明：
 
-- 项目开源不代表开发者有义务为您提供服务。  
-- 您的发言不应该具有攻击性或是不友善倾向。  
-- 在提问前请先阅读《提问的智慧》。  
-- 若有必要，开发者有权对您停止任何技术支持。  
-- 开发组会 **尽可能** 保证用户可以进行平滑升级，但无法保证不在新版本引入影响使用的漏洞，且内部实现可能会在不发布任何通知的情况下进行重命名/修改/删除。  
+### 附加条款
 
-如果您对以上条目感到不适，建议您停止使用本项目。
+1. 不可移除本项目的版权声明；（[AGPL3 7(b)](LICENSE#L356)）
+2. 当重分发经修改后的本软件时，需要在软件名或版本号中采用可识别的方式进行注明；（[AGPL3 7(c)](LICENSE#L360)）
 
 ## 贡献代码
 
