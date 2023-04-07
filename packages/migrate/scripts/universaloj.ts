@@ -1,6 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import os from 'os';
-import path from 'path';
 import mariadb from 'mariadb';
 import xml2js from 'xml2js';
 import {
@@ -361,7 +359,7 @@ export async function run({
             const data: RecordDoc = {
                 status: statusMap[rdoc.result_error] || STATUS.STATUS_WAITING,
                 _id: Time.getObjectID(new Date(rdoc.submit_time), false),
-                uid: uidMap[rdoc.submitter] || 0,
+                uid: uidMap[rdoc.submitter] || 1,
                 code: '',
                 lang: langMap[rdoc.language] || '',
                 pid: pidMap[rdoc.problem_id] || 0,
@@ -377,22 +375,14 @@ export async function run({
                 judger: 1,
             };
             const content = JSON.parse(rdoc.content);
-            const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import-uoj`);
             try {
-                await fs.copyFile(`${dataDir}/opt/uoj/web/app/storage${content.file_name}`, `${tmpdir}.zip`);
                 let zip: AdmZip;
                 try {
-                    zip = new AdmZip(`${tmpdir}.zip`);
+                    zip = new AdmZip(await fs.readFile(`${dataDir}/opt/uoj/web/app/storage${content.file_name}`));
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
-                await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(tmpdir, true, (err) => {
-                        if (err) reject(err);
-                        resolve(null);
-                    });
-                });
-                data.code = await fs.readFile(path.join(tmpdir, 'answer.code'), 'utf8');
+                data.code = zip.getEntries().find((i) => i.name.endsWith('answer.code')).getData().toString();
             } catch { /* ignore no code */ }
             const result = JSON.parse(Buffer.from(rdoc.result, 'base64').toString('utf8'));
             if (result.error) {
@@ -414,7 +404,7 @@ export async function run({
                             });
                             return;
                         }
-                        data.testCases = data.testCases.concat(subtask.test.map((curCase, caseIndex) => ({
+                        data.testCases.push(...subtask.test.map((curCase, caseIndex) => ({
                             subtaskId: subtask.$.num,
                             id: caseIndex + 1,
                             score: curCase.$.score,
@@ -425,7 +415,7 @@ export async function run({
                         })));
                     });
                 } else if (details.tests.test) {
-                    data.testCases = data.testCases.concat(details.tests.test.map((curCase) => ({
+                    data.testCases.push(...details.tests.test.map((curCase) => ({
                         subtaskId: 1,
                         id: curCase.$.num,
                         score: curCase.$.score,
