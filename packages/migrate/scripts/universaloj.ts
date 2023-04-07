@@ -414,7 +414,7 @@ export async function run({
                             });
                             return;
                         }
-                        data.testCases.concat(subtask.test.map((curCase, caseIndex) => ({
+                        data.testCases = data.testCases.concat(subtask.test.map((curCase, caseIndex) => ({
                             subtaskId: subtask.$.num,
                             id: caseIndex + 1,
                             score: curCase.$.score,
@@ -425,7 +425,7 @@ export async function run({
                         })));
                     });
                 } else if (details.tests.test) {
-                    data.testCases.concat(details.tests.test.map((curCase) => ({
+                    data.testCases = data.testCases.concat(details.tests.test.map((curCase) => ({
                         subtaskId: 1,
                         id: curCase.$.num,
                         score: curCase.$.score,
