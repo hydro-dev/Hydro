@@ -1,4 +1,5 @@
 import child from 'child_process';
+import path from 'path';
 import { CAC } from 'cac';
 import fs from 'fs-extra';
 import superagent from 'superagent';
@@ -17,7 +18,7 @@ export function register(cli: CAC) {
         const res = await superagent.get(patch);
         logger.info('Downloaded patch');
         for (let i = 0; i <= 100; i++) {
-            const fp = `${mod}.${i}.patch`;
+            const fp = path.join(path.dirname(mod), `${mod}.${i}.patch`);
             if (fs.existsSync(fp)) continue;
             patch = fp;
             break;
