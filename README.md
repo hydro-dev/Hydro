@@ -104,6 +104,20 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.8.12 / UI 4.48.12
+- core: 修复比赛中讨论不会随比赛删除的问题
+- vjudge: codeforces: 更新登陆检查逻辑
+- ui: 在题目提交页面显示提示
+- core: 更新用户缓存
+- core: 强制终止不回应心跳包的 Websocket 连接
+- core: 设置导入题目的默认 tag
+- core: 默认禁用 Python2
+- core: 支持重排序导航栏
+- ui: 修复部分情况下进入编辑模式按钮不生效的问题
+- core: 添加 hydrooj patch 功能
+- core: 允许查看作业中自己的提交
+- core: 其他漏洞修复
+
 ### Hydro 4.9.8 / UI 4.48.11
 - core: 修复 strictioi 下的计分板显示问题
 - core: 允许普通用户查看比赛讨论
