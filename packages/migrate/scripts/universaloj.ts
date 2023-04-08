@@ -3,8 +3,8 @@ import mariadb from 'mariadb';
 import xml2js from 'xml2js';
 import {
     AdmZip, ContestModel, DomainModel, fs, MessageModel, moment,
-    noop, NotFoundError, ObjectId, postJudge, ProblemModel, RecordDoc, RecordModel,
-    STATUS, SystemModel, Time, UserModel, ValidationError,
+    noop, NotFoundError, ObjectId, postJudge, ProblemConfigFile, ProblemModel, RecordDoc, RecordModel,
+    STATUS, SystemModel, Time, UserModel, ValidationError, yaml,
 } from 'hydrooj';
 const statusMap = {
     Accepted: STATUS.STATUS_ACCEPTED,
@@ -18,6 +18,7 @@ const statusMap = {
     'Judgement Failed': STATUS.STATUS_SYSTEM_ERROR,
     'No Comment': STATUS.STATUS_SYSTEM_ERROR,
     Skippped: STATUS.STATUS_CANCELED,
+    Judging: STATUS.STATUS_JUDGING,
 };
 const sexMap = {
     U: 3,
@@ -236,6 +237,7 @@ export async function run({
                 maintainer,
             });
         }
+        console.log({ message: `Synced ${pageId * step} / ${pcount} problems` });
     }
     report({ message: 'problem finished' });
 
@@ -389,43 +391,47 @@ export async function run({
                 if (data.status === STATUS.STATUS_COMPILE_ERROR) data.compilerTexts.push(result.error);
                 else data.judgeTexts.push(result.error);
             } else {
-                const details = await xml2js.parseStringPromise(result.details);
-                if (details.tests.subtask) {
-                    details.tests.subtask.forEach((subtask) => {
-                        if (!subtask.test) {
-                            data.testCases.push({
+                // TODO final_result
+                if (!result.details) continue;
+                try {
+                    const details = await xml2js.parseStringPromise(result.details);
+                    if (details.tests.subtask) {
+                        details.tests.subtask.forEach((subtask) => {
+                            if (!subtask.test) {
+                                data.testCases.push({
+                                    subtaskId: subtask.$.num,
+                                    id: 1,
+                                    score: 0,
+                                    time: 0,
+                                    memory: 0,
+                                    message: 'Skipped',
+                                    status: STATUS.STATUS_CANCELED,
+                                });
+                                return;
+                            }
+                            data.testCases.push(...subtask.test.map((curCase, caseIndex) => ({
                                 subtaskId: subtask.$.num,
-                                id: 1,
-                                score: 0,
-                                time: 0,
-                                memory: 0,
-                                message: 'Skipped',
-                                status: STATUS.STATUS_CANCELED,
-                            });
-                            return;
-                        }
-                        data.testCases.push(...subtask.test.map((curCase, caseIndex) => ({
-                            subtaskId: subtask.$.num,
-                            id: caseIndex + 1,
+                                id: caseIndex + 1,
+                                score: curCase.$.score,
+                                time: curCase.$.time === '-1' ? 0 : curCase.time,
+                                memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
+                                message: curCase.res[0] || '',
+                                status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
+                            })));
+                        });
+                    } else if (details.tests.test) {
+                        data.testCases.push(...details.tests.test.map((curCase) => ({
+                            subtaskId: 1,
+                            id: curCase.$.num,
                             score: curCase.$.score,
                             time: curCase.$.time === '-1' ? 0 : curCase.time,
                             memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
                             message: curCase.res[0] || '',
                             status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
                         })));
-                    });
-                } else if (details.tests.test) {
-                    data.testCases.push(...details.tests.test.map((curCase) => ({
-                        subtaskId: 1,
-                        id: curCase.$.num,
-                        score: curCase.$.score,
-                        time: curCase.$.time === '-1' ? 0 : curCase.time,
-                        memory: curCase.$.memory === '-1' ? 0 : curCase.memory,
-                        message: curCase.res[0] || '',
-                        status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
-                    })));
-                }
-                data.status = Math.max(...data.testCases.map((x) => x.status));
+                    }
+                    data.status = Math.max(...data.testCases.map((x) => x.status));
+                } catch (e) { console.log(rdoc.id, result); }
             }
             if (rdoc.contest_id) {
                 data.contest = new ObjectId(tidMap[rdoc.contest_id]);
@@ -434,7 +440,7 @@ export async function run({
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
-        report({ message: `Synced ${pageId * step} / ${rcount} records` });
+        console.log({ message: `Synced ${pageId * step} / ${rcount} records` });
     }
     report({ message: 'record finished' });
 
@@ -449,11 +455,100 @@ export async function run({
         const pdoc = await ProblemModel.get(domainId, `P${file.name}`, undefined, true);
         if (!pdoc) continue;
         report({ message: `Syncing testdata for ${file.name}` });
+        const filenames = datas.map((i) => i.name);
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            await ProblemModel.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/testdata/${file.name}/${data.name}`);
+            await ProblemModel.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/var/uoj_data/${file.name}/${data.name}`);
+            if (data.name === 'problem.conf') {
+                const confInfo: any = {
+                    subtask_end: { 0: 0 },
+                    subtask_score: {},
+                    point: {},
+                };
+                const conf = await fs.readFile(`${dataDir}/var/uoj_data/${file.name}/${data.name}`, 'utf8');
+                const config: ProblemConfigFile = {
+                    subtasks: [],
+                };
+                const lines = conf.replace(/\r/g, '').split('\n').map((i) => i.trim()).filter((i) => i);
+                for (const line of lines) {
+                    const [key, value] = line.split(' ');
+                    if (key === 'use_builtin_checker') {
+                        config.checker = value;
+                        config.checker_type = 'testlib';
+                    } else if (key === 'time_limit') {
+                        config.time = `${value}s`;
+                    } else if (key === 'memory_limit') {
+                        config.memory = `${value}mb`;
+                    } else if (key.startsWith('subtask_end_')) {
+                        confInfo.subtask_end[+key.slice(12)] = +value;
+                    } else if (key.startsWith('subtask_score_')) {
+                        confInfo.subtask_score[+key.slice(14)] = +value;
+                    } else if (key.startsWith('point_score_')) {
+                        confInfo.point[+key.slice(12)] = +value;
+                    } else confInfo[key] = value;
+                }
+                if (!config.checker && filenames.includes('chk.cpp')) {
+                    config.checker_type = 'testlib';
+                    config.checker = 'chk.cpp';
+                }
+                if (filenames.includes('val.cpp')) config.validator = 'val.cpp';
+                if (confInfo.n_tests && Object.keys(confInfo.point).length === +confInfo.n_tests) {
+                    config.subtasks.push(...Object.keys(confInfo.point).map((i) => ({
+                        id: +i,
+                        score: confInfo.point[i],
+                        cases: [{
+                            input: `${confInfo.input_pre}${i}.${confInfo.input_suf}`,
+                            output: `${confInfo.output_pre}${i}.${confInfo.output_suf}`,
+                        }],
+                    })));
+                }
+                if (confInfo.n_subtasks
+                    && Object.keys(confInfo.subtask_end).length === +confInfo.n_subtasks
+                    && Object.keys(confInfo.subtask_score).length === +confInfo.n_subtasks) {
+                    config.subtasks.push(...[...new Array(+confInfo.n_subtasks)].map((v, i) => i + 1).map((i) => ({
+                        id: +i,
+                        score: confInfo.subtask_score[i],
+                        cases: [...new Array(confInfo.subtask_end[i] - (confInfo.subtask_end[i - 1] || 0))].map((v, j) => ({
+                            input: `${confInfo.input_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.input_suf}`,
+                            output: `${confInfo.output_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.output_suf}`,
+                        })),
+                    })));
+                }
+                if (confInfo.n_sample_tests || confInfo.n_ex_tests) {
+                    let subtaskId = Math.max(...config.subtasks.map((i) => i.id)) + 1 || 2;
+                    if (config.subtasks.length === 0) {
+                        config.subtasks.push({
+                            id: 1,
+                            cases: [...new Array(+confInfo.n_tests)].map((v, i) => i + 1).map((i) => ({
+                                input: `${confInfo.input_pre}${i}.${confInfo.input_suf}`,
+                                output: `${confInfo.output_pre}${i}.${confInfo.output_suf}`,
+                            })),
+                        });
+                    }
+                    if (confInfo.n_sample_tests) {
+                        config.subtasks.push({
+                            id: subtaskId++,
+                            score: 0,
+                            cases: [...new Array(+confInfo.n_sample_tests)].map((v, i) => i + 1).map((i) => ({
+                                input: `ex_${confInfo.input_pre}${i}.${confInfo.input_suf}`,
+                                output: `ex_${confInfo.output_pre}${i}.${confInfo.output_suf}`,
+                            })),
+                        });
+                    }
+                    if (confInfo.n_ex_tests) {
+                        config.subtasks.push({
+                            id: subtaskId++,
+                            score: 0,
+                            cases: [...new Array(+confInfo.n_ex_tests)].map((v, i) => i + 1).map((i) => ({
+                                input: `ex_${confInfo.input_pre}${i + (confInfo.n_sample_tests || 0)}.${confInfo.input_suf}`,
+                                output: `ex_${confInfo.output_pre}${i + (confInfo.n_sample_tests || 0)}.${confInfo.output_suf}`,
+                            })),
+                        });
+                    }
+                }
+                await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+            }
         }
-        // TODO problem.conf
     }
     return true;
 }
