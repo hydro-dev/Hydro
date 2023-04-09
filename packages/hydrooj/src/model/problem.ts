@@ -8,7 +8,7 @@ import yaml from 'js-yaml';
 import { escapeRegExp, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
-import { size, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
@@ -28,6 +28,7 @@ import user from './user';
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
+const logger = new Logger('problem');
 function sortable(source: string) {
     return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
 }
@@ -408,6 +409,7 @@ export class ProblemModel {
 
     static async import(domainId: string, filepath: string, operator: number) {
         let tmpdir = '';
+        let del = false;
         if (filepath.endsWith('.zip')) {
             tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
             let zip: AdmZip;
@@ -416,6 +418,7 @@ export class ProblemModel {
             } catch (e) {
                 throw new ValidationError('zip', null, e.message);
             }
+            del = true;
             await new Promise((resolve, reject) => {
                 zip.extractAllToAsync(tmpdir, true, (err) => {
                     if (err) reject(err);
@@ -444,7 +447,7 @@ export class ProblemModel {
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
-                    domainId, pid, pdoc.title, overrideContent || pdoc.content,
+                    domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
                     operator || pdoc.owner, pdoc.tag || [], pdoc.hidden,
                 );
                 if (files.includes('testdata')) {
@@ -466,9 +469,10 @@ export class ProblemModel {
                         }
                     }
                 }
+                if (process.env.HYDRO_CLI) logger.info(`Imported problem ${pdoc.pid} (${pdoc.title})`);
             }
         } finally {
-            await fs.remove(tmpdir);
+            if (del) await fs.remove(tmpdir);
         }
     }
 

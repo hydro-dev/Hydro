@@ -3,6 +3,7 @@
 /// <reference lib="ES2015" />
 /// <reference types="@types/sharedworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
+import { FLAG_INFO } from 'vj/constant/message';
 
 console.log('SharedWorker init');
 
@@ -55,6 +56,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
       setTimeout(() => {
         delete ack[payload.mdoc.id];
         if (acked) return;
+        if (payload.mdoc.flag & FLAG_INFO) return;
         if (Notification?.permission !== 'granted') {
           console.log('Notification permission denied');
           return;
