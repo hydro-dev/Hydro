@@ -67,7 +67,7 @@ class DataReportHandler extends Handler {
             await coll.updateOne(
                 { _id: installId },
                 {
-                    $push: {
+                    $addToSet: {
                         ips: this.request.ip,
                     },
                     $set: { downgrade: setPayload },
@@ -75,7 +75,7 @@ class DataReportHandler extends Handler {
             );
         } else {
             await coll.updateOne({ _id: installId }, {
-                $push: {
+                $addToSet: {
                     ips: this.request.ip,
                 },
                 $set: setPayload,
