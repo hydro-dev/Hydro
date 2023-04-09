@@ -407,19 +407,26 @@ export class ProblemModel {
     }
 
     static async import(domainId: string, filepath: string, operator: number) {
-        const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
-        let zip: AdmZip;
-        try {
-            zip = new AdmZip(filepath);
-        } catch (e) {
-            throw new ValidationError('zip', null, e.message);
-        }
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmpdir, true, (err) => {
-                if (err) reject(err);
-                resolve(null);
+        let tmpdir = '';
+        if (filepath.endsWith('.zip')) {
+            tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
+            let zip: AdmZip;
+            try {
+                zip = new AdmZip(filepath);
+            } catch (e) {
+                throw new ValidationError('zip', null, e.message);
+            }
+            await new Promise((resolve, reject) => {
+                zip.extractAllToAsync(tmpdir, true, (err) => {
+                    if (err) reject(err);
+                    resolve(null);
+                });
             });
-        });
+        } else if (fs.statSync(filepath).isDirectory()) {
+            tmpdir = filepath;
+        } else {
+            throw new ValidationError('file', null, 'Invalid file');
+        }
         try {
             const problems = await fs.readdir(tmpdir, { withFileTypes: true });
             for (const p of problems) {
