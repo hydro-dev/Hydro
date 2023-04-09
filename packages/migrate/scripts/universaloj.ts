@@ -4,7 +4,7 @@ import xml2js from 'xml2js';
 import {
     AdmZip, ContestModel, DomainModel, fs, MessageModel, moment,
     noop, NotFoundError, ObjectId, postJudge, ProblemConfigFile, ProblemModel, RecordDoc, RecordModel,
-    STATUS, SystemModel, Time, UserModel, ValidationError, yaml,
+    STATUS, SubtaskType, SystemModel, Time, UserModel, ValidationError, yaml,
 } from 'hydrooj';
 const statusMap = {
     Accepted: STATUS.STATUS_ACCEPTED,
@@ -461,7 +461,7 @@ export async function run({
             await ProblemModel.addTestdata(domainId, pdoc.docId, data.name, `${dataDir}/var/uoj_data/${file.name}/${data.name}`);
             if (data.name === 'problem.conf') {
                 const confInfo: any = {
-                    subtask_end: { 0: 0 },
+                    subtask_end: {},
                     subtask_score: {},
                     point: {},
                 };
@@ -514,37 +514,27 @@ export async function run({
                         })),
                     })));
                 }
-                if (confInfo.n_sample_tests || confInfo.n_ex_tests) {
-                    let subtaskId = Math.max(...config.subtasks.map((i) => i.id)) + 1 || 2;
-                    if (config.subtasks.length === 0) {
+                if (+confInfo.n_ex_tests) {
+                    let subtaskId = config.subtasks.length ? Math.max(...config.subtasks.map((i) => i.id)) + 1 : 2;
+                    if (!config.subtasks.length) {
                         config.subtasks.push({
                             id: 1,
+                            score: 97,
+                            type: 'sum' as SubtaskType,
                             cases: [...new Array(+confInfo.n_tests)].map((v, i) => i + 1).map((i) => ({
                                 input: `${confInfo.input_pre}${i}.${confInfo.input_suf}`,
                                 output: `${confInfo.output_pre}${i}.${confInfo.output_suf}`,
                             })),
                         });
                     }
-                    if (confInfo.n_sample_tests) {
-                        config.subtasks.push({
-                            id: subtaskId++,
-                            score: 0,
-                            cases: [...new Array(+confInfo.n_sample_tests)].map((v, i) => i + 1).map((i) => ({
-                                input: `ex_${confInfo.input_pre}${i}.${confInfo.input_suf}`,
-                                output: `ex_${confInfo.output_pre}${i}.${confInfo.output_suf}`,
-                            })),
-                        });
-                    }
-                    if (confInfo.n_ex_tests) {
-                        config.subtasks.push({
-                            id: subtaskId++,
-                            score: 0,
-                            cases: [...new Array(+confInfo.n_ex_tests)].map((v, i) => i + 1).map((i) => ({
-                                input: `ex_${confInfo.input_pre}${i + (confInfo.n_sample_tests || 0)}.${confInfo.input_suf}`,
-                                output: `ex_${confInfo.output_pre}${i + (confInfo.n_sample_tests || 0)}.${confInfo.output_suf}`,
-                            })),
-                        });
-                    }
+                    config.subtasks.push({
+                        id: subtaskId++,
+                        score: 3,
+                        cases: [...new Array(+confInfo.n_ex_tests)].map((v, i) => i + 1).map((i) => ({
+                            input: `ex_${confInfo.input_pre}${i}.${confInfo.input_suf}`,
+                            output: `ex_${confInfo.output_pre}${i}.${confInfo.output_suf}`,
+                        })),
+                    });
                 }
                 await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(yaml.dump(config)));
             }
