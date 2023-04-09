@@ -21,7 +21,10 @@ class AccountService {
             await coll.updateOne({ _id: account._id }, { $set: data });
         });
         this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
-        this.main().catch((e) => logger.error(`Error occured in ${account.type}/${account.handle}`, e));
+        this.main().catch((e) => {
+            logger.error(`Error occured in ${account.type}/${account.handle}`);
+            console.error(e);
+        });
     }
 
     async addProblemList(name: string) {

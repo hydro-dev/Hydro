@@ -33,10 +33,11 @@ export class BasicFetcher {
     }
 
     async html(url: string) {
-        const { text: html } = await this.get(url);
+        const { text: html, headers } = await this.get(url);
         const $dom = new JSDOM(html);
         $dom.window.html = html;
-        return $dom.window as DOMWindow & { html: string };
+        $dom.window.headers = headers;
+        return $dom.window as DOMWindow & { html: string, headers: any };
     }
 
     post(url: string) {
