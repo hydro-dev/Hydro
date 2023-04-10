@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import {
     Context, md5, Schema, sha1,
 } from 'hydrooj';
@@ -75,7 +76,7 @@ export function apply(ctx: Context) {
         return `${Buffer.from(uname).toString('base64')}|${mixedSha1}`;
     });
     ctx.provideModule('hash', 'syzoj', (password: string) => md5(`${password}syzoj2_xxx`));
-    ctx.provideModule('hash', 'uoj', (password, salt, { uname }) => md5(`${uname}${password}`));
+    ctx.provideModule('hash', 'uoj', (password, salt, { uname }) => md5(`${uname}${crypto.createHmac('md5', salt).update(password).digest('hex')}`));
 
     ctx.i18n.load('zh', {
         'migrate from hustoj': '从 HustOJ 导入',

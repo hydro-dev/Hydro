@@ -85,6 +85,8 @@ export async function run({
         KEY `ac_num` (`ac_num`,`username`)
         ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
     */
+    const configFile = await fs.readFile(`${dataDir}/opt/uoj/web/app/.config.php`, 'utf8');
+    const salt = configFile.match(/'client_salt' => '(.+?)'/)[1];
     const uidMap: Record<string, number> = {};
     const udocs = await query('SELECT * FROM `user_info`');
     const priv = await SystemModel.get('default.priv');
@@ -109,7 +111,7 @@ export async function run({
                 mailLower: handleMailLower(udoc.email || `${udoc.username}@universaloj.local`),
                 regat: new Date(udoc.register_time),
                 hash: udoc.password,
-                salt: udoc.password,
+                salt,
                 hashType: 'uoj',
                 ip: [udoc.http_x_forwarded_for || udoc.remote_addr || '127.0.0.1'],
                 loginat: new Date(),
