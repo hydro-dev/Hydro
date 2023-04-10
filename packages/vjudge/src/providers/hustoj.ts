@@ -18,7 +18,7 @@ interface HustOJRemoteConfig {
         endpoint?: string;
         usernameField?: string;
         passwordField?: string;
-        extra?: Record<string, string>;
+        extra?: Record<string, string> | (() => Promise<Record<string, string>>);
     };
     // NOTE: CAPTCHAS ARE NOT SUPPORTED
     submit?: {
@@ -83,6 +83,10 @@ const defaultConfig: HustOJRemoteConfig = {
 function isProcessing(t: string) {
     return [STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING].includes(VERDICT[t]);
 }
+// TODO
+async function parseCaptcha(image: Buffer) { // eslint-disable-line
+    return '';
+}
 
 export class HUSTOJ extends BasicFetcher implements IBasicProvider {
     config: HustOJRemoteConfig;
@@ -118,10 +122,11 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
 
     async login(username: string, password: string) {
         this.cookie = [];
-        const res = await this.post(this.config.login[0]).send({
-            [this.config.login.usernameField]: username,
-            [this.config.login.passwordField]: password,
-            ...this.config.login.extra,
+        const c = this.config.login;
+        const res = await this.post(c.endpoint).send({
+            [c.usernameField]: username,
+            [c.passwordField]: password,
+            ...(typeof c.extra === 'function' ? await c.extra() : c.extra),
         });
         this.state.username = username;
         this.cookie = res.headers['set-cookie'].join('\n');
@@ -286,6 +291,31 @@ export class YBT extends HUSTOJ {
             time: totalTime,
             memory: totalMem,
         });
+    }
+}
+
+export class YBTBAS extends HUSTOJ {
+    updateConfig() {
+        this.config.login.extra = async () => {
+            const captcha = await this.get('/login_xx.php').responseType('arraybuffer');
+            return {
+                login: '登录',
+                auth: (await parseCaptcha(captcha.body)).toLowerCase(),
+            };
+        };
+        this.config.submit = {
+            endpoint: '/action.php',
+            idField: 'problem_id',
+            langField: 'language',
+            codeField: 'source',
+            extra: { submit: '提交', user_id: this.account.handle },
+            tooFrequent: '提交频繁啦！',
+        };
+        this.config.ceInfo = {
+            endpoint: '/show_ce_info.php?runid={rid}',
+            matcher: /<td class="ceinfo">(.*?)<\/td>/gmi,
+        };
+        this.config.server = 'http://bas.ssoier.cn:8086/';
     }
 }
 
