@@ -42,6 +42,7 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     // HustOJ
     等待: STATUS.STATUS_WAITING,
     运行并评判: STATUS.STATUS_JUDGING,
+    正在评测中: STATUS.STATUS_JUDGING,
     编译成功: STATUS.STATUS_JUDGING,
     RUNNING_JUDGING: STATUS.STATUS_JUDGING,
     正确: STATUS.STATUS_ACCEPTED,
