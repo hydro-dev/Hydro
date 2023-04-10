@@ -61,7 +61,6 @@ class RemoteStorageService {
     public client: S3Client;
     public error = '';
     public bucket = 'hydro';
-    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
     private alternatives: Record<'user' | 'judge', S3Client> = {
         user: null,
         judge: null,
@@ -93,10 +92,6 @@ class RemoteStorageService {
                 endpoint: endPoint,
                 ...base,
             });
-            this.replaceWithAlternativeUrlFor = {
-                user: parseAlternativeEndpointUrl(endPointForUser),
-                judge: parseAlternativeEndpointUrl(endPointForJudge),
-            };
             if (/^https?:\/\//.test(endPointForUser)) {
                 this.alternatives.user = new S3Client({
                     endpoint: endPointForUser,
@@ -210,7 +205,6 @@ class RemoteStorageService {
         }), {
             expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
         });
-        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
         return url;
     }
 
@@ -230,10 +224,7 @@ class RemoteStorageService {
             },
             Expires: 600,
         });
-        return {
-            url: this.replaceWithAlternativeUrlFor.user(url),
-            fields,
-        };
+        return { url, fields };
     }
 
     async copy(src: string, target: string) {
