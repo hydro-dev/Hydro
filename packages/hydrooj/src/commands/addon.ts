@@ -24,7 +24,7 @@ export function register(cli: CAC) {
             fs.mkdirSync(`${dir}/locales`);
             fs.mkdirSync(`${dir}/public`);
             fs.mkdirSync(`${dir}/frontend`);
-            fs.symlinkSync(dir, path.resolve(os.homedir(), name), 'dir');
+            fs.symlinkSync(dir, path.resolve(os.homedir(), name || 'addon'), 'dir');
             addons.push(dir);
             logger.success(`Addon created at ${dir}`);
         } else if (operation && name) {
