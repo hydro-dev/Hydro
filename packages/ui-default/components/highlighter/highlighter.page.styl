@@ -84,3 +84,9 @@ code
 
 .token.space:before
 	content: '\00B7'
+
+@media print {
+  .code-toolbar>.toolbar {
+    display: none !important;
+  }
+}
