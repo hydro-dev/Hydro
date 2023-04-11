@@ -168,12 +168,12 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         // if (res.text.includes(this.config.submit.tooFrequent)) throw new TooFrequentError();
         console.log(res.text);
         if (this.config.submit.noRefetch) {
-            return this.config.submit.rid.exec(res.text)[1];
+            return res.text.match(this.config.submit.rid)[0].split('=')[1];
         }
         const url = this.config.monit.endpoint.replace('{uid}', this.state.username).replace('{pid}', id);
         this.state.pid = id;
         const r = await this.get(url);
-        return this.config.submit.rid.exec(r.text)[1];
+        return r.text.match(this.config.submit.rid)[0].split('=')[1];
     }
 
     async waitForSubmission(rid, next, end) {
@@ -381,7 +381,7 @@ export class YBTBAS extends YBT {
             codeField: 'source',
             extra: { submit: '提交', user_id: this.account.handle },
             tooFrequent: '提交频繁啦！',
-            rid: /runidx=([0-9]+)/gmi,
+            rid: /runidx=([0-9]+)/mi,
             noRefetch: true,
         };
         this.config.ceInfo = {
@@ -402,7 +402,7 @@ export class BZOJ extends HUSTOJ {
         };
         this.config.submit.tooFrequent = 'You should not submit more than twice in 10 seconds.....';
         this.config.submit.rid = /Submit_Time<\/td><\/tr>\n<tr align="center" class="evenrow"><td>([0-9]+)/igm;
-        this.config.ceInfo.matcher = /<pre>([\s\S]*?)<\/pre>/igm;
+        this.config.ceInfo.matcher = /<pre>([\s\S]*?)<\/pre>/im;
     }
 }
 
