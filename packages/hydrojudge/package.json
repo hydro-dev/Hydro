@@ -11,7 +11,7 @@
         "mongodb": "^5.2.0",
         "p-queue": "^7.3.4",
         "schemastery": "^3.7.2",
-        "shell-quote": "^1.8.0",
+        "shell-quote": "^1.8.1",
         "superagent": "^8.0.9",
         "ws": "^8.13.0"
     },

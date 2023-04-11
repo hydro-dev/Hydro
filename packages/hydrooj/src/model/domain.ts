@@ -1,5 +1,5 @@
 import { Dictionary } from 'lodash';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { Filter } from 'mongodb';
 import { DomainDoc } from '../interface';
 import * as bus from '../service/bus';
@@ -11,7 +11,7 @@ import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
-const cache = new LRU<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
+const cache = new LRUCache<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
 
 interface DomainUserArg {
     _id: number,
