@@ -113,7 +113,7 @@ const page = new NamedPage('problem_config', () => {
         delete state.config.cases;
         delete state.config.score;
       }
-      if (state.config.subtasks && state.config.subtasks.length) return;
+      if (state.config.subtasks?.length) return;
       const testdata = (state.testdata || []).map((i) => i.name);
       unsubscribe();
       const subtasks = readSubtasksFromFiles(testdata, state.config);
