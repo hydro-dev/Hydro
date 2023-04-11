@@ -3,8 +3,12 @@ import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
     _, AdmZip, BadRequestError, buildContent, ContentNode, Context, FileTooLargeError, fs,
-    Handler, PERM, ProblemConfigFile, ProblemModel, SolutionModel, ValidationError,
+    Handler, PERM, ProblemConfigFile, ProblemModel, ProblemType, SolutionModel, ValidationError, yaml,
 } from 'hydrooj';
+
+const knownRemoteMapping = {
+    bas: 'ybtbas',
+};
 
 class FpsProblemImportHandler extends Handler {
     async get() {
@@ -58,12 +62,17 @@ class FpsProblemImportHandler extends Handler {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
+            if (p.remote_oj) {
+                config.type = ProblemType.Remote;
+                config.subType = knownRemoteMapping[p.remote_oj[0]] || p.remote_oj[0];
+                config.target = p.remote_id[0];
+            }
             const title = decodeHTML(p.title.join(' '));
             const tags = _.filter(p.source, (i: string) => i.trim()).flatMap((i) => i.split(' ')).filter((i) => i);
             const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
             const tasks = [
                 ProblemModel.edit(domainId, pid, { html: true }),
-                ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(`time: ${config.time}\nmemory: ${config.memory}`)),
+                ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
             ];
             const addTestdata = (node: any, id: string, ext: string) => {
                 if (!node && typeof node !== 'string') return; // Ignore file not exist
