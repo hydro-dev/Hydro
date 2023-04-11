@@ -1,4 +1,4 @@
-import { load as loadModule } from '@hydrooj/ui-default';
+import { getFeatures, load as loadModule } from '../../lazyload';
 
 let loaded;
 
@@ -35,11 +35,12 @@ const loaders = {
   typescript: () => import('./languages/typescript'),
   yaml: () => import('./languages/yaml'),
   external: async (monaco, feat) => {
-    const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
-    for (const item of items) {
-      let apply = (item.startsWith('http') || item.startsWith('/'))
-        ? await legacyLoadExternalModule(window.externalModules[item])
-        : (await loadModule(item)).apply;
+    for (const item of await getFeatures(`monaco-${feat}`)) {
+      let apply = typeof item === 'function'
+        ? item
+        : (item.startsWith('http') || item.startsWith('/'))
+          ? await legacyLoadExternalModule(window.externalModules[item])
+          : (await loadModule(item)).apply;
       if (typeof apply !== 'function') apply = apply.default || apply.apply;
       if (typeof apply === 'function') await apply(monaco);
     }
@@ -65,7 +66,7 @@ export async function load(features = ['markdown']) {
   for (const feat of features) {
     if (loaded.includes(feat)) continue;
     if (!loaders[feat]) {
-      const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
+      const items = await getFeatures(`monaco-${feat}`);
       if (!items.length) {
         console.warn('Unknown monaco feature:', feat);
         continue;
