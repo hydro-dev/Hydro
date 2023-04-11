@@ -18,6 +18,7 @@ export * from './misc/Page';
 export { initPageLoader } from './hydro';
 
 const lazyModules = {};
+const features = {};
 export default async function load(name: string) {
   if (window.node_modules[name]) return window.node_modules[name];
   if (name === 'echarts') return import('echarts');
@@ -36,6 +37,15 @@ export default async function load(name: string) {
   });
   document.body.appendChild(tag);
   return lazyModules[name];
+}
+export async function getFeatures(name: string) {
+  const legacy = Object.keys(window.externalModules).filter((i) => i === name || i.startsWith(`${name}@`));
+  const c = Object.keys(features).filter((i) => i === name || i.startsWith(`${name}@`));
+  return legacy.concat(c);
+}
+
+export function provideFeature(name: string, content: string) {
+  features[name] = content;
 }
 
 export interface EventMap { }

@@ -1,6 +1,22 @@
-import { loadExternalModule } from 'vj/utils';
+import { load as loadModule } from '@hydrooj/ui-default';
 
 let loaded;
+
+const val: Record<string, any> = {};
+/** @deprecated */
+export async function legacyLoadExternalModule(target: string) {
+  if (val[target]) return val[target];
+  const ele = document.createElement('script');
+  ele.src = target;
+  await new Promise((resolve, reject) => {
+    ele.onload = resolve;
+    ele.onerror = reject;
+    document.head.appendChild(ele);
+  });
+  val[target] = window.exports;
+  return val[target];
+}
+
 const loaders = {
   i18n: async () => {
     const { setLocaleData } = await import('./nls');
@@ -21,7 +37,9 @@ const loaders = {
   external: async (monaco, feat) => {
     const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
     for (const item of items) {
-      let apply = await loadExternalModule(window.externalModules[item]);
+      let apply = (item.startsWith('http') || item.startsWith('/'))
+        ? await legacyLoadExternalModule(window.externalModules[item])
+        : (await loadModule(item)).apply;
       if (typeof apply !== 'function') apply = apply.default || apply.apply;
       if (typeof apply === 'function') await apply(monaco);
     }
