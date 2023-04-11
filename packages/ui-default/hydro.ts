@@ -11,7 +11,7 @@ declare global {
     UserContext: any;
     UiContext: any;
     Hydro: any;
-    externalModules: Record<string, string>;
+    externalModules: Record<string, string | (() => Promise<any>)>;
     captureException?: (e: Error) => void;
   }
 }
