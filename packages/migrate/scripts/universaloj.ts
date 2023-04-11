@@ -120,7 +120,7 @@ export async function run({
                 avatar: `gravatar:${udoc.email || `${udoc.username}@universaloj.local`}`,
                 bio: udoc.motto || '',
                 gender: sexMap[udoc.sex] || 3,
-                qq: udoc.qq || null,
+                qq: udoc.qq.toString() || null,
                 phone: udoc.cellphone || null,
             });
             if (udoc.usergroup === 'S') await UserModel.setSuperAdmin(uid);
