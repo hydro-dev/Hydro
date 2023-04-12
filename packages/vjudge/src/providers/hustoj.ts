@@ -368,10 +368,10 @@ export class YBTBAS extends YBT {
             const captcha = await this.get('/login_xx.php').responseType('arraybuffer');
             if (captcha.headers['set-cookie']) this.cookie = captcha.headers['set-cookie'];
             if (!global.parseCaptcha) await sleep(30000);
-            const parseCaptcha = global.parseCaptcha || _parseCaptcha;
+            if (!global.parseCaptcha) return { login: '登录' };
             return {
                 login: '登录',
-                auth: (await parseCaptcha(captcha.body)).toLowerCase(),
+                auth: await global.parseCaptcha(captcha.body).toLowerCase(),
             };
         };
         this.config.submit = {
@@ -389,6 +389,10 @@ export class YBTBAS extends YBT {
             selector: 'table[width="900px"]>tbody>tr>td>div>center>table>tbody>tr>td',
         };
         this.config.server = 'http://bas.ssoier.cn:8086/';
+        sleep(30000).then(() => {
+            // Prevent cookie expiration
+            if (!global.parseCaptcha) setInterval(() => this.get('/'), 60000);
+        });
     }
 }
 

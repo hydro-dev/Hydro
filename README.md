@@ -104,7 +104,19 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.8.12 / UI 4.48.12
+### Hydro 4.9.13 / UI 4.48.13
+- fps-import: 支持处理远端评测题目
+- vjudge: 添加 VERDICT.WAITING 属性
+- ui: 优化测试数据自动识别
+- vjudge: 添加一本通编程启蒙支持
+- ui: 添加 `problemset/download` 钩子
+- ui: 在打印模式下隐藏部分控件
+- core: addon create 使用符号链接
+- ui: 评测记录页面显示代码行号
+- core: 支持从解压的题目文件夹导入题目
+- core: setJudge 时添加 PRIV_UNLIMITED_ACCESS
+
+### Hydro 4.9.12 / UI 4.48.12
 - core: 修复比赛中讨论不会随比赛删除的问题
 - vjudge: codeforces: 更新登陆检查逻辑
 - ui: 在题目提交页面显示提示

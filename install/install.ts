@@ -538,10 +538,6 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
-            ...installAsJudge ? [] : [
-                'hydrooj install https://hydro.ac/language-server-0.0.1.tgz',
-                'pm2 restart hydrooj',
-            ],
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             ['pm2 install pm2-logrotate', { retry: true }],

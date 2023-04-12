@@ -67,7 +67,7 @@ async function runWebpack({
     if (fs.existsSync(statsPath)) {
       log('Compare to last production bundle:');
       const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
-      for (const key in stats) if (!oldStats[key]) oldStats[key] = 0;
+      for (const key in stats) oldStats[key] ||= 0;
       const entries: [filename: string, orig: number, curr: number][] = [];
       for (const [key, value] of Object.entries(oldStats)) {
         if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
