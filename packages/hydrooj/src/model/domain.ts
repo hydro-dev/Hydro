@@ -102,7 +102,7 @@ class DomainModel {
         const result = await coll.findOneAndUpdate({ lower: domainId }, { $set }, { returnDocument: 'after' });
         if (result.value) {
             await bus.parallel('domain/update', domainId, $set, result.value);
-            cache.delete(`id::${domainId}`);
+            bus.broadcast('domain/delete-cache', domainId);
         }
         return result.value;
     }
