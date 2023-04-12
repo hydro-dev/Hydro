@@ -163,6 +163,7 @@ export enum ProblemType {
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
     Objective = 'objective',
+    Remote = 'remote_judge',
 }
 
 export enum SubtaskType {

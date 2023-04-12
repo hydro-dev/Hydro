@@ -407,7 +407,7 @@ export class ProblemModel {
         return true;
     }
 
-    static async import(domainId: string, filepath: string, operator: number) {
+    static async import(domainId: string, filepath: string, operator = 1) {
         let tmpdir = '';
         let del = false;
         if (filepath.endsWith('.zip')) {
@@ -482,6 +482,7 @@ export class ProblemModel {
         await fs.mkdir(tmpdir);
         const pdocs = await ProblemModel.getMulti(domainId, {}, ProblemModel.PROJECTION_PUBLIC).toArray();
         for (const pdoc of pdocs) {
+            if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid} (${pdoc.title})`);
             const problemPath = path.join(tmpdir, `${pdoc.docId}`);
             await fs.mkdir(problemPath);
             const problemYaml = path.join(problemPath, 'problem.yaml');
