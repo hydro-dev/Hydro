@@ -39,7 +39,7 @@ const loaders = {
       let apply = typeof item === 'function'
         ? item
         : (item.startsWith('http') || item.startsWith('/'))
-          ? await legacyLoadExternalModule(window.externalModules[item])
+          ? await legacyLoadExternalModule(item)
           : (await loadModule(item)).apply;
       if (typeof apply !== 'function') apply = apply.default || apply.apply;
       if (typeof apply === 'function') await apply(monaco);
