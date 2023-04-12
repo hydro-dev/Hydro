@@ -72,8 +72,8 @@ async function chooseAction(authn?: boolean) {
 export default new AutoloadPage('user_verify', () => {
   $(document).on('click', '[name="login_submit"]', async (ev) => {
     ev.preventDefault();
-    const $form = ev.currentTarget.form;
-    const uname = $('[name="uname"]').val() as string;
+    const form = ev.currentTarget.form;
+    const uname = $(form).find('[name="uname"]').val() as string;
     const info = await api(gql`
       uname: user(uname:${uname}){
         tfa authn
@@ -88,13 +88,13 @@ export default new AutoloadPage('user_verify', () => {
       let action = (authn && tfa) ? await chooseAction(true) : '';
       action ||= tfa ? await chooseAction(false) : 'webauthn';
       if (action === 'webauthn') {
-        const challenge = await verifywebauthn($form);
-        if (challenge) $form['authnChallenge'].value = challenge;
+        const challenge = await verifywebauthn(form);
+        if (challenge) form['authnChallenge'].value = challenge;
         else return;
-      } else if (action === 'tfa') $form['tfa'].value = $('[name="tfa_code"]').val() as string;
+      } else if (action === 'tfa') form['tfa'].value = $('[name="tfa_code"]').val() as string;
       else return;
     }
-    $form.submit();
+    form.submit();
   });
   $(document).on('click', '[name=webauthn_verify]', async (ev) => {
     ev.preventDefault();
