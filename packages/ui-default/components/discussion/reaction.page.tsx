@@ -79,7 +79,7 @@ const reactionPage = new AutoloadPage('reactionPage', () => {
     const target = $(e.currentTarget);
     const res = await request.post('', {
       operation: 'reaction',
-      type: target.parent().data('type'),
+      nodeType: target.parent().data('type'),
       id: target.parent().data(target.parent().data('type')),
       emoji: target.text().trim().split(' ')[0],
       reverse: target.hasClass('active'),

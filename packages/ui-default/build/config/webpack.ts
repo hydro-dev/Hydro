@@ -243,7 +243,6 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         filename: '[name].css?[fullhash:6]',
       }),
       new WebpackManifestPlugin({}),
-      new DuplicatesPlugin(),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
       new CopyWebpackPlugin({
         patterns: [
@@ -263,6 +262,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minChunkSize: 128000,
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
+      new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
       new MonacoWebpackPlugin({
         filename: '[name].[hash:6].worker.js',
         customLanguages: [{
@@ -274,7 +274,10 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           },
         }],
       }),
-      ...env.measure ? [new BundleAnalyzerPlugin({ analyzerPort: 'auto' })] : [],
+      ...env.measure ? [
+        new BundleAnalyzerPlugin({ analyzerPort: 'auto' }),
+        new DuplicatesPlugin(),
+      ] : [],
     ],
   };
 

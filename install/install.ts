@@ -4,6 +4,8 @@
 import { execSync, ExecSyncOptions } from 'child_process';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
+import os, { cpus } from 'os';
+import { createInterface } from 'readline/promises';
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -43,6 +45,9 @@ const locales = {
         'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Ubuntu 22.04 系统进行安装。
 开发者对因为使用宝塔面板的数据丢失不承担任何责任。
 要取消安装，请使用 Ctrl-C 退出。安装程序将在五秒后继续。`,
+        'migrate.hustojFound': `检测到 HustOJ。安装程序可以将 HustOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 HustOJ）
+该功能支持原版 HustOJ 和部分修改版，输入 y 确认该操作。
+迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
@@ -66,15 +71,19 @@ To ignore this warning, please run this script again with '--shamefully-unsafe-b
         'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a pure Ubuntu 22.04 OS.
 The developer is not responsible for any data loss caused by using BT-Panel.
 To cancel the installation, please use Ctrl-C to exit. The installation program will continue in five seconds.`,
+        'migrate.hustojFound': `HustOJ detected. The installation program can migrate all data from HustOJ to Hydro.
+The original data will not be lost, and you can switch back to HustOJ at any time.
+This feature supports the original version of HustOJ and some modified versions. Enter y to confirm this operation.
+If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
     },
 };
 
 const installAsJudge = process.argv.includes('--judge');
 const noCaddy = process.argv.includes('--no-caddy');
-const installTarget = installAsJudge
-    ? '@hydrooj/hydrojudge'
-    : 'hydrooj @hydrooj/hydrojudge @hydrooj/ui-default @hydrooj/fps-importer';
-const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer'];
+const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer', '@hydrooj/a11y'];
+const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
+const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
+const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -105,7 +114,7 @@ if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
-let migration;
+let migration = '';
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -148,11 +157,30 @@ gid: 1536
 const Caddyfile = `\
 # 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
 # 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
-# 仅需将 :80 改为你的域名（如 hydro.ac）后直接重载配置即可自动签发 ssl 证书。
+# 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
 # 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
-  reverse_proxy http://127.0.0.1:8888
+  log {
+    output file /data/access.log {
+      roll_size 1gb
+      roll_keep_for 72h
+    }
+    format json
+  }
+  # Handle static files directly, for better performance.
+  root * /root/.hydro/static
+  @static {
+    file {
+      try_files {path}
+    }
+  }
+  handle @static {
+    file_server
+  }
+  handle {
+    reverse_proxy http://127.0.0.1:8888
+  }
 }
 `;
 
@@ -172,13 +200,19 @@ processLimit: 128
 testcases_max: 60
 total_time_limit: 300
 retry_delay_sec: 3
-parallelism: 10
+parallelism: ${Math.floor(cpus().length / 2)}
 rate: 1.00
 rerun: 0
-secret: examplesecret
+secret: Hydro-Judge-Secret
 env: |
-    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/nodejs/bin
+    PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
+`;
+
+const nixConfBase = `
+trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydro.ac:EytfvyReWHFwhY9MCGimCIn46KQNfmv9y8E2NqlNfxQ=
+connect-timeout = 10
+experimental-features = nix-command flakes
 `;
 
 const isPortFree = async (port: number) => {
@@ -224,6 +258,21 @@ function rollbackResolveField() {
     return true;
 }
 
+const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
+// TODO: refuse to install if mem < 1.5
+const wtsize = Math.max(0.25, Math.floor((mem / 6) * 100) / 100);
+
+const printInfo = [
+    'echo "扫码加入QQ群："',
+    'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
+    () => {
+        if (installAsJudge) return;
+        password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
+        log.info('extra.dbUser');
+        log.info('extra.dbPassword', password);
+    },
+];
+
 const Steps = () => [
     {
         init: 'install.preparing',
@@ -241,30 +290,51 @@ const Steps = () => [
                 }
             },
             () => {
+                if (substituters.length) {
+                    writeFileSync('/etc/nix/nix.conf', `substituters = ${substituters.join(' ')}
+${nixConfBase}`);
+                } else if (!CN) {
+                    writeFileSync('/etc/nix/nix.conf', `substituters = https://cache.nixos.org/ https://nix.hydro.ac/cache
+${nixConfBase}`);
+                }
                 if (CN) return;
                 // rollback mirrors
-                writeFileSync('/etc/nix/nix.conf', `substituters = https://cache.nixos.org/ https://nix.hydro.ac/cache
-trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= hydro.ac:EytfvyReWHFwhY9MCGimCIn46KQNfmv9y8E2NqlNfxQ=
-connect-timeout = 10`);
-                exec('nix-channel --del nixpkgs', { stdio: 'inherit' });
-                exec('nix-channel --add nixpkgs https://nixos.org/channels/nixpkgs-unstable', { stdio: 'inherit' });
+                exec('nix-channel --remove nixpkgs', { stdio: 'inherit' });
+                exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
             'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
-            () => {
-                // Not implemented yet
-                // if (fs.existsSync('/home/judge/src')) {
-                //     const res = cli.prompt('migrate.hustojFound');
-                //     if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
-                // }
-
-                // const docker = !exec1('docker -v').code;
-                // if (!docker) return;
-                // // TODO check more places
-                // if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
-                //     const res = cli.prompt('migrate.qduojFound');
-                //     if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
-                // }
+            async () => {
+                const rl = createInterface(process.stdin, process.stdout);
+                try {
+                    if (existsSync('/home/judge/src')) {
+                        log.info('migrate.hustojFound');
+                        const res = await rl.question('>');
+                        if (res.toLowerCase().trim() === 'y') migration = 'hustoj';
+                    }
+                    if (migration) return;
+                    const docker = !exec('docker -v').code;
+                    if (!docker) return;
+                    const containers = exec('docker ps -a --format json').output?.split('\n')
+                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
+                    const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
+                    if (uoj) {
+                        // not ready for production
+                        return;
+                        log.info('migrate.uojFound');
+                        const res = await rl.question('>');
+                        if (res.toLowerCase().trim() === 'y') migration = 'uoj';
+                    }
+                    // // TODO check more places
+                    // if (fs.exist('/root/OnlineJudgeDeploy/docker-compose.yml')) {
+                    //     const res = cli.prompt('migrate.qduojFound');
+                    //     if (res.toLowerCase().trim() === 'y') migration = 'qduoj';
+                    // }
+                } catch (e) {
+                    console.error('Failed migration detection');
+                } finally {
+                    rl.close();
+                }
             },
         ],
     },
@@ -360,12 +430,18 @@ connect-timeout = 10`);
             () => writeFileSync(`${process.env.HOME}/.hydro/mount.yaml`, mount),
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
             ...installAsJudge ? [] : [
-                'pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0',
+                () => console.log(`WiredTiger cache size: ${wtsize}GB`),
+                `pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
                 'pm2 start hydrooj',
                 async () => {
                     if (noCaddy) return;
                     if (!await isPortFree(80)) log.warn('port.80');
+                    if (migration === 'hustoj') {
+                        exec('systemctl stop nginx || true');
+                        exec('systemctl disable nginx || true');
+                        exec('/etc/init.d/nginx stop || true');
+                    }
                     exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
                     exec('hydrooj cli system set server.xff x-forwarded-for');
                     exec('hydrooj cli system set server.xhost x-forwarded-host');
@@ -376,46 +452,92 @@ connect-timeout = 10`);
         ],
     },
     {
-        init: 'install.migrateHustoj',
-        skip: () => migration !== 'hustoj',
+        init: 'install.migrate',
+        skip: () => !migration,
         silent: true,
         operations: [
             ['yarn global add @hydrooj/migrate', { retry: true }],
             'hydrooj addon add @hydrooj/migrate',
+        ],
+    },
+    {
+        init: 'install.migrateHustoj',
+        skip: () => migration !== 'hustoj',
+        silent: true,
+        operations: [
             () => {
+                const dbInc = readFileSync('/home/judge/src/web/include/db_info.inc.php', 'utf-8');
+                const l = dbInc.split('\n');
+                function getConfig(key) {
+                    const t = l.find((i) => i.includes(`$${key}`))?.split('=', 2)[1].split(';')[0].trim();
+                    if (!t) return null;
+                    if (t.startsWith('"') && t.endsWith('"')) return t.slice(1, -1);
+                    if (t === 'false') return false;
+                    if (t === 'true') return true;
+                    return +t;
+                }
                 const config = {
-                    host: 'localhost',
+                    host: getConfig('DB_HOST'),
                     port: 3306,
-                    name: 'jol',
-                    dataDir: '/home/judge/data',
-                    // TODO: auto-read uname&passwd&contestType
-                    username: 'debian-sys-maint',
-                    password: '',
-                    contestType: 'acm',
+                    name: getConfig('DB_NAME'),
+                    dataDir: getConfig('OJ_DATA'),
+                    username: getConfig('DB_USER'),
+                    password: getConfig('DB_PASS'),
+                    contestType: getConfig('OJ_OI_MODE') ? 'oi' : 'acm',
+                    domainId: 'system',
                 };
-                exec(`hydrooj cli script migrateHustoj ${JSON.stringify(config)}`);
+                console.log(config);
+                exec(`hydrooj cli script migrateHustoj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
+                if (!getConfig('OJ_REGISTER')) exec('hydrooj cli user setPriv 0 0');
             },
             'pm2 restart hydrooj',
         ],
     },
     {
-        init: 'install.done',
-        skip: () => installAsJudge,
+        init: 'install.migrateUoj',
+        skip: () => migration !== 'uoj',
+        silent: true,
         operations: [
             () => {
-                password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
+                const containers = exec('docker ps -a --format json').output?.split('\n')
+                    .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
+                const uoj = containers!.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running')!;
+                const info = JSON.parse(exec(`docker inspect ${uoj.Id}`).output!);
+                const dir = info[0].GraphDriver.Data.MergedDir;
+                exec(`sed s/127.0.0.1/0.0.0.0/g -i ${dir}/etc/mysql/mysql.conf.d/mysqld.cnf`);
+                exec(`docker exec -i ${uoj.Id} /etc/init.d/mysql restart`);
+                const passwd = readFileSync(`${dir}/etc/mysql/debian.cnf`, 'utf-8')
+                    .split('\n').find((i) => i.startsWith('password'))?.split('=')[1].trim();
+                const script = [
+                    `CREATE USER 'hydromigrate'@'%' IDENTIFIED BY '${password}';`,
+                    'GRANT ALL PRIVILEGES ON *.* TO \'hydromigrate\'@\'%\' WITH GRANT OPTION;',
+                    'FLUSH PRIVILEGES;',
+                    '',
+                ].join('\n');
+                exec(`docker exec -i ${uoj.Id} mysql -u debian-sys-maint -p${passwd} -e "${script}"`);
+                const config = {
+                    host: info[0].NetworkSettings.IPAddress,
+                    port: 3306,
+                    name: 'app_uoj233',
+                    dataDir: `${dir}/var/uoj_data`,
+                    username: 'hydromigrate',
+                    password,
+                    domainId: 'system',
+                };
+                console.log(config);
+                // TODO mail config
+                exec(`hydrooj cli script migrateUoj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
             },
-            () => log.info('extra.dbUser'),
-            () => log.info('extra.dbPassword', password),
         ],
+    },
+    {
+        init: 'install.done',
+        skip: () => installAsJudge,
+        operations: printInfo,
     },
     {
         init: 'install.postinstall',
         operations: [
-            ...installAsJudge ? [] : [
-                'hydrooj install https://hydro.ac/language-server-0.0.1.tgz',
-                'pm2 restart hydrooj',
-            ],
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             ['pm2 install pm2-logrotate', { retry: true }],
@@ -425,6 +547,7 @@ connect-timeout = 10`);
     {
         init: 'install.alldone',
         operations: [
+            ...printInfo,
             () => log.info('install.alldone'),
             () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
         ],

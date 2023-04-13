@@ -35,7 +35,7 @@
               <h1 class="section__tab-title">{{ file }}</h1>
               <div class="section__tab-main submit-file__{{ file }}">
                 {% set lang = rdoc.lang[file] if typeof(rdoc.lang) == 'object' else (rdoc.lang if file == 'code' else 'plain') %}
-                <pre><code class="line-numbers language-{{ model.setting.langs[lang].highlight }}">{{ rdoc.code if (file == 'code' and rdoc.code) else rdoc.files[file] }}</code></pre>
+                <pre class="line-numbers"><code class="language-{{ model.setting.langs[lang].highlight }}">{{ rdoc.code if (file == 'code' and rdoc.code) else rdoc.files[file] }}</code></pre>
                 <a class="primary rounded button" href="?download={{ file }}"><span class="icon icon-download"></span> {{ _('Download') }}</a>
               </div>
             </li>

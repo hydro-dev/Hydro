@@ -22,14 +22,19 @@ Feel free to create an account and then navigate to `MyAccount > MyDomains > Cre
 
 ## Contact US
 
-QQ [3402182471](https://wpa.qq.com/msgrd?v=3&uin=3402182471&site=qq&menu=yes)  
+Email: i@undefined.moe  
 Hydro QQ User Group: 1085853538  
 Telegram Group [@hydrodev](https://t.me/hydrodev)
 Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
 
 ## License
 
-AGPL3
+The software is distributed under AGPLv3 with additional terms.
+
+Additional terms under AGPLv3 Section 7:
+
+1. You must not remove the copyright declaration displayed in the software. (Under [AGPLv3, 7(b)](LICENSE#L356))  
+2. When you distribute a modified version of the software, you must change the software name or the version number in a reasonable way in order to distinguish it from the original version. (Under [AGPLv3, 7(c)](LICENSE#360))
 
 ## Contributing
 

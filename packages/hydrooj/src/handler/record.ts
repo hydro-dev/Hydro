@@ -3,7 +3,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import {
-    ContestNotAttendedError, ContestNotFoundError, HackRejudgeFailedError,
+    ContestNotFoundError, HackRejudgeFailedError,
     PermissionError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
@@ -46,26 +46,27 @@ class RecordListHandler extends ContestDetailBaseHandler {
         this.response.template = 'record_main.html';
         const q: Filter<RecordDoc> = { contest: tid };
         if (full) uidOrName = this.user._id.toString();
-        if (tid) {
-            tdoc = await contest.get(domainId, tid);
-            this.tdoc = tdoc;
-            if (!tdoc) throw new ContestNotFoundError(domainId, pid);
-            if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
-                if (contest.canShowRecord.call(this, tdoc, true)) {
-                    const name = tdoc.rule === 'homework'
-                        ? "You haven't claimed this homework yet."
-                        : "You haven't attended this contest yet.";
-                    notification.push({ name, args: { type: 'note' }, checker: () => true });
-                } else throw new ContestNotAttendedError(domainId, tid);
-            }
-        }
         if (uidOrName) {
             const udoc = await user.getById(domainId, +uidOrName)
                 || await user.getByUname(domainId, uidOrName)
                 || await user.getByEmail(domainId, uidOrName);
             if (udoc) q.uid = udoc._id;
             else invalid = true;
+        }
+        if (tid) {
+            tdoc = await contest.get(domainId, tid);
+            this.tdoc = tdoc;
+            if (!tdoc) throw new ContestNotFoundError(domainId, pid);
+            if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!contest[q.uid === this.user._id ? 'canShowSelfRecord' : 'canShowRecord'].call(this, tdoc, true)) {
+                throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            }
+            if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
+                const name = tdoc.rule === 'homework'
+                    ? "You haven't claimed this homework yet."
+                    : "You haven't attended this contest yet.";
+                notification.push({ name, args: { type: 'note' }, checker: () => true });
+            }
         }
         if (pid) {
             if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {

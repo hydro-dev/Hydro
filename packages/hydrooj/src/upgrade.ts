@@ -17,6 +17,7 @@ import MessageModel from './model/message';
 import problem from './model/problem';
 import RecordModel from './model/record';
 import ScheduleModel from './model/schedule';
+import StorageModel from './model/storage';
 import * as system from './model/system';
 import TaskModel from './model/task';
 import user from './model/user';
@@ -531,6 +532,55 @@ const scripts: UpgradeScript[] = [
             await db.collection('message').updateOne({ _id: m._id }, { $set: { content } });
         }
         return true;
+    },
+    async function _76_77() {
+        return await iterateAllProblem(['domainId', 'title', 'docId', 'data'], async (pdoc, current, total) => {
+            if (!pdoc.data?.find((i) => i.name.includes('/'))) return;
+            logger.info(pdoc.domainId, pdoc.docId, pdoc.title, pdoc.data.map((i) => i._id));
+            const prefix = `problem/${pdoc.domainId}/${pdoc.docId}/testdata/`;
+            for (const file of pdoc.data) {
+                if (!file._id.includes('/')) continue;
+                let newName = file._id.split('/')[1].toLowerCase();
+                if (pdoc.data.find((i) => i._id === newName)) {
+                    newName = file._id.replace(/\//g, '_').toLowerCase();
+                }
+                await StorageModel.rename(`${prefix}${file._id}`, `${prefix}${newName}`);
+                file._id = newName;
+                file.name = newName;
+            }
+            await problem.edit(pdoc.domainId, pdoc.docId, { data: pdoc.data });
+        });
+    },
+    async function _77_78() {
+        await document.coll.updateMany({ docType: document.TYPE_DISCUSSION }, { $set: { hidden: false } });
+        return true;
+    },
+    async function _78_79() {
+        const t = await document.collStatus.find({
+            docType: document.TYPE_CONTEST, journal: { $elemMatch: { rid: null } },
+        }).toArray();
+        for (const r of t) {
+            r.journal = r.journal.filter((i) => i.rid !== null);
+            await document.collStatus.updateOne({ _id: r._id }, { $set: { journal: r.journal } });
+        }
+        return await iterateAllContest(async (tdoc) => {
+            if (tdoc.rule !== 'acm') return;
+            logger.info(tdoc.domainId, tdoc.title);
+            await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+            if (contest.isDone(tdoc)) await contest.unlockScoreboard(tdoc.domainId, tdoc.docId);
+        });
+    },
+    async function _79_80() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                try {
+                    await contest.get(_id, ddoc.parentId as ObjectId);
+                } catch (e) {
+                    await discussion.del(_id, ddoc.docId);
+                }
+            }
+        });
     },
 ];
 

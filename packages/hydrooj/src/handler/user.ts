@@ -1,6 +1,7 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
+import { Time } from '@hydrooj/utils';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -264,13 +265,15 @@ export class UserRegisterHandler extends Handler {
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
             await this.limitRate('send_sms', 60, 3);
-            const t = await token.add(
+            const id = String.random(6, '0123456789');
+            await token.add(
                 token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
+                10 * Time.minute,
                 { phone: phoneNumber },
-                String.random(6),
+                id,
             );
-            await global.Hydro.lib.sendSms(phoneNumber, 'register', t[0]);
+            await global.Hydro.lib.sendSms(phoneNumber, 'register', id);
+            this.response.body = { phone: phoneNumber };
             this.response.template = 'user_register_sms.html';
         } else throw new ValidationError('mail');
     }
@@ -298,11 +301,12 @@ class UserRegisterWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_REGISTRATION);
         if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
         if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
+        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = tdoc.mail.split('@');
         const $set: any = tdoc.set || {};
+        if (tdoc.phone) $set.phone = tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);

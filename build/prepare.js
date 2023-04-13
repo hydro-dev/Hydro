@@ -11,6 +11,7 @@ if (process.env.npm_execpath.includes('yarn')) {
 const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
 const types = fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i));
 
+/** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
     target: 'es2020',
     module: 'commonjs',
@@ -20,6 +21,7 @@ const compilerOptionsBase = {
     sourceMap: false,
     composite: true,
     strictBindCallApply: true,
+    resolveJsonModule: true,
     experimentalDecorators: true,
     // emitDecoratorMetadata: true,
     incremental: true,
@@ -53,15 +55,15 @@ const configFlat = (name) => ({
         rootDir: '.',
     },
     include: ['**/*.ts'],
-    exclude: ['public'],
+    exclude: ['public', 'frontend'],
 });
 
 for (const name of ['plugins', 'modules']) {
     if (!fs.existsSync(path.resolve(process.cwd(), name))) {
         fs.mkdirSync(path.resolve(process.cwd(), name));
-        // Write an empty file to make eslint happy
-        fs.writeFileSync(path.resolve(process.cwd(), name, 'eslint.ts'), '');
     }
+    // Write an empty file to make eslint happy
+    fs.writeFileSync(path.resolve(process.cwd(), name, 'nop.ts'), 'export default {};\n');
 }
 
 const modules = [
@@ -73,7 +75,10 @@ const UIConfig = {
     exclude: [
         'packages/ui-default/public',
     ],
-    include: ['ts', 'tsx'].flatMap((ext) => [].map((name) => `${name}/**/public/**/*.${ext}`).concat(`packages/ui-default/**/*.${ext}`)),
+    include: ['ts', 'tsx']
+        .flatMap((ext) => ['plugins', 'modules']
+            .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
+            .concat(`packages/ui-default/**/*.${ext}`)),
     compilerOptions: {
         experimentalDecorators: true,
         esModuleInterop: true,

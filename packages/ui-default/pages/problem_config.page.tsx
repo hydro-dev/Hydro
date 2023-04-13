@@ -85,9 +85,8 @@ const page = new NamedPage('problem_config', () => {
   }
 
   async function mountComponent() {
-    const [{ default: ProblemConfigEditor }, { default: ProblemConfigForm }, { default: ProblemConfigReducer }] = await Promise.all([
-      import('vj/components/problemconfig/ProblemConfigEditor'),
-      import('vj/components/problemconfig/ProblemConfigForm'),
+    const [{ default: ProblemConfig }, { default: ProblemConfigReducer }] = await Promise.all([
+      import('vj/components/problemconfig/index'),
       import('vj/components/problemconfig/reducer'),
     ]);
 
@@ -105,11 +104,16 @@ const page = new NamedPage('problem_config', () => {
       if (!state.config.__loaded) return;
       if (state.config.cases) {
         const score = state.config.score * state.config.cases.length;
-        state.config.subtasks = [{ type: 'sum' as SubtaskType, score: score && score < 100 ? score : 100, cases: state.config.cases }];
+        state.config.subtasks = [{
+          type: 'sum' as SubtaskType,
+          score: score && score < 100 ? score : 100,
+          cases: state.config.cases,
+          id: 1,
+        }];
         delete state.config.cases;
         delete state.config.score;
       }
-      if (state.config.subtasks) return;
+      if (state.config.subtasks?.length) return;
       const testdata = (state.testdata || []).map((i) => i.name);
       unsubscribe();
       const subtasks = readSubtasksFromFiles(testdata, state.config);
@@ -120,15 +124,7 @@ const page = new NamedPage('problem_config', () => {
     });
     createRoot(document.getElementById('ProblemConfig')!).render(
       <Provider store={store}>
-        <div className="row">
-          <div className="medium-5 columns">
-            <ProblemConfigEditor />
-          </div>
-          <div className="medium-7 columns">
-            <ProblemConfigForm />
-          </div>
-        </div>
-        <button className="rounded primary button" onClick={() => uploadConfig(store.getState().config)}>{i18n('Submit')}</button>
+        <ProblemConfig onSave={() => uploadConfig(store.getState().config)} />
       </Provider>,
     );
   }

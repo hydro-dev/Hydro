@@ -83,37 +83,37 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     async getCsrfToken(url: string) {
-        const { document, html } = await this.html(url);
+        const { document, html, headers } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
-            throw new Error(document.body.textContent);
+            throw new Error(document.body.textContent!);
         }
-        const ftaa = this.getCookie('70a7c28f3de');
-        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa');
+        const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
+        const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
         return [
             (
                 document.querySelector('meta[name="X-Csrf-Token"]')
                 || document.querySelector('input[name="csrf_token"]')
             )?.getAttribute('content'),
-            ftaa, bfaa,
+            ftaa, bfaa, headers,
         ];
     }
 
     get loggedIn() {
-        return this.get('/enter').then((res) => {
+        return this.get('/').then((res) => {
             const html = res.text;
-            if (html.includes('Login into Codeforces')) return false;
             if (html.length < 1000 && html.includes('Redirecting...')) {
                 logger.debug('Got a redirect', html);
                 return false;
             }
-            return true;
+            return html.includes('header-bell__img');
         });
     }
 
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry normal login');
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
+        const [csrf, ftaa, bfaa, header] = await this.getCsrfToken('/enter');
+        if (header['set-cookie']) this.setCookie(header['set-cookie']);
         const res = await this.post('/enter').send({
             csrf_token: csrf,
             action: 'enter',

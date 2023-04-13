@@ -7,7 +7,7 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Submit to Judge') }}</h1>
       </div>
-      <div class="section__body">
+      <div class="section__body typo" name="submit_section">
         <form method="post" enctype="multipart/form-data">
           {% set files = pdoc.config.submit_files or ['code'] %}
           <div class="section__tab-container">

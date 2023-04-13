@@ -33,14 +33,6 @@ export class FormatError extends Error {
     }
 }
 
-export class RuntimeError extends Error {
-    type = 'RuntimeError';
-
-    constructor(public detail: string, message: string) {
-        super(message);
-    }
-}
-
 export class SystemError extends Error {
     type = 'SystemError';
 

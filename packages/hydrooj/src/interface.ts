@@ -5,6 +5,7 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type { Context } from './context';
+import type { DocStatusType } from './model/document';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
@@ -162,6 +163,7 @@ export enum ProblemType {
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
     Objective = 'objective',
+    Remote = 'remote_judge',
 }
 
 export enum SubtaskType {
@@ -201,6 +203,8 @@ export interface ProblemConfigFile {
     subtasks?: SubtaskConfig[];
     langs?: string[];
     validator?: string;
+    time_limit_rate?: Record<string, number>;
+    memory_limit_rate?: Record<string, number>;
 }
 
 export interface ProblemConfig {
@@ -464,6 +468,7 @@ declare module './model/discussion' {
         sort: number;
         lastRCount: number;
         lock?: boolean;
+        hidden?: boolean;
     }
 }
 
@@ -508,6 +513,11 @@ export interface ContestStat extends Record<string, any> {
     unrank?: boolean,
 }
 
+export interface ScoreboardConfig {
+    isExport: boolean;
+    lockAt?: Date;
+}
+
 export interface ContestRule<T = any> {
     _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
@@ -520,16 +530,16 @@ export interface ContestRule<T = any> {
     showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
     stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (
-        this: ContestRule<T>, isExport: boolean, _: (s: string) => string,
+        this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc<30>, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
     ranked: (tdoc: Tdoc<30>, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
@@ -650,7 +660,9 @@ declare module './service/db' {
         'domain.user': any;
         'record': RecordDoc;
         'document': any;
-        'document.status': StatusDocBase;
+        'document.status': StatusDocBase & {
+            [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
+        }[keyof DocStatusType];
         'discussion.history': DiscussionHistoryDoc;
         'user': Udoc;
         'user.preference': UserPreferenceDoc;

@@ -195,14 +195,16 @@ class JudgeConnectionHandler extends ConnectionHandler {
     async newTask() {
         if (this.processing) return;
         let t;
+        let rdoc: RecordDoc;
         while (!t) {
             if (this.closed) return;
-            // eslint-disable-next-line no-await-in-loop
+            /* eslint-disable no-await-in-loop */
             t = await task.getFirst(this.query);
-            // eslint-disable-next-line no-await-in-loop
             if (!t) await sleep(500);
+            else rdoc = await record.get(t.domainId, t.rid);
+            /* eslint-enable no-await-in-loop */
+            if (!rdoc) t = null;
         }
-        let rdoc = await record.get(t.domainId, t.rid);
         this.send({ task: { ...rdoc, ...t } });
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
@@ -211,7 +213,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        if (msg.key !== 'ping' && msg.key !== 'prio') logger[['status', 'next'].includes(msg.key) ? 'debug' : 'info']('%o', omit(msg, 'key'));
+        if (msg.key !== 'ping' && msg.key !== 'prio') {
+            const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
+            const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
+            logger[method]('%o', omit(msg, keys));
+        }
         if (msg.key === 'next') await next(msg);
         else if (msg.key === 'end') {
             if (!msg.nop) await end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e));

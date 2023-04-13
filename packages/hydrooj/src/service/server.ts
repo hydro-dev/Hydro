@@ -180,6 +180,11 @@ export class Handler extends HandlerCommon {
         if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
+    // This is beta API, may be changed in the future.
+    progress(message: string) {
+        Hydro.model.message.sendInfo(this.user._id, message);
+    }
+
     async init() {
         if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
             const host = new URL(this.request.headers.referer).host;
@@ -383,12 +388,34 @@ export function Connection(
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
             for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
-            conn.onmessage = (e) => h.message?.(JSON.parse(e.data.toString()));
-            conn.onclose = () => {
+            let lastHeartbeat = Date.now();
+            let closed = false;
+            let interval: NodeJS.Timer;
+            const clean = () => {
+                if (closed) return;
+                closed = true;
                 bus.emit('connection/close', h);
+                if (interval) clearInterval(interval);
                 disposables.forEach((d) => d());
                 h.cleanup?.(args);
             };
+            interval = setInterval(() => {
+                if (Date.now() - lastHeartbeat > 80000) {
+                    clean();
+                    conn.terminate();
+                }
+                if (Date.now() - lastHeartbeat > 30000) conn.send('ping');
+            }, 40000);
+            conn.onmessage = (e) => {
+                lastHeartbeat = Date.now();
+                if (e.data === 'pong') return;
+                if (e.data === 'ping') {
+                    conn.send('pong');
+                    return;
+                }
+                h.message?.(JSON.parse(e.data.toString()));
+            };
+            conn.onclose = clean;
             await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
@@ -544,7 +571,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
         socket.close();
     });
     const port = system.get('server.port');
-    pluginContext.on('app/ready', async () => {
+    pluginContext.on('app/listen', async () => {
         await new Promise((r) => {
             httpServer.listen(argv.options.port || port, () => {
                 logger.success('Server listening at: %d', argv.options.port || port);

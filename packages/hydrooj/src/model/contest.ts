@@ -7,16 +7,14 @@ import {
 } from '../error';
 import {
     BaseUserDict, ContestRule, ContestRules, ProblemDict,
-    ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
+    ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
-import { buildProjection } from '../utils';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
-import RecordModel from './record';
 import user, { User } from './user';
 
 interface AcmJournal {
@@ -55,45 +53,51 @@ const acm = buildContestRule({
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
         const npending = Counter<number>();
-        const effective: Record<number, AcmJournal> = {};
+        const display: Record<number, AcmDetail> = {};
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal) {
-            if (!this.submitAfterAccept && effective[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
-            if (j.status === STATUS.STATUS_WAITING) {
-                npending[j.pid]++;
-                continue;
-            }
-            effective[j.pid] = j;
+            if (!this.submitAfterAccept && display[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
+            const penalty = 20 * 60 * naccept[j.pid];
+            detail[j.pid] = {
+                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
+            };
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
                 naccept[j.pid]++;
             }
+            if (lockAt && j.rid.getTimestamp() > lockAt) {
+                npending[j.pid]++;
+                // FIXME this is tricky
+                // @ts-ignore
+                display[j.pid] ||= {};
+                display[j.pid].npending = npending[j.pid];
+                continue;
+            }
+            display[j.pid] = detail[j.pid];
         }
-        for (const pid in effective) {
-            const j = effective[pid];
-            const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
-            const penalty = 20 * 60 * naccept[j.pid];
-            detail[pid] = {
-                ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty, npending: npending[j.pid],
-            };
-        }
-        for (const d of Object.values(detail).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
+        for (const d of Object.values(display).filter((i) => i.status === STATUS.STATUS_ACCEPTED)) {
             accept++;
             time += d.time;
         }
-        return { accept, time, detail };
+        return {
+            accept, time, detail, display,
+        };
     },
-    async scoreboardHeader(isExport, _, tdoc, pdict) {
+    async scoreboardHeader(config, _, tdoc, pdict) {
         const columns: ScoreboardRow = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) {
+        if (config.isExport) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -103,7 +107,7 @@ const acm = buildContestRule({
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
-            if (isExport) {
+            if (config.isExport) {
                 columns.push(
                     {
                         type: 'string',
@@ -124,13 +128,12 @@ const acm = buildContestRule({
         }
         return columns;
     },
-    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict = tsdoc.detail || {};
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) {
+        if (config.isExport) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -143,15 +146,17 @@ const acm = buildContestRule({
         });
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
+            if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
             pdict[s.pid].nSubmit++;
             if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
         }
+        const tsddict = (config.lockAt ? tsdoc.display : tsdoc.detail) || {};
         for (const pid of tdoc.pids) {
             const doc = tsddict[pid] || {} as Partial<AcmDetail>;
             const accept = doc.status === STATUS.STATUS_ACCEPTED;
             const colTime = accept ? formatSeconds(doc.real, false).toString() : '';
             const colPenalty = doc.rid ? Math.ceil(doc.penalty / 60).toString() : '';
-            if (isExport) {
+            if (config.isExport) {
                 row.push(
                     { type: 'string', value: colTime },
                     { type: 'string', value: colPenalty },
@@ -175,7 +180,7 @@ const acm = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+    async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
@@ -197,12 +202,12 @@ const acm = buildContestRule({
         ]).toArray() as any[];
         for (const t of data) first[t._id] = t.first.getTimestamp().getTime();
 
-        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
+        const columns = await this.scoreboardHeader(config, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [
             columns,
             ...await Promise.all(rankedTsdocs.map(
                 ([rank, tsdoc]) => this.scoreboardRow(
-                    isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { first },
+                    config, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { first },
                 ),
             )),
         ];
@@ -219,23 +224,37 @@ const oi = buildContestRule({
     submitAfterAccept: true,
     statusSort: { score: -1 },
     stat(tdoc, journal) {
+        const npending = Counter();
         const detail = {};
+        const display = {};
         let score = 0;
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) detail[j.pid] = j;
+            if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) {
+                detail[j.pid] = j;
+                display[j.pid] ||= {};
+                if (lockAt && j.rid.getTimestamp() > lockAt) {
+                    npending[j.pid]++;
+                    display[j.pid].npending = npending[j.pid];
+                    continue;
+                }
+                display[j.pid] = j;
+            }
         }
-        for (const i in detail) score += detail[i].score;
-        return { score, detail };
+        for (const i in display) score += display[i].score || 0;
+        return { score, detail, display };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
     showSelfRecord: (tdoc, now) => now > tdoc.endAt,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
-    async scoreboardHeader(isExport, _, tdoc, pdict) {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
+    async scoreboardHeader(config, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (isExport) {
+        if (config.isExport) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -245,7 +264,7 @@ const oi = buildContestRule({
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
-            if (isExport) {
+            if (config.isExport) {
                 columns.push({
                     type: 'string',
                     value: '#{0} {1}'.format(i, pdict[tdoc.pids[i - 1]].title),
@@ -260,13 +279,12 @@ const oi = buildContestRule({
         }
         return columns;
     },
-    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
-        const tsddict = tsdoc.detail || {};
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const row: ScoreboardNode[] = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) {
+        if (config.isExport) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -275,13 +293,15 @@ const oi = buildContestRule({
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
+            if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
             pdict[s.pid].nSubmit++;
             if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
         }
+        const tsddict = (config.lockAt ? tsdoc.display : tsdoc.detail) || {};
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            const node: ScoreboardNode = (!isExport && isDone(tdoc)
+            const node: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
                 && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString())
                 ? {
@@ -296,7 +316,8 @@ const oi = buildContestRule({
                     }],
                 } : {
                     type: 'record',
-                    value: tsddict[pid]?.score ?? '-',
+                    value: `${tsddict[pid]?.score ?? '-'}${tsddict[pid]?.npending
+                        ? `<span style="color:orange">+${tsddict[pid]?.npending}</span>` : ''}`,
                     raw: tsddict[pid]?.rid || null,
                 };
             if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]) {
@@ -306,7 +327,7 @@ const oi = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+    async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
@@ -332,12 +353,12 @@ const oi = buildContestRule({
                 }
             }
         }
-        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
+        const columns = await this.scoreboardHeader(config, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [
             columns,
             ...await Promise.all(rankedTsdocs.map(
                 ([rank, tsdoc]) => this.scoreboardRow(
-                    isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { psdict, first },
+                    config, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc, { psdict, first },
                 ),
             )),
         ];
@@ -367,12 +388,9 @@ const strictioi = buildContestRule({
         let score = 0;
         const subtasks: Record<number, SubtaskResult> = {};
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            Object.keys(j.subtasks).forEach((i) => {
-                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) {
-                    subtasks[i] = j.subtasks[i];
-                    subtasks[i].rid = j.rid;
-                }
-            });
+            for (const i in j.subtasks) {
+                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) subtasks[i] = j.subtasks[i];
+            }
             j.score = sumBy(Object.values(subtasks), 'score');
             j.status = Math.max(...Object.values(subtasks).map((i) => i.status));
             j.subtasks = subtasks;
@@ -381,13 +399,13 @@ const strictioi = buildContestRule({
         for (const i in detail) score += detail[i].score;
         return { score, detail };
     },
-    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardNode[] = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) {
+        if (config.isExport) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -402,8 +420,8 @@ const strictioi = buildContestRule({
         for (const pid of tdoc.pids) {
             row.push({
                 type: 'record',
-                value: tsddict[pid]?.penaltyScore || '',
-                hover: Object.values(tsddict[pid]?.subtasks).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
+                value: tsddict[pid]?.score || '',
+                hover: Object.values(tsddict[pid]?.subtasks || {}).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
@@ -447,13 +465,13 @@ const ledo = buildContestRule({
             score, originalScore, detail,
         };
     },
-    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (isExport) {
+        if (config.isExport) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -529,20 +547,20 @@ const homework = buildContestRule({
     showScoreboard: () => true,
     showSelfRecord: () => true,
     showRecord: (tdoc, now) => now > tdoc.endAt,
-    async scoreboardHeader(isExport, _, tdoc, pdict) {
+    async scoreboardHeader(config, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
             { type: 'total_score', value: _('Score') },
         ];
-        if (isExport) {
+        if (config.isExport) {
             columns.push({ type: 'string', value: _('Original Score') });
         }
         columns.push({ type: 'time', value: _('Total Time') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
-            if (isExport) {
+            if (config.isExport) {
                 columns.push(
                     {
                         type: 'string',
@@ -567,7 +585,7 @@ const homework = buildContestRule({
         }
         return columns;
     },
-    async scoreboardRow(isExport, _, tdoc, pdict, udoc, rank, tsdoc) {
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
@@ -581,7 +599,7 @@ const homework = buildContestRule({
                 value: tsdoc.penaltyScore || 0,
             },
         ];
-        if (isExport) {
+        if (config.isExport) {
             row.push({ type: 'string', value: tsdoc.score || 0 });
         }
         row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
@@ -596,7 +614,7 @@ const homework = buildContestRule({
             const colOriginalScore = tsddict[pid]?.score ?? '';
             const colTime = tsddict[pid]?.time || '';
             const colTimeStr = colTime ? formatSeconds(colTime, false) : '';
-            if (isExport) {
+            if (config.isExport) {
                 row.push(
                     { type: 'string', value: colScore },
                     { type: 'string', value: colOriginalScore },
@@ -615,15 +633,15 @@ const homework = buildContestRule({
         }
         return row;
     },
-    async scoreboard(isExport, _, tdoc, pdict, cursor) {
+    async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids);
-        const columns = await this.scoreboardHeader(isExport, _, tdoc, pdict);
+        const columns = await this.scoreboardHeader(config, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [
             columns,
             ...await Promise.all(rankedTsdocs.map(
-                ([rank, tsdoc]) => this.scoreboardRow(isExport, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc),
+                ([rank, tsdoc]) => this.scoreboardRow(config, _, tdoc, pdict, udict[tsdoc.uid], rank, tsdoc),
             )),
         ];
         return [rows, udict];
@@ -695,12 +713,6 @@ async function _updateStatus(
     tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
     subtasks: Record<number, SubtaskResult>,
 ) {
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (isLocked(tdoc)) {
-        status = STATUS.STATUS_WAITING;
-        score = 0;
-        subtasks = {};
-    }
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks,
     }, 'rid');
@@ -769,7 +781,7 @@ export function isDone(tdoc: Tdoc, tsdoc?: any) {
 export function isLocked(tdoc: Tdoc) {
     if (!tdoc.lockAt) return false;
     const now = new Date();
-    return (tdoc.lockAt < now && now < tdoc.endAt);
+    return tdoc.lockAt < now && !tdoc.unlocked;
 }
 
 export function isExtended(tdoc: Tdoc) {
@@ -827,19 +839,6 @@ export async function recalcStatus(domainId: string, tid: ObjectId) {
 export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
-    const rdocs = await RecordModel.getMulti(domainId, { contest: tid, _id: { $gte: Time.getObjectID(tdoc.lockAt) } })
-        .project(buildProjection(['_id', 'uid', 'pid', 'status', 'score'])).toArray();
-    for (const rdoc of rdocs) {
-        // TODO optimize
-        // eslint-disable-next-line
-        const tsdoc = await document.revPushStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, 'journal', {
-            rid: rdoc._id, pid: rdoc.pid, status: rdoc.status, score: rdoc.score,
-        }, 'rid');
-        const journal = _getStatusJournal(tsdoc);
-        const stats = RULES[tdoc.rule].stat(tdoc, journal);
-        // eslint-disable-next-line
-        await document.revSetStatus(domainId, document.TYPE_CONTEST, tid, rdoc.uid, tsdoc.rev, { journal, ...stats });
-    }
     await edit(domainId, tid, { unlocked: true });
 }
 
@@ -868,14 +867,14 @@ export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPer
 }
 
 export async function getScoreboard(
-    this: Handler, domainId: string, tid: ObjectId, isExport = false,
+    this: Handler, domainId: string, tid: ObjectId, config: ScoreboardConfig,
 ): Promise<[Tdoc<30>, ScoreboardRow[], BaseUserDict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
     const pdict = await problem.getList(domainId, tdoc.pids, true, true, problem.PROJECTION_CONTEST_DETAIL);
     const [rows, udict] = await RULES[tdoc.rule].scoreboard(
-        isExport, this.translate.bind(this),
+        config, this.translate.bind(this),
         tdoc, pdict, tsdocsCursor,
     );
     await bus.parallel('contest/scoreboard', tdoc, rows, udict, pdict);

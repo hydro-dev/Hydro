@@ -42,7 +42,7 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   $('[data-lostpass]').on('click', (e) => {
     e.preventDefault();
     new InfoDialog({
-      $body: tpl`<p>${i18n('Relax and try to remember your password.')}</p>`,
+      $body: tpl.typoMsg(i18n('Relax and try to remember your password.')),
     }).open();
   });
 });

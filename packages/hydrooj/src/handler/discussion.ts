@@ -1,7 +1,7 @@
 import { isSafeInteger } from 'lodash';
 import { ObjectId } from 'mongodb';
 import {
-    DiscussionLockedError, DiscussionNotFoundError, DocumentNotFoundError,
+    DiscussionLockedError, DiscussionNodeNotFoundError, DiscussionNotFoundError, DocumentNotFoundError,
     PermissionError,
 } from '../error';
 import { DiscussionDoc, DiscussionReplyDoc, DiscussionTailReplyDoc } from '../interface';
@@ -30,7 +30,7 @@ class DiscussionHandler extends Handler {
     vnode?: any;
 
     @param('type', Types.Range(Object.keys(typeMapper)), true)
-    @param('name', Types.Name, true)
+    @param('name', Types.String, true)
     @param('did', Types.ObjectId, true)
     @param('drid', Types.ObjectId, true)
     @param('drrid', Types.ObjectId, true)
@@ -55,15 +55,10 @@ class DiscussionHandler extends Handler {
                 }
             }
         }
-        // TODO(twd2): do more visibility check eg. contest
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
         this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this.user._id);
-        if (this.vnode.assign?.length && !this.user.own(this.vnode)) {
-            if (!Set.intersection(this.vnode.assign, this.user.group).size) {
-                throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-            }
-        }
+        if (!discussion.checkVNodeVisibility(typeMapper[type], this.vnode, this.user)) throw new DiscussionNodeNotFoundError(this.vnode.id);
         if (this.ddoc) {
             this.ddoc.parentType ||= this.vnode.type;
             this.ddoc.parentId ||= this.vnode.id;
@@ -73,11 +68,13 @@ class DiscussionHandler extends Handler {
 
 class DiscussionMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, page = 1) {
+    @param('all', Types.Boolean)
+    async get(domainId: string, page = 1, all = false) {
         // Limit to known types
         const parentType = { $in: Object.keys(typeMapper).map((i) => typeMapper[i]) };
+        all &&= this.user.hasPerm(PERM.PERM_MOD_BADGE);
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti(domainId, { parentType }),
+            discussion.getMulti(domainId, { parentType, ...all ? {} : { hidden: false } }),
             page,
             system.get('pagination.discussion'),
         );
@@ -95,15 +92,16 @@ class DiscussionMainHandler extends Handler {
 
 class DiscussionNodeHandler extends DiscussionHandler {
     @param('type', Types.Range(Object.keys(typeMapper)))
-    @param('name', Types.Name)
+    @param('name', Types.String)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, type: string, _name: string, page = 1) {
         let name: ObjectId | string | number;
         if (ObjectId.isValid(_name)) name = new ObjectId(_name);
         else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
         else name = _name;
+        const hidden = this.user.own(this.vnode) || this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION) ? {} : { hidden: false };
         const [ddocs, dpcount] = await paginate(
-            discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name }),
+            discussion.getMulti(domainId, { parentType: typeMapper[type], parentId: name, ...hidden }),
             page,
             system.get('pagination.discussion'),
         );
@@ -152,9 +150,10 @@ class DiscussionCreateHandler extends DiscussionHandler {
         await this.limitRate('add_discussion', 3600, 60);
         if (highlight) this.checkPerm(PERM.PERM_HIGHLIGHT_DISCUSSION);
         if (pin) this.checkPerm(PERM.PERM_PIN_DISCUSSION);
+        const hidden = this.vnode.hidden ?? false;
         const did = await discussion.add(
             domainId, typeMapper[type], this.vnode.id, this.user._id,
-            title, content, this.request.ip, highlight, pin,
+            title, content, this.request.ip, highlight, pin, hidden,
         );
         this.response.body = { did };
         this.response.redirect = this.url('discussion_detail', { did });
@@ -216,7 +215,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
         this.back();
     }
 
-    @param('type', Types.Range(['did', 'drid']))
+    @param('nodeType', Types.Range(['did', 'drid']))
     @param('id', Types.ObjectId)
     @param('emoji', Types.Emoji)
     @param('reverse', Types.Boolean)
@@ -364,7 +363,12 @@ class DiscussionRawHandler extends DiscussionHandler {
             this.response.body.history = await discussion.getHistory(domainId, drrid || drid || did);
         } else {
             const [doc] = await discussion.getHistory(domainId, drrid || drid || did, ts ? { time: new Date(ts) } : {});
-            if (!doc && ts) throw new DiscussionNotFoundError(drrid || drid || did);
+            if (!doc) {
+                if (ts) throw new DiscussionNotFoundError(drrid || drid || did);
+                if (drrid && !this.drrdoc) throw new DiscussionNotFoundError(drrid);
+                if (drid && !this.drdoc) throw new DiscussionNotFoundError(drid);
+                if (did && !this.ddoc) throw new DiscussionNotFoundError(did);
+            }
             this.response.type = 'text/markdown';
             this.response.body = doc ? doc.content : drrid ? this.drrdoc.content : drid ? this.drdoc.content : this.ddoc.content;
         }
@@ -397,9 +401,10 @@ class DiscussionEditHandler extends DiscussionHandler {
         else this.checkPerm(PERM.PERM_EDIT_DISCUSSION_SELF);
         if (!this.user.hasPerm(PERM.PERM_HIGHLIGHT_DISCUSSION)) highlight = this.ddoc.highlight;
         if (!this.user.hasPerm(PERM.PERM_PIN_DISCUSSION)) pin = this.ddoc.pin;
+        const hidden = this.vnode.hidden ?? false;
         await Promise.all([
             discussion.edit(domainId, did, {
-                title, highlight, pin, content, editor: this.user._id, edited: true,
+                title, highlight, pin, content, editor: this.user._id, edited: true, hidden,
             }),
             oplog.log(this, 'discussion.edit', this.ddoc),
         ]);

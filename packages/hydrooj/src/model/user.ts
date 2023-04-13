@@ -1,11 +1,12 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
     ownerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
+import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
 import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
@@ -22,7 +23,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
-const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
+const cache = new LRUCache<string, User>({ max: 10000, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: { _id: number, uname: string, mail: string } | string | true | undefined | null, receiver = false) {
     if (!udoc) return false;
@@ -96,9 +97,10 @@ export class User {
         this.perm = dudoc.perm || 0n; // This is a fallback for unknown user
         this.scope = typeof scope === 'string' ? BigInt(scope) : scope;
         this.role = dudoc.role || 'default';
+        this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
-        if (dudoc.group) this.group = [...dudoc.group, this._id.toString()];
+        if (dudoc.group) this.group = dudoc.group;
 
         for (const key in setting.SETTINGS_BY_KEY) {
             this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
@@ -154,6 +156,11 @@ export class User {
 
     async private() {
         const user = await new User(this._udoc, this._dudoc, this.scope).init();
+        user.avatarUrl = avatar(user.avatar, 128);
+        if (user.pinnedDomains instanceof Array) {
+            const result = await Promise.allSettled(user.pinnedDomains.slice(0, 10).map((i) => domain.get(i)));
+            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i);
+        }
         user._isPrivate = true;
         return user;
     }
@@ -251,11 +258,12 @@ class UserModel {
     }
 
     @ArgMethod
-    static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>) {
+    static async setById(uid: number, $set?: Partial<Udoc>, $unset?: Value<Partial<Udoc>, ''>, $push?: any) {
         if (uid < -999) return null;
         const op: any = {};
         if ($set && Object.keys($set).length) op.$set = $set;
         if ($unset && Object.keys($unset).length) op.$unset = $unset;
+        if ($push && Object.keys($push).length) op.$push = $push;
         if (op.$set?.loginip) op.$addToSet = { ip: op.$set.loginip };
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
         deleteUserCache(res.value);
@@ -410,7 +418,7 @@ class UserModel {
         return await UserModel.setPriv(
             uid,
             PRIV.PRIV_USER_PROFILE | PRIV.PRIV_JUDGE | PRIV.PRIV_VIEW_ALL_DOMAIN
-            | PRIV.PRIV_READ_PROBLEM_DATA,
+            | PRIV.PRIV_READ_PROBLEM_DATA | PRIV.PRIV_UNLIMITED_ACCESS,
         );
     }
 
@@ -433,10 +441,12 @@ class UserModel {
     }
 
     static delGroup(domainId: string, name: string) {
+        deleteUserCache(domainId);
         return collGroup.deleteOne({ domainId, name });
     }
 
     static updateGroup(domainId: string, name: string, uids: number[]) {
+        deleteUserCache(domainId);
         return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });
     }
 }

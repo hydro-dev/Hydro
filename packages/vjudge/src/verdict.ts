@@ -40,8 +40,10 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     SUBMIT_FAILED_TEMP: STATUS.STATUS_SYSTEM_ERROR,
 
     // HustOJ
+    WAITING: STATUS.STATUS_WAITING,
     等待: STATUS.STATUS_WAITING,
     运行并评判: STATUS.STATUS_JUDGING,
+    正在评测中: STATUS.STATUS_JUDGING,
     编译成功: STATUS.STATUS_JUDGING,
     RUNNING_JUDGING: STATUS.STATUS_JUDGING,
     正确: STATUS.STATUS_ACCEPTED,
@@ -65,8 +67,8 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     get(self, key) {
         if (typeof key === 'symbol') return null;
         key = normalize(key);
-        if (STATUS[key]) return STATUS[key];
-        if (self[key]) return self[key];
+        if (typeof STATUS[key] === 'number') return STATUS[key];
+        if (typeof self[key] === 'number') return self[key];
         return null;
     },
 });

@@ -28,11 +28,12 @@ export default class RecordModel {
 
     static async submissionPriority(uid: number, base: number = 0) {
         const timeRecent = await RecordModel.coll
-            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid }).project({ time: 1, status: 1 }).toArray();
+            .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid, rejudged: { $ne: true } })
+            .project({ time: 1, status: 1 }).toArray();
         const pending = timeRecent.filter((i) => [
             STATUS.STATUS_WAITING, STATUS.STATUS_FETCHED, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING,
         ].includes(i.status)).length;
-        return base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1);
+        return Math.max(base - 10000, base - (pending * 1000 + 1) * (sum(timeRecent.map((i) => i.time || 0)) / 10000 + 1));
     }
 
     static async get(_id: ObjectId): Promise<RecordDoc | null>;
@@ -70,6 +71,7 @@ export default class RecordModel {
         let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
         meta = { ...meta, problemOwner: 1 };
+        await task.deleteMany({ rid: { $in: rids } });
         if (rdoc.pid) {
             let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
             if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
@@ -81,8 +83,8 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
             data = pdoc.data;
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
             if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
-                await task.deleteMany({ rid: { $in: rids } });
                 return await task.addMany(rids.map((rid) => ({
                     ...(pdoc.config as any),
                     priority,
@@ -94,7 +96,6 @@ export default class RecordModel {
                 } as any)));
             }
         }
-        await task.deleteMany({ rid: { $in: rids } });
         return await task.addMany(rids.map((rid) => ({
             priority,
             type: 'judge',

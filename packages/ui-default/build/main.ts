@@ -67,7 +67,7 @@ async function runWebpack({
     if (fs.existsSync(statsPath)) {
       log('Compare to last production bundle:');
       const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
-      for (const key in stats) if (!oldStats[key]) oldStats[key] = 0;
+      for (const key in stats) oldStats[key] ||= 0;
       const entries: [filename: string, orig: number, curr: number][] = [];
       for (const [key, value] of Object.entries(oldStats)) {
         if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
@@ -87,11 +87,11 @@ async function runWebpack({
 }
 
 async function runGulp() {
-  function handleError(err) {
+  function errorHandler(err) {
     log(chalk.red('Error: %s'), chalk.reset(err.toString() + err.stack));
     process.exit(1);
   }
-  const gulpTasks = gulpConfig({ production: true, errorHandler: handleError });
+  const gulpTasks = gulpConfig({ errorHandler });
   return new Promise((resolve) => {
     const taskList = {};
 

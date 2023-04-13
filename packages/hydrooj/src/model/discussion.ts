@@ -9,10 +9,12 @@ import * as bus from '../service/bus';
 import db from '../service/db';
 import { NumberKeys } from '../typeutils';
 import { buildProjection } from '../utils';
+import { PERM } from './builtin';
 import * as contest from './contest';
 import * as document from './document';
 import problem from './problem';
 import * as training from './training';
+import { User } from './user';
 
 export interface DiscussionDoc extends Document { }
 export type Field = keyof DiscussionDoc;
@@ -20,7 +22,7 @@ export type Field = keyof DiscussionDoc;
 export const PROJECTION_LIST: Field[] = [
     '_id', 'domainId', 'docType', 'docId', 'highlight',
     'nReply', 'views', 'pin', 'updateAt', 'owner',
-    'parentId', 'parentType', 'title',
+    'parentId', 'parentType', 'title', 'hidden',
 ];
 export const PROJECTION_PUBLIC: Field[] = [
     ...PROJECTION_LIST, 'content', 'edited', 'react', 'maintainer',
@@ -43,7 +45,7 @@ export const coll = db.collection('discussion.history');
 export async function add(
     domainId: string, parentType: number, parentId: ObjectId | number | string,
     owner: number, title: string, content: string,
-    ip: string | null = null, highlight: boolean, pin: boolean,
+    ip: string | null = null, highlight: boolean, pin: boolean, hidden = false,
 ): Promise<ObjectId> {
     const time = new Date();
     const payload: Partial<DiscussionDoc> = {
@@ -61,6 +63,7 @@ export async function add(
         updateAt: time,
         views: 0,
         sort: 100,
+        hidden,
     };
     await bus.parallel('discussion/before-add', payload);
     const res = await document.add(
@@ -271,12 +274,11 @@ export function flushNodes(domainId: string) {
 
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
-        let pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
+        const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
         if (!pdoc) throw new DiscussionNodeNotFoundError(id);
-        if (pdoc.hidden) pdoc = problem.default;
         return { ...pdoc, type, id: pdoc.docId };
     }
-    if ([document.TYPE_CONTEST, document.TYPE_TRAINING, document.TYPE_HOMEWORK].includes(type as any)) {
+    if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
         const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
@@ -285,13 +287,16 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             const tsdoc = await model.getStatus(domainId, _id, uid);
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
-        return { ...tdoc, type, id: _id };
+        return {
+            ...tdoc, type, id, hidden: false,
+        };
     }
     return {
         title: id,
         ...await getNode(domainId, id),
         type,
         id,
+        owner: 1,
     };
 }
 
@@ -312,6 +317,16 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
     return res;
 }
 
+export function checkVNodeVisibility(type: number, vnode: any, user: User) {
+    if (type === document.TYPE_PROBLEM) {
+        if (vnode.hidden && !(user.own(vnode) || user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) return false;
+    }
+    if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
+        if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;
+    }
+    return true;
+}
+
 export function apply(ctx: Context) {
     ctx.on('problem/delete', async (domainId, docId) => {
         const dids = await document.getMulti(
@@ -327,6 +342,13 @@ export function apply(ctx: Context) {
             document.deleteMulti(domainId, document.TYPE_DISCUSSION, { docId: { $in: dids } }),
             document.deleteMulti(domainId, document.TYPE_DISCUSSION_REPLY, { docId: { $in: drids } }),
         ]);
+    });
+    ctx.on('problem/edit', async (result) => {
+        const dids = await document.getMulti(
+            result.domainId, document.TYPE_DISCUSSION,
+            { parentType: document.TYPE_PROBLEM, parentId: result.docId },
+        ).project({ docId: 1 }).map((ddoc) => ddoc.docId).toArray();
+        return await document.coll.updateMany({ _id: { $in: dids } }, { $set: { hidden: result.hidden } });
     });
 }
 
@@ -367,4 +389,5 @@ global.Hydro.model.discussion = {
     getNodes,
     getVnode,
     getListVnodes,
+    checkVNodeVisibility,
 };

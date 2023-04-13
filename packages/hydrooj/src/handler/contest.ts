@@ -11,10 +11,12 @@ import {
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, NotAssignedError, PermissionError, ValidationError,
 } from '../error';
-import { Tdoc } from '../interface';
+import { ScoreboardConfig, Tdoc } from '../interface';
 import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
+import * as discussion from '../model/discussion';
+import * as document from '../model/document';
 import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
@@ -72,10 +74,13 @@ ScheduleModel.Worker.addHandler('contest', async (doc) => {
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, rule = '', page = 1) {
+    @param('all', Types.Boolean)
+    async get(domainId: string, rule = '', page = 1, all = false) {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        const cursor = contest.getMulti(domainId, rule ? { rule } : { rule: { $in: rules } });
+        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
+        const q = { ...all ? { assign: { $in: [...this.user.group, null] } } : {}, ...rule ? { rule } : { rule: { $in: rules } } };
+        const cursor = contest.getMulti(domainId, q);
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const tids = [];
@@ -262,14 +267,21 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
 export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     @param('ext', Types.Range(['csv', 'html', 'ghost']), true)
-    async get(domainId: string, tid: ObjectId, ext = '') {
+    @param('realtime', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, ext = '', realtime) {
         if (!contest.canShowScoreboard.call(this, this.tdoc, true)) throw new ContestScoreboardHiddenError(tid);
+        if (realtime && !this.user.own(this.tdoc)) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+        }
         if (ext) {
             await this.exportScoreboard(domainId, tid, ext);
             return;
         }
-        const [, rows, udict, pdict] = await contest.getScoreboard.call(this, domainId, tid, false);
-        this.response.template = 'contest_scoreboard.html';
+        const config: ScoreboardConfig = { isExport: false };
+        if (!realtime && this.tdoc.lockAt && !this.tdoc.unlocked) {
+            config.lockAt = this.tdoc.lockAt;
+        }
+        const [, rows, udict, pdict] = await contest.getScoreboard.call(this, domainId, tid, config);
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
@@ -277,6 +289,8 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         this.response.body = {
             tdoc: this.tdoc, rows, udict, pdict, page_name,
         };
+        this.response.pjax = 'partials/scoreboard.html';
+        this.response.template = 'contest_scoreboard.html';
     }
 
     async exportGhost(domainId: string, tid: ObjectId) {
@@ -319,6 +333,9 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     async exportScoreboard(domainId: string, tid: ObjectId, ext: string) {
         await this.limitRate('scoreboard_download', 60, 3);
         if (ext === 'ghost') {
+            if (contest.isLocked(this.tdoc) && !this.user.own(this.tdoc)) {
+                this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            }
             await this.exportGhost(domainId, tid);
             return;
         }
@@ -326,7 +343,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
-        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, true);
+        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, { isExport: true, lockAt: this.tdoc.lockAt });
         this.binary(await getContent[ext](rows, this.tdoc), `${this.tdoc.title}.${ext}`);
     }
 
@@ -445,11 +462,17 @@ export class ContestEditHandler extends Handler {
     @param('tid', Types.ObjectId)
     async postDelete(domainId: string, tid: ObjectId) {
         if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
-        await contest.del(domainId, tid);
-        await record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' });
-        await ScheduleModel.deleteMany({
-            type: 'schedule', subType: 'contest', domainId, tid,
-        });
+        const [ddocs] = await Promise.all([
+            discussion.getMulti(domainId, { parentType: document.TYPE_CONTEST, parentId: tid }).project({ _id: 1 }).toArray(),
+            contest.del(domainId, tid),
+        ]);
+        const tasks: any[] = ddocs.map((i) => discussion.del(domainId, i._id));
+        await Promise.all(tasks.concat([
+            record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' }),
+            ScheduleModel.deleteMany({
+                type: 'schedule', subType: 'contest', domainId, tid,
+            }),
+        ]));
         this.response.redirect = this.url('contest_main');
     }
 }

@@ -93,6 +93,12 @@ export async function apply(ctx: Context) {
             }
         }
     }
+    for (const f of global.addons) {
+        const dir = path.join(f, 'public');
+        // eslint-disable-next-line no-await-in-loop
+        if (await fs.pathExists(dir)) await fs.copy(dir, '/root/.hydro/static');
+    }
+    await ctx.parallel('app/listen');
     logger.success('Server started');
     process.send?.('ready');
     await ctx.parallel('app/ready');

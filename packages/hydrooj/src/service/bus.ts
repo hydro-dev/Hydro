@@ -32,6 +32,7 @@ type HandlerEvents =
 /* eslint-disable @typescript-eslint/naming-convention */
 export interface EventMap extends LifecycleEvents, HandlerEvents {
     'app/started': () => void
+    'app/listen': () => void
     'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn
     'app/before-reload': (entries: Set<string>) => VoidReturn

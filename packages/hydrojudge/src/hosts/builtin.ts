@@ -7,7 +7,6 @@ import {
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
-import { processTestdata } from '../cases';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
@@ -68,7 +67,6 @@ const session = {
             fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version)),
             fs.writeFile(path.join(filePath, 'lastUsage'), Date.now().toString()),
         ]);
-        await processTestdata(filePath);
         return filePath;
     },
 };
@@ -78,6 +76,10 @@ export async function postInit() {
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
+        if (!rdoc) {
+            logger.debug('Record not found: %o', t);
+            return;
+        }
         (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
     };
     TaskModel.consume({ type: 'judge' }, handle);

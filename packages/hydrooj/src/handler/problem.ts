@@ -7,7 +7,7 @@ import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
+    BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
     ProblemIsReferencedError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
@@ -251,6 +251,7 @@ export class ProblemMainHandler extends Handler {
 
     @param('pids', Types.NumericArray)
     async postDelete(domainId: string, pids: number[]) {
+        let i = 0;
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
@@ -258,6 +259,8 @@ export class ProblemMainHandler extends Handler {
             if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.del(domainId, pid);
+            i++;
+            this.progress(`Deleting: (${i}/${pids.length})`);
         }
         this.back();
     }
@@ -449,6 +452,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
 
     @param('target', Types.String)
     async postCopy(domainId: string, target: string) {
+        if (this.pdoc.reference) throw new BadRequestError('Cannot copy a referenced problem');
         const t = `,${this.domain.share || ''},`;
         if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
         const ddoc = await domain.get(target);
@@ -1040,7 +1044,7 @@ export class ProblemPrefixListHandler extends Handler {
 export async function apply(ctx) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
-    ctx.Route('problem_detail', '/p/:pid', ProblemDetailHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_detail', '/p/:pid', ProblemDetailHandler);
     ctx.Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
     ctx.Route('problem_hack', '/p/:pid/hack/:rid', ProblemHackHandler, PERM.PERM_SUBMIT_PROBLEM);
     ctx.Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);

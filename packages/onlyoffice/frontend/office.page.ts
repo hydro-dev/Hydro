@@ -1,6 +1,6 @@
-import { $ } from '@hydrooj/ui-default';
+import { $, addPage, AutoloadPage } from '@hydrooj/ui-default';
 
-const { AutoloadPage } = window.Hydro;
+/* global DocsAPI */
 
 let loaded = false;
 async function load() {
@@ -23,7 +23,7 @@ const loader = (mode) => async (element) => {
   const t = new URL(url, window.location.href).pathname.split('.');
   const n = new URL(url, window.location.href).pathname.split('/');
   const lang = UserContext.viewLang.includes('_') ? UserContext.viewLang.split('_')[0] : UserContext.viewLang;
-  // eslint-disable-next-line no-undef
+  // @ts-ignore
   window.editor = new DocsAPI.DocEditor(id, {
     document: {
       fileType: t[t.length - 1],
@@ -64,18 +64,12 @@ const loader = (mode) => async (element) => {
   });
 };
 
-const getEles = (types) => {
-  const eles = [];
-  for (const type of types) eles.push(...$(`div[data-${type}]`).get());
-  return eles;
-};
+const getEles = (types: string[]) => types.flatMap((type) => $(`div[data-${type}]`).get());
 
-const page = new AutoloadPage('onlyoffice', async () => {
+addPage(new AutoloadPage('onlyoffice', async () => {
   const all = getEles(['doc', 'docx', 'cell', 'xls', 'xlsx', 'slide', 'ppt', 'pptx']);
   if (all.length) await load();
   getEles(['doc', 'docx']).forEach(loader('word'));
   getEles(['cell', 'xls', 'xlsx']).forEach(loader('cell'));
   getEles(['slide', 'ppt', 'pptx']).forEach(loader('slide'));
-});
-
-window.Hydro.extraPages.push(page);
+}));

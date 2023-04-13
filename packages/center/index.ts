@@ -1,5 +1,6 @@
 import assert from 'assert';
 import crypto from 'crypto-js';
+import { lt } from 'semver';
 import {
     db, definePlugin, ForbiddenError, Handler, post, Types, yaml,
 } from 'hydrooj';
@@ -43,29 +44,46 @@ class DataReportHandler extends Handler {
             throw new ForbiddenError();
         }
         const old = await coll.findOne({ _id: installId });
-        await coll.updateOne({ _id: installId }, {
-            $set: {
-                version: payload.version,
-                name: payload.name,
-                url: payload.url,
-                addons: payload.addons,
-                mem: payload.memory,
-                osinfo: payload.osinfo,
-                cpu: payload.cpu,
-                ip: this.request.ip,
-                flags: payload.flags,
-                update: new Date(),
-                domainCount: payload.domainCount,
-                userCount: payload.userCount,
-                problemCount: payload.problemCount,
-                discussionCount: payload.discussionCount,
-                recordCount: payload.recordCount,
-                sandbox: payload.sandbox,
-                dbVersion: payload.dbVersion,
-            },
-            $setOnInsert: { init: new Date() },
-        }, { upsert: true });
+        const setPayload = {
+            version: payload.version,
+            name: payload.name,
+            url: payload.url,
+            addons: payload.addons,
+            mem: payload.memory,
+            osinfo: payload.osinfo,
+            cpu: payload.cpu,
+            ip: this.request.ip,
+            flags: payload.flags,
+            update: new Date(),
+            domainCount: payload.domainCount,
+            userCount: payload.userCount,
+            problemCount: payload.problemCount,
+            discussionCount: payload.discussionCount,
+            recordCount: payload.recordCount,
+            sandbox: payload.sandbox,
+            dbVersion: payload.dbVersion,
+        };
+        if (old && lt(payload.version, old.version)) {
+            await coll.updateOne(
+                { _id: installId },
+                {
+                    $addToSet: {
+                        ips: this.request.ip,
+                    },
+                    $set: { downgrade: setPayload },
+                },
+            );
+        } else {
+            await coll.updateOne({ _id: installId }, {
+                $addToSet: {
+                    ips: this.request.ip,
+                },
+                $set: setPayload,
+                $setOnInsert: { init: new Date() },
+            }, { upsert: true });
+        }
         this.ctx.emit('center/report', this, installId, old, payload);
+        // TODO deliver messages
         this.response.body = { code: 0 };
     }
 }

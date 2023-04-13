@@ -4,6 +4,7 @@ import {
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
+import { testlibCheckers } from '../monaco/schema/problemconfig';
 import { FormItem, ManagedSelect, SingleFileSelect } from './BasicForm';
 import type { RootState } from './reducer/index';
 
@@ -12,6 +13,8 @@ export default function ProblemType() {
   const checkerType = useSelector((state: RootState) => state.config.checker_type);
   const filename = useSelector((state: RootState) => state.config.filename);
   const subType = useSelector((state: RootState) => state.config.subType);
+  const checker = useSelector((state: RootState) => state.config.checker);
+  const [category, setCategory] = React.useState(checker?.includes('.') ? 'preset' : 'custom');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
   return (
@@ -58,25 +61,56 @@ export default function ProblemType() {
                     </div>
                   )}
                 />
-                {['testlib', 'other'].map((i) => (
-                  <Tab
-                    id={i}
-                    title={i}
-                    key={i}
-                    panel={(
-                      <div className="row">
-                        {i === 'other' && (
-                          <FormItem columns={6} label="Interface">
-                            <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon']} formKey="checker_type" />
-                          </FormItem>
-                        )}
-                        <FormItem columns={6} label="Checker">
-                          <SingleFileSelect formKey="checker" />
+                <Tab
+                  id="testlib"
+                  title="testlib"
+                  panel={(
+                    <div className="row">
+                      <FormItem columns={6} label="Type">
+                        <select
+                          value={category}
+                          onChange={(ev) => {
+                            setCategory(ev.currentTarget.value);
+                            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: null });
+                          }}
+                          className="select"
+                        >
+                          <option value="preset">{i18n('Preset')}</option>
+                          <option value="custom">{i18n('Custom')}</option>
+                        </select>
+                      </FormItem>
+                      {category === 'preset'
+                        ? <FormItem columns={6} label="Checker">
+                          <select
+                            value={checker}
+                            onChange={(ev) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: ev.currentTarget.value })}
+                            className="select"
+                          >
+                            {testlibCheckers.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
                         </FormItem>
-                      </div>
-                    )}
-                  />
-                ))}
+                        : <FormItem columns={6} label="Checker">
+                          <SingleFileSelect formKey="checker" />
+                        </FormItem>}
+                    </div>
+                  )}
+                />
+                <Tab
+                  id="other"
+                  title="other"
+                  panel={(
+                    <div className="row">
+                      <FormItem columns={6} label="Interface">
+                        <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon']} formKey="checker_type" />
+                      </FormItem>
+                      <FormItem columns={6} label="Checker">
+                        <SingleFileSelect formKey="checker" />
+                      </FormItem>
+                    </div>
+                  )}
+                />
               </Tabs>
             )}
           />

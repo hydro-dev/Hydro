@@ -14,7 +14,6 @@ export default async function compile(
 ): Promise<Execute> {
     const target = lang.target || 'foo';
     const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
-    const time = lang.time_limit_rate || 1;
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
@@ -24,8 +23,12 @@ export default async function compile(
                 copyIn: { ...copyIn, [lang.code_file]: code },
                 copyOutCached: [target],
                 env: { HYDRO_LANG: lang.key },
+                time: lang.compile_time_limit || 10000,
+                memory: lang.compile_memory_limit || 256 * 1024 * 1024,
             },
         );
+        if (status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) next?.({ message: 'Compile timeout.' });
+        if (status === STATUS.STATUS_MEMORY_LIMIT_EXCEEDED) next?.({ message: 'Compile memory limit exceeded.' });
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
         if (!fileIds[target]) throw new CompileError({ stderr: 'Executable file not found.' });
         next?.({ compilerText: compilerText(stdout, stderr) });
@@ -33,14 +36,12 @@ export default async function compile(
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
             clean: () => del(fileIds[target]),
-            time,
         };
     }
     return {
         execute,
         copyIn: { ...copyIn, [lang.code_file]: code },
         clean: () => Promise.resolve(null),
-        time,
     };
 }
 

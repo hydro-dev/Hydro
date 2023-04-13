@@ -438,6 +438,18 @@ class HomeDomainHandler extends Handler {
         this.response.template = 'home_domain.html';
         this.response.body = { ddocs, dudict, canManage };
     }
+
+    @param('id', Types.String)
+    async postStar(domainId: string, id: string) {
+        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.concat(id) });
+        this.back({ star: true });
+    }
+
+    @param('id', Types.String)
+    async postUnstar(domainId: string, id: string) {
+        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        this.back({ star: false });
+    }
 }
 
 class HomeDomainCreateHandler extends Handler {
@@ -455,8 +467,11 @@ class HomeDomainCreateHandler extends Handler {
         if (doc) throw new DomainAlreadyExistsError(id);
         avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
-        await domain.edit(domainId, { avatar });
-        await domain.setUserRole(domainId, this.user._id, 'root');
+        await Promise.all([
+            domain.edit(domainId, { avatar }),
+            domain.setUserRole(domainId, this.user._id, 'root'),
+            user.setById(this.user._id, undefined, undefined, { pinnedDomains: [domainId] }),
+        ]);
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
     }

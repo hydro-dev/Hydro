@@ -75,9 +75,11 @@ rules:
         regex: '^[\d]+$'
         match: true
       format: null
-    - selector: [typeProperty, objectLiteralProperty]
+    - selector: [typeProperty, typeMethod, objectLiteralProperty]
       modifiers: [requiresQuotes]
       format: null
+    - selector: [typeMethod]
+      format: [camelCase, PascalCase]
     - selector: enum
       format: [PascalCase]
     - selector: [class, interface, typeAlias, enumMember]

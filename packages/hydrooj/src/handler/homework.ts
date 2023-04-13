@@ -22,8 +22,10 @@ const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, page = 1) {
-        const cursor = contest.getMulti(domainId, { rule: 'homework' });
+    @param('all', Types.Boolean)
+    async get(domainId: string, page = 1, all = false) {
+        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
+        const cursor = contest.getMulti(domainId, { rule: 'homework', ...all ? { assign: { $in: [...this.user.group, null] } } : {} });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
         for (const tdoc of tdocs) {
