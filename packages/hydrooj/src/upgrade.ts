@@ -582,6 +582,11 @@ const scripts: UpgradeScript[] = [
             }
         });
     },
+    async function _80_81() {
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: false }, { $set: { pin: 0 } });
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: true }, { $set: { pin: 1 } });
+        return true;
+    },
 ];
 
 export default scripts;

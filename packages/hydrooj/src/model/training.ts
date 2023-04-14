@@ -36,13 +36,14 @@ export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: an
 
 export function add(
     domainId: string, title: string, content: string,
-    owner: number, dag: TrainingNode[] = [], description = '',
+    owner: number, dag: TrainingNode[] = [], description = '', pin = 0,
 ) {
     return document.add(domainId, content, owner, document.TYPE_TRAINING, null, null, null, {
         dag,
         title,
         description,
         attend: 0,
+        pin,
     });
 }
 
