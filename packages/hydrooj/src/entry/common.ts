@@ -147,8 +147,10 @@ export async function template(pending: string[], fail: string[]) {
             try {
                 const files = await getFiles(p);
                 for (const file of files) {
-                    if (file.endsWith('.tsx')) global.Hydro.ui.template[file] = require(path.resolve(p, file));
-                    global.Hydro.ui.template[file] = await fs.readFile(path.resolve(p, file), 'utf-8');
+                    const l = path.resolve(p, file);
+                    if (file.endsWith('.tsx')) global.Hydro.ui.template[file] = require(l);
+                    global.Hydro.ui.template[file] = await fs.readFile(l, 'utf-8');
+                    if (process.env.DEV) global.Hydro.ui.template[`${file}.source`] = l;
                 }
                 logger.info('Template init: %s', i);
             } catch (e) {
