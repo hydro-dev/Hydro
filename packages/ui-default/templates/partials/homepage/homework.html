@@ -38,8 +38,8 @@
         </li>
       {%- endfor -%}
     </ol>
-    <div class="section__footer more">
-      <a href="{{ url('homework_main') }}">{{ _('More') }} ></a>
-    </div>
+    <ul class="pager pager-bottom"><li>
+      <a class="pager__item next link" href="{{ url('homework_main') }}">{{ _('More') }} ></a>
+    </li></ul>
   </div>
 {% endif %}
