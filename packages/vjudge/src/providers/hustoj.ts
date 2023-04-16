@@ -9,6 +9,14 @@ import { VERDICT } from '../verdict';
 //       You may find it just works, or you may not.
 //       Feel free to open a pull request if you want to fix any issue.
 
+// WARN: https://github.com/zhblue/hustoj/pull/932/files
+//       The remote result might be incorrect.
+//       possible fix1: submit every submission twice and compare the results.
+//       however it consumes more resources and time.
+//       possible fix2: auto register new accounts after the limit was reached.
+//       but the server might limit the number of accounts per IP address.
+//       Those fixes won't be implemented officially. Use at your own risk.
+
 /* eslint-disable no-await-in-loop */
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36';
 const logger = new Logger('vjudge/hustoj');
@@ -86,10 +94,6 @@ const defaultConfig: HustOJRemoteConfig = {
 
 function isProcessing(t: string) {
     return [STATUS.STATUS_WAITING, STATUS.STATUS_COMPILING, STATUS.STATUS_JUDGING].includes(VERDICT[t]);
-}
-// TODO
-async function _parseCaptcha(image: Buffer) { // eslint-disable-line
-    return '';
 }
 
 export class HUSTOJ extends BasicFetcher implements IBasicProvider {
@@ -313,6 +317,8 @@ export class YBT extends HUSTOJ {
         if (VERDICT[staText4[0]] === STATUS.STATUS_ACCEPTED) {
             totalScore = 100;
             totalStatus = STATUS.STATUS_ACCEPTED;
+        } else if (totalScore >= 100) {
+            totalScore = 0;
         }
         end({
             status: totalStatus,
