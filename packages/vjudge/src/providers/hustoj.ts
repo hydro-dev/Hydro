@@ -160,7 +160,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         return this.loggedIn;
     }
 
-    async submitProblem(id: string, lang: string, code: string) {
+    async submitProblem(id: string, lang: string, code: string, info, next, end) {
         await this.ensureLogin();
         if (id.startsWith('P')) id = id.substring(1);
         const res = await this.post(this.config.submit.endpoint).send({
@@ -172,7 +172,12 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         // if (res.text.includes(this.config.submit.tooFrequent)) throw new TooFrequentError();
         console.log(res.text);
         if (this.config.submit.noRefetch) {
-            return res.text.match(this.config.submit.rid)[0].split('=')[1];
+            const match = res.text.match(this.config.submit.rid);
+            if (!match?.length) {
+                end({ message: res.text.substring(0, 1024) });
+                return null;
+            }
+            return match[0].split('=')[1];
         }
         const url = this.config.monit.endpoint.replace('{uid}', this.state.username).replace('{pid}', id);
         this.state.pid = id;
