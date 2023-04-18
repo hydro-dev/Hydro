@@ -502,6 +502,80 @@ const ledo = buildContestRule({
     },
 }, oi);
 
+const fakecf = buildContestRule({
+    TEXT: 'Codeforces(No-Hack)',
+    check: () => { },
+    submitAfterAccept: false,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    stat(tdoc, journal) {
+        const ntry = Counter<number>();
+        const detail = {};
+        const len = tdoc.endAt.getTime() - tdoc.beginAt.getTime();
+        for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            const vaild = ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status) || j.subtasks[0].status != STATUS.STATUS_ACCEPT;
+            if (vaild) ntry[j.pid]++;
+            const real = j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime();
+            const score = Date.now() <= tdoc.endAt.getMilliseconds() ? j.subtask[1].score : j.subtask[2].score;
+            const penaltyScore = vaild ? Math.round((2.0*len-real)/(2.0*len)*Math.max(0.7, 0.95 ** (ntry[j.pid] - 1)) * score) : 0;
+            if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
+                detail[j.pid] = {
+                    ...j,
+                    score,
+                    penaltyScore,
+                    ntry: ntry[j.pid] - 1,
+                };
+            }
+        }
+        let score = 0;
+        let originalScore = 0;
+        for (const pid of tdoc.pids) {
+            if (!detail[pid]) continue;
+            score += detail[pid].penaltyScore;
+            originalScore += detail[pid].score;
+        }
+        return {
+            score, originalScore, detail,
+        };
+    },
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+        const tsddict = tsdoc.detail || {};
+        const row: ScoreboardRow = [
+            { type: 'rank', value: rank.toString() },
+            { type: 'user', value: udoc.uname, raw: tsdoc.uid },
+        ];
+        if (config.isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({
+            type: 'total_score',
+            value: tsdoc.score || 0,
+            hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
+        });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
+        for (const pid of tdoc.pids) {
+            row.push({
+                type: 'record',
+                value: tsddict[pid]?.penaltyScore || '',
+                hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
+                raw: tsddict[pid]?.rid,
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
+                    ? 'background-color: rgb(217, 240, 199);'
+                    : undefined,
+            });
+        }
+        return row;
+    },
+}, oi);
+
 const homework = buildContestRule({
     TEXT: 'Assignment',
     hidden: true,
@@ -652,7 +726,7 @@ const homework = buildContestRule({
 });
 
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi, ledo, strictioi,
+    acm, oi, homework, ioi, ledo, strictioi, fakecf
 };
 
 function _getStatusJournal(tsdoc) {
