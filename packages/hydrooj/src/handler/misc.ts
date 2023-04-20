@@ -12,7 +12,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, requireSudo, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
@@ -122,8 +122,10 @@ export class StorageHandler extends Handler {
 }
 
 export class SwitchAccountHandler extends Handler {
+    @requireSudo
     @param('uid', Types.Int)
     async get(domainId: string, uid: number) {
+        this.session.sudoUid = this.user._id;
         this.session.uid = uid;
         this.back();
     }
@@ -134,5 +136,5 @@ export async function apply(ctx) {
     ctx.Route('home_files', '/file', FilesHandler);
     ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
     ctx.Route('storage', '/storage', StorageHandler);
-    ctx.Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Route('switch_account', '/account/:uid', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
