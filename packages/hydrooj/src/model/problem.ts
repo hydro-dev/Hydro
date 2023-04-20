@@ -482,12 +482,12 @@ export class ProblemModel {
         await fs.mkdir(tmpdir);
         const pdocs = await ProblemModel.getMulti(domainId, {}, ProblemModel.PROJECTION_PUBLIC).toArray();
         for (const pdoc of pdocs) {
-            if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid} (${pdoc.title})`);
+            if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid || (`P${pdoc.docId}`)} (${pdoc.title})`);
             const problemPath = path.join(tmpdir, `${pdoc.docId}`);
             await fs.mkdir(problemPath);
             const problemYaml = path.join(problemPath, 'problem.yaml');
             const problemYamlContent = yaml.dump({
-                pid: pdoc.pid,
+                pid: pdoc.pid || `P${pdoc.docId}`,
                 owner: pdoc.owner,
                 title: pdoc.title,
                 tag: pdoc.tag,
