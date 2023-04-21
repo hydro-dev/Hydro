@@ -98,7 +98,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
-    'record/change': (rdoc: RecordDoc, $set?: any, $push?: any) => void
+    'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
     'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
 }
 /* eslint-enable @typescript-eslint/naming-convention */

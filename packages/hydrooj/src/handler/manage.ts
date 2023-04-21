@@ -232,9 +232,9 @@ class SystemUserImportHandler extends SystemHandler {
                 if (!Types.Email[1](email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!Types.Username[1](username)) messages.push(`Line ${+i + 1}: Invalid username`);
                 else if (!Types.Password[1](password)) messages.push(`Line ${+i + 1}: Invalid password`);
-                else if (await user.getByEmail('system', email)) {
+                else if (udocs.find((t) => t.email === email) || await user.getByEmail('system', email)) {
                     messages.push(`Line ${+i + 1}: Email ${email} already exists.`);
-                } else if (await user.getByUname('system', username)) {
+                } else if (udocs.find((t) => t.username === username) || await user.getByUname('system', username)) {
                     messages.push(`Line ${+i + 1}: Username ${username} already exists.`);
                 } else {
                     const payload: any = {};
