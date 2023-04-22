@@ -195,14 +195,14 @@ hosts:
     detail: true
 tmpfs_size: 512m
 stdio_size: 256m
-memoryMax: 1024m
+memoryMax: ${Math.min(1024, os.totalmem() / 4)}m
 processLimit: 128
-testcases_max: 60
-total_time_limit: 300
+testcases_max: 120
+total_time_limit: 600
 retry_delay_sec: 3
 parallelism: ${Math.floor(cpus().length / 2)}
 rate: 1.00
-rerun: 0
+rerun: 2
 secret: Hydro-Judge-Secret
 env: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -428,7 +428,8 @@ ${nixConfBase}`);
         operations: [
             ['pm2 stop all', { ignore: true }],
             () => writeFileSync(`${process.env.HOME}/.hydro/mount.yaml`, mount),
-            `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml"`,
+            // eslint-disable-next-line max-len
+            `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml -http-addr=localhost:5050"`,
             ...installAsJudge ? [] : [
                 () => console.log(`WiredTiger cache size: ${wtsize}GB`),
                 `pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
@@ -538,10 +539,6 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
-            ...installAsJudge ? [] : [
-                'hydrooj install https://hydro.ac/language-server-0.0.1.tgz',
-                'pm2 restart hydrooj',
-            ],
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             ['pm2 install pm2-logrotate', { retry: true }],

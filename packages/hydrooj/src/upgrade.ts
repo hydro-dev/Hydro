@@ -582,6 +582,22 @@ const scripts: UpgradeScript[] = [
             }
         });
     },
+    async function _80_81() {
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: false }, { $set: { pin: 0 } });
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: true }, { $set: { pin: 1 } });
+        return true;
+    },
+    async function _81_82() {
+        return await iterateAllUser(async (udoc) => {
+            if (!udoc.pinnedDomains) return;
+            let pinnedDomains = new Set<string>();
+            for (const d of udoc.pinnedDomains) {
+                if (typeof d === 'string') pinnedDomains.add(d);
+                else pinnedDomains = Set.union(pinnedDomains, d);
+            }
+            await user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
+        });
+    },
 ];
 
 export default scripts;

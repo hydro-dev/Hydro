@@ -613,7 +613,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
     async get(domainId: string, tid: ObjectId) {
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
         tsdocs.forEach((i) => {
-            i.endAt = this.tdoc.duration ? moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
+            i.endAt = (this.tdoc.duration && i.startAt) ? moment(i.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
         });
         const udict = await user.getListForRender(domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)]);
         this.response.body = { tdoc: this.tdoc, tsdocs, udict };

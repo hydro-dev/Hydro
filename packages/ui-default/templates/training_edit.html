@@ -6,18 +6,16 @@
       <div class="section__body">
         <form method="post">
           <div class="row">
-            <div class="medium-10 columns">
+            <div class="medium-9 columns">
               <label>
                 {{ _('Title') }}
                 <input name="title" placeholder="{{ _('title') }}" value="{{ tdoc.title|default('') }}" class="textbox" autofocus>
               </label>
             </div>
-            <div class="medium-2 columns">
+            <div class="medium-3 columns">
               <label>
-                <br>
-                <label class="checkbox">
-                  <input type="checkbox" name="pin" value="on"{% if tdoc['hidden'] %} checked{% endif %} class="checkbox">{{ _('Pin') }}
-                </label>
+                {{ _('Pin') }}
+                <input name="pin" placeholder="{{ _('Pin level') }}" value="{{ tdoc.pin|default(0) }}" class="textbox">
               </label>
             </div>
           </div>

@@ -53,4 +53,8 @@ export class BasicFetcher {
         if (typeof cookie === 'string') this.cookie = [cookie];
         else this.cookie = cookie;
     }
+
+    setEndpoint(endpoint: string) {
+        this.defaultEndpoint = endpoint;
+    }
 }

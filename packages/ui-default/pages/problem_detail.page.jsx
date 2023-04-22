@@ -187,7 +187,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('.outer-loader-container').show();
     const ans = {};
     let cnt = 0;
-    const reg = /{{ (input|select|multiselect)\(\d+(-\d+)?\) }}/g;
+    const reg = /{{ (input|select|multiselect|textarea)\(\d+(-\d+)?\) }}/g;
     $('.problem-content .typo').children().each((i, e) => {
       if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
       const questions = [];
@@ -195,11 +195,17 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       while (q = reg.exec(e.innerText)) questions.push(q); // eslint-disable-line no-cond-assign
       for (const [info, type] of questions) {
         cnt++;
-        const id = info.replace(/{{ (input|select|multiselect)\((\d+(-\d+)?)\) }}/, '$2');
+        const id = info.replace(/{{ (input|select|multiselect|textarea)\((\d+(-\d+)?)\) }}/, '$2');
         if (type === 'input') {
           $(e).html($(e).html().replace(info, tpl`
             <div class="objective_${id} medium-3" style="display: inline-block;">
               <input type="text" name="${id}" class="textbox objective-input">
+            </div>
+          `));
+        } else if (type === 'textarea') {
+          $(e).html($(e).html().replace(info, tpl`
+            <div class="objective_${id} medium-6">
+              <textarea name="${id}" class="textbox objective-input"></textarea>
             </div>
           `));
         } else {
@@ -224,7 +230,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
         : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
-      $('input.objective-input[type!=checkbox]').on('input', (e) => {
+      $('.objective-input[type!=checkbox]').on('input', (e) => {
         ans[e.target.name] = e.target.value;
       });
       $('input.objective-input[type=checkbox]').on('input', (e) => {

@@ -2,10 +2,11 @@ import { nanoid } from 'nanoid';
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { InfoDialog } from 'vj/components/dialog';
 import VjNotification from 'vj/components/notification/index';
-import { FLAG_ALERT } from 'vj/constant/message';
+import { FLAG_ALERT, FLAG_INFO, FLAG_RICHTEXT } from 'vj/constant/message';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
 
+let previous: VjNotification;
 const onmessage = (msg) => {
   console.log('Received message', msg);
   if (msg.mdoc.flag & FLAG_ALERT) {
@@ -18,12 +19,21 @@ const onmessage = (msg) => {
           <p>${i18n(msg.mdoc.content)}</p>
         </div>`,
     }).open();
-    return true;
+    return false;
+  }
+  if (msg.mdoc.flag & FLAG_INFO) {
+    if (previous) previous.hide();
+    previous = new VjNotification({
+      message: i18n(msg.mdoc.content),
+      duration: 3000,
+    });
+    previous.show();
+    return false;
   }
   if (document.hidden) return false;
   // Is message
   new VjNotification({
-    ...(msg.udoc._id === 1 && msg.mdoc.flag & 4)
+    ...(msg.udoc._id === 1 && msg.mdoc.flag & FLAG_RICHTEXT)
       ? { message: i18n('You received a system message, click here to view.') }
       : {
         title: msg.udoc.uname,

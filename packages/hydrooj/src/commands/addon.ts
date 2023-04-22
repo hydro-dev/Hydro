@@ -18,13 +18,13 @@ export function register(cli: CAC) {
         let addons = JSON.parse(fs.readFileSync(addonPath).toString());
         if (operation === 'create') {
             const dir = `${addonDir}/${name || 'addon'}`;
-            fs.mkdirSync(dir);
+            fs.mkdirSync(dir, { recursive: true });
             child.execSync('yarn init -y', { cwd: dir });
             fs.mkdirSync(`${dir}/templates`);
             fs.mkdirSync(`${dir}/locales`);
             fs.mkdirSync(`${dir}/public`);
             fs.mkdirSync(`${dir}/frontend`);
-            fs.symlinkSync(dir, path.resolve(os.homedir(), name), 'dir');
+            fs.symlinkSync(dir, path.resolve(os.homedir(), name || 'addon'), 'dir');
             addons.push(dir);
             logger.success(`Addon created at ${dir}`);
         } else if (operation && name) {

@@ -11,6 +11,7 @@ class MessageModel {
     static FLAG_UNREAD = 1;
     static FLAG_ALERT = 2;
     static FLAG_RICHTEXT = 4;
+    static FLAG_INFO = 8;
 
     static coll = db.collection('message');
 
@@ -27,6 +28,14 @@ class MessageModel {
         if (from !== to) bus.broadcast('user/message', to, mdoc);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
         return mdoc;
+    }
+
+    static async sendInfo(to: number, content: string) {
+        const _id = new ObjectId();
+        const mdoc: MessageDoc = {
+            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO,
+        };
+        bus.broadcast('user/message', to, mdoc);
     }
 
     static async get(_id: ObjectId) {

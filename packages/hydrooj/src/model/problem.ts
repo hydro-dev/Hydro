@@ -8,7 +8,7 @@ import yaml from 'js-yaml';
 import { escapeRegExp, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
-import { size, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
@@ -28,6 +28,7 @@ import user from './user';
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
+const logger = new Logger('problem');
 function sortable(source: string) {
     return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
 }
@@ -406,20 +407,29 @@ export class ProblemModel {
         return true;
     }
 
-    static async import(domainId: string, filepath: string, operator: number) {
-        const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
-        let zip: AdmZip;
-        try {
-            zip = new AdmZip(filepath);
-        } catch (e) {
-            throw new ValidationError('zip', null, e.message);
-        }
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmpdir, true, (err) => {
-                if (err) reject(err);
-                resolve(null);
+    static async import(domainId: string, filepath: string, operator = 1) {
+        let tmpdir = '';
+        let del = false;
+        if (filepath.endsWith('.zip')) {
+            tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
+            let zip: AdmZip;
+            try {
+                zip = new AdmZip(filepath);
+            } catch (e) {
+                throw new ValidationError('zip', null, e.message);
+            }
+            del = true;
+            await new Promise((resolve, reject) => {
+                zip.extractAllToAsync(tmpdir, true, (err) => {
+                    if (err) reject(err);
+                    resolve(null);
+                });
             });
-        });
+        } else if (fs.statSync(filepath).isDirectory()) {
+            tmpdir = filepath;
+        } else {
+            throw new ValidationError('file', null, 'Invalid file');
+        }
         try {
             const problems = await fs.readdir(tmpdir, { withFileTypes: true });
             for (const p of problems) {
@@ -437,7 +447,7 @@ export class ProblemModel {
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
-                    domainId, pid, pdoc.title, overrideContent || pdoc.content,
+                    domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
                     operator || pdoc.owner, pdoc.tag || [], pdoc.hidden,
                 );
                 if (files.includes('testdata')) {
@@ -459,9 +469,10 @@ export class ProblemModel {
                         }
                     }
                 }
+                if (process.env.HYDRO_CLI) logger.info(`Imported problem ${pdoc.pid} (${pdoc.title})`);
             }
         } finally {
-            await fs.remove(tmpdir);
+            if (del) await fs.remove(tmpdir);
         }
     }
 
@@ -471,11 +482,12 @@ export class ProblemModel {
         await fs.mkdir(tmpdir);
         const pdocs = await ProblemModel.getMulti(domainId, {}, ProblemModel.PROJECTION_PUBLIC).toArray();
         for (const pdoc of pdocs) {
+            if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid || (`P${pdoc.docId}`)} (${pdoc.title})`);
             const problemPath = path.join(tmpdir, `${pdoc.docId}`);
             await fs.mkdir(problemPath);
             const problemYaml = path.join(problemPath, 'problem.yaml');
             const problemYamlContent = yaml.dump({
-                pid: pdoc.pid,
+                pid: pdoc.pid || `P${pdoc.docId}`,
                 owner: pdoc.owner,
                 title: pdoc.title,
                 tag: pdoc.tag,

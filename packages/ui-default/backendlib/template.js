@@ -17,10 +17,12 @@ else template &&= findFileSync(template);
 
 class Loader extends nunjucks.Loader {
   getSource(name) {
-    if (!template) {
-      if (!global.Hydro.ui.template[name]) throw new Error(`Cannot get template ${name}`);
+    const src = global.Hydro.ui.template[name];
+    const ref = global.Hydro.ui.template[`${name}.source`];
+    if (!process.env.DEV) {
+      if (!src) throw new Error(`Cannot get template ${name}`);
       return {
-        src: global.Hydro.ui.template[name],
+        src,
         path: name,
         noCache: false,
       };
@@ -28,10 +30,11 @@ class Loader extends nunjucks.Loader {
     let fullpath = null;
     const p = path.resolve(template, name);
     if (fs.existsSync(p)) fullpath = p;
+    if (!fullpath && ref && fs.existsSync(ref)) fullpath = ref;
     if (!fullpath) {
-      if (global.Hydro.ui.template[name]) {
+      if (src) {
         return {
-          src: global.Hydro.ui.template[name],
+          src,
           path: name,
           noCache: true,
         };
@@ -39,7 +42,7 @@ class Loader extends nunjucks.Loader {
       throw new Error(`Cannot get template ${name}`);
     }
     return {
-      src: fs.readFileSync(fullpath, 'utf-8').toString(),
+      src: fs.readFileSync(fullpath, 'utf-8'),
       path: fullpath,
       noCache: true,
     };

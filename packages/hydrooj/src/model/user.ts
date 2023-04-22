@@ -1,5 +1,5 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
@@ -23,7 +23,7 @@ export const coll: Collection<Udoc> = db.collection('user');
 // Virtual user, only for display in contest.
 export const collV: Collection<VUdoc> = db.collection('vuser');
 export const collGroup: Collection<GDoc> = db.collection('user.group');
-const cache = new LRU<string, User>({ max: 10000, ttl: 300 * 1000 });
+const cache = new LRUCache<string, User>({ max: 10000, ttl: 300 * 1000 });
 
 export function deleteUserCache(udoc: { _id: number, uname: string, mail: string } | string | true | undefined | null, receiver = false) {
     if (!udoc) return false;

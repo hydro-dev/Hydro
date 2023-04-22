@@ -163,6 +163,7 @@ export enum ProblemType {
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
     Objective = 'objective',
+    Remote = 'remote_judge',
 }
 
 export enum SubtaskType {
@@ -410,7 +411,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
 
 export interface TrainingDoc extends Tdoc {
     description: string;
-    pin?: boolean;
+    pin?: number;
     dag: TrainingNode[];
 }
 

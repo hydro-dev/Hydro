@@ -180,6 +180,11 @@ export class Handler extends HandlerCommon {
         if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
+    // This is beta API, may be changed in the future.
+    progress(message: string) {
+        Hydro.model.message.sendInfo(this.user._id, message);
+    }
+
     async init() {
         if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
             const host = new URL(this.request.headers.referer).host;

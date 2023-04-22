@@ -5,6 +5,7 @@ import Notification from 'vj/components/notification';
 import {
   api, createZipStream, gql, i18n, pipeStream, request,
 } from 'vj/utils';
+import { ctx } from '../../context';
 
 let isBeforeUnloadTriggeredByLibrary = !window.isSecureContext;
 function onBeforeUnload(e) {
@@ -75,10 +76,17 @@ export default async function download(filename, targets) {
   window.removeEventListener('beforeunload', onBeforeUnload);
 }
 
+declare module '../../api' {
+  interface EventMap {
+    'problemset/download': (pids: number[], name: string, targets: { filename: string; url?: string; content?: string }[]) => void;
+  }
+}
+
 export async function downloadProblemSet(pids, name = 'Export') {
   Notification.info(i18n('Downloading...'));
   const targets = [];
   try {
+    await ctx.serial('problemset/download', pids, name, targets);
     for (const pid of pids) {
       const pdoc = await api(gql`
         problem(id: ${+pid}) {
