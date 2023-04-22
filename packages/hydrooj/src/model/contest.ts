@@ -512,21 +512,17 @@ const fakecf = buildContestRule({
     stat(tdoc, journal) {
         const ntry = Counter<number>();
         const detail = {};
-        const len = tdoc.endAt.getTime() - tdoc.beginAt.getTime();
-        const subtasks: Record<number, SubtaskResult> = {};
         const now = new Date();
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
             const valid = !([STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) && j.subtasks[1]?.status == STATUS.STATUS_ACCEPTED;
             if (!valid) continue;
-            console.log('pid: %d, a:%d',j.pid,j.subtasks[1].status);
             const real = Math.round((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime())/60000);
             const subtaskId = now.getTime() <= tdoc.endAt.getTime() ? 2 : 3;
             const sub = j.subtasks[subtaskId];
-            if (sub == null || sub == undefined) continue;
+            if (sub == null) continue;
             const score = j.subtasks[1].score * 100;
             const penaltyScore = Math.round(sub.score > 0 ? score - real * score / 250 - (ntry[j.pid] - 1) * 10 : 0);
             ntry[j.pid] += sub.score > 0 ? 0 : 1;
-            console.log("score: {0} status: {1}".format(penaltyScore,now.getTime() <= tdoc.endAt.getTime()));
             detail[j.pid] = {
                 ...j,
                 status: sub.status,
@@ -559,7 +555,7 @@ const fakecf = buildContestRule({
         }
         row.push({
             type: 'total_score',
-            value: `${Math.round(tsdoc.score)}` || '0',
+            value: `${Math.round(tsdoc.score) || 0}`,
             hover: '',
         });
         for (const pid of tdoc.pids) {
