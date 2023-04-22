@@ -507,8 +507,8 @@ const fakecf = buildContestRule({
     check: () => { },
     submitAfterAccept: true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
-    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
-    showRecord: (tdoc, now) => now > new Date(tdoc.endAt.setHours(tdoc.endAt.getHours()+1)),
+    showSelfRecord: (tdoc, now) => now > new Date(tdoc.endAt.setHours(tdoc.endAt.getHours()+5)),
+    showRecord: (tdoc, now) => now > new Date(tdoc.endAt.setHours(tdoc.endAt.getHours()+5)),
     stat(tdoc, journal) {
         const ntry = Counter<number>();
         const detail = {};
