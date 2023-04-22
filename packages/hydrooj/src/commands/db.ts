@@ -39,7 +39,7 @@ export function register(cli: CAC) {
             child.spawn('mongo', [url], { stdio: 'inherit' });
         }
     });
-    cli.command('backup').action(() => {
+    cli.command('backup').option('--dbOnly', 'Only dump database', { default: false }).action(() => {
         const url = getUrl();
         exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
         const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
@@ -51,18 +51,20 @@ export function register(cli: CAC) {
         const stat = fs.statSync(target);
         logger.success(`Database backup saved at ${target} , size: ${size(stat.size)}`);
     });
-    cli.command('restore <filename>').action(async (filename) => {
+    cli.command('restore <filename>').option('-y', 'Assume yes', { default: false }).action(async (filename) => {
         const url = getUrl();
         if (!fs.existsSync(filename)) {
             logger.error('Cannot find file');
             return;
         }
-        const rl = readline.createInterface(process.stdin, process.stdout);
-        const answer = await rl.question(`Overwrite current database with backup file ${filename}? [y/N]`);
-        rl.close();
-        if (answer.toLowerCase() !== 'y') {
-            logger.warn('Abort.');
-            return;
+        if (!argv.options.y) {
+            const rl = readline.createInterface(process.stdin, process.stdout);
+            const answer = await rl.question(`Overwrite current database with backup file ${filename}? [y/N]`);
+            rl.close();
+            if (answer.toLowerCase() !== 'y') {
+                logger.warn('Abort.');
+                return;
+            }
         }
         exec('unzip', [filename, '-d', dir], { stdio: 'inherit' });
         exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/hydro`, '--drop'], { stdio: 'inherit' });

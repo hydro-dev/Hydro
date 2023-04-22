@@ -107,7 +107,7 @@
             <a class="pager__item next link" href="?page={{ page + 1 }}{{
               (('&tid=' + filterTid) if filterTid else '')
               + (('&uidOrName=' + filterUidOrName) if filterUidOrName else '')
-              + (('&language=' + filterLanguage) if filterLanguage else '')
+              + (('&lang=' + filterLang) if filterLang else '')
               + (('&status=' + filterStatus) if filterStatus else '')
               + (('&pid=' + filterPid) if filterPid else '')
               + ('&allDomain=1' if all else '') }}">{{ _('pager_next') }}</a>
