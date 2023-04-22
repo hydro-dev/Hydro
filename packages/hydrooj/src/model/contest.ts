@@ -66,14 +66,14 @@ const acm = buildContestRule({
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal) {
             if (!this.submitAfterAccept && display[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
+            if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
+                naccept[j.pid]++;
+            }
             const real = Math.floor((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000);
             const penalty = 20 * 60 * naccept[j.pid];
             detail[j.pid] = {
                 ...j, naccept: naccept[j.pid], time: real + penalty, real, penalty,
             };
-            if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) {
-                naccept[j.pid]++;
-            }
             if (lockAt && j.rid.getTimestamp() > lockAt) {
                 npending[j.pid]++;
                 // FIXME this is tricky
