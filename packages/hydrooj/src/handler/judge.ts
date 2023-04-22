@@ -69,7 +69,7 @@ export async function next(body: Partial<JudgeResultBody>) {
     if (!rdoc) return;
     const { $set, $push } = processPayload(rdoc, body);
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
-    bus.broadcast('record/change', rdoc!, $set, $push);
+    bus.broadcast('record/change', rdoc!, $set, $push, body);
 }
 
 export async function postJudge(rdoc: RecordDoc) {
@@ -139,7 +139,7 @@ export async function end(body: Partial<JudgeResultBody>) {
     await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
-    bus.broadcast('record/change', rdoc); // trigger a full update
+    bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
