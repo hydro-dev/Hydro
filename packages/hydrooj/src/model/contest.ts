@@ -505,41 +505,47 @@ const ledo = buildContestRule({
 const fakecf = buildContestRule({
     TEXT: 'Codeforces(No-Hack)',
     check: () => { },
-    submitAfterAccept: false,
+    submitAfterAccept: true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: (tdoc, now) => now > tdoc.endAt,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    showRecord: (tdoc, now) => now > new Date(tdoc.endAt.setHours(tdoc.endAt.getHours()+1)),
     stat(tdoc, journal) {
         const ntry = Counter<number>();
         const detail = {};
         const len = tdoc.endAt.getTime() - tdoc.beginAt.getTime();
+        const subtasks: Record<number, SubtaskResult> = {};
+        const now = new Date();
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
-            const vaild = ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status) || j.subtasks[0].status != STATUS.STATUS_ACCEPT;
-            if (vaild) ntry[j.pid]++;
-            const real = j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime();
-            const score = Date.now() <= tdoc.endAt.getMilliseconds() ? j.subtask[1].score : j.subtask[2].score;
-            const penaltyScore = vaild ? Math.round((2.0*len-real)/(2.0*len)*Math.max(0.7, 0.95 ** (ntry[j.pid] - 1)) * score) : 0;
-            if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
-                detail[j.pid] = {
-                    ...j,
-                    score,
-                    penaltyScore,
-                    ntry: ntry[j.pid] - 1,
-                };
-            }
+            const valid = !([STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) && j.subtasks[1]?.status == STATUS.STATUS_ACCEPTED;
+            if (!valid) continue;
+            console.log('pid: %d, a:%d',j.pid,j.subtasks[1].status);
+            const real = Math.round((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime())/60000);
+            const subtaskId = now.getTime() <= tdoc.endAt.getTime() ? 2 : 3;
+            const sub = j.subtasks[subtaskId];
+            if (sub == null || sub == undefined) continue;
+            const score = j.subtasks[1].score * 100;
+            const penaltyScore = Math.round(sub.score > 0 ? score - real * score / 250 - (ntry[j.pid] - 1) * 10 : 0);
+            ntry[j.pid] += sub.score > 0 ? 0 : 1;
+            console.log("score: {0} status: {1}".format(penaltyScore,now.getTime() <= tdoc.endAt.getTime()));
+            detail[j.pid] = {
+                ...j,
+                status: sub.status,
+                score: sub.score,
+                penaltyScore,
+                ntry: ntry[j.pid],
+            };
         }
         let score = 0;
-        let originalScore = 0;
         for (const pid of tdoc.pids) {
             if (!detail[pid]) continue;
             score += detail[pid].penaltyScore;
-            originalScore += detail[pid].score;
         }
         return {
-            score, originalScore, detail,
+            score: Math.round(score), 
+            detail,
         };
     },
-    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+    async scoreboardRow(config, _, tdoc, __, udoc, rank, tsdoc, ___) {
         const tsddict = tsdoc.detail || {};
         const row: ScoreboardRow = [
             { type: 'rank', value: rank.toString() },
@@ -553,23 +559,19 @@ const fakecf = buildContestRule({
         }
         row.push({
             type: 'total_score',
-            value: tsdoc.score || 0,
-            hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
+            value: `${Math.round(tsdoc.score)}` || '0',
+            hover: '',
         });
-        for (const s of tsdoc.journal || []) {
-            if (!pdict[s.pid]) continue;
-            pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
-        }
         for (const pid of tdoc.pids) {
+            console.log(`pid: ${pid}, ntry: ${tsddict[pid]?.ntry}`)
+            const value = tsddict[pid]?.penaltyScore ? `<span style="color:green">${tsddict[pid]?.penaltyScore}</span>` : (tsddict[pid]?.ntry ? `<span style="color:red">-${tsddict[pid]?.ntry}</span>` : '')
+            const invalid = tsddict[pid]?.rid && ([STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(tsddict[pid]?.status) || tsddict[pid]?.subtasks[1]?.status != STATUS.STATUS_ACCEPTED);
             row.push({
                 type: 'record',
-                value: tsddict[pid]?.penaltyScore || '',
-                hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
+                value: value,
+                hover: `Last verdict: ${tsddict[pid]?.status}`,
                 raw: tsddict[pid]?.rid,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
-                    ? 'background-color: rgb(217, 240, 199);'
-                    : undefined,
+                style: invalid ? 'background-color: rgb(255, 215, 0);' : undefined,
             });
         }
         return row;
