@@ -589,10 +589,10 @@ const scripts: UpgradeScript[] = [
     },
     async function _81_82() {
         return await iterateAllUser((udoc) => {
-            const pinnedDomains = new Set<string>();
+            let pinnedDomains = new Set<string>();
             for (const d of udoc.pinnedDomains) {
                 if (typeof d === 'string') pinnedDomains.add(d);
-                else Set.union(pinnedDomains, d);
+                else pinnedDomains = Set.union(pinnedDomains, d);
             }
             return user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
         });
