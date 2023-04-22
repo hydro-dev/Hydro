@@ -104,6 +104,19 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.15 / UI 4.48.15
+- ui: 客观题：允许多行答案
+- core: 修复 pinnedDomains 无法修改的问题
+- install: 调大默认限制
+- ui: 优化比赛弹窗通知
+- core: 修复比赛选手管理页时间计算
+- core: cli: 题目导出时生成默认题目 ID
+- core: dump: 支持 --dbOnly 参数
+- core: 用户导入: 重复信息检查
+- ui: 更改默认版权信息
+- core: 支持训练基于置顶等级排序
+- ui: 模板热重载
+
 ### Hydro 4.9.13 / UI 4.48.13
 - fps-import: 支持处理远端评测题目
 - vjudge: 添加 VERDICT.WAITING 属性
