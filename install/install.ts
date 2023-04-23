@@ -200,7 +200,8 @@ processLimit: 128
 testcases_max: 120
 total_time_limit: 600
 retry_delay_sec: 3
-parallelism: ${Math.floor(cpus().length / 2)}
+parallelism: ${Math.max(1, Math.floor(cpus().length / 4))}
+singleTaskParallelism: 2
 rate: 1.00
 rerun: 2
 secret: Hydro-Judge-Secret
