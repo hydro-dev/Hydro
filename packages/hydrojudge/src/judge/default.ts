@@ -53,9 +53,7 @@ function judgeCase(c: NormalizedCase) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
-        await Promise.all(
-            Object.values(res.fileIds).map((id) => del(id)),
-        ).catch(() => { /* Ignore file doesn't exist */ });
+        await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             return await runner(ctx, ctxSubtask);
