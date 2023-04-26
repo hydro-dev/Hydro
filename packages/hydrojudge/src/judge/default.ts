@@ -5,7 +5,7 @@ import compile, { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { Execute } from '../interface';
 import { Logger } from '../log';
-import { del, run, runQueued } from '../sandbox';
+import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';

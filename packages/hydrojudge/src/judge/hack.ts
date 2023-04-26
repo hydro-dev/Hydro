@@ -5,7 +5,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import compile, { compileChecker, compileValidator } from '../compile';
 import { Execute } from '../interface';
-import { del, run, runQueued } from '../sandbox';
+import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
