@@ -39,10 +39,10 @@ class SolutionModel {
         return document.count(domainId, document.TYPE_PROBLEM_SOLUTION, query);
     }
 
-    static getMulti(domainId: string, pid: number) {
+    static getMulti(domainId: string, pid: number, query: any = {}) {
         return document.getMulti(
             domainId, document.TYPE_PROBLEM_SOLUTION,
-            { parentType: document.TYPE_PROBLEM, parentId: pid },
+            { parentType: document.TYPE_PROBLEM, parentId: pid, ...query },
         ).sort({ vote: -1 });
     }
 
