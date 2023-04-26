@@ -17,6 +17,7 @@ const JudgeSettings = Schema.object({
     total_time_limit: Schema.number().default(60),
     processLimit: Schema.number().default(32),
     parallelism: Schema.number().default(2),
+    concurrency: Schema.number(),
     singleTaskParallelism: Schema.number().default(2),
     rerun: Schema.number().description('Re-Run testcase if time-limit-exceeded (max per submission)').default(0),
     rate: Schema.number().default(1),

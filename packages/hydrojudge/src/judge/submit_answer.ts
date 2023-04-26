@@ -4,7 +4,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import { compileChecker } from '../compile';
 import { runFlow } from '../flow';
-import { del, run } from '../sandbox';
+import { del, runQueued } from '../sandbox';
 import { NormalizedCase } from '../utils';
 import { Context } from './interface';
 
@@ -20,7 +20,7 @@ function judgeCase(c: NormalizedCase) {
         let score = 0;
         const fileIds = [];
         if (ctx.config.subType === 'multi') {
-            const res = await run(
+            const res = await runQueued(
                 '/usr/bin/unzip foo.zip',
                 {
                     stdin: null,
@@ -54,7 +54,7 @@ function judgeCase(c: NormalizedCase) {
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             }));
         }
-        await Promise.all(fileIds.map(del)).catch(() => { /* Ignore file doesn't exist */ });
+        await Promise.allSettled(fileIds.map(del));
         return {
             id: c.id,
             status,
