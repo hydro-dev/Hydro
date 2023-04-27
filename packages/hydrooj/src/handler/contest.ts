@@ -282,12 +282,14 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             config.lockAt = this.tdoc.lockAt;
         }
         const [, rows, udict, pdict] = await contest.getScoreboard.call(this, domainId, tid, config);
+        const groups = this.user.hasPerm(PERM.PERM_EDIT_DOMAIN)
+            ? await user.listGroup(domainId) : [];
         // eslint-disable-next-line @typescript-eslint/naming-convention
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
             : 'contest_scoreboard';
         this.response.body = {
-            tdoc: this.tdoc, rows, udict, pdict, page_name,
+            tdoc: this.tdoc, rows, udict, pdict, page_name, groups,
         };
         this.response.pjax = 'partials/scoreboard.html';
         this.response.template = 'contest_scoreboard.html';
