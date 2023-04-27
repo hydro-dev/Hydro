@@ -7,6 +7,12 @@
       <ol class="menu">
         <li class="menu__item nojs--hide">
           <form method="get" id="searchForm">
+            <select name="group" class="select"{% if not groups.length %} style="display:none"{% endif %}>
+              <option value="all" selected>{{ _('All') }}</option>
+              {% for group in groups %}
+                <option value="{{ group.uids.join(',') }}">{{ group.name }}</option>
+              {% endfor %}
+            </select>
             <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
