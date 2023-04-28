@@ -150,8 +150,10 @@ class TrainingDetailHandler extends Handler {
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
         });
+        const groups = this.user.hasPerm(PERM.PERM_EDIT_DOMAIN)
+            ? await user.listGroup(domainId) : [];
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict, groups,
         };
         this.response.body.tdoc.description = this.response.body.tdoc.description
             .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)

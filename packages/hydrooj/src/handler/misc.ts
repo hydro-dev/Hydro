@@ -84,7 +84,6 @@ export class FSDownloadHandler extends Handler {
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
-        this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
         await oplog.log(this, 'download.file.user', {
@@ -95,6 +94,7 @@ export class FSDownloadHandler extends Handler {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
             );
+            this.response.addHeader('Cache-Control', 'public');
         } catch (e) {
             if (e.message.includes('Invalid path')) throw new NotFoundError(filename);
             throw e;

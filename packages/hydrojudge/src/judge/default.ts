@@ -5,7 +5,7 @@ import compile, { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { Execute } from '../interface';
 import { Logger } from '../log';
-import { del, run } from '../sandbox';
+import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
@@ -14,7 +14,7 @@ const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
-        const res = await run(
+        const res = await runQueued(
             ctx.execute.execute,
             {
                 stdin: { src: c.input },
@@ -53,9 +53,7 @@ function judgeCase(c: NormalizedCase) {
             if (code < 32) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
-        await Promise.all(
-            Object.values(res.fileIds).map((id) => del(id)),
-        ).catch(() => { /* Ignore file doesn't exist */ });
+        await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             return await runner(ctx, ctxSubtask);
@@ -65,7 +63,7 @@ function judgeCase(c: NormalizedCase) {
             if (langConfig.analysis && !ctx.analysis) {
                 ctx.analysis = true;
                 try {
-                    const r = await run(langConfig.analysis, {
+                    const r = await runQueued(langConfig.analysis, {
                         copyIn: {
                             ...ctx.execute.copyIn,
                             input: { src: c.input },

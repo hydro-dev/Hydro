@@ -450,7 +450,7 @@ class HomeDomainHandler extends Handler {
 
     @param('id', Types.String)
     async postStar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.concat(id) });
+        await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
         this.back({ star: true });
     }
 
@@ -479,7 +479,7 @@ class HomeDomainCreateHandler extends Handler {
         await Promise.all([
             domain.edit(domainId, { avatar }),
             domain.setUserRole(domainId, this.user._id, 'root'),
-            user.setById(this.user._id, undefined, undefined, { pinnedDomains: [domainId] }),
+            user.setById(this.user._id, undefined, undefined, { pinnedDomains: domainId }),
         ]);
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };

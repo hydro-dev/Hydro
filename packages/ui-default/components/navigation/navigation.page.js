@@ -106,6 +106,7 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
 
   $('.header__hamburger').on('click', () => slideout.toggle());
   $(window).on('resize', handleNavbar);
+  setInterval(handleNavbar, 3000);
 }, () => {
   $trigger = $(tpl`
     <li class="nav__list-item nav_more" data-dropdown-pos="bottom right" data-dropdown-target="#menu-nav-more">

@@ -2,7 +2,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import compile from '../compile';
 import { CompileError } from '../error';
 import { Logger } from '../log';
-import { run } from '../sandbox';
+import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
@@ -46,7 +46,7 @@ export const judge = async (ctx: Context) => {
     }
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const res = await run(
+    const res = await runQueued(
         ctx.execute.execute,
         {
             stdin: { content: ctx.input },
@@ -55,6 +55,7 @@ export const judge = async (ctx: Context) => {
             time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
         },
+        1,
     );
     const { code, time, memory } = res;
     let { status } = res;
@@ -85,7 +86,7 @@ export const judge = async (ctx: Context) => {
         if (langConfig.analysis) {
             try {
                 ctx.analysis = true;
-                const r = await run(langConfig.analysis, {
+                const r = await runQueued(langConfig.analysis, {
                     copyIn: {
                         ...ctx.execute.copyIn,
                         input: { content: ctx.input },

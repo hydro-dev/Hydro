@@ -80,8 +80,9 @@ export async function postInit() {
             logger.debug('Record not found: %o', t);
             return;
         }
-        (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
+        await (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
     };
-    TaskModel.consume({ type: 'judge' }, handle);
+    const parallelism = Math.max(getConfig('parallelism'), 2);
+    for (let i = 1; i < parallelism; i++) TaskModel.consume({ type: 'judge' }, handle);
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
 }

@@ -19,7 +19,7 @@ const onmessage = (msg) => {
           <p>${i18n(msg.mdoc.content)}</p>
         </div>`,
     }).open();
-    return true;
+    return false;
   }
   if (msg.mdoc.flag & FLAG_INFO) {
     if (previous) previous.hide();
@@ -28,7 +28,7 @@ const onmessage = (msg) => {
       duration: 3000,
     });
     previous.show();
-    return true;
+    return false;
   }
   if (document.hidden) return false;
   // Is message
