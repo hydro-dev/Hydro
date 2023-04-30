@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.9.15",
+    "version": "4.9.16",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -12,12 +12,12 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.317.0",
-        "@aws-sdk/lib-storage": "^3.317.0",
+        "@aws-sdk/client-s3": "^3.319.0",
+        "@aws-sdk/lib-storage": "^3.319.0",
         "@aws-sdk/middleware-endpoint": "^3.310.0",
-        "@aws-sdk/s3-presigned-post": "^3.317.0",
-        "@aws-sdk/s3-request-presigner": "^3.317.0",
-        "@graphql-tools/schema": "^9.0.18",
+        "@aws-sdk/s3-presigned-post": "^3.319.0",
+        "@aws-sdk/s3-request-presigner": "^3.319.0",
+        "@graphql-tools/schema": "^9.0.19",
         "@hydrooj/utils": "workspace:*",
         "@simplewebauthn/server": "^7.2.0",
         "adm-zip": "0.5.5",
@@ -37,7 +37,7 @@
         "koa-router": "^12.0.0",
         "koa-static-cache": "^5.1.4",
         "lodash": "^4.17.21",
-        "lru-cache": "9.1.0",
+        "lru-cache": "^9.1.1",
         "mime-types": "^2.1.35",
         "moment-timezone": "^0.5.43",
         "mongodb": "^5.3.0",
@@ -71,7 +71,7 @@
         "@types/saslprep": "^1.0.1",
         "@types/semver": "^7.3.13",
         "@types/serialize-javascript": "^5.0.2",
-        "@types/superagent": "^4.1.16",
+        "@types/superagent": "^4.1.17",
         "@types/tar": "^6.1.4",
         "moment": "^2.29.4"
     }
