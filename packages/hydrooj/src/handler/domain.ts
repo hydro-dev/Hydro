@@ -3,7 +3,7 @@ import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import { Context } from '../context';
 import {
-    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError,
+    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
     InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
@@ -162,6 +162,7 @@ class DomainUserHandler extends ManageHandler {
     @post('uid', Types.Int)
     @post('role', Types.Role)
     async postSetUser(domainId: string, uid: number, role: string) {
+        if (uid === this.domain.owner) throw new ForbiddenError();
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
@@ -173,6 +174,7 @@ class DomainUserHandler extends ManageHandler {
     @param('uid', Types.NumericArray)
     @param('role', Types.Role)
     async postSetUsers(domainId: string, uid: number[], role: string) {
+        if (uid.includes(this.domain.owner)) throw new ForbiddenError();
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
