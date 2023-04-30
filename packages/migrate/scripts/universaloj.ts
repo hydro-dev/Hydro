@@ -99,7 +99,7 @@ export async function run({
         current ||= await UserModel.getByUname(domainId, udoc.username);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
-            uidMap[udoc.id] = current._id;
+            uidMap[udoc.username] = current._id;
         } else {
             const [u] = await UserModel.coll.find({}).sort({ _id: -1 }).limit(1).toArray();
             const uid = Math.max((u?._id || 0) + 1, 2);
@@ -438,7 +438,7 @@ export async function run({
             }
             if (rdoc.contest_id) {
                 data.contest = new ObjectId(tidMap[rdoc.contest_id]);
-                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.submitter]).catch(noop);
             }
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
