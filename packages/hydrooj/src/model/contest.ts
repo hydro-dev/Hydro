@@ -502,6 +502,87 @@ const ledo = buildContestRule({
     },
 }, oi);
 
+const cf = buildContestRule({
+    TEXT: 'Codeforces',
+    check: () => { },
+    submitAfterAccept: false,
+    showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    showSelfRecord: () => true,
+    showRecord: (tdoc, now) => now > tdoc.endAt,
+    stat(tdoc, journal) {
+        const ntry = Counter<number>();
+        const hackSucc = Counter<number>();
+        const hackFail = Counter<number>();
+        const detail = {};
+        for (const j of journal) {
+            if ([STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) continue;
+            // if (this.submitAfterAccept) continue;
+            if (j.status === STATUS.STATUS_HACK_SUCCESSFUL) hackSucc[j.pid]++;
+            if (j.status === STATUS.STATUS_HACK_UNSUCCESSFUL) hackFail[j.pid]++;
+            if (STATUS.STATUS_ACCEPTED !== j.status) ntry[j.pid]++;
+            const timePenaltyScore = Math.round(Math.max(j.score * 100 - (j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000 / 60 * j.score * 100 / 250, j.score * 100 * 0.3));
+            const penaltyScore = Math.max(timePenaltyScore - 50 * (ntry[j.pid]), 0);
+            if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
+                detail[j.pid] = {
+                    ...j,
+                    penaltyScore,
+                    timePenaltyScore,
+                    ntry: ntry[j.pid],
+                    hackFail: hackFail[j.pid],
+                    hackSucc: hackSucc[j.pid],
+                };
+            }
+        }
+        let score = 0;
+        let originalScore = 0;
+        for (const pid of tdoc.pids) {
+            if (!detail[pid]) continue;
+            detail[pid].score -= 50 * detail[pid].hackFail;
+            detail[pid].score += 100 * detail[pid].hackSucc;
+            score += detail[pid].penaltyScore;
+            originalScore += detail[pid].score;
+        }
+        return {
+            score, originalScore, detail,
+        };
+    },
+    async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
+        const tsddict = tsdoc.detail || {};
+        const row: ScoreboardRow = [
+            { type: 'rank', value: rank.toString() },
+            { type: 'user', value: udoc.uname, raw: tsdoc.uid },
+        ];
+        if (config.isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({
+            type: 'total_score',
+            value: tsdoc.score || 0,
+            hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
+        });
+        for (const s of tsdoc.journal || []) {
+            if (!pdict[s.pid]) continue;
+            pdict[s.pid].nSubmit++;
+            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+        }
+        for (const pid of tdoc.pids) {
+            row.push({
+                type: 'record',
+                value: tsddict[pid]?.penaltyScore || '',
+                hover: tsddict[pid]?.penaltyScore ? `${tsddict[pid].timePenaltyScore}, -${tsddict[pid].ntry}, +${tsddict[pid].hackSucc} , -${tsddict[pid].hackFail}` : '',
+                raw: tsddict[pid]?.rid,
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
+                    ? 'background-color: rgb(217, 240, 199);'
+                    : undefined,
+            });
+        }
+        return row;
+    },
+}, oi);
+
 const homework = buildContestRule({
     TEXT: 'Assignment',
     hidden: true,
@@ -652,7 +733,7 @@ const homework = buildContestRule({
 });
 
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi, ledo, strictioi,
+    acm, oi, homework, ioi, ledo, strictioi, cf,
 };
 
 function _getStatusJournal(tsdoc) {
@@ -667,12 +748,12 @@ export async function add(
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, attend: 0, lockedList: {},
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
+        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated, lockedList: pids.reduce((acc, curr) => ({ ...acc, [curr]: [] }), {}),
     });
     await bus.parallel('contest/add', data, res);
     return res;
@@ -890,6 +971,19 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
                 ? 'Live...'
                 : 'Done');
 
+export async function getLockedList(domainId: string, tid: ObjectId) {
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+    if (tdoc.rule !== 'cf') return false;
+    return tdoc.lockedList;
+}
+
+export async function updateLockedList(domainId: string, tid: ObjectId, $lockList: any) {
+    const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
+    tdoc.lockedList = $lockList;
+    edit(domainId, tid, tdoc);
+}
+
+
 global.Hydro.model.contest = {
     RULES,
     add,
@@ -922,4 +1016,6 @@ global.Hydro.model.contest = {
     isLocked,
     isExtended,
     statusText,
+    getLockedList,
+    updateLockedList,
 };

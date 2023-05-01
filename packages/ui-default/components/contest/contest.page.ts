@@ -18,6 +18,16 @@ const contestPage = new AutoloadPage('contestPage', () => {
       Notification.error(e.message || e);
     });
   });
+  $('.nav__logo').on('click', (ev) => {
+    console.log('fk');
+    const id = $(this).attr('id');
+    request.get(`./lock?pid=${id}`).then(() => {
+      Notification.success(i18n('Successfully locked'));
+      delay(1000).then(() => window.location.reload());
+    }).catch((e) => {
+      Notification.error(e.message || e);
+    })
+  });
 });
 
 export default contestPage;

@@ -11,7 +11,7 @@ import {
     FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
     ProblemIsReferencedError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
-    RecordNotFoundError, SolutionNotFoundError, ValidationError,
+    RecordNotFoundError, SolutionNotFoundError, ValidationError, ProblemLockError,
 } from '../error';
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
@@ -503,6 +503,12 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('input', Types.String, true)
     @param('tid', Types.ObjectId, true)
     async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectId) {
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid);
+            if (tdoc.rule === 'cf' && tdoc.lockedList[this.pdoc.docId].includes(this.user._id)) {
+                throw new ProblemLockError("You have locked this problem.");
+            }
+        }
         const config = this.pdoc.config;
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (['submit_answer', 'objective'].includes(config.type)) {
@@ -570,7 +576,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
         if (!this.rdoc || this.rdoc.pid !== this.pdoc.docId
             || this.rdoc.contest?.toString() !== tid?.toString()) throw new RecordNotFoundError(domainId, rid);
         if (tid) {
-            if (this.tdoc.rule !== 'codeforces') throw new HackFailedError('This contest is not hackable.');
+            if (this.tdoc.rule !== 'cf') throw new HackFailedError('This contest is not hackable.');
             if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         }
         if (this.rdoc.uid === this.user._id) throw new HackFailedError('You cannot hack your own submission');
