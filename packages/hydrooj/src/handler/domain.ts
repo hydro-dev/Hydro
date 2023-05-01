@@ -126,7 +126,10 @@ class DomainDashboardHandler extends ManageHandler {
     async postDelete({ domainId }) {
         if (domainId === 'system') throw new CannotDeleteSystemDomainError();
         if (this.domain.owner !== this.user._id) throw new OnlyOwnerCanDeleteDomainError();
-        await domain.del(domainId);
+        await Promise.all([
+            domain.del(domainId),
+            oplog.log(this, 'domain.delete', {}),
+        ]);
         this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
@@ -203,7 +206,10 @@ class DomainPermissionHandler extends ManageHandler {
             roles[role] = 0n;
             for (const r of perms) roles[role] |= 1n << BigInt(r);
         }
-        await domain.setRoles(domainId, roles);
+        await Promise.all([
+            domain.setRoles(domainId, roles),
+            oplog.log(this, 'domain.setRoles', { roles }),
+        ]);
         this.back();
     }
 }
@@ -222,7 +228,10 @@ class DomainRoleHandler extends ManageHandler {
         const rdict: Dictionary<any> = {};
         for (const r of roles) rdict[r._id] = r.perm;
         if (rdict[role]) throw new RoleAlreadyExistError(role);
-        await domain.addRole(domainId, role, rdict.default);
+        await Promise.all([
+            domain.addRole(domainId, role, rdict.default),
+            oplog.log(this, 'domain.addRole', { role }),
+        ]);
         this.back();
     }
 
@@ -232,7 +241,10 @@ class DomainRoleHandler extends ManageHandler {
         if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
-        await domain.deleteRoles(domainId, roles);
+        await Promise.all([
+            domain.deleteRoles(domainId, roles),
+            oplog.log(this, 'domain.deleteRoles', { roles }),
+        ]);
         this.back();
     }
 }
