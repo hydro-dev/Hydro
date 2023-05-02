@@ -748,7 +748,7 @@ export async function add(
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, attend: 0, lockedList: {},
+        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
@@ -973,7 +973,7 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
 
 export async function getLockedList(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
-    if (tdoc.rule !== 'cf') return false;
+    if (tdoc.rule !== 'cf') return null;
     return tdoc.lockedList;
 }
 

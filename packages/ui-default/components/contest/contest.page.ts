@@ -18,7 +18,7 @@ const contestPage = new AutoloadPage('contestPage', () => {
       Notification.error(e.message || e);
     });
   });
-  $('.nav__logo').on('click', (ev) => {
+  $('.btn--lock').on('click', (ev) => {
     console.log('fk');
     const id = $(this).attr('id');
     request.get(`./lock?pid=${id}`).then(() => {

@@ -54,7 +54,7 @@
                   {% if not tdoc.lockedList[pid].includes(handler.user._id) %}
                     <form style="float: right; margin-left: 10px;" action="{{ url('contest_lock_problem', tid=tdoc.docId) }}" method="GET">
                       <input type="hidden" name="pid" value="{{ pid }}">
-                        <button class="col--lock" type="submit">
+                        <button class="btn--lock" type="submit">
                           Lock
                         </button>
                     </form>
