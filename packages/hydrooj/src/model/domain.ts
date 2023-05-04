@@ -298,7 +298,7 @@ bus.on('ready', () => Promise.all([
 bus.on('domain/delete-cache', async (domainId: string) => {
     const ddoc = await DomainModel.get(domainId);
     if (!ddoc) return;
-    for (const host of ddoc.hosts) {
+    for (const host of ddoc.hosts || []) {
         cache.delete(`host::${host}`);
     }
     cache.delete(`id::${domainId}`);
