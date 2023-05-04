@@ -518,7 +518,6 @@ export async function run({
                     })));
                 }
                 if (+confInfo.n_ex_tests) {
-                    let subtaskId = config.subtasks.length ? Math.max(...config.subtasks.map((i) => i.id)) + 1 : 2;
                     if (!config.subtasks.length) {
                         config.subtasks.push({
                             id: 1,
@@ -531,7 +530,7 @@ export async function run({
                         });
                     }
                     config.subtasks.push({
-                        id: subtaskId++,
+                        id: Math.max(...config.subtasks.map((i) => i.id)) + 1,
                         score: 3,
                         cases: [...new Array(+confInfo.n_ex_tests)].map((v, i) => i + 1).map((i) => ({
                             input: `ex_${confInfo.input_pre}${i}.${confInfo.input_suf}`,
