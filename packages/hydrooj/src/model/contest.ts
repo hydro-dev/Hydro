@@ -517,9 +517,12 @@ const cf = buildContestRule({
         for (const j of journal) {
             if ([STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status)) continue;
             // if (this.submitAfterAccept) continue;
-            if (j.status === STATUS.STATUS_HACK_SUCCESSFUL) hackSucc[j.pid]++;
-            if (j.status === STATUS.STATUS_HACK_UNSUCCESSFUL) hackFail[j.pid]++;
             if (STATUS.STATUS_ACCEPTED !== j.status) ntry[j.pid]++;
+            if ([STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL].includes(j.status)) {
+                if (j.status == STATUS.STATUS_HACK_SUCCESSFUL) detail[j.pid].hackSucc++;
+                else detail[j.pid].hackFail++;
+                continue;
+            }
             const timePenaltyScore = Math.round(Math.max(j.score * 100 - (j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000 / 60 * j.score * 100 / 250, j.score * 100 * 0.3));
             const penaltyScore = Math.max(timePenaltyScore - 50 * (ntry[j.pid]), 0);
             if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
@@ -537,8 +540,8 @@ const cf = buildContestRule({
         let originalScore = 0;
         for (const pid of tdoc.pids) {
             if (!detail[pid]) continue;
-            detail[pid].score -= 50 * detail[pid].hackFail;
-            detail[pid].score += 100 * detail[pid].hackSucc;
+            detail[pid].penaltyScore -= 50 * detail[pid].hackFail;
+            detail[pid].penaltyScore += 100 * detail[pid].hackSucc;
             score += detail[pid].penaltyScore;
             originalScore += detail[pid].score;
         }

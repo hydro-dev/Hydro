@@ -51,16 +51,16 @@
                 </a>
                 {% if tdoc.rule === "cf" %}
                   <a style="float: right; margin-left: 10px;" href="{{ url('record_main', query={tid:tdoc.docId, pid:pid, status:1}) }}" target="_blank">Hack</a>
-                  {% if not tdoc.lockedList[pid].includes(handler.user._id) %}
                     <form style="float: right; margin-left: 10px;" action="{{ url('contest_lock_problem', tid=tdoc.docId) }}" method="GET">
                       <input type="hidden" name="pid" value="{{ pid }}">
                         <button class="btn--lock" type="submit">
-                          Lock
+                          {% if not tdoc.lockedList[pid].includes(handler.user._id) %}
+                            Lock
+                          {% else %}
+                            Locked
+                          {% endif %}
                         </button>
                     </form>
-                  {% else %}
-                    <a style="float: right; margin-left: 10px;" target="_blank">Locked</a>
-                  {% endif %}
                 {% endif %}
               </td>
             </tr>

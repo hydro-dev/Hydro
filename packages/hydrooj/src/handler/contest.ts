@@ -644,7 +644,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
 export class ContestProblemLockHandler extends Handler {
     @param('tid', Types.ObjectId)
     @param('pid', Types.UnsignedInt)
-    async get(domainId: string, tid: ObjectId, pid: number) {
+    async get(domainId: string, tid: ObjectId, pid: number) { // Maybe use method get was more convenient
         const lockList = await contest.getLockedList(domainId, tid);
         if (!lockList) throw new ProblemLockError('This contest is not lockable.');
         if (lockList[pid].includes(this.user._id)) throw new ProblemLockError('This problem has Locked before.');
