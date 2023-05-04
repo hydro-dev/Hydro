@@ -9,7 +9,7 @@ const client = new Proxy({
         return superagent.post(`${url}/run`).send(req).then((res) => res.body);
     },
     getFile(fileId: string): Promise<Buffer> {
-        return superagent.get(`${url}/file/${fileId}`).then((res) => res.body);
+        return superagent.get(`${url}/file/${fileId}`).responseType('arraybuffer').then((res) => res.body);
     },
     deleteFile(fileId: string): Promise<void> {
         return superagent.delete(`${url}/file/${fileId}`).then((res) => res.body);

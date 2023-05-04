@@ -5,7 +5,7 @@ import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import compile, { compileChecker, compileValidator } from '../compile';
 import { Execute } from '../interface';
-import { del, run } from '../sandbox';
+import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
@@ -28,7 +28,7 @@ export async function judge(ctx: Context) {
     ]);
     ctx.clean.push(() => fs.unlink(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const validateResult = await run(
+    const validateResult = await runQueued(
         validator.execute,
         {
             stdin: { src: input },
@@ -41,7 +41,7 @@ export async function judge(ctx: Context) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
-    const res = await run(
+    const res = await runQueued(
         execute.execute,
         {
             stdin: { src: input },
@@ -76,9 +76,7 @@ export async function judge(ctx: Context) {
         if (code < 32) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     }
-    await Promise.all(
-        Object.values(res.fileIds).map((id) => del(id)),
-    ).catch(() => { /* Ignore file doesn't exist */ });
+    await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
 
     if (message) ctx.next({ message });
 

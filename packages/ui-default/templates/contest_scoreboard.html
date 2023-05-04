@@ -25,6 +25,9 @@
           <option value="all">{{ _('All Users') }}</option>
           <option value="star">{{ _('Starred Users') }}</option>
           <option value="rank">{{ _('Ranked Users') }}</option>
+          {% for group in groups %}
+            <option value="{{ group.uids.join(',') }}">{{ group.name }}</option>
+          {% endfor %}
         </select>
       </div>
     </div>

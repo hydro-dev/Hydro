@@ -166,6 +166,7 @@ class HomeSecurityHandler extends Handler {
         }
         this.response.template = 'home_security.html';
         this.response.body = {
+            sudoUid: this.session.sudoUid || null,
             sessions,
             authenticators: this.user._authenticators.map((c) => pick(c, [
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
@@ -180,9 +181,13 @@ class HomeSecurityHandler extends Handler {
     @param('current', Types.String)
     @param('password', Types.Password)
     @param('verifyPassword', Types.Password)
-    async postChangePassword(_: string, current: string, password: string, verify: string) {
+    async postChangePassword(domainId: string, current: string, password: string, verify: string) {
         if (password !== verify) throw new VerifyPasswordError();
-        this.user.checkPassword(current);
+        if (this.session.sudoUid) {
+            const udoc = await user.getById(domainId, this.session.sudoUid);
+            if (!udoc) throw new UserNotFoundError(this.session.sudoUid);
+            udoc.checkPassword(current);
+        } else this.user.checkPassword(current);
         await user.setPassword(this.user._id, password);
         await token.delByUid(this.user._id);
         this.response.redirect = this.url('user_login');
@@ -194,7 +199,11 @@ class HomeSecurityHandler extends Handler {
     async postChangeMail(domainId: string, current: string, email: string) {
         const mailDomain = email.split('@')[1];
         if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-        this.user.checkPassword(current);
+        if (this.session.sudoUid) {
+            const udoc = await user.getById(domainId, this.session.sudoUid);
+            if (!udoc) throw new UserNotFoundError(this.session.sudoUid);
+            udoc.checkPassword(current);
+        } else this.user.checkPassword(current);
         const udoc = await user.getByEmail(domainId, email);
         if (udoc) throw new UserAlreadyExistError(email);
         await this.limitRate('send_mail', 3600, 30);

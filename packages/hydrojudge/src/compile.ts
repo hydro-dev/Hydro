@@ -5,7 +5,7 @@ import checkers from './checkers';
 import { CompileError, FormatError } from './error';
 import { Execute } from './interface';
 import {
-    CopyIn, CopyInFile, del, run,
+    CopyIn, CopyInFile, del, runQueued,
 } from './sandbox';
 import { compilerText } from './utils';
 
@@ -17,7 +17,7 @@ export default async function compile(
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
-        } = await run(
+        } = await runQueued(
             copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
             {
                 copyIn: { ...copyIn, [lang.code_file]: code },
@@ -26,6 +26,7 @@ export default async function compile(
                 time: lang.compile_time_limit || 10000,
                 memory: lang.compile_memory_limit || 256 * 1024 * 1024,
             },
+            3,
         );
         if (status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) next?.({ message: 'Compile timeout.' });
         if (status === STATUS.STATUS_MEMORY_LIMIT_EXCEEDED) next?.({ message: 'Compile memory limit exceeded.' });

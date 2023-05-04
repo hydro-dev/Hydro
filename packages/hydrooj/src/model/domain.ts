@@ -1,4 +1,4 @@
-import { Dictionary } from 'lodash';
+import { Dictionary, escapeRegExp } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Filter } from 'mongodb';
 import { DomainDoc } from '../interface';
@@ -268,7 +268,7 @@ class DomainModel {
 
     @ArgMethod
     static async getPrefixSearch(prefix: string, limit: number = 50) {
-        const $regex = new RegExp(prefix, 'mi');
+        const $regex = new RegExp(escapeRegExp(prefix), 'mi');
         const ddocs = await coll.find({
             $or: [{ _id: { $regex } }, { name: { $regex } }],
         }).limit(limit).toArray();

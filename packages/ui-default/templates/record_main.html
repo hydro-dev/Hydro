@@ -53,7 +53,7 @@
                 {{ _('By Status') }}
               </label>
               <select class="compact select" name="status">
-                <option value="" {% if not filterStatus %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
+                <option value="" {% if typeof(filterStatus) != 'number' %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
                 {%- for k,v in utils.status.STATUS_TEXTS -%}
                 <option value="{{k}}" {% if filterStatus == k %}selected{% else %}{% endif %}>{{v}}</option>
                 {%- endfor -%}

@@ -13,16 +13,20 @@ import * as system from './system';
 export class StorageModel {
     static coll = db.collection('storage');
 
+    static generateId(ext: string) {
+        return `${nanoid(3).replace(/[_-]/g, '0')}/${nanoid().replace(/[_-]/g, '0')}${ext}`;
+    }
+
     static async put(path: string, file: string | Buffer | Readable, owner?: number) {
         const meta = {};
         await StorageModel.del([path]);
         meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
             ? 'text/plain'
             : lookup(path) || 'application/octet-stream';
-        let _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        let _id = StorageModel.generateId(extname(path));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
-        while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(path));
         await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({

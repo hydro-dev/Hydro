@@ -179,6 +179,10 @@ export async function del(fileId: string) {
     await client.deleteFile(fileId);
 }
 
+export async function get(fileId: string) {
+    return await client.getFile(fileId);
+}
+
 export async function run(execute: string, params?: Parameter): Promise<SandboxAdaptedResult> {
     let result: SandboxResult;
     try {
@@ -202,10 +206,10 @@ export async function run(execute: string, params?: Parameter): Promise<SandboxA
     return await adaptResult(result, params);
 }
 
-const queue = new PQueue({ concurrency: getConfig('parallelism') });
+const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('parallelism') });
 
 export function runQueued(execute: string, params?: Parameter, priority = 0) {
-    return queue.add(() => run(execute, params), { priority });
+    return queue.add(() => run(execute, params), { priority }) as Promise<SandboxAdaptedResult>;
 }
 
 export * from './sandbox/interface';

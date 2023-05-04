@@ -77,7 +77,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             else invalid = true;
         }
         if (lang) q.lang = lang;
-        if (status) q.status = status;
+        if (typeof status === 'number') q.status = status;
         if (all) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             delete q.contest;

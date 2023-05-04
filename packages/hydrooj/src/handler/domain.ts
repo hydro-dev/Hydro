@@ -3,7 +3,7 @@ import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import { Context } from '../context';
 import {
-    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError,
+    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
     InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
@@ -126,7 +126,10 @@ class DomainDashboardHandler extends ManageHandler {
     async postDelete({ domainId }) {
         if (domainId === 'system') throw new CannotDeleteSystemDomainError();
         if (this.domain.owner !== this.user._id) throw new OnlyOwnerCanDeleteDomainError();
-        await domain.del(domainId);
+        await Promise.all([
+            domain.del(domainId),
+            oplog.log(this, 'domain.delete', {}),
+        ]);
         this.response.redirect = this.url('home_domain', { domainId: 'system' });
     }
 }
@@ -162,6 +165,7 @@ class DomainUserHandler extends ManageHandler {
     @post('uid', Types.Int)
     @post('role', Types.Role)
     async postSetUser(domainId: string, uid: number, role: string) {
+        if (uid === this.domain.owner) throw new ForbiddenError();
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
@@ -173,6 +177,7 @@ class DomainUserHandler extends ManageHandler {
     @param('uid', Types.NumericArray)
     @param('role', Types.Role)
     async postSetUsers(domainId: string, uid: number[], role: string) {
+        if (uid.includes(this.domain.owner)) throw new ForbiddenError();
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
@@ -201,7 +206,10 @@ class DomainPermissionHandler extends ManageHandler {
             roles[role] = 0n;
             for (const r of perms) roles[role] |= 1n << BigInt(r);
         }
-        await domain.setRoles(domainId, roles);
+        await Promise.all([
+            domain.setRoles(domainId, roles),
+            oplog.log(this, 'domain.setRoles', { roles }),
+        ]);
         this.back();
     }
 }
@@ -220,7 +228,10 @@ class DomainRoleHandler extends ManageHandler {
         const rdict: Dictionary<any> = {};
         for (const r of roles) rdict[r._id] = r.perm;
         if (rdict[role]) throw new RoleAlreadyExistError(role);
-        await domain.addRole(domainId, role, rdict.default);
+        await Promise.all([
+            domain.addRole(domainId, role, rdict.default),
+            oplog.log(this, 'domain.addRole', { role }),
+        ]);
         this.back();
     }
 
@@ -230,7 +241,10 @@ class DomainRoleHandler extends ManageHandler {
         if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
-        await domain.deleteRoles(domainId, roles);
+        await Promise.all([
+            domain.deleteRoles(domainId, roles),
+            oplog.log(this, 'domain.deleteRoles', { roles }),
+        ]);
         this.back();
     }
 }

@@ -30,9 +30,14 @@ const page = new NamedPage('contest_scoreboard', () => {
     } else if (val === 'star') {
       $('.data-table tbody tr').hide();
       read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show());
-    } else {
+    } else if (val === 'rank') {
       $('.data-table tbody tr').show();
       $('.rank--unrank').closest('tr').hide();
+    } else {
+      $('.data-table tbody tr').hide();
+      const uids = val.toString().split(',').map((i) => +i.trim()).filter((i) => i);
+      if (!uids?.length) return;
+      uids.forEach((uid) => $(`.user--${uid}`).closest('tr').show());
     }
   });
 
@@ -40,7 +45,7 @@ const page = new NamedPage('contest_scoreboard', () => {
   const endAt = new Date(UiContext.tdoc.endAt).getTime();
   function updateScoreboard() {
     const now = Date.now();
-    if (beginAt <= now && now <= endAt) pjax.request(UiContext.scoreboardUrl || '', { push: false });
+    if (beginAt <= now && now <= endAt) pjax.request({ url: UiContext.scoreboardUrl || '', push: false });
   }
 
   setInterval(updateScoreboard, 180000);
