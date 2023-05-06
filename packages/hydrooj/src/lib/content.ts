@@ -53,7 +53,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 `</code></pre><pre><code class="language-output${i + 1}">`,
                 sample[1],
                 '</code></pre>',
-            ].join('\n')),
+            ].join('')),
             ...source.hint ? [`<h2>${_('Hint')}</h2>`, source.hint] : [],
             ...source.source ? [`<h2>${_('Source')}</h2>`, source.source] : [],
         ].join('\n')
