@@ -407,6 +407,9 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     // For training
     description?: string;
     dag?: TrainingNode[];
+
+    // For codeforces
+    lockedList?: {};
 }
 
 export interface TrainingDoc extends Tdoc {
@@ -525,7 +528,7 @@ export interface ContestRule<T = any> {
     submitAfterAccept: boolean;
     showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
     showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
+    showRecord: (tdoc: Tdoc<30>, now: Date, user?: User, pdoc?: ProblemDoc) => boolean;
     stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,

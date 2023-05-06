@@ -1,6 +1,9 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 {{ set(UiContext, 'pdoc', pdoc) }}
+{% if tdoc %}
+  {{ set(UiContext, 'tdoc', tdoc) }}
+{% endif %}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
@@ -26,7 +29,11 @@
             </div>
           </div>
           <div class="row"><div class="columns">
-            <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
+            {% if not tdoc or not tdoc.lockedList[pdoc.docId].includes(handler.user._id) %}
+              <input type="submit" class="rounded primary button" value="{{ _('Submit') }}">
+            {% else %}
+              <input disabled type="submit" class="rounded primary button" value="{{ _('Locked') }}">
+            {% endif %}
           </div></div>
         </form>
       </div>

@@ -1,3 +1,4 @@
+import { pid } from 'process';
 import {
     omit, pick, throttle, uniqBy,
 } from 'lodash';
@@ -58,8 +59,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             this.tdoc = tdoc;
             if (!tdoc) throw new ContestNotFoundError(domainId, pid);
             if (!contest.canShowScoreboard.call(this, tdoc, true)) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-            if ((!contest[q.uid === this.user._id ? 'canShowSelfRecord' : 'canShowRecord'].call(this, tdoc, true))
-                && (!pid || tdoc.rule === "cf" && !tdoc.lockedList[parseInt(pid.toString())].includes(this.user._id))) {
+            if (!contest[q.uid === this.user._id ? 'canShowSelfRecord' : 'canShowRecord'].call(this, tdoc, true, pid ? await problem.get(domainId, pid) : null)) {
                 throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
             }
             if (!(await contest.getStatus(domainId, tid, this.user._id))?.attend) {
@@ -153,9 +153,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         } else if (rdoc.contest) {
             this.tdoc = await contest.get(domainId, rdoc.contest);
             let canView = this.user.own(this.tdoc);
-            canView ||= contest.canShowRecord.call(this, this.tdoc);
+            canView ||= contest.canShowRecord.call(this, this.tdoc, true, await problem.get(domainId, rdoc.pid));
             canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            canView ||= this.tdoc.rule === "cf" && this.tdoc.lockedList[parseInt(rdoc.pid.toString())].includes(this.user._id);
             if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
             canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
@@ -172,7 +171,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        canViewCode ||= this.tdoc.rule === "cf" && this.tdoc.lockedList[parseInt(rdoc.pid.toString())].includes(this.user._id);
         if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {

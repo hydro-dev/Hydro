@@ -9,7 +9,8 @@ import {
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
-    InvalidTokenError, NotAssignedError, PermissionError, ValidationError, ProblemLockError,
+    InvalidTokenError, NotAssignedError, PermissionError, ProblemLockError,
+    ValidationError,
 } from '../error';
 import { ScoreboardConfig, Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -644,7 +645,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
 export class ContestProblemLockHandler extends Handler {
     @param('tid', Types.ObjectId)
     @param('pid', Types.UnsignedInt)
-    async get(domainId: string, tid: ObjectId, pid: number) { // Maybe use method get was more convenient
+    async post(domainId: string, tid: ObjectId, pid: number) {
         const lockList = await contest.getLockedList(domainId, tid);
         if (!lockList) throw new ProblemLockError('This contest is not lockable.');
         if (lockList[pid].includes(this.user._id)) throw new ProblemLockError('This problem has Locked before.');

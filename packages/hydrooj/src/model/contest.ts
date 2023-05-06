@@ -14,7 +14,7 @@ import * as bus from '../service/bus';
 import type { Handler } from '../service/server';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
-import problem from './problem';
+import problem, { ProblemDoc } from './problem';
 import user, { User } from './user';
 
 interface AcmJournal {
@@ -508,7 +508,11 @@ const cf = buildContestRule({
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    showRecord: (tdoc, now, user, pdoc) => {
+        if (now > tdoc.endAt) return true;
+        if (pdoc && tdoc.lockedList[pdoc.docId].includes(user._id)) return true;
+        return false;
+    },
     stat(tdoc, journal) {
         const ntry = Counter<number>();
         const hackSucc = Counter<number>();
@@ -519,11 +523,13 @@ const cf = buildContestRule({
             // if (this.submitAfterAccept) continue;
             if (STATUS.STATUS_ACCEPTED !== j.status) ntry[j.pid]++;
             if ([STATUS.STATUS_HACK_SUCCESSFUL, STATUS.STATUS_HACK_UNSUCCESSFUL].includes(j.status)) {
-                if (j.status == STATUS.STATUS_HACK_SUCCESSFUL) detail[j.pid].hackSucc++;
+                if (j.status === STATUS.STATUS_HACK_SUCCESSFUL) detail[j.pid].hackSucc++;
                 else detail[j.pid].hackFail++;
                 continue;
             }
-            const timePenaltyScore = Math.round(Math.max(j.score * 100 - (j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000 / 60 * j.score * 100 / 250, j.score * 100 * 0.3));
+            const timePenaltyScore = Math.round(Math.max(j.score * 100
+                                                - ((j.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) * (j.score * 100)) / (250 * 60000),
+                                                j.score * 100 * 0.3));
             const penaltyScore = Math.max(timePenaltyScore - 50 * (ntry[j.pid]), 0);
             if (!detail[j.pid] || detail[j.pid].penaltyScore < penaltyScore) {
                 detail[j.pid] = {
@@ -575,7 +581,9 @@ const cf = buildContestRule({
             row.push({
                 type: 'record',
                 value: tsddict[pid]?.penaltyScore || '',
-                hover: tsddict[pid]?.penaltyScore ? `${tsddict[pid].timePenaltyScore}, -${tsddict[pid].ntry}, +${tsddict[pid].hackSucc} , -${tsddict[pid].hackFail}` : '',
+                hover: tsddict[pid]?.penaltyScore
+                    ? `${tsddict[pid].timePenaltyScore}, -${tsddict[pid].ntry}, +${tsddict[pid].hackSucc} , -${tsddict[pid].hackFail}`
+                    : '',
                 raw: tsddict[pid]?.rid,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
@@ -932,8 +940,8 @@ export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
-    if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
+export function canShowRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true, pdoc?: ProblemDoc) {
+    if (RULES[tdoc.rule].showRecord(tdoc, new Date(), this.user, pdoc)) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
@@ -985,7 +993,6 @@ export async function updateLockedList(domainId: string, tid: ObjectId, $lockLis
     tdoc.lockedList = $lockList;
     edit(domainId, tid, tdoc);
 }
-
 
 global.Hydro.model.contest = {
     RULES,

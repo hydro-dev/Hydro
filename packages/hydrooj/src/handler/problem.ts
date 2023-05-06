@@ -10,8 +10,9 @@ import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
-    ProblemIsReferencedError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
-    RecordNotFoundError, SolutionNotFoundError, ValidationError, ProblemLockError,
+    ProblemIsReferencedError, ProblemLockError,
+    ProblemNotAllowLanguageError, ProblemNotAllowPretestError, ProblemNotFoundError,
+    RecordNotFoundError, SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
@@ -479,7 +480,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (typeof this.pdoc.config === 'string') throw new ProblemConfigError();
     }
 
-    async get() {
+    async get(domainId: string, tid?: ObjectId) {
         this.response.template = 'problem_submit.html';
         const langRange = (typeof this.pdoc.config === 'object' && this.pdoc.config.langs)
             ? Object.fromEntries(this.pdoc.config.langs.map((i) => [i, setting.langs[i]?.display || i]))
@@ -488,6 +489,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             langRange,
             pdoc: this.pdoc,
             udoc: this.udoc,
+            tdoc: this.tdoc,
             title: this.pdoc.title,
             page_name: this.tdoc
                 ? this.tdoc.rule === 'homework'
@@ -506,7 +508,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (tid) {
             const tdoc = await contest.get(domainId, tid);
             if (tdoc.rule === 'cf' && tdoc.lockedList[this.pdoc.docId].includes(this.user._id)) {
-                throw new ProblemLockError("You have locked this problem.");
+                throw new ProblemLockError('You have locked this problem.');
             }
         }
         const config = this.pdoc.config;
