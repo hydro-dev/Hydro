@@ -23,7 +23,7 @@ function safeKeys(data: any) {
     else if (data instanceof ObjectId) return data;
     else if (data instanceof Object) {
         for (const key in data) {
-            if (['password', 'verifyPassword'].includes(key)) {
+            if (['password', 'verifyPassword'].includes(key) || key.startsWith('__')) {
                 delete data[key];
                 continue;
             }
