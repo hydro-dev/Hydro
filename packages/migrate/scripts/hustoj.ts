@@ -4,8 +4,8 @@ import path from 'path';
 import mariadb from 'mariadb';
 import TurndownService from 'turndown';
 import {
-    buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
-    RecordDoc, RecordModel, SolutionModel, STATUS, SystemModel, Time, UserModel,
+    _, buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
+    RecordDoc, RecordModel, SolutionModel, STATUS, StorageModel, SystemModel, Time, UserModel,
 } from 'hydrooj';
 
 const turndown = new TurndownService({
@@ -49,6 +49,17 @@ const nameMap: Record<string, string> = {
     'test.in': 'test0.in',
     'test.out': 'test0.out',
 };
+
+async function addContestFile(domainId: string, tid: ObjectId, filename: string, filepath: string) {
+    const tdoc = await ContestModel.get(domainId, tid);
+    await StorageModel.put(`contest/${domainId}/${tid}/${filename}`, filepath, 1);
+    const meta = await StorageModel.getMeta(`contest/${domainId}/${tid}/${filename}`);
+    const payload = { _id: filename, name: filename, ..._.pick(meta, ['size', 'lastModified', 'etag']) };
+    if (!meta) return false;
+    await ContestModel.edit(domainId, tid, { files: [...(tdoc.files || []), payload] });
+    return true;
+}
+
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
@@ -155,7 +166,7 @@ export async function run({
             }
             if (!pidMap[pdoc.problem_id]) {
                 const files = {};
-                const content = buildContent({
+                let content = buildContent({
                     description: pdoc.description,
                     input: pdoc.input,
                     output: pdoc.output,
@@ -163,15 +174,15 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html');
-                const uploadImgs = content.matchAll(/<img src="\/upload\/([^"]+\/([^"]+))"/g);
-                const uploadFiles = content.matchAll(/<a href="\/upload\/([^"]+\/([^"]+))"/g);
+                const uploadImgs = content.matchAll(/src="\/upload\/([^"]+\/([^"]+))"/g);
+                const uploadFiles = content.matchAll(/href="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const img of uploadImgs) {
                     files[img[2]] = await fs.readFile(path.join(uploadDir, img[1]));
-                    content.replace(img[1], `file://${img[2]}`);
+                    content = content.replace(`/upload/${img[1]}`, `file://${img[2]}`);
                 }
                 for (const file of uploadFiles) {
                     files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-                    content.replace(file[1], `file://${file[2]}`);
+                    content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
                 }
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
@@ -222,12 +233,30 @@ export async function run({
     for (const tdoc of tdocs) {
         const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
+        const files = {};
+        let description = tdoc.description;
+        const uploadImgs = description.matchAll(/src="\/upload\/([^"]+\/([^"]+))"/g);
+        const uploadFiles = description.matchAll(/href="\/upload\/([^"]+\/([^"]+))"/g);
+        for (const img of uploadImgs) {
+            files[img[2]] = await fs.readFile(path.join(uploadDir, img[1]));
+            description = description.replace(`/upload/${img[1]}`, `file://${img[2]}`);
+        }
+        for (const file of uploadFiles) {
+            files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
+            description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+        }
         const tid = await ContestModel.add(
             domainId, tdoc.title, tdoc.description || 'Description',
             adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, true,
             { _code: password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
+        if (Object.keys(files).length) {
+            await Promise.all(Object.keys(files).map(
+                (filename) => addContestFile(domainId, tid, filename, files[filename]).then(
+                    report({ message: `move additional_file ${filename} for contest ${tidMap[tdoc.contest_id]}` }),
+                )));
+        }
     }
     report({ message: 'contest finished' });
     /*
