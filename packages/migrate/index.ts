@@ -17,6 +17,7 @@ export function apply(ctx: Context) {
             domainId: Schema.string().required(),
             contestType: Schema.string().required(),
             dataDir: Schema.string().required(),
+            uploadDir: Schema.string().required(),
         }),
         (...args) => require('./scripts/hustoj').run(...args),
     );

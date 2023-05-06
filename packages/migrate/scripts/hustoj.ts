@@ -1,5 +1,6 @@
 /* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
+import path from 'path';
 import mariadb from 'mariadb';
 import TurndownService from 'turndown';
 import {
@@ -51,7 +52,7 @@ const nameMap: Record<string, string> = {
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
-    dataDir, rerun = true, randomMail = false,
+    dataDir, uploadDir, rerun = true, randomMail = false,
 }, report: Function) {
     const src = await mariadb.createConnection({
         host,
@@ -153,19 +154,37 @@ export async function run({
                 if (opdoc) pidMap[pdoc.problem_id] = opdoc.docId;
             }
             if (!pidMap[pdoc.problem_id]) {
+                const files = {};
+                const content = buildContent({
+                    description: pdoc.description,
+                    input: pdoc.input,
+                    output: pdoc.output,
+                    samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
+                    hint: pdoc.hint,
+                    source: pdoc.source,
+                }, 'html');
+                const uploadImgs = content.matchAll(/<img src="\/upload\/([^"]+\/([^"]+))"/g);
+                const uploadFiles = content.matchAll(/<a href="\/upload\/([^"]+\/([^"]+))"/g);
+                for (const img of uploadImgs) {
+                    files[img[2]] = await fs.readFile(path.join(uploadDir, img[1]));
+                    content.replace(img[1], `file://${img[2]}`);
+                }
+                for (const file of uploadFiles) {
+                    files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
+                    content.replace(file[1], `file://${file[2]}`);
+                }
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
-                    pdoc.title, buildContent({
-                        description: pdoc.description,
-                        input: pdoc.input,
-                        output: pdoc.output,
-                        samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
-                        hint: pdoc.hint,
-                        source: pdoc.source,
-                    }, 'html'),
+                    pdoc.title, content,
                     1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i), pdoc.defunct === 'Y',
                 );
                 pidMap[pdoc.problem_id] = pid;
+                if (Object.keys(files).length) {
+                    await Promise.all(Object.keys(files).map(
+                        (filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename]).then(
+                            report({ message: `move additional_file ${filename} for problem ${pid}` }),
+                        )));
+                }
             }
             const cdoc = await query(`SELECT * FROM \`privilege\` WHERE \`rightstr\` = 'p${pdoc.problem_id}'`);
             const maintainer = [];
@@ -211,7 +230,6 @@ export async function run({
         tidMap[tdoc.contest_id] = tid.toHexString();
     }
     report({ message: 'contest finished' });
-
     /*
         solution	程序运行结果记录
         字段名	类型	长度	是否允许为空	备注
