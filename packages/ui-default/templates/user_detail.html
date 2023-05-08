@@ -95,7 +95,7 @@
               <h1 class="section__tab-title">{{ _('Bio') }}</h1>
               <div class="section__tab-main">
               {% if not udoc.bio %}
-                {{ nothing.render("This person is lazy and didn't wrote anything.") }}
+                {{ nothing.render("This person is lazy and didn't write anything.") }}
               {% else %}
                 <div class="section__body typo">
                   {{ udoc.bio|default('')|markdown|safe }}
