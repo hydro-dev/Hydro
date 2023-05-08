@@ -25,7 +25,7 @@ class HomeworkMainHandler extends Handler {
     async get(domainId: string, page = 1) {
         const cursor = contest.getMulti(domainId, {
             rule: 'homework',
-            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? { assign: { $or: [{ $in: this.user.group }, { $size: 0 }] } } : {},
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? {} : { assign: { $or: [{ $in: this.user.group }, { $size: 0 }] } },
         });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
