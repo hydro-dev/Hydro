@@ -262,6 +262,16 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: 'sum',
     },
     {
+        regex: /^(([0-9]+)(?:[^\d]*))\.in$/,
+        output: [
+            (a) => `${a[1]}.out`,
+            (a) => `${a[1]}.ans`,
+        ],
+        id: (a) => +a[2],
+        subtask: () => 1,
+        preferredScorerType: 'sum',
+    },
+    {
         regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.in$/,
         output: [
             (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.out`,
