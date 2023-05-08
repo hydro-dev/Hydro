@@ -104,7 +104,7 @@ export class ContestDetailBaseHandler extends Handler {
             contest.get(domainId, tid),
             contest.getStatus(domainId, tid, this.user._id),
         ]);
-        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) {
+        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
                 throw new NotAssignedError('contest', tid);
@@ -163,7 +163,7 @@ export class ContestDetailHandler extends Handler {
             contest.getStatus(domainId, tid, this.user._id),
         ]);
         if (contest.RULES[this.tdoc.rule].hidden) throw new ContestNotFoundError(domainId, tid);
-        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) {
+        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)) {
             const groups = await user.listGroup(domainId, this.user._id);
             if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
                 throw new NotAssignedError('contest', tid);
