@@ -74,12 +74,13 @@ ScheduleModel.Worker.addHandler('contest', async (doc) => {
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('page', Types.PositiveInt, true)
-    @param('all', Types.Boolean)
-    async get(domainId: string, rule = '', page = 1, all = false) {
+    async get(domainId: string, rule = '', page = 1) {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
-        const q = { ...all ? { assign: { $in: [...this.user.group, null] } } : {}, ...rule ? { rule } : { rule: { $in: rules } } };
+        const q = {
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? {} : { assign: { $or: [{ $in: this.user.group }, { $size: 0 }] } },
+            ...rule ? { rule } : { rule: { $in: rules } },
+        };
         const cursor = contest.getMulti(domainId, q);
         const qs = rule ? `rule=${rule}` : '';
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
@@ -413,7 +414,7 @@ export class ContestEditHandler extends Handler {
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
-        _code = '', autoHide = false, assign: string[] = null, lock: number = null,
+        _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false,
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
