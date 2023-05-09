@@ -78,7 +78,7 @@ export class ContestListHandler extends Handler {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
         const q = {
-            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? {} : { assign: { $or: [{ $in: this.user.group }, { $size: 0 }] } },
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? {} : { $or: [{ assign: { $in: this.user.group } }, { assign: { $size: 0 } }] },
             ...rule ? { rule } : { rule: { $in: rules } },
         };
         const cursor = contest.getMulti(domainId, q);
