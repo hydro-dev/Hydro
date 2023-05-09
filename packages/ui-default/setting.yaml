@@ -78,6 +78,11 @@ formatCode:
 preload:
   type: text
   default: ''
+domainNavigation:
+  type: boolean
+  family: setting_display
+  desc: Show Domain Navigation
+  value: true
 about:
   type: markdown
   name: about

@@ -295,7 +295,12 @@ bus.on('ready', () => Promise.all([
         { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
     ),
 ]));
-bus.on('domain/delete-cache', (domainId: string) => {
+bus.on('domain/delete-cache', async (domainId: string) => {
+    const ddoc = await DomainModel.get(domainId);
+    if (!ddoc) return;
+    for (const host of ddoc.hosts || []) {
+        cache.delete(`host::${host}`);
+    }
     cache.delete(`id::${domainId}`);
 });
 export default DomainModel;

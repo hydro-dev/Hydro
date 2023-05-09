@@ -81,7 +81,7 @@
           {%- for html in (model.system.get('ui-default.footer_extra_html')|default('')).split('\n') -%}
             <li class="footer__extra-link-item">{{ html|safe }}</li>
           {%- endfor -%}
-          <li class="footer__extra-link-item">Worker {{ process.env.NODE_APP_INSTANCE }} in {{ Date.now() - handler.args.__start }}ms</li>
+          <li class="footer__extra-link-item">Worker {{ process.env.NODE_APP_INSTANCE }}, {{ Date.now() - handler.args.__start }}ms</li>
           <!-- Prepare {{ handler.args.__prepareDone - handler.args.__prepare }}ms -->
           <!-- Method {{ handler.args.__methodDone - handler.args.__method }}ms -->
           <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a> {{ "Professional" if model.system.get('server.pro') else "Community" }}</li>

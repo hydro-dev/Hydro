@@ -4,7 +4,7 @@
 {% import "components/nothing.html" as nothing with context %}
 <div data-fragment-id="problem_list">
 {% if not pdocs.length %}
-  {{ nothing.render('Sorry, there is no problem in the problem set') }}
+  {{ nothing.render('Sorry, there are no problems in the problem set.') }}
 {% else %}
   {{ paginator.render(page, ppcount, position='top', add_qs=('q=' + qs if qs else '')) }}
   <table class="data-table hide-problem-tag">

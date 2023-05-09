@@ -31,7 +31,7 @@ export default connect((state: any) => ({
     const value = this.props.value || '';
     const { language } = this.props;
     const { monaco, registerAction, customOptions } = await load([language]);
-    const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+    const uri = monaco.Uri.parse(`hydro:${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
     this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(value, language, uri);
     if (this.containerElement) {
       const config: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -84,7 +84,7 @@ export default connect((state: any) => ({
     if (model && editor && prevProps.language !== language) {
       const val = model.getValue(LF, false);
       model.dispose();
-      const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+      const uri = monaco.Uri.parse(`hydro:${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
       this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(val, language, uri);
       editor.setModel(this.model);
     }

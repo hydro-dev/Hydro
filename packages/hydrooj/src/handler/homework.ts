@@ -22,10 +22,11 @@ const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
-    @param('all', Types.Boolean)
-    async get(domainId: string, page = 1, all = false) {
-        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
-        const cursor = contest.getMulti(domainId, { rule: 'homework', ...all ? { assign: { $in: [...this.user.group, null] } } : {} });
+    async get(domainId: string, page = 1) {
+        const cursor = contest.getMulti(domainId, {
+            rule: 'homework',
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? {} : { $or: [{ assign: { $in: this.user.group } }, { assign: { $size: 0 } }] },
+        });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
         for (const tdoc of tdocs) {
@@ -48,7 +49,7 @@ class HomeworkDetailHandler extends Handler {
     async prepare(domainId: string, tid: ObjectId) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        if (tdoc.assign?.length && !this.user.own(tdoc)) {
+        if (tdoc.assign?.length && !this.user.own(tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
             if (!Set.intersection(tdoc.assign, this.user.group).size) {
                 throw new NotAssignedError('homework', tdoc.docId);
             }
