@@ -160,7 +160,7 @@ export const PERMS = [
     Permission('perm_homework', PERM.PERM_ATTEND_HOMEWORK, 'Claim homework'),
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK, 'Edit any homework'),
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK_SELF, 'Edit own homework'),
-    Permission('perm_homework', PERM.PERM_VIEW_HIDDEN_HOMEWORK, 'View all homeworks'),
+    Permission('perm_homework', PERM.PERM_VIEW_HIDDEN_HOMEWORK, 'View all homework'),
     Permission('perm_training', PERM.PERM_VIEW_TRAINING, 'View training plans'),
     Permission('perm_training', PERM.PERM_CREATE_TRAINING, 'Create training plans'),
     Permission('perm_training', PERM.PERM_EDIT_TRAINING, 'Edit training plans'),
