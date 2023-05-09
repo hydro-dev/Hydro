@@ -598,6 +598,10 @@ const scripts: UpgradeScript[] = [
             await user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
         });
     },
+    async function _82_83() {
+        await document.coll.updateMany({ docType: document.TYPE_CONTEST, assign: null }, { $set: { assign: [] } });
+        return true;
+    },
 ];
 
 export default scripts;
