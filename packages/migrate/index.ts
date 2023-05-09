@@ -17,16 +17,16 @@ export function apply(ctx: Context) {
             domainId: Schema.string().required(),
             contestType: Schema.string().required(),
             dataDir: Schema.string().required(),
-            uploadDir: Schema.string().required(),
+            uploadDir: Schema.string().default('/home/judge/src/web/upload/'),
         }),
         (...args) => require('./scripts/hustoj').run(...args),
     );
     ctx.addScript(
         'migrateSyzoj', 'migrate from syzoj',
         Schema.object({
-            host: Schema.string().required().default('localhost'),
-            port: Schema.number().required().default(3306),
-            name: Schema.string().required().default('syzoj'),
+            host: Schema.string().default('localhost'),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('syzoj'),
             username: Schema.string().required(),
             password: Schema.string().required(),
             domainId: Schema.string().default('system'),

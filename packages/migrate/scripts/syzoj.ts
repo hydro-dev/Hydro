@@ -323,7 +323,6 @@ export async function run({
                 judgeTexts: [],
                 compilerTexts: [],
                 testCases: [],
-                source: rdoc.id.toString(),
                 judgeAt: new Date(),
                 rejudged: false,
                 judger: 1,

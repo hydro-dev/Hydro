@@ -377,7 +377,6 @@ export async function run({
                 judgeAt: new Date(rdoc.judge_time),
                 rejudged: false,
                 judger: 1,
-                source: rdoc.id.toString(),
             };
             const content = JSON.parse(rdoc.content);
             try {

@@ -63,7 +63,7 @@ async function addContestFile(domainId: string, tid: ObjectId, filename: string,
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
-    dataDir, uploadDir, rerun = true, randomMail = false,
+    dataDir, uploadDir = '/home/judge/src/web/upload/', rerun = true, randomMail = false,
 }, report: Function) {
     const src = await mariadb.createConnection({
         host,
@@ -174,12 +174,7 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html');
-                const uploadImgs = content.matchAll(/src="\/upload\/([^"]+\/([^"]+))"/g);
-                const uploadFiles = content.matchAll(/href="\/upload\/([^"]+\/([^"]+))"/g);
-                for (const img of uploadImgs) {
-                    files[img[2]] = await fs.readFile(path.join(uploadDir, img[1]));
-                    content = content.replace(`/upload/${img[1]}`, `file://${img[2]}`);
-                }
+                const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
                     content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
@@ -190,12 +185,8 @@ export async function run({
                     1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i), pdoc.defunct === 'Y',
                 );
                 pidMap[pdoc.problem_id] = pid;
-                if (Object.keys(files).length) {
-                    await Promise.all(Object.keys(files).map(
-                        (filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename]).then(
-                            report({ message: `move additional_file ${filename} for problem ${pid}` }),
-                        )));
-                }
+                await Promise.all(Object.keys(files).map((filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename])));
+                if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for problem ${pid}` });
             }
             const cdoc = await query(`SELECT * FROM \`privilege\` WHERE \`rightstr\` = 'p${pdoc.problem_id}'`);
             const maintainer = [];
@@ -235,12 +226,7 @@ export async function run({
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const files = {};
         let description = tdoc.description;
-        const uploadImgs = description.matchAll(/src="\/upload\/([^"]+\/([^"]+))"/g);
-        const uploadFiles = description.matchAll(/href="\/upload\/([^"]+\/([^"]+))"/g);
-        for (const img of uploadImgs) {
-            files[img[2]] = await fs.readFile(path.join(uploadDir, img[1]));
-            description = description.replace(`/upload/${img[1]}`, `file://${img[2]}`);
-        }
+        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
         for (const file of uploadFiles) {
             files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
             description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
@@ -251,12 +237,8 @@ export async function run({
             { _code: password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
-        if (Object.keys(files).length) {
-            await Promise.all(Object.keys(files).map(
-                (filename) => addContestFile(domainId, tid, filename, files[filename]).then(
-                    report({ message: `move additional_file ${filename} for contest ${tidMap[tdoc.contest_id]}` }),
-                )));
-        }
+        await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
+        if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
     }
     report({ message: 'contest finished' });
     /*
