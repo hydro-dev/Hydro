@@ -1,4 +1,3 @@
-import { pid } from 'process';
 import {
     omit, pick, throttle, uniqBy,
 } from 'lodash';
