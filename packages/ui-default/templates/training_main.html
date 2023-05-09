@@ -7,7 +7,7 @@
         <h1 class="section__title">{{ _('All Training Plans') }}</h1>
       </div>
       {% if not tdocs.length %}
-        {{ nothing.render('Sorry, there is no training plan.') }}
+        {{ nothing.render('Sorry, there are no training plans.') }}
       {% else %}
         <ol class="section__list all primary training__list">
           {%- for tdoc in tdocs -%}
@@ -88,7 +88,7 @@
         </ol>
         <div class="section__body">
           <div class="typo supplementary">
-            <p>{{ _('You can create your own training plans and share with others.') }}</p>
+            <p>{{ _('You can create your own training plans and share them with others.') }}</p>
           </div>
         </div>
       </div>

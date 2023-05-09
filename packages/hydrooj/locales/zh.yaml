@@ -496,7 +496,7 @@ New Training Plan: 新训练计划
 New: 创建
 No comments so far...: 目前还没有评论...
 No dataset at present.: 暂无测试数据。
-no discussion yet...: 目前没有讨论…
+No discussion yet...: 目前没有讨论…
 No Permission to Attend Contest: 您没有权限参加比赛
 No Permission to Claim Homework: 您没有权限认领作业
 No Permission to Create a Discussion: 您没有权限创建讨论
@@ -519,7 +519,7 @@ Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献�
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
 Oh, there is no task in the queue!: 喔，队列中目前没有任务。
-Oh, there is no task that matches the filter!: 喔，目前没有符合过滤条件的任务。
+Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
 Ok: 确定
 Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
 Oops, there are no results.: 呀，没有结果。
@@ -564,7 +564,7 @@ perm_training: 训练
 Permission: 权限
 Permissions: 权限
 Phone: 手机号
-Pick a problem randomly based on current filter: 根据当前过滤条件随机选择一道题
+Pick a problem randomly based on the current filter.: 根据当前过滤条件随机选择一道题
 pid: 题目 ID
 Pin discussions: 置顶讨论
 Pin training plans: 置顶训练计划
@@ -781,7 +781,7 @@ This homework is not open.: 该作业还未开放递交。
 This is the current session: 这是当前的会话
 This message will be presented to those whose submissions are accepted.: 这条消息将会被展示给通过此题的用户。
 This page needs JavaScript to work.: 这个页面需要 Javascript。
-This person is lazy and didn't wrote anything.: 该用户太懒，这里啥也没写 (´・ω・｀)
+This person is lazy and didn't write anything.: 该用户太懒，这里啥也没写 (´・ω・｀)
 This section cannot be challenged at present, so please complete the following sections first: 该章节目前不可挑战，请先完成以下章节
 This type of files are not allowed to be uploaded.: 不允许上传这种文件。
 Time (Seconds): 耗时 (秒)
@@ -900,7 +900,7 @@ Write Your Solution: 发表您的题解
 WYSIWYG: 所见即所得
 Year: 年
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
-You can create your own training plans and share with others.: 您可以创建您自己的训练计划并且与他人分享。
+You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 该比赛已结束，您无法在比赛模式下递交该题目。您可以点击“在题库中打开”以普通模式查看和递交本题。
 You cannot submit for this problem because the homework's deadline is due.: 作业已超过截止时间，您无法递交本题目。
 You cannot visit this domain.: 您不能访问此域。
@@ -908,7 +908,7 @@ You don't have the required permission ({0}) in this domain.: 您在该域中无
 You don't have the required privilege.: 您没有相应的特权。
 You don't own any domain and don't have privilege to create domain.: 您不拥有任何域也没有创建域的特权。
 You have not submitted any solutions for this problem: 您在该题下没有递交过任何解答
-You have permissions to create problems for this domain.: 您有权限为此域创建题目。
+You have permission to create problems for this domain.: 您有权限为此域创建题目。
 You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 您有未完成的创建域操作。您可以点击“继续”来完成创建。
 You haven't attended this contest yet.: 您还没有参加本次比赛。
 You haven't claimed this homework yet.: 您还未认领过该作业。
