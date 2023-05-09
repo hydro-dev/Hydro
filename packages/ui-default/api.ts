@@ -10,6 +10,7 @@ export { default as Socket } from './components/socket/index';
 export { default as uploadFiles } from './components/upload';
 export * as redux from 'react-redux';
 export * from './components/zipDownloader';
+export { default as download } from './components/zipDownloader';
 export { default as $ } from 'jquery';
 export { default as _ } from 'lodash';
 export { default as React } from 'react';
