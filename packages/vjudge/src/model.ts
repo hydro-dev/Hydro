@@ -42,7 +42,9 @@ class AccountService {
         const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid });
         await next({ status: STATUS.STATUS_FETCHED });
         try {
-            const comment = SettingModel.langs[task.lang].comment;
+            const langConfig = SettingModel.langs[task.lang];
+            if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
+            const comment = langConfig.comment;
             if (comment) {
                 const msg = `Hydro submission #${task.rid}@${new Date().getTime()}`;
                 if (typeof comment === 'string') task.code = `${comment} ${msg}\n${task.code}`;

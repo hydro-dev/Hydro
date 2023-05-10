@@ -15,7 +15,10 @@ export interface LangConfig {
     key: string;
     hidden: boolean;
     analysis?: string;
+    /** @deprecated */
     remote?: string;
+    validAs?: Record<string, string>;
+    /** @deprecated */
     pretest?: string | false;
     comment?: string | [string, string];
     compile_time_limit?: number;
@@ -47,6 +50,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.key = key;
         entry.hidden ||= false;
         entry.disabled ||= false;
+        entry.validAs ||= {};
     }
     return file;
 }

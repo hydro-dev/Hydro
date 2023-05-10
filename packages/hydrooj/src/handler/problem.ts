@@ -340,7 +340,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             let baseLangs;
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
-                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
+                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p])];
                 baseLangs = dl;
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
@@ -512,7 +512,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         if (pretest) {
             if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-            if (setting.langs[lang]?.pretest === false) throw new ProblemNotAllowPretestError('language');
             if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new ProblemNotAllowPretestError('type');
             }
