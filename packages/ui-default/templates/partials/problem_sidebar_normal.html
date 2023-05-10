@@ -61,7 +61,7 @@
         </form>
       </li>
     {% endif %}
-    {% set _canViewSolution = handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) or (handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT) and tsdoc.status == STATUS.STATUS_ACCEPTED) %}
+    {% set _canViewSolution = handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) or (handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT) and psdoc.status == STATUS.STATUS_ACCEPTED) %}
     {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) or _canViewSolution %}
       <li class="menu__seperator"></li>
     {% endif %}
