@@ -125,8 +125,10 @@ export async function run({
                 udoc.email || `${udoc.username}@syzoj.local`, udoc.username, '',
                 null, udoc.ip, SystemModel.get('default.priv'),
             );
-            if (udoc.is_admin) await UserModel.setSuperAdmin(uid);
-            superAdmin.push(uid);
+            if (udoc.is_admin) {
+                await UserModel.setSuperAdmin(uid);
+                superAdmin.push(uid);
+            }
             uidMap[udoc.id] = uid;
             await UserModel.setById(uid, {
                 regat: new Date(udoc.register_time * 1000),

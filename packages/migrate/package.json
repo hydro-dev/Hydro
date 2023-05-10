@@ -5,12 +5,14 @@
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
-    "devDependencies": {
-        "@types/turndown": "^5.0.1"
-    },
     "dependencies": {
         "mariadb": "^3.1.1",
-        "mongodb": "^5.3.0",
-        "turndown": "^7.1.2"
+        "mongodb": "^5.2.0",
+        "turndown": "^7.1.2",
+        "xml2js": "^0.4.23"
+    },
+    "devDependencies": {
+        "@types/turndown": "^5.0.1",
+        "@types/xml2js": "^0.4.11"
     }
 }
