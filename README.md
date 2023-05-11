@@ -76,6 +76,7 @@ Hydro 支持导入常见格式的题库文件，包括 Hydro 通用的 zip 格�
 Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他平台的题目，修改题面后编入自己的作业或比赛，快速搭建自己的题库体系。  
 当前支持的平台有：  
 
+- [一本通编程启蒙](https://hydro.ac/ybtbas.zip)：官方提供一本通编程启蒙题库，免费使用，参照压缩包内导入说明。
 - [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
 - [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
