@@ -8,7 +8,7 @@ import {
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import {
-    FileInfo, JudgeMeta, ProblemConfigFile, RecordDoc,
+    JudgeMeta, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';

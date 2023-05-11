@@ -104,6 +104,20 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.17 / UI 4.48.17
+- core&ui: 比赛成绩表和训练支持基于组过滤
+- judge: 添加并行优先级处理
+- core: 为域设置操作添加操作日志
+- core: storage: 保存文件时避开 -_ 等字符
+- core: 修复评测记录列表页过滤 Waiting 提交不生效的问题
+- ui: 修复 Typescript Language Service 工作异常的问题
+- ui: 添加域快速导航开关
+- core: 添加 PERM_VIEW_HIDDEN_CONTEST 与 PERM_VIEW_HIDDEN_HOMEWORK 权限
+- ui: 翻译优化
+- core: langs: 添加 validAs 选项
+- migrate: 添加 UOJ 支持
+- core&ui: 其他漏洞修复和优化
+
 ### Hydro 4.9.15 / UI 4.48.15
 - ui: 客观题：允许多行答案
 - core: 修复 pinnedDomains 无法修改的问题
