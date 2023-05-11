@@ -1,6 +1,7 @@
 {% import "components/paginator.html" as paginator with context %}
 {% extends "layout/basic.html" %}
 {{ set(UiContext, 'tdoc', tdoc) }}
+{{ set(UiContext, 'tsdoc', tsdoc) }}
 {% set type = 'homework' if tdoc.rule == 'homework' else 'contest' %}
 
 {% block content %}
