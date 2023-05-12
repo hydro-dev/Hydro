@@ -114,8 +114,8 @@ function buildQuery(udoc: User) {
 
 const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
     const escaped = escapeRegExp(q.toLowerCase());
-    const $regex = new RegExp(q.length >= 3 ? escaped : `\\A${escaped}`, 'gmi');
-    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
+    const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
+    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
     const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
     if (!Number.isNaN(+q)) {
