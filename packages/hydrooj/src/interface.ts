@@ -658,6 +658,7 @@ export interface ContestBalloonDoc {
     tid: ObjectId;
     pid: number;
     uid: number;
+    first?: boolean;
     /** Sent by */
     sent?: number;
     sentAt?: Date;

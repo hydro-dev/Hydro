@@ -722,7 +722,7 @@ async function _updateStatus(
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (status === STATUS.STATUS_ACCEPTED && tdoc.balloon && !isLocked(tdoc)) await addBalloon(tdoc.domainId, tdoc._id, pid, uid);
+    if (status === STATUS.STATUS_ACCEPTED && tdoc.balloon && !isLocked(tdoc, rid.getTimestamp())) await addBalloon(tdoc.domainId, tdoc._id, pid, uid);
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
@@ -756,13 +756,16 @@ export function getMultiStatus(domainId: string, query: any) {
 }
 
 export async function addBalloon(domainId: string, tid: ObjectId, pid: number, uid: number) {
-    const bdoc = await collBalloon.findOne({
+    const balloon = await collBalloon.findOne({
         domainId, tid, pid, uid,
     });
-    if (bdoc) return null;
-    return await collBalloon.insertOne({
-        _id: new ObjectId(), domainId, tid, pid, uid,
-    });
+    if (balloon) return null;
+    const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
+    const bdoc = {
+        _id: new ObjectId(), domainId, tid, pid, uid, ...(!bdcount ? { first: true } : {}),
+    };
+    bus.broadcast('contest/balloon', domainId, tid, bdoc);
+    return await collBalloon.insertOne(bdoc);
 }
 
 export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
@@ -801,10 +804,10 @@ export function isDone(tdoc: Tdoc, tsdoc?: any) {
     return false;
 }
 
-export function isLocked(tdoc: Tdoc) {
+export function isLocked(tdoc: Tdoc, time?: Date) {
     if (!tdoc.lockAt) return false;
-    const now = new Date();
-    return tdoc.lockAt < now && !tdoc.unlocked;
+    time ||= new Date();
+    return tdoc.lockAt < time && !tdoc.unlocked;
 }
 
 export function isExtended(tdoc: Tdoc) {

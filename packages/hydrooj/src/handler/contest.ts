@@ -644,9 +644,9 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
 
 export class ContestBalloonHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
-    @param('unsend', Types.Boolean)
-    async get(domainId: string, tid: ObjectId, unsend = false) {
-        const bdocs = await contest.getMultiBalloon(domainId, tid, unsend ? { send: { $exists: false } } : {}).toArray();
+    @param('unsent', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, unsent = false) {
+        const bdocs = await contest.getMultiBalloon(domainId, tid, unsent ? { sent: { $exists: false } } : {}).toArray();
         const uids = [...bdocs.map((i) => i.uid), ...bdocs.filter((i) => i.sent).map((i) => i.sent)];
         const udict = await user.getListForRender(domainId, uids);
         this.response.body = { bdocs, udict };
