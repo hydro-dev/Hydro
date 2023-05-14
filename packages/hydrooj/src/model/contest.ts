@@ -11,6 +11,7 @@ import {
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import type { Handler } from '../service/server';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
@@ -655,6 +656,8 @@ export const RULES: ContestRules = {
     acm, oi, homework, ioi, ledo, strictioi,
 };
 
+const collBalloon = db.collection('contest.balloon');
+
 function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.getTimestamp() - b.rid.getTimestamp()));
 }
@@ -718,6 +721,8 @@ async function _updateStatus(
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    if (status === STATUS.STATUS_ACCEPTED && tdoc.balloon && !isLocked(tdoc)) await addBalloon(tdoc.domainId, tdoc._id, pid, uid);
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
@@ -748,6 +753,24 @@ export async function attend(domainId: string, tid: ObjectId, uid: number, paylo
 
 export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
+}
+
+export async function addBalloon(domainId: string, tid: ObjectId, pid: number, uid: number) {
+    const bdoc = await collBalloon.findOne({
+        domainId, tid, pid, uid,
+    });
+    if (bdoc) return null;
+    return await collBalloon.insertOne({
+        _id: new ObjectId(), domainId, tid, pid, uid,
+    });
+}
+
+export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
+    return collBalloon.find({ domainId, tid, ...query });
+}
+
+export async function updateBalloon(domainId: string, tid: ObjectId, bid: ObjectId, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, _id: bid }, { $set });
 }
 
 export function isNew(tdoc: Tdoc, days = 1) {
@@ -910,6 +933,9 @@ global.Hydro.model.contest = {
     getAndListStatus,
     recalcStatus,
     unlockScoreboard,
+    addBalloon,
+    getMultiBalloon,
+    updateBalloon,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,

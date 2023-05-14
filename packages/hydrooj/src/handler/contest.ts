@@ -641,6 +641,27 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         this.back();
     }
 }
+
+export class ContestBalloonHandler extends ContestManagementBaseHandler {
+    @param('tid', Types.ObjectId)
+    @param('unsend', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, unsend = false) {
+        const bdocs = await contest.getMultiBalloon(domainId, tid, unsend ? { send: { $exists: false } } : {}).toArray();
+        const uids = [...bdocs.map((i) => i.uid), ...bdocs.filter((i) => i.sent).map((i) => i.sent)];
+        const udict = await user.getListForRender(domainId, uids);
+        this.response.body = { bdocs, udict };
+        this.response.pjax = 'partials/contest_balloon.html';
+        this.response.template = 'contest_balloon.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('balloons', Types.ArrayOf(Types.ObjectId))
+    async postSendBalloon(domainId: string, tid: ObjectId, balloons: ObjectId[]) {
+        await Promise.all(balloons.map((bid) => contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() })));
+        this.back();
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('contest_create', '/contest/create', ContestEditHandler);
     ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
@@ -653,4 +674,5 @@ export async function apply(ctx) {
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_balloon', '/contest/:tid/balloon', ContestBalloonHandler, PERM.PERM_VIEW_CONTEST);
 }

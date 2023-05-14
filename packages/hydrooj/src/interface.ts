@@ -393,6 +393,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
+    balloon?: Record<number, string>;
 
     /**
      * In hours
@@ -651,6 +652,17 @@ export interface DiscussionHistoryDoc {
     ip: string;
 }
 
+export interface ContestBalloonDoc {
+    _id: ObjectId;
+    domainId: string;
+    tid: ObjectId;
+    pid: number;
+    uid: number;
+    /** Sent by */
+    sent?: number;
+    sentAt?: Date;
+}
+
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -678,6 +690,7 @@ declare module './service/db' {
         'event': EventDoc;
         'opcount': OpCountDoc;
         'schedule': Schedule;
+        'contest.balloon': ContestBalloonDoc;
     }
 }
 
