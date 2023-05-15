@@ -226,8 +226,12 @@ class SystemUserImportHandler extends SystemHandler {
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;
-            let [email, username, password, displayName, extra] = u.split(',').map((t) => t.trim());
-            if (!email || !username || !password) [email, username, password, displayName, extra] = u.split('\t').map((t) => t.trim());
+            let [email, username, password, displayName, extra] = u.split('\t').map((t) => t.trim());
+            if (!email || !username || !password) {
+                const data = u.split(',').map((t) => t.trim());
+                [email, username, password, displayName, extra] = data;
+                if (data.length > 5) extra = data.slice(4).join(',');
+            }
             if (email && username && password) {
                 if (!Types.Email[1](email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!Types.Username[1](username)) messages.push(`Line ${+i + 1}: Invalid username`);
