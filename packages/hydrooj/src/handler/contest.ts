@@ -179,9 +179,11 @@ export class ContestDetailHandler extends Handler {
     async get(domainId: string, tid: ObjectId) {
         this.response.template = 'contest_detail.html';
         const udict = await user.getList(domainId, [this.tdoc.owner]);
+        const fields = ['attend', 'startAt'];
+        if (this.tdoc.duration) fields.push('endAt');
         this.response.body = {
             tdoc: this.tdoc,
-            tsdoc: pick(this.tsdoc, ['attend', 'startAt']),
+            tsdoc: pick(this.tsdoc, fields),
             udict,
             files: sortFiles(this.tdoc.files || []),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
@@ -289,8 +291,9 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
             : 'contest_scoreboard';
+        const tsdoc = pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
         this.response.body = {
-            tdoc: this.tdoc, rows, udict, pdict, page_name, groups,
+            tdoc: this.tdoc, tsdoc, rows, udict, pdict, page_name, groups,
         };
         this.response.pjax = 'partials/scoreboard.html';
         this.response.template = 'contest_scoreboard.html';
@@ -614,7 +617,7 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
 export class ContestUserHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
-        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).project({ uid: 1, attend: 1, startAt: 1 }).toArray();
         tsdocs.forEach((i) => {
             i.endAt = (this.tdoc.duration && i.startAt) ? moment(i.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
         });
