@@ -442,8 +442,8 @@ export class ProblemModel {
                 if (!pdoc) continue;
                 let pid = pdoc.pid;
                 if (pid) {
-                    const current = await ProblemModel.get(domainId, pid);
-                    if (current) pid = undefined;
+                    if (!(/^[A-Za-z]+[0-9]*$/.test(pid))) pid = undefined;
+                    else if (await ProblemModel.get(domainId, pid)) pid = undefined;
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
