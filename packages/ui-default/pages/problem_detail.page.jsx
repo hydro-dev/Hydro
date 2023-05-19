@@ -2,7 +2,7 @@ import { getScoreColor } from '@hydrooj/utils/lib/status';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
@@ -295,7 +295,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     }
     const ele = document.createElement('div');
     $(ele).insertBefore($('.scratchpad--hide').get(0));
-    ReactDOM.createRoot(ele).render(<ProblemNavigation />);
+    createRoot(ele).render(<ProblemNavigation />);
     $('.non-scratchpad--hide').hide();
     $('.scratchpad--hide').hide();
     $('.outer-loader-container').hide();
