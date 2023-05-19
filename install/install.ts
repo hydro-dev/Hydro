@@ -62,6 +62,7 @@ const locales = {
         'install.compiler': 'Installing compiler...',
         'install.hydro': 'Installing Hydro...',
         'install.done': 'Hydro installation completed!',
+        'install.alldone': 'Hydro installation completed.',
         'install.editJudgeConfigAndStart': 'Please edit config at ~/.hydro/judge.yaml than start hydrojudge with:\npm2 start hydrojudge && pm2 save.',
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
