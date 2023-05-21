@@ -50,6 +50,19 @@
                 <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}">
                   <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
                 </a>
+                {% if tdoc.rule === "cf" %}
+                  <a style="float: right; margin-left: 10px;" href="{{ url('record_main', query={tid:tdoc.docId, pid:pid, status:1}) }}" target="_blank">Hack</a>
+                    <form style="float: right; margin-left: 10px;" action="{{ url('contest_lock_problem', tid=tdoc.docId) }}" method="POST">
+                      <input type="hidden" name="pid" value="{{ pid }}">
+                        <button class="btn--lock" type="submit">
+                          {% if not tdoc.lockedList[pid].includes(handler.user._id) %}
+                            Lock
+                          {% else %}
+                            Locked
+                          {% endif %}
+                        </button>
+                    </form>
+                {% endif %}
               </td>
             </tr>
           {%- endfor -%}

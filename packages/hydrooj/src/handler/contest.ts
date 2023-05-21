@@ -9,7 +9,8 @@ import {
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
-    InvalidTokenError, NotAssignedError, PermissionError, ValidationError,
+    InvalidTokenError, NotAssignedError, PermissionError, ProblemLockError,
+    ValidationError,
 } from '../error';
 import { ScoreboardConfig, Tdoc } from '../interface';
 import paginate from '../lib/paginate';
@@ -653,6 +654,20 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         this.back();
     }
 }
+
+export class ContestProblemLockHandler extends Handler {
+    @param('tid', Types.ObjectId)
+    @param('pid', Types.UnsignedInt)
+    async post(domainId: string, tid: ObjectId, pid: number) {
+        const lockList = await contest.getLockedList(domainId, tid);
+        if (!lockList) throw new ProblemLockError('This contest is not lockable.');
+        if (lockList[pid].includes(this.user._id)) throw new ProblemLockError('This problem has Locked before.');
+        lockList[pid].push(this.user._id);
+        await contest.updateLockedList(domainId, tid, lockList);
+        this.back();
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('contest_create', '/contest/create', ContestEditHandler);
     ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
@@ -665,4 +680,5 @@ export async function apply(ctx) {
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_lock_problem', '/contest/:tid/lock', ContestProblemLockHandler, PERM.PERM_VIEW_CONTEST);
 }
