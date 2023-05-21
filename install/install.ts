@@ -345,6 +345,12 @@ ${nixConfBase}`);
         skip: () => installAsJudge,
         hidden: installAsJudge,
         operations: [
+            () => writeFileSync(`${process.env.HOME}/.config/nixpkgs/config.nix`, `\
+{
+    permittedInsecurePackages = [
+        "openssl-1.1.1t"
+    ];
+}`),
             `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
         ],
     },
