@@ -9,11 +9,10 @@ import markdown from './backendlib/markdown';
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
 
-  async get({ domainId }) {
+  async get() {
     const LANGS = SettingModel.langs;
     const languages = {};
     for (const key in LANGS) {
-      if (LANGS[key].domain && !LANGS[key].domain.includes(domainId)) continue;
       if (LANGS[key].hidden) continue;
       languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;
     }

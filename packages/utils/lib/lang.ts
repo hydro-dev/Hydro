@@ -9,7 +9,6 @@ export interface LangConfig {
     monaco: string;
     time_limit_rate: number;
     memory_limit_rate: number;
-    domain: string[];
     display: string;
     target?: string;
     key: string;
