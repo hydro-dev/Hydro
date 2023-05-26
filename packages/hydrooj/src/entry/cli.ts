@@ -65,12 +65,12 @@ async function cli() {
         return console.error(parameters.join(', '));
     }
     for (let i = 0; i < args.length; i++) {
-        if ("'\"".includes(args[i][0]) && "'\"".includes(args[i][args[i].length - 1])) {
+        if ((+args[i]).toString() === args[i]) {
+            args[i] = +args[i];
+        } else if ("'\"".includes(args[i][0]) && "'\"".includes(args[i][args[i].length - 1])) {
             args[i] = args[i].substr(1, args[i].length - 2);
         } else if (args[i].length === 24 && ObjectId.isValid(args[i])) {
             args[i] = new ObjectId(args[i]);
-        } else if ((+args[i]).toString() === args[i]) {
-            args[i] = +args[i];
         } else if (args[i].startsWith('~')) {
             args[i] = argv.options[args[i].substr(1)];
         }
