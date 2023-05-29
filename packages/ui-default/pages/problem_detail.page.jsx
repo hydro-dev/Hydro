@@ -229,6 +229,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       }
     });
 
+    let cacheKey = `${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`;
+    if (UiContext.tdoc?._id && UiContext.tdoc.rule !== 'homework') cacheKey += `@${UiContext.tdoc._id}`;
+
     let setUpdate;
     function ProblemNavigation() {
       [, setUpdate] = React.useState(0);
@@ -241,11 +244,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     }
 
     function saveAns() {
-      localStorage.setItem(`objective_${UiContext.domain._id}#${UiContext.pdoc.docId}`, JSON.stringify(ans));
+      localStorage.setItem(`${cacheKey}#objective`, JSON.stringify(ans));
       setUpdate?.((i) => i + 1);
     }
     function loadAns() {
-      const saved = localStorage.getItem(`objective_${UiContext.domain._id}#${UiContext.pdoc.docId}`);
+      const saved = localStorage.getItem(`${cacheKey}#objective`);
       if (saved) {
         Object.assign(ans, JSON.parse(saved));
         for (const [id, val] of Object.entries(ans)) {
