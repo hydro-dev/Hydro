@@ -6,6 +6,41 @@
   </a>
 {% endmacro %}
 
+{% macro scoreboardRow(row) %}
+{%- for column in row -%}
+  <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
+  {%- if column.type == 'rank' -%}
+    <span class="{{ 'rank--unrank' if column.value == '0' else 'rank--normal' }}">{{ '*' if column.value == '0' else column.value|string|nl2br|safe }}</span>
+  {%- elif column.type == 'user' -%}
+    {%- set canView = canViewAll or handler.user._id == column.raw -%}
+    <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
+      <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
+      <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+    </button>
+    {{ user.render_inline(udict[column.raw], badge=false) }}
+  {%- elif column.type == 'record' and column.raw -%}
+    <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}"{% if column.hover %} data-tooltip="{{ column.hover }}"{% endif %}>
+      <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|string|nl2br|safe }}</span>
+    </a>
+  {%- elif column.type == 'records' -%}
+    {%- for record in column.raw -%}
+      {%- if loop.index0 -%}/{%- endif -%}
+      {%- if record.raw -%}
+        <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
+          {%- set _color = utils.status.getScoreColor(record.score|default(record.value)) -%}
+          <span style="font-weight:bold;color:{{ _color }}">{{ record.value|string|nl2br|safe }}</span>
+        </a>
+      {%- else -%}
+        {{ record.value|string|nl2br|safe }}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- else -%}
+    <span{% if column.hover %} data-tooltip="{{ column.hover }}"{% endif %}>{{ column.value|string|nl2br|safe }}</span>
+  {%- endif -%}
+  </td>
+{%- endfor -%}
+{% endmacro %}
+
 <div data-fragment-id="scoreboard">
   {% if model.contest.isLocked(tdoc) %}
     <div class="section__body no-padding">
@@ -42,42 +77,16 @@
       </thead>
       <tbody>
       {%- set canViewAll = handler.user.own(tdoc) or model.contest.canShowRecord.call(handler, tdoc) -%}
-      {%- for row in rows -%}{%- if loop.index0 > 0 -%}
-        <tr>
-          {%- for column in row -%}
-            <td class="col--{{ rows[0][loop.index0]['type'] }}"{% if column.style %} style="{{ column.style }}"{% endif %}>
-            {%- if column.type == 'rank' -%}
-              <span class="{{ 'rank--unrank' if column.value == '0' else 'rank--normal' }}">{{ '*' if column.value == '0' else column.value|string|nl2br|safe }}</span>
-            {%- elif column.type == 'user' -%}
-              {%- set canView = canViewAll or handler.user._id == column.raw -%}
-              <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
-              </button>
-              {{ user.render_inline(udict[column.raw], badge=false) }}
-            {%- elif column.type == 'record' and column.raw -%}
-              <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}" data-tooltip="{{ column.hover }}">
-                <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|string|nl2br|safe }}</span>
-              </a>
-            {%- elif column.type == 'records' -%}
-              {%- for record in column.raw -%}
-                {%- if loop.index0 -%}/{%- endif -%}
-                {%- if record.raw -%}
-                  <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
-                    {%- set _color = utils.status.getScoreColor(record.score|default(record.value)) -%}
-                    <span style="font-weight:bold;color:{{ _color }}">{{ record.value|string|nl2br|safe }}</span>
-                  </a>
-                {%- else -%}
-                  {{ record.value|string|nl2br|safe }}
-                {%- endif -%}
-              {%- endfor -%}
-            {%- else -%}
-              <span data-tooltip="{{ column.hover }}">{{ column.value|string|nl2br|safe }}</span>
-            {%- endif -%}
-            </td>
-          {%- endfor -%}
-        </tr>
-      {%- endif -%}{%- endfor -%}
+      {%- for row in rows -%}
+        {%- if loop.index0 == 1001 -%}
+          {{ noscript_note.render() }}
+        {%- endif -%}
+        {%- if loop.index0 > 1000 -%}
+          <tr style="display:none">{{ scoreboardRow(row) }}</tr>
+        {%- elif loop.index0 > 0 -%}
+          <tr>{{ scoreboardRow(row) }}</tr>
+        {%- endif -%}
+      {%- endfor -%}
       </tbody>
     </table>
   </div>

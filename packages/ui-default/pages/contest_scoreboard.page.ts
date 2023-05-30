@@ -1,3 +1,4 @@
+import Clusterize from 'clusterize.js';
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import { pjax } from 'vj/utils';
@@ -5,7 +6,7 @@ import { pjax } from 'vj/utils';
 const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => {
   const { tdoc } = UiContext;
   const key = `scoreboard-star/${tdoc.domainId}/${tdoc.docId}`;
-  const read = () => JSON.parse(localStorage.getItem(key) || '[]');
+  const read = () => JSON.parse(localStorage.getItem(key) || '[]').map((i) => +i);
   const write = (data) => localStorage.setItem(key, JSON.stringify(data));
 
   read().forEach((uid) => $(`.star.user--${uid}`).addClass('activated'));
@@ -23,22 +24,40 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => 
     write(star);
   });
 
+  const rows: Record<number, string> = {};
+  const total = [];
+  let nowRendering = [];
+  const unrank = [];
+  for (const line of $('.data-table tbody tr')) {
+    const uid = +$(line).find('[data-uid]').data('uid');
+    line.style.display = 'table-row';
+    rows[uid] = line.outerHTML;
+    nowRendering.push(uid);
+    total.push(uid);
+    if ($(line).find('.rank--unrank').length) unrank.push(uid);
+    $(line).remove();
+  }
+
+  const virtualizedList = new Clusterize({
+    rows: nowRendering.map((i) => rows[i]),
+    scrollElem: $('.data-table').get(0),
+    contentElem: $('tbody').get(0),
+  });
+
   $('.select.filter').on('change', (e) => {
     const val = $(e.target).val();
-    if (val === 'all') {
-      $('.data-table tbody tr').show();
-    } else if (val === 'star') {
-      $('.data-table tbody tr').hide();
-      read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show());
-    } else if (val === 'rank') {
-      $('.data-table tbody tr').show();
-      $('.rank--unrank').closest('tr').hide();
-    } else {
-      $('.data-table tbody tr').hide();
+    if (val === 'all') nowRendering = total;
+    else if (val === 'star') nowRendering = read();
+    else if (val === 'rank') nowRendering = total.filter((i) => !unrank.includes(i));
+    else {
+      nowRendering = [];
       const uids = val.toString().split(',').map((i) => +i.trim()).filter((i) => i);
-      if (!uids?.length) return;
-      uids.forEach((uid) => $(`.user--${uid}`).closest('tr').show());
+      for (const uid of total) {
+        if (!uids.includes(+uid)) continue;
+        nowRendering.push(uid);
+      }
     }
+    virtualizedList.update(nowRendering.map((i) => rows[i]));
   });
 
   const beginAt = new Date(UiContext.tdoc.beginAt).getTime();
