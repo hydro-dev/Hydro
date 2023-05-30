@@ -9,7 +9,7 @@
     "preferUnplugged": true,
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
-        "jsdom": "^22.0.0",
+        "jsdom": "^22.1.0",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {
