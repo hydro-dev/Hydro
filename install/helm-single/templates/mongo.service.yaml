@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mongo
+  name: mongo-service
+  namespace: hydro-namespace
+spec:
+  ports:
+    - port: {{.Values.Mongo.ClusterPort}}
+      name: mongo-cluster-endpoint
+      protocol: TCP
+      targetPort: 27017
+  selector:
+    app: mongo
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mongo
+  name: mongo-loadbalance-service
+  namespace: hydro-namespace
+spec:
+  ports:
+    - port: {{.Values.Mongo.LoadBalancerPort}}
+      name: mongo-endpoint
+      protocol: TCP
+      targetPort: 27017
+  selector:
+    app: mongo
+  type: LoadBalancer

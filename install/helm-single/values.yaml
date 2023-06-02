@@ -1,0 +1,38 @@
+Mongo:
+  Volume: /path/of/mongo-volume
+  Username: username
+  Password: password
+  ClusterPort: 27017 # 对集群内服务端口
+  LoadBalancerPort: 27017 # 对集群外暴露端口
+
+Backend:
+  Image: some.url/docker/backend:latest
+  FileVolume: /path/of/backend-file-volume # aka /data/file
+  BackendVolume: /path/of/backend-config-volume # aka /root/.hydro
+  Replicas: 1
+  ClusterPort: 8080 # 对集群内服务端口
+  ConfigJson: |-
+    {"host": "mongo-service.hydro-namespace.svc.cluster.local", "port": "27017", "name": "hydro", "username": "username", "password": "password"}
+
+  AddonJson: |-
+    ["@hydrooj/ui-default"]
+
+Judge:
+  Replicas: 1
+  ConfigVolume: /path/of/judge-volume # aka /root/.config/hydro
+  Image: some.url/docker/judge:latest
+  # 评测机走svc内网连接后端
+  JudgeYaml: |-
+    hosts:
+      localhost:
+        type: hydro
+        server_url: http://backend-service.hydro-namespace.svc.cluster.local:8080/
+        uname: root
+        password: rootroot
+        detail: true
+
+Global:
+  Mongo:
+    SvcDomain: mongo-service.hydro-namespace.svc.cluster.local
+  Backend:
+    SvcDomain: backend-service.hydro-namespace.svc.cluster.local
