@@ -13,7 +13,7 @@ hydrooj cli user setSuperAdmin 2
 
 Helm Chart示例中尚未完全适配多节点以及HA需求。主要体现在
 - Mongo的单节点部署
-- 为了理解和调试便利，后端容器`/data/file`和`/root/.hydro`，Mongo容器`/data/db`，评测机容器``使用了HostPath。
+- 为了理解和调试便利，后端容器`/data/file`和`/root/.hydro`，Mongo容器`/data/db`，评测机容器`/root/.config/hydro`使用了HostPath。
 
 
 由于Judge需要以特权容器运行（cgroup所需），建议将Backend和Judge调度到不同的节点上。
