@@ -37,7 +37,7 @@ spec:
             - |
               cp /root/.hydro-config-map/addon.json /root/.hydro/ &&
               cp /root/.hydro-config-map/config.json /root/.hydro/ &&
-              pm2-runtime start hydrooj
+              hydrooj
 
       initContainers:
         - name: init-mydb
