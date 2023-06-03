@@ -442,7 +442,7 @@ export class ProblemModel {
                 if (!pdoc) continue;
                 let pid = pdoc.pid;
                 if (pid) {
-                    if (!(/^[A-Za-z]+[0-9]*$/.test(pid))) pid = undefined;
+                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(pid))) pid = undefined;
                     else if (await ProblemModel.get(domainId, pid)) pid = undefined;
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
