@@ -9,6 +9,11 @@
       <p>{{ pdoc.config }}</p>
     </blockquote>
   {% endif %}
+  {% if pdoc.config.langs and not pdoc.config.langs|length %}
+    <blockquote class="warn">
+      <p>{{ _('No submission language available for this problem.') }}</p>
+    </blockquote>
+  {% endif %}
   {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
     <blockquote class="note">
       <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>

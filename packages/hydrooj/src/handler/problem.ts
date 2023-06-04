@@ -340,7 +340,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             let baseLangs;
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
-                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p])];
+                const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);
+                if (setting.langs[p]) dl.push(p);
                 baseLangs = dl;
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
@@ -478,6 +479,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     async prepare(domainId: string, tid?: ObjectId) {
         if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         if (typeof this.pdoc.config === 'string') throw new ProblemConfigError();
+        if (this.pdoc.config.langs && !this.pdoc.config.langs.length) throw new ProblemConfigError();
     }
 
     async get() {
