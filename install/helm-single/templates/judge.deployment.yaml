@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: judge
+  name: judge-deployment
+  namespace: hydro-namespace
+spec:
+  replicas: {{.Values.Judge.Replicas}}
+  revisionHistoryLimit: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: judge
+  template:
+    metadata:
+      labels:
+        app: judge
+    spec:
+      containers:
+        - name: oj-judge
+          image: {{.Values.Judge.Image}}
+          imagePullPolicy: IfNotPresent
+          privileged: true
+          volumeMounts:
+            - mountPath: /root/.config/hydro
+              name: judge-volume
+            - mountPath: /root/.judge-config-map
+              name: config-json-volume
+          ports:
+            - name: server-port
+              containerPort: 80
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cp /root/.judge-config-map/judge.yaml /root/ &&
+              pm2 start sandbox &&
+              pm2-runtime start hydrojudge
+
+      restartPolicy: Always
+      volumes:
+        - name: judge-volume
+          hostPath:
+            path: {{.Values.Judge.ConfigVolume}}
+            type: DirectoryOrCreate
+        - name: config-volume
+          configMap:
+            name: judge-config-map
