@@ -407,7 +407,7 @@ export class ProblemModel {
         return true;
     }
 
-    static async import(domainId: string, filepath: string, operator = 1) {
+    static async import(domainId: string, filepath: string, operator = 1, preferredPrefix?: string) {
         let tmpdir = '';
         let del = false;
         if (filepath.endsWith('.zip')) {
@@ -441,9 +441,19 @@ export class ProblemModel {
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 if (!pdoc) continue;
                 let pid = pdoc.pid;
+
+                const isValidPid = async (id: string) => {
+                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (await ProblemModel.get(domainId, id)) return false;
+                    return true;
+                };
+
                 if (pid) {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(pid))) pid = undefined;
-                    else if (await ProblemModel.get(domainId, pid)) pid = undefined;
+                    if (preferredPrefix) {
+                        const newPid = pid.replace(/^[A-Za-z]+/, preferredPrefix);
+                        if (isValidPid(newPid)) pid = newPid;
+                    }
+                    if (!isValidPid(pid)) pid = undefined;
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
