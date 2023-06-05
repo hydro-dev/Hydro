@@ -451,9 +451,9 @@ export class ProblemModel {
                 if (pid) {
                     if (preferredPrefix) {
                         const newPid = pid.replace(/^[A-Za-z]+/, preferredPrefix);
-                        if (isValidPid(newPid)) pid = newPid;
+                        if (await isValidPid(newPid)) pid = newPid;
                     }
-                    if (!isValidPid(pid)) pid = undefined;
+                    if (!await isValidPid(pid)) pid = undefined;
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 const docId = await ProblemModel.add(
