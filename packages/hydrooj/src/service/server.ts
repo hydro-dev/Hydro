@@ -2,6 +2,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import cac from 'cac';
+import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Body from 'koa-body';
@@ -83,6 +84,7 @@ interface HydroContext {
 export interface KoaContext extends Koa.Context {
     HydroContext: HydroContext;
     handler: any;
+    request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
     render: (name: string, args: any) => Promise<void>;
     renderHTML: (name: string, args: any) => Promise<string>;
