@@ -8,6 +8,7 @@
           <p>{{ _('Upload zipfile') }} {% if type %}({{ _('Type') }}: {{type}}){% endif %}:
             <input type="file" name="file">
             {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) and not type %}<input type="checkbox" name="keepUser">{% endif %}
+            <input type="text" name="preferredPrefix"></input>
             <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
           </p>
         </form>

@@ -12,7 +12,7 @@ const knownRemoteMapping = {
 
 class FpsProblemImportHandler extends Handler {
     async get() {
-        this.response.template = 'problem_import.html';
+        this.response.template = 'problem_import_fps.html';
     }
 
     async run(domainId: string, result: any) {
