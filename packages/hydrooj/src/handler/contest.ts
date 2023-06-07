@@ -626,7 +626,9 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
 export class ContestUserHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
-        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).project({ uid: 1, attend: 1, startAt: 1 }).toArray();
+        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).project({
+            uid: 1, attend: 1, startAt: 1, unrank: 1,
+        }).toArray();
         tsdocs.forEach((i) => {
             i.endAt = (this.tdoc.duration && i.startAt) ? moment(i.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
         });
