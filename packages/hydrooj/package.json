@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.9.18",
+    "version": "4.9.19",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -12,11 +12,11 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.347.1",
-        "@aws-sdk/lib-storage": "^3.347.1",
+        "@aws-sdk/client-s3": "^3.348.0",
+        "@aws-sdk/lib-storage": "^3.348.0",
         "@aws-sdk/middleware-endpoint": "^3.347.0",
-        "@aws-sdk/s3-presigned-post": "^3.347.1",
-        "@aws-sdk/s3-request-presigner": "^3.347.1",
+        "@aws-sdk/s3-presigned-post": "^3.348.0",
+        "@aws-sdk/s3-request-presigner": "^3.348.0",
         "@graphql-tools/schema": "^10.0.0",
         "@hydrooj/utils": "workspace:*",
         "@simplewebauthn/server": "^7.3.0",

@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.48.18",
+  "version": "4.48.19",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -34,7 +34,7 @@
     "@types/markdown-it": "^12.2.3",
     "@types/pickadate": "^3.5.32",
     "@types/qrcode": "^1.5.0",
-    "@types/react": "^18.2.8",
+    "@types/react": "^18.2.9",
     "@types/react-dom": "^18.2.4",
     "@types/redux-logger": "^3.0.9",
     "@types/serviceworker": "^0.0.67",

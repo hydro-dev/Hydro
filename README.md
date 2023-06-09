@@ -105,6 +105,20 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.19 / UI 4.48.19
+- core: 修复比赛代码导出功能无法处理选手提交的二进制文件的问题
+- core: 修复比赛管理显示用户参与排名状态
+- core&ui: 支持按小组筛选比赛/作业
+- core: 显示 spj 编译超时等详情信息
+- core&ui: 导入题目：支持重新整理题号
+- core: loader: 添加 git 集成
+- install: 添加 k3s 安装样例
+- core: 默认仅使用小写文件名
+- ui: 在比赛中忽略记住的客观题答案
+- core: 移除 langs.domain 选项
+- core: 修复修改邮箱后旧邮箱仍被占用的问题
+- ui: 部分样式修复
+
 ### Hydro 4.9.18 / UI 4.48.18
 - ui: 客观题：支持记住上次选择的答案并添加快速跳题
 - core: 使用 $HOME/.hydro 存储临时文件

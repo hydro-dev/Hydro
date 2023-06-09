@@ -65,7 +65,7 @@
         "simple-git": "^3.19.0",
         "style-loader": "^3.3.3",
         "stylus": "^0.59.0",
-        "stylus-loader": "^7.1.2",
+        "stylus-loader": "7.1.2",
         "supertest": "^6.3.3",
         "ts-loader": "^9.4.3",
         "typescript": "5.0.2",
@@ -78,7 +78,7 @@
     },
     "resolutions": {
         "@types/node": "18.16.1",
-        "@types/react": "18.2.8",
+        "@types/react": "18.2.9",
         "prettier": "npm:not-installable-package@1.0.0"
     }
 }
