@@ -71,7 +71,7 @@
             <select class="inline compact select" name="rule">
               <option value=""{% if not rule %} selected{% endif %}>{{ _('All') }}</option>
               {%- for k, v in model.contest.RULES -%}
-                {% if not k.hidden %}
+                {% if not v.hidden %}
                   <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(v.TEXT) }}</option>
                 {% endif %}
               {%- endfor -%}
