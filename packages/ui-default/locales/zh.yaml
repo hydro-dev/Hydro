@@ -482,6 +482,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
+Leave empty for default: 留空以使用默认
 Ledo: 乐多
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
@@ -635,6 +636,7 @@ Please select at least one role to perform this operation.: 请选择至少一�
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
 Preference Settings: 偏好设置
+preferredPrefix_hint: 此选项用于重排题号。例如，若题目包中所给的题号分别是 P1001, P1002, P1003，而此选项填写了 T，则导入后三道题的题号分别为 T1001, T1002 和 T1003。
 Preparing Upload...: 准备上传...
 Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试

@@ -19,6 +19,7 @@ perm_problem_solution: Problem Solutions
 perm_problem: Problems
 perm_record: Records
 perm_training: Trainings
+preferredPrefix_hint: This is used for re-organizing problem IDs. For example, if the ID of the problem in the problemset are P1001, P1002, P1003, and you set "T" in this option, those problem will be imported with ID T1001, T1002 and T1003.
 problem_create: Problem Create
 problem_edit: Problem Edit
 problem_import: Import Problem
