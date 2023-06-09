@@ -536,7 +536,7 @@ export class ContestCodeHandler extends Handler {
                 if (!id) return;
                 zip.addFile(
                     `${rnames[rdoc._id.toHexString()]}.${filename || 'txt'}`,
-                    await streamToBuffer(storage.get(id)),
+                    await streamToBuffer(await storage.get(`submission/${id}`)),
                 );
             } else if (rdoc.code) {
                 zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
