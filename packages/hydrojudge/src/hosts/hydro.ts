@@ -178,14 +178,14 @@ export default class Hydro {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        let content = this.config.minPriority !== undefined
+        const content1 = this.config.minPriority !== undefined
             ? `{"key":"prio","prio":${this.config.minPriority}}`
             : '{"key":"ping"}';
-        setInterval(() => this.ws?.send?.(content), 30000);
-        content = this.config.mbps !== undefined
+        setInterval(() => this.ws?.send?.(content1), 30000);
+        const content2 = this.config.mbps !== undefined
             ? `{"key":"mbps","mbps":${this.config.mbps}}`
             : '{"key":"ping"}';
-        setInterval(() => this.ws?.send?.(content), 30000);
+        setInterval(() => this.ws?.send?.(content2), 30000);
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
