@@ -178,6 +178,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     closed = false;
     query: any = { type: 'judge' };
     ip: string;
+    maxMbps = -1;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
@@ -205,6 +206,17 @@ class JudgeConnectionHandler extends ConnectionHandler {
             /* eslint-enable no-await-in-loop */
             if (!rdoc) t = null;
         }
+        if (this.maxMbps !== -1) {
+            const pdoc = await problem.get(rdoc.domainId, rdoc.pid);
+            for (let data of pdoc.data) {
+                if (data.size > this.maxMbps * 1024 * pdoc.data.length) {
+                    task.add(t);
+                    logger.info("Skipped task,");
+                    await sleep(500); this.newTask();
+                    return;
+                }
+            }
+        }
         this.send({ task: { ...rdoc, ...t } });
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
@@ -213,7 +225,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        if (msg.key !== 'ping' && msg.key !== 'prio') {
+        if (msg.key !== 'ping' && msg.key !== 'prio' && msg.key !== 'mbps') {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
@@ -227,6 +239,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio') {
             this.query.priority = { $gt: msg.prio };
+        } else if (msg.key === 'mbps') {
+            this.maxMbps = msg.mbps;
         }
     }
 
