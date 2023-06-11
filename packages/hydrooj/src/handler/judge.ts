@@ -209,7 +209,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (this.maxMbps !== -1) {
             const pdoc = await problem.get(rdoc.domainId, rdoc.pid);
             for (let data of pdoc.data) {
-                if (data.size > this.maxMbps * 1024 * pdoc.data.length) {
+                if (data.size * pdoc.data.length > this.maxMbps * 1024 * 8) {
                     task.add(t);
                     logger.info("Skipped task,");
                     await sleep(500); this.newTask();
