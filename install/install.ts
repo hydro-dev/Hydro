@@ -85,6 +85,8 @@ const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-impo
 const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
+const migrationArg = process.argv.find((i) => i.startsWith('--migration='));
+let migration = migrationArg ? migrationArg.split('=')[1] : '';
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -115,7 +117,6 @@ if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
-let migration = '';
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -333,8 +334,6 @@ ${nixConfBase}`);
                         .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
                     const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
-                        // not ready for production
-                        return;
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
                         if (res.toLowerCase().trim() === 'y') migration = 'uoj';
