@@ -53,7 +53,12 @@ class AccountService {
             const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
             if (!rid) return;
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
-            await this.api.waitForSubmission(rid, next, end);
+            const nextFunction = (data) => {
+                if (data.case) delete data.case.message;
+                if (data.cases) data.cases.forEach((x) => delete x.message);
+                return next(data);
+            };
+            await this.api.waitForSubmission(rid, task.config?.detail === false ? nextFunction : next, end);
         } catch (e) {
             if (process.env.DEV) {
                 logger.error(e);
