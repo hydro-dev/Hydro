@@ -10,7 +10,7 @@
         "cac": "^6.7.14",
         "mongodb": "^5.6.0",
         "p-queue": "^7.3.4",
-        "schemastery": "^3.9.0",
+        "schemastery": "^3.10.0",
         "shell-quote": "^1.8.1",
         "superagent": "^8.0.9",
         "ws": "^8.13.0"
