@@ -36,7 +36,7 @@ const page = new NamedPage('record_main', async () => {
     clearDefaultValue: false,
   });
   const langs = UiContext.domain.langs?.split(',');
-  const availableLangs = getAvailableLangs(langs.length ? langs : undefined);
+  const availableLangs = getAvailableLangs(langs?.length ? langs : undefined);
   Object.keys(availableLangs).map(
     (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${availableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');
