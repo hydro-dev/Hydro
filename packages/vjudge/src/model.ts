@@ -205,7 +205,7 @@ export async function apply(ctx: Context) {
     }
     // });
     ctx.vjudge = vjudge;
-    ctx.check.add('vjudge', async (_ctx, log, warn, error) => {
+    ctx.check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
         const working = [];
         const pool = await vjudge.checkStatus(true);
         for (const [k, v] of Object.entries(pool)) {
