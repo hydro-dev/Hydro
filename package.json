@@ -79,6 +79,7 @@
     "resolutions": {
         "@types/node": "18.16.1",
         "@types/react": "18.2.9",
+        "schemastery": "3.10.0",
         "prettier": "npm:not-installable-package@1.0.0"
     }
 }
