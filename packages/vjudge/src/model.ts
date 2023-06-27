@@ -16,6 +16,7 @@ class AccountService {
     problemLists: Set<string>;
     listUpdated = false;
     working = false;
+    error = null;
 
     constructor(public Provider: BasicProvider, public account: RemoteAccount) {
         this.api = new Provider(account, async (data) => {
@@ -24,6 +25,7 @@ class AccountService {
         this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
         this.main().catch((e) => {
             logger.error(`Error occured in ${account.type}/${account.handle}`);
+            this.error = e.message;
             console.error(e);
         });
     }
@@ -173,29 +175,18 @@ class VJudgeService extends Service {
         });
     }
 
-    async checkStatus() {
-        const res: Record<string, { working: boolean, status?: string }> = {};
+    async checkStatus(onCheckFunc = false) {
+        const res: Record<string, { working: boolean, error?: string, status?: any }> = {};
         for (const [k, v] of Object.entries(this.pool)) {
             res[k] = {
                 working: v.working,
-                status: v.api.check ? await v.api.check() : null,
+                error: v.error,
+                status: v.api.checkStatus ? await v.api.checkStatus(onCheckFunc) : null,
             };
         }
         return res;
     }
 }
-
-const check = (vjudge: VJudgeService) => async (ctx, log, warn) => {
-    const working = [];
-    const pool = await vjudge.checkStatus();
-    for (const [k, v] of Object.entries(pool)) {
-        if (!v.working) warn(`vjudge worker ${k} is not working`);
-        else working.push(k);
-        if (v.status) log(`vjudge worker ${k} has note: ${v.status}`);
-    }
-    if (!working.length) warn('no vjudge worker is working');
-    log(`vjudge working workers: ${working.join(', ')}`);
-};
 
 export { BasicFetcher } from './fetch';
 export { VERDICT } from './verdict';
@@ -214,5 +205,15 @@ export async function apply(ctx: Context) {
     }
     // });
     ctx.vjudge = vjudge;
-    ctx.check.add('vjudge', check(vjudge));
+    ctx.check.add('vjudge', async (_ctx, log, warn, error) => {
+        const working = [];
+        const pool = await vjudge.checkStatus(true);
+        for (const [k, v] of Object.entries(pool)) {
+            if (!v.working) error(`vjudge worker ${k}: ${v.error}`);
+            else working.push(k);
+            if (v.status) log(`vjudge worker ${k}: ${v.status}`);
+        }
+        if (!working.length) warn('no vjudge worker is working');
+        log(`vjudge working workers: ${working.join(', ')}`);
+    });
 }
