@@ -86,7 +86,7 @@ export const Types: Types = {
     Email: saslprepString(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/i),
     DomainId: saslprepString(/^[a-zA-Z][a-zA-Z0-9_]{3,31}$/),
     Role: saslprepString(/^[_0-9A-Za-z\u4e00-\u9fa5]{1,31}$/i),
-    Title: basicString(/^.{1,64}$/),
+    Title: basicString(/^.{1,64}$/, (i) => !!i.trim()),
     String: basicString(),
 
     Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],

@@ -85,6 +85,8 @@ const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-impo
 const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
+const migrationArg = process.argv.find((i) => i.startsWith('--migration='));
+let migration = migrationArg ? migrationArg.split('=')[1] : '';
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -115,7 +117,6 @@ if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
-let migration = '';
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -159,6 +160,7 @@ const Caddyfile = `\
 # 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
 # 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
 # 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
+# 填写完整域名，注意区分有无 www （www.hydro.ac 和 hydro.ac 不同，请检查 DNS 设置）
 # 请注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
@@ -333,8 +335,6 @@ ${nixConfBase}`);
                         .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
                     const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
-                        // not ready for production
-                        return;
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
                         if (res.toLowerCase().trim() === 'y') migration = 'uoj';
