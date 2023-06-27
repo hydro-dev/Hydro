@@ -48,6 +48,7 @@ export async function apply(ctx: Context) {
 
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/monitor'));
+    ctx.plugin(require('../service/check'));
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);

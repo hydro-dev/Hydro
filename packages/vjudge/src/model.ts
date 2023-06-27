@@ -15,6 +15,7 @@ class AccountService {
     api: IBasicProvider;
     problemLists: Set<string>;
     listUpdated = false;
+    working = false;
 
     constructor(public Provider: BasicProvider, public account: RemoteAccount) {
         this.api = new Provider(account, async (data) => {
@@ -116,6 +117,7 @@ class AccountService {
         setInterval(() => this.login(), Time.hour);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
         const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
+        this.working = true;
         do {
             this.listUpdated = false;
             for (const listName of this.problemLists) {
@@ -165,7 +167,30 @@ class VJudgeService extends Service {
             // TODO dispose session
         });
     }
+
+    async checkStatus() {
+        const res: Record<string, { working: boolean, status?: string }> = {};
+        for (const [k, v] of Object.entries(this.pool)) {
+            res[k] = {
+                working: v.working,
+                status: v.api.check ? await v.api.check() : null,
+            };
+        }
+        return res;
+    }
 }
+
+const check = (vjudge: VJudgeService) => async (ctx, log, warn) => {
+    const working = [];
+    const pool = await vjudge.checkStatus();
+    for (const [k, v] of Object.entries(pool)) {
+        if (!v.working) warn(`vjudge worker ${k} is not working`);
+        else working.push(k);
+        if (v.status) log(`vjudge worker ${k} has note: ${v.status}`);
+    }
+    if (!working.length) warn('no vjudge worker is working');
+    log(`vjudge working workers: ${working.join(', ')}`);
+};
 
 export { BasicFetcher } from './fetch';
 export { VERDICT } from './verdict';
@@ -184,4 +209,5 @@ export async function apply(ctx: Context) {
     }
     // });
     ctx.vjudge = vjudge;
+    ctx.check.add('vjudge', check(vjudge));
 }

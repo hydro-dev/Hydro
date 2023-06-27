@@ -3,7 +3,6 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import { omit } from 'lodash';
 import Schema from 'schemastery';
-import * as check from '../check';
 import {
     CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
 } from '../error';
@@ -14,6 +13,7 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
+import * as check from '../service/check';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';

@@ -2,8 +2,9 @@
 
 import os from 'os';
 import { Dictionary } from 'lodash';
-import * as system from './model/system';
-import db from './service/db';
+import { Context, Service } from '../context';
+import * as system from '../model/system';
+import db from './db';
 
 const c = {};
 
@@ -56,4 +57,15 @@ export async function start(ctx, log, warn, error, cb: (id: string) => void) {
 
 export async function cancel(id: string) {
     c[id] = true;
+}
+
+export class CheckService extends Service {
+    add(name: string, checkFunc: CheckItem) {
+        checks[name] = checkFunc;
+    }
+}
+
+export async function apply(ctx: Context) {
+    Context.service('check', CheckService);
+    ctx.check = new CheckService(ctx, 'check', true);
 }
