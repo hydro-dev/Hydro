@@ -252,6 +252,15 @@ class RemoteStorageService {
             CopySource: src,
         }));
     }
+
+    async status() {
+        return {
+            type: 'S3',
+            status: !!this.error,
+            error: this.error,
+            bucket: this.bucket,
+        };
+    }
 }
 
 class LocalStorageService {
@@ -328,6 +337,15 @@ class LocalStorageService {
         target = resolve(this.dir, convertPath(target));
         await copyFile(src, target);
         return { etag: target, lastModified: new Date() };
+    }
+
+    async status() {
+        return {
+            type: 'Local',
+            status: !!this.error,
+            error: this.error,
+            bucket: 'Hydro',
+        };
     }
 }
 
