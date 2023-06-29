@@ -105,6 +105,15 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.20 / UI 4.48.20
+- vjudge: 修复 Codeforces 提交结果获取
+- core: 优化系统自检功能
+- vjudge: 支持 detail 设置（#582）
+- ui: 修复语言过滤（#598）
+- ui: 禁用视频自动播放
+- install: 支持安装时自动从 UOJ 导入数据
+- ui: 修复 preferredPrefix 功能异常的问题
+
 ### Hydro 4.9.19 / UI 4.48.19
 - core: 修复比赛代码导出功能无法处理选手提交的二进制文件的问题
 - core: 修复比赛管理显示用户参与排名状态
