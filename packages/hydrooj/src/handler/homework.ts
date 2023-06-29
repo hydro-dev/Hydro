@@ -24,7 +24,7 @@ class HomeworkMainHandler extends Handler {
     @param('group', Types.Name, true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, group = '', page = 1) {
-        const groups = (await user.listGroup(domainId, this.user._id)).map((i) => i.name);
+        const groups = (await user.listGroup(domainId, this.user._id)).map((i) => i.name).filter((i) => !Number.isSafeInteger(+i));
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
         const cursor = contest.getMulti(domainId, {
             rule: 'homework',

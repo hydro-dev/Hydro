@@ -20,8 +20,11 @@
             <select class="inline compact select" name="group">
               <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
               {%- for g in groups -%}
-                  <option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>
+                <option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>
               {%- endfor -%}
+              {%- if not groups|length -%}
+                <option disabled>{{ _('No group available') }}</option>
+              {%- endif -%}
             </select>
             <button type="submit" class="compact button hasjs--hide">
               {{ _('Search') }}
