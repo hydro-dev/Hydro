@@ -265,7 +265,7 @@ class RemoteStorageService {
 
 class LocalStorageService {
     client: null;
-    error: '';
+    error = '';
     dir: string;
     opts: null;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
