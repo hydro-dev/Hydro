@@ -59,7 +59,7 @@ const convertPath = (p: string) => {
 
 class RemoteStorageService {
     public client: S3Client;
-    public error = null;
+    public error = '';
     public bucket = 'hydro';
     private replaceWithAlternativeUrlFor: Partial<Record<'user' | 'judge', (originalUrl: string) => string>>;
     private alternatives: Record<'user' | 'judge', S3Client> = {
@@ -265,7 +265,7 @@ class RemoteStorageService {
 
 class LocalStorageService {
     client: null;
-    error: null;
+    error: '';
     dir: string;
     opts: null;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
