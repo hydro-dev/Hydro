@@ -62,7 +62,7 @@
           <span class="icon icon-warning"></span> {{ _('Report') }}
         </a></li>
       {% if handler.user.hasPerm(perm.PERM_ADD_REACTION) %}
-        <li><a href="javascript:;" data-op="react" data-type="discuss" data-form="{{ {operation: 'reaction', type:'did', id: ddoc._id }|json }}">
+        <li><a href="javascript:;" data-op="react" data-type="discuss" data-form="{{ {operation: 'reaction', nodeType:'did', id: ddoc._id }|json }}">
           <span class="icon icon-emoji"></span>
         </a></li>
       {% endif %}
