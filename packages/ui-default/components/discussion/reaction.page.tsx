@@ -68,7 +68,7 @@ const reactionPage = new AutoloadPage('reactionPage', () => {
   const canUseReaction = $('[data-op="react"]').length > 0;
   $('[data-op="react"]').each((i, e) => {
     ReactDOM.createRoot(e).render(
-      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').type}='${$(e).data('form').id}']`)} />,
+      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').nodeType}='${$(e).data('form').id}']`)} />,
     );
   });
   $(document).on('click', '.reaction', async (e) => {
