@@ -386,15 +386,15 @@ const strictioi = buildContestRule({
     stat(tdoc, journal) {
         const detail = {};
         let score = 0;
-        const subtasks: Record<number, SubtaskResult> = {};
+        const subtasks: Record<number, Record<number, SubtaskResult>> = {};
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            subtasks[j.pid] ||= {};
             for (const i in j.subtasks) {
-                if (!subtasks[i] || subtasks[i].score < j.subtasks[i].score) subtasks[i] = j.subtasks[i];
+                if (!subtasks[j.pid][i] || subtasks[j.pid][i].score < j.subtasks[i].score) subtasks[j.pid][i] = j.subtasks[i];
             }
-            j.score = sumBy(Object.values(subtasks), 'score');
-            j.status = Math.max(...Object.values(subtasks).map((i) => i.status));
-            j.subtasks = subtasks;
-            if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = j;
+            j.score = sumBy(Object.values(subtasks[j.pid]), 'score');
+            j.status = Math.max(...Object.values(subtasks[j.pid]).map((i) => i.status));
+            if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = { ...j, subtasks: subtasks[j.pid] };
         }
         for (const i in detail) score += detail[i].score;
         return { score, detail };
