@@ -77,7 +77,8 @@ export class ContestListHandler extends Handler {
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, rule = '', group = '', page = 1) {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
-        const groups = (await user.listGroup(domainId, this.user._id)).map((i) => i.name).filter((i) => !Number.isSafeInteger(+i));
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
+            .map((i) => i.name).filter((i) => !Number.isSafeInteger(+i));
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
         const q = {
