@@ -256,7 +256,7 @@ class RemoteStorageService {
     async status() {
         return {
             type: 'S3',
-            status: !!this.error,
+            status: !this.error,
             error: this.error,
             bucket: this.bucket,
         };
@@ -265,7 +265,7 @@ class RemoteStorageService {
 
 class LocalStorageService {
     client: null;
-    error: null;
+    error = '';
     dir: string;
     opts: null;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
@@ -342,7 +342,7 @@ class LocalStorageService {
     async status() {
         return {
             type: 'Local',
-            status: !!this.error,
+            status: !this.error,
             error: this.error,
             bucket: 'Hydro',
         };
