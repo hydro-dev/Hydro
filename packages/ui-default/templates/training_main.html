@@ -59,7 +59,7 @@
         </div>
         <div class="section__body">
           <ol class="my secondary training__list">
-            {%- for tsdoc in tsdict -%}
+            {%- for tid, tsdoc in tsdict -%}
               {% if tsdoc['enroll'] %}
                 <li class="training__item"><div class="media">
                   <div class="media__left">
@@ -67,7 +67,7 @@
                   </div>
                   <div class="media__body">
                     <h1 class="training__title"><a href="{{ url('training_detail', tid=tsdoc.docId) }}" data-emoji-enabled>{{ tdict[tsdoc['docId']]['title'] }}</a></h1>
-                    <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ (100 * tsdoc['donePids']|length / model.training.getPids(tdict[tsdoc['docId']].dag)|length)|round|int }}%;"></div></div> {{ _('Complete') }} {{ (100 * tsdoc['donePids']|length / handler.getPids(tdict[tsdoc.docId].dag)|length)|round|int }}%</div>
+                    <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ (100 * tsdoc['donePids']|length / model.training.getPids(tdict[tsdoc['docId']].dag)|length)|round|int }}%;"></div></div> {{ _('Complete') }} {{ (100 * tsdoc['donePids']|length / model.training.getPids(tdict[tsdoc.docId].dag)|length)|round|int }}%</div>
                   </div>
                 </div></li>
               {% endif %}
