@@ -288,6 +288,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('realtime', Types.Boolean)
     async get(domainId: string, tid: ObjectId, ext = '', realtime) {
         if (!contest.canShowScoreboard.call(this, this.tdoc, true)) throw new ContestScoreboardHiddenError(tid);
+        if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         if (realtime && !this.user.own(this.tdoc)) {
             this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
         }
