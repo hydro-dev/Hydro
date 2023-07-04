@@ -35,8 +35,8 @@ export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: an
 }
 
 export function add(
-    domainId: string, title: string, content: string,
-    owner: number, dag: TrainingNode[] = [], description = '', pin = 0,
+    domainId: string, title: string, content: string, owner: number,
+    dag: TrainingNode[] = [], description = '', pin = 0, maintainer: number[] = [],
 ) {
     return document.add(domainId, content, owner, document.TYPE_TRAINING, null, null, null, {
         dag,
@@ -44,6 +44,7 @@ export function add(
         description,
         attend: 0,
         pin,
+        maintainer,
     });
 }
 

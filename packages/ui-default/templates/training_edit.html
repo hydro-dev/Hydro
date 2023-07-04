@@ -26,6 +26,13 @@
               <p class="help-text">{{ _('Introduce must not exceed 500 characters and it will be shown in the list view.') }}</p>
             </label>
           </div></div>
+          {{ form.form_text({
+            columns:12,
+            label:'Training Maintainer',
+            name:'maintainer',
+            help_text:_('Allow to maintain this {0}').format(_('training')),
+            value:tdoc.maintainer|default('')
+          }) }}
           <div class="row"><div class="columns">
             <label>
               {{ _('Description') }}

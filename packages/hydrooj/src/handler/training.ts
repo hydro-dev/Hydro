@@ -206,20 +206,20 @@ class TrainingEditHandler extends Handler {
     @param('dag', Types.Content)
     @param('pin', Types.UnsignedInt)
     @param('description', Types.Content)
+    @param('maintainer', Types.NumericArray, true)
     async post(
-        domainId: string, tid: ObjectId,
-        title: string, content: string,
-        _dag: string, pin = 0, description: string,
+        domainId: string, tid: ObjectId, title: string, content: string,
+        _dag: string, pin = 0, description: string, maintainer: number[] = [],
     ) {
         if ((!!this.tdoc?.pin) !== (!!pin)) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag', null, 'Please specify at least one problem'));
         if (!tid) {
-            tid = await training.add(domainId, title, content, this.user._id, dag, description, pin);
+            tid = await training.add(domainId, title, content, this.user._id, dag, description, pin, maintainer);
         } else {
             await training.edit(domainId, tid, {
-                title, content, dag, description, pin,
+                title, content, dag, description, pin, maintainer,
             });
         }
         this.response.body = { tid };

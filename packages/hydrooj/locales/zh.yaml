@@ -518,8 +518,8 @@ Numeric PID: 数字题号
 Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献过题目~
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
-Oh, there is no task in the queue!: 喔，队列中目前没有任务。
 Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
+Oh, there is no task in the queue!: 喔，队列中目前没有任务。
 Ok: 确定
 Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
 Oops, there are no results.: 呀，没有结果。
@@ -804,6 +804,7 @@ training_create: 创建训练
 training_detail: 训练详情
 training_edit: 编辑训练
 training_main: 训练
+training: 训练
 Training: 训练
 Trainings per page: 每页展示的训练数量
 Type: 类型
