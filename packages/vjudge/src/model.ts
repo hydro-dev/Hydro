@@ -16,7 +16,7 @@ class AccountService {
     problemLists: Set<string>;
     listUpdated = false;
     working = false;
-    error = null;
+    error = '';
 
     constructor(public Provider: BasicProvider, public account: RemoteAccount) {
         this.api = new Provider(account, async (data) => {
@@ -25,6 +25,7 @@ class AccountService {
         this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
         this.main().catch((e) => {
             logger.error(`Error occured in ${account.type}/${account.handle}`);
+            this.working = false;
             this.error = e.message;
             console.error(e);
         });
