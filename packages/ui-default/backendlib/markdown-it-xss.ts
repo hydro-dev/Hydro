@@ -21,6 +21,7 @@ const tagCheck = new FilterXSS({
     }
     if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
       // 可能丢失了一个结束标签
+      html = `</${stack[stack.length - 1]}>${html}`;
       stack.pop();
       stack.pop();
       return html;
