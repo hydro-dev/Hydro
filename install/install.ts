@@ -283,7 +283,9 @@ const printInfo = [
     'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
     () => {
         if (installAsJudge) return;
-        password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
+        const config = require(`${process.env.HOME}/.hydro/config.json`);
+        if (config.uri) password = new URL(config.uri).password || '(No password)';
+        else password = config.password || '(No password)';
         log.info('extra.dbUser');
         log.info('extra.dbPassword', password);
     },
