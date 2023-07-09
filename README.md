@@ -105,11 +105,19 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.21 / UI 4.48.21
+- core: 修复 strictioi 比赛计分
+- ui: 修复已参加训练列表显示
+- core: 在比赛开始前禁用计分板
+- ui: 在添加用户到域的时候隐藏 default 和 guest 选项
+- core: 允许管理员筛选所有小组
+- ui: 修复语言过滤（#598）
+- ui: 修复讨论 reaction
+
 ### Hydro 4.9.20 / UI 4.48.20
 - vjudge: 修复 Codeforces 提交结果获取
 - core: 优化系统自检功能
 - vjudge: 支持 detail 设置（#582）
-- ui: 修复语言过滤（#598）
 - ui: 禁用视频自动播放
 - install: 支持安装时自动从 UOJ 导入数据
 - ui: 修复 preferredPrefix 功能异常的问题
