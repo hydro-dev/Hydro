@@ -204,12 +204,12 @@ class TrainingEditHandler extends Handler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.Content)
-    @param('pin', Types.UnsignedInt)
     @param('description', Types.Content)
+    @param('pin', Types.UnsignedInt, true)
     @param('maintainer', Types.NumericArray, true)
     async post(
         domainId: string, tid: ObjectId, title: string, content: string,
-        _dag: string, pin = 0, description: string, maintainer: number[] = [],
+        _dag: string, description: string, pin = 0, maintainer: number[] = [],
     ) {
         if ((!!this.tdoc?.pin) !== (!!pin)) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
