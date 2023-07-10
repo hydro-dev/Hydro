@@ -40,6 +40,8 @@ class HomeworkMainHandler extends Handler {
                     ],
                 },
             ...group ? { assign: { $in: [group] } } : {},
+        }).sort({
+            penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
         });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
