@@ -95,7 +95,7 @@ export class ContestListHandler extends Handler {
             ...rule ? { rule } : { rule: { $in: rules } },
             ...group ? { assign: { $in: [group] } } : {},
         };
-        const cursor = contest.getMulti(domainId, q);
+        const cursor = contest.getMulti(domainId, q).sort({ endAt: -1, beginAt: -1, _id: -1 });
         let qs = rule ? `rule=${rule}` : '';
         if (group) qs += qs ? `&group=${group}` : `group=${group}`;
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
