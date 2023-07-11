@@ -973,7 +973,7 @@ export class ProblemCreateHandler extends Handler {
     ) {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];
         for (const file of files) {
@@ -986,7 +986,6 @@ export class ProblemCreateHandler extends Handler {
             }
         }
         await Promise.all(tasks);
-        if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
