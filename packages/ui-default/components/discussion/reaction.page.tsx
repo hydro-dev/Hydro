@@ -10,9 +10,9 @@ import { request } from 'vj/utils';
 
 function renderReactions(reactions, self, rootEle) {
   let html = '';
-  for (const key in reactions) {
-    if (!reactions[key]) continue;
-    html += `<div class="reaction${self[key] ? ' active' : ''}""><span class="emoji">${key}</span> ${reactions[key]}</div>\n`;
+  for (const [k, v] of Object.entries(reactions).sort(([, v1], [, v2]) => +v2 - +v1)) {
+    if (!v) continue;
+    html += `<div class="reaction${self[k] ? ' active' : ''}""><span class="emoji">${k}</span> ${v}</div>\n`;
   }
   rootEle.html(html);
 }
