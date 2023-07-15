@@ -815,11 +815,12 @@ export async function getAndListStatus(domainId: string, tid: ObjectId): Promise
     return [tdoc, tsdocs];
 }
 
-export async function recalcStatus(domainId: string, tid: ObjectId) {
+export async function recalcStatus(domainId: string, tid: ObjectId, unlock = false) {
     const [tdoc, tsdocs] = await Promise.all([
         document.get(domainId, document.TYPE_CONTEST, tid),
         document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
     ]);
+    if (unlock) tdoc.unlocked = true;
     const tasks = [];
     for (const tsdoc of tsdocs || []) {
         if (tsdoc.journal) {
@@ -839,7 +840,7 @@ export async function recalcStatus(domainId: string, tid: ObjectId) {
 export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
-    await recalcStatus(domainId, tid);
+    await recalcStatus(domainId, tid, true);
     await edit(domainId, tid, { unlocked: true });
 }
 
