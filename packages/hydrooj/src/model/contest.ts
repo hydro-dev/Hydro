@@ -839,8 +839,8 @@ export async function recalcStatus(domainId: string, tid: ObjectId) {
 export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc.lockAt || tdoc.unlocked) return;
-    await recalcStatus(domainId, tid);
     await edit(domainId, tid, { unlocked: true });
+    await recalcStatus(domainId, tid);
 }
 
 export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
