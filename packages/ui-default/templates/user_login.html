@@ -26,6 +26,7 @@
         <input type="hidden" name="tfa" value="">
         <input type="hidden" name="authnChallenge" value="">
         <div class="text-center">
+          {{ captcha|safe }}
           <input type="submit" value="{{ _('Login') }}" name="login_submit" class="inverse expanded rounded primary button">
         </div>
       </div></div>
