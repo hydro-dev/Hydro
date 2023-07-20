@@ -13,7 +13,7 @@ const logger = new Logger('remote/codeforces');
 
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
-        ? ['', '921', '01']
+        ? ['', 'P', '921', '01']
         : /^(P|GYM)(\d+)([A-Z]+[0-9]*)$/.exec(id);
     if (type === 'GYM' && (+contestId) < 100000) {
         return [type, ((+contestId) + 100000).toString(), problemId];
