@@ -125,8 +125,10 @@ export async function run({
                 udoc.email || `${udoc.username}@syzoj.local`, udoc.username, '',
                 null, udoc.ip, SystemModel.get('default.priv'),
             );
-            if (udoc.is_admin) await UserModel.setSuperAdmin(uid);
-            superAdmin.push(uid);
+            if (udoc.is_admin) {
+                await UserModel.setSuperAdmin(uid);
+                superAdmin.push(uid);
+            }
             uidMap[udoc.id] = uid;
             await UserModel.setById(uid, {
                 regat: new Date(udoc.register_time * 1000),
@@ -237,7 +239,7 @@ export async function run({
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
                     const [afdoc] = additionalFile;
-                    await ProblemModel.addAdditionalFile(domainId, pdoc.docId,
+                    await ProblemModel.addAdditionalFile(domainId, pidMap[pdoc.id],
                         `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }

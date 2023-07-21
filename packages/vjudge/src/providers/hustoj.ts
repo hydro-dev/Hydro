@@ -334,6 +334,7 @@ export class YBT extends HUSTOJ {
     }
 }
 
+// 已弃用。请直接从 https://hydro.ac/ybtbas.zip 下载题库文件并按照压缩包内说明导入系统。
 export class YBTBAS extends YBT {
     static langs = {
         ybtbas: {

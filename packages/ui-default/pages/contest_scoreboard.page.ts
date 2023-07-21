@@ -2,7 +2,7 @@ import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import { pjax } from 'vj/utils';
 
-const page = new NamedPage('contest_scoreboard', () => {
+const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => {
   const { tdoc } = UiContext;
   const key = `scoreboard-star/${tdoc.domainId}/${tdoc.docId}`;
   const read = () => JSON.parse(localStorage.getItem(key) || '[]');

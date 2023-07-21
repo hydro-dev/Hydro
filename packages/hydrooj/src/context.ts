@@ -4,6 +4,7 @@ import { GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import { EventMap } from './service/bus';
+import type { CheckService } from './service/check';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap {
 }
@@ -26,6 +27,7 @@ export interface Context {
     Route: typeof import('./service/server').Route;
     Connection: typeof import('./service/server').Connection;
     withHandlerClass: import('./service/server').RouteService['withHandlerClass'];
+    check: CheckService;
     setTimeout: typeof setTimeout;
     setInterval: typeof setInterval;
     setImmediate: typeof setImmediate;

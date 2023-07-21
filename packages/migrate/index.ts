@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import {
     Context, md5, Schema, sha1,
 } from 'hydrooj';
@@ -16,15 +17,16 @@ export function apply(ctx: Context) {
             domainId: Schema.string().required(),
             contestType: Schema.string().required(),
             dataDir: Schema.string().required(),
+            uploadDir: Schema.string().default('/home/judge/src/web/upload/'),
         }),
         (...args) => require('./scripts/hustoj').run(...args),
     );
     ctx.addScript(
         'migrateSyzoj', 'migrate from syzoj',
         Schema.object({
-            host: Schema.string().required(),
-            port: Schema.number().required(),
-            name: Schema.string().required(),
+            host: Schema.string().default('localhost'),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('syzoj'),
             username: Schema.string().required(),
             password: Schema.string().required(),
             domainId: Schema.string().default('system'),
@@ -42,6 +44,19 @@ export function apply(ctx: Context) {
             password: Schema.string().required(),
         }),
         (...args) => require('./scripts/vijos').run(...args),
+    );
+    ctx.addScript(
+        'migrateuniversaloj', 'migrate from universaloj',
+        Schema.object({
+            host: Schema.string().default('172.17.0.2'),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('app_uoj233'),
+            username: Schema.string().default('hydromigrate'),
+            password: Schema.string().required(),
+            domainId: Schema.string().default('system'),
+            dataDir: Schema.string().required(),
+        }),
+        (...args) => require('./scripts/universaloj').run(...args),
     );
 
     ctx.provideModule('hash', 'hust', ($password, $saved) => {
@@ -62,10 +77,12 @@ export function apply(ctx: Context) {
         return `${Buffer.from(uname).toString('base64')}|${mixedSha1}`;
     });
     ctx.provideModule('hash', 'syzoj', (password: string) => md5(`${password}syzoj2_xxx`));
+    ctx.provideModule('hash', 'uoj', (password, salt, { uname }) => md5(`${uname}${crypto.createHmac('md5', salt).update(password).digest('hex')}`));
 
     ctx.i18n.load('zh', {
         'migrate from hustoj': '从 HustOJ 导入',
         'migrate from vijos': '从 Vijos 导入',
         'migrate from syzoj': '从 SYZOJ 导入',
+        'migrate from universaloj': '从 UniversalOJ 导入',
     });
 }

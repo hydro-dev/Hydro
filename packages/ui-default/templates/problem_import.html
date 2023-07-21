@@ -5,11 +5,34 @@
     <div class="section">
       <div class="section__body">
         <form method="post" enctype="multipart/form-data">
-          <p>{{ _('Upload zipfile') }} {% if type %}({{ _('Type') }}: {{type}}){% endif %}:
-            <input type="file" name="file">
-            {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) and not type %}<input type="checkbox" name="keepUser">{% endif %}
-            <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
-          </p>
+          <div class="row">
+            <div class="medium-12 columns">
+              <p>{{ _('Upload zipfile') }} {% if type %}({{ _('Type') }}: {{type}}){% endif %}: <input type="file" name="file"></p>
+              <br />
+            </div>
+          </div>
+          <div class="row">
+            {{ form.form_text({
+              label:'preferredPrefix',
+              columns:6,
+              name:'preferredPrefix',
+              row:false,
+              help_text:_('The preferred problem ID prefix.'),
+              placeholder:_('Leave empty for default')
+            }) }}
+            {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) and not type %}
+              {{ form.form_checkbox ({
+                label:'Keep original user',
+                columns:6,
+                name:'keepUser',
+                placeholder:_('Keep original problem owner. Only used if this problemset is exported from current system.'),
+                row:false
+              }) }}
+            {% endif %}
+          </div>
+          <div class="row"><div class="columns">
+            <input type="submit" class="rounded primary button" value="{{ _('Upload') }}">
+          </div></div>
         </form>
       </div>
     </div>
@@ -19,6 +42,8 @@
       <div class="section__body typo">
         <h2>{{ _('What is this?') }}</h2>
         <p>{{ _('With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported.') }}</p>
+        <h2>{{ _('About preferredPrefix option') }}</h2>
+        <p>{{ _('preferredPrefix_hint') }}</p>
       </div>
     </div>
   </div>

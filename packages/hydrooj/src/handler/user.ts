@@ -222,6 +222,7 @@ class UserLogoutHandler extends Handler {
     async post() {
         this.session.uid = 0;
         this.session.sudo = null;
+        this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.response.redirect = '/';
     }
@@ -313,6 +314,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
         this.session.viewLang = '';
         this.session.uid = uid;
+        this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }

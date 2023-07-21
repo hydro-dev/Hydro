@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: judge-config-map
+  labels:
+    app: judge
+  namespace: hydro-namespace
+data:
+  judge.yaml: |-
+    {{.Values.Judge.JudgeYaml | nindent 4}}

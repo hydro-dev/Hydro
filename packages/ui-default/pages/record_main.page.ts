@@ -35,7 +35,8 @@ const page = new NamedPage('record_main', async () => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pid"]'), {
     clearDefaultValue: false,
   });
-  const availableLangs = getAvailableLangs(UiContext.domain.langs?.split(','));
+  const langs = UiContext.domain.langs?.split(',').map((i) => i.trim()).filter((i) => i);
+  const availableLangs = getAvailableLangs(langs?.length ? langs : undefined);
   Object.keys(availableLangs).map(
     (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${availableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');

@@ -48,6 +48,7 @@ export async function apply(ctx: Context) {
 
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/monitor'));
+    ctx.plugin(require('../service/check'));
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
@@ -96,7 +97,7 @@ export async function apply(ctx: Context) {
     for (const f of global.addons) {
         const dir = path.join(f, 'public');
         // eslint-disable-next-line no-await-in-loop
-        if (await fs.pathExists(dir)) await fs.copy(dir, '/root/.hydro/static');
+        if (await fs.pathExists(dir)) await fs.copy(dir, path.join(os.homedir(), '.hydro/static'));
     }
     await ctx.parallel('app/listen');
     logger.success('Server started');

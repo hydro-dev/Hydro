@@ -8,7 +8,7 @@ import {
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import {
-    FileInfo, JudgeMeta, ProblemConfigFile, RecordDoc,
+    JudgeMeta, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
@@ -68,41 +68,27 @@ export default class RecordModel {
         if (!rids.length) return null;
         const rdoc = await RecordModel.get(domainId, rids[0]);
         if (!rdoc) return null;
-        let data: FileInfo[] = [];
         let source = `${domainId}/${rdoc.pid}`;
-        meta = { ...meta, problemOwner: 1 };
         await task.deleteMany({ rid: { $in: rids } });
-        if (rdoc.pid) {
-            let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
+        let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
+        if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+        if (pdoc.reference) {
+            pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
             if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
-            if (pdoc.reference) {
-                pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
-                if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
-            }
-            meta.problemOwner = pdoc.owner;
             source = `${pdoc.domainId}/${pdoc.docId}`;
-            data = pdoc.data;
-            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-            config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
-            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
-                return await task.addMany(rids.map((rid) => ({
-                    ...(pdoc.config as any),
-                    priority,
-                    type: 'remotejudge',
-                    rid,
-                    domainId,
-                    config,
-                    data,
-                } as any)));
-            }
         }
+        meta = { ...meta, problemOwner: pdoc.owner };
+        if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+        const type = (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) ? 'remotejudge' : 'judge';
+        config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
         return await task.addMany(rids.map((rid) => ({
+            ...(pdoc.config as any),
             priority,
-            type: 'judge',
+            type,
             rid,
             domainId,
             config,
-            data,
+            data: pdoc.data,
             source,
             meta,
         } as any)));

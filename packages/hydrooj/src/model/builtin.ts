@@ -69,6 +69,7 @@ export const PERM = {
     PERM_ATTEND_CONTEST: 1n << 45n,
     PERM_EDIT_CONTEST: 1n << 50n,
     PERM_EDIT_CONTEST_SELF: 1n << 51n,
+    PERM_VIEW_HIDDEN_CONTEST: 1n << 68n,
 
     // Homework
     PERM_VIEW_HOMEWORK: 1n << 52n,
@@ -78,6 +79,7 @@ export const PERM = {
     PERM_ATTEND_HOMEWORK: 1n << 56n,
     PERM_EDIT_HOMEWORK: 1n << 57n,
     PERM_EDIT_HOMEWORK_SELF: 1n << 58n,
+    PERM_VIEW_HIDDEN_HOMEWORK: 1n << 69n,
 
     // Training
     PERM_VIEW_TRAINING: 1n << 46n,
@@ -150,6 +152,7 @@ export const PERMS = [
     Permission('perm_contest', PERM.PERM_ATTEND_CONTEST, 'Attend contests'),
     Permission('perm_contest', PERM.PERM_EDIT_CONTEST, 'Edit any contests'),
     Permission('perm_contest', PERM.PERM_EDIT_CONTEST_SELF, 'Edit own contests'),
+    Permission('perm_contest', PERM.PERM_VIEW_HIDDEN_CONTEST, 'View all contests'),
     Permission('perm_homework', PERM.PERM_VIEW_HOMEWORK, 'View homework'),
     Permission('perm_homework', PERM.PERM_VIEW_HOMEWORK_SCOREBOARD, 'View homework scoreboard'),
     Permission('perm_homework', PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD, 'View hidden homework submission status and scoreboard'),
@@ -157,6 +160,7 @@ export const PERMS = [
     Permission('perm_homework', PERM.PERM_ATTEND_HOMEWORK, 'Claim homework'),
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK, 'Edit any homework'),
     Permission('perm_homework', PERM.PERM_EDIT_HOMEWORK_SELF, 'Edit own homework'),
+    Permission('perm_homework', PERM.PERM_VIEW_HIDDEN_HOMEWORK, 'View all homework'),
     Permission('perm_training', PERM.PERM_VIEW_TRAINING, 'View training plans'),
     Permission('perm_training', PERM.PERM_CREATE_TRAINING, 'Create training plans'),
     Permission('perm_training', PERM.PERM_EDIT_TRAINING, 'Edit training plans'),

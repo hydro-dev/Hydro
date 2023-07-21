@@ -13,7 +13,7 @@ const logger = new Logger('remote/codeforces');
 
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
-        ? ['', '921', '01']
+        ? ['', 'P', '921', '01']
         : /^(P|GYM)(\d+)([A-Z]+[0-9]*)$/.exec(id);
     if (type === 'GYM' && (+contestId) < 100000) {
         return [type, ((+contestId) + 100000).toString(), problemId];
@@ -302,7 +302,8 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
         this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        return document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        return type !== 'GYM' ? submission : `${contestId}#${submission}`;
     }
 
     async waitForSubmission(id: string, next, end) {
@@ -310,10 +311,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
-            const { body } = await this.post('/data/submitSource').send({
-                csrf_token: this.csrf,
-                submissionId: id,
-            });
+            const contestId = id.includes('#') ? id.split('#')[0] : null;
+            const { body } = await this.post('/data/submitSource')
+                .set('referer', contestId ? `https://codeforces.com/gym/${contestId}/my` : 'https://codeforces.com/problemset/status?my=on')
+                .send({
+                    csrf_token: this.csrf,
+                    submissionId: contestId ? id.split('#')[1] : id,
+                });
             if (body.compilationError === 'true') {
                 return await end({
                     compilerText: body['checkerStdoutAndStderr#1'],

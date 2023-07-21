@@ -108,7 +108,7 @@
           {{ action(_('Delete'), 'delete', 'comment', {operation: comment_delete_op, drid: doc._id}, 'delete') }}
         {% endif %}
         {% if (handler.user.hasPerm(perm.PERM_ADD_REACTION)) %}
-          {{ action('', 'react', 'comment', {operation: 'reaction', type:'drid', id: doc._id}, 'emoji') }}
+          {{ action('', 'react', 'comment', {operation: 'reaction', nodeType: 'drid', id: doc._id}, 'emoji') }}
         {% endif %}
         </div>
       </div>
@@ -134,7 +134,7 @@
                 <div class="supplementary dczcomments__supplementary">
                   {{ user.render_inline(udoc, avatar=false) }}
                   @ {{ datetimeSpan(rdoc._id)|safe }}
-                  {% if doc.edited %} 
+                  {% if rdoc.edited %} 
                     <div class="history" data-discussion-history data-raw-url="{{ url('discussion_tail_reply_raw', did=doc.parentId, drid=doc._id, drrid=rdoc._id) }}"><a>{{ _('Edited') }}</a></div>
                   {% endif %}
                 </div>

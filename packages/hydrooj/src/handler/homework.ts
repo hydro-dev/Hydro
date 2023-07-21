@@ -21,11 +21,28 @@ const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
 
 class HomeworkMainHandler extends Handler {
+    @param('group', Types.Name, true)
     @param('page', Types.PositiveInt, true)
-    @param('all', Types.Boolean)
-    async get(domainId: string, page = 1, all = false) {
-        if (all && !this.user.hasPerm(PERM.PERM_MOD_BADGE)) all = false;
-        const cursor = contest.getMulti(domainId, { rule: 'homework', ...all ? { assign: { $in: [...this.user.group, null] } } : {} });
+    async get(domainId: string, group = '', page = 1) {
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
+            .map((i) => i.name);
+        if (group && !groups.includes(group)) throw new NotAssignedError(group);
+        const cursor = contest.getMulti(domainId, {
+            rule: 'homework',
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) && !group
+                ? {}
+                : {
+                    $or: [
+                        { maintainer: this.user._id },
+                        { owner: this.user._id },
+                        { assign: { $in: groups } },
+                        { assign: { $size: 0 } },
+                    ],
+                },
+            ...group ? { assign: { $in: [group] } } : {},
+        }).sort({
+            penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
+        });
         const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
         const calendar = [];
         for (const tdoc of tdocs) {
@@ -36,8 +53,10 @@ class HomeworkMainHandler extends Handler {
             } else cal.endAt = tdoc.penaltySince;
             calendar.push(cal);
         }
+        const qs = group ? `group=${group}` : '';
+        const groupsFilter = groups.filter((i) => !Number.isSafeInteger(+i));
         this.response.body = {
-            tdocs, calendar, tpcount, page,
+            tdocs, calendar, tpcount, page, qs, groups: groupsFilter, group,
         };
         this.response.template = 'homework_main.html';
     }
@@ -48,7 +67,7 @@ class HomeworkDetailHandler extends Handler {
     async prepare(domainId: string, tid: ObjectId) {
         const tdoc = await contest.get(domainId, tid);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        if (tdoc.assign?.length && !this.user.own(tdoc)) {
+        if (tdoc.assign?.length && !this.user.own(tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
             if (!Set.intersection(tdoc.assign, this.user.group).size) {
                 throw new NotAssignedError('homework', tdoc.docId);
             }

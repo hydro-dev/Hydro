@@ -120,6 +120,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
                         (ctx.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
                     ),
                 },
+                ctx.next,
             ).then(markCleanup),
         ]);
     },

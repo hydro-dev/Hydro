@@ -76,6 +76,7 @@ Hydro 支持导入常见格式的题库文件，包括 Hydro 通用的 zip 格�
 Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他平台的题目，修改题面后编入自己的作业或比赛，快速搭建自己的题库体系。  
 当前支持的平台有：  
 
+- [一本通编程启蒙](https://hydro.ac/ybtbas.zip)：官方提供一本通编程启蒙题库，免费使用，参照压缩包内导入说明。
 - [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
 - [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
@@ -103,6 +104,61 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.9.21 / UI 4.48.21
+- core: 修复 strictioi 比赛计分
+- ui: 修复已参加训练列表显示
+- core: 在比赛开始前禁用计分板
+- ui: 在添加用户到域的时候隐藏 default 和 guest 选项
+- core: 允许管理员筛选所有小组
+- ui: 修复语言过滤（#598）
+- ui: 修复讨论 reaction
+
+### Hydro 4.9.20 / UI 4.48.20
+- vjudge: 修复 Codeforces 提交结果获取
+- core: 优化系统自检功能
+- vjudge: 支持 detail 设置（#582）
+- ui: 禁用视频自动播放
+- install: 支持安装时自动从 UOJ 导入数据
+- ui: 修复 preferredPrefix 功能异常的问题
+
+### Hydro 4.9.19 / UI 4.48.19
+- core: 修复比赛代码导出功能无法处理选手提交的二进制文件的问题
+- core: 修复比赛管理显示用户参与排名状态
+- core&ui: 支持按小组筛选比赛/作业
+- core: 显示 spj 编译超时等详情信息
+- core&ui: 导入题目：支持重新整理题号
+- core: loader: 添加 git 集成
+- install: 添加 k3s 安装样例
+- core: 默认仅使用小写文件名
+- ui: 在比赛中忽略记住的客观题答案
+- core: 移除 langs.domain 选项
+- core: 修复修改邮箱后旧邮箱仍被占用的问题
+- ui: 部分样式修复
+
+### Hydro 4.9.18 / UI 4.48.18
+- ui: 客观题：支持记住上次选择的答案并添加快速跳题
+- core: 使用 $HOME/.hydro 存储临时文件
+- core: import: 导入时检查 pid 是否合法
+- ui: 添加 validAs 相关语言自测支持
+- ui: 修复灵活时间模式下比赛进度条显示
+- core: 优化导入用户识别
+- ui: 记住编辑器字体大小
+- core: 支持按标签搜索题目
+
+### Hydro 4.9.17 / UI 4.48.17
+- core&ui: 比赛成绩表和训练支持基于组过滤
+- judge: 添加并行优先级处理
+- core: 为域设置操作添加操作日志
+- core: storage: 保存文件时避开 -_ 等字符
+- core: 修复评测记录列表页过滤 Waiting 提交不生效的问题
+- ui: 修复 Typescript Language Service 工作异常的问题
+- ui: 添加域快速导航开关
+- core: 添加 PERM_VIEW_HIDDEN_CONTEST 与 PERM_VIEW_HIDDEN_HOMEWORK 权限
+- ui: 翻译优化
+- core: langs: 添加 validAs 选项
+- migrate: 添加 UOJ 支持
+- core&ui: 其他漏洞修复和优化
 
 ### Hydro 4.9.15 / UI 4.48.15
 - ui: 客观题：允许多行答案

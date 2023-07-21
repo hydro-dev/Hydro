@@ -28,6 +28,7 @@ export default async function compile(
             },
             3,
         );
+        // TODO: distinguish user program and checker
         if (status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) next?.({ message: 'Compile timeout.' });
         if (status === STATUS.STATUS_MEMORY_LIMIT_EXCEEDED) next?.({ message: 'Compile memory limit exceeded.' });
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
@@ -50,7 +51,7 @@ const testlibFile = {
     src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
 };
 
-async function _compile(src: string, type: 'checker' | 'validator' | 'interactor', getLang, copyIn, withTestlib = true) {
+async function _compile(src: string, type: 'checker' | 'validator' | 'interactor', getLang, copyIn, withTestlib = true, next?: any) {
     const s = src.replace('@', '.').split('.');
     let lang;
     let langId = s.pop();
@@ -62,15 +63,15 @@ async function _compile(src: string, type: 'checker' | 'validator' | 'interactor
     if (!lang) throw new FormatError(`Unknown ${type} language.`);
     if (withTestlib) copyIn = { ...copyIn, 'testlib.h': testlibFile };
     // TODO cache compiled binary
-    return await compile(lang, { src }, copyIn);
+    return await compile(lang, { src }, copyIn, next);
 }
 
-export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: CopyIn) {
+export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: CopyIn, next?: any) {
     if (['default', 'strict'].includes(checkerType)) {
         return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
     }
     if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
-    return _compile(checker, 'checker', getLang, copyIn, checkerType === 'testlib');
+    return _compile(checker, 'checker', getLang, copyIn, checkerType === 'testlib', next);
 }
 
 export async function compileInteractor(getLang: Function, interactor: string, copyIn: CopyIn) {

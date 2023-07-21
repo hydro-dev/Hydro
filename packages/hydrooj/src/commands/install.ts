@@ -45,7 +45,7 @@ export function register(cli: CAC) {
             const url = new URL(src);
             const filename = url.pathname.split('/').pop()!;
             if (['.tar.gz', '.tgz', '.zip'].find((i) => filename.endsWith(i))) {
-                const name = filename.replace(/(-?\d+\.\d+\.\d+)?(\.tar\.gz|\.zip|\.tgz)$/g, '');
+                const name = filename.replace(/(-?(\d+\.\d+\.\d+|latest))?(\.tar\.gz|\.zip|\.tgz)$/g, '');
                 newAddonPath = path.join(addonDir, name);
                 logger.info(`Downloading ${src} to ${newAddonPath}`);
                 fs.ensureDirSync(newAddonPath);

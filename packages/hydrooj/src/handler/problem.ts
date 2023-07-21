@@ -114,8 +114,8 @@ function buildQuery(udoc: User) {
 
 const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
     const escaped = escapeRegExp(q.toLowerCase());
-    const $regex = new RegExp(q.length >= 3 ? escaped : `\\A${escaped}`, 'gmi');
-    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
+    const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
+    const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
     const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
     if (!Number.isNaN(+q)) {
@@ -340,7 +340,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             let baseLangs;
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
-                const dl = [p, ...Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`))];
+                const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);
+                if (setting.langs[p]) dl.push(p);
                 baseLangs = dl;
             } else {
                 baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
@@ -371,6 +372,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         };
         if (this.tdoc && this.tsdoc) {
             const fields = ['attend', 'startAt'];
+            if (this.tdoc.duration) fields.push('endAt');
             if (contest.canShowSelfRecord.call(this, this.tdoc, true)) fields.push('detail');
             this.response.body.tsdoc = pick(this.tsdoc, fields);
         }
@@ -477,6 +479,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     async prepare(domainId: string, tid?: ObjectId) {
         if (tid && !contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(this.tdoc.docId);
         if (typeof this.pdoc.config === 'string') throw new ProblemConfigError();
+        if (this.pdoc.config.langs && !this.pdoc.config.langs.length) throw new ProblemConfigError();
     }
 
     async get() {
@@ -512,7 +515,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         if (pretest) {
             if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-            if (setting.langs[lang]?.pretest === false) throw new ProblemNotAllowPretestError('language');
             if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new ProblemNotAllowPretestError('type');
             }
@@ -823,7 +825,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async get(domainId: string, page = 1, tid?: ObjectId, sid?: ObjectId) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         this.response.template = 'problem_solution.html';
-        const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
+        const accepted = this.psdoc?.status === STATUS.STATUS_ACCEPTED;
         if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
@@ -934,7 +936,7 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     @param('tid', Types.ObjectId, true)
     async get(domainId: string, psid: ObjectId, psrid?: ObjectId, tid?: ObjectId) {
         if (tid) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_SOLUTION);
-        const accepted = this.tsdoc?.status === STATUS.STATUS_ACCEPTED;
+        const accepted = this.psdoc?.status === STATUS.STATUS_ACCEPTED;
         if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
@@ -971,7 +973,7 @@ export class ProblemCreateHandler extends Handler {
     ) {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];
         for (const file of files) {
@@ -984,7 +986,6 @@ export class ProblemCreateHandler extends Handler {
             }
         }
         await Promise.all(tasks);
-        if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }
