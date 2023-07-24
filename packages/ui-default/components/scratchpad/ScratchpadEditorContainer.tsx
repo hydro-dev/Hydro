@@ -8,11 +8,13 @@ interface ScratchpadOptions {
   value?: string;
   language?: string;
   handleUpdateCode?: (str: string, event: monaco.editor.IModelContentChangedEvent) => void;
+  settings?: any;
 }
 
 export default connect((state: any) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
+  settings: state.ui.settings.config,
 }), (dispatch) => ({
   handleUpdateCode: (code: string) => {
     dispatch({
@@ -36,8 +38,8 @@ export default connect((state: any) => ({
     if (this.containerElement) {
       const config: monaco.editor.IStandaloneEditorConstructionOptions = {
         theme: 'vs-light',
-        ...customOptions,
         fontFamily: UserContext.codeFontFamily,
+        ...customOptions,
         lineNumbers: 'on',
         glyphMargin: true,
         lightbulb: { enabled: true },
@@ -87,6 +89,9 @@ export default connect((state: any) => ({
       const uri = monaco.Uri.parse(`hydro:${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
       this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(val, language, uri);
       editor.setModel(this.model);
+    }
+    if (editor && this.props.settings) {
+      editor.updateOptions(this.props.settings);
     }
   }
 

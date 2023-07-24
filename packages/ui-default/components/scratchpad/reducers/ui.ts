@@ -11,6 +11,10 @@ export default function reducer(state = {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
     isLoading: false,
   },
+  settings: {
+    visible: false,
+    config: JSON.parse(localStorage.getItem('editor.config') || '{}'),
+  },
   isPosting: false,
   pretestWaitSec: 0,
   submitWaitSec: 0,
@@ -37,6 +41,21 @@ export default function reducer(state = {
         [uiElement]: {
           ...state[uiElement],
           visible: !state[uiElement].visible,
+        },
+      };
+    }
+    case 'SCRATCHPAD_SETTING_UPDATE': {
+      const { setting, value } = action.payload;
+      const config = {
+        ...state.settings.config,
+        [setting]: value,
+      };
+      localStorage.setItem('editor.config', JSON.stringify(config));
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          config,
         },
       };
     }
