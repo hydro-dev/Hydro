@@ -20,6 +20,7 @@ export default function reducer(state = {
   submitWaitSec: 0,
   lastTick: 0,
   activePage: 'problem',
+  pendingCommand: '',
 }, action: any = {}) {
   switch (action.type) {
     case 'SCRATCHPAD_UI_SET_VISIBILITY': {
@@ -57,6 +58,12 @@ export default function reducer(state = {
           ...state.settings,
           config,
         },
+      };
+    }
+    case 'SCRATCHPAD_TRIGGER_EDITOR_COMMAND': {
+      return {
+        ...state,
+        pendingCommand: action.payload.command,
       };
     }
     case 'SCRATCHPAD_POST_PRETEST_PENDING':

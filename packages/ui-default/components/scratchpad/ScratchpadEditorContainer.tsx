@@ -9,17 +9,26 @@ interface ScratchpadOptions {
   language?: string;
   handleUpdateCode?: (str: string, event: monaco.editor.IModelContentChangedEvent) => void;
   settings?: any;
+  pendingCommand?: string;
+  commandDone?: () => void;
 }
 
 export default connect((state: any) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
   settings: state.ui.settings.config,
+  pendingCommand: state.ui.pendingCommand,
 }), (dispatch) => ({
   handleUpdateCode: (code: string) => {
     dispatch({
       type: 'SCRATCHPAD_EDITOR_UPDATE_CODE',
       payload: code,
+    });
+  },
+  commandDone: () => {
+    dispatch({
+      type: 'SCRATCHPAD_TRIGGER_EDITOR_COMMAND',
+      payload: { command: '' },
     });
   },
 }))(class MonacoEditor extends React.PureComponent<ScratchpadOptions> {
@@ -92,6 +101,11 @@ export default connect((state: any) => ({
     }
     if (editor && this.props.settings) {
       editor.updateOptions(this.props.settings);
+    }
+    if (this.props.pendingCommand) {
+      editor.focus();
+      editor.getAction(this.props.pendingCommand)?.run();
+      this.props.commandDone();
     }
   }
 
