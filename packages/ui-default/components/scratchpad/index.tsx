@@ -1,4 +1,5 @@
 import ProblemIcon from '@vscode/codicons/src/icons/file.svg?react';
+import SettingsIcon from '@vscode/codicons/src/icons/settings-gear.svg?react';
 import { Allotment } from 'allotment';
 import $ from 'jquery';
 import _ from 'lodash';
@@ -10,12 +11,17 @@ import { Context, ctx, Service } from 'vj/context';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
+import ScratchpadSettings from './ScratchpadSettings';
 import ScratchpadToolbar from './ScratchpadToolbarContainer';
 
 const pages = {
   problem: {
     icon: () => <ProblemIcon />,
     component: () => <Dom childDom={$('.problem-content').get(0)} />,
+  },
+  settings: {
+    icon: () => <SettingsIcon />,
+    component: () => <ScratchpadSettings />,
   },
 };
 
