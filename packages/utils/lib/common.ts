@@ -250,6 +250,16 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: 'min',
     },
     {
+        regex: /^([0-9]+)([^\d]*)([0-9]+)\.in$/,
+        output: [
+            (a) => `${a[1]}${a[2]}${a[3]}.out`,
+            (a) => `${a[1]}${a[2]}${a[3]}.ans`,
+        ],
+        id: (a) => +a[3],
+        subtask: (a) => +a[1],
+        preferredScorerType: 'min',
+    },
+    {
         regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+)\.(in|txt)$/,
         output: [
             (a) => `${a[1] + a[2]}.out`,
@@ -278,6 +288,16 @@ const SubtaskMatcher: MatchRule[] = [
             (a) => `${a[1]}.ans`,
         ],
         id: (a) => +a[2],
+        subtask: () => 1,
+        preferredScorerType: 'sum',
+    },
+    {
+        regex: /^((?:.*)[-_]([0-9]+))\.in$/,
+        output: [
+            (a) => `${a[1]}.out`,
+            (a) => `${a[1]}.ans`,
+        ],
+        id: (a) => +a[3],
         subtask: () => 1,
         preferredScorerType: 'sum',
     },
