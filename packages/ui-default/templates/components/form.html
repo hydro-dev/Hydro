@@ -172,6 +172,7 @@
 
 {% macro textarea(args) %}
 {% set markdown = args.markdown or false %}
+{% set nospellcheck = args.nospellcheck or false %}
 <div
   name="form_item_{{ args.name }}"
   {{ container_attr('textarea-container', args) }}
@@ -180,6 +181,7 @@
     name="{{ args.name }}"
     placeholder="{{ args.placeholder }}"
     {% if markdown %}data-markdown{% endif %}
+    {% if nospellcheck %}spellcheck="false"{% endif %}
     {{ form_attr('textbox', args) }}
   >{{ args.value }}</textarea>
 </div>

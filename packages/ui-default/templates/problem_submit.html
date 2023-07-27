@@ -18,7 +18,7 @@
               }) }}
           </div>
           <div class="row nojs--hide" id="codelang-selector"></div>
-          {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true}) }}
+          {{ form.form_textarea({label:'Code', columns:12, name:'code', extra_class:'monospace', autofocus:true, nospellcheck:true}) }}
           <div class="row">
             <div class="medium-12 columns">
               <p>{{ _('Or upload a file:') }} <input type="file" name="file"></p>
