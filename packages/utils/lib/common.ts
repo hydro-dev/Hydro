@@ -235,41 +235,21 @@ interface MatchRule {
     output: ((a: RegExpExecArray) => string)[];
     id: (a: RegExpExecArray) => number;
     subtask: (a: RegExpExecArray) => number;
-    preferredScorerType: 'min' | 'max' | 'sum';
+    preferredScorerType: (a: RegExpExecArray) => 'min' | 'max' | 'sum';
 }
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.in$/,
+        regex: /^(([A-Za-z0-9]*?)(?:(\d*)[-_])?(\d+))\.in$/,
         output: [
-            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.out`,
-            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.ans`,
+            (a) => `${a[1]}.out`,
+            (a) => `${a[1]}.ans`,
+            (a) => `${a[1]}.out`.replace(/input/g, 'output'),
+            (a) => (a[1].includes('input') ? `${a[1]}.txt`.replace(/input/g, 'output') : null),
         ],
         id: (a) => +a[4],
-        subtask: (a) => +a[2],
-        preferredScorerType: 'min',
-    },
-    {
-        regex: /^([0-9]+)([^\d]*)([0-9]+)\.in$/,
-        output: [
-            (a) => `${a[1]}${a[2]}${a[3]}.out`,
-            (a) => `${a[1]}${a[2]}${a[3]}.ans`,
-        ],
-        id: (a) => +a[3],
-        subtask: (a) => +a[1],
-        preferredScorerType: 'min',
-    },
-    {
-        regex: /^([^\d]*(?:\d+[a-zA-Z]+)*)(\d+)\.(in|txt)$/,
-        output: [
-            (a) => `${a[1] + a[2]}.out`,
-            (a) => `${a[1] + a[2]}.ans`,
-            (a) => `${a[1] + a[2]}.out`.replace(/input/g, 'output'),
-            (a) => (a[1].includes('input') ? `${a[1] + a[2]}.txt`.replace(/input/g, 'output') : null),
-        ],
-        id: (a) => +a[2],
-        subtask: () => 1,
-        preferredScorerType: 'sum',
+        subtask: (a) => +(a[3] || 1),
+        preferredScorerType: (a) => (a[3] ? 'min' : 'sum'),
     },
     {
         regex: /^([^\d]*)\.in(\d+)$/,
@@ -279,7 +259,17 @@ const SubtaskMatcher: MatchRule[] = [
         ],
         id: (a) => +a[2],
         subtask: () => 1,
-        preferredScorerType: 'sum',
+        preferredScorerType: () => 'sum',
+    },
+    {
+        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.in$/,
+        output: [
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.out`,
+            (a) => `${a[1]}${a[2]}${a[3]}${a[4]}.ans`,
+        ],
+        id: (a) => +a[4],
+        subtask: (a) => +a[2],
+        preferredScorerType: () => 'min',
     },
     {
         regex: /^(([0-9]+)[-_](?:.*))\.in$/,
@@ -289,17 +279,7 @@ const SubtaskMatcher: MatchRule[] = [
         ],
         id: (a) => +a[2],
         subtask: () => 1,
-        preferredScorerType: 'sum',
-    },
-    {
-        regex: /^((?:.*)[-_]([0-9]+))\.in$/,
-        output: [
-            (a) => `${a[1]}.out`,
-            (a) => `${a[1]}.ans`,
-        ],
-        id: (a) => +a[3],
-        subtask: () => 1,
-        preferredScorerType: 'sum',
+        preferredScorerType: () => 'sum',
     },
 ];
 
@@ -339,6 +319,7 @@ export function readSubtasksFromFiles(files: string[], config) {
             if (!data) continue;
             const sid = rule.subtask(data);
             const c = { input: file, output: '', id: rule.id(data) };
+            const type = rule.preferredScorerType(data);
             for (const func of rule.output) {
                 if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
@@ -347,7 +328,7 @@ export function readSubtasksFromFiles(files: string[], config) {
                         subtask[sid] = {
                             time: config.time,
                             memory: config.memory,
-                            type: rule.preferredScorerType,
+                            type,
                             cases: [c],
                         };
                     } else if (!subtask[sid].cases) subtask[sid].cases = [c];
