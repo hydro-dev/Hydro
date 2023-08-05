@@ -23,7 +23,7 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
         if (m?.[1]) {
           const id = +m[1];
           if (Number.isSafeInteger(id)) {
-            const $output = ($typo || $container).find(`pre.language-output${id}`);
+            const $output = ($typo.length ? $typo : $container).find(`pre.language-output${id}`);
             if ($output.length) {
               const $c = $(document.createElement('div')).addClass('row');
               $root.after($c);
