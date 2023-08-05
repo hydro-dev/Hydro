@@ -722,15 +722,17 @@ async function _updateStatus(
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (status === STATUS.STATUS_ACCEPTED && tdoc.balloon && !isLocked(tdoc, rid.getTimestamp())) await addBalloon(tdoc.domainId, tdoc._id, pid, uid);
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
 export async function updateStatus(
     domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
+    updated: boolean,
 ) {
     const tdoc = await get(domainId, tid);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    if (status === STATUS.STATUS_ACCEPTED && updated && tdoc.balloon) addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
@@ -755,14 +757,14 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
-export async function addBalloon(domainId: string, tid: ObjectId, pid: number, uid: number) {
+export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
     const balloon = await collBalloon.findOne({
         domainId, tid, pid, uid,
     });
     if (balloon) return null;
     const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
     const bdoc = {
-        _id: new ObjectId(), domainId, tid, pid, uid, ...(!bdcount ? { first: true } : {}),
+        _id: new ObjectId(), domainId, tid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
     };
     bus.broadcast('contest/balloon', domainId, tid, bdoc);
     return await collBalloon.insertOne(bdoc);
