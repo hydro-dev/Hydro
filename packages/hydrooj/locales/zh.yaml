@@ -679,6 +679,7 @@ Scoreboard: 成绩表
 Scripts: 脚本
 Search: 搜索
 SearchProblem: 搜索题目
+ClearSelection: 清空筛选条件
 SearchHint: 请输入题目ID/题目名称关键字
 ProblemType: 题型
 ProblemDifficulty: 难度

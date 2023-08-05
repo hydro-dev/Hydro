@@ -1,5 +1,5 @@
 <form method="get" id="searchForm" action="{{ url('problem_main') }}">
-  <div class="search-panel">
+  <div class="search-panel" data-widget-search-panel>
     <div class="search-panel--header">
       <div class="title">{{ _('SearchProblem') }}:</div>
       <div class="search">
@@ -20,9 +20,9 @@
         <h2 class="title text-align-vertical">
           {{ _('ProblemType') }}:
         </h2>
-        <div class="list">
+        <div class="list" data-problem-type-container>
           {%- for problemType in (model.system.get('problem.descriptors')|parseYaml)["题目类型"] -%}
-          <div class="list__item selected text-align-vertical">
+          <div class="list__item text-align-vertical" data-problem-type="{{problemType}}">
             {{ problemType }}
           </div>
           {%- endfor -%}          
@@ -32,9 +32,9 @@
         <h2 class="title text-align-vertical">
           {{ _('ProblemDifficulty') }}:
         </h2>
-        <div class="list">
+        <div class="list" data-problem-difficulty-container>
           {%- for problemDifficulty in (model.system.get('problem.descriptors')|parseYaml)["难度"] -%}
-          <div class="list__item selected text-align-vertical">
+          <div class="list__item text-align-vertical" data-problem-difficulty="{{problemDifficulty}}">
             {{ problemDifficulty }}
           </div>
           {%- endfor -%}          
@@ -50,6 +50,7 @@
           </div>        
         </div>       
       </section>
+      {% include "partials/problem_stat.html" %}
     </div>
   </div>
 </form>

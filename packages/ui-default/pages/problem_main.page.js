@@ -15,6 +15,11 @@ const categories = {};
 const dirtyCategories = [];
 const selections = [];
 const list = [];
+const selectedDescriptors = {
+  type: new Set(),
+  difficulty: new Set(),
+  tags: new Set(),
+};
 
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
@@ -239,12 +244,60 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
+function selectDescriptor(name, ele) {
+  const value = $(ele).attr(`data-problem-${name}`);
+  if (!value) return;
+  selectedDescriptors[name].add(value);
+  $(ele).addClass('selected');
+  $(ele).append('<span class="icon icon-check"></span>');
+}
+
+function handleDescriptorSelect(name, ev) {
+  const value = $(ev.currentTarget).attr(`data-problem-${name}`);
+  if (!value) return;
+  if (selectedDescriptors[name].has(value)) {
+    selectedDescriptors[name].delete(value);
+    $(ev.currentTarget).removeClass('selected');
+    $(ev.currentTarget).find('.icon-check').remove();
+  } else {
+    selectedDescriptors[name].add(value);
+    $(ev.currentTarget).addClass('selected');
+    $(ev.currentTarget).append('<span class="icon icon-check"></span>');
+  }
+}
+
+function buildDescriptorFilter() {
+  const $problemTypeContainer = $('[data-problem-type-container]');
+  if (!$problemTypeContainer) return;
+  selectDescriptor('type', $problemTypeContainer.children().first());
+  $problemTypeContainer.on('click', '[data-problem-type]', (ev) => handleDescriptorSelect('type', ev));
+  const $problemDifficultyContainer = $('[data-problem-difficulty-container]');
+  if (!$problemDifficultyContainer) return;
+  selectDescriptor('difficulty', $problemDifficultyContainer.children().first());
+  $problemDifficultyContainer.on('click', '[data-problem-difficulty]', (ev) => handleDescriptorSelect('difficulty', ev));
+
+  const $problemStatContainer = $('[data-fragment-id="problem_stat"]');
+  if (!$problemStatContainer) return;
+  $problemStatContainer.children('.link').on('click', (ev) => {
+    $problemTypeContainer.children().removeClass('selected');
+    $problemTypeContainer.children().find('.icon-check').remove();
+    $problemDifficultyContainer.children().removeClass('selected');
+    $problemDifficultyContainer.children().find('.icon-check').remove();
+    selectedDescriptors.type.clear();
+    selectedDescriptors.difficulty.clear();
+    selectedDescriptors.tags.clear();
+    selectDescriptor('type', $problemTypeContainer.children().first());
+    selectDescriptor('difficulty', $problemDifficultyContainer.children().first());
+  });
+}
+
 const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   parseCategorySelection();
+  buildDescriptorFilter();
   $(document).on('click', '[name="leave-edit-mode"]', () => {
     $body.removeClass('edit-mode').addClass('display-mode');
   });
