@@ -132,6 +132,7 @@
 
 .search-panel
   margin: 16px
+  margin-bottom: -10px
 
 .search-panel--header
   display: flex
@@ -191,7 +192,36 @@
 .search-panel--body
   padding: 24px 20px
 
+.search-panel--body > section
+  display: flex
+  margin-bottom: 40px
+
+.search-panel--body .text-align-vertical
+  display: flex
+  align-items: center
+
 .search-panel--body .title
   font-size: 16px
   font-weight: bold
-  margin-bottom: 12px
+  margin-right: 48px
+  height: 30px
+
+.search-panel--body .list
+  display: flex
+  flex-flow: row wrap
+  max-width: calc(100% - 100px)
+
+.search-panel--body .list__item
+  font-size: 14px
+  padding: 7px 20px
+  cursor: pointer
+
+.search-panel--body .list > .selected
+  background: #458ae7
+  color: #ffffff
+  padding: 6px 18px
+  margin: 2px 2px
+
+.search-panel--body .list > .dialog-button
+  border: 1px solid #458ae7
+  color: #458ae7

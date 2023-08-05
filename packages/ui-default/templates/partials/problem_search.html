@@ -17,19 +17,38 @@
     </div>
     <div class="search-panel--body">
       <section>
-        <div class="title">
+        <h2 class="title text-align-vertical">
           {{ _('ProblemType') }}:
+        </h2>
+        <div class="list">
+          {%- for problemType in (model.system.get('problem.descriptors')|parseYaml)["题目类型"] -%}
+          <div class="list__item selected text-align-vertical">
+            {{ problemType }}
+          </div>
+          {%- endfor -%}          
         </div>
       </section>
       <section>
-        <div class="title">
+        <h2 class="title text-align-vertical">
           {{ _('ProblemDifficulty') }}:
-        </div>        
+        </h2>
+        <div class="list">
+          {%- for problemDifficulty in (model.system.get('problem.descriptors')|parseYaml)["难度"] -%}
+          <div class="list__item selected text-align-vertical">
+            {{ problemDifficulty }}
+          </div>
+          {%- endfor -%}          
+        </div>                
       </section>        
       <section>
-        <div class="title">
+        <h2 class="title text-align-vertical">
           {{ _('ProblemTag') }}:
-        </div>                
+        </h2>         
+        <div class="list">
+          <div class="list__item text-align-vertical dialog-button">
+            {{ _('SelectTags') }}
+          </div>        
+        </div>       
       </section>
     </div>
   </div>
