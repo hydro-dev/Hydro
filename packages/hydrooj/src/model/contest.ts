@@ -728,7 +728,7 @@ async function _updateStatus(
 export async function updateStatus(
     domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
-    updated: boolean,
+    updated: boolean = false,
 ) {
     const tdoc = await get(domainId, tid);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
