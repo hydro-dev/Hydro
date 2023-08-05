@@ -126,32 +126,72 @@
 .data-table > thead > tr
   height: 54.9px
 
-.search
-  width: 100%
+.search-container
+  padding: 0.05rem 0 0 0 
+  background: #f6f5fa
+
+.search-panel
+  margin: 16px
+
+.search-panel--header
+  display: flex
+  justify-content: space-between
+  align-items: center
+  background: #ffffff
+  padding: 6px 20px
+
+.search-panel--header > .title
+  font-size: 18px
+  font-weight: bold
+  color: #3774c9
+
+.search-panel--header > .search
+  width: calc(100% - 90px)
   position: relative
   display: flex
+  align-items: center
 
-.search > input
+.search > .search--bar
   width: 100%
-  border: 1px solid #cccccc
-  border-right: none
-  padding: 5px
+  background: #eeeff3
+  display: flex
+
+.search--bar > input
+  width: 100%
+  background: #eeeff3
+  border: none
+  padding: 5px 0
   height: 36px
   outline: none
   color: #000000
 
+.search--bar > input::placeholder
+  color: #b0b0b0
+
+.search--bar > div
+  display: flex
+  align-items: center
+  padding: 0 12px
+
+.search--bar > div > span
+  font-size: rem(20px)
+  color: #b0b0b0
+
 .search > button
-  width: 40px
+  width: 100px
   height: 36px
-  border: 1px solid #00B4CC
-  background: #00B4CC
+  border: 1px solid #458ae7
+  background: #458ae7
   text-align: center
   color: #fff
   cursor: pointer
-  font-size: 20px
+  font-size: rem(16px)
+  font-weight: bold
 
-.search > div
-  position: absolute
-  right: 50px
-  top: 8px
-  font-size: rem(17px)
+.search-panel--body
+  padding: 24px 20px
+
+.search-panel--body .title
+  font-size: 16px
+  font-weight: bold
+  margin-bottom: 12px

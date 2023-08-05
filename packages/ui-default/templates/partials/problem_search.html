@@ -1,0 +1,36 @@
+<form method="get" id="searchForm" action="{{ url('problem_main') }}">
+  <div class="search-panel">
+    <div class="search-panel--header">
+      <div class="title">{{ _('SearchProblem') }}:</div>
+      <div class="search">
+        <div class="search--bar">
+          <div>
+            <span class="icon icon-search"></span>
+          </div>          
+          <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('SearchHint') }}">
+          {# {% include "partials/problem_stat.html" %} #}
+        </div>
+        <button type="submit">
+          <span>{{ _('Search') }}</span>
+        </button>
+      </div>
+    </div>
+    <div class="search-panel--body">
+      <section>
+        <div class="title">
+          {{ _('ProblemType') }}:
+        </div>
+      </section>
+      <section>
+        <div class="title">
+          {{ _('ProblemDifficulty') }}:
+        </div>        
+      </section>        
+      <section>
+        <div class="title">
+          {{ _('ProblemTag') }}:
+        </div>                
+      </section>
+    </div>
+  </div>
+</form>
