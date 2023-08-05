@@ -154,10 +154,9 @@ class DomainUserHandler extends ManageHandler {
             const ud = udict[dudoc.uid];
             rudocs[ud.role || 'default'].push(ud);
         }
-        const rolesSelect = roles.map((role) => [role._id, role._id]);
         this.response.template = 'domain_user.html';
         this.response.body = {
-            roles, rolesSelect, rudocs, udict, domain: this.domain,
+            roles, rudocs, udict, domain: this.domain,
         };
     }
 

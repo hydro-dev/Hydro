@@ -11,7 +11,7 @@ setDiagnosticsOptions({
     {
       uri: 'https://hydro.js.org/schema/problemConfig.json',
       fileMatch: ['hydro://problem/file/config.yaml'],
-      schema: problemConfigSchema,
+      schema: problemConfigSchema as any,
     },
     {
       uri: new URL('/manage/config/schema.json', window.location.href).toString(),

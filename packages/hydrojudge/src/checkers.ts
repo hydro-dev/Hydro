@@ -207,16 +207,21 @@ const checkers: Record<string, Checker> = new Proxy({
             },
             env: config.env,
         });
-        if (status === STATUS.STATUS_SYSTEM_ERROR) {
+        if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
+            const message = {
+                [STATUS.STATUS_SYSTEM_ERROR]: stderr,
+                [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Checker Time Limit Exceeded',
+                [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Checker Memory Limit Exceeded',
+            }[status];
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
-                message: stderr,
+                message,
             };
         }
         if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
             return {
-                status: STATUS.STATUS_WRONG_ANSWER,
+                status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
                 message: `Checker exited with code ${code}`,
             };

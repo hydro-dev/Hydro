@@ -16,7 +16,7 @@ import './lib/i18n';
 import { Logger } from './logger';
 import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
-import { unwrapExports } from './utils';
+import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { inject } from './lib/ui';
 
@@ -157,6 +157,34 @@ app.state[Loader.Record] = Object.create(null);
 export async function load() {
     addon(path.resolve(__dirname, '..'), true);
     Error.stackTraceLimit = 50;
+    try {
+        const { simpleGit } = require('simple-git') as typeof import('simple-git');
+        const { all } = await simpleGit().log();
+        if (all.length > 0) Hydro.version.hydrooj += `-${all[0].hash.substring(0, 7)}`;
+        const { isClean } = await simpleGit().status();
+        if (!isClean()) Hydro.version.hydrooj += '-dirty';
+        if (process.env.DEV) {
+            const q = await simpleGit().listRemote(['--get-url']);
+            if (!q.includes('hydro-dev/Hydro')) {
+                console.warn('\x1b[93m');
+                console.warn('DISCLAIMER:');
+                console.warn(' You are under development mode.');
+                console.warn(' The Hydro project is licensed under AGPL3,');
+                console.warn(' which means you have to open source your modifications,');
+                console.warn(' unless you have got another license from the original author.');
+                console.warn('');
+                console.warn('声明：');
+                console.warn(' 你正在运行开发者模式。');
+                console.warn(' Hydro 项目基于 AGPL3 协议开源，');
+                console.warn(' 这意味着除非你获得了原作者的其他授权，你需要同样以 AGPL3 协议开源所有的修改。');
+                console.warn('\x1b[39m');
+                console.log('');
+                console.log('Hydro will start in 5s.');
+                console.log('Hydro 将在五秒后继续启动。');
+                await sleep(5000);
+            }
+        }
+    } catch (e) { }
     await require('./entry/worker').apply(app);
     global.gc?.();
 }

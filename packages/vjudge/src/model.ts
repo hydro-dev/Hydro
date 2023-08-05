@@ -15,6 +15,8 @@ class AccountService {
     api: IBasicProvider;
     problemLists: Set<string>;
     listUpdated = false;
+    working = false;
+    error = '';
 
     constructor(public Provider: BasicProvider, public account: RemoteAccount) {
         this.api = new Provider(account, async (data) => {
@@ -23,6 +25,8 @@ class AccountService {
         this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
         this.main().catch((e) => {
             logger.error(`Error occured in ${account.type}/${account.handle}`);
+            this.working = false;
+            this.error = e.message;
             console.error(e);
         });
     }
@@ -53,7 +57,12 @@ class AccountService {
             const rid = await this.api.submitProblem(task.target, task.lang, task.code, task, next, end);
             if (!rid) return;
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
-            await this.api.waitForSubmission(rid, next, end);
+            const nextFunction = (data) => {
+                if (data.case) delete data.case.message;
+                if (data.cases) data.cases.forEach((x) => delete x.message);
+                return next(data);
+            };
+            await this.api.waitForSubmission(rid, task.config?.detail === false ? nextFunction : next, end);
         } catch (e) {
             if (process.env.DEV) {
                 logger.error(e);
@@ -81,7 +90,7 @@ class AccountService {
                 try {
                     const res = await this.api.getProblem(pid, meta);
                     if (!res) continue;
-                    const docId = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag, false);
+                    const docId = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag);
                     if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
                     for (const key in res.files) {
                         await ProblemModel.addAdditionalFile(domainId, docId, key, res.files[key]);
@@ -116,6 +125,7 @@ class AccountService {
         setInterval(() => this.login(), Time.hour);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
         const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
+        this.working = true;
         do {
             this.listUpdated = false;
             for (const listName of this.problemLists) {
@@ -165,6 +175,18 @@ class VJudgeService extends Service {
             // TODO dispose session
         });
     }
+
+    async checkStatus(onCheckFunc = false) {
+        const res: Record<string, { working: boolean, error?: string, status?: any }> = {};
+        for (const [k, v] of Object.entries(this.pool)) {
+            res[k] = {
+                working: v.working,
+                error: v.error,
+                status: v.api.checkStatus ? await v.api.checkStatus(onCheckFunc) : null,
+            };
+        }
+        return res;
+    }
 }
 
 export { BasicFetcher } from './fetch';
@@ -184,4 +206,15 @@ export async function apply(ctx: Context) {
     }
     // });
     ctx.vjudge = vjudge;
+    ctx.check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
+        const working = [];
+        const pool = await vjudge.checkStatus(true);
+        for (const [k, v] of Object.entries(pool)) {
+            if (!v.working) error(`vjudge worker ${k}: ${v.error}`);
+            else working.push(k);
+            if (v.status) log(`vjudge worker ${k}: ${v.status}`);
+        }
+        if (!working.length) warn('no vjudge worker is working');
+        log(`vjudge working workers: ${working.join(', ')}`);
+    });
 }

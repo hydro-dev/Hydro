@@ -3,7 +3,6 @@ import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import { omit } from 'lodash';
 import Schema from 'schemastery';
-import * as check from '../check';
 import {
     CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
 } from '../error';
@@ -14,6 +13,7 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
+import { check } from '../service/check';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
@@ -71,7 +71,7 @@ class SystemCheckConnHandler extends ConnectionHandler {
         const log = (payload: any) => this.send({ type: 'log', payload });
         const warn = (payload: any) => this.send({ type: 'warn', payload });
         const error = (payload: any) => this.send({ type: 'error', payload });
-        await check.start(this, log, warn, error, (id) => { this.id = id; });
+        await check.run(this, log, warn, error, (id) => { this.id = id; });
     }
 
     async cleanup() {
@@ -226,8 +226,12 @@ class SystemUserImportHandler extends SystemHandler {
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;
-            let [email, username, password, displayName, extra] = u.split(',').map((t) => t.trim());
-            if (!email || !username || !password) [email, username, password, displayName, extra] = u.split('\t').map((t) => t.trim());
+            let [email, username, password, displayName, extra] = u.split('\t').map((t) => t.trim());
+            if (!email || !username || !password) {
+                const data = u.split(',').map((t) => t.trim());
+                [email, username, password, displayName, extra] = data;
+                if (data.length > 5) extra = data.slice(4).join(',');
+            }
             if (email && username && password) {
                 if (!Types.Email[1](email)) messages.push(`Line ${+i + 1}: Invalid email.`);
                 else if (!Types.Username[1](username)) messages.push(`Line ${+i + 1}: Invalid username`);

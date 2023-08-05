@@ -602,6 +602,20 @@ const scripts: UpgradeScript[] = [
         await document.coll.updateMany({ docType: document.TYPE_CONTEST, assign: null }, { $set: { assign: [] } });
         return true;
     },
+    async function _83_84() {
+        const tdocs = await document.coll.find({ docType: document.TYPE_CONTEST, rule: 'strictioi' }).toArray();
+        for (const tdoc of tdocs) {
+            logger.info(tdoc.domainId, tdoc.title);
+            const rdocs = await RecordModel.coll.find({ domainId: tdoc.domainId, contest: tdoc.docId }).toArray();
+            for (const rdoc of rdocs) {
+                await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, rdoc.uid, 'journal', {
+                    rid: rdoc._id, pid: rdoc.pid, status: rdoc.status, score: rdoc.score, subtasks: rdoc.subtasks,
+                }, 'rid');
+            }
+            await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+        }
+        return true;
+    },
 ];
 
 export default scripts;

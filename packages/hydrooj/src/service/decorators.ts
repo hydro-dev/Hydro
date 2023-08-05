@@ -99,6 +99,15 @@ export const subscribe: (name: keyof EventMap) => MethodDecorator & ClassDecorat
     };
 };
 
+/*
+ * For security concern, some API requires sudo privilege to access.
+ * And for some superadmin operations,
+ * we do not allow them using a password to perform the sudo operation,
+ * as most user choose to use "remember password" option.
+ * When teachers are using a superuser account, accessing from classrooms,
+ * it may lead to serious security issues.
+ * !!! Please make sure that all superuser accounts have two factor authentication enabled. !!!
+ */
 export function requireSudo(target: any, funcName: string, obj: any) {
     const originalMethod = obj.value;
     obj.value = function sudo(this: Handler, ...args: any[]) {

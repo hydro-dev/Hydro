@@ -100,7 +100,7 @@
                 'invite': _('Require Invitation Code'),
                 'assign': _('Assign User or Group')
               },
-              value: ("public" if not tdoc._code else "invite") if not tdoc.assign else "assign",
+              value: ("public" if not tdoc._code else "invite") if not tdoc.assign|length else "assign",
               disabled:true,
               row:false
             }) }}

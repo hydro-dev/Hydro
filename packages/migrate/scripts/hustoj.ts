@@ -182,7 +182,8 @@ export async function run({
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
                     pdoc.title, content,
-                    1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i), pdoc.defunct === 'Y',
+                    1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i),
+                    { hidden: pdoc.defunct === 'Y' },
                 );
                 pidMap[pdoc.problem_id] = pid;
                 await Promise.all(Object.keys(files).map((filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename])));

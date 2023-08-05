@@ -482,6 +482,7 @@ Last Update At: 最后活动时间
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
+Leave empty for default: 留空以使用默认
 Ledo: 乐多
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
@@ -554,12 +555,14 @@ New: 创建
 No {0} at current.: 当前没有{0}。
 No comments so far...: 目前还没有评论...
 No discussion yet...: 目前没有讨论…
+No group available: 没有可用小组
 No Permission to Attend Contest: 您没有权限参加比赛
 No Permission to Claim Homework: 您没有权限认领作业
 No Permission to Create a Discussion: 您没有权限创建讨论
 No Permission to Submit: 您没有权限递交
 No problem.: 没有题目。
 No solutions so far...: 目前还没有题解...
+No submission language available for this problem.: 本题没有可用的提交语言。
 No Submissions: 没有递交
 No target available: 无可用目标
 No testcase here: 此处没有测试点
@@ -577,9 +580,9 @@ objective: 客观题
 Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献过题目~
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
+Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
 Oh, there is no submission!: 喔，还没有评测记录呢！
 Oh, there is no task in the queue!: 喔，队列中目前没有任务。
-Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
 Ok: 确定
 Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
 Oops, there are no results.: 呀，没有结果。
@@ -634,6 +637,7 @@ Please select at least one role to perform this operation.: 请选择至少一�
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
 Preference Settings: 偏好设置
+preferredPrefix_hint: 此选项用于重排题号。例如，若题目包中所给的题号分别是 P1001, P1002, P1003，而此选项填写了 T，则导入后三道题的题号分别为 T1001, T1002 和 T1003。
 Preparing Upload...: 准备上传...
 Pretest Data: 自测数据
 Pretest Your Code: 使用自定义数据测试

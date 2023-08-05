@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mongo
+  name: mongo-deployment
+  namespace: hydro-namespace
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: oj-mongo
+          image: mongo:latest
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /data/db
+              name: localvolume
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: {{.Values.Mongo.Username}}
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: {{.Values.Mongo.Password}}
+          ports:
+            - name: db-port
+              containerPort: 27017
+      volumes:
+        - name: localvolume
+          hostPath:
+            path: {{.Values.Mongo.Volume}}
+            type: DirectoryOrCreate

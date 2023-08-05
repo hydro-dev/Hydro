@@ -62,6 +62,7 @@ const locales = {
         'install.compiler': 'Installing compiler...',
         'install.hydro': 'Installing Hydro...',
         'install.done': 'Hydro installation completed!',
+        'install.alldone': 'Hydro installation completed.',
         'install.editJudgeConfigAndStart': 'Please edit config at ~/.hydro/judge.yaml than start hydrojudge with:\npm2 start hydrojudge && pm2 save.',
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
@@ -84,6 +85,8 @@ const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-impo
 const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
+const migrationArg = process.argv.find((i) => i.startsWith('--migration='));
+let migration = migrationArg ? migrationArg.split('=')[1] : '';
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -114,7 +117,6 @@ if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
     avx2 = false;
     log.warn('warn.avx2');
 }
-let migration = '';
 let retry = 0;
 log.info('install.start');
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -158,7 +160,8 @@ const Caddyfile = `\
 # 如果你希望使用其他端口或使用域名，修改此处 :80 的值后在 ~/.hydro 目录下使用 caddy reload 重载配置。
 # 如果你在当前配置下能够通过 http://你的域名/ 正常访问到网站，若需开启 ssl，
 # 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
-# 清注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
+# 填写完整域名，注意区分有无 www （www.hydro.ac 和 hydro.ac 不同，请检查 DNS 设置）
+# 请注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
 # For more information, refer to caddy v2 documentation.
 :80 {
   log {
@@ -182,6 +185,18 @@ const Caddyfile = `\
     reverse_proxy http://127.0.0.1:8888
   }
 }
+
+# 如果你需要同时配置其他站点，可参考下方设置：
+# 请注意：如果多个站点需要共享同一个端口（如 80/443），请确保为每个站点都填写了域名！
+# 动态站点：
+# xxx.com {
+#    reverse_proxy http://127.0.0.1:1234
+# }
+# 静态站点：
+# xxx.com {
+#    root * /www/xxx.com
+#    file_server
+# }
 `;
 
 const judgeYaml = `\
@@ -268,7 +283,9 @@ const printInfo = [
     'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
     () => {
         if (installAsJudge) return;
-        password = new URL(require(`${process.env.HOME}/.hydro/config.json`).uri).password || '(No password)';
+        const config = require(`${process.env.HOME}/.hydro/config.json`);
+        if (config.uri) password = new URL(config.uri).password || '(No password)';
+        else password = config.password || '(No password)';
         log.info('extra.dbUser');
         log.info('extra.dbPassword', password);
     },
@@ -320,8 +337,6 @@ ${nixConfBase}`);
                         .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
                     const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
-                        // not ready for production
-                        return;
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
                         if (res.toLowerCase().trim() === 'y') migration = 'uoj';
@@ -344,6 +359,13 @@ ${nixConfBase}`);
         skip: () => installAsJudge,
         hidden: installAsJudge,
         operations: [
+            () => writeFileSync(`${process.env.HOME}/.config/nixpkgs/config.nix`, `\
+{
+    permittedInsecurePackages = [
+        "openssl-1.1.1t"
+        "openssl-1.1.1u"
+    ];
+}`),
             `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
         ],
     },

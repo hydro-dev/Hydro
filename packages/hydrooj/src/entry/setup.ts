@@ -80,7 +80,7 @@ async function get(ctx: Context) {
 async function post(ctx: Context) {
     const {
         host, port, name, username, password,
-    } = ctx.request.body;
+    } = (ctx.request as any).body;
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;

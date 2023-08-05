@@ -14,6 +14,23 @@
               <option value="list" selected>{{ _('List View') }}</option>
             </select>
           </span>
+        {% if groups.length %}
+          <form method="get" class="filter-form" name="filter-form">
+            {{ _('Show') }}:
+            <select class="inline compact select" name="group">
+              <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
+              {%- for g in groups -%}
+                <option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>
+              {%- endfor -%}
+              {%- if not groups|length -%}
+                <option disabled>{{ _('No group available') }}</option>
+              {%- endif -%}
+            </select>
+            <button type="submit" class="compact button hasjs--hide">
+              {{ _('Search') }}
+            </button>
+          </form>
+        {% endif %}
         {% if handler.user.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
           <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
         {% endif %}
@@ -51,7 +68,7 @@
           </li>
         {%- endfor -%}
         </ol>
-        {{ paginator.render(page, tpcount) }}
+        {{ paginator.render(page, tpcount, add_qs=qs) }}
         <div name="calendar_entry"></div>
       {% endif %}
       </div>

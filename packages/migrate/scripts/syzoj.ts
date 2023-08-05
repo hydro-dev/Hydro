@@ -239,7 +239,7 @@ export async function run({
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
                     const [afdoc] = additionalFile;
-                    await ProblemModel.addAdditionalFile(domainId, pdoc.docId,
+                    await ProblemModel.addAdditionalFile(domainId, pidMap[pdoc.id],
                         `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }
