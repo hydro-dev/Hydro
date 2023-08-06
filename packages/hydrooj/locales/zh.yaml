@@ -685,6 +685,7 @@ ProblemType: 题型
 ProblemDifficulty: 难度
 ProblemTag: 标签
 SelectTags: 选择标签
+SelectedTags: 已选标签
 Secret (visible to admins): 保密（对管理员可见）
 Secret: 保密
 Section: 章节

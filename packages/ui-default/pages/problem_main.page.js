@@ -18,8 +18,9 @@ const list = [];
 const selectedDescriptors = {
   type: new Set(),
   difficulty: new Set(),
-  tags: new Set(),
+  tags: {},
 };
+let currentProblemTagCategory = null;
 
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
@@ -244,50 +245,201 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
-function selectDescriptor(name, ele) {
-  const value = $(ele).attr(`data-problem-${name}`);
-  if (!value) return;
-  selectedDescriptors[name].add(value);
+function addSelectedDescriptorHighlight(ele) {
   $(ele).addClass('selected');
   $(ele).append('<span class="icon icon-check"></span>');
 }
 
-function handleDescriptorSelect(name, ev) {
-  const value = $(ev.currentTarget).attr(`data-problem-${name}`);
+function removeSelectedDescriptorHighlight(ele) {
+  $(ele).removeClass('selected');
+  $(ele).find('.icon-check').remove();
+}
+
+function selectDescriptor(name, ele) {
+  const value = $(ele).attr(`data-problem-${name}`);
+  if (!value) return;
+  selectedDescriptors[name].add(value);
+  addSelectedDescriptorHighlight(ele);
+}
+
+function deselectDescriptor(name, ele) {
+  const value = $(ele).attr(`data-problem-${name}`);
   if (!value) return;
   if (selectedDescriptors[name].has(value)) {
     selectedDescriptors[name].delete(value);
-    $(ev.currentTarget).removeClass('selected');
-    $(ev.currentTarget).find('.icon-check').remove();
-  } else {
-    selectedDescriptors[name].add(value);
-    $(ev.currentTarget).addClass('selected');
-    $(ev.currentTarget).append('<span class="icon icon-check"></span>');
+    removeSelectedDescriptorHighlight(ele);
   }
 }
 
-function buildDescriptorFilter() {
+function handleSelectDescriptor(name, ev) {
+  const value = $(ev.currentTarget).attr(`data-problem-${name}`);
+  if (!value) return;
+  if (selectedDescriptors[name].has(value)) {
+    deselectDescriptor(name, ev.currentTarget);
+  } else {
+    selectDescriptor(name, ev.currentTarget);
+  }
+}
+
+function toggleProblemTagDialog() {
+  const $problemTagDialog = $('[data-search-dialog]');
+  if (!$problemTagDialog) return;
+  $problemTagDialog.toggleClass('hide');
+}
+
+function clearSelectedProblemTagCategory() {
+  const $problemTagCategoryContainer = $('[data-problem-tag-category-container]');
+  if (!$problemTagCategoryContainer) return;
+  $problemTagCategoryContainer.children().removeClass('selected');
+
+  const $problemTagContainer = $('[data-problem-tag-container]');
+  if (!$problemTagContainer) return;
+  $problemTagContainer.addClass('hide');
+}
+
+function selectProblemTagCategory(ele) {
+  clearSelectedProblemTagCategory();
+  const value = $(ele).attr('data-problem-tag-category');
+  if (!value) return;
+  currentProblemTagCategory = value;
+  $(ele).addClass('selected');
+  const $problemTagContainer = $(`[data-problem-tag-container="${value}"]`);
+  if (!$problemTagContainer) return;
+  $problemTagContainer.removeClass('hide');
+}
+
+function removeSelectedTagHighlight(ele) {
+  $(ele).removeClass('selected');
+  $(ele).find('.icon-close').remove();
+}
+
+function addSelectedTagHighlight(ele) {
+  $(ele).addClass('selected');
+  $(ele).append(`
+    <span class="icon icon-close"></span>
+  `);
+}
+
+function removeSelectedTagElement(value, tag) {
+  const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
+  if (!$problemTagSelectedContainer) return;
+  $problemTagSelectedContainer.find(`[data-problem-tag-selected="${tag}"]`).remove();
+}
+
+function addSelectedTagElement(value, tag) {
+  const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
+  if (!$problemTagSelectedContainer) return;
+  $problemTagSelectedContainer.append(`
+    <div class="item" data-problem-tag-selected="${tag}">
+      ${tag}
+      <span class="icon icon-close"></span>
+    </div>
+  `);
+  $problemTagSelectedContainer.on('click', `[data-problem-tag-selected="${tag}"]`, (ev) => {
+    ev.stopPropagation();
+    selectedDescriptors.tags[value].delete(tag);
+    removeSelectedTagHighlight($(`[data-problem-tag="${tag}"]`));
+    removeSelectedTagElement(value, tag);
+  });
+}
+
+function handleSelectTag(value, ev) {
+  ev.stopPropagation();
+  const tag = $(ev.currentTarget).attr('data-problem-tag');
+  if (!tag) return;
+  if (selectedDescriptors.tags[value].has(tag)) {
+    selectedDescriptors.tags[value].delete(tag);
+    removeSelectedTagHighlight(ev.currentTarget);
+    removeSelectedTagElement(value, tag);
+  } else {
+    selectedDescriptors.tags[value].add(tag);
+    addSelectedTagHighlight(ev.currentTarget);
+    addSelectedTagElement(value, tag);
+  }
+}
+
+function clearSelectedDescriptors() {
+  const $problemTypeContainer = $('[data-problem-type-container]');
+  if (!$problemTypeContainer) return;
+  removeSelectedDescriptorHighlight($problemTypeContainer.children());
+
+  const $problemDifficultyContainer = $('[data-problem-difficulty-container]');
+  if (!$problemDifficultyContainer) return;
+  removeSelectedDescriptorHighlight($problemDifficultyContainer.children());
+
+  selectedDescriptors.type.clear();
+  selectedDescriptors.difficulty.clear();
+
+  for (const category in selectedDescriptors.tags) {
+    const $problemTagContainer = $(`[data-problem-tag-container="${category}"]`);
+    for (const tag of selectedDescriptors.tags[category]) {
+      removeSelectedTagHighlight($problemTagContainer.find(`[data-problem-tag="${tag}"]`));
+      removeSelectedTagElement(category, tag);
+    }
+    selectedDescriptors.tags[category].clear();
+  }
+}
+
+function fallbackToDefaultDescriptors() {
   const $problemTypeContainer = $('[data-problem-type-container]');
   if (!$problemTypeContainer) return;
   selectDescriptor('type', $problemTypeContainer.children().first());
-  $problemTypeContainer.on('click', '[data-problem-type]', (ev) => handleDescriptorSelect('type', ev));
   const $problemDifficultyContainer = $('[data-problem-difficulty-container]');
   if (!$problemDifficultyContainer) return;
   selectDescriptor('difficulty', $problemDifficultyContainer.children().first());
-  $problemDifficultyContainer.on('click', '[data-problem-difficulty]', (ev) => handleDescriptorSelect('difficulty', ev));
+  const $problemTagCategoryContainer = $('[data-problem-tag-category-container]');
+  if (!$problemTagCategoryContainer) return;
+  selectProblemTagCategory($problemTagCategoryContainer.children().first());
+}
+
+function buildDescriptorFilter() {
+  fallbackToDefaultDescriptors();
+
+  const $problemTypeContainer = $('[data-problem-type-container]');
+  if (!$problemTypeContainer) return;
+  $problemTypeContainer.on('click', '[data-problem-type]', (ev) => handleSelectDescriptor('type', ev));
+  const $problemDifficultyContainer = $('[data-problem-difficulty-container]');
+  if (!$problemDifficultyContainer) return;
+  $problemDifficultyContainer.on('click', '[data-problem-difficulty]', (ev) => handleSelectDescriptor('difficulty', ev));
 
   const $problemStatContainer = $('[data-fragment-id="problem_stat"]');
   if (!$problemStatContainer) return;
   $problemStatContainer.children('.link').on('click', (ev) => {
-    $problemTypeContainer.children().removeClass('selected');
-    $problemTypeContainer.children().find('.icon-check').remove();
-    $problemDifficultyContainer.children().removeClass('selected');
-    $problemDifficultyContainer.children().find('.icon-check').remove();
-    selectedDescriptors.type.clear();
-    selectedDescriptors.difficulty.clear();
-    selectedDescriptors.tags.clear();
+    clearSelectedDescriptors();
     selectDescriptor('type', $problemTypeContainer.children().first());
     selectDescriptor('difficulty', $problemDifficultyContainer.children().first());
+  });
+
+  const $searchDialog = $('[data-search-dialog]');
+  if (!$searchDialog) return;
+  $searchDialog.on('click', (ev) => {
+    toggleProblemTagDialog();
+  });
+  $searchDialog.on('click', '.dialog__content', (ev) => {
+    ev.stopPropagation();
+  });
+
+  const $problemTagDialogButton = $('[data-problem-tag-dialog-button]');
+  if (!$problemTagDialogButton) return;
+  $problemTagDialogButton.on('click', '.dialog-button', (ev) => {
+    toggleProblemTagDialog();
+  });
+
+  const $problemTagCategoryContainer = $('[data-problem-tag-category-container]');
+  if (!$problemTagCategoryContainer) return;
+  $problemTagCategoryContainer.on('click', '[data-problem-tag-category]', (ev) => {
+    selectProblemTagCategory(ev.currentTarget);
+  });
+
+  $problemTagCategoryContainer.children().each((index, ele) => {
+    const value = $(ele).attr('data-problem-tag-category');
+    if (!value) return;
+    selectedDescriptors.tags[value] = new Set();
+    const $problemTagContainer = $(`[data-problem-tag-container="${value}"]`);
+    if (!$problemTagContainer) return;
+    $problemTagContainer.on('click', '[data-problem-tag]', (ev) => {
+      handleSelectTag(value, ev);
+    });
   });
 }
 

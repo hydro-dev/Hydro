@@ -1,0 +1,34 @@
+<div class="search-dialog hide" data-search-dialog>
+  <div class="dialog__content">
+    <div class="dialog--select__header">      
+      <div class="dialog--select__header--list" data-problem-tag-category-container>
+        {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
+        <div class="dialog--select__header--item text-align-vertical" data-problem-tag-category="{{problemTagCategory}}">
+        {{ problemTagCategory }}
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+    <div class="dialog--select__body">
+      {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
+      <div class="dialog--select__body--tags hide" data-problem-tag-container="{{problemTagCategory}}">
+        <div class="dialog--select__body--tags__selected">
+          <h2>{{ _('SelectedTags') }}: </h2>
+          <div data-problem-tag-selected-container="{{problemTagCategory}}" class="list"></div>
+        </div>
+        <div class="dialog--select__body--divider"></div>
+        <div class="dialog--select__body--tags__all">
+          <h2>{{ problemTagCategory }}: </h2>
+          <div class="dialog--select__body--tags__all list">
+            {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
+            <div class="dialog--select__body--tags__all item" data-problem-tag="{{problemTag}}">
+              {{ problemTag }}
+            </div>
+            {%- endfor -%}
+          </div>  
+        </div>
+      </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>

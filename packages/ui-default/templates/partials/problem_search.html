@@ -8,7 +8,6 @@
             <span class="icon icon-search"></span>
           </div>          
           <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('SearchHint') }}">
-          {# {% include "partials/problem_stat.html" %} #}
         </div>
         <button type="submit">
           <span>{{ _('Search') }}</span>
@@ -44,7 +43,7 @@
         <h2 class="title text-align-vertical">
           {{ _('ProblemTag') }}:
         </h2>         
-        <div class="list">
+        <div class="list" data-problem-tag-dialog-button>
           <div class="list__item text-align-vertical dialog-button">
             {{ _('SelectTags') }}
           </div>        
@@ -53,4 +52,5 @@
       {% include "partials/problem_stat.html" %}
     </div>
   </div>
+  {% include "partials/problem_tag_dialog.html" %}
 </form>
