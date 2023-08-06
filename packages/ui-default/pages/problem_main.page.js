@@ -20,7 +20,6 @@ const selectedDescriptors = {
   difficulty: new Set(),
   tags: {},
 };
-let currentProblemTagCategory = null;
 
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
@@ -301,7 +300,6 @@ function selectProblemTagCategory(ele) {
   clearSelectedProblemTagCategory();
   const value = $(ele).attr('data-problem-tag-category');
   if (!value) return;
-  currentProblemTagCategory = value;
   $(ele).addClass('selected');
   const $problemTagContainer = $(`[data-problem-tag-container="${value}"]`);
   if (!$problemTagContainer) return;
@@ -464,6 +462,8 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '.toggle-tag', () => {
     $('.section__table-container').children(1).toggleClass('hide-problem-tag');
   });
+
+  // TODO: update this to according to the new descriptors.
   $('#search').on('click', (ev) => {
     ev.preventDefault();
     updateSelection();

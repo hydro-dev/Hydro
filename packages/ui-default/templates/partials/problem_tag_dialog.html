@@ -19,9 +19,9 @@
         <div class="dialog--select__body--divider"></div>
         <div class="dialog--select__body--tags__all">
           <h2>{{ problemTagCategory }}: </h2>
-          <div class="dialog--select__body--tags__all list">
+          <div class="list">
             {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
-            <div class="dialog--select__body--tags__all item" data-problem-tag="{{problemTag}}">
+            <div class="item" data-problem-tag="{{problemTag}}">
               {{ problemTag }}
             </div>
             {%- endfor -%}
