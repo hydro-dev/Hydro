@@ -45,7 +45,6 @@
             </button>
           </div>
         </form>
-        <div id="selected-categories"></div>
         {% if model.system.get('problem.pinnedFilter') %}
         <div class="filter-panel">
           {% for name, sub_filter in model.system.get('problem.pinnedFilter')|parseYaml %}
