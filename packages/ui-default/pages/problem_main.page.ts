@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
+import parser from 'search-query-parser';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
@@ -12,8 +13,7 @@ import {
 } from 'vj/utils';
 
 const categories = {};
-const dirtyCategories = [];
-const selections = [];
+let selections: string[] = [];
 const list = [];
 
 function setDomSelected($dom, selected) {
@@ -21,44 +21,48 @@ function setDomSelected($dom, selected) {
   else $dom.removeClass('selected');
 }
 
-async function updateSelection(sendRequest = true) {
-  dirtyCategories.forEach(({ type, category, subcategory }) => {
-    let item = categories[category];
-    const isSelected = item.select || _.some(item.children, (c) => c.select);
-    setDomSelected(item.$tag, isSelected);
-    if (isSelected) {
-      selections.push(category);
-    } else {
-      _.pull(selections, category);
+const parserOptions = {
+  keywords: ['category', 'difficulty'],
+  offsets: true,
+  alwaysArray: true,
+  tokenize: true,
+};
+
+function writeSelectionToInput() {
+  const currentValue = $('[name="q"]').val() as string;
+  const parsedCurrentValue = parser.parse(currentValue, parserOptions) as parser.SearchParserResult;
+  const q = parser.stringify({
+    ...parsedCurrentValue,
+    category: selections,
+    text: parsedCurrentValue.text,
+  }, parserOptions);
+  $('[name="q"]').val(q);
+}
+
+function updateSelection() {
+  selections = _.uniq(selections);
+  for (const category in categories) {
+    const item = categories[category];
+    let childSelected = false;
+    for (const subcategory in item.children) {
+      const shouldSelect = selections.includes(subcategory);
+      const isSelected = item.children[subcategory].$tag.hasClass('selected');
+      childSelected ||= shouldSelect;
+      if (isSelected !== shouldSelect) setDomSelected(item.children[subcategory].$tag, shouldSelect);
     }
-    if (type === 'subcategory') {
-      item = categories[category].children[subcategory];
-      setDomSelected(item.$tag, item.select);
-      const selectionName = subcategory;
-      if (item.select) {
-        selections.push(selectionName);
-      } else {
-        _.pull(selections, selectionName);
-      }
-    }
-  });
-  dirtyCategories.length = 0;
-  if (sendRequest) {
-    // a list of categories which subcategory is selected
-    const requestCategoryTags = _.uniq(selections
-      .filter((s) => s.indexOf(',') !== -1)
-      .map((s) => s.split(',')[0]));
-    // drop the category if its subcategory is selected
-    const requestTags = _.uniq(_.pullAll(selections, requestCategoryTags));
-    let q = $('[name="q"]').val().split(' ').filter((i) => !i.startsWith('category:')).join(' ');
-    if (requestTags.length) q = requestTags.map((i) => `category:${i}`).join(' ') + (q ? ` ${q}` : '');
-    const url = new URL(window.location.href);
-    if (!q) url.searchParams.delete('q');
-    else url.searchParams.set('q', q);
-    url.searchParams.delete('page');
-    pjax.request({ url: url.toString() });
-    $('[name="q"]').val(q);
+    const shouldSelect = selections.includes(category) || childSelected;
+    const isSelected = item.$tag.hasClass('selected');
+    if (isSelected !== shouldSelect) setDomSelected(item.$tag, shouldSelect);
   }
+}
+
+function loadQuery() {
+  const q = $('[name="q"]').val().toString();
+  const url = new URL(window.location.href);
+  if (!q) url.searchParams.delete('q');
+  else url.searchParams.set('q', q);
+  url.searchParams.delete('page');
+  pjax.request({ url: url.toString() });
 }
 
 function buildCategoryFilter() {
@@ -78,7 +82,6 @@ function buildCategoryFilter() {
       .remove()
       .attr('class', 'widget--category-filter__drop');
     const treeItem = {
-      select: false,
       $tag: $categoryTag,
       children: {},
     };
@@ -95,7 +98,6 @@ function buildCategoryFilter() {
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = $(subCategoryTag);
         treeItem.children[$tag.text()] = {
-          select: false,
           $tag,
         };
       });
@@ -106,25 +108,17 @@ function buildCategoryFilter() {
     }
   });
   list.push(...Object.keys(categories));
-  list.push(..._.flatMap(Object.values(categories), (c) => Object.keys(c.children)));
+  list.push(..._.flatMap(Object.values(categories), (c: any) => Object.keys(c.children)));
   $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const category = $(ev.currentTarget).text();
     const treeItem = categories[category];
-    // the effect should be cancelSelect if it is shown as selected when clicking
-    const shouldSelect = treeItem.$tag.hasClass('selected') ? false : !treeItem.select;
-    treeItem.select = shouldSelect;
-    dirtyCategories.push({ type: 'category', category });
-    if (!shouldSelect) {
-      // de-select children
-      _.forEach(treeItem.children, (treeSubItem, subcategory) => {
-        if (treeSubItem.select) {
-          treeSubItem.select = false;
-          dirtyCategories.push({ type: 'subcategory', subcategory, category });
-        }
-      });
-    }
+    const shouldSelect = !treeItem.$tag.hasClass('selected');
+    if (shouldSelect) selections.push(category);
+    else selections = _.without(selections, category, ...Object.keys(treeItem.children));
     updateSelection();
+    writeSelectionToInput();
+    loadQuery();
     ev.preventDefault();
   });
   $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
@@ -132,27 +126,21 @@ function buildCategoryFilter() {
     const subcategory = $(ev.currentTarget).text();
     const category = $(ev.currentTarget).attr('data-category');
     const treeItem = categories[category].children[subcategory];
-    treeItem.select = !treeItem.select;
-    dirtyCategories.push({ type: 'subcategory', subcategory, category });
+    const shouldSelect = !treeItem.$tag.hasClass('selected');
+    if (shouldSelect) selections.push(subcategory);
+    else selections = _.without(selections, subcategory);
+    // TODO auto de-select parent
     updateSelection();
+    writeSelectionToInput();
+    loadQuery();
     ev.preventDefault();
   });
 }
 
 function parseCategorySelection() {
-  UiContext.currentCategory.split(' ').forEach((cline) => {
-    const [category, subcategory] = cline.split(',');
-    if (!categories[category]) return;
-    if (subcategory && !categories[category].children[subcategory]) return;
-    if (!subcategory) {
-      categories[category].select = true;
-      dirtyCategories.push({ type: 'category', category });
-    } else {
-      categories[category].children[subcategory].select = true;
-      dirtyCategories.push({ type: 'subcategory', subcategory, category });
-    }
-  });
-  updateSelection(false);
+  const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as parser.SearchParserResult;
+  selections = _.uniq(parsed.category || []);
+  updateSelection();
 }
 
 function ensureAndGetSelectedPids() {
@@ -170,7 +158,7 @@ function ensureAndGetSelectedPids() {
 async function handleOperation(operation) {
   const pids = ensureAndGetSelectedPids();
   if (pids === null) return;
-  const payload = {};
+  const payload: any = {};
   if (operation === 'delete') {
     const action = await new ConfirmDialog({
       $body: tpl.typoMsg(i18n('Confirm to delete the selected problems?')),
@@ -194,7 +182,7 @@ async function handleOperation(operation) {
         </div>
       </div>
     `).appendTo(document.body);
-    const domainSelector = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
+    const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
     const copyDialog = await new ActionDialog({
       $body: $('.dialog__body--problem-copy > div'),
       onDispatch(action) {
@@ -214,7 +202,7 @@ async function handleOperation(operation) {
     await request.post('', { operation, pids, ...payload });
     Notification.success(i18n(`Selected problems have been ${operation === 'copy' ? 'copie' : operation}d.`));
     await delay(2000);
-    updateSelection(true);
+    loadQuery();
   } catch (error) {
     Notification.error(error.message);
   }
@@ -245,6 +233,7 @@ const page = new NamedPage(['problem_main'], () => {
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   parseCategorySelection();
+  updateSelection();
   $(document).on('click', '[name="leave-edit-mode"]', () => {
     $body.removeClass('edit-mode').addClass('display-mode');
   });
@@ -257,14 +246,19 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {
-    $('.section__table-container').children(1).toggleClass('hide-problem-tag');
+    $('.section__table-container').toggleClass('hide-problem-tag');
   });
+  function inputChanged() {
+    parseCategorySelection();
+    updateSelection();
+    loadQuery();
+  }
   $('#search').on('click', (ev) => {
     ev.preventDefault();
-    updateSelection();
+    inputChanged();
   });
-  $('#searchForm').on('submit', updateSelection);
-  $('#searchForm').find('input').on('input', _.debounce(updateSelection, 500));
+  $('#searchForm').on('submit', inputChanged);
+  $('#searchForm').find('input').on('input', _.debounce(inputChanged, 500));
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
