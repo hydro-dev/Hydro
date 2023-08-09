@@ -4,7 +4,9 @@
       <div class="dialog--select__header--list" data-problem-tag-category-container>
         {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
         <div class="dialog--select__header--item text-align-vertical" data-problem-tag-category="{{problemTagCategory}}">
-        {{ problemTagCategory }}
+          {{ problemTagCategory }}
+          <div class="red-dot hide" data-problem-tag-selected-count>
+          </div>
         </div>
         {%- endfor -%}
       </div>

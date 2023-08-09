@@ -283,11 +283,30 @@
   background: #eeeff3
   min-width: 90px
   text-align: center
+  position: relative
 
   &.selected
     background: #458ae7
     color: #ffffff
     font-weight: bold
+
+  & > .red-dot
+    width: 20px
+    height: 20px
+    border-radius: 50%
+    background: #ef6060
+    color: #ffffff
+    position: absolute
+    top: 0px
+    right: 0px
+    transform: translate(50%, -50%)
+    font-size: 14px
+    text-align: center
+    line-height: 20px
+
+    &.hide 
+      display: none
+      opacity: 0
 
 .dialog--select__header--item::first
   margin-left: 0px

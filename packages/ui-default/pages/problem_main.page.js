@@ -326,6 +326,19 @@ function toggleSelectedTagElement(value, tag) {
   $problemTagSelected.toggleClass('hide');
 }
 
+function updateSelectedTagCount(category) {
+  const $problemTagCategoryContainer = $(`[data-problem-tag-category="${category}"]`);
+  if (!$problemTagCategoryContainer) return;
+  const $problemTagSelectedCount = $problemTagCategoryContainer.find('[data-problem-tag-selected-count]');
+  if (!$problemTagSelectedCount) return;
+  $problemTagSelectedCount.text(selectedDescriptors.tags[category].size);
+  if (selectedDescriptors.tags[category].size > 0) {
+    $problemTagSelectedCount.removeClass('hide');
+  } else {
+    $problemTagSelectedCount.addClass('hide');
+  }
+}
+
 function handleSelectTag(value, ev) {
   ev.stopPropagation();
   const tag = $(ev.currentTarget).attr('data-problem-tag');
@@ -339,6 +352,16 @@ function handleSelectTag(value, ev) {
     addSelectedTagHighlight(ev.currentTarget);
     toggleSelectedTagElement(value, tag);
   }
+  updateSelectedTagCount(value);
+}
+
+function handleDeselectTag(value, ev) {
+  ev.stopPropagation();
+  const tag = $(ev.currentTarget).attr('data-problem-tag-selected');
+  selectedDescriptors.tags[value].delete(tag);
+  removeSelectedTagHighlight($(`[data-problem-tag="${tag}"]`));
+  toggleSelectedTagElement(value, tag);
+  updateSelectedTagCount(value);
 }
 
 function clearSelectedDescriptors() {
@@ -355,6 +378,7 @@ function clearSelectedDescriptors() {
 
   for (const category in selectedDescriptors.tags) {
     const $problemTagContainer = $(`[data-problem-tag-container="${category}"]`);
+    if (!$problemTagContainer) continue;
     for (const tag of selectedDescriptors.tags[category]) {
       removeSelectedTagHighlight($problemTagContainer.find(`[data-problem-tag="${tag}"]`));
       toggleSelectedTagElement(category, tag);
@@ -427,11 +451,7 @@ function buildDescriptorFilter() {
     const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
     if (!$problemTagSelectedContainer) return;
     $problemTagSelectedContainer.on('click', '[data-problem-tag-selected]', (ev) => {
-      ev.stopPropagation();
-      const tag = $(ev.currentTarget).attr('data-problem-tag-selected');
-      selectedDescriptors.tags[value].delete(tag);
-      removeSelectedTagHighlight($(`[data-problem-tag="${tag}"]`));
-      toggleSelectedTagElement(value, tag);
+      handleDeselectTag(value, ev);
     });
   });
 }
