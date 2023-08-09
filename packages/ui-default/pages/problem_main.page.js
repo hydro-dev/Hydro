@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, ConfirmDialog, Dialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
@@ -25,7 +25,7 @@ async function updateSelection(sendRequest = true) {
   dirtyCategories.forEach(({ type, category, subcategory }) => {
     let item = categories[category];
     const isSelected = item.select || _.some(item.children, (c) => c.select);
-    setDomSelected(item.$tag, isSelected);
+    item.$tag.forEach((i) => setDomSelected(i, isSelected));
     if (isSelected) {
       selections.push(category);
     } else {
@@ -33,7 +33,7 @@ async function updateSelection(sendRequest = true) {
     }
     if (type === 'subcategory') {
       item = categories[category].children[subcategory];
-      setDomSelected(item.$tag, item.select);
+      item.$tag.forEach((i) => setDomSelected(i, item.select));
       const selectionName = subcategory;
       if (item.select) {
         selections.push(selectionName);
@@ -71,7 +71,7 @@ function buildCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'widget--category-filter__category-tag');
+      .attr('class', 'category-filter__category-tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
@@ -79,7 +79,7 @@ function buildCategoryFilter() {
       .attr('class', 'widget--category-filter__drop');
     const treeItem = {
       select: false,
-      $tag: $categoryTag,
+      $tag: [$categoryTag],
       children: {},
     };
     categories[categoryText] = treeItem;
@@ -88,13 +88,13 @@ function buildCategoryFilter() {
       $categoryTag.text(`${$categoryTag.text()}`);
       const $subCategoryTags = $drop
         .children('li')
-        .attr('class', 'widget--category-filter__subcategory')
+        .attr('class', 'category-filter__subcategory')
         .find('a')
-        .attr('class', 'widget--category-filter__subcategory-tag')
+        .attr('class', 'category-filter__subcategory-tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
-        const $tag = $(subCategoryTag);
-        treeItem.children[$tag.text()] = {
+        const $tag = [$(subCategoryTag)];
+        treeItem.children[$(subCategoryTag).text()] = {
           select: false,
           $tag,
         };
@@ -107,35 +107,68 @@ function buildCategoryFilter() {
   });
   list.push(...Object.keys(categories));
   list.push(..._.flatMap(Object.values(categories), (c) => Object.keys(c.children)));
-  $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const category = $(ev.currentTarget).text();
-    const treeItem = categories[category];
-    // the effect should be cancelSelect if it is shown as selected when clicking
-    const shouldSelect = treeItem.$tag.hasClass('selected') ? false : !treeItem.select;
-    treeItem.select = shouldSelect;
-    dirtyCategories.push({ type: 'category', category });
-    if (!shouldSelect) {
-      // de-select children
-      _.forEach(treeItem.children, (treeSubItem, subcategory) => {
-        if (treeSubItem.select) {
-          treeSubItem.select = false;
-          dirtyCategories.push({ type: 'subcategory', subcategory, category });
-        }
-      });
-    }
-    updateSelection();
-    ev.preventDefault();
+}
+
+const tagDialog = new Dialog({
+  $body: $('.dialog--category-filter > div'),
+  cancelByClickingBack: true,
+  cancelByEsc: true,
+});
+
+function clearSelectedProblemTagCategory() {
+  const $problemTagCategoryContainer = tagDialog.$dom.find('[data-category-tab-container]');
+  if (!$problemTagCategoryContainer) return;
+  $problemTagCategoryContainer.children().removeClass('selected');
+
+  const $problemTagContainer = tagDialog.$dom.find('[data-category-container]');
+  if (!$problemTagContainer) return;
+  $problemTagContainer.addClass('hide');
+}
+
+function selectProblemTagCategory(ele) {
+  clearSelectedProblemTagCategory();
+  const value = $(ele).attr('data-category-tab');
+  if (!value) return;
+  $(ele).addClass('selected');
+  const $problemTagContainer = tagDialog.$dom.find(`[data-category-container="${value}"]`);
+  if (!$problemTagContainer) return;
+  $problemTagContainer.removeClass('hide');
+}
+
+tagDialog.clear = function () {
+  selectProblemTagCategory(this.$dom.find('[data-category-tab-container]').children().first());
+  return this;
+};
+
+function buildDisplayCategory() {
+  const $displayCategoryContainer = $('[data-display-category-container]');
+  if (!$displayCategoryContainer.length) return;
+  $displayCategoryContainer.get().forEach((container) => {
+    $(container).find('.category-filter__subcategory-tag').get().forEach((subcategory) => {
+      const $tag = $(subcategory);
+      const categoryText = $tag.attr('data-category');
+      const subcategoryText = $tag.attr('data-subcategory');
+      categories[categoryText].children[subcategoryText].$tag.push($tag);
+    });
   });
-  $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const subcategory = $(ev.currentTarget).text();
-    const category = $(ev.currentTarget).attr('data-category');
-    const treeItem = categories[category].children[subcategory];
-    treeItem.select = !treeItem.select;
-    dirtyCategories.push({ type: 'subcategory', subcategory, category });
-    updateSelection();
-    ev.preventDefault();
+}
+
+function buildCategoryDialog() {
+  const $problemTagCategoryContainer = tagDialog.$dom.find('[data-category-tab-container]');
+  if (!$problemTagCategoryContainer) return;
+  $problemTagCategoryContainer.on('click', '[data-category-tab]', (ev) => {
+    selectProblemTagCategory(ev.currentTarget);
+  });
+
+  $problemTagCategoryContainer.children().get().forEach((category) => {
+    const categoryText = $(category).attr('data-category-tab');
+    categories[categoryText].$tag.push($(category));
+    const $problemTagContainer = tagDialog.$dom.find(`[data-category-container="${categoryText}"]`);
+    if (!$problemTagContainer) return;
+    $problemTagContainer.find('.category-filter__subcategory-tag').get().forEach((subcategory) => {
+      const $tag = $(subcategory);
+      categories[categoryText].children[$tag.attr('data-subcategory')].$tag.push($tag);
+    });
   });
 }
 
@@ -244,7 +277,39 @@ const page = new NamedPage(['problem_main'], () => {
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
+  buildDisplayCategory();
+  buildCategoryDialog();
   parseCategorySelection();
+  $(document).on('click', '.category-filter__category-tag', (ev) => {
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+    const category = $(ev.currentTarget).text();
+    const treeItem = categories[category];
+    // the effect should be cancelSelect if it is shown as selected when clicking
+    const shouldSelect = treeItem.$tag.hasClass('selected') ? false : !treeItem.select;
+    treeItem.select = shouldSelect;
+    dirtyCategories.push({ type: 'category', category });
+    if (!shouldSelect) {
+      // de-select children
+      _.forEach(treeItem.children, (treeSubItem, subcategory) => {
+        if (treeSubItem.select) {
+          treeSubItem.select = false;
+          dirtyCategories.push({ type: 'subcategory', subcategory, category });
+        }
+      });
+    }
+    updateSelection();
+    ev.preventDefault();
+  });
+  $(document).on('click', '.category-filter__subcategory-tag', (ev) => {
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+    const subcategory = $(ev.currentTarget).text();
+    const category = $(ev.currentTarget).attr('data-category');
+    const treeItem = categories[category].children[subcategory];
+    treeItem.select = !treeItem.select;
+    dirtyCategories.push({ type: 'subcategory', subcategory, category });
+    updateSelection();
+    ev.preventDefault();
+  });
   $(document).on('click', '[name="leave-edit-mode"]', () => {
     $body.removeClass('edit-mode').addClass('display-mode');
   });
@@ -259,6 +324,8 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '.toggle-tag', () => {
     $('.section__table-container').children(1).toggleClass('hide-problem-tag');
   });
+
+  // TODO: update this to according to the new descriptors.
   $('#search').on('click', (ev) => {
     ev.preventDefault();
     updateSelection();
@@ -271,6 +338,10 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $(document).on('vjContentNew', (e) => processElement(e.target));
   processElement(document);
+  $('[data-problem-tag-dialog-button]').on('click', (ev) => {
+    ev.preventDefault();
+    tagDialog.clear().open();
+  });
 });
 
 export default page;
