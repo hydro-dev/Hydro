@@ -47,7 +47,7 @@
         </form>
         {% if domain.pinnedFilter %}
         <div class="filter-panel">
-          {% for name, sub_filter in model.system.get('problem.pinnedFilter')|parseYaml %}
+          {% for name, sub_filter in domain.pinnedFilter|parseYaml %}
           <div class="section__body group-list__item flex-row flex-cross-center">
             <ol class="chip-list">
               <b class="chip-list__item">{{ _(name) }}: </b>
