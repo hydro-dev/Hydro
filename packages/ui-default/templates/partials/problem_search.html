@@ -39,15 +39,27 @@
           {%- endfor -%}          
         </div>                
       </section>        
-      <section>
+      <section style="margin-bottom: 36px">
         <h2 class="title text-align-vertical">
           {{ _('ProblemTag') }}:
-        </h2>         
-        <div class="list" data-problem-tag-dialog-button>
-          <div class="list__item text-align-vertical dialog-button">
-            {{ _('SelectTags') }}
-          </div>        
-        </div>       
+        </h2>
+        <div class="problem-tag-container">
+          <div class="list">
+            <div class="list__item text-align-vertical dialog-button" data-problem-tag-dialog-button>
+              {{ _('SelectTags') }}
+            </div>   
+          </div>     
+          <div class="problem-tag-container--selected" data-problem-tag-selected-container-outer>
+            {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
+              {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
+              <div class="item hide selected" data-problem-tag-category-outer="{{problemTagCategory}}" data-problem-tag-selected-outer="{{problemTag}}">
+                {{ problemTag }}
+                <span class="icon icon-close"></span>
+              </div>
+              {%- endfor -%}       
+            {%- endfor -%}
+          </div>                
+        </div>               
       </section>
       {% include "partials/problem_stat.html" %}
     </div>

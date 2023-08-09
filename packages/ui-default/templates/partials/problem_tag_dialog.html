@@ -18,7 +18,7 @@
           <h2>{{ _('SelectedTags') }}: </h2>
           <div data-problem-tag-selected-container="{{problemTagCategory}}" class="list">
             {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
-            <div class="item hide" data-problem-tag-selected="{{problemTag}}">
+            <div class="item hide selected" data-problem-tag-selected="{{problemTag}}">
               {{ problemTag }}
               <span class="icon icon-close"></span>
             </div>
