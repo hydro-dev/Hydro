@@ -2,7 +2,33 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-{% include "partials/problem_categories_dialog.html" %}
+<div style="display: none" class="dialog--category-filter">
+  <div>
+    <div class="dialog--category-filter__header">      
+      <div class="flex-row flex-warp flex-cross-center" data-category-tab-container>
+        {%- for category in Object.keys((model.system.get('problem.categories')|parseYaml)) -%}
+        <div class="dialog--category-filter__header--item text-align-vertical" data-category-tab="{{category}}">
+        {{ category }}
+        </div>
+        {%- endfor -%}
+      </div>
+    </div>
+    {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml  -%}
+    <ol class="section__body chip-list dialog--category-filter__body hide" data-category-container="{{category}}">
+      <h2 class="section__title">{{ category }}: </h2>
+      <div class="flex-row flex-warp flex-cross-center">
+      {%- if sub_categories|length -%}
+        {%- for subcategory in sub_categories -%}
+        <span class="category-filter__subcategory-tag filter-item chip-list__item" data-category="{{category}}">{{ subcategory }}</span>
+        {%- endfor -%}
+      {%- else -%}
+        <span class="category-filter__category-tag filter-item chip-list__item">{{ category }}</span>
+      {%- endif -%}
+      </div>  
+    </ol>
+    {%- endfor -%}
+  </div>
+</div>
   <div class="row">
     <div class="medium-9 columns">
       <div class="section display-mode">
@@ -21,15 +47,14 @@
           </form>
           <div id="selected-categories"></div>
           {% if model.system.get('problem.pinnedFilter') %}
-          {% set pinnedFilter = model.system.get('problem.pinnedFilter')|parseYaml %}
           <div class="filter-panel">
-            {% for name, sub_filter in pinnedFilter %}
+            {% for name, sub_filter in model.system.get('problem.pinnedFilter')|parseYaml %}
             <div class="section__body group-list__item flex-row flex-cross-center">
               <ol class="chip-list">
                 <b class="chip-list__item">{{ _(name) }}: </b>
                 {%- for item, value in sub_filter -%}
                 <li class="chip-list__item">
-                   <a class="list__item filter-item" href="{{ url('problem_main', query={q: value}) }}" data-filter="{{ value }}">{{ item }}</a>
+                    <a class="list__item filter-item" href="{{ url('problem_main', query={q: value}) }}" data-filter="{{ value }}">{{ item }}</a>
                 </li>
                 {%- endfor -%}
               </ol>
