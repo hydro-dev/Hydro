@@ -321,14 +321,14 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drrid', Types.ObjectId)
     async postDeleteTailReply(domainId: string, drid: ObjectId, drrid: ObjectId) {
         const deleteBy = this.user.own(this.drrdoc) ? 'self' : 'Admin';
-        if (!(this.user.own(this.ddoc)
-        && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
-            if (this.user.own(this.drrdoc)) {
-                this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF);
-            } else {
+        if (!(this.user.own(this.drrdoc)
+        && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF))) {
+            if (!this.user.own(this.drrdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
+            } else {
+                this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF);
             }
-    }
+        }
         const msg = JSON.stringify({
             message: 'Admin {0} delete your discussion tail reply {1} in "{2}"({3:link}).',
             params: [
