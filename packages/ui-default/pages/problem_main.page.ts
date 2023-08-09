@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
+import parser from 'search-query-parser';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog, ConfirmDialog, Dialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
@@ -12,8 +13,7 @@ import {
 } from 'vj/utils';
 
 const categories = {};
-const dirtyCategories = [];
-const selections = [];
+let selections: string[] = [];
 const list = [];
 
 function setDomSelected($dom, selected) {
@@ -21,44 +21,48 @@ function setDomSelected($dom, selected) {
   else $dom.removeClass('selected');
 }
 
-async function updateSelection(sendRequest = true) {
-  dirtyCategories.forEach(({ type, category, subcategory }) => {
-    let item = categories[category];
-    const isSelected = item.select || _.some(item.children, (c) => c.select);
-    item.$tag.forEach((i) => setDomSelected(i, isSelected));
-    if (isSelected) {
-      selections.push(category);
-    } else {
-      _.pull(selections, category);
+const parserOptions = {
+  keywords: ['category', 'difficulty'],
+  offsets: true,
+  alwaysArray: true,
+  tokenize: true,
+};
+
+function writeSelectionToInput() {
+  const currentValue = $('[name="q"]').val() as string;
+  const parsedCurrentValue = parser.parse(currentValue, parserOptions) as parser.SearchParserResult;
+  const q = parser.stringify({
+    ...parsedCurrentValue,
+    category: selections,
+    text: parsedCurrentValue.text,
+  }, parserOptions);
+  $('[name="q"]').val(q);
+}
+
+function updateSelection() {
+  selections = _.uniq(selections);
+  for (const category in categories) {
+    const item = categories[category];
+    let childSelected = false;
+    for (const subcategory in item.children) {
+      const shouldSelect = selections.includes(subcategory);
+      const isSelected = item.children[subcategory].$tag[0].hasClass('selected');
+      childSelected ||= shouldSelect;
+      if (isSelected !== shouldSelect) item.children[subcategory].$tag.forEach((t) => setDomSelected(t, shouldSelect));
     }
-    if (type === 'subcategory') {
-      item = categories[category].children[subcategory];
-      item.$tag.forEach((i) => setDomSelected(i, item.select));
-      const selectionName = subcategory;
-      if (item.select) {
-        selections.push(selectionName);
-      } else {
-        _.pull(selections, selectionName);
-      }
-    }
-  });
-  dirtyCategories.length = 0;
-  if (sendRequest) {
-    // a list of categories which subcategory is selected
-    const requestCategoryTags = _.uniq(selections
-      .filter((s) => s.indexOf(',') !== -1)
-      .map((s) => s.split(',')[0]));
-    // drop the category if its subcategory is selected
-    const requestTags = _.uniq(_.pullAll(selections, requestCategoryTags));
-    let q = $('[name="q"]').val().split(' ').filter((i) => !i.startsWith('category:')).join(' ');
-    if (requestTags.length) q = requestTags.map((i) => `category:${i}`).join(' ') + (q ? ` ${q}` : '');
-    const url = new URL(window.location.href);
-    if (!q) url.searchParams.delete('q');
-    else url.searchParams.set('q', q);
-    url.searchParams.delete('page');
-    pjax.request({ url: url.toString() });
-    $('[name="q"]').val(q);
+    const shouldSelect = selections.includes(category) || childSelected;
+    const isSelected = item.$tag[0].hasClass('selected');
+    if (isSelected !== shouldSelect) item.$tag.forEach((t) => setDomSelected(t, shouldSelect));
   }
+}
+
+function loadQuery() {
+  const q = $('[name="q"]').val().toString();
+  const url = new URL(window.location.href);
+  if (!q) url.searchParams.delete('q');
+  else url.searchParams.set('q', q);
+  url.searchParams.delete('page');
+  pjax.request({ url: url.toString() });
 }
 
 function buildCategoryFilter() {
@@ -78,7 +82,6 @@ function buildCategoryFilter() {
       .remove()
       .attr('class', 'widget--category-filter__drop');
     const treeItem = {
-      select: false,
       $tag: [$categoryTag],
       children: {},
     };
@@ -94,8 +97,7 @@ function buildCategoryFilter() {
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = [$(subCategoryTag)];
-        treeItem.children[$(subCategoryTag).text()] = {
-          select: false,
+        treeItem.children[$tag[0].text()] = {
           $tag,
         };
       });
@@ -106,10 +108,10 @@ function buildCategoryFilter() {
     }
   });
   list.push(...Object.keys(categories));
-  list.push(..._.flatMap(Object.values(categories), (c) => Object.keys(c.children)));
+  list.push(..._.flatMap(Object.values(categories), (c: any) => Object.keys(c.children)));
 }
 
-const tagDialog = new Dialog({
+const tagDialog: any = new Dialog({
   $body: $('.dialog--category-filter > div'),
   cancelByClickingBack: true,
   cancelByEsc: true,
@@ -159,23 +161,30 @@ function buildCategoryDialog() {
   });
 }
 
-function parseCategorySelection() {
-  const queryCategories = $('[name="q"]').val().split(' ').filter((i) => i.startsWith('category:')).map((i) => i.replace('category:', ''));
-  const mainCategories = queryCategories.filter((i) => categories[i]);
-  mainCategories.forEach((category) => {
-    if (!categories[category]) return;
-    const subcategories = queryCategories.filter((i) => categories[category].children[i]);
-    if (!subcategories.length) {
-      categories[category].select = true;
-      dirtyCategories.push({ type: 'category', category });
-    } else {
-      subcategories.forEach((subcategory) => {
-        categories[category].children[subcategory].select = true;
-        dirtyCategories.push({ type: 'subcategory', subcategory, category });
-      });
+function parsePinnedFilter() {
+  $('[data-filter]').get().forEach((ele) => {
+    const [type, value] = $(ele).attr('data-filter').split(':');
+    if (type === 'difficulty') {
+      $(ele).attr('data-difficulty', value).addClass('difficulty-filter__tag');
+    }
+    if (type === 'category') {
+      if (categories[value]) {
+        $(ele).addClass('category-filter__category-tag');
+      } else {
+        const category = Object.keys(categories).find((c) => categories[c].children[value]);
+        if (category) {
+          $(ele).addClass('category-filter__subcategory-tag').attr('data-category', category);
+        }
+      }
     }
   });
-  updateSelection(false);
+}
+
+function parseCategorySelection() {
+  const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as parser.SearchParserResult;
+  selections = _.uniq(parsed.category || []);
+  if (parsed.difficulty) parsed.difficulty.forEach((d) => $(`.difficulty-filter__tag[data-difficulty="${d}"]`).addClass('selected'));
+  updateSelection();
 }
 
 function ensureAndGetSelectedPids() {
@@ -193,7 +202,7 @@ function ensureAndGetSelectedPids() {
 async function handleOperation(operation) {
   const pids = ensureAndGetSelectedPids();
   if (pids === null) return;
-  const payload = {};
+  const payload: any = {};
   if (operation === 'delete') {
     const action = await new ConfirmDialog({
       $body: tpl.typoMsg(i18n('Confirm to delete the selected problems?')),
@@ -217,7 +226,7 @@ async function handleOperation(operation) {
         </div>
       </div>
     `).appendTo(document.body);
-    const domainSelector = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
+    const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
     const copyDialog = await new ActionDialog({
       $body: $('.dialog__body--problem-copy > div'),
       onDispatch(action) {
@@ -237,7 +246,7 @@ async function handleOperation(operation) {
     await request.post('', { operation, pids, ...payload });
     Notification.success(i18n(`Selected problems have been ${operation === 'copy' ? 'copie' : operation}d.`));
     await delay(2000);
-    updateSelection(true);
+    loadQuery();
   } catch (error) {
     Notification.error(error.message);
   }
@@ -268,32 +277,19 @@ const page = new NamedPage(['problem_main'], () => {
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
   buildCategoryDialog();
+  parsePinnedFilter();
   parseCategorySelection();
-  $(document).on('click', '[data-filter]', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const filterKey = $(ev.currentTarget).attr('data-filter');
-    selections.push(filterKey);
-    updateSelection();
-    ev.preventDefault();
-  });
+  updateSelection();
   $(document).on('click', '.category-filter__category-tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const category = $(ev.currentTarget).text();
     const treeItem = categories[category];
-    // the effect should be cancelSelect if it is shown as selected when clicking
-    const shouldSelect = treeItem.$tag.hasClass('selected') ? false : !treeItem.select;
-    treeItem.select = shouldSelect;
-    dirtyCategories.push({ type: 'category', category });
-    if (!shouldSelect) {
-      // de-select children
-      _.forEach(treeItem.children, (treeSubItem, subcategory) => {
-        if (treeSubItem.select) {
-          treeSubItem.select = false;
-          dirtyCategories.push({ type: 'subcategory', subcategory, category });
-        }
-      });
-    }
+    const shouldSelect = !treeItem.$tag[0].hasClass('selected');
+    if (shouldSelect) selections.push(category);
+    else selections = _.without(selections, category, ...Object.keys(treeItem.children));
     updateSelection();
+    writeSelectionToInput();
+    loadQuery();
     ev.preventDefault();
   });
   $(document).on('click', '.category-filter__subcategory-tag', (ev) => {
@@ -301,10 +297,28 @@ const page = new NamedPage(['problem_main'], () => {
     const subcategory = $(ev.currentTarget).text();
     const category = $(ev.currentTarget).attr('data-category');
     const treeItem = categories[category].children[subcategory];
-    treeItem.select = !treeItem.select;
-    dirtyCategories.push({ type: 'subcategory', subcategory, category });
+    const shouldSelect = !treeItem.$tag[0].hasClass('selected');
+    if (shouldSelect) selections.push(subcategory);
+    else selections = _.without(selections, subcategory);
+    // TODO auto de-select parent
     updateSelection();
+    writeSelectionToInput();
+    loadQuery();
     ev.preventDefault();
+  });
+  $(document).on('click', '.difficulty-filter__tag', (ev) => {
+    ev.preventDefault();
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+    const difficulty = $(ev.currentTarget).attr('data-difficulty');
+    const shouldSelect = !$(ev.currentTarget).hasClass('selected');
+    $(ev.currentTarget).toggleClass('selected');
+    const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as parser.SearchParserResult;
+    const q = parser.stringify({
+      ...parsed,
+      difficulty: shouldSelect ? [...(parsed.difficulty || []), difficulty] : parsed.difficulty.filter((d) => d !== difficulty),
+    }, parserOptions);
+    $('[name="q"]').val(q);
+    loadQuery();
   });
   $(document).on('click', '[name="leave-edit-mode"]', () => {
     $body.removeClass('edit-mode').addClass('display-mode');
@@ -318,16 +332,19 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {
-    $('.section__table-container').children(1).toggleClass('hide-problem-tag');
+    $('.section__table-container').toggleClass('hide-problem-tag');
   });
-
-  // TODO: update this to according to the new descriptors.
+  function inputChanged() {
+    parseCategorySelection();
+    updateSelection();
+    loadQuery();
+  }
   $('#search').on('click', (ev) => {
     ev.preventDefault();
-    updateSelection();
+    inputChanged();
   });
-  $('#searchForm').on('submit', updateSelection);
-  $('#searchForm').find('input').on('input', _.debounce(updateSelection, 500));
+  $('#searchForm').on('submit', inputChanged);
+  $('#searchForm').find('input').on('input', _.debounce(inputChanged, 500));
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
