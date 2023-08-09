@@ -14,7 +14,14 @@
       <div class="dialog--select__body--tags hide" data-problem-tag-container="{{problemTagCategory}}">
         <div class="dialog--select__body--tags__selected">
           <h2>{{ _('SelectedTags') }}: </h2>
-          <div data-problem-tag-selected-container="{{problemTagCategory}}" class="list"></div>
+          <div data-problem-tag-selected-container="{{problemTagCategory}}" class="list">
+            {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
+            <div class="item hide" data-problem-tag-selected="{{problemTag}}">
+              {{ problemTag }}
+              <span class="icon icon-close"></span>
+            </div>
+            {%- endfor -%}            
+          </div>
         </div>
         <div class="dialog--select__body--divider"></div>
         <div class="dialog--select__body--tags__all">

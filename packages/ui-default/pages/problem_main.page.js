@@ -318,27 +318,12 @@ function addSelectedTagHighlight(ele) {
   `);
 }
 
-function removeSelectedTagElement(value, tag) {
+function toggleSelectedTagElement(value, tag) {
   const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
   if (!$problemTagSelectedContainer) return;
-  $problemTagSelectedContainer.find(`[data-problem-tag-selected="${tag}"]`).remove();
-}
-
-function addSelectedTagElement(value, tag) {
-  const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
-  if (!$problemTagSelectedContainer) return;
-  $problemTagSelectedContainer.append(`
-    <div class="item" data-problem-tag-selected="${tag}">
-      ${tag}
-      <span class="icon icon-close"></span>
-    </div>
-  `);
-  $problemTagSelectedContainer.on('click', `[data-problem-tag-selected="${tag}"]`, (ev) => {
-    ev.stopPropagation();
-    selectedDescriptors.tags[value].delete(tag);
-    removeSelectedTagHighlight($(`[data-problem-tag="${tag}"]`));
-    removeSelectedTagElement(value, tag);
-  });
+  const $problemTagSelected = $problemTagSelectedContainer.find(`[data-problem-tag-selected="${tag}"]`);
+  if (!$problemTagSelected) return;
+  $problemTagSelected.toggleClass('hide');
 }
 
 function handleSelectTag(value, ev) {
@@ -348,11 +333,11 @@ function handleSelectTag(value, ev) {
   if (selectedDescriptors.tags[value].has(tag)) {
     selectedDescriptors.tags[value].delete(tag);
     removeSelectedTagHighlight(ev.currentTarget);
-    removeSelectedTagElement(value, tag);
+    toggleSelectedTagElement(value, tag);
   } else {
     selectedDescriptors.tags[value].add(tag);
     addSelectedTagHighlight(ev.currentTarget);
-    addSelectedTagElement(value, tag);
+    toggleSelectedTagElement(value, tag);
   }
 }
 
@@ -372,7 +357,7 @@ function clearSelectedDescriptors() {
     const $problemTagContainer = $(`[data-problem-tag-container="${category}"]`);
     for (const tag of selectedDescriptors.tags[category]) {
       removeSelectedTagHighlight($problemTagContainer.find(`[data-problem-tag="${tag}"]`));
-      removeSelectedTagElement(category, tag);
+      toggleSelectedTagElement(category, tag);
     }
     selectedDescriptors.tags[category].clear();
   }
@@ -437,6 +422,16 @@ function buildDescriptorFilter() {
     if (!$problemTagContainer) return;
     $problemTagContainer.on('click', '[data-problem-tag]', (ev) => {
       handleSelectTag(value, ev);
+    });
+
+    const $problemTagSelectedContainer = $(`[data-problem-tag-selected-container="${value}"]`);
+    if (!$problemTagSelectedContainer) return;
+    $problemTagSelectedContainer.on('click', '[data-problem-tag-selected]', (ev) => {
+      ev.stopPropagation();
+      const tag = $(ev.currentTarget).attr('data-problem-tag-selected');
+      selectedDescriptors.tags[value].delete(tag);
+      removeSelectedTagHighlight($(`[data-problem-tag="${tag}"]`));
+      toggleSelectedTagElement(value, tag);
     });
   });
 }
