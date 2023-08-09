@@ -45,7 +45,7 @@
             </button>
           </div>
         </form>
-        {% if model.system.get('problem.pinnedFilter') %}
+        {% if domain.pinnedFilter %}
         <div class="filter-panel">
           {% for name, sub_filter in model.system.get('problem.pinnedFilter')|parseYaml %}
           <div class="section__body group-list__item flex-row flex-cross-center">
