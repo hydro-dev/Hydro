@@ -13,9 +13,13 @@
     <ol class="section__body chip-list dialog--category-filter__body hide" data-category-container="{{category}}">
       <h2 class="section__title">{{ category }}: </h2>
       <div class="flex-row flex-warp flex-cross-center">
+      {%- if sub_categories|length -%}
         {%- for subcategory in sub_categories -%}
-        <span class="category-filter__subcategory-tag chip-list__item" data-subcategory="{{subcategory}}" data-category="{{category}}">{{ subcategory }}</span>
+        <span class="category-filter__subcategory-tag filter-item chip-list__item" data-category="{{category}}">{{ subcategory }}</span>
         {%- endfor -%}
+      {%- else -%}
+        <span class="category-filter__category-tag filter-item chip-list__item">{{ category }}</span>
+      {%- endif -%}
       </div>  
     </ol>
     {%- endfor -%}

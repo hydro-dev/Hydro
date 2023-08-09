@@ -38,6 +38,10 @@
   &__category
     margin-bottom: rem(6px)
 
+  &__subcategory
+    margin: rem(2px)
+    display: inline-block
+
   &__drop
     position: relative
     font-size: rem($font-size-small)
@@ -63,38 +67,32 @@
       left: 100%
       top: 50%
       margin-left: rem(floor($menu-drop-triangle-size * 1.414))
-
-  &__subcategory
-    margin: rem(2px)
-    display: inline-block
-
-.category-filter
-  &__category-tag, &__subcategory-tag
-      display: inline-block
-      padding: rem(5px 6px)
-
-      &:hover
-        color: #FFF
-        background: $primary-color
-        text-decoration: none
-
-      &.selected
-        color: #FFF
-        background: $secondary-color
-
-.drop-target-attached-right .widget--category-filter__drop
-  margin-right: 0
-  margin-left: rem(10px)
-
-  &:before
-    transform-origin: 100% 0
-    transform: rotate(-45deg)
-    left: auto
-    right: 100%
-    margin-left: 0
+  
+  &.drop-target-attached-right
     margin-right: 0
-    margin-top: rem(floor($menu-drop-triangle-size * -1.414))
+    margin-left: rem(10px)
 
+    &:before
+      transform-origin: 100% 0
+      transform: rotate(-45deg)
+      left: auto
+      right: 100%
+      margin-left: 0
+      margin-right: 0
+      margin-top: rem(floor($menu-drop-triangle-size * -1.414))
+
+.filter-item
+    display: inline-block
+    padding: rem(5px 6px)
+
+    &:hover
+      color: #FFF
+      background: $primary-color
+      text-decoration: none
+
+    &.selected
+      color: #FFF
+      background: $secondary-color
 
 .display-mode .display-mode-hide,
 .edit-mode .edit-mode-hide,

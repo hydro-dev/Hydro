@@ -2,10 +2,7 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-{% include "partials/problem_tag_dialog.html" %}
-  {{ set(UiContext, {
-      currentCategory: category
-  }) }}
+{% include "partials/problem_categories_dialog.html" %}
   <div class="row">
     <div class="medium-9 columns">
       <div class="section display-mode">
@@ -17,24 +14,26 @@
               <button type="submit">
                 <span class="icon icon-search"></span>
               </button>
-              <button class="nojs--hide" data-problem-tag-dialog-button>
+              <button class="nojs--hide" data-categories-dialog-button>
                 <span class="icon icon-filter"></span>
               </button>
             </div>
           </form>
-          {% if model.system.get('problem.display_categories')  %}
-          <div class="categories-panel">
-            {% for name in model.system.get('problem.display_categories').split('\n') %}
-              <div class="section__body group-list__item flex-row flex-cross-center" data-display-category-container>
-                <ol class="chip-list">
-                  <b class="chip-list__item">{{ name }}: </b>
-                  {%- for sub_category in (model.system.get('problem.categories')|parseYaml)[name] -%}
-                  <li class="chip-list__item">
-                    <a class="list__item category-filter__subcategory-tag" href="{{ url('problem_main', query={q:'category:'+sub_category}) }}" data-category="{{name}}" data-subcategory="{{sub_category}}">{{ sub_category }}</a>
-                  </li>
-                  {%- endfor -%}          
-                </ol>
-              </div>
+          <div id="selected-categories"></div>
+          {% if model.system.get('problem.pinnedFilter') %}
+          {% set pinnedFilter = model.system.get('problem.pinnedFilter')|parseYaml %}
+          <div class="filter-panel">
+            {% for name, sub_filter in pinnedFilter %}
+            <div class="section__body group-list__item flex-row flex-cross-center">
+              <ol class="chip-list">
+                <b class="chip-list__item">{{ _(name) }}: </b>
+                {%- for item, value in sub_filter -%}
+                <li class="chip-list__item">
+                   <a class="list__item filter-item" href="{{ url('problem_main', query={q: value}) }}" data-filter="{{ value }}">{{ item }}</a>
+                </li>
+                {%- endfor -%}
+              </ol>
+            </div>
             {% endfor %}
           </div>
           {% endif %}

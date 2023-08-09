@@ -71,7 +71,7 @@ function buildCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'category-filter__category-tag');
+      .attr('class', 'filter-item category-filter__category-tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
@@ -88,9 +88,9 @@ function buildCategoryFilter() {
       $categoryTag.text(`${$categoryTag.text()}`);
       const $subCategoryTags = $drop
         .children('li')
-        .attr('class', 'category-filter__subcategory')
+        .attr('class', 'widget--category-filter__subcategory')
         .find('a')
-        .attr('class', 'category-filter__subcategory-tag')
+        .attr('class', 'filter-item category-filter__subcategory-tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = [$(subCategoryTag)];
@@ -140,19 +140,6 @@ tagDialog.clear = function () {
   return this;
 };
 
-function buildDisplayCategory() {
-  const $displayCategoryContainer = $('[data-display-category-container]');
-  if (!$displayCategoryContainer.length) return;
-  $displayCategoryContainer.get().forEach((container) => {
-    $(container).find('.category-filter__subcategory-tag').get().forEach((subcategory) => {
-      const $tag = $(subcategory);
-      const categoryText = $tag.attr('data-category');
-      const subcategoryText = $tag.attr('data-subcategory');
-      categories[categoryText].children[subcategoryText].$tag.push($tag);
-    });
-  });
-}
-
 function buildCategoryDialog() {
   const $problemTagCategoryContainer = tagDialog.$dom.find('[data-category-tab-container]');
   if (!$problemTagCategoryContainer) return;
@@ -167,22 +154,25 @@ function buildCategoryDialog() {
     if (!$problemTagContainer) return;
     $problemTagContainer.find('.category-filter__subcategory-tag').get().forEach((subcategory) => {
       const $tag = $(subcategory);
-      categories[categoryText].children[$tag.attr('data-subcategory')].$tag.push($tag);
+      categories[categoryText].children[$tag.text()].$tag.push($tag);
     });
   });
 }
 
 function parseCategorySelection() {
-  UiContext.currentCategory.split(' ').forEach((cline) => {
-    const [category, subcategory] = cline.split(',');
+  const queryCategories = $('[name="q"]').val().split(' ').filter((i) => i.startsWith('category:')).map((i) => i.replace('category:', ''));
+  const mainCategories = queryCategories.filter((i) => categories[i]);
+  mainCategories.forEach((category) => {
     if (!categories[category]) return;
-    if (subcategory && !categories[category].children[subcategory]) return;
-    if (!subcategory) {
+    const subcategories = queryCategories.filter((i) => categories[category].children[i]);
+    if (!subcategories.length) {
       categories[category].select = true;
       dirtyCategories.push({ type: 'category', category });
     } else {
-      categories[category].children[subcategory].select = true;
-      dirtyCategories.push({ type: 'subcategory', subcategory, category });
+      subcategories.forEach((subcategory) => {
+        categories[category].children[subcategory].select = true;
+        dirtyCategories.push({ type: 'subcategory', subcategory, category });
+      });
     }
   });
   updateSelection(false);
@@ -277,9 +267,15 @@ const page = new NamedPage(['problem_main'], () => {
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
   buildCategoryFilter();
-  buildDisplayCategory();
   buildCategoryDialog();
   parseCategorySelection();
+  $(document).on('click', '[data-filter]', (ev) => {
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+    const filterKey = $(ev.currentTarget).attr('data-filter');
+    selections.push(filterKey);
+    updateSelection();
+    ev.preventDefault();
+  });
   $(document).on('click', '.category-filter__category-tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
     const category = $(ev.currentTarget).text();
@@ -338,7 +334,7 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $(document).on('vjContentNew', (e) => processElement(e.target));
   processElement(document);
-  $('[data-problem-tag-dialog-button]').on('click', (ev) => {
+  $('[data-categories-dialog-button]').on('click', (ev) => {
     ev.preventDefault();
     tagDialog.clear().open();
   });
