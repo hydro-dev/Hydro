@@ -150,6 +150,7 @@ Claim homework: 认领作业
 Claim Homework: 认领作业
 Claimed: 已认领
 Clear Marks: 清除标记
+ClearSelection: 清空筛选条件
 Click here to chat with me: 点击这里与我聊天
 click to add: 点击添加
 Clone: 复制
@@ -678,6 +679,9 @@ problem.import.input_format: '## 输入格式'
 problem.import.limit_and_hint: '## 限制'
 problem.import.output_format: '## 输出格式'
 problem.import.problem_description: '## 题目描述'
+ProblemType: 题型
+ProblemDifficulty: 难度
+ProblemTag: 标签
 Problems Sets: 题库
 Problems: 题目
 Processing...: 处理中...
@@ -761,12 +765,8 @@ Scoreboard: 成绩表
 Scoring method: 评分方式
 Scripts: 脚本
 Search: 搜索
-SearchProblem: 搜索题目
-ClearSelection: 清空筛选条件
 SearchHint: 请输入题目ID/题目名称关键字
-ProblemType: 题型
-ProblemDifficulty: 难度
-ProblemTag: 标签
+SearchProblem: 搜索题目
 SelectTags: 选择标签
 SelectedTags: 已选标签
 Secret (visible to admins): 保密（对管理员可见）
