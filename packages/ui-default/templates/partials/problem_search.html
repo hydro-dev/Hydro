@@ -1,6 +1,6 @@
 <form method="get" id="searchForm" action="{{ url('problem_main') }}">
-  <div class="search-panel" data-widget-search-panel>
-    <div class="search-panel--header">
+  <div class="search-container">
+    <div class="search-container--header">
       <div class="title">{{ _('SearchProblem') }}:</div>
       <div class="search">
         <div class="search--bar">
@@ -14,42 +14,51 @@
         </button>
       </div>
     </div>
-    <div class="search-panel--body">
+    <div class="search-container--body">
+      {# {% if domain.pinnedFilter %} #}
+      {# {% set pinnedFilter = domain.pinnedFilter|parseYaml %} #}
+      {% if true %}
+      {% set pinnedFilter = {
+            "difficulty": ['入门', 'CSP-J(-)', 'CSP-J', 'CSP-J(+)', 'CSP-S(-)', 'CSP-S', 'CSP-S(+)', 'NOIP', '省选', 'NOI', 'IOI'],
+            "type": ['编程题', '选择题', '判断题', '填空题', '材料题']
+        } 
+      %}
       <section>
-        <h2 class="title text-align-vertical">
+        <h2 class="title text--align-vertical">
           {{ _('ProblemType') }}:
         </h2>
-        <div class="list" data-problem-type-container>
-          {%- for problemType in (model.system.get('problem.descriptors')|parseYaml)["题目类型"] -%}
-          <div class="list__item text-align-vertical" data-problem-type="{{problemType}}">
-            {{ problemType }}
+        <div class="list flex-wrap" data-type-container>
+          {%- for type in pinnedFilter.type -%}
+          <div class="list__item text--align-vertical" data-selection="{{type}}">
+            {{ type }}
           </div>
           {%- endfor -%}          
         </div>
       </section>
       <section>
-        <h2 class="title text-align-vertical">
+        <h2 class="title text--align-vertical">
           {{ _('ProblemDifficulty') }}:
         </h2>
-        <div class="list" data-problem-difficulty-container>
-          {%- for problemDifficulty in (model.system.get('problem.descriptors')|parseYaml)["难度"] -%}
-          <div class="list__item text-align-vertical" data-problem-difficulty="{{problemDifficulty}}">
-            {{ problemDifficulty }}
+        <div class="list flex-wrap" data-difficulty-container>
+          {%- for difficulty in pinnedFilter.difficulty -%}
+          <div class="list__item text--align-vertical" data-selection="{{difficulty}}">
+            {{ difficulty }}
           </div>
           {%- endfor -%}          
         </div>                
-      </section>        
+      </section>
+      {% endif %}       
       <section style="margin-bottom: 36px">
-        <h2 class="title text-align-vertical">
+        <h2 class="title text--align-vertical">
           {{ _('ProblemTag') }}:
         </h2>
-        <div class="problem-tag-container">
-          <div class="list">
-            <div class="list__item text-align-vertical dialog-button" data-problem-tag-dialog-button>
+        <div class="tag-container">
+          <div class="list flex-wrap">
+            <div class="list__item text--align-vertical dialog-button" data-problem-tag-dialog-button>
               {{ _('SelectTags') }}
             </div>   
           </div>     
-          <div class="problem-tag-container--selected" data-problem-tag-selected-container-outer>
+          <div class="tag-container--selected" data-problem-tag-selected-container-outer>
             {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
               {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
               <div class="item hide selected" data-problem-tag-category-outer="{{problemTagCategory}}" data-problem-tag-selected-outer="{{problemTag}}">
@@ -64,5 +73,5 @@
       {% include "partials/problem_stat.html" %}
     </div>
   </div>
-  {% include "partials/problem_tag_dialog.html" %}
 </form>
+{% include "partials/problem_category_dialog.html" %}

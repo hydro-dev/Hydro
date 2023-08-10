@@ -126,114 +126,113 @@
 .data-table > thead > tr
   height: 54.9px
 
-.search-container
-  padding: 0.05rem 0 0 0 
-  background: #f6f5fa
+.section__header.no-padding
+  padding: 0
 
-.search-panel
-  margin: 16px
+form > .search-container
+  padding: 12px 16px 0 16px
+  background: #f6f5fa
   margin-bottom: -10px
 
-.search-panel--header
+.search-container--header
   display: flex
   justify-content: space-between
   align-items: center
   background: #ffffff
   padding: 6px 20px
 
-.search-panel--header > .title
-  font-size: 18px
-  font-weight: bold
-  color: #3774c9
+  & > .title
+    font-size: 18px
+    font-weight: bold
+    color: #3774c9
 
-.search-panel--header > .search
-  width: calc(100% - 90px)
-  position: relative
+  & > .search
+    width: calc(100% - 90px)
+    position: relative
+    display: flex
+    align-items: center
+
+    & > .search--bar
+      width: 100%
+      background: #eeeff3
+      display: flex
+
+      & > input
+        width: 100%
+        background: #eeeff3
+        border: none
+        padding: 5px 0
+        height: 36px
+        outline: none
+        color: #000000
+
+      & > input::placeholder
+        color: #b0b0b0
+
+      & > div
+        display: flex
+        align-items: center
+        padding: 0 12px      
+
+        & > span
+          font-size: rem(20px)
+          color: #b0b0b0  
+
+    & > button
+      width: 100px
+      height: 36px
+      border: 1px solid #458ae7
+      background: #458ae7
+      text-align: center
+      color: #fff
+      cursor: pointer
+      font-size: rem(16px)
+      font-weight: bold
+
+.text--align-vertical
   display: flex
   align-items: center
 
-.search > .search--bar
-  width: 100%
-  background: #eeeff3
-  display: flex
-
-.search--bar > input
-  width: 100%
-  background: #eeeff3
-  border: none
-  padding: 5px 0
-  height: 36px
-  outline: none
-  color: #000000
-
-.search--bar > input::placeholder
-  color: #b0b0b0
-
-.search--bar > div
-  display: flex
-  align-items: center
-  padding: 0 12px
-
-.search--bar > div > span
-  font-size: rem(20px)
-  color: #b0b0b0
-
-.search > button
-  width: 100px
-  height: 36px
-  border: 1px solid #458ae7
-  background: #458ae7
-  text-align: center
-  color: #fff
-  cursor: pointer
-  font-size: rem(16px)
-  font-weight: bold
-
-.search-panel--body
+.search-container--body
   padding: 24px 20px
 
-.search-panel--body > section
-  display: flex
-  margin-bottom: 40px
+  & > section
+    display: flex
+    margin-bottom: 40px
 
-.search-panel--body .text-align-vertical
-  display: flex
-  align-items: center
+    & > .title
+      font-size: 16px
+      font-weight: bold
+      margin-right: 48px
+      height: 30px
 
-.search-panel--body .title
-  font-size: 16px
-  font-weight: bold
-  margin-right: 48px
-  height: 30px
+    & .list
+      display: flex
+      max-width: calc(100% - 100px)
 
-.search-panel--body .list
-  display: flex
-  flex-flow: row wrap
-  max-width: calc(100% - 100px)
+      & > .list__item
+        font-size: 14px
+        padding: 8px 20px
+        cursor: pointer
 
-.search-panel--body .list__item
-  font-size: 14px
-  padding: 8px 20px
-  cursor: pointer
+        &.selected
+          background: #458ae7
+          color: #ffffff
+          padding: 6px 18px
+          margin: 2px 2px
+          padding-right: 8px
 
-.search-panel--body .list__item.selected
-  background: #458ae7
-  color: #ffffff
-  padding: 6px 18px
-  margin: 2px 2px
-  padding-right: 8px
+          & > span
+            padding-left: 6px
 
-.search-panel--body .list__item.selected > span
-  padding-left: 6px
+  & .tag-container
+    width: calc(100% - 90px)    
 
-.search-panel--body .list > .dialog-button
-  border: 1px solid #458ae7
-  color: #458ae7
+    & .dialog-button
+      border: 1px solid #458ae7
+      color: #458ae7      
 
-.search-panel--body .problem-tag-container
-  width: calc(100% - 90px)
-
-.problem-tag-container--selected
+.tag-container--selected
   display: flex
   flex-flow: row wrap
   margin: 4px 0 0 0
@@ -259,18 +258,19 @@
       display: none
       opacity: 0    
 
-.search-panel .problem-stat
-  display: flex
-  justify-content: space-between
+.search-container 
+  & .problem-stat
+    display: flex
+    justify-content: space-between
 
-.search-panel .problem-stat > p
-  font-size: 14px
-  color: #4c4a48
+    & > p
+      font-size: 14px
+      color: #4c4a48
 
-.search-panel .problem-stat .link
-  color: #458ae7
-  cursor: pointer
-  text-decoration: underline
+    & > .link
+      color: #458ae7
+      cursor: pointer
+      text-decoration: underline
 
 .search-dialog
   position: fixed
