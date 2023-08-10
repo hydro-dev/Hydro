@@ -1,6 +1,6 @@
+import parser, { SearchParserResult } from '@hydrooj/utils/lib/search';
 import $ from 'jquery';
 import _ from 'lodash';
-import parser from 'search-query-parser';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
@@ -30,7 +30,7 @@ const parserOptions = {
 
 function writeSelectionToInput() {
   const currentValue = $('[name="q"]').val() as string;
-  const parsedCurrentValue = parser.parse(currentValue, parserOptions) as parser.SearchParserResult;
+  const parsedCurrentValue = parser.parse(currentValue, parserOptions) as SearchParserResult;
   const q = parser.stringify({
     ...parsedCurrentValue,
     category: selections,
@@ -138,7 +138,7 @@ function buildCategoryFilter() {
 }
 
 function parseCategorySelection() {
-  const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as parser.SearchParserResult;
+  const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as SearchParserResult;
   selections = _.uniq(parsed.category || []);
   updateSelection();
 }

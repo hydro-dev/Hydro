@@ -126,7 +126,6 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "nunjucks": "^3.2.4",
     "schemastery-jsonschema": "^1.0.3",
-    "search-query-parser": "^1.6.0",
     "streamsaver": "^2.0.6",
     "xss": "^1.0.14"
   }
