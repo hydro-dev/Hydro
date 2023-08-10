@@ -1,10 +1,10 @@
 <form method="get" id="searchForm" action="{{ url('problem_main') }}">
   <div class="search-container">
-    <div class="search-container--header">
+    <div class="search-container--header flex-row">
       <div class="title">{{ _('SearchProblem') }}:</div>
-      <div class="search">
-        <div class="search--bar">
-          <div>
+      <div class="search flex-row">
+        <div class="search--bar flex-row">
+          <div class="flex-row">
             <span class="icon icon-search"></span>
           </div>          
           <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('SearchHint') }}">
@@ -23,11 +23,11 @@
             "type": ['编程题', '选择题', '判断题', '填空题', '材料题']
         } 
       %}
-      <section>
+      <section class="flex-row">
         <h2 class="title text--align-vertical">
           {{ _('ProblemType') }}:
         </h2>
-        <div class="list flex-wrap" data-type-container>
+        <div class="list flex-wrap flex-row" data-type-container>
           {%- for type in pinnedFilter.type -%}
           <div class="list__item text--align-vertical" data-selection="{{type}}">
             {{ type }}
@@ -35,11 +35,11 @@
           {%- endfor -%}          
         </div>
       </section>
-      <section>
+      <section class="flex-row">
         <h2 class="title text--align-vertical">
           {{ _('ProblemDifficulty') }}:
         </h2>
-        <div class="list flex-wrap" data-difficulty-container>
+        <div class="list flex-wrap flex-row" data-difficulty-container>
           {%- for difficulty in pinnedFilter.difficulty -%}
           <div class="list__item text--align-vertical" data-selection="{{difficulty}}">
             {{ difficulty }}
@@ -48,21 +48,25 @@
         </div>                
       </section>
       {% endif %}       
-      <section style="margin-bottom: 36px">
+      <section style="margin-bottom: 36px" class="flex-row">
         <h2 class="title text--align-vertical">
           {{ _('ProblemTag') }}:
         </h2>
-        <div class="tag-container">
-          <div class="list flex-wrap">
-            <div class="list__item text--align-vertical dialog-button" data-problem-tag-dialog-button>
+        <div class="subcategory-container">
+          <div class="list flex-wrap flex-row">
+            <div class="list__item text--align-vertical dialog-button">
               {{ _('SelectTags') }}
             </div>   
           </div>     
-          <div class="tag-container--selected" data-problem-tag-selected-container-outer>
-            {%- for problemTagCategory in Object.keys((model.system.get('problem.descriptors')|parseYaml)["标签类型"]) -%}
-              {%- for problemTag in (model.system.get('problem.descriptors')|parseYaml)["标签类型"][problemTagCategory] -%}
-              <div class="item hide selected" data-problem-tag-category-outer="{{problemTagCategory}}" data-problem-tag-selected-outer="{{problemTag}}">
-                {{ problemTag }}
+          <div class="subcategory-container__selected flex-row flex-wrap">
+            {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
+              <div class="list__item hide selected" data-selection="{{category}}">
+                {{ category }}
+                <span class="icon icon-close"></span>
+              </div>              
+              {%- for sub_category in sub_categories -%}
+              <div class="list__item hide selected" data-selection="{{sub_category}}">
+                {{ sub_category }}
                 <span class="icon icon-close"></span>
               </div>
               {%- endfor -%}       

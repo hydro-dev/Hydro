@@ -1,4 +1,4 @@
-<div data-fragment-id="problem_stat" class="problem-stat">
+<div data-fragment-id="problem_stat" class="problem-stat flex-row">
   <p>{{ _('{0} problems' if pcountRelation == 'eq' else 'Over {0} problems').format(pcount) }}</p>
-  <p class="link">{{ _('ClearSelection') }}</p>
+  <a class="link" href="./p?q=">{{ _('ClearSelection') }}</a>
 </div>
