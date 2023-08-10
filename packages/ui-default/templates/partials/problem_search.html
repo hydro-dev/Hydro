@@ -1,53 +1,17 @@
 <form method="get" id="searchForm" action="{{ url('problem_main') }}">
   <div class="search-container">
-    <div class="search-container--header flex-row">
-      <div class="title">{{ _('SearchProblem') }}:</div>
-      <div class="search flex-row">
-        <div class="search--bar flex-row">
-          <div class="flex-row">
-            <span class="icon icon-search"></span>
-          </div>          
-          <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('SearchHint') }}">
-        </div>
-        <button type="submit">
-          <span>{{ _('Search') }}</span>
-        </button>
-      </div>
-    </div>
     <div class="search-container--body">
-      {# {% if domain.pinnedFilter %} #}
-      {# {% set pinnedFilter = domain.pinnedFilter|parseYaml %} #}
-      {% if true %}
-      {% set pinnedFilter = {
-            "difficulty": ['入门', 'CSP-J(-)', 'CSP-J', 'CSP-J(+)', 'CSP-S(-)', 'CSP-S', 'CSP-S(+)', 'NOIP', '省选', 'NOI', 'IOI'],
-            "type": ['编程题', '选择题', '判断题', '填空题', '材料题']
-        } 
-      %}
-      <section class="flex-row">
-        <h2 class="title text--align-vertical">
-          {{ _('ProblemType') }}:
-        </h2>
-        <div class="list flex-wrap flex-row" data-type-container>
-          {%- for type in pinnedFilter.type -%}
-          <div class="list__item text--align-vertical" data-selection="{{type}}">
-            {{ type }}
+      {% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}
+      {% for k, v in pinnedFilter %}
+        <section class="flex-row">
+          <h2 class="title text--align-vertical">{{ k }}:</h2>
+          <div class="list flex-wrap flex-row" {% if k==='难度' %}data-difficulty-container{% else %}data-type-container{% endif %}>
+            {%- for name, t in v -%}
+              <div class="list__item text--align-vertical" data-selection="{{t}}">{{ name }}</div>
+            {%- endfor -%}          
           </div>
-          {%- endfor -%}          
-        </div>
-      </section>
-      <section class="flex-row">
-        <h2 class="title text--align-vertical">
-          {{ _('ProblemDifficulty') }}:
-        </h2>
-        <div class="list flex-wrap flex-row" data-difficulty-container>
-          {%- for difficulty in pinnedFilter.difficulty -%}
-          <div class="list__item text--align-vertical" data-selection="{{difficulty}}">
-            {{ difficulty }}
-          </div>
-          {%- endfor -%}          
-        </div>                
-      </section>
-      {% endif %}       
+        </section>
+      {% endfor %} 
       <section style="margin-bottom: 36px" class="flex-row">
         <h2 class="title text--align-vertical">
           {{ _('ProblemTag') }}:

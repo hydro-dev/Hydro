@@ -74,7 +74,7 @@ function updateSelection() {
   const $typeContainer = $('[data-type-container]');
   if (!$typeContainer) return;
   const typeCategories = $typeContainer.children()
-    .map((index, element) => $(element).attr('data-selection'))
+    .map((index, element) => $(element).attr('data-selection').split(':')[1])
     .get();
   for (const category in categories) {
     const item = categories[category];
@@ -284,7 +284,7 @@ function buildSearchContainer() {
   const $typeContainer = $('[data-type-container]');
   if (!$typeContainer) return;
   $typeContainer.children().each((index, element) => {
-    const selection = $(element).attr('data-selection');
+    const selection = $(element).attr('data-selection').split(':')[1];
     categories[selection] = {
       $tag: $(element),
       children: {},
@@ -305,7 +305,7 @@ function buildSearchContainer() {
   const $difficultyContainer = $('[data-difficulty-container]');
   if (!$difficultyContainer) return;
   $difficultyContainer.children().each((index, element) => {
-    const selection = $(element).attr('data-selection');
+    const selection = $(element).attr('data-selection').split(':')[1];
     difficulties[selection] = {
       $tag: $(element),
       children: {},

@@ -190,10 +190,9 @@ form > .search-container
   align-items: center
 
 .search-container--body
-  padding: 24px 20px
 
   & > section
-    margin-bottom: 40px
+    margin-bottom: 5px
 
     & > .title
       font-size: 16px
@@ -351,3 +350,33 @@ form > .search-container
 
   & .subcategory__all
     margin: 24px 0 0 0
+
+.search
+  width: 100%
+  position: relative
+  display: flex
+
+.search > input
+  width: 100%
+  border: 1px solid #cccccc
+  border-right: none
+  padding: 5px
+  height: 36px
+  outline: none
+  color: #000000
+
+.search > button
+  width: 40px
+  height: 36px
+  border: 1px solid #00B4CC
+  background: #00B4CC
+  text-align: center
+  color: #fff
+  cursor: pointer
+  font-size: 20px
+
+.search > div
+  position: absolute
+  right: 50px
+  top: 8px
+  font-size: rem(17px)
