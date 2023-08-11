@@ -14,7 +14,7 @@
     {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
     <div class="subcategory-container hide" data-subcategory-container="{{category}}">
       <div class="subcategory__selected">
-        <h2>{{ _('SelectedTags') }}: </h2>
+        <h2>{{ _('SelectedCategories') }}: </h2>
         <div class="list flex-row flex-wrap">
           <div class="list__item hide selected" data-selection="{{category}}">
             {{ category }}

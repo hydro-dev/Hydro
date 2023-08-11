@@ -1,11 +1,11 @@
-<form method="get" id="searchForm" action="{{ url('problem_main') }}">
+<div class="problem-search">
   <div class="search-container">
     <div class="search-container--body">
-      {% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}
+      {% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}      
       {% for k, v in pinnedFilter %}
         <section class="flex-row">
           <h2 class="title text--align-vertical">{{ k }}:</h2>
-          <div class="list flex-wrap flex-row" {% if k==='难度' %}data-difficulty-container{% else %}data-type-container{% endif %}>
+          <div class="list flex-wrap flex-row" data-pinned-container>
             {%- for name, t in v -%}
               <div class="list__item text--align-vertical" data-selection="{{t}}">{{ name }}</div>
             {%- endfor -%}          
@@ -14,12 +14,12 @@
       {% endfor %} 
       <section style="margin-bottom: 36px" class="flex-row">
         <h2 class="title text--align-vertical">
-          {{ _('ProblemTag') }}:
+          {{ _('ProblemCategory') }}:
         </h2>
         <div class="subcategory-container">
           <div class="list flex-wrap flex-row">
             <div class="list__item text--align-vertical dialog-button">
-              {{ _('SelectTags') }}
+              {{ _('SelectCategory') }}
             </div>   
           </div>     
           <div class="subcategory-container__selected flex-row flex-wrap">
@@ -41,5 +41,5 @@
       {% include "partials/problem_stat.html" %}
     </div>
   </div>
-</form>
+</div>
 {% include "partials/problem_category_dialog.html" %}

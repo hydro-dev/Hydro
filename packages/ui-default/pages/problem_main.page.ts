@@ -17,6 +17,10 @@ const legacyCategories = {};
 
 const categories = {};
 const difficulties = {};
+
+const pinnedCategories: string[] = [];
+const pinnedDifficulties: string[] = [];
+
 let categorySelections: string[] = [];
 let difficultySelections: string[] = [];
 
@@ -71,18 +75,13 @@ function updateSelection() {
     if (isSelected !== shouldSelect) setDomSelected(item.$tag, shouldSelect);
   }
 
-  const $typeContainer = $('[data-type-container]');
-  if (!$typeContainer) return;
-  const typeCategories = $typeContainer.children()
-    .map((index, element) => $(element).attr('data-selection').split(':')[1])
-    .get();
   for (const category in categories) {
     const item = categories[category];
     const shouldSelect = categorySelections.includes(category);
     const isSelected = item.$tag.hasClass('selected');
     if (isSelected !== shouldSelect) {
       setDomSelected(item.$tag, shouldSelect);
-      if (typeCategories.includes(category)) {
+      if (pinnedCategories.includes(category)) {
         setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
       } else {
         setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-close"></span>');
@@ -100,7 +99,9 @@ function updateSelection() {
     const isSelected = item.$tag.hasClass('selected');
     if (isSelected !== shouldSelect) {
       setDomSelected(item.$tag, shouldSelect);
-      setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
+      if (pinnedDifficulties.includes(difficulty)) {
+        setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
+      }
     }
   }
 }
@@ -277,54 +278,55 @@ function clearCategoryDialog(): Dialog {
   const category = first.attr('data-category');
   const $subCategoryContainer = categoryDialog.$dom.find(`[data-subcategory-container="${category}"]`);
   $subCategoryContainer.removeClass('hide');
-  return categoryDialog;
 }
 
 function buildSearchContainer() {
-  const $typeContainer = $('[data-type-container]');
-  if (!$typeContainer) return;
-  $typeContainer.children().each((index, element) => {
-    const selection = $(element).attr('data-selection').split(':')[1];
-    categories[selection] = {
-      $tag: $(element),
-      children: {},
-    };
-
-    $(element).on('click', (ev) => {
-      if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-      const shouldSelect = !categories[selection].$tag.hasClass('selected');
-      if (shouldSelect) categorySelections.push(selection);
-      else categorySelections = _.without(categorySelections, selection, ...Object.keys(categories[selection].children));
-      updateSelection();
-      writeSelectionToInput();
-      loadQuery();
-      ev.preventDefault();
-    });
-  });
-
-  const $difficultyContainer = $('[data-difficulty-container]');
-  if (!$difficultyContainer) return;
-  $difficultyContainer.children().each((index, element) => {
-    const selection = $(element).attr('data-selection').split(':')[1];
-    difficulties[selection] = {
-      $tag: $(element),
-      children: {},
-    };
-
-    $(element).on('click', (ev) => {
-      if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-      const shouldSelect = !difficulties[selection].$tag.hasClass('selected');
-      if (shouldSelect) difficultySelections.push(selection);
-      else difficultySelections = _.without(difficultySelections, selection, ...Object.keys(difficulties[selection].children));
-      updateSelection();
-      writeSelectionToInput();
-      loadQuery();
-      ev.preventDefault();
+  $('[data-pinned-container]')?.each((index, container) => {
+    $(container).children().each((_index, _element) => {
+      const [type, selection] = $(_element).attr('data-selection').split(':');
+      switch (type) {
+        case 'category':
+          pinnedCategories.push(selection);
+          categories[selection] = {
+            $tag: $(_element),
+            children: {},
+          };
+          $(_element).on('click', (ev) => {
+            if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+            const shouldSelect = !categories[selection].$tag.hasClass('selected');
+            if (shouldSelect) categorySelections.push(selection);
+            else categorySelections = _.without(categorySelections, selection, ...Object.keys(categories[selection].children));
+            updateSelection();
+            writeSelectionToInput();
+            loadQuery();
+            ev.preventDefault();
+          });
+          break;
+        case 'difficulty':
+          pinnedDifficulties.push(selection);
+          difficulties[selection] = {
+            $tag: $(_element),
+            children: {},
+          };
+          $(_element).on('click', (ev) => {
+            if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+            const shouldSelect = !difficulties[selection].$tag.hasClass('selected');
+            if (shouldSelect) difficultySelections.push(selection);
+            else difficultySelections = _.without(difficultySelections, selection, ...Object.keys(difficulties[selection].children));
+            updateSelection();
+            writeSelectionToInput();
+            loadQuery();
+            ev.preventDefault();
+          });
+          break;
+        default: // ignore
+      }
     });
   });
 
   $('.dialog-button.list__item')?.on('click', (ev) => {
-    clearCategoryDialog().open();
+    clearCategoryDialog();
+    categoryDialog.open();
     ev.preventDefault();
   });
 
