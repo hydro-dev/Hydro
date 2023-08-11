@@ -498,7 +498,7 @@ class OauthCallbackHandler extends Handler {
                     username,
                     redirect: this.domain.registerRedirect,
                     set,
-                    oauth: [args.type, r.email],
+                    oauth: [args.type, r._id],
                 },
             );
             this.response.redirect = this.url('user_register_with_code', { code: t });
