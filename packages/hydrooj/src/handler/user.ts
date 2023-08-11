@@ -466,6 +466,7 @@ class OauthCallbackHandler extends Handler {
             if (r.email) {
                 const udoc = await user.getByEmail('system', r.email);
                 if (udoc) {
+                    await oauth.set(r._id, udoc._id);
                     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
                     this.session.uid = udoc._id;
                     this.session.scope = PERM.PERM_ALL.toString();
