@@ -5,6 +5,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
+import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -144,10 +145,17 @@ export class ProblemMainHandler extends Handler {
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
-        const category = flattenDeep(q.split(' ')
-            .filter((i) => i.startsWith('category:'))
-            .map((i) => i.split('category:')[1]?.split(',')));
-        const text = q.split(' ').filter((i) => !i.startsWith('category:')).join(' ');
+        const parsed = parser.parse(q, {
+            keywords: ['category', 'difficulty'],
+            offsets: false,
+            alwaysArray: true,
+            tokenize: true,
+        });
+        const category = parsed.category || [];
+        const text = (parsed.text || []).join(' ');
+        if (parsed.difficulty?.every((i) => Number.isSafeInteger(+i))) {
+            query.difficulty = { $in: parsed.difficulty.map(Number) };
+        }
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (text) category.push(text);
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
@@ -214,7 +222,6 @@ export class ProblemMainHandler extends Handler {
                 pcountRelation,
                 pdocs,
                 psdict,
-                category: category.join(','),
                 qs: q,
             };
         }
@@ -974,7 +981,7 @@ export class ProblemCreateHandler extends Handler {
     ) {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
-        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], hidden);
+        const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], { hidden, difficulty });
         const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];
         for (const file of files) {
@@ -987,7 +994,6 @@ export class ProblemCreateHandler extends Handler {
             }
         }
         await Promise.all(tasks);
-        if (difficulty) await problem.edit(domainId, docId, { difficulty });
         this.response.body = { pid: pid || docId };
         this.response.redirect = this.url('problem_files', { pid: pid || docId });
     }

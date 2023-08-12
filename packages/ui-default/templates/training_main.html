@@ -52,6 +52,23 @@
     </div>
   </div>
   <div class="large-3 columns">
+    {% if handler.user.hasPerm(perm.PERM_CREATE_TRAINING) %}
+      <div class="section side">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Create Training Plan') }}</h1>
+        </div>
+        <ol class="menu">
+          <li class="menu__item">
+            <a href="{{ url('training_create') }}" class="menu__link"><span class="icon icon-add"></span> {{ _('New Training Plan') }}</a>
+          </li>
+        </ol>
+        <div class="section__body">
+          <div class="typo supplementary">
+            <p>{{ _('You can create your own training plans and share them with others.') }}</p>
+          </div>
+        </div>
+      </div>
+    {% endif %}
     {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <div class="section side">
         <div class="section__header">
@@ -74,23 +91,6 @@
               {% endif %}
             {%- endfor -%}
           </ol>
-        </div>
-      </div>
-    {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_CREATE_TRAINING) %}
-      <div class="section side">
-        <div class="section__header">
-          <h1 class="section__title">{{ _('Create Training Plan') }}</h1>
-        </div>
-        <ol class="menu">
-          <li class="menu__item">
-            <a href="{{ url('training_create') }}" class="menu__link"><span class="icon icon-add"></span> {{ _('New Training Plan') }}</a>
-          </li>
-        </ol>
-        <div class="section__body">
-          <div class="typo supplementary">
-            <p>{{ _('You can create your own training plans and share them with others.') }}</p>
-          </div>
         </div>
       </div>
     {% endif %}

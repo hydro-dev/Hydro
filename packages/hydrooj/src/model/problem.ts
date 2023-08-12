@@ -119,24 +119,25 @@ export class ProblemModel {
 
     static async add(
         domainId: string, pid: string = '', title: string, content: string, owner: number,
-        tag: string[] = [], hidden = false,
+        tag: string[] = [], meta: { difficulty?: number, hidden?: boolean } = {},
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
         const result = await ProblemModel.addWithId(
             domainId, (doc?.docId || 0) + 1, pid,
-            title, content, owner, tag, hidden,
+            title, content, owner, tag, meta,
         );
         return result;
     }
 
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
-        content: string, owner: number, tag: string[] = [], hidden = false,
+        content: string, owner: number, tag: string[] = [],
+        meta: { difficulty?: number, hidden?: boolean } = {},
     ) {
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
+            title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
@@ -230,7 +231,7 @@ export class ProblemModel {
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
         const docId = await ProblemModel.add(
             target, pid, original.title, original.content,
-            original.owner, original.tag, original.hidden,
+            original.owner, original.tag, { hidden: original.hidden },
         );
         await ProblemModel.edit(target, docId, { reference: { domainId, pid: _id } });
         return docId;
@@ -456,9 +457,10 @@ export class ProblemModel {
                     if (!await isValidPid(pid)) pid = undefined;
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
+                if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
                 const docId = await ProblemModel.add(
                     domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
-                    operator || pdoc.owner, pdoc.tag || [], pdoc.hidden,
+                    operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                 );
                 if (files.includes('testdata')) {
                     const datas = await fs.readdir(path.join(tmpdir, i, 'testdata'), { withFileTypes: true });
@@ -503,6 +505,7 @@ export class ProblemModel {
                 tag: pdoc.tag,
                 nSubmit: pdoc.nSubmit,
                 nAccept: pdoc.nAccept,
+                difficulty: pdoc.difficulty,
             });
             await fs.writeFile(problemYaml, problemYamlContent);
             try {

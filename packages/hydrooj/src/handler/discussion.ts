@@ -284,7 +284,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
             if (!this.user.own(this.drdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
-            } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_SELF);
+            } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF);
         }
         const msg = JSON.stringify({
             message: '{0} {1} delete your discussion reply {2} in "{3}"({4:link}).',
