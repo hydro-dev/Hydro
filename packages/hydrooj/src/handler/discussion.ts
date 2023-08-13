@@ -173,6 +173,8 @@ class DiscussionDetailHandler extends DiscussionHandler {
             system.get('pagination.reply'),
         );
         const uids = [
+
+            ...this.vnode.owner ? [this.vnode.owner] : [],
             this.ddoc.owner,
             ...drdocs.map((drdoc) => drdoc.owner),
         ];
