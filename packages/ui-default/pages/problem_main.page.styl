@@ -126,149 +126,43 @@
 .data-table > thead > tr
   height: 54.9px
 
-.section__header.no-padding
-  padding: 0
+.search-container
+  padding-bottom: 0
 
-.problem-search > .search-container
-  padding: 12px 16px 0 16px
-  background: #f6f5fa
-  margin-bottom: -10px
+  .title
+    margin-bottom: rem(5px)
 
-.search-container--header
-  justify-content: space-between
-  align-items: center
-  background: #ffffff
-  padding: 6px 20px
+  .dialog-button
+    font-size: rem($font-size-secondary)
+    display: inline-block
+    padding: rem(5px 6px)
+    margin-bottom: rem(5px)
 
-  & > .title
-    font-size: 18px
-    font-weight: bold
-    color: #3774c9
+.search-tag__item
+  display: inline-block
+  padding: rem(5px 6px)
+  font-size: rem($font-size-secondary)
+  margin-bottom: rem(5px)
 
-  & > .search
-    width: calc(100% - 90px)
-    position: relative
-    align-items: center
+  &:hover    
+    color: #555;
+    background: #f4f4f4;
+    text-decoration: none
 
-    & > .search--bar
-      width: 100%
-      background: #eeeff3
+  &.selected
+    color: #FFF
+    background: $primary-color !important
 
-      & > input
-        width: 100%
-        background: #eeeff3
-        border: none
-        padding: 5px 0
-        height: 36px
-        outline: none
-        color: #000000
-
-      & > input::placeholder
-        color: #b0b0b0
-
-      & > div
-        align-items: center
-        padding: 0 12px      
-
-        & > span
-          font-size: rem(20px)
-          color: #b0b0b0  
-
-    & > button
-      width: 100px
-      height: 36px
-      border: 1px solid #458ae7
-      background: #458ae7
-      text-align: center
-      color: #fff
-      cursor: pointer
-      font-size: rem(16px)
-      font-weight: bold
-
-.text--align-vertical
-  display: flex
-  align-items: center
-
-.search-container--body
-
-  & > section
-    margin-bottom: 5px
-
-    & > .title
-      font-size: 16px
-      font-weight: bold
-      margin-right: 48px
-      height: 30px
-
-    & .list
-      max-width: calc(100% - 100px)
-
-      & .list__item
-        font-size: 14px
-        padding: 8px 20px
-        cursor: pointer
-
-        &.selected
-          background: #458ae7
-          color: #ffffff
-          padding: 6px 18px
-          margin: 2px 2px
-          padding-right: 8px
-
-          & > span
-            padding-left: 6px
-
-  & .subcategory-container
-    width: calc(100% - 90px)    
-
-    & .dialog-button
-      border: 1px solid #458ae7
-      color: #458ae7      
-
-.subcategory-container__selected
-  margin: 4px 0 0 0
-
-  & .list__item
-    font-size: 14px
-    padding: 6px 8px
-    margin: 2px 2px
-    background: #eaeaea
-    cursor: pointer
-    min-width: 90px
-    text-align: center
-
-    &.selected
-      background: #adc6e5
-      color: #5782be
-
-    & > span
-      font-size: 14px      
-      vertical-align: middle
-
-    &.hide 
-      display: none
-      opacity: 0    
-
-.search-container 
-  & .problem-stat
-    justify-content: space-between
-
-    & > p
-      font-size: 14px
-      color: #4c4a48
-
-    & > .link
-      color: #458ae7
-      cursor: pointer
-      text-decoration: underline
-      font-size: 14px
+  &.hide 
+    display: none
+    opacity: 0    
 
 .category-filter__header
-  & [data-category-container].list
+  [data-category-container].list
     overflow-x: auto
 
-  & .list
-    & .list__item
+  .list
+    .list__item
       padding: 12px 12px
       cursor: pointer
       margin: 0px 10px
@@ -278,29 +172,11 @@
       position: relative
 
       &.selected
-        background: #458ae7
-        color: #ffffff
+        background: $primary-color
+        color: #FFF
         font-weight: bold
 
-      & > .red-dot
-        width: 20px
-        height: 20px
-        border-radius: 50%
-        background: #ef6060
-        color: #ffffff
-        position: absolute
-        top: 0px
-        right: 0px
-        transform: translate(50%, -50%)
-        font-size: 14px
-        text-align: center
-        line-height: 20px
-
-        &.hide 
-          display: none
-          opacity: 0
-
-    & .list__item::first
+    .list__item::first
       margin-left: 0px
 
 .category-filter__body
@@ -310,46 +186,21 @@
   overflow-y: auto  
 
   .subcategory-container
-    padding: 24px
-
     &.hide
       display: none
       opacity: 0
 
     & h2
-      font-size: 16px
+      font-size: rem($font-size)
       font-weight: bold
       margin-bottom: 16px
 
-  & .list
-    margin: 24px 0 0 0
+    .divider
+      border-bottom: 1px solid #e5e5e5
+      margin: rem(16px) 0
 
-    & .list__item
-      padding: 8px 10px
-      margin: 0 16px 16px 0
-      background: #eaeaea
-      cursor: pointer
-      min-width: 100px
-      text-align: center
-
-      &.selected
-        background: #adc6e5
-        color: #5782be
-
-      & > span
-        font-size: 14px      
-        vertical-align: middle
-
-      &.hide 
-        display: none
-        opacity: 0        
-
-  & .divider
-    border-bottom: 1px solid #e5e5e5
-    margin: 4px 0
-
-  & .subcategory__all
-    margin: 24px 0 0 0
+    .search-tag__item
+      background: #eaeaea;
 
 .search
   width: 100%

@@ -1,27 +1,23 @@
 <div class="dialog--category-filter">
   <div class="category-filter__header">      
-    <div class="list flex-row" data-category-container>
+    <div class="list flex-row flex-cross-center" data-category-container>
       {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
-      <div class="list__item text-align-vertical" data-category="{{category}}">
-        {{ category }}
-        <div class="red-dot hide">
-        </div>
-      </div>
+      <div class="list__item" data-category="{{category}}">{{ category }}</div>
       {%- endfor -%}
     </div>
   </div>
   <div class="category-filter__body">
     {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
-    <div class="subcategory-container hide" data-subcategory-container="{{category}}">
+    <div class="section__body subcategory-container hide" data-subcategory-container="{{ category }}">
       <div class="subcategory__selected">
         <h2>{{ _('SelectedCategories') }}: </h2>
         <div class="list flex-row flex-wrap">
-          <div class="list__item hide selected" data-selection="{{category}}">
+          <div class="chip-list__item search-tag__item hide selected" data-selection="{{ category }}">
             {{ category }}
             <span class="icon icon-close"></span>            
           </div>            
           {%- for sub_category in sub_categories -%}
-          <div class="list__item hide selected" data-selection="{{sub_category}}">
+          <div class="chip-list__item search-tag__item hide selected" data-selection="{{ sub_category }}">
             {{ sub_category }}
             <span class="icon icon-close"></span>
           </div>
@@ -32,13 +28,9 @@
       <div class="subcategory__all">
         <h2>{{ category }}: </h2>
         <div class="list flex-row flex-wrap">
-          <div class="list__item" data-selection="{{category}}">
-            {{ category }}
-          </div>          
+          <div class="chip-list__item search-tag__item" data-selection="{{ category }}">{{ category }}</div>          
           {%- for sub_category in sub_categories -%}
-          <div class="list__item" data-selection="{{sub_category}}">
-            {{ sub_category }}
-          </div>
+          <div class="chip-list__item search-tag__item" data-selection="{{ sub_category }}">{{ sub_category }}</div>
           {%- endfor -%}
         </div>  
       </div>

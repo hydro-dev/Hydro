@@ -24,12 +24,6 @@ const pinnedDifficulties: string[] = [];
 let categorySelections: string[] = [];
 let difficultySelections: string[] = [];
 
-const categoryDialog = new Dialog({
-  $body: $('.dialog--category-filter'),
-  cancelByClickingBack: true,
-  cancelByEsc: true,
-});
-
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
   else $dom.removeClass('selected');
@@ -264,21 +258,27 @@ function hideTags(target) {
     .forEach((i) => $(i).addClass('notag--hide'));
 }
 
-function clearCategoryDialog(): Dialog {
-  const $dataCategoryContainer = categoryDialog.$dom.find('[data-category-container]');
-  if (!$dataCategoryContainer) return;
+const categoryDialog: any = new Dialog({
+  $body: $('.dialog--category-filter'),
+  cancelByClickingBack: true,
+  cancelByEsc: true,
+});
+
+categoryDialog.clear = function () {
+  const $dataCategoryContainer = this.$dom.find('[data-category-container]');
   $dataCategoryContainer.children().each((_index, _element) => {
     setDomSelected($(_element), false);
     const category = $(_element).attr('data-category');
-    const $subCategoryContainer = categoryDialog.$dom.find(`[data-subcategory-container="${category}"]`);
+    const $subCategoryContainer = this.$dom.find(`[data-subcategory-container="${category}"]`);
     $subCategoryContainer.addClass('hide');
   });
   const first = $dataCategoryContainer.children().first();
   setDomSelected(first, true);
   const category = first.attr('data-category');
-  const $subCategoryContainer = categoryDialog.$dom.find(`[data-subcategory-container="${category}"]`);
+  const $subCategoryContainer = this.$dom.find(`[data-subcategory-container="${category}"]`);
   $subCategoryContainer.removeClass('hide');
-}
+  return this;
+};
 
 function buildSearchContainer() {
   $('[data-pinned-container]')?.each((index, container) => {
@@ -324,9 +324,8 @@ function buildSearchContainer() {
     });
   });
 
-  $('.dialog-button.list__item')?.on('click', (ev) => {
-    clearCategoryDialog();
-    categoryDialog.open();
+  $('.dialog-button')?.on('click', (ev) => {
+    categoryDialog.clear().open();
     ev.preventDefault();
   });
 
@@ -344,7 +343,7 @@ function buildSearchContainer() {
       setDomSelected($(element), true);
       $subCategoryContainer.removeClass('hide');
     });
-    $subCategoryContainer.find('.subcategory__all .list__item').each((_index, _element) => {
+    $subCategoryContainer.find('.subcategory__all .search-tag__item').each((_index, _element) => {
       const subcategory = $(_element).attr('data-selection');
       categories[subcategory] = {
         $tag: $(_element),
@@ -362,7 +361,7 @@ function buildSearchContainer() {
         ev.preventDefault();
       });
     });
-    $subCategoryContainer.find('.subcategory__selected .list__item').each((_index, _element) => {
+    $subCategoryContainer.find('.subcategory__selected .search-tag__item').each((_index, _element) => {
       const subcategory = $(_element).attr('data-selection');
       categories[subcategory].$phantom.push($(_element));
       $(_element).on('click', (ev) => {
@@ -376,7 +375,7 @@ function buildSearchContainer() {
     });
   });
 
-  $('section > .subcategory-container > .subcategory-container__selected .list__item')?.each((index, element) => {
+  $('.subcategory-container__selected .search-tag__item')?.each((index, element) => {
     const subcategory = $(element).attr('data-selection');
     categories[subcategory].$phantom.push($(element));
     $(element).on('click', (ev) => {
