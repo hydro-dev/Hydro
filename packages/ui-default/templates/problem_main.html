@@ -5,19 +5,21 @@
   <div class="row">
     <div class="medium-9 columns">
       <div class="section display-mode">
-        <form method="get" id="searchForm" action="{{ url('problem_main') }}">
-          <div class="search">
-            <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('Search') }}">
-            {% include "partials/problem_stat.html" %}
-            <button type="submit">
-              <span class="icon icon-search"></span>
-            </button>
-          </div>
-        </form>
+        <div class="section__body no-padding">
+          <form method="get" id="searchForm" action="{{ url('problem_main') }}">
+            <div class="search">
+              <input name="q" type="text" value="{{ qs }}" placeholder="{{ _('Search') }}">
+              {% include "partials/problem_stat.html" %}
+              <button type="submit">
+                <span class="icon icon-search"></span>
+              </button>
+            </div>
+          </form>
+        </div>
         {% if handler.domain.pinnedFilter %}
-          <div class="section__header no-padding">
-            {% include "partials/problem_search.html" %}
-          </div>
+        <div class="section__header no-padding">
+          {% include "partials/problem_search.html" %}
+        </div>
         {% endif %}
         <div class="section__body no-padding">
           {% include "partials/problem_list.html" %}
