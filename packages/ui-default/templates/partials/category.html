@@ -1,5 +1,6 @@
 <ul class="group-list" data-widget-cf-container>
-  {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
+  {% set _categories = (handler.domain.problemCategories or model.system.get('problem.categories'))|parseYaml %}
+  {%- for category, sub_categories in _categories-%}
     <li class="group-list__item">
       <h2 class="section__title">
         <a href="{{ url('problem_main', query={q:'category:'+category}) }}" data-category="{{ category }}">{{ category }}</a>
