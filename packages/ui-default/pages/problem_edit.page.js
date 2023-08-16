@@ -221,7 +221,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   }
 
   async function handleClickDownloadAll() {
-    const files = $('.additionalfile-table tr').map(function () { return $(this).attr('data-filename'); }).get();
+    const files = $('.additional_file-table tr').map(function () { return $(this).attr('data-filename'); }).get();
     const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'additional_file' });
     const targets = [];
     for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
