@@ -20,6 +20,9 @@ const client = new Proxy({
     version(): Promise<SandboxVersion> {
         return superagent.get(`${url}/version`).then((res) => res.body);
     },
+    config(): Promise<Record<string, any>> {
+        return superagent.get(`${url}/config`).then((res) => res.body);
+    },
 }, {
     get(self, key) {
         url = getConfig('sandbox_host');

@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import { fs } from '@hydrooj/utils';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
     JudgeResultBody, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
@@ -11,6 +12,7 @@ import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
 import logger from '../log';
+import client from '../sandbox/client';
 import { JudgeTask } from '../task';
 
 const session = {
@@ -71,8 +73,18 @@ const session = {
     },
 };
 
-export async function postInit() {
+export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
+    ctx.check.addChecker('Judge', async (_ctx, log, warn) => {
+        const SandboxConfig = await client.config();
+        if (SandboxConfig.runnerConfig?.cgroupType === 2) {
+            const { osinfo } = await sysinfo.get();
+            const kernelVersionArray = osinfo.kernel.split('-')[0].split('.').map((x) => +x);
+            if (kernelVersionArray[0] < 5 || (kernelVersionArray[0] === 5 && kernelVersionArray[1] < 19)) {
+                warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
+            }
+        }
+    });
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
