@@ -41,8 +41,23 @@ export class HomeHandler extends Handler {
 
     async getHomework(domainId: string, limit = 5) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) return [[], {}];
-        const tdocs = await contest.getMulti(domainId, { rule: 'homework' })
-            .limit(limit).toArray();
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? undefined : this.user._id))
+            .map((i) => i.name);
+        const tdocs = await contest.getMulti(domainId, {
+            rule: 'homework',
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)
+                ? {}
+                : {
+                    $or: [
+                        { maintainer: this.user._id },
+                        { owner: this.user._id },
+                        { assign: { $in: groups } },
+                        { assign: { $size: 0 } },
+                    ],
+                },
+        }).sort({
+            penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
+        }).limit(limit).toArray();
         const tsdict = await contest.getListStatus(
             domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
         );
@@ -52,7 +67,22 @@ export class HomeHandler extends Handler {
     async getContest(domainId: string, limit = 10) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) return [[], {}];
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        const tdocs = await contest.getMulti(domainId, { rule: { $in: rules } })
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
+            .map((i) => i.name);
+        const q = {
+            rule: { $in: rules },
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)
+                ? {}
+                : {
+                    $or: [
+                        { maintainer: this.user._id },
+                        { owner: this.user._id },
+                        { assign: { $in: groups } },
+                        { assign: { $size: 0 } },
+                    ],
+                },
+        };
+        const tdocs = await contest.getMulti(domainId, q).sort({ endAt: -1, beginAt: -1, _id: -1 })
             .limit(limit).toArray();
         const tsdict = await contest.getListStatus(
             domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
