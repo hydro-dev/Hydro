@@ -16,6 +16,7 @@
 import './utils';
 
 import PQueue from 'p-queue';
+import { gte } from 'semver';
 import { fs } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
@@ -47,11 +48,13 @@ process.on('unhandledRejection', (reason, p) => {
 
 async function daemon() {
     const _hosts = getConfig('hosts');
+    const SandboxVersion = await client.version();
     const SandboxConfig = await client.config();
+    const { osinfo } = await sysinfo.get();
     if (SandboxConfig.runnerConfig?.cgroupType === 2) {
-        const { osinfo } = await sysinfo.get();
-        const kernelVersionArray = osinfo.kernel.split('-')[0].split('.').map((x) => +x);
-        if (kernelVersionArray[0] < 5 || (kernelVersionArray[0] === 5 && kernelVersionArray[1] < 19)) {
+        const kernelVersion = osinfo.kernel.split('-')[0];
+        const sandboxVersion = SandboxVersion.buildVersion.split('v')[1];
+        if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
             log.warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
         }
     }
