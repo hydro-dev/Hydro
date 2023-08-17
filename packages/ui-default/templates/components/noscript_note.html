@@ -9,6 +9,10 @@
 <div class="section__body no-padding">
   <blockquote class="warn">
     <p>{{ _('This page needs JavaScript to work.') }}</p>
+    {% if handler.session.legacy and not handler.session.nohint %}
+    <p>{{ _('You are currently in legacy mode. Please be aware that some features may be restricted in legacy mode. For a better experience, we recommend switching to standard mode.') }}</p>
+    <a href="/legacy">{{ _('Standard mode') }}</a> <a href="/legacy?legacy=true&nohint=true">{{ _('Hidden') }}</a>
+    {% endif %}
   </blockquote>
 </div>
 {% endif %}
