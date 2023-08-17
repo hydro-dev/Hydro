@@ -105,6 +105,16 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.22 / UI 4.48.22
+- ui: 在线IDE：添加设置页面
+- core: 导出题目时添加难度信息
+- ui: 修复特定情况下 markdown 标签补全出错的问题
+- import-qduoj: 检查 pid 合法性
+- core: 排序作业列表
+- ui: 修复讨论编辑显示
+- core: 导出 pwsh 函数
+- vjudge: codeforces: 修复比赛 921 爬取异常
+
 ### Hydro 4.9.21 / UI 4.48.21
 - core: 修复 strictioi 比赛计分
 - ui: 修复已参加训练列表显示

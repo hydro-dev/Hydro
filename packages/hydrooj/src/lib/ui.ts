@@ -34,7 +34,7 @@ export function inject(node: UIInjectableFields, name: string, args: Record<stri
     const obj = { name, args: args || {}, checker: buildChecker(...permPrivChecker) };
     const idx = obj.args.before ? nodes[node].findIndex((i) => i.name === obj.args.before) : -1;
     if (idx !== -1) {
-        if (obj.name in nodes[node]) nodes[node] = nodes[node].filter((i) => i.name !== obj.name);
+        nodes[node] = nodes[node].filter((i) => i.name !== obj.name);
         nodes[node].splice(idx, 0, obj);
     } else nodes[node].push(obj);
     return () => { nodes[node] = nodes[node].filter((i) => i !== obj); };

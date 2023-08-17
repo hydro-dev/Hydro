@@ -15,8 +15,9 @@
         "moment-timezone": "^0.5.43",
         "mongodb": "^5.7.0",
         "reggol": "^1.4.4",
+        "search-query-parser": "^1.6.0",
         "source-map-support": "^0.5.21",
-        "systeminformation": "^5.18.6"
+        "systeminformation": "^5.18.8"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.1",

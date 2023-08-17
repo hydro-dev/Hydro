@@ -9,7 +9,7 @@
       </div>
       <div class="section__body">
         <form method="post" enctype="multipart/form-data">
-          {{ form.form_textarea({label:'Input', columns:12, name:'input', extra_class:'monospace', autofocus:true}) }}
+          {{ form.form_textarea({label:'Input', columns:12, name:'input', extra_class:'monospace', autofocus:true, nospellcheck:true}) }}
           <div class="row">
             <div class="medium-12 columns">
               <p>{{ _('Or upload a file:') }} <input type="file" name="file"></p>
@@ -24,7 +24,6 @@
     </div>
   </div>
   <div class="medium-3 columns">
-    {% set owner_udoc = udoc %}
     {% include "partials/problem_sidebar.html" %}
   </div>
 </div>
