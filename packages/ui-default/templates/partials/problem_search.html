@@ -1,44 +1,36 @@
-<div class="problem-search">
-  <div class="search-container">
-    <div class="search-container--body">
-      {% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}      
-      {% for k, v in pinnedFilter %}
-        <section class="flex-row">
-          <h2 class="title text--align-vertical">{{ k }}:</h2>
-          <div class="list flex-wrap flex-row" data-pinned-container>
-            {%- for name, t in v -%}
-              <div class="list__item text--align-vertical" data-selection="{{t}}">{{ name }}</div>
-            {%- endfor -%}          
-          </div>
-        </section>
-      {% endfor %} 
-      <section style="margin-bottom: 36px" class="flex-row">
-        <h2 class="title text--align-vertical">
-          {{ _('ProblemCategory') }}:
-        </h2>
-        <div class="subcategory-container">
-          <div class="list flex-wrap flex-row">
-            <div class="list__item text--align-vertical dialog-button">
-              {{ _('SelectCategory') }}
-            </div>   
-          </div>     
-          <div class="subcategory-container__selected flex-row flex-wrap">
-            {%- for category, sub_categories in model.system.get('problem.categories')|parseYaml -%}
-              <div class="list__item hide selected" data-selection="{{category}}">
-                {{ category }}
-                <span class="icon icon-close"></span>
-              </div>              
-              {%- for sub_category in sub_categories -%}
-              <div class="list__item hide selected" data-selection="{{sub_category}}">
-                {{ sub_category }}
-                <span class="icon icon-close"></span>
-              </div>
-              {%- endfor -%}       
-            {%- endfor -%}
-          </div>                
-        </div>               
-      </section>
-      {% include "partials/problem_stat.html" %}
+<div class="section__body search-container">
+{% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}
+{% set categories = (handler.domain.problemCategories or model.system.get('problem.categories'))|parseYaml %}
+{% for k, v in pinnedFilter %}
+  <div class="flex-row flex-cross-center">
+    <b class="title">{{ k }}: &nbsp;&nbsp;</b>
+    <div class="chip-list flex-wrap flex-row" data-pinned-container>
+      {%- for name, t in v -%}
+      <a class="chip-list__item search-tag__item" data-selection="{{ t }}">{{ name }}</a>
+      {%- endfor -%}
+    </div>
+  </div>
+{% endfor %} 
+  <div class="flex-row flex-cross-center">
+    <b class="title">{{ _('ProblemCategory') }}: &nbsp;&nbsp;</b>
+    <div class="chip-list flex-wrap flex-row">
+      <a class="chip-list__item typo-a dialog-button">{{ _('SelectCategory') }}</a>   
+    </div>
+  </div>
+  <div class="flex-row flex-cross-center">
+    <div class="subcategory-container__selected flex-row flex-wrap chip-list">
+      {%- for category, sub_categories in categories -%}
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="{{ category }}">
+          {{ category }}
+          <span class="icon icon-close"></span>
+        </div>
+        {%- for sub_category in sub_categories -%}
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="{{ sub_category }}">
+          {{ sub_category }}
+          <span class="icon icon-close"></span>
+        </div>
+        {%- endfor -%}
+      {%- endfor -%}
     </div>
   </div>
 </div>
