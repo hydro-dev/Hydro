@@ -429,7 +429,7 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {
-    $('.section__table-container').toggleClass('hide-problem-tag');
+    $('.section__table-container').children().toggleClass('hide-problem-tag');
   });
 
   $('#search').on('click', (ev) => {
