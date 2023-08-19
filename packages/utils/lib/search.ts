@@ -1,6 +1,7 @@
-import { parse, SearchParserOptions, SearchParserResult } from 'search-query-parser';
+import type { SearchParserOptions, SearchParserResult } from 'search-query-parser';
+import { parse } from 'search-query-parser';
 
-export { parse, SearchParserOptions, SearchParserResult } from 'search-query-parser';
+export { parse, SearchParserOptions, SearchParserResult };
 
 export function stringify(queryObject: SearchParserResult, options: SearchParserOptions = {}, prefix = ''): string {
     if (!Object.keys(queryObject || {}).length) return '';
