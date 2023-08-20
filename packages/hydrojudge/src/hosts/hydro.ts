@@ -89,7 +89,6 @@ export default class Hydro {
                 pid: +pid,
                 files: filenames,
             });
-            log.info(res.body.links);
             if (!res.body.links) throw new FormatError('problem not exist');
             const that = this;
             // eslint-disable-next-line no-inner-declarations
