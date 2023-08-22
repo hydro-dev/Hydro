@@ -48,12 +48,20 @@ process.on('unhandledRejection', (reason, p) => {
 
 async function daemon() {
     const _hosts = getConfig('hosts');
-    const SandboxVersion = await client.version();
-    const SandboxConfig = await client.config();
+    let sandboxVersion = '1.0.0';
+    let sandboxCgroup = 0;
+    try {
+        const version = await client.version();
+        sandboxVersion = version.buildVersion.split('v')[1];
+        const config = await client.config();
+        sandboxCgroup = config.runnerConfig?.cgroupType || 0;
+    } catch (e) {
+        log.error('Your sandbox version is tooooooo low! Please upgrade!');
+        process.exit(1);
+    }
     const { osinfo } = await sysinfo.get();
-    if (SandboxConfig.runnerConfig?.cgroupType === 2) {
+    if (sandboxCgroup === 2) {
         const kernelVersion = osinfo.kernel.split('-')[0];
-        const sandboxVersion = SandboxVersion.buildVersion.split('v')[1];
         if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
             log.warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
         }

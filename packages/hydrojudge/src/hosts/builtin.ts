@@ -76,13 +76,22 @@ const session = {
 
 export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
-    const SandboxVersion = await client.version();
-    const SandboxConfig = await client.config();
+    let sandboxVersion = '1.0.0';
+    let sandboxCgroup = 0;
+    try {
+        const version = await client.version();
+        sandboxVersion = version.buildVersion.split('v')[1];
+        if (!version.copyOutOptional) throw Error();
+        const config = await client.config();
+        sandboxCgroup = config.runnerConfig.cgroupType;
+    } catch (e) {}
     const { osinfo } = await sysinfo.get();
-    ctx.check.addChecker('Judge', async (_ctx, log, warn) => {
-        if (SandboxConfig.runnerConfig?.cgroupType === 2) {
+    ctx.check.addChecker('Judge', async (_ctx, log, warn, error) => {
+        if (!gte(sandboxVersion, '1.3.0')) {
+            error('Your sandbox version is tooooooo low! Please upgrade! Read https://hydro.ac/d/faqs/p/20');
+        }
+        if (sandboxCgroup === 2) {
             const kernelVersion = osinfo.kernel.split('-')[0];
-            const sandboxVersion = SandboxVersion.buildVersion.split('v')[1];
             if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
                 warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
             }
