@@ -399,7 +399,9 @@ class UserModel {
         const $regex = `^${escapeRegExp(prefix.toLowerCase())}`;
         const udocs = await coll.find({ unameLower: { $regex } })
             .limit(limit).project({ _id: 1 }).toArray();
-        return await Promise.all(udocs.map(({ _id }) => UserModel.getById(domainId, _id)));
+        const dudocs = await domain.getMultiUserInDomain(domainId, { displayName: { $regex } }).limit(limit).project({ uid: 1 }).toArray();
+        const uids = uniq([...udocs.map(({ _id }) => _id), ...dudocs.map(({ uid }) => uid)]);
+        return await Promise.all(uids.map(({ _id }) => UserModel.getById(domainId, _id)));
     }
 
     @ArgMethod
