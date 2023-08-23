@@ -36,8 +36,9 @@ function searchUser() {
   $('.enroll_user_menu_item').each((i, e) => {
     const $item = $(e);
     const $username = $item.data('uname').toString().toLowerCase();
+    const $displayName = $item.data('displayname')?.toString().toLowerCase();
     const $uid = $item.data('uid').toString();
-    $item.toggle(($username.includes(val) && (group === 'all' || group.split(',').includes($uid))) || $uid === val);
+    $item.toggle((($displayName?.includes(val) || $username.includes(val)) && (group === 'all' || group.split(',').includes($uid))) || $uid === val);
   });
 }
 
