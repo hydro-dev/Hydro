@@ -112,7 +112,7 @@ function buildLegacyCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'widget--category-filter-tag');
+      .attr('class', 'widget--category-filter__tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
@@ -135,7 +135,7 @@ function buildLegacyCategoryFilter() {
         .children('li')
         .attr('class', 'widget--category-filter__subcategory')
         .find('a')
-        .attr('class', 'widget--category-filter-tag')
+        .attr('class', 'widget--category-filter__tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = $(subCategoryTag);
@@ -151,7 +151,7 @@ function buildLegacyCategoryFilter() {
   });
   list.push(...Object.keys(selections.category));
   list.push(..._.flatMap(Object.values(selections.category), (c: any) => Object.keys(c.children)));
-  $(document).on('click', '.widget--category-filter-tag', (ev) => handleTagSelected(ev));
+  $(document).on('click', '.widget--category-filter__tag', (ev) => handleTagSelected(ev));
 }
 
 function parseCategorySelection() {
