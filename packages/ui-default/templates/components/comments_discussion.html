@@ -19,6 +19,7 @@
   comment_delete_self_perm,
   reply_post_perm,
   reply_edit_self_perm,
+  reply_delete_perm,
   reply_delete_self_perm,
   comment_placeholder = 'Write Your Comment',
   comment_post_op = 'reply',
@@ -142,7 +143,7 @@
                 {% if handler.user.own(rdoc) and handler.user.hasPerm(reply_edit_self_perm) %}
                   {{ action(_('Edit'), 'edit', 'reply', {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}, 'edit') }}
                 {% endif %}
-                {% if handler.user.own(rdoc) and handler.user.hasPerm(reply_delete_self_perm) %}
+                {% if (handler.user.own(rdoc) and handler.user.hasPerm(reply_delete_self_perm)) or handler.user.hasPerm(reply_delete_perm) %}
                   {{ action(_('Delete'), 'delete', 'reply', {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}, 'delete') }}
                 {% endif %}
                 </div>
