@@ -300,12 +300,6 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
-function inputChanged() {
-  parseCategorySelection();
-  updateSelection();
-  loadQuery();
-}
-
 const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
@@ -329,7 +323,11 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '.toggle-tag', () => {
     $('.section__table-container').children().toggleClass('hide-problem-tag');
   });
-
+  function inputChanged() {
+    parseCategorySelection();
+    updateSelection();
+    loadQuery();
+  }
   $('#search').on('click', (ev) => {
     ev.preventDefault();
     inputChanged();
