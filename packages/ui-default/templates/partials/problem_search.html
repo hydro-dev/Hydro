@@ -20,12 +20,12 @@
   <div class="flex-row flex-cross-center">
     <div class="subcategory-container__selected flex-row flex-wrap chip-list">
       {%- for category, sub_categories in categories -%}
-        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="{{ category }}">
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="category:{{ category }}">
           {{ category }}
           <span class="icon icon-close"></span>
         </div>
         {%- for sub_category in sub_categories -%}
-        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="{{ sub_category }}">
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="category:{{ sub_category }}">
           {{ sub_category }}
           <span class="icon icon-close"></span>
         </div>

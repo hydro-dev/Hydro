@@ -15,29 +15,18 @@ import {
 const list = [];
 const legacyCategories = {};
 
-const pinned: Record<string, string[]> = {
-  category: [],
-  difficulty: [],
-};
+const pinned: Record<string, string[]> = { category: [], difficulty: [] };
+const selections = { category: {}, difficulty: {} };
+const selectedTags: Record<string, string[]> = { category: [], difficulty: [] };
 
-const selections = {
-  category: {},
-  difficulty: {},
-};
-
-const selectedTags: Record<string, string[]> = {
-  category: [],
-  difficulty: [],
-};
-
-function setDomSelected($dom, selected) {
-  if (selected) $dom.addClass('selected');
-  else $dom.removeClass('selected');
-}
-
-function setIconSelected($dom, selected, icon) {
-  if (selected) $dom.append(icon);
-  else $dom.find('span').remove();
+function setDomSelected($dom, selected, icon?) {
+  if (selected) {
+    $dom.addClass('selected');
+    if (icon) $dom.append(icon);
+  } else {
+    $dom.removeClass('selected');
+    if (icon) $dom.find('span').remove();
+  }
 }
 
 const parserOptions = {
@@ -75,32 +64,21 @@ function updateSelection() {
     if (isSelected !== shouldSelect) setDomSelected(item.$tag, shouldSelect);
   }
 
-  for (const category in selections.category) {
-    const item = selections.category[category];
-    const shouldSelect = selectedTags.category.includes(category);
-    const isSelected = item.$tag.hasClass('selected');
-    if (isSelected !== shouldSelect) {
-      setDomSelected(item.$tag, shouldSelect);
-      if (pinned.category.includes(category)) {
-        setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
-      } else {
-        setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-close"></span>');
-        for (const $element of item.$phantom) {
-          if (shouldSelect) $element.removeClass('hide');
-          else $element.addClass('hide');
+  for (const type in selections) {
+    for (const selection in selections[type]) {
+      const item = selections[type][selection];
+      const shouldSelect = selectedTags[type].includes(selection);
+      const isSelected = item.$tag.hasClass('selected');
+      if (isSelected !== shouldSelect) {
+        if (pinned[type].includes(selection)) {
+          setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
+        } else {
+          setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-close"></span>');
+          for (const $element of item.$phantom) {
+            if (shouldSelect) $($element).removeClass('hide');
+            else $($element).addClass('hide');
+          }
         }
-      }
-    }
-  }
-
-  for (const difficulty in selections.difficulty) {
-    const item = selections.difficulty[difficulty];
-    const shouldSelect = selectedTags.difficulty.includes(difficulty);
-    const isSelected = item.$tag.hasClass('selected');
-    if (isSelected !== shouldSelect) {
-      setDomSelected(item.$tag, shouldSelect);
-      if (pinned.difficulty.includes(difficulty)) {
-        setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
       }
     }
   }
@@ -277,42 +255,23 @@ function buildSearchContainer() {
     };
   });
 
-  $('.dialog-button')?.on('click', (ev) => {
-    categoryDialog.clear().open();
-    ev.preventDefault();
+  categoryDialog.$dom.find('.subcategory__all .search-tag__item').each((_index, _element) => {
+    const [,subcategory] = $(_element).attr('data-selection').split(':');
+    selections.category[subcategory] = {
+      $tag: $(_element),
+      children: {},
+      $phantom: [
+        ...categoryDialog.$dom.find(`.subcategory__selected .search-tag__item[data-selection="category:${subcategory}"]`).get(),
+        ...$(`.subcategory-container__selected .search-tag__item[data-selection="category:${subcategory}"]`).get(),
+      ],
+    };
   });
 
-  const $dataCategoryContainer = categoryDialog.$dom.find('[data-category-container]');
-  if (!$dataCategoryContainer) return;
-  $dataCategoryContainer.children().each((index, element) => {
-    const category = $(element).attr('data-category');
-    const $subCategoryContainer = categoryDialog.$dom.find(`[data-subcategory-container="${category}"]`);
-    $(element).on('click', () => {
-      $dataCategoryContainer.children().each((_index, _element) => {
-        setDomSelected($(_element), false);
-        const _category = $(_element).attr('data-category');
-        categoryDialog.$dom.find(`[data-subcategory-container="${_category}"]`)?.addClass('hide');
-      });
-      setDomSelected($(element), true);
-      $subCategoryContainer.removeClass('hide');
-    });
-    $subCategoryContainer.find('.subcategory__all .search-tag__item').each((_index, _element) => {
-      const [,subcategory] = $(_element).attr('data-selection').split(':');
-      selections.category[subcategory] = {
-        $tag: $(_element),
-        children: {},
-        $phantom: [],
-      };
-    });
-    $subCategoryContainer.find('.subcategory__selected .search-tag__item').each((_index, _element) => {
-      const [,subcategory] = $(_element).attr('data-selection').split(':');
-      selections.category[subcategory].$phantom.push($(_element));
-    });
-  });
-
-  $('.subcategory-container__selected .search-tag__item')?.each((index, element) => {
-    const subcategory = $(element).attr('data-selection');
-    selections.category[subcategory].$phantom.push($(element));
+  $(document).on('click', '[data-category-container] [data-category]', (ev) => {
+    $('[data-category-container] [data-category]').removeClass('selected');
+    $(ev.currentTarget).addClass('selected');
+    $('[data-subcategory-container]').addClass('hide');
+    $(`[data-subcategory-container="${$(ev.currentTarget).attr('data-category')}"]`).removeClass('hide');
   });
 
   $(document).on('click', '.search-tag__item', (ev) => {
@@ -377,6 +336,10 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $('#searchForm').on('submit', inputChanged);
   $('#searchForm').find('input').on('input', _.debounce(inputChanged, 500));
+  $('.dialog-button').on('click', (ev) => {
+    categoryDialog.clear().open();
+    ev.preventDefault();
+  });
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
