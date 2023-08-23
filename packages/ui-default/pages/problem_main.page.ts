@@ -15,14 +15,20 @@ import {
 const list = [];
 const legacyCategories = {};
 
-const categories = {};
-const difficulties = {};
+const pinned: Record<string, string[]> = {
+  category: [],
+  difficulty: [],
+};
 
-const pinnedCategories: string[] = [];
-const pinnedDifficulties: string[] = [];
+const selections = {
+  category: {},
+  difficulty: {},
+};
 
-let categorySelections: string[] = [];
-let difficultySelections: string[] = [];
+const selectedTags: Record<string, string[]> = {
+  category: [],
+  difficulty: [],
+};
 
 function setDomSelected($dom, selected) {
   if (selected) $dom.addClass('selected');
@@ -46,36 +52,36 @@ function writeSelectionToInput() {
   const parsedCurrentValue = parser.parse(currentValue, parserOptions) as SearchParserResult;
   const q = parser.stringify({
     ...parsedCurrentValue,
-    category: categorySelections,
-    difficulty: difficultySelections,
+    category: selectedTags.category,
+    difficulty: selectedTags.difficulty,
     text: parsedCurrentValue.text,
   }, parserOptions);
   $('[name="q"]').val(q);
 }
 
 function updateSelection() {
-  categorySelections = _.uniq(categorySelections);
+  selectedTags.category = _.uniq(selectedTags.category);
   for (const category in legacyCategories) {
     const item = legacyCategories[category];
     let childSelected = false;
     for (const subcategory in item.children) {
-      const shouldSelect = categorySelections.includes(subcategory);
+      const shouldSelect = selectedTags.category.includes(subcategory);
       const isSelected = item.children[subcategory].$tag.hasClass('selected');
       childSelected ||= shouldSelect;
       if (isSelected !== shouldSelect) setDomSelected(item.children[subcategory].$tag, shouldSelect);
     }
-    const shouldSelect = categorySelections.includes(category) || childSelected;
+    const shouldSelect = selectedTags.category.includes(category) || childSelected;
     const isSelected = item.$tag.hasClass('selected');
     if (isSelected !== shouldSelect) setDomSelected(item.$tag, shouldSelect);
   }
 
-  for (const category in categories) {
-    const item = categories[category];
-    const shouldSelect = categorySelections.includes(category);
+  for (const category in selections.category) {
+    const item = selections.category[category];
+    const shouldSelect = selectedTags.category.includes(category);
     const isSelected = item.$tag.hasClass('selected');
     if (isSelected !== shouldSelect) {
       setDomSelected(item.$tag, shouldSelect);
-      if (pinnedCategories.includes(category)) {
+      if (pinned.category.includes(category)) {
         setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
       } else {
         setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-close"></span>');
@@ -87,13 +93,13 @@ function updateSelection() {
     }
   }
 
-  for (const difficulty in difficulties) {
-    const item = difficulties[difficulty];
-    const shouldSelect = difficultySelections.includes(difficulty);
+  for (const difficulty in selections.difficulty) {
+    const item = selections.difficulty[difficulty];
+    const shouldSelect = selectedTags.difficulty.includes(difficulty);
     const isSelected = item.$tag.hasClass('selected');
     if (isSelected !== shouldSelect) {
       setDomSelected(item.$tag, shouldSelect);
-      if (pinnedDifficulties.includes(difficulty)) {
+      if (pinned.difficulty.includes(difficulty)) {
         setIconSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
       }
     }
@@ -119,7 +125,7 @@ function buildLegacyCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'widget--category-filter__category-tag');
+      .attr('class', 'widget--category-filter-tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
@@ -137,7 +143,7 @@ function buildLegacyCategoryFilter() {
         .children('li')
         .attr('class', 'widget--category-filter__subcategory')
         .find('a')
-        .attr('class', 'widget--category-filter__subcategory-tag')
+        .attr('class', 'widget--category-filter-tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = $(subCategoryTag);
@@ -153,27 +159,14 @@ function buildLegacyCategoryFilter() {
   });
   list.push(...Object.keys(legacyCategories));
   list.push(..._.flatMap(Object.values(legacyCategories), (c: any) => Object.keys(c.children)));
-  $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
+  $(document).on('click', '.widget--category-filter-tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const category = $(ev.currentTarget).text();
-    const treeItem = legacyCategories[category];
-    const shouldSelect = !treeItem.$tag.hasClass('selected');
-    if (shouldSelect) categorySelections.push(category);
-    else categorySelections = _.without(categorySelections, category, ...Object.keys(treeItem.children));
-    updateSelection();
-    writeSelectionToInput();
-    loadQuery();
-    ev.preventDefault();
-  });
-  $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const subcategory = $(ev.currentTarget).text();
+    const tag = $(ev.currentTarget).text();
     const category = $(ev.currentTarget).attr('data-category');
-    const treeItem = legacyCategories[category].children[subcategory];
+    const treeItem = category ? legacyCategories[category].children[tag] : legacyCategories[tag];
     const shouldSelect = !treeItem.$tag.hasClass('selected');
-    if (shouldSelect) categorySelections.push(subcategory);
-    else categorySelections = _.without(categorySelections, subcategory);
-    // TODO auto de-select parent
+    if (shouldSelect) selectedTags.category.push(tag);
+    else selectedTags.category = _.without(selectedTags.category, tag, ...(category ? [] : Object.keys(treeItem.children)));
     updateSelection();
     writeSelectionToInput();
     loadQuery();
@@ -183,8 +176,8 @@ function buildLegacyCategoryFilter() {
 
 function parseCategorySelection() {
   const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as SearchParserResult;
-  categorySelections = _.uniq(parsed.category || []);
-  difficultySelections = _.uniq(parsed.difficulty || []);
+  selectedTags.category = _.uniq(parsed.category || []);
+  selectedTags.difficulty = _.uniq(parsed.difficulty || []);
 }
 
 function ensureAndGetSelectedPids() {
@@ -266,62 +259,22 @@ const categoryDialog: any = new Dialog({
 
 categoryDialog.clear = function () {
   const $dataCategoryContainer = this.$dom.find('[data-category-container]');
-  $dataCategoryContainer.children().each((_index, _element) => {
-    setDomSelected($(_element), false);
-    const category = $(_element).attr('data-category');
-    const $subCategoryContainer = this.$dom.find(`[data-subcategory-container="${category}"]`);
-    $subCategoryContainer.addClass('hide');
-  });
+  $dataCategoryContainer.children().addClass('hide');
   const first = $dataCategoryContainer.children().first();
   setDomSelected(first, true);
-  const category = first.attr('data-category');
-  const $subCategoryContainer = this.$dom.find(`[data-subcategory-container="${category}"]`);
-  $subCategoryContainer.removeClass('hide');
+  this.$dom.find('[data-subcategory-container]').addClass('hide');
+  this.$dom.find(`[data-subcategory-container="${first.attr('data-category')}"]`).removeClass('hide');
   return this;
 };
 
 function buildSearchContainer() {
-  $('[data-pinned-container]')?.each((index, container) => {
-    $(container).children().each((_index, _element) => {
-      const [type, selection] = $(_element).attr('data-selection').split(':');
-      switch (type) {
-        case 'category':
-          pinnedCategories.push(selection);
-          categories[selection] = {
-            $tag: $(_element),
-            children: {},
-          };
-          $(_element).on('click', (ev) => {
-            if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-            const shouldSelect = !categories[selection].$tag.hasClass('selected');
-            if (shouldSelect) categorySelections.push(selection);
-            else categorySelections = _.without(categorySelections, selection, ...Object.keys(categories[selection].children));
-            updateSelection();
-            writeSelectionToInput();
-            loadQuery();
-            ev.preventDefault();
-          });
-          break;
-        case 'difficulty':
-          pinnedDifficulties.push(selection);
-          difficulties[selection] = {
-            $tag: $(_element),
-            children: {},
-          };
-          $(_element).on('click', (ev) => {
-            if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-            const shouldSelect = !difficulties[selection].$tag.hasClass('selected');
-            if (shouldSelect) difficultySelections.push(selection);
-            else difficultySelections = _.without(difficultySelections, selection, ...Object.keys(difficulties[selection].children));
-            updateSelection();
-            writeSelectionToInput();
-            loadQuery();
-            ev.preventDefault();
-          });
-          break;
-        default: // ignore
-      }
-    });
+  $('[data-pinned-container] [data-selection]').each((_index, _element) => {
+    const [type, selection] = $(_element).attr('data-selection').split(':');
+    pinned[type].push(selection);
+    selections[type][selection] = {
+      $tag: $(_element),
+      children: {},
+    };
   });
 
   $('.dialog-button')?.on('click', (ev) => {
@@ -344,48 +297,34 @@ function buildSearchContainer() {
       $subCategoryContainer.removeClass('hide');
     });
     $subCategoryContainer.find('.subcategory__all .search-tag__item').each((_index, _element) => {
-      const subcategory = $(_element).attr('data-selection');
-      categories[subcategory] = {
+      const [,subcategory] = $(_element).attr('data-selection').split(':');
+      selections.category[subcategory] = {
         $tag: $(_element),
         children: {},
         $phantom: [],
       };
-      $(_element).on('click', (ev) => {
-        if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-        const shouldSelect = !categories[subcategory].$tag.hasClass('selected');
-        if (shouldSelect) categorySelections.push(subcategory);
-        else categorySelections = _.without(categorySelections, subcategory, ...Object.keys(categories[subcategory].children));
-        updateSelection();
-        writeSelectionToInput();
-        loadQuery();
-        ev.preventDefault();
-      });
     });
     $subCategoryContainer.find('.subcategory__selected .search-tag__item').each((_index, _element) => {
-      const subcategory = $(_element).attr('data-selection');
-      categories[subcategory].$phantom.push($(_element));
-      $(_element).on('click', (ev) => {
-        if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-        categorySelections = _.without(categorySelections, subcategory, ...Object.keys(categories[subcategory].children));
-        updateSelection();
-        writeSelectionToInput();
-        loadQuery();
-        ev.preventDefault();
-      });
+      const [,subcategory] = $(_element).attr('data-selection').split(':');
+      selections.category[subcategory].$phantom.push($(_element));
     });
   });
 
   $('.subcategory-container__selected .search-tag__item')?.each((index, element) => {
     const subcategory = $(element).attr('data-selection');
-    categories[subcategory].$phantom.push($(element));
-    $(element).on('click', (ev) => {
-      if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-      categorySelections = _.without(categorySelections, subcategory, ...Object.keys(categories[subcategory].children));
-      updateSelection();
-      writeSelectionToInput();
-      loadQuery();
-      ev.preventDefault();
-    });
+    selections.category[subcategory].$phantom.push($(element));
+  });
+
+  $(document).on('click', '.search-tag__item', (ev) => {
+    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+    const [type, selection] = $(ev.currentTarget).attr('data-selection').split(':');
+    const shouldSelect = !selections[type][selection].$tag.hasClass('selected');
+    if (shouldSelect) selectedTags[type].push(selection);
+    else selectedTags[type] = _.without(selectedTags[type], selection, ...Object.keys(selections[type][selection].children));
+    updateSelection();
+    writeSelectionToInput();
+    loadQuery();
+    ev.preventDefault();
   });
 }
 

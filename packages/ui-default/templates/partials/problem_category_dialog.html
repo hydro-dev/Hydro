@@ -13,12 +13,12 @@
       <div class="subcategory__selected">
         <h2>{{ _('Selected categories') }}: </h2>
         <div class="list flex-row flex-wrap">
-          <div class="chip-list__item search-tag__item hide selected" data-selection="{{ category }}">
+          <div class="chip-list__item search-tag__item hide selected" data-selection="category:{{ category }}">
             {{ category }}
             <span class="icon icon-close"></span>            
           </div>            
           {%- for sub_category in sub_categories -%}
-          <div class="chip-list__item search-tag__item hide selected" data-selection="{{ sub_category }}">
+          <div class="chip-list__item search-tag__item hide selected" data-selection="category:{{ sub_category }}">
             {{ sub_category }}
             <span class="icon icon-close"></span>
           </div>
@@ -29,9 +29,9 @@
       <div class="subcategory__all">
         <h2>{{ category }}: </h2>
         <div class="list flex-row flex-wrap">
-          <div class="chip-list__item search-tag__item" data-selection="{{ category }}">{{ category }}</div>          
+          <div class="chip-list__item search-tag__item" data-selection="category:{{ category }}">{{ category }}</div>          
           {%- for sub_category in sub_categories -%}
-          <div class="chip-list__item search-tag__item" data-selection="{{ sub_category }}">{{ sub_category }}</div>
+          <div class="chip-list__item search-tag__item" data-selection="category:{{ sub_category }}">{{ sub_category }}</div>
           {%- endfor -%}
         </div>  
       </div>
