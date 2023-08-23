@@ -14,14 +14,11 @@
   comment_ref,
   reply_ref,
   comment_post_perm,
-  comment_edit_perm,
   comment_edit_self_perm,
   comment_delete_perm,
   comment_delete_self_perm,
   reply_post_perm,
-  reply_edit_perm,
   reply_edit_self_perm,
-  reply_delete_perm,
   reply_delete_self_perm,
   comment_placeholder = 'Write Your Comment',
   comment_post_op = 'reply',
@@ -101,7 +98,7 @@
         {% if handler.user.hasPerm(reply_post_perm) %}
           {{ action(_('Reply'), 'reply', 'comment', {operation: reply_post_op, drid: doc._id}, 'reply') }}
         {% endif %}
-        {% if (handler.user.hasPerm(comment_edit_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_edit_perm) %}
+        {% if handler.user.hasPerm(comment_edit_self_perm) and handler.user.own(doc) %}
           {{ action(_('Edit'), 'edit', 'comment', {operation: comment_edit_op, drid: doc._id}, 'edit') }}
         {% endif %}
         {% if (handler.user.hasPerm(comment_delete_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(comment_delete_perm) %}
@@ -142,10 +139,10 @@
                 {% if handler.user.hasPerm(reply_post_perm) %}
                   {{ action(_('Reply'), 'reply', 'reply', {}, 'reply') }}
                 {% endif %}
-                {% if handler.user.own(doc) or handler.user.hasPerm(reply_edit_perm) %}
+                {% if handler.user.own(rdoc) and handler.user.hasPerm(reply_edit_self_perm) %}
                   {{ action(_('Edit'), 'edit', 'reply', {operation: reply_edit_op, drid: doc._id, drrid: rdoc._id}, 'edit') }}
                 {% endif %}
-                {% if handler.user.own(doc) or handler.user.hasPerm(reply_delete_perm) %}
+                {% if handler.user.own(rdoc) and handler.user.hasPerm(reply_delete_self_perm) %}
                   {{ action(_('Delete'), 'delete', 'reply', {operation: reply_delete_op, drid: doc._id, drrid: rdoc._id}, 'delete') }}
                 {% endif %}
                 </div>
