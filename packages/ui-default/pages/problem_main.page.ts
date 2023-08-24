@@ -58,9 +58,7 @@ function updateSelection() {
         const childShouldSelect = selectedTags[type].includes(subcategory);
         const childIsSelected = item.children[subcategory].$tag.hasClass('selected');
         childSelected ||= childShouldSelect;
-        if (childIsSelected !== childShouldSelect) {
-          setDomSelected(item.children[subcategory].$tag, childShouldSelect);
-        }
+        if (childIsSelected !== childShouldSelect) setDomSelected(item.children[subcategory].$tag, childShouldSelect);
       }
       if (item.$legacy) setDomSelected(item.$legacy, (shouldSelect || childSelected));
       if (isSelected !== shouldSelect) {
