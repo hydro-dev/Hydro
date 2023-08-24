@@ -53,8 +53,17 @@ function updateSelection() {
       const item = selections[type][selection];
       const shouldSelect = selectedTags[type].includes(selection);
       const isSelected = (item.$tag || item.$legacy).hasClass('selected');
+      let childSelected = false;
+      for (const subcategory in item.children) {
+        const childShouldSelect = selectedTags[type].includes(subcategory);
+        const childIsSelected = item.children[subcategory].$tag.hasClass('selected');
+        childSelected ||= childShouldSelect;
+        if (childIsSelected !== childShouldSelect) {
+          setDomSelected(item.children[subcategory].$tag, childShouldSelect);
+        }
+      }
+      if (item.$legacy) setDomSelected(item.$legacy, (shouldSelect || childSelected));
       if (isSelected !== shouldSelect) {
-        if (item.$legacy) setDomSelected(item.$legacy, shouldSelect);
         if (pinned[type].includes(selection)) {
           setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
         } else {
@@ -65,16 +74,6 @@ function updateSelection() {
           }
         }
       }
-      let childSelect = false;
-      for (const subcategory in item.children) {
-        const childShouldSelect = selectedTags[type].includes(subcategory);
-        const childIsSelected = item.children[subcategory].$tag.hasClass('selected');
-        childSelect ||= childShouldSelect;
-        if (childIsSelected !== childShouldSelect) {
-          setDomSelected(item.children[subcategory].$tag, childShouldSelect);
-        }
-      }
-      if (item.$legacy && childSelect !== shouldSelect) setDomSelected(item.$legacy, childSelect);
     }
   }
 }
