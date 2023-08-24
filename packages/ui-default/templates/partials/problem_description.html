@@ -19,8 +19,5 @@
       <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
     </blockquote>
   {% endif %}
-  {% if handler.session.legacy and not handler.session.nohint %}
-    {{ noscript_note.render() }}
-  {% endif %}
   {{ pdoc.content|content(handler.request.query.lang or handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
 </div>
