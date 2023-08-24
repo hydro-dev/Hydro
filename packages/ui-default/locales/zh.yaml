@@ -646,6 +646,7 @@ Pretest?: 自测?
 Privacy: 隐私
 Privilege: 权限
 Problem {1} not found.: 题目 {1} 不存在。
+Problem Category: 标签
 Problem Data: 题目数据
 Problem ID cannot be a pure number. Leave blank if you want to use numberic id.: 题目ID不能为纯数字。 若要自动分配数字ID请将此处留空。
 Problem ID List: 题目 ID 列表
@@ -767,7 +768,9 @@ Section: 章节
 Security: 安全
 Select a node to create discussion.: 选择一个节点来发表讨论。
 Select a role: 选择一个角色
+Select Category: 选择标签
 Select User: 选择用户
+Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
