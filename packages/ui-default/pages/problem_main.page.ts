@@ -51,17 +51,10 @@ function updateSelection() {
   for (const type in selections) {
     for (const selection in selections[type]) {
       const item = selections[type][selection];
-      for (const subcategory in item.children) {
-        const shouldSelect = selectedTags[type].includes(subcategory);
-        const isSelected = item.children[subcategory].$tag.hasClass('selected');
-        if (isSelected !== shouldSelect) {
-          setDomSelected(item.children[subcategory].$tag, shouldSelect);
-          if (item.$legacy) setDomSelected(item.$legacy, shouldSelect);
-        }
-      }
       const shouldSelect = selectedTags[type].includes(selection);
       const isSelected = (item.$tag || item.$legacy).hasClass('selected');
       if (isSelected !== shouldSelect) {
+        if (item.$legacy) setDomSelected(item.$legacy, shouldSelect);
         if (pinned[type].includes(selection)) {
           setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
         } else {
@@ -72,6 +65,16 @@ function updateSelection() {
           }
         }
       }
+      let childSelect = false;
+      for (const subcategory in item.children) {
+        const childShouldSelect = selectedTags[type].includes(subcategory);
+        const childIsSelected = item.children[subcategory].$tag.hasClass('selected');
+        childSelect ||= childShouldSelect;
+        if (childIsSelected !== childShouldSelect) {
+          setDomSelected(item.children[subcategory].$tag, childShouldSelect);
+        }
+      }
+      if (item.$legacy && childSelect !== shouldSelect) setDomSelected(item.$legacy, childSelect);
     }
   }
 }
@@ -86,7 +89,6 @@ function loadQuery() {
 }
 
 function handleTagSelected(ev) {
-  debugger;
   if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
   let [type, selection] = ['category', $(ev.currentTarget).text()];
   if ($(ev.currentTarget).attr('data-selection')) [type, selection] = $(ev.currentTarget).attr('data-selection').split(':');
