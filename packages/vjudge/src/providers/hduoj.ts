@@ -1,7 +1,7 @@
 import { JSDOM } from 'jsdom';
 import {
     Logger, STATUS, sleep,
-    parseTimeMS, parseMemoryMB
+    parseTimeMS, parseMemoryMB,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -79,15 +79,10 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
                 check: 0,
                 problemid: id.split('P')[1],
                 language,
-                _usercode: new Buffer(encodeURIComponent(source)).toString('base64')
+                _usercode: Buffer.from(encodeURIComponent(source)).toString('base64'),
             });
         const { window: { document } } = new JSDOM(text);
-        var rid = /<td height=22px>(\d+)<\/td>/g.exec(text);
-        if (!rid) {
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit Failed' });
-            return null;
-        }
-        return rid[1];
+        return document.querySelector('#fixed_table>table>tbody>tr:nth-child(3)>td:nth-child(1)').innerHTML;
     }
 
     async getCompilerText(id: string) {
