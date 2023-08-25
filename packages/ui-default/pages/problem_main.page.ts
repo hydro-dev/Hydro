@@ -230,7 +230,7 @@ function hideTags(target) {
 }
 
 const categoryDialog: any = new Dialog({
-  $body: $('.dialog--category-filter'),
+  $body: $('.dialog--category-filter > div'),
   cancelByClickingBack: true,
   cancelByEsc: true,
 });
