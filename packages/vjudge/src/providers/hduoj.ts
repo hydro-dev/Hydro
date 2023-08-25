@@ -1,12 +1,15 @@
 import { JSDOM } from 'jsdom';
-import { Logger, STATUS, sleep, parseTimeMS, parseMemoryMB } from 'hydrooj';
+import {
+    Logger, STATUS, sleep,
+    parseTimeMS, parseMemoryMB
+} from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
 const logger = new Logger('remote/hduoj');
 const statusDict = {
-    'Queuing': STATUS.STATUS_JUDGING,
-    'Accepted': STATUS.STATUS_ACCEPTED,
+    Queuing: STATUS.STATUS_JUDGING,
+    Accepted: STATUS.STATUS_ACCEPTED,
     'Wrong Answer': STATUS.STATUS_WRONG_ANSWER,
     'Presentation Error': STATUS.STATUS_WRONG_ANSWER,
     'Compilation Error': STATUS.STATUS_COMPILE_ERROR,
@@ -61,9 +64,9 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async listProblem(page: number, resync = false) {
         const ProblemMatcher = /p\(\d,(\d+),\d,".+?",\d+,\d+\);/g;
-        // if (resync && page > 1) return [];
+        if (resync && page > 1) return [];
         const { text } = await this.get(`/listproblem.php?vol=${page}`);
-        var match, result = new Array();
+        let match, result = [];
         while (match = ProblemMatcher.exec(text)) result.push(`P${match[1]}`);
         return result;
     }
@@ -78,6 +81,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
                 language,
                 _usercode: new Buffer(encodeURIComponent(source)).toString('base64')
             });
+        const { window: { document } } = new JSDOM(text);
         var rid = /<td height=22px>(\d+)<\/td>/g.exec(text);
         if (!rid) {
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit Failed' });
