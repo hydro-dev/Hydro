@@ -2,7 +2,7 @@ import parser, { SearchParserResult } from '@hydrooj/utils/lib/search';
 import $ from 'jquery';
 import _ from 'lodash';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, ConfirmDialog, Dialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
@@ -12,13 +12,19 @@ import {
   delay, i18n, pjax, request, tpl,
 } from 'vj/utils';
 
-const categories = {};
-let selections: string[] = [];
 const list = [];
+const pinned: Record<string, string[]> = { category: [], difficulty: [] };
+const selections = { category: {}, difficulty: {} };
+const selectedTags: Record<string, string[]> = { category: [], difficulty: [] };
 
-function setDomSelected($dom, selected) {
-  if (selected) $dom.addClass('selected');
-  else $dom.removeClass('selected');
+function setDomSelected($dom, selected, icon?) {
+  if (selected) {
+    $dom.addClass('selected');
+    if (icon) $dom.append(icon);
+  } else {
+    $dom.removeClass('selected');
+    if (icon) $dom.find('span').remove();
+  }
 }
 
 const parserOptions = {
@@ -33,26 +39,40 @@ function writeSelectionToInput() {
   const parsedCurrentValue = parser.parse(currentValue, parserOptions) as SearchParserResult;
   const q = parser.stringify({
     ...parsedCurrentValue,
-    category: selections,
+    category: selectedTags.category,
+    difficulty: selectedTags.difficulty,
     text: parsedCurrentValue.text,
   }, parserOptions);
   $('[name="q"]').val(q);
 }
 
 function updateSelection() {
-  selections = _.uniq(selections);
-  for (const category in categories) {
-    const item = categories[category];
-    let childSelected = false;
-    for (const subcategory in item.children) {
-      const shouldSelect = selections.includes(subcategory);
-      const isSelected = item.children[subcategory].$tag.hasClass('selected');
-      childSelected ||= shouldSelect;
-      if (isSelected !== shouldSelect) setDomSelected(item.children[subcategory].$tag, shouldSelect);
+  selectedTags.category = _.uniq(selectedTags.category);
+  for (const type in selections) {
+    for (const selection in selections[type]) {
+      const item = selections[type][selection];
+      const shouldSelect = selectedTags[type].includes(selection);
+      const isSelected = (item.$tag || item.$legacy).hasClass('selected');
+      let childSelected = false;
+      for (const subcategory in item.children) {
+        const childShouldSelect = selectedTags[type].includes(subcategory);
+        const childIsSelected = item.children[subcategory].$tag.hasClass('selected');
+        childSelected ||= childShouldSelect;
+        if (childIsSelected !== childShouldSelect) setDomSelected(item.children[subcategory].$tag, childShouldSelect);
+      }
+      if (item.$legacy) setDomSelected(item.$legacy, (shouldSelect || childSelected));
+      if (isSelected !== shouldSelect) {
+        if (pinned[type].includes(selection)) {
+          setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-check"></span>');
+        } else {
+          if (item.$tag) setDomSelected(item.$tag, shouldSelect, '<span class="icon icon-close"></span>');
+          for (const $element of item.$phantom) {
+            if (shouldSelect) $($element).removeClass('hide');
+            else $($element).addClass('hide');
+          }
+        }
+      }
     }
-    const shouldSelect = selections.includes(category) || childSelected;
-    const isSelected = item.$tag.hasClass('selected');
-    if (isSelected !== shouldSelect) setDomSelected(item.$tag, shouldSelect);
   }
 }
 
@@ -65,7 +85,22 @@ function loadQuery() {
   pjax.request({ url: url.toString() });
 }
 
-function buildCategoryFilter() {
+function handleTagSelected(ev) {
+  if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
+  let [type, selection] = ['category', $(ev.currentTarget).text()];
+  if ($(ev.currentTarget).attr('data-selection')) [type, selection] = $(ev.currentTarget).attr('data-selection').split(':');
+  const category = $(ev.currentTarget).attr('data-category');
+  const treeItem = category ? selections[type][category].children[selection] : selections[type][selection];
+  const shouldSelect = !(treeItem.$tag || treeItem.$legacy).hasClass('selected');
+  if (shouldSelect) selectedTags[type].push(selection);
+  else selectedTags[type] = _.without(selectedTags[type], selection, ...(category ? [] : Object.keys(treeItem.children)));
+  updateSelection();
+  writeSelectionToInput();
+  loadQuery();
+  ev.preventDefault();
+}
+
+function buildLegacyCategoryFilter() {
   const $container = $('[data-widget-cf-container]');
   if (!$container) return;
   $container.attr('class', 'widget--category-filter row small-up-3 medium-up-2');
@@ -75,17 +110,22 @@ function buildCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'widget--category-filter__category-tag');
+      .attr('class', 'widget--category-filter__tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
       .remove()
       .attr('class', 'widget--category-filter__drop');
-    const treeItem = {
-      $tag: $categoryTag,
-      children: {},
-    };
-    categories[categoryText] = treeItem;
+    if (selections.category[categoryText]) {
+      selections.category[categoryText].$legacy = $categoryTag;
+    } else {
+      selections.category[categoryText] = {
+        $legacy: $categoryTag,
+        $tag: null,
+        children: {},
+        $phantom: [],
+      };
+    }
     $category.empty().append($categoryTag);
     if ($drop.length > 0) {
       $categoryTag.text(`${$categoryTag.text()}`);
@@ -93,11 +133,11 @@ function buildCategoryFilter() {
         .children('li')
         .attr('class', 'widget--category-filter__subcategory')
         .find('a')
-        .attr('class', 'widget--category-filter__subcategory-tag')
+        .attr('class', 'widget--category-filter__tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = $(subCategoryTag);
-        treeItem.children[$tag.text()] = {
+        selections.category[categoryText].children[$tag.text()] = {
           $tag,
         };
       });
@@ -107,40 +147,15 @@ function buildCategoryFilter() {
       });
     }
   });
-  list.push(...Object.keys(categories));
-  list.push(..._.flatMap(Object.values(categories), (c: any) => Object.keys(c.children)));
-  $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const category = $(ev.currentTarget).text();
-    const treeItem = categories[category];
-    const shouldSelect = !treeItem.$tag.hasClass('selected');
-    if (shouldSelect) selections.push(category);
-    else selections = _.without(selections, category, ...Object.keys(treeItem.children));
-    updateSelection();
-    writeSelectionToInput();
-    loadQuery();
-    ev.preventDefault();
-  });
-  $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const subcategory = $(ev.currentTarget).text();
-    const category = $(ev.currentTarget).attr('data-category');
-    const treeItem = categories[category].children[subcategory];
-    const shouldSelect = !treeItem.$tag.hasClass('selected');
-    if (shouldSelect) selections.push(subcategory);
-    else selections = _.without(selections, subcategory);
-    // TODO auto de-select parent
-    updateSelection();
-    writeSelectionToInput();
-    loadQuery();
-    ev.preventDefault();
-  });
+  list.push(...Object.keys(selections.category));
+  list.push(..._.flatMap(Object.values(selections.category), (c: any) => Object.keys(c.children)));
+  $(document).on('click', '.widget--category-filter__tag', (ev) => handleTagSelected(ev));
 }
 
 function parseCategorySelection() {
   const parsed = parser.parse($('[name="q"]').val() as string || '', parserOptions) as SearchParserResult;
-  selections = _.uniq(parsed.category || []);
-  updateSelection();
+  selectedTags.category = _.uniq(parsed.category || []);
+  selectedTags.difficulty = _.uniq(parsed.difficulty || []);
 }
 
 function ensureAndGetSelectedPids() {
@@ -214,6 +229,54 @@ function hideTags(target) {
     .forEach((i) => $(i).addClass('notag--hide'));
 }
 
+const categoryDialog: any = new Dialog({
+  $body: $('.dialog--category-filter'),
+  cancelByClickingBack: true,
+  cancelByEsc: true,
+});
+
+categoryDialog.clear = function () {
+  const $dataCategoryContainer = this.$dom.find('[data-category-container]');
+  $dataCategoryContainer.children().addClass('hide');
+  const first = $dataCategoryContainer.children().first();
+  setDomSelected(first, true);
+  this.$dom.find('[data-subcategory-container]').addClass('hide');
+  this.$dom.find(`[data-subcategory-container="${first.attr('data-category')}"]`).removeClass('hide');
+  return this;
+};
+
+function buildSearchContainer() {
+  $('[data-pinned-container] [data-selection]').each((_index, _element) => {
+    const [type, selection] = $(_element).attr('data-selection').split(':');
+    pinned[type].push(selection);
+    selections[type][selection] = {
+      $tag: $(_element),
+      children: {},
+    };
+  });
+
+  categoryDialog.$dom.find('.subcategory__all .search-tag__item').each((_index, _element) => {
+    const [,subcategory] = $(_element).attr('data-selection').split(':');
+    selections.category[subcategory] = {
+      $tag: $(_element),
+      children: {},
+      $phantom: [
+        ...categoryDialog.$dom.find(`.subcategory__selected .search-tag__item[data-selection="category:${subcategory}"]`).get(),
+        ...$(`.subcategory-container__selected .search-tag__item[data-selection="category:${subcategory}"]`).get(),
+      ],
+    };
+  });
+
+  $(document).on('click', '[data-category-container] [data-category]', (ev) => {
+    $('[data-category-container] [data-category]').removeClass('selected');
+    $(ev.currentTarget).addClass('selected');
+    $('[data-subcategory-container]').addClass('hide');
+    $(`[data-subcategory-container="${$(ev.currentTarget).attr('data-category')}"]`).removeClass('hide');
+  });
+
+  $(document).on('click', '.search-tag__item', (ev) => handleTagSelected(ev));
+}
+
 async function handleDownload(ev) {
   let name = 'Export';
   // eslint-disable-next-line no-alert
@@ -231,7 +294,9 @@ const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
-  buildCategoryFilter();
+
+  buildSearchContainer();
+  buildLegacyCategoryFilter();
   parseCategorySelection();
   updateSelection();
   $(document).on('click', '[name="leave-edit-mode"]', () => {
@@ -246,7 +311,7 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {
-    $('.section__table-container').toggleClass('hide-problem-tag');
+    $('.section__table-container').children().toggleClass('hide-problem-tag');
   });
   function inputChanged() {
     parseCategorySelection();
@@ -259,6 +324,10 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $('#searchForm').on('submit', inputChanged);
   $('#searchForm').find('input').on('input', _.debounce(inputChanged, 500));
+  $('.dialog-button').on('click', (ev) => {
+    categoryDialog.clear().open();
+    ev.preventDefault();
+  });
   $(document).on('click', 'a.pager__item', (ev) => {
     ev.preventDefault();
     pjax.request(ev.currentTarget.getAttribute('href')).then(() => window.scrollTo(0, 0));
