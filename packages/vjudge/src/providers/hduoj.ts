@@ -67,8 +67,12 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const ProblemMatcher = /p\(\d,(\d+),\d,".+?",\d+,\d+\);/g;
         if (resync && page > 1) return [];
         const { text } = await this.get(`/listproblem.php?vol=${page}`);
-        let match, result = [];
-        while (match = ProblemMatcher.exec(text)) result.push(`P${match[1]}`);
+        let result = [];
+        let match = ProblemMatcher.exec(text);
+        while (match) {
+            result.push(`P${match[1]}`);
+            match = ProblemMatcher.exec(text);
+        }
         return result;
     }
 
