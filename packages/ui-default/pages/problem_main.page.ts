@@ -13,6 +13,7 @@ import {
 } from 'vj/utils';
 
 const list = [];
+const filterTags = {};
 const pinned: Record<string, string[]> = { category: [], difficulty: [] };
 const selections = { category: {}, difficulty: {} };
 const selectedTags: Record<string, string[]> = { category: [], difficulty: [] };
@@ -90,10 +91,13 @@ function handleTagSelected(ev) {
   let [type, selection] = ['category', $(ev.currentTarget).text()];
   if ($(ev.currentTarget).attr('data-selection')) [type, selection] = $(ev.currentTarget).attr('data-selection').split(':');
   const category = $(ev.currentTarget).attr('data-category');
+  const filterType = $(ev.currentTarget).attr('data-filter');
   const treeItem = category ? selections[type][category].children[selection] : selections[type][selection];
   const shouldSelect = !(treeItem.$tag || treeItem.$legacy).hasClass('selected');
-  if (shouldSelect) selectedTags[type].push(selection);
-  else selectedTags[type] = _.without(selectedTags[type], selection, ...(category ? [] : Object.keys(treeItem.children)));
+  if (shouldSelect) {
+    if (filterType) selectedTags[type] = _.without(selectedTags[type], ...filterTags[filterType]);
+    selectedTags[type].push(selection);
+  } else selectedTags[type] = _.without(selectedTags[type], selection, ...(category ? [] : Object.keys(treeItem.children)));
   updateSelection();
   writeSelectionToInput();
   loadQuery();
@@ -248,7 +252,12 @@ categoryDialog.clear = function () {
 function buildSearchContainer() {
   $('[data-pinned-container] [data-selection]').each((_index, _element) => {
     const [type, selection] = $(_element).attr('data-selection').split(':');
+    const filterType = $(_element).attr('data-filter');
     pinned[type].push(selection);
+    if (filterType) {
+      filterTags[filterType] ||= [];
+      filterTags[filterType].push(selection);
+    }
     selections[type][selection] = {
       $tag: $(_element),
       children: {},
