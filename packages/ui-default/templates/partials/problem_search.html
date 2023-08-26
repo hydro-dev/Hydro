@@ -6,7 +6,7 @@
     <b class="title">{{ k }}: &nbsp;&nbsp;</b>
     <div class="chip-list flex-wrap flex-row" data-pinned-container>
       {%- for name, t in v -%}
-        {% if not v == '__metadata__' %}
+        {% if name !== '__metadata__' %}
         <a class="chip-list__item search-tag__item" data-selection="{{ t }}" {% if pinnedFilter[k]['__metadata__']['single'] %}data-filter="{{ k }}"{% endif %}>{{ name }}</a>
         {% endif %}
       {%- endfor -%}
