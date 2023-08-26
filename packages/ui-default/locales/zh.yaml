@@ -484,6 +484,7 @@ Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
 Leave empty for default: 留空以使用默认
 Ledo: 乐多
+Legacy mode: 兼容模式
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
 Limitations: 限制
@@ -817,6 +818,7 @@ Sorry, there are no users in this domain.: 对不起，此域中没有用户。
 Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
+Standard mode: 标准模式
 Star Topic: 收藏讨论
 Star: 收藏
 Starred Users: 关注用户
@@ -1005,6 +1007,7 @@ With this feature, you can copy problems that you can view from a domain to some
 Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 Year: 年
+You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.: 您当前处于兼容模式。某些功能在此模式下不可用。我们强烈建议在现代浏览器上切换为标准模式以获得更好的体验。
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以将头像上传到 <a href="https://gravatar.com/">Gravatar</a>，本站的头像将自动更新。
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。

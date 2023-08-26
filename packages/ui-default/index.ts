@@ -59,8 +59,10 @@ class LegacyModeHandler extends Handler {
   noCheckPermView = true;
 
   @param('legacy', Types.Boolean)
-  async get(domainId: string, legacy = false) {
+  @param('nohint', Types.Boolean)
+  async get(domainId: string, legacy = false, nohint = false) {
     this.session.legacy = legacy;
+    this.session.nohint = nohint;
     this.back();
   }
 }
