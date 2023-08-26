@@ -105,6 +105,15 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.23 / UI 4.48.23
+- migrate: hustoj: 导入时忽略不存在的图片
+- core: oauth: 使用 OpenID 进行账号关联
+- core: 支持根据显示名搜索用户
+- core: 支持根据题目难度搜索题目
+- ui: 优化首页比赛作业过滤逻辑
+- core: 优化测试点识别
+- ui: 禁用自测输入的拼写检查
+
 ### Hydro 4.9.22 / UI 4.48.22
 - ui: 在线IDE：添加设置页面
 - core: 导出题目时添加难度信息
