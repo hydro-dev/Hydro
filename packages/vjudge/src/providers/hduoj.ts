@@ -1,8 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
 import {
-    Logger, STATUS, sleep,
-    parseTimeMS, parseMemoryMB,
+    Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -67,7 +66,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const ProblemMatcher = /p\(\d,(\d+),\d,".+?",\d+,\d+\);/g;
         if (resync && page > 1) return [];
         const { text } = await this.get(`/listproblem.php?vol=${page}`);
-        let result = [];
+        const result = [];
         let match = ProblemMatcher.exec(text);
         while (match) {
             result.push(`P${match[1]}`);
