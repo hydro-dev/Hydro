@@ -108,16 +108,15 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             if (status === STATUS.STATUS_JUDGING) continue;
             const time = recordNode.querySelector('td:nth-child(5)').innerHTML;
             const memory = recordNode.querySelector('td:nth-child(6)').innerHTML;
-            const message = {
+            if (status === STATUS.STATUS_COMPILE_ERROR) {
+                await next({ compilerText: await this.getCompilerText(id) });
+            }
+            await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
                 time: parseTimeMS(time),
                 memory: parseMemoryMB(memory) * 1024,
-            };
-            if (status === STATUS.STATUS_COMPILE_ERROR) {
-                message.compilerText = await this.getCompilerText(id);
-            }
-            await end(message);
+            });
             return;
         }
     }
