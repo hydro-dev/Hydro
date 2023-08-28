@@ -51,8 +51,40 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const res = await this.get(`/showproblem.php?pid=${id.split('P')[1]}`);
         const { window: { document } } = new JSDOM(res.text);
         const contentNode = document.querySelector('body>table>tbody>tr:nth-child(4)>td');
+        const title = contentNode.querySelector('h1').textContent;
+        contentNode.querySelectorAll('br').forEach(ele => ele.remove());
+        contentNode.querySelector('h1:first-child').remove();
+        contentNode.querySelector('font:first-child').remove();
+        contentNode.querySelector('center').remove();
+        contentNode.querySelectorAll('div.panel_title').forEach(title => {
+            const ele = document.createElement('h2');
+            ele.innerHTML=title.innerHTML;
+            title.replaceWith(ele);
+        });
+        contentNode.querySelectorAll('div.panel_content').forEach(content => {
+            const ele = document.createElement('p');
+            ele.innerHTML=content.innerHTML;
+            content.replaceWith(ele);
+        });
+        let sampleId = 0;
+        contentNode.querySelectorAll('p>pre>div').forEach(sample => {
+            const sampleNode = sample.parentElement.parentElement;
+            const title = sampleNode.previousElementSibling;
+            let sampleType;
+            if(title.innerHTML=='Sample Input')sampleType='input',++sampleId;
+            else if(title.innerHTML=='Sample Output')sampleType='output';
+            else return;
+            const elePre = document.createElement('pre');
+            const eleCode = document.createElement('code');
+            elePre.appendChild(eleCode);
+            eleCode.setAttribute('class', `language-${sampleType}${sampleId}`);
+            eleCode.innerHTML = `${sample.innerHTML.trim()}\n`;
+            sampleNode.replaceWith(elePre);
+            title.remove();
+        });
+        contentNode.querySelectorAll('div.panel_bottom').forEach(ele => ele.remove());
         return {
-            title: contentNode.querySelector('h1').innerHTML,
+            title,
             data: {
                 'config.yaml': Buffer.from(`time: ${1000}ms\nmemory: ${1000}k\ntype: remote_judge\nsubType: hduoj\ntarget: ${id}`),
             },
@@ -75,7 +107,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         return result;
     }
 
-    async submitProblem(id: string, lang: string, source: string, info, next, end) {
+    async submitProblem(id: string, lang: string, source: string) {
         await this.ensureLogin();
         const language = lang.includes('hduoj.') ? lang.split('hduoj.')[1] : '0';
         const { text } = await this.post('/submit.php?action=submit')
