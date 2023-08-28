@@ -58,12 +58,12 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         contentNode.querySelector('center').remove();
         contentNode.querySelectorAll('div.panel_title').forEach(title => {
             const ele = document.createElement('h2');
-            ele.innerHTML=title.innerHTML;
+            ele.innerHTML = title.innerHTML;
             title.replaceWith(ele);
         });
         contentNode.querySelectorAll('div.panel_content').forEach(content => {
             const ele = document.createElement('p');
-            ele.innerHTML=content.innerHTML;
+            ele.innerHTML = content.innerHTML;
             content.replaceWith(ele);
         });
         let sampleId = 0;
@@ -71,8 +71,8 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             const sampleNode = sample.parentElement.parentElement;
             const title = sampleNode.previousElementSibling;
             let sampleType;
-            if(title.innerHTML=='Sample Input')sampleType='input',++sampleId;
-            else if(title.innerHTML=='Sample Output')sampleType='output';
+            if (title.innerHTML == 'Sample Input') sampleType = 'input', ++sampleId;
+            else if (title.innerHTML == 'Sample Output') sampleType = 'output';
             else return;
             const elePre = document.createElement('pre');
             const eleCode = document.createElement('code');
