@@ -401,7 +401,7 @@ class UserModel {
             .limit(limit).project({ _id: 1 }).toArray();
         const dudocs = await domain.getMultiUserInDomain(domainId, { displayName: { $regex } }).limit(limit).project({ uid: 1 }).toArray();
         const uids = uniq([...udocs.map(({ _id }) => _id), ...dudocs.map(({ uid }) => uid)]);
-        return await Promise.all(uids.map(({ _id }) => UserModel.getById(domainId, _id)));
+        return await Promise.all(uids.map((_id) => UserModel.getById(domainId, _id)));
     }
 
     @ArgMethod
