@@ -50,7 +50,6 @@ async function callback(this: Handler, { state, code} ) {
         TokenModel.get(state, TokenModel.TYPE_OAUTH),
     ]);
     const res = await superagent.get(`https://graph.qq.com/oauth2.0/token?grant_type=authorization_code&client_id=${appid}&client_secret=${secret}&code=${code}&redirect_uri=${url}oauth/qq/callback&fmt=json`)
-        .set('User-Agent', 'ADTeam-OAuth')
         .set('accept', 'application/json')
         .send();
     const fanhui = res.text;
