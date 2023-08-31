@@ -13,7 +13,7 @@
 
 import {
     Context, ForbiddenError, Handler, superagent, SystemModel,
-    TokenModel, UserFacingError, ValidationError, OauthModel, OauthCallbackHandler
+    TokenModel, UserFacingError, ValidationError, OauthModel, OauthCallbackHandler, 
 } from 'hydrooj';
 
 import { Notification } from '@hydrooj/ui-default';
@@ -42,7 +42,7 @@ function unescapedString(escapedString: string) {
     return escapedString.replace(/-/g, '+').replace(/_/g, '/');
 }
 
-async function callback(this: Handler, { state, code}) {
+async function callback(this: Handler, { state, code} ) {
     const [[appid, secret, url], s] = await Promise.all([
         SystemModel.getMany([
             'login-qq.id', 'login-qq.secret', 'server.url',
@@ -53,29 +53,22 @@ async function callback(this: Handler, { state, code}) {
         .set('User-Agent', 'ADTeam-OAuth')
         .set('accept', 'application/json')
         .send();
-    
     const fanhui = res.text;
     const JSobj_token = JSON.parse(fanhui);
     const t = JSobj_token.access_token;
     const userInfo = await superagent.get(`https://graph.qq.com/oauth2.0/me?fmt=json&access_token=${t}`)
             .send();
-
     const fanhui_id = userInfo.text;
     const JSobj_id = JSON.parse(fanhui_id);
-    
     const OpenID = JSobj_id.openid;
-    
-    if(this.user.hasPriv(PRIV.PRIV_USER_PROFILE)){
+    if(this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
         OauthModel.set(OpenID, this.user._id);
     }
     await TokenModel.del(state, TokenModel.TYPE_OAUTH);
     this.response.redirect = s.redirect;
-    console.log();
     return {
-        //TODO use openid
-        _id: OpenID
+        _id: OpenID,
     };
-
 }
 
 export function apply(ctx: Context) {
