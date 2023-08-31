@@ -6,9 +6,9 @@ import { JSDOM } from 'jsdom';
 import { htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS, } from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { BasicFetcher } from '../fetch';
-const charset = require('superagent-charset');
+const charsetReq = require('superagent-charset');
 const superagent = charset(require('superagent'));
-charset(superagent);
+charsetReq(superagent);
 proxy(superagent as any);
 const logger = new Logger('remote/hduoj');
 
