@@ -1,0 +1,10 @@
+id:
+    type: text
+    category: system
+    desc: QQ OAuth AppID
+    name: id
+secret:
+    type: text
+    category: system
+    desc: QQ OAuth Secret
+    name: secret
