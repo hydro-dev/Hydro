@@ -1,16 +1,4 @@
-/**
-*****************************************************************************
-*
-*  @file    index.ts
-*  @brief   绑定/登录主入口文件和回调函数
-*
-*  @author  air
-*  @date    2023/8/31
-*  @version 1.0.0
-*
-*****************************************************************************
-*/
-
+//Power by air. <air@adteam.cc>
 import {
     Context, ForbiddenError, Handler, superagent, SystemModel,
     TokenModel, UserFacingError, ValidationError, OauthModel, OauthCallbackHandler, 
