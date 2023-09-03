@@ -10,7 +10,7 @@ API采用QQ互联，需在[QQ互联](https://connect.qq.com/)申请API后，在�
         <h1 class="section__title" id="qq" data-heading>{{ _('binding') }}</h1>
     </div>
     <div class="section__body">
-        <p>{{ _('jump') }}</p><br>
+        <p>{{ _('jump of qq connect') }}</p><br>
         <a href="/oauth/qq" class="primary rounded button">{{ _('bind_and_binding') }}</a>
     </div>
 </div>
