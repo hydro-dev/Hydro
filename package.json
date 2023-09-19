@@ -78,8 +78,8 @@
     },
     "resolutions": {
         "@types/node": "18.17.1",
-        "@types/react": "18.2.16",
-        "schemastery": "3.11.1",
+        "@types/react": "18.2.22",
+        "schemastery": "3.13.0",
         "prettier": "npm:not-installable-package@1.0.0"
     }
 }
