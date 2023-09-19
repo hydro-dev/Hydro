@@ -620,6 +620,7 @@ const scripts: UpgradeScript[] = [
         return await iterateAllDomain(async ({ _id }) => {
             const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
             for await (const ddoc of cursor) {
+                await discussion.edit(_id, ddoc.docId, { parentId: new ObjectId(ddoc.parentId) });
                 try {
                     await contest.get(_id, ddoc.parentId as ObjectId);
                 } catch (e) {
