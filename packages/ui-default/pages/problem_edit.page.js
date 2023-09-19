@@ -130,7 +130,7 @@ function buildCategoryFilter() {
       _.forEach(treeItem.children, (treeSubItem, subcategory) => {
         if (treeSubItem.select) {
           treeSubItem.select = false;
-          dirtyCategories.push({ type: 'subcategory', subcategory, category });
+          dirtyCategories.push({ type: 'subcategory', subcategory, category: tag });
         }
       });
     }
