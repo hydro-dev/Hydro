@@ -616,6 +616,18 @@ const scripts: UpgradeScript[] = [
         }
         return true;
     },
+    async function _84_85() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                try {
+                    await contest.get(_id, ddoc.parentId as ObjectId);
+                } catch (e) {
+                    await discussion.del(_id, ddoc.docId);
+                }
+            }
+        });
+    },
 ];
 
 export default scripts;
