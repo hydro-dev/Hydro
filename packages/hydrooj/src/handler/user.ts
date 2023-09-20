@@ -172,7 +172,7 @@ class UserWebauthnHandler extends Handler {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = generateAuthenticationOptions({
+        const options = await generateAuthenticationOptions({
             allowCredentials: udoc._authenticators.map((authenticator) => ({
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
@@ -332,6 +332,11 @@ class UserLostPassHandler extends Handler {
         if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
+        await Promise.all([
+            this.limitRate('send_mail', 3600, 30, false),
+            this.limitRate(`user_lostpass_${mail}`, 60, 5, false),
+            oplog.log(this, 'user.lostpass', {}),
+        ]);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
             system.get('session.unsaved_expire_seconds'),

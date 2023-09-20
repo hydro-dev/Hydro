@@ -1,5 +1,6 @@
-import { Button, Icon, TreeNode } from '@blueprintjs/core';
-import { Popover2 } from '@blueprintjs/popover2';
+import {
+  Button, Classes, Icon, Popover, TreeNode,
+} from '@blueprintjs/core';
 import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import { TestCaseConfig } from 'hydrooj';
 import { isEqual } from 'lodash';
@@ -61,12 +62,12 @@ export function SubtaskNode(props: { subtaskId: number }) {
   }
 
   return (
-    <li className="bp4-tree-node bp4-tree-node-expanded">
-      {subtaskId !== -1 && <div className="bp4-tree-node-content" onClick={() => setExpand((e) => !e)}>
+    <li className={`${Classes.TREE_NODE} ${Classes.TREE_NODE_EXPANDED}`}>
+      {subtaskId !== -1 && <div className={Classes.TREE_NODE_CONTENT} onClick={() => setExpand((e) => !e)}>
         <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
-        <span className="bp4-tree-node-label">{i18n('Subtask {0}', subtaskId)}</span>
-        <span className="bp4-tree-node-secondary-label" onClick={(ev) => ev.stopPropagation()}>
-          <Popover2
+        <span className={Classes.TREE_NODE_LABEL}>{i18n('Subtask {0}', subtaskId)}</span>
+        <span className={Classes.TREE_NODE_SECONDARY_LABEL} onClick={(ev) => ev.stopPropagation()}>
+          <Popover
             content={<div style={{ padding: 20 }}>
               <b>{i18n('Are you sure you want to delete this subtask?')}</b>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
@@ -75,10 +76,10 @@ export function SubtaskNode(props: { subtaskId: number }) {
             </div>}
           >
             <Icon icon="trash" />
-          </Popover2>
+          </Popover>
         </span>
       </div>}
-      <ul className="bp4-tree-node-list" ref={drop}>
+      <ul className={Classes.TREE_NODE_LIST} ref={drop}>
         {subtaskId !== -1 && <SubtaskSettings subtaskId={subtaskId} subtaskIds={subtaskIds} time={time} memory={memory} />}
         {expand
           ? <SelectionManager subtaskId={subtaskId} subtaskIds={subtaskIds} />
@@ -91,10 +92,10 @@ export function SubtaskNode(props: { subtaskId: number }) {
             path={[0]}
           />}
         {!cases.length && (
-          <li className="bp4-tree-node">
-            <div className="bp4-tree-node-content">
-              <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
-              <span className="bp4-tree-node-label text-gray">{subtaskId === -1
+          <li className={Classes.TREE_NODE}>
+            <div className={Classes.TREE_NODE_CONTENT}>
+              <span className={`${Classes.TREE_NODE_CARET_NONE} ${Classes.ICON_STANDARD}`}></span>
+              <span className={`${Classes.TREE_NODE_LABEL} text-gray`}>{subtaskId === -1
                 ? i18n('No testcase here')
                 : i18n('Drag and drop testcases here:')}</span>
             </div>
@@ -123,23 +124,23 @@ export function SubtaskConfigTree() {
     });
   }
   return (
-    <div className="bp4-tree">
-      <ul className="bp4-tree-node-list bp4-tree-root">
-        <li className="bp4-tree-node" onClick={autoConfigure}>
-          <div className="bp4-tree-node-content bp4-tree-node-content-0">
+    <div className={Classes.TREE}>
+      <ul className={`${Classes.TREE_NODE_LIST} ${Classes.TREE_ROOT}`}>
+        <li className={Classes.TREE_NODE} onClick={autoConfigure}>
+          <div className={`${Classes.TREE_NODE_CONTENT} bp5-tree-node-content-0`}>
             <Icon icon="clean" />&nbsp;
-            <span className="bp4-tree-node-label">{i18n('Auto configure')}</span>
+            <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto configure')}</span>
           </div>
         </li>
         <GlobalSettings />
         {ids.map((id) => <SubtaskNode key={id} subtaskId={id} />)}
         <li
-          className="bp4-tree-node"
+          className={Classes.TREE_NODE}
           onClick={() => dispatch({ type: 'problemconfig/addSubtask' })}
         >
-          <div className="bp4-tree-node-content bp4-tree-node-content-0">
+          <div className={`${Classes.TREE_NODE_CONTENT} bp5-tree-node-content-0`}>
             <Icon icon="folder-new" />&nbsp;
-            <span className="bp4-tree-node-label">{i18n('Add new subtask')}</span>
+            <span className={Classes.TREE_NODE_LABEL}>{i18n('Add new subtask')}</span>
           </div>
         </li>
       </ul>
@@ -155,8 +156,8 @@ export function ProblemConfigTree() {
           <SubtaskConfigTree />
         </div>
         <div className="medium-6 columns">
-          <div className="bp4-tree">
-            <ul className="bp4-tree-node-list bp4-tree-root">
+          <div className={Classes.TREE}>
+            <ul className={`${Classes.TREE_ROOT} ${Classes.TREE_NODE_LIST}`}>
               <AddTestcase />
               <SubtaskNode subtaskId={-1} />
             </ul>
