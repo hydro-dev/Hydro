@@ -1,5 +1,6 @@
-import { Menu, MenuItem, TreeNode } from '@blueprintjs/core';
-import { ContextMenu2 } from '@blueprintjs/popover2';
+import {
+  ContextMenu, Menu, MenuItem, TreeNode,
+} from '@blueprintjs/core';
 import { TestCaseConfig } from 'hydrooj';
 import { omit } from 'lodash';
 import React from 'react';
@@ -22,7 +23,7 @@ export function TestcaseNode(props: TestcaseNodeProps) {
     c, selected, onClick, subtaskIds, subtaskId,
   } = props;
   return (
-    <ContextMenu2
+    <ContextMenu
       onContextMenu={onClick}
       data-subtaskid={subtaskId}
       data-index={c.input}
@@ -49,7 +50,7 @@ export function TestcaseNode(props: TestcaseNodeProps) {
         label={<>&nbsp;{c.input} / {c.output}</>}
         path={[0]}
       />
-    </ContextMenu2>
+    </ContextMenu>
   );
 }
 

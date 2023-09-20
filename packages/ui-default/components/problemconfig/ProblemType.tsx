@@ -1,5 +1,5 @@
 import {
-  Card, Switch, Tab, Tabs,
+  Card, Classes, Switch, Tab, Tabs,
 } from '@blueprintjs/core';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,7 +27,7 @@ export default function ProblemType() {
           defaultSelectedTabId="default"
           renderActiveTabPanelOnly
         >
-          <span className="bp4-tab">{i18n('Problem Type')}</span>
+          <span className={Classes.TAB}>{i18n('Problem Type')}</span>
           <Tabs.Expander />
           <Tab
             id="default"
@@ -42,7 +42,7 @@ export default function ProblemType() {
                 onChange={dispatcher({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type' })}
                 renderActiveTabPanelOnly
               >
-                <span className="bp4-tab">{i18n('CheckerType')}</span>
+                <span className={Classes.TAB}>{i18n('CheckerType')}</span>
                 <Tabs.Expander />
                 <Tab
                   id="default"
