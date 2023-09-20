@@ -1,5 +1,5 @@
 import { Allotment } from 'allotment';
-import AnsiUp from 'ansi_up';
+import { AnsiUp } from 'ansi_up';
 import React from 'react';
 import { connect } from 'react-redux';
 import Icon from 'vj/components/react/IconComponent';
