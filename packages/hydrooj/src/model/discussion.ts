@@ -288,7 +288,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
         return {
-            ...tdoc, type, id, hidden: false,
+            ...tdoc, type, id: _id, hidden: false,
         };
     }
     return {
