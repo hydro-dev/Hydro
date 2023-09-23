@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import charset from 'superagent-charset';
@@ -61,7 +62,8 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getProblem(id: string) {
         logger.info(id);
-        const res = await superagent.get(`/showproblem.php?pid=${id.split('P')[1]}`)
+        const res = await superagent.get('/showproblem.php')
+            .query({ pid: id.split('P')[1] })
             .buffer(true)
             .charset('gbk');
         const { window: { document } } = new JSDOM(res.text);
