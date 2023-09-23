@@ -3,7 +3,9 @@ import charset from 'superagent-charset';
 import proxy from 'superagent-proxy';
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import { htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS } from 'hydrooj';
+import {
+    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS
+} from 'hydrooj';
 import { IBasicProvider, RemoteAccount } from '../interface';
 import { BasicFetcher } from '../fetch';
 const charsetReq = require('superagent-charset');
