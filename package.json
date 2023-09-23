@@ -47,7 +47,7 @@
         "css-loader": "^6.8.1",
         "esbuild": "0.17.10",
         "esbuild-loader": "^2.21.0",
-        "eslint": "^8.49.0",
+        "eslint": "^8.50.0",
         "eslint-import-resolver-typescript": "^3.6.0",
         "eslint-import-resolver-webpack": "^0.13.7",
         "fs-extra": "^11.1.1",
