@@ -243,7 +243,7 @@ export class UserRegisterHandler extends Handler {
             const mailDomain = mail.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             await Promise.all([
-                this.limitRate(`send_mail_${mail}`, 60, 1),
+                this.limitRate(`send_mail_${mail}`, 60, 3, false),
                 this.limitRate('send_mail', 3600, 30, false),
                 oplog.log(this, 'user.register', {}),
             ]);
@@ -267,7 +267,7 @@ export class UserRegisterHandler extends Handler {
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
             await Promise.all([
-                this.limitRate(`send_sms_${phoneNumber}`, 60, 1),
+                this.limitRate(`send_sms_${phoneNumber}`, 60, 1, false),
                 this.limitRate('send_sms', 3600, 15, false),
                 oplog.log(this, 'user.register', {}),
             ]);
@@ -339,7 +339,7 @@ class UserLostPassHandler extends Handler {
         if (!udoc) throw new UserNotFoundError(mail);
         await Promise.all([
             this.limitRate('send_mail', 3600, 30, false),
-            this.limitRate(`user_lostpass_${mail}`, 60, 5, false),
+            this.limitRate(`user_lostpass_${mail}`, 60, 3, false),
             oplog.log(this, 'user.lostpass', {}),
         ]);
         const [tid] = await token.add(
