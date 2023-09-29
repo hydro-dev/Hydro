@@ -13,7 +13,9 @@ function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
-        const [{ code, time, memory }, resInteractor] = await runPiped(
+        const [{
+            code, signalled, time, memory,
+        }, resInteractor] = await runPiped(
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
@@ -39,7 +41,7 @@ function judgeCase(c: NormalizedCase) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else if ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code)) {
             status = STATUS.STATUS_RUNTIME_ERROR;
-            if (code < 32) message = signals[code];
+            if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         } else {
             const result = parse(resInteractor.stderr, c.score);

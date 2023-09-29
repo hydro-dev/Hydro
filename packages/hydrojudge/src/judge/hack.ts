@@ -51,7 +51,9 @@ export async function judge(ctx: Context) {
             cacheStdoutAndStderr: true,
         },
     );
-    const { code, time, memory } = res;
+    const {
+        code, signalled, time, memory,
+    } = res;
     let { status } = res;
     let message: any = '';
     if (status === STATUS.STATUS_ACCEPTED) {
@@ -73,7 +75,7 @@ export async function judge(ctx: Context) {
             }));
         }
     } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-        if (code < 32) message = signals[code];
+        if (code < 32 && signalled) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     }
     await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
