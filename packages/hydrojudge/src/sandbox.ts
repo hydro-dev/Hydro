@@ -45,6 +45,7 @@ interface Parameter {
 interface SandboxAdaptedResult {
     status: number;
     code: number;
+    signalled: boolean;
     /** in miliseconds */
     time: number;
     /** in kilobytes */
@@ -114,6 +115,7 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     // FIXME: Signalled?
     const ret: SandboxAdaptedResult = {
         status: statusMap.get(result.status) || STATUS.STATUS_ACCEPTED,
+        signalled: result.status === SandboxStatus.Signalled,
         time: result.time / 1000000 / rate,
         memory: result.memory / 1024,
         files: result.files,
