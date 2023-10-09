@@ -1,5 +1,6 @@
 import codeforces from './codeforces';
 import csgoj from './csgoj';
+import hduoj from './hduoj';
 import {
     BZOJ as bzoj, HUSTOJ as hustoj, XJOI as xjoi, YBT as ybt,
     YBTBAS as ybtbas,
@@ -8,7 +9,6 @@ import luogu from './luogu';
 import poj from './poj';
 import spoj from './spoj';
 import uoj from './uoj';
-import hduoj from './hduoj';
 
 const vjudge: Record<string, any> = {
     codeforces,
