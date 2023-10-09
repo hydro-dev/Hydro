@@ -24,6 +24,7 @@ const page = new NamedPage('record_main', async () => {
       dd.apply($oldTr[0], dd.diff($oldTr[0], $newTr[0]));
       $oldTr.trigger('vjContentNew');
     } else {
+      if (+new URLSearchParams(window.location.search).get('page') > 1) return;
       $('.record_main__table tbody').prepend($newTr);
       $('.record_main__table tbody tr:last').remove();
       $newTr.trigger('vjContentNew');
