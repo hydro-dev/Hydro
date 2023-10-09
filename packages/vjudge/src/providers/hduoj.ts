@@ -1,3 +1,4 @@
+/* eslint-disable no-constant-condition */
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
@@ -157,6 +158,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         return res;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async submitProblem(id: string, lang: string, code: string, info) {
         await this.ensureLogin();
         const language = lang.includes('hduoj.') ? lang.split('hduoj.')[1] : '0';
@@ -172,6 +174,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         if (text.includes('One or more following ERROR(s) occurred.')) {
             throw new Error(text.split('<li>')[1].split('</li>')[0]);
         }
+        // eslint-disable-next-line max-len
         const { text: status } = await this.get(`/status.php?first=&pid=${id}&user=${this.account.handle}&lang=${parseInt(language, 10) + 1}&status=0`);
         const $dom = new JSDOM(status);
         const res = $dom.window.document.querySelector('.table_text>tbody');
