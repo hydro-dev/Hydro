@@ -499,6 +499,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             langRange,
             pdoc: this.pdoc,
             udoc: this.udoc,
+            tdoc: this.tdoc,
             title: this.pdoc.title,
             page_name: this.tdoc
                 ? this.tdoc.rule === 'homework'
