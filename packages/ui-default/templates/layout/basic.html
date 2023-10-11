@@ -3,6 +3,14 @@
 {% block body %}
 {% if UserContext %}{% include "partials/nav.html" %}{% endif %}
 <div class="slideout-panel" id="panel">
+  {% if handler.session.legacy and not handler.session.nohint %}
+    <div class="typo hint flex-row flex-main-center flex-cross-center">
+        <p>
+          {{ _('You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.') }}
+          <a href="/legacy">{{ _('Standard mode') }}</a> <a href="/legacy?legacy=true&nohint=true">{{ _('Hidden') }}</a>
+        </p>
+    </div>
+  {% endif %}
   <div class="slideout-overlay"></div>
   {% if UserContext %}{% include "partials/header_mobile.html" %}{% endif %}
   <div class="main">

@@ -2,9 +2,6 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-  {{ set(UiContext, {
-      currentCategory: category
-  }) }}
   <div class="row">
     <div class="medium-9 columns">
       <div class="section display-mode">
@@ -18,6 +15,11 @@
               </button>
             </div>
           </form>
+        </div>
+        {% if handler.domain.pinnedFilter %}
+          {% include "partials/problem_search.html" %}
+        {% endif %}
+        <div class="section__body no-padding">
           {% include "partials/problem_list.html" %}
         </div>
       </div>

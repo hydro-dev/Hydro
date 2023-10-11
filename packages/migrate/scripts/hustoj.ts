@@ -176,8 +176,12 @@ export async function run({
                 }, 'html');
                 const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
-                    files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-                    content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+                    try {
+                        files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
+                        content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+                    } catch (e) {
+                        report({ message: `failed to read file: ${path.join(uploadDir, file[1])}` });
+                    }
                 }
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,

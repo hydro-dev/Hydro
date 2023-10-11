@@ -5,6 +5,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
+import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -144,10 +145,17 @@ export class ProblemMainHandler extends Handler {
         let sort: string[];
         let fail = false;
         let pcountRelation = 'eq';
-        const category = flattenDeep(q.split(' ')
-            .filter((i) => i.startsWith('category:'))
-            .map((i) => i.split('category:')[1]?.split(',')));
-        const text = q.split(' ').filter((i) => !i.startsWith('category:')).join(' ');
+        const parsed = parser.parse(q, {
+            keywords: ['category', 'difficulty'],
+            offsets: false,
+            alwaysArray: true,
+            tokenize: true,
+        });
+        const category = parsed.category || [];
+        const text = (parsed.text || []).join(' ');
+        if (parsed.difficulty?.every((i) => Number.isSafeInteger(+i))) {
+            query.difficulty = { $in: parsed.difficulty.map(Number) };
+        }
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (text) category.push(text);
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
@@ -214,7 +222,6 @@ export class ProblemMainHandler extends Handler {
                 pcountRelation,
                 pdocs,
                 psdict,
-                category: category.join(','),
                 qs: q,
             };
         }
@@ -369,6 +376,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             solutionCount: scnt,
             discussionCount: dcnt,
             tdoc: this.tdoc,
+            owner_udoc: (tid && this.tdoc.owner !== this.pdoc.owner) ? await user.getById(domainId, this.tdoc.owner) : null,
         };
         if (this.tdoc && this.tsdoc) {
             const fields = ['attend', 'startAt'];
@@ -491,6 +499,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             langRange,
             pdoc: this.pdoc,
             udoc: this.udoc,
+            tdoc: this.tdoc,
             title: this.pdoc.title,
             page_name: this.tdoc
                 ? this.tdoc.rule === 'homework'

@@ -57,7 +57,9 @@ export const judge = async (ctx: Context) => {
         },
         1,
     );
-    const { code, time, memory } = res;
+    const {
+        code, signalled, time, memory,
+    } = res;
     let { status } = res;
     const message: string[] = [];
     if (time > parseTimeMS(ctx.config.time || '1s')) {
@@ -66,7 +68,7 @@ export const judge = async (ctx: Context) => {
         status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
     } else if (code) {
         status = STATUS.STATUS_RUNTIME_ERROR;
-        if (code < 32) message.push(`ExitCode: ${code} (${signals[code]})`);
+        if (code < 32 && signalled) message.push(`ExitCode: ${code} (${signals[code]})`);
         else message.push(`ExitCode: ${code}`);
     }
     message.push(res.stdout, res.stderr);
