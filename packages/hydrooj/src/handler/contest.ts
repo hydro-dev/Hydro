@@ -4,7 +4,7 @@ import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
-    Counter, sortFiles, streamToBuffer, Time,
+    Counter, sortFiles, streamToBuffer, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -666,13 +666,13 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
 
 export class ContestBalloonHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
-    @param('unsent', Types.Boolean)
-    async get(domainId: string, tid: ObjectId, unsent = false) {
+    @param('todo', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, todo = false) {
         const bdocs = await contest.getMultiBalloon(domainId, tid, {
-            ...unsent ? { sent: { $exists: false } } : {},
+            ...todo ? { sent: { $exists: false } } : {},
             ...(!this.tdoc.lockAt || !(this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD)))
                 ? {} : { rid: { $lt: this.tdoc.lockAt } },
-        }).toArray();
+        }).sort({ bid: -1 }).toArray();
         const uids = [...bdocs.map((i) => i.uid), ...bdocs.filter((i) => i.sent).map((i) => i.sent)];
         const udict = await user.getListForRender(domainId, uids);
         this.response.body = { bdocs, udict };
@@ -681,9 +681,23 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     }
 
     @param('tid', Types.ObjectId)
-    @param('balloons', Types.ArrayOf(Types.ObjectId))
-    async postSendBalloon(domainId: string, tid: ObjectId, balloons: ObjectId[]) {
-        await Promise.all(balloons.map((bid) => contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() })));
+    @param('color', Types.Content)
+    async postSetColor(domainId: string, tid: ObjectId, color: string) {
+        const config = yaml.load(color);
+        if (typeof config !== 'object') throw new ValidationError('color');
+        const balloon = {};
+        this.tdoc.pids.forEach((pid) => {
+            if (!config[pid]) throw new ValidationError('color');
+            balloon[pid] = config[pid.toString()];
+        });
+        await contest.edit(domainId, tid, { balloon });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('balloon', Types.PositiveInt)
+    async postDone(domainId: string, tid: ObjectId, bid: number) {
+        await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
         this.back();
     }
 }

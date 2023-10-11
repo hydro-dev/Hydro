@@ -656,6 +656,7 @@ export interface ContestBalloonDoc {
     _id: ObjectId;
     domainId: string;
     tid: ObjectId;
+    bid: number;
     pid: number;
     uid: number;
     first?: boolean;

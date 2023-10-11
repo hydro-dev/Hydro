@@ -732,7 +732,7 @@ export async function updateStatus(
 ) {
     const tdoc = await get(domainId, tid);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (status === STATUS.STATUS_ACCEPTED && updated && tdoc.balloon) addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && updated) await addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
@@ -763,19 +763,28 @@ export async function addBalloon(domainId: string, tid: ObjectId, uid: number, r
     });
     if (balloon) return null;
     const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
-    const bdoc = {
-        _id: new ObjectId(), domainId, tid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
+    const [bdoc] = await collBalloon.find({}).sort({ bid: -1 }).limit(1).toArray();
+    const bid = (bdoc?.bid || 0) + 1;
+    const newBdoc = {
+        _id: new ObjectId(), domainId, tid, bid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
     };
-    bus.broadcast('contest/balloon', domainId, tid, bdoc);
-    return await collBalloon.insertOne(bdoc);
+    try {
+        await collBalloon.insertOne(newBdoc);
+        bus.broadcast('contest/balloon', domainId, tid, newBdoc);
+    } catch (e) {
+        if (e.code === 11000) {
+            return await addBalloon(domainId, tid, uid, rid, pid);
+        }
+    }
+    return bid;
 }
 
 export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
     return collBalloon.find({ domainId, tid, ...query });
 }
 
-export async function updateBalloon(domainId: string, tid: ObjectId, bid: ObjectId, $set: any) {
-    return await collBalloon.findOneAndUpdate({ domainId, tid, _id: bid }, { $set });
+export async function updateBalloon(domainId: string, tid: ObjectId, bid: number, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, bid }, { $set });
 }
 
 export function isNew(tdoc: Tdoc, days = 1) {
@@ -918,6 +927,11 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
             : isOngoing(tdoc, tsdoc)
                 ? 'Live...'
                 : 'Done');
+
+bus.on('ready', () => db.ensureIndexes(
+    collBalloon,
+    { key: { domainId: 1, tid: 1, bid: 1 }, name: 'balloon', unique: true },
+));
 
 global.Hydro.model.contest = {
     RULES,
