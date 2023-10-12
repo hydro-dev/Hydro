@@ -314,6 +314,7 @@ export function readSubtasksFromFiles(files: string[], config) {
     const subtask: Record<number, ParsedSubtask> = {};
     for (const s of config.subtasks || []) if (s.id) subtask[s.id] = s;
     for (const file of files) {
+        let match = false;
         for (const rule of SubtaskMatcher) {
             const data = rule.regex.exec(file);
             if (!data) continue;
@@ -324,6 +325,7 @@ export function readSubtasksFromFiles(files: string[], config) {
                 if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
                 if (c.output === '/dev/null' || files.includes(c.output)) {
+                    match = true;
                     if (!subtask[sid]) {
                         subtask[sid] = {
                             time: config.time,
@@ -336,6 +338,7 @@ export function readSubtasksFromFiles(files: string[], config) {
                     break;
                 }
             }
+            if (match) break;
         }
     }
     return Object.values(subtask);
