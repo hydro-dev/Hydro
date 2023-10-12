@@ -23,9 +23,17 @@ const onmessage = (msg) => {
   }
   if (msg.mdoc.flag & FLAG_INFO) {
     if (previous) previous.hide();
+    try {
+      msg.mdoc.content = JSON.parse(msg.mdoc.content);
+      if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
+      msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
+    } catch (e) {
+      msg.mdoc.content = i18n(msg.mdoc.content);
+    }
     previous = new VjNotification({
-      message: i18n(msg.mdoc.content),
-      duration: 3000,
+      message: msg.mdoc.content,
+      duration: msg.mdoc.url ? 10000 : 3000,
+      ...(msg.mdoc.url ? { action: () => window.open(msg.mdoc.url, '_blank') } : {}),
     });
     previous.show();
     return false;

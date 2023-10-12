@@ -183,8 +183,8 @@ export class Handler extends HandlerCommon {
     }
 
     // This is beta API, may be changed in the future.
-    progress(message: string) {
-        Hydro.model.message.sendInfo(this.user._id, message);
+    progress(message: string, params: any[]) {
+        Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
     }
 
     async init() {

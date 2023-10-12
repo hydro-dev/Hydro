@@ -886,21 +886,22 @@ export function addClarification(
     domainId: string, tid: ObjectId, did: ObjectId, owner: number,
     content: string, ip: string, subject = 0,
 ) {
-    if (tid === did) {
-        return document.add(
-            domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
-            null, document.TYPE_CONTEST, tid, { ip, subject },
+    if (did) {
+        return document.push(
+            domainId, document.TYPE_CONTEST_CLARIFICATION, did,
+            'reply', { content, owner, ip },
         );
-    } return document.push(
-        domainId, document.TYPE_CONTEST_CLARIFICATION, did,
-        'reply', content, owner, { ip },
+    }
+    return document.add(
+        domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
+        null, document.TYPE_CONTEST, tid, { ip, subject },
     );
 }
 
-export function getMultiClarification(domainId: string, tid: ObjectId, query) {
+export function getMultiClarification(domainId: string, tid: ObjectId, owner = 0) {
     return document.getMulti(
         domainId, document.TYPE_CONTEST_CLARIFICATION,
-        { parentType: document.TYPE_CONTEST, parentId: tid, ...query },
+        { parentType: document.TYPE_CONTEST, parentId: tid, ...(owner ? { owner: { $in: [owner, 0] } } : {}) },
     ).sort('_id', -1).toArray();
 }
 
