@@ -882,6 +882,28 @@ export async function getScoreboard(
     return [tdoc, rows, udict, pdict];
 }
 
+export function addClarification(
+    domainId: string, tid: ObjectId, did: ObjectId, owner: number,
+    content: string, ip: string, subject = 0,
+) {
+    if (tid === did) {
+        return document.add(
+            domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
+            null, document.TYPE_CONTEST, tid, { ip, subject },
+        );
+    } return document.push(
+        domainId, document.TYPE_CONTEST_CLARIFICATION, did,
+        'reply', content, owner, { ip },
+    );
+}
+
+export function getMultiClarification(domainId: string, tid: ObjectId, query) {
+    return document.getMulti(
+        domainId, document.TYPE_CONTEST_CLARIFICATION,
+        { parentType: document.TYPE_CONTEST, parentId: tid, ...query },
+    ).sort('_id', -1).toArray();
+}
+
 export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
     isNew(tdoc)
         ? 'New'
@@ -915,6 +937,8 @@ global.Hydro.model.contest = {
     canShowScoreboard,
     canViewHiddenScoreboard,
     getScoreboard,
+    addClarification,
+    getMultiClarification,
     isNew,
     isUpcoming,
     isNotStarted,

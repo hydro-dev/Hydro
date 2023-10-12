@@ -204,6 +204,9 @@ export class ContestDetailHandler extends Handler {
             files: sortFiles(this.tdoc.files || []),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
+        if (!this.user.own(this.tdoc)) {
+            this.response.body.clarifications = await contest.getMultiClarification(domainId, tid, { owner: { $in: [this.user._id, 0] } });
+        }
         if (this.request.json) return;
         this.response.body.tdoc.content = this.response.body.tdoc.content
             .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
@@ -246,6 +249,19 @@ export class ContestDetailHandler extends Handler {
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
         if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
         await contest.attend(domainId, tid, this.user._id);
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('content', Types.Content)
+    @param('subject', Types.Int)
+    async postClarification(domainId: string, tid: ObjectId, content: string, subject: number) {
+        await this.limitRate('add_discussion', 3600, 60);
+        await contest.addClarification(domainId, tid, tid, this.user._id, content, this.request.ip, subject);
+        if (!this.user.own(this.tdoc)) {
+            await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map(
+                (uid) => message.sendInfo(uid, `Contest ${this.tdoc.title} has a new clarification, please go to contest management to reply.`)));
+        }
         this.back();
     }
 }
@@ -563,6 +579,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             files: sortFiles(this.tdoc.files || []),
+            clarifications: await contest.getMultiClarification(domainId, tid, {}),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
         this.response.pjax = 'partials/files.html';
@@ -570,12 +587,24 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     }
 
     @param('tid', Types.ObjectId)
+    @param('did', Types.ObjectId)
     @param('content', Types.Content)
-    async postBroadcast(domainId: string, tid: ObjectId, content: string) {
-        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
-        const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
-        const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
-        await Promise.all(uids.map((uid) => message.send(this.user._id, uid, content, flag)));
+    @param('subject', Types.Int, true)
+    async postClarification(domainId: string, tid: ObjectId, did: ObjectId, content: string, subject = 0) {
+        if (tid === did) {
+            const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+            const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
+            const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
+            await Promise.all([
+                ...uids.map((uid) => message.send(this.user._id, uid, content, flag)),
+                contest.addClarification(domainId, tid, tid, 0, content, this.request.ip, subject),
+            ]);
+        } else {
+            await Promise.all([
+                contest.addClarification(domainId, tid, did, this.user._id, content, this.request.ip),
+                message.sendInfo(this.tdoc.owner, 'Contest owner replied to your clarification.'),
+            ]);
+        }
         this.back();
     }
 
