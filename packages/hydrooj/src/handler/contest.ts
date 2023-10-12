@@ -697,6 +697,9 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     @param('balloon', Types.PositiveInt)
     async postDone(domainId: string, tid: ObjectId, bid: number) {
+        const balloon = await contest.getBalloon(domainId, tid, bid);
+        if (!balloon) throw new ValidationError('balloon');
+        if (balloon.sent) throw new ValidationError('balloon', null, 'Balloon already sent');
         await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
         this.back();
     }

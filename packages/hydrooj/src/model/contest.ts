@@ -708,6 +708,40 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
+export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
+    const balloon = await collBalloon.findOne({
+        domainId, tid, pid, uid,
+    });
+    if (balloon) return null;
+    const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
+    const [bdoc] = await collBalloon.find({}).sort({ bid: -1 }).limit(1).toArray();
+    const bid = (bdoc?.bid || 0) + 1;
+    const newBdoc = {
+        _id: new ObjectId(), domainId, tid, bid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
+    };
+    try {
+        await collBalloon.insertOne(newBdoc);
+        bus.broadcast('contest/balloon', domainId, tid, newBdoc);
+    } catch (e) {
+        if (e.code === 11000) {
+            return await addBalloon(domainId, tid, uid, rid, pid);
+        }
+    }
+    return bid;
+}
+
+export async function getBalloon(domainId: string, tid: ObjectId, bid: number) {
+    return await collBalloon.findOne({ domainId, tid, bid });
+}
+
+export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
+    return collBalloon.find({ domainId, tid, ...query });
+}
+
+export async function updateBalloon(domainId: string, tid: ObjectId, bid: number, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, bid }, { $set });
+}
+
 export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
@@ -721,7 +755,6 @@ async function _updateStatus(
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
 }
 
@@ -757,36 +790,6 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
-export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
-    const balloon = await collBalloon.findOne({
-        domainId, tid, pid, uid,
-    });
-    if (balloon) return null;
-    const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
-    const [bdoc] = await collBalloon.find({}).sort({ bid: -1 }).limit(1).toArray();
-    const bid = (bdoc?.bid || 0) + 1;
-    const newBdoc = {
-        _id: new ObjectId(), domainId, tid, bid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
-    };
-    try {
-        await collBalloon.insertOne(newBdoc);
-        bus.broadcast('contest/balloon', domainId, tid, newBdoc);
-    } catch (e) {
-        if (e.code === 11000) {
-            return await addBalloon(domainId, tid, uid, rid, pid);
-        }
-    }
-    return bid;
-}
-
-export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
-    return collBalloon.find({ domainId, tid, ...query });
-}
-
-export async function updateBalloon(domainId: string, tid: ObjectId, bid: number, $set: any) {
-    return await collBalloon.findOneAndUpdate({ domainId, tid, bid }, { $set });
-}
-
 export function isNew(tdoc: Tdoc, days = 1) {
     const now = new Date().getTime();
     const readyAt = tdoc.beginAt.getTime();
@@ -815,9 +818,8 @@ export function isDone(tdoc: Tdoc, tsdoc?: any) {
     return false;
 }
 
-export function isLocked(tdoc: Tdoc, time?: Date) {
+export function isLocked(tdoc: Tdoc, time = new Date()) {
     if (!tdoc.lockAt) return false;
-    time ||= new Date();
     return tdoc.lockAt < time && !tdoc.unlocked;
 }
 
@@ -952,6 +954,7 @@ global.Hydro.model.contest = {
     getAndListStatus,
     recalcStatus,
     unlockScoreboard,
+    getBalloon,
     addBalloon,
     getMultiBalloon,
     updateBalloon,
