@@ -109,6 +109,8 @@ Auto configure: 自动配置
 Auto detect: 自动检测
 Auto hide problems during the contest: 在比赛过程中自动隐藏题目
 Auto Read Tasks: 自动识别任务
+Awards: 奖项
+Balloon Status: 气球状态
 Basic Info: 基础信息
 Basic: 基础
 Be Copied: 被复制
@@ -374,6 +376,8 @@ File: 文件
 Filename: 文件名
 Files: 文件
 Filter: 过滤
+First of Contest: 全场一血 
+First of Problem: 题目一血
 fontFamily: 字体
 Footer: 页脚
 Footnote: 脚注
@@ -776,6 +780,7 @@ Selected files have been deleted.: 所选文件已被删除。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
+Send By: 递送者
 Send Code after acceptance: 通过题目后发送源代码
 Send Message: 发送站内信息
 Send Password Reset Email: 发送密码重置邮件
@@ -783,6 +788,7 @@ Send Verification Email: 发送验证邮件
 Send: 发送
 Seperated with ',': 用 ',' 分隔
 Service Status: 服务状态
+Set Color: 设置颜色
 Set Privilege: 设置权限
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色

@@ -31,7 +31,7 @@
     <td class="col--send-by">
       {% if bdoc.sent %}{{ user.render_inline(udict[bdoc.sent], avatar=false, badge=false) }} @ {{ datetimeSpan(bdoc.sentAt)|safe }}{% else %}-{% endif %}
     </td>
-    <td class="col--awards">{% if bdoc.first %}First of Problem{% endif %}</td>
+    <td class="col--awards">{% if bdoc.id === 1 %}{{ _('First of Contest') }}{% elif bdoc.first %}{{ _('First of Problem') }}{% endif %}</td>
   </tr>
   {%- endfor -%}
 </tbody>
