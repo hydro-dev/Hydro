@@ -714,7 +714,7 @@ export async function addBalloon(domainId: string, tid: ObjectId, uid: number, r
     });
     if (balloon) return null;
     const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
-    const [bdoc] = await collBalloon.find({}).sort({ bid: -1 }).limit(1).toArray();
+    const [bdoc] = await collBalloon.find({ domainId, tid }).sort({ bid: -1 }).limit(1).toArray();
     const bid = (bdoc?.bid || 0) + 1;
     const newBdoc = {
         _id: new ObjectId(), domainId, tid, bid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
@@ -761,11 +761,10 @@ async function _updateStatus(
 export async function updateStatus(
     domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
-    updated: boolean = false,
 ) {
     const tdoc = await get(domainId, tid);
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && updated) await addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 

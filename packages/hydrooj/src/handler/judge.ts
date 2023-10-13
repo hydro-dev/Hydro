@@ -77,10 +77,10 @@ export async function postJudge(rdoc: RecordDoc) {
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
+        console.log(updated);
         await contest.updateStatus(
             rdoc.domainId, rdoc.contest, rdoc.uid, rdoc._id,
             rdoc.pid, rdoc.status, rdoc.score, rdoc.subtasks,
-            updated,
         );
     } else if (accept && updated) await domain.incUserInDomain(rdoc.domainId, rdoc.uid, 'nAccept', 1);
     const isNormalSubmission = ![
