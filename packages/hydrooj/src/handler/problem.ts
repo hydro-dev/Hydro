@@ -342,6 +342,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             this.pdoc.config = pdoc.config;
+            this.pdoc.additional_file = pdoc.additional_file;
         }
         if (typeof this.pdoc.config !== 'string') {
             let baseLangs;
