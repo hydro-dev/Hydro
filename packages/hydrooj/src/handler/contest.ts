@@ -161,6 +161,7 @@ export class ContestDetailBaseHandler extends Handler {
                 checker: () => contest.canShowScoreboard.call(this, this.tdoc, true),
             },
             {
+                name: 'problem_detail',
                 displayName: `${String.fromCharCode(65 + this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
