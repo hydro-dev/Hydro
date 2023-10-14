@@ -883,19 +883,27 @@ export async function getScoreboard(
 }
 
 export function addClarification(
-    domainId: string, tid: ObjectId, did: ObjectId, owner: number,
-    content: string, ip: string, subject = 0,
+    domainId: string, tid: ObjectId, owner: number, content: string,
+    ip: string, subject = 0,
 ) {
-    if (did) {
-        return document.push(
-            domainId, document.TYPE_CONTEST_CLARIFICATION, did,
-            'reply', { content, owner, ip },
-        );
-    }
     return document.add(
         domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
         null, document.TYPE_CONTEST, tid, { ip, subject },
     );
+}
+
+export function addClarificationReply(
+    domainId: string, did: ObjectId, owner: number,
+    content: string, ip: string,
+) {
+    return document.push(
+        domainId, document.TYPE_CONTEST_CLARIFICATION, did,
+        'reply', { content, owner, ip },
+    );
+}
+
+export function getClarification(domainId: string, did: ObjectId) {
+    return document.get(domainId, document.TYPE_CONTEST_CLARIFICATION, did);
 }
 
 export function getMultiClarification(domainId: string, tid: ObjectId, owner = 0) {
@@ -939,6 +947,7 @@ global.Hydro.model.contest = {
     canViewHiddenScoreboard,
     getScoreboard,
     addClarification,
+    getClarification,
     getMultiClarification,
     isNew,
     isUpcoming,

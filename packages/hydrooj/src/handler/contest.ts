@@ -290,13 +290,12 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
         if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         await this.limitRate('add_discussion', 3600, 60);
-        await contest.addClarification(domainId, tid, tid, this.user._id, content, this.request.ip, subject);
+        await contest.addClarification(domainId, tid, this.user._id, content, this.request.ip, subject);
         if (!this.user.own(this.tdoc)) {
-            await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map((uid) => message.sendInfo(uid, JSON.stringify({
+            await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map((uid) => message.send(1, uid, JSON.stringify({
                 message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
                 params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
-                url: this.url('contest_manage', { tid }),
-            }))));
+            }), message.FLAG_UNREAD)));
         }
         this.back();
     }
@@ -597,20 +596,20 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('subject', Types.Int, true)
     async postClarification(domainId: string, tid: ObjectId, content: string, did: ObjectId, subject = 0) {
         if (did) {
+            const tcdoc = await contest.getClarification(domainId, did);
             await Promise.all([
-                contest.addClarification(domainId, tid, did, 0, content, this.request.ip),
-                message.sendInfo(this.tdoc.owner, JSON.stringify({
+                contest.addClarificationReply(domainId, did, 0, content, this.request.ip),
+                message.send(1, tcdoc.owner, JSON.stringify({
                     message: 'Contest {0} jury replied to your clarification, please go to contest page to view.',
                     params: [this.tdoc.title],
-                    url: this.url('contest_problemlist', { tid }),
-                })),
+                }), message.FLAG_ALERT),
             ]);
         } else {
             const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
             const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
             const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
             await Promise.all([
-                contest.addClarification(domainId, tid, tid, 0, content, this.request.ip, subject),
+                contest.addClarification(domainId, tid, 0, content, this.request.ip, subject),
                 ...uids.map((uid) => message.send(this.user._id, uid, content, flag)),
             ]);
         }
