@@ -54,7 +54,7 @@
         {%- endfor -%}
       </tbody>
     </table>
-  {% elif not reference and not _files.length %}
+  {% elif (not reference or filetype == 'additional_file') and not _files.length %}
     {{ nothing.render('No {0} at current.', compact=sidebar, args=[_(filetype)]) }}
   {% endif %}
 </div>
