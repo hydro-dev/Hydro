@@ -54,12 +54,7 @@ const onmessage = (msg) => {
   return true;
 };
 
-const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
-// TODO handle a better way for cookie
-if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
-const endpoint = url.toString().replace('http', 'ws');
-
-const initWorkerMode = () => {
+const initWorkerMode = (endpoint) => {
   console.log('Messages: using SharedWorker');
   const worker = new SharedWorker('/messages-shared-worker.js', { name: 'HydroMessagesWorker' });
   worker.port.start();
@@ -89,9 +84,13 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
       action: () => window.open('/home/messages', '_blank'),
     }).show();
   }
+  const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
+  // TODO handle a better way for cookie
+  if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
+  const endpoint = url.toString().replace('http', 'ws');
   if (window.SharedWorker) {
     try {
-      initWorkerMode();
+      initWorkerMode(endpoint);
       return;
     } catch (e) {
       console.error('SharedWorker init fail: ', e.message);
