@@ -947,6 +947,7 @@ global.Hydro.model.contest = {
     canViewHiddenScoreboard,
     getScoreboard,
     addClarification,
+    addClarificationReply,
     getClarification,
     getMultiClarification,
     isNew,
