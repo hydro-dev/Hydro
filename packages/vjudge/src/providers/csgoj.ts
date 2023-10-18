@@ -37,15 +37,18 @@ csgoj.1:
   monaco: cpp
   highlight: cpp astyle-c
   comment: //
-csgoj.2:
-  display: Pascal
-  monaco: pascal
-  highlight: pascal
-  comment: //
 csgoj.3:
   display: Java
   monaco: java
   highlight: java astyle-java
+  comment: //
+csgoj.6:
+  display: Python3
+  highlight: python
+  comment: '#'
+csgoj.17:
+  display: Go
+  highlight: go
   comment: //
 */
 
