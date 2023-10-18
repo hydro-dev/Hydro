@@ -107,8 +107,8 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         const description = [...pDescription.children].map((i) => i.outerHTML).join('');
         const input = [...document.querySelector('div[name="Input"]').children].map((i) => i.outerHTML).join('');
         const output = [...document.querySelector('div[name="Output"]').children].map((i) => i.outerHTML).join('');
-        const sampleInput = `\`\`\`input1\n${document.querySelector('div[name="Sample Input"]>pre').innerHTML.trim()}\n\`\`\``;
-        const sampleOutput = `\`\`\`output1\n${document.querySelector('div[name="Sample Output"]>pre').innerHTML.trim()}\n\`\`\``;
+        const sampleInput = `\`\`\`input1\n${document.querySelector('pre.sample_input_area').innerHTML.trim()}\n\`\`\``;
+        const sampleOutput = `\`\`\`output1\n${document.querySelector('pre.sample_output_area').innerHTML.trim()}\n\`\`\``;
         const contents = [description, input, output, sampleInput, sampleOutput];
         const hint = document.querySelector('div[name="Hint"]');
         if (hint.textContent.trim().length > 4) {
@@ -160,9 +160,12 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         while (count < 60) {
             count++;
             await sleep(3000);
-            const { body } = await this.get(`/csgoj/Status/status_ajax?solution_id=${id}`).set('X-Requested-With', 'XMLHttpRequest');
+            const { body } = await this
+                // eslint-disable-next-line max-len
+                .get(`/csgoj/status/status_ajax?sort=solution_id_show&order=desc&offset=0&limit=20&problem_id=&user_id=&solution_id=${id}&language=-1&result=-1`)
+                .set('X-Requested-With', 'XMLHttpRequest');
             const status = statusDict[body.rows[0].result] || STATUS.STATUS_SYSTEM_ERROR;
-            if (status === STATUS.STATUS_JUDGING) continue;
+            if (status === STATUS.STATUS_JUDGING || status === STATUS.STATUS_COMPILING) continue;
             await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
