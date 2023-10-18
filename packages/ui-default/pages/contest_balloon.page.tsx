@@ -22,7 +22,7 @@ function Balloon({ tdoc, val }) {
               <th>{i18n('Problem')}</th>
               <th>{i18n('Color')}</th>
               <th>{i18n('Name')}</th>
-              <th>{i18n('Picker')}</th>
+              <th><span className="icon icon-wrench"></span></th>
             </tr>
           </thead>
           <tbody>
