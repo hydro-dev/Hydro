@@ -1,3 +1,4 @@
+{% import "components/nothing.html" as nothing with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
 {{ set(UiContext, 'tdoc', tdoc) }}
@@ -12,6 +13,9 @@
       </div>
       {{ noscript_note.render() }}
       <div class="section__body no-padding">
+        {% if not tdoc.balloon|length %}
+          {{ nothing.render('Please set the balloon color for each problem first.') }}
+        {% else %}
         <table class="data-table record_main__table">
           <colgroup>
             <col class="col--status">
@@ -33,6 +37,7 @@
           </thead>
           {% include "partials/contest_balloon.html" %}
         </table>
+        {% endif %}
       </div>
     </div>
   </div>

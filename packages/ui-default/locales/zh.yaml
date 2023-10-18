@@ -640,6 +640,7 @@ Please follow the instructions on your device to complete the verification.: 请
 Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
+Please set the balloon color for each problem first.: 请先为每道题设置气球颜色。
 Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
 Preference Settings: 偏好设置
 preferredPrefix_hint: 此选项用于重排题号。例如，若题目包中所给的题号分别是 P1001, P1002, P1003，而此选项填写了 T，则导入后三道题的题号分别为 T1001, T1002 和 T1003。
