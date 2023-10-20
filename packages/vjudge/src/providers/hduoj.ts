@@ -2,6 +2,7 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
+import { } from 'superagent';
 import charset from 'superagent-charset';
 import proxy from 'superagent-proxy';
 import {
@@ -9,6 +10,12 @@ import {
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
+
+declare module "superagent" {
+    interface Request {
+        charset(c: string): this;
+    }
+}
 
 charset(superagent);
 proxy(superagent as any);
