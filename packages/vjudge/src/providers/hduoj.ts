@@ -10,7 +10,7 @@ import {
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-charsetReq(superagent);
+charset(superagent);
 proxy(superagent as any);
 const logger = new Logger('remote/hduoj');
 
