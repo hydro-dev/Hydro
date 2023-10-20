@@ -105,6 +105,19 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.25 / UI 4.48.25
+- core: 修复忘记密码邮件发送速率限制
+- core: 修复比赛讨论
+- ui: 修复题目编辑页子算法标签选择
+- utils: 修复 input1.txt 测试点识别
+- core: 提交列表：不在第一页时禁用实时推送
+- judge: 优化 exitcode 识别
+- core: 修复比赛题目提交页边栏
+- fps-importer: 修复 remote_oj 字段识别
+- ui: 修复使用独立 socketUrl 时 cookie 传入
+- vjudge: 更新 csgoj 题面爬取
+- vjudge: hduoj 支持
+
 ### Hydro 4.9.23 / UI 4.48.23
 - migrate: hustoj: 导入时忽略不存在的图片
 - core: oauth: 使用 OpenID 进行账号关联
