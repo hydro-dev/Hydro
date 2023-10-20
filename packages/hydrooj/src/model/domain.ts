@@ -142,7 +142,7 @@ class DomainModel {
         const affected = await UserModel.getMulti({ _id: { $in: uid } })
             .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
             .toArray();
-        affected.forEach((udoc) => deleteUserCache(udoc));
+        for (const udoc of affected) deleteUserCache(udoc);
         return await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
     }
 

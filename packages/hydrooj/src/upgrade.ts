@@ -434,10 +434,10 @@ const scripts: UpgradeScript[] = [
     null,
     async function _65_66() {
         return await iterateAllDomain(async (ddoc) => {
-            Object.keys(ddoc.roles).forEach((role) => {
+            for (const role of Object.keys(ddoc.roles)) {
                 if (['guest', 'root'].includes(role)) return;
                 ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
-            });
+            }
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
     },

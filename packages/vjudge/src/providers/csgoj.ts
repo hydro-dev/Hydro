@@ -93,12 +93,12 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         const pDescription = document.querySelector('div[name="Description"]');
         const files = {};
         const images = {};
-        pDescription.querySelectorAll('img[src]').forEach((ele) => {
+        for (const ele of pDescription.querySelectorAll('img[src]')) {
             let src = ele.getAttribute('src').replace('.svg', '.png');
             src = new URL(src, 'https://cpc.csgrandeur.cn').toString();
             if (images[src]) {
                 ele.setAttribute('src', `file://${images[src]}.png`);
-                return;
+                continue;
             }
             const file = new PassThrough();
             this.get(src).pipe(file);
@@ -106,7 +106,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
             images[src] = fid;
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const description = [...pDescription.children].map((i) => i.outerHTML).join('');
         const input = [...document.querySelector('div[name="Input"]').children].map((i) => i.outerHTML).join('');
         const output = [...document.querySelector('div[name="Output"]').children].map((i) => i.outerHTML).join('');

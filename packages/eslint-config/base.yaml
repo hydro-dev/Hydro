@@ -12,6 +12,7 @@ plugins:
   - '@typescript-eslint'
   - simple-import-sort
   - eslint-plugin-import
+  - eslint-plugin-github
 rules:
   '@typescript-eslint/no-shadow': 1
 
@@ -145,6 +146,8 @@ rules:
       message: Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.
     - selector: WithStatement
       message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.'
+  
+  github/array-foreach: 1
 
   simple-import-sort/imports:
    - warn
