@@ -10,6 +10,7 @@
     "dependencies": {
         "@hydrooj/utils": "workspace:*",
         "jsdom": "^22.1.0",
+        "superagent-charset": "^1.2.0",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {
