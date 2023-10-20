@@ -2,13 +2,24 @@ import { nanoid } from 'nanoid';
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { InfoDialog } from 'vj/components/dialog';
 import VjNotification from 'vj/components/notification/index';
-import { FLAG_ALERT, FLAG_INFO, FLAG_RICHTEXT } from 'vj/constant/message';
+import {
+  FLAG_ALERT, FLAG_I18N, FLAG_INFO, FLAG_RICHTEXT,
+} from 'vj/constant/message';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
 
 let previous: VjNotification;
 const onmessage = (msg) => {
   console.log('Received message', msg);
+  if (msg.mdoc.flag & FLAG_I18N) {
+    try {
+      msg.mdoc.content = JSON.parse(msg.mdoc.content);
+      if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
+      msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
+    } catch (e) {
+      msg.mdoc.content = i18n(msg.mdoc.content);
+    }
+  }
   if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
     new InfoDialog({
@@ -23,17 +34,9 @@ const onmessage = (msg) => {
   }
   if (msg.mdoc.flag & FLAG_INFO) {
     if (previous) previous.hide();
-    try {
-      msg.mdoc.content = JSON.parse(msg.mdoc.content);
-      if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
-      msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
-    } catch (e) {
-      msg.mdoc.content = i18n(msg.mdoc.content);
-    }
     previous = new VjNotification({
       message: msg.mdoc.content,
-      duration: msg.mdoc.url ? 10000 : 3000,
-      ...(msg.mdoc.url ? { action: () => window.open(msg.mdoc.url, '_blank') } : {}),
+      duration: 3000,
     });
     previous.show();
     return false;
@@ -41,15 +44,17 @@ const onmessage = (msg) => {
   if (document.hidden) return false;
   // Is message
   new VjNotification({
-    ...(msg.udoc._id === 1 && msg.mdoc.flag & FLAG_RICHTEXT)
-      ? { message: i18n('You received a system message, click here to view.') }
-      : {
+    ...(msg.udoc._id === 1)
+      ? {
+        type: 'info',
+        message: msg.mdoc.flag & FLAG_RICHTEXT ? i18n('You received a system message, click here to view.') : msg.mdoc.content,
+      } : {
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
         message: msg.mdoc.content,
       },
     duration: 15000,
-    action: () => window.open(`/home/messages?uid=${msg.udoc._id}`, '_blank'),
+    action: () => window.open(msg.mdoc.url ? msg.mdoc.url : `/home/messages?uid=${msg.udoc._id}`, '_blank'),
   }).show();
   return true;
 };

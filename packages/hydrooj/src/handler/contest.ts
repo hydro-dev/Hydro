@@ -295,7 +295,8 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map((uid) => message.send(1, uid, JSON.stringify({
                 message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
                 params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
-            }), message.FLAG_UNREAD)));
+                url: this.url('contest_manage', { tid }),
+            }), message.FLAG_I18N | message.FLAG_UNREAD)));
         }
         this.back();
     }
@@ -602,7 +603,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
                 message.send(1, tcdoc.owner, JSON.stringify({
                     message: 'Contest {0} jury replied to your clarification, please go to contest page to view.',
                     params: [this.tdoc.title],
-                }), message.FLAG_ALERT),
+                    url: this.url('contest_problemlist', { tid }),
+                }), message.FLAG_I18N | message.FLAG_ALERT),
             ]);
         } else {
             const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
@@ -610,7 +612,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
             await Promise.all([
                 contest.addClarification(domainId, tid, 0, content, this.request.ip, subject),
-                ...uids.map((uid) => message.send(this.user._id, uid, content, flag)),
+                ...uids.map((uid) => message.send(1, uid, content, flag)),
             ]);
         }
         this.back();

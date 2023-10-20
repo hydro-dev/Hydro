@@ -12,6 +12,7 @@ class MessageModel {
     static FLAG_ALERT = 2;
     static FLAG_RICHTEXT = 4;
     static FLAG_INFO = 8;
+    static FLAG_I18N = 16;
 
     static coll = db.collection('message');
 
@@ -33,7 +34,7 @@ class MessageModel {
     static async sendInfo(to: number, content: string) {
         const _id = new ObjectId();
         const mdoc: MessageDoc = {
-            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO,
+            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
         };
         bus.broadcast('user/message', to, mdoc);
     }
