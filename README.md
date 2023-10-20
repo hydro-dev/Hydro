@@ -81,7 +81,7 @@ Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他�
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
 - [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
 - [洛谷](https://www.luogu.com.cn)：使用此功能需要向洛谷购买授权；
-- [CSGOJ](https://cpc.csgrandeur.cn)；
+- [CSGOJ](https://cpc.csgrandeur.cn)：广东省赛与湖南省赛赛题评测平台；
 - [POJ](https://poj.org)：较为古董，服务器稳定性差；
 - HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
 
