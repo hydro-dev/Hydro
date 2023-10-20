@@ -36,7 +36,7 @@ export class HomeHandler extends Handler {
     uids = new Set<number>();
 
     collectUser(uids: number[]) {
-        uids.forEach((uid) => this.uids.add(uid));
+        for (const uid of uids) this.uids.add(uid);
     }
 
     async getHomework(domainId: string, limit = 5) {

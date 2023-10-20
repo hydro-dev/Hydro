@@ -177,15 +177,15 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const text = $dom.window.document.querySelector('.problem-statement').innerHTML;
         const { window: { document } } = new JSDOM(text);
         const files = {};
-        document.querySelectorAll('img[src]').forEach((ele) => {
+        for (const ele of document.querySelectorAll('img[src]')) {
             const src = ele.getAttribute('src');
-            if (!src.startsWith('http')) return;
+            if (!src.startsWith('http')) continue;
             const file = new PassThrough();
             this.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const title = document.querySelector('.title').innerHTML.trim().split('. ')[1];
         const time = parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
         const memory = parseInt(document.querySelector('.memory-limit').innerHTML.substr(55, 4), 10);
@@ -200,11 +200,11 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const note = document.querySelector('.note')?.innerHTML.trim();
         document.querySelector('.note')?.remove();
         document.querySelector('.sample-tests')?.remove();
-        document.querySelectorAll('.section-title').forEach((ele) => {
+        for (const ele of document.querySelectorAll('.section-title')) {
             const e = document.createElement('h2');
             e.innerHTML = ele.innerHTML;
             ele.replaceWith(e);
-        });
+        }
         const description = document.body.innerHTML.trim();
         return {
             title: id.startsWith('P921') ? title.replace('1', id.split('P921')[1]) : title,
