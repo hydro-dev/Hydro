@@ -69,7 +69,8 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getProblem(id: string) {
         logger.info(id);
-        const res = await superagent.get('/showproblem.php')
+        const url = new URL('/showproblem.php', this.account.endpoint || 'https://acm.hdu.edu.cn').toString();
+        const res = await superagent.get(url)
             .query({ pid: id.split('P')[1] })
             .buffer(true)
             .charset('gbk');

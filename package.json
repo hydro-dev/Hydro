@@ -50,6 +50,7 @@
         "eslint": "^8.51.0",
         "eslint-import-resolver-typescript": "^3.6.1",
         "eslint-import-resolver-webpack": "^0.13.7",
+        "eslint-plugin-github": "^4.10.1",
         "fs-extra": "^11.1.1",
         "globby": "13.2.2",
         "inspectpack": "^4.7.1",
