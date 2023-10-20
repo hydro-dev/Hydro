@@ -9,8 +9,7 @@ import {
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
-const charsetReq = require('superagent-charset');
-const superagent = charset(require('superagent'));
+
 charsetReq(superagent);
 proxy(superagent as any);
 const logger = new Logger('remote/hduoj');
@@ -71,11 +70,11 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const images = {};
         const files = {};
         const problemContent = document.querySelector('table>tbody').children[3].children[0];
-        problemContent.querySelectorAll('img[src]').forEach((ele) => {
+        for (const ele of problemContent.querySelectorAll('img[src]')) {
             const src = ele.getAttribute('src');
             if (images[src]) {
                 ele.setAttribute('src', `file://${images[src]}.png`);
-                return;
+                continue;
             }
             const file = new PassThrough();
             this.get(src).pipe(file);
@@ -83,7 +82,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             images[src] = fid;
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const info = problemContent.children[1].children[0].children[0].innerHTML;
         const timeMatcher = /Time Limit: \d+\/(\d+) MS/;
         const time = info.match(timeMatcher)[1];
