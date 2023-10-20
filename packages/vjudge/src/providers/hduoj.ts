@@ -11,7 +11,7 @@ import {
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
-declare module "superagent" {
+declare module 'superagent' {
     interface Request {
         charset(c: string): this;
     }
