@@ -5,7 +5,7 @@ import { JSDOM } from 'jsdom';
 import charset from 'superagent-charset';
 import proxy from 'superagent-proxy';
 import {
-    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
+    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS, superagent,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
