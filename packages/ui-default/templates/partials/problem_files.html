@@ -6,8 +6,7 @@
     <blockquote class="note">
       <p>{{ _('This is a copy of another problem.') }}</p>
     </blockquote>
-  {% endif %}
-  {% if _files.length and (filetype == 'additional_file' or not reference) %}
+  {% elif _files.length %}
     <table class="data-table {{ filetype }}-table">
       <colgroup>
         {% if not sidebar %}<col class="col--checkbox">{% endif %}
@@ -54,7 +53,7 @@
         {%- endfor -%}
       </tbody>
     </table>
-  {% elif (not reference or filetype == 'additional_file') and not _files.length %}
+  {% else %}
     {{ nothing.render('No {0} at current.', compact=sidebar, args=[_(filetype)]) }}
   {% endif %}
 </div>
