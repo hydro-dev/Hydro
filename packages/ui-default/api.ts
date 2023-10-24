@@ -4,7 +4,7 @@ export * from './utils';
 export { default as Notification } from './components/notification';
 export * from './components/dialog';
 export { Context, Service, ctx } from './context';
-export { default as AnsiUp } from 'ansi_up';
+export { AnsiUp } from 'ansi_up';
 export { default as loadMonaco } from './components/monaco/loader';
 export { default as Socket } from './components/socket/index';
 export { default as uploadFiles } from './components/upload';

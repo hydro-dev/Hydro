@@ -26,7 +26,7 @@ function judgeCase(c: NormalizedCase) {
             },
         );
         const {
-            code, time, memory, fileIds,
+            code, signalled, time, memory, fileIds,
         } = res;
         let { status } = res;
         let message: any = '';
@@ -50,7 +50,7 @@ function judgeCase(c: NormalizedCase) {
                 }));
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-            if (code < 32) message = signals[code];
+            if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
         await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));

@@ -1,0 +1,43 @@
+{% set _categories = (handler.domain.problemCategories or model.system.get('problem.categories'))|parseYaml %}
+<div class="dialog--category-filter" style="display:none;">
+  <div>
+    <div class="category-filter__header">      
+      <div class="list flex-row flex-cross-center" data-category-container>
+        {%- for category, sub_categories in _categories -%}
+          <div class="list__item" data-category="{{category}}">{{ category }}</div>
+        {%- endfor -%}
+      </div>
+    </div>
+    <div class="category-filter__body">
+      {%- for category, sub_categories in _categories -%}
+      <div class="section__body subcategory-container hide" data-subcategory-container="{{ category }}">
+        <div class="subcategory__selected">
+          <h2>{{ _('Selected categories') }}: </h2>
+          <div class="list flex-row flex-wrap">
+            <div class="chip-list__item search-tag__item hide selected" data-selection="category:{{ category }}">
+              {{ category }}
+              <span class="icon icon-close"></span>            
+            </div>            
+            {%- for sub_category in sub_categories -%}
+            <div class="chip-list__item search-tag__item hide selected" data-selection="category:{{ sub_category }}">
+              {{ sub_category }}
+              <span class="icon icon-close"></span>
+            </div>
+            {%- endfor -%}            
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="subcategory__all">
+          <h2>{{ category }}: </h2>
+          <div class="list flex-row flex-wrap">
+            <div class="chip-list__item search-tag__item" data-selection="category:{{ category }}">{{ category }}</div>          
+            {%- for sub_category in sub_categories -%}
+            <div class="chip-list__item search-tag__item" data-selection="category:{{ sub_category }}">{{ sub_category }}</div>
+            {%- endfor -%}
+          </div>  
+        </div>
+      </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>

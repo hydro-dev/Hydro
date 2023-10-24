@@ -398,7 +398,7 @@ export async function run({
                 try {
                     const details = await xml2js.parseStringPromise(result.details);
                     if (details.tests.subtask) {
-                        details.tests.subtask.forEach((subtask) => {
+                        for (const subtask of details.tests.subtask) {
                             if (!subtask.test) {
                                 data.testCases.push({
                                     subtaskId: subtask.$.num,
@@ -409,7 +409,7 @@ export async function run({
                                     message: 'Skipped',
                                     status: STATUS.STATUS_CANCELED,
                                 });
-                                return;
+                                continue;
                             }
                             data.testCases.push(...subtask.test.map((curCase, caseIndex) => ({
                                 subtaskId: subtask.$.num,
@@ -420,7 +420,7 @@ export async function run({
                                 message: curCase.res[0] || '',
                                 status: statusMap[curCase.$.info] || STATUS.STATUS_WAITING,
                             })));
-                        });
+                        }
                     } else if (details.tests.test) {
                         data.testCases.push(...details.tests.test.map((curCase) => ({
                             subtaskId: 1,

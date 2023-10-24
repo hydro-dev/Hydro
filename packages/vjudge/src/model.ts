@@ -59,7 +59,7 @@ class AccountService {
             await next({ status: STATUS.STATUS_JUDGING, message: `ID = ${rid}` });
             const nextFunction = (data) => {
                 if (data.case) delete data.case.message;
-                if (data.cases) data.cases.forEach((x) => delete x.message);
+                if (data.cases) for (const x of data.cases) delete x.message;
                 return next(data);
             };
             await this.api.waitForSubmission(rid, task.config?.detail === false ? nextFunction : next, end);

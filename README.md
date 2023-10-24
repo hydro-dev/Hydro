@@ -81,7 +81,7 @@ Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他�
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
 - [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
 - [洛谷](https://www.luogu.com.cn)：使用此功能需要向洛谷购买授权；
-- [CSGOJ](https://cpc.csgrandeur.cn)；
+- [CSGOJ](https://cpc.csgrandeur.cn)：广东省赛与湖南省赛赛题评测平台；
 - [POJ](https://poj.org)：较为古董，服务器稳定性差；
 - HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
 
@@ -104,6 +104,28 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.9.25 / UI 4.48.25
+- core: 修复忘记密码邮件发送速率限制
+- core: 修复比赛讨论
+- ui: 修复题目编辑页子算法标签选择
+- utils: 修复 input1.txt 测试点识别
+- core: 提交列表：不在第一页时禁用实时推送
+- judge: 优化 exitcode 识别
+- core: 修复比赛题目提交页边栏
+- fps-importer: 修复 remote_oj 字段识别
+- ui: 修复使用独立 socketUrl 时 cookie 传入
+- vjudge: 更新 csgoj 题面爬取
+- vjudge: hduoj 支持
+
+### Hydro 4.9.23 / UI 4.48.23
+- migrate: hustoj: 导入时忽略不存在的图片
+- core: oauth: 使用 OpenID 进行账号关联
+- core: 支持根据显示名搜索用户
+- core: 支持根据题目难度搜索题目
+- ui: 优化首页比赛作业过滤逻辑
+- core: 优化测试点识别
+- ui: 禁用自测输入的拼写检查
 
 ### Hydro 4.9.22 / UI 4.48.22
 - ui: 在线IDE：添加设置页面

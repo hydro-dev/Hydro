@@ -1,0 +1,39 @@
+{% set pinnedFilter = handler.domain.pinnedFilter|parseYaml %}
+{% set categories = (handler.domain.problemCategories or model.system.get('problem.categories'))|parseYaml %}
+<div class="section__body search-container">
+  {% for k, v in pinnedFilter %}
+  <div class="flex-row flex-cross-center">
+    <b class="title">{{ k }}: &nbsp;&nbsp;</b>
+    <div class="chip-list flex-wrap flex-row" data-pinned-container>
+      {%- for name, t in v -%}
+        {% if name !== '__metadata__' %}
+        <a class="chip-list__item search-tag__item" data-selection="{{ t }}" {% if pinnedFilter[k]['__metadata__']['single'] %}data-filter="{{ k }}"{% endif %}>{{ name }}</a>
+        {% endif %}
+      {%- endfor -%}
+    </div>
+  </div>
+  {% endfor %} 
+  <div class="flex-row flex-cross-center">
+    <b class="title">{{ _('Problem Category') }}: &nbsp;&nbsp;</b>
+    <div class="chip-list flex-wrap flex-row">
+      <a class="chip-list__item typo-a dialog-button">{{ _('Select Category') }}</a>   
+    </div>
+  </div>
+  <div class="flex-row flex-cross-center">
+    <div class="subcategory-container__selected flex-row flex-wrap chip-list">
+      {%- for category, sub_categories in categories -%}
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="category:{{ category }}">
+          {{ category }}
+          <span class="icon icon-close"></span>
+        </div>
+        {%- for sub_category in sub_categories -%}
+        <div class="chip-list__item search-tag__item search-category__item hide selected" data-selection="category:{{ sub_category }}">
+          {{ sub_category }}
+          <span class="icon icon-close"></span>
+        </div>
+        {%- endfor -%}
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+{% include "partials/problem_category_dialog.html" %}
