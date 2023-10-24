@@ -763,7 +763,6 @@ export async function updateStatus(
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
 ) {
     const tdoc = await get(domainId, tid);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
