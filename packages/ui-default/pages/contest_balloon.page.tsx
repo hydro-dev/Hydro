@@ -7,7 +7,7 @@ import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  delay, i18n, pjax, request, tpl,
+  i18n, pjax, request, tpl,
 } from 'vj/utils';
 
 function Balloon({ tdoc, val }) {
