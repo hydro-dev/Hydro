@@ -1,9 +1,7 @@
 // Hydro Integration
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { gte } from 'semver';
 import { fs } from '@hydrooj/utils';
-import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
     JudgeResultBody, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
@@ -13,7 +11,7 @@ import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
 import logger from '../log';
-import client from '../sandbox/client';
+import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
 const session = {
@@ -76,27 +74,7 @@ const session = {
 
 export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
-    let sandboxVersion = '1.0.0';
-    let sandboxCgroup = 0;
-    try {
-        const version = await client.version();
-        sandboxVersion = version.buildVersion.split('v')[1];
-        if (!version.copyOutOptional) throw Error();
-        const config = await client.config();
-        sandboxCgroup = config.runnerConfig.cgroupType;
-    } catch (e) {}
-    const { osinfo } = await sysinfo.get();
-    ctx.check.addChecker('Judge', async (_ctx, log, warn, error) => {
-        if (!gte(sandboxVersion, '1.3.0')) {
-            error('Your sandbox version is tooooooo low! Please upgrade! Read https://hydro.ac/d/faqs/p/20');
-        }
-        if (sandboxCgroup === 2) {
-            const kernelVersion = osinfo.kernel.split('-')[0];
-            if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
-                warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
-            }
-        }
-    });
+    ctx.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);

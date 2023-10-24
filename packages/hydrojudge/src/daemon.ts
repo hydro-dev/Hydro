@@ -16,13 +16,11 @@
 import './utils';
 
 import PQueue from 'p-queue';
-import { gte } from 'semver';
 import { fs } from '@hydrooj/utils';
-import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
 import log from './log';
-import client from './sandbox/client';
+import { versionCheck } from './sandbox';
 
 const hosts: Record<string, HydroHost> = {};
 let exit = false;
@@ -47,25 +45,9 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 async function daemon() {
+    const shouldRun = await versionCheck((msg) => log.error(msg));
+    if (!shouldRun) process.exit(1);
     const _hosts = getConfig('hosts');
-    let sandboxVersion = '1.0.0';
-    let sandboxCgroup = 0;
-    try {
-        const version = await client.version();
-        sandboxVersion = version.buildVersion.split('v')[1];
-        const config = await client.config();
-        sandboxCgroup = config.runnerConfig?.cgroupType || 0;
-    } catch (e) {
-        log.error('Your sandbox version is tooooooo low! Please upgrade!');
-        process.exit(1);
-    }
-    const { osinfo } = await sysinfo.get();
-    if (sandboxCgroup === 2) {
-        const kernelVersion = osinfo.kernel.split('-')[0];
-        if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
-            log.warn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
-        }
-    }
     const queue = new PQueue({ concurrency: Infinity });
     await fs.ensureDir(getConfig('tmp_dir'));
     queue.on('error', (e) => log.error(e));
