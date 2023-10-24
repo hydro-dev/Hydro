@@ -14,12 +14,12 @@
         <span class="record-status--text pending">Waiting</span>
     </td>
     {% endif %}
-    <td class="col--bid">{{ bdoc.bid }}</td>
+    <td class="col--bid">{{ bdoc._id.toHexString()|truncate(8,True,'') }}</td>
     <td class="col--problem col--problem-name" style="color:{{ tdoc.balloon[bdoc.pid].color }}">
       {% if not bdoc.sent %}
         <form class="form--inline" method="post">
-          <input type="hidden" name="balloon" value="{{ bdoc.bid }}">
-          <button type="submit" name="operation" value="done" class="link text-maroon lighter">
+          <input type="hidden" name="balloon" value="{{ bdoc._id.toHexString() }}">
+          <button type="submit" name="operation" value="done" class="link text-maroon lighter" data-balloon="{{ bdoc._id.toHexString() }}">
             <span class="icon icon-send"></span>
             {{ _('Send') }}
           </button> 
@@ -27,11 +27,11 @@
       {% endif %}
       <b>{{ String.fromCharCode(65+tdoc.pids.indexOf(bdoc.pid)) }}</b>&nbsp;&nbsp;({{ tdoc.balloon[bdoc.pid].name }})
     </td>
-    <td class="col--submit-by">{{ user.render_inline(udict[bdoc.uid], badge=false) }} @ {{ datetimeSpan(bdoc.rid)|safe }}</td>
-    <td class="col--send-by">
-      {% if bdoc.sent %}{{ user.render_inline(udict[bdoc.sent], avatar=false, badge=false) }} @ {{ datetimeSpan(bdoc.sentAt)|safe }}{% else %}-{% endif %}
+    <td class="col--submit-by" data-tooltip="{{ bdoc._id.getTimestamp().format() }}">{{ user.render_inline(udict[bdoc.uid], badge=false) }}</td>
+    <td class="col--send-by"{% if bdoc.sent %} data-tooltip="{{ bdoc.sentAt.format() }}"{% endif %}>
+      {% if bdoc.sent %}{{ user.render_inline(udict[bdoc.sent], avatar=false, badge=false) }}{% else %}-{% endif %}
     </td>
-    <td class="col--awards">{% if bdoc.id === 1 %}{{ _('First of Contest') }}{% elif bdoc.first %}{{ _('First of Problem') }}{% endif %}</td>
+    <td class="col--awards">{% if bdoc.first %}{{ _('First of Problem') }}{% endif %}</td>
   </tr>
   {%- endfor -%}
 </tbody>

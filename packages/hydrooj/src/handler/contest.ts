@@ -671,8 +671,8 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
         const bdocs = await contest.getMultiBalloon(domainId, tid, {
             ...todo ? { sent: { $exists: false } } : {},
             ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
-                ? {} : { rid: { $lt: this.tdoc.lockAt } },
-        }).sort({ bid: -1 }).toArray();
+                ? {} : { _id: { $lt: this.tdoc.lockAt } },
+        }).sort({ _id: -1 }).toArray();
         const uids = [...bdocs.map((i) => i.uid), ...bdocs.filter((i) => i.sent).map((i) => i.sent)];
         const udict = await user.getListForRender(domainId, uids);
         this.response.body = {
@@ -702,8 +702,8 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     }
 
     @param('tid', Types.ObjectId)
-    @param('balloon', Types.PositiveInt)
-    async postDone(domainId: string, tid: ObjectId, bid: number) {
+    @param('balloon', Types.ObjectId)
+    async postDone(domainId: string, tid: ObjectId, bid: ObjectId) {
         const balloon = await contest.getBalloon(domainId, tid, bid);
         if (!balloon) throw new ValidationError('balloon');
         if (balloon.sent) throw new ValidationError('balloon', null, 'Balloon already sent');

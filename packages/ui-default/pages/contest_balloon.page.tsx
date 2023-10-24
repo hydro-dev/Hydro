@@ -30,7 +30,12 @@ function Balloon({ tdoc, val }) {
               const { color: c, name } = val[+pid];
               return (
                 <tr key={pid}>
-                  <td>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</td>
+                  <td>
+                    { now === pid
+                      ? (<b>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</b>)
+                      : (<span>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</span>)
+                    }
+                  </td>
                   <td>
                     <HexColorInput
                       className='textbox'
@@ -89,8 +94,7 @@ async function handleSetColor(tdoc) {
     Notification.error(`${e.message} ${e.params?.[0]}`);
   }
   Notification.info(i18n('Successfully updated.'));
-  await delay(1000);
-  window.location.reload();
+  pjax.request({ url: '', push: false });
 }
 
 const page = new NamedPage('contest_balloon', () => {
@@ -105,6 +109,18 @@ const page = new NamedPage('contest_balloon', () => {
 
   $('[name="set_color"]').on('click', () => handleSetColor(tdoc));
   setInterval(update, 60000);
+
+  $(document).on('click', '[value="done"]', async (ev) => {
+    ev.preventDefault();
+    const balloon = $(ev.currentTarget).data('balloon');
+    try {
+      await request.post('', { balloon, operation: 'done' });
+    } catch (e) {
+      Notification.error(`${e.message} ${e.params?.[0]}`);
+    }
+    Notification.info(i18n('Successfully updated.'));
+    pjax.request({ url: '', push: false });
+  });
 });
 
 export default page;

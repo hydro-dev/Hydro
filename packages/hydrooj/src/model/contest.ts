@@ -714,32 +714,24 @@ export async function addBalloon(domainId: string, tid: ObjectId, uid: number, r
     });
     if (balloon) return null;
     const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
-    const [bdoc] = await collBalloon.find({ domainId, tid }).sort({ bid: -1 }).limit(1).toArray();
-    const bid = (bdoc?.bid || 0) + 1;
     const newBdoc = {
-        _id: new ObjectId(), domainId, tid, bid, pid, uid, rid, ...(!bdcount ? { first: true } : {}),
+        _id: rid, domainId, tid, pid, uid, ...(!bdcount ? { first: true } : {}),
     };
-    try {
-        await collBalloon.insertOne(newBdoc);
-        bus.broadcast('contest/balloon', domainId, tid, newBdoc);
-    } catch (e) {
-        if (e.code === 11000) {
-            return await addBalloon(domainId, tid, uid, rid, pid);
-        }
-    }
-    return bid;
+    await collBalloon.insertOne(newBdoc);
+    bus.broadcast('contest/balloon', domainId, tid, newBdoc);
+    return rid;
 }
 
-export async function getBalloon(domainId: string, tid: ObjectId, bid: number) {
-    return await collBalloon.findOne({ domainId, tid, bid });
+export async function getBalloon(domainId: string, tid: ObjectId, _id: ObjectId) {
+    return await collBalloon.findOne({ domainId, tid, _id });
 }
 
 export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
     return collBalloon.find({ domainId, tid, ...query });
 }
 
-export async function updateBalloon(domainId: string, tid: ObjectId, bid: number, $set: any) {
-    return await collBalloon.findOneAndUpdate({ domainId, tid, bid }, { $set });
+export async function updateBalloon(domainId: string, tid: ObjectId, _id: ObjectId, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, _id }, { $set });
 }
 
 export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
@@ -927,11 +919,6 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
             : isOngoing(tdoc, tsdoc)
                 ? 'Live...'
                 : 'Done');
-
-bus.on('ready', () => db.ensureIndexes(
-    collBalloon,
-    { key: { domainId: 1, tid: 1, bid: 1 }, name: 'balloon', unique: true },
-));
 
 global.Hydro.model.contest = {
     RULES,
