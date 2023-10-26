@@ -27,3 +27,5 @@ This Contribution License Agreement (**“Agreement”**) is agreed to by the pa
 8. **Information about Submissions**. You agree that contributions to Projects and information about contributions may be maintained indefinitely and disclosed publicly, including Your name and other information that You submit with Your Submission.
 
 9. **Entire Agreement/Assignment**. This Agreement is the entire agreement between the parties, and supersedes any and all prior agreements, understandings or communications, written or oral, between the parties relating to the subject matter hereof. This Agreement may be assigned by hydro-dev.
+
+I have read the CLA Document and I hereby sign the CLA
