@@ -74,6 +74,12 @@ async function cli() {
         } else if (args[i].startsWith('~')) {
             args[i] = argv.options[args[i].substr(1)];
         }
+        else if (args[i].startsWith('i[')) {
+            args[i] = args[i].substr(2, args[i].length - 3).split(',').map((x) => parseInt(x));
+        }
+        else if (args[i].startsWith('s[')) {
+            args[i] = args[i].substr(2, args[i].length - 3).split(',');
+        }
     }
     let result = global.Hydro.model[modelName][func](...args);
     if (result instanceof Promise) result = await result;
