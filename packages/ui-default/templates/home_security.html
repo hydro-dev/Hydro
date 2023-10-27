@@ -145,6 +145,22 @@
   <div class="columns">
     <div class="section">
       <div class="section__header">
+        <h1 class="section__title" id="oauth" data-heading>{{ _('Oauth Bind') }}</h1>
+      </div>
+      <div class="section__body">
+      {%- for v in handler.loginMethods -%}
+        <div class="row"><div class="columns">
+          <a href="{{ url('user_oauth', type=v.id) }}" class="expanded rounded button inverse">{{ _('Bind with {0}', v.id) }}</a>
+        </div></div>
+      {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="columns">
+    <div class="section">
+      <div class="section__header">
         <h1 class="section__title" id="session" data-heading>{{ _('Active Sessions') }}</h1>
       </div>
       <div class="section__body">
