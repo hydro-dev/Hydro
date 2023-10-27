@@ -2,7 +2,7 @@
 import os from 'os';
 import path from 'path';
 import {
-    AdmZip, buildContent, ContentNode, Context, fs, Handler, PERM,
+    AdmZip, buildContent, Context, fs, Handler, PERM,
     ProblemConfigFile, ProblemModel, ValidationError, yaml,
 } from 'hydrooj';
 
@@ -36,7 +36,7 @@ class ImportHojHandler extends Handler {
                     samples: [],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }
+                };
                 if (pdoc.examples) {
                     const re = /<input>([\s\S]*?)<\/input><output>([\s\S]*?)<\/output>/g;
                     const examples = pdoc.examples.match(re).map((i) => {
