@@ -125,8 +125,8 @@ class UserLoginHandler extends Handler {
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
-            ? this.url('homepage') : this.request.referer);
+        this.response.redirect = (this.request.referer || '/login').endsWith('/login')
+            ? this.url('homepage') : this.request.referer;
     }
 }
 
