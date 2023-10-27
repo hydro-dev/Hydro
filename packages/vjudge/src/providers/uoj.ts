@@ -71,15 +71,15 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
         const res = await this.get(`/problem/${id.split('P')[1]}`);
         const { window: { document } } = new JSDOM(res.text);
         const files = {};
-        document.querySelectorAll('article>img[src]').forEach((ele) => {
+        for (const ele of document.querySelectorAll('article>img[src]')) {
             const src = ele.getAttribute('src');
-            if (!src.startsWith('http')) return;
+            if (!src.startsWith('http')) continue;
             const file = new PassThrough();
             this.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const contentNode = document.querySelector('article');
         const titles = contentNode.querySelectorAll('h3');
         for (const title of titles) {

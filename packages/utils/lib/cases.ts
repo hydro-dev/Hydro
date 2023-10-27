@@ -20,13 +20,13 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         }
         if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
         if (cfg.validator) config.validator = checkFile(cfg.validator, 'Cannot find validator {0}.');
-        ['judge', 'user'].forEach((n) => {
+        for (const n of ['judge', 'user']) {
             const conf = cfg[`${n}_extra_files`];
-            if (!conf) return;
+            if (!conf) continue;
             if (conf instanceof Array) {
                 config[`${n}_extra_files`] = conf.map((file) => checkFile(file, `Cannot find ${n} extra file {0}.`));
             } else throw new Error(`Invalid ${n}_extra_files config.`);
-        });
+        }
     }
     if (cfg.cases?.length) {
         config.subtasks = [{

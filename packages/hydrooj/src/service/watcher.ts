@@ -1,3 +1,4 @@
+// This file was adapted from @koishijs, MIT licensed.
 /* eslint-disable consistent-return */
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable @typescript-eslint/no-shadow */
@@ -13,7 +14,7 @@ function loadDependencies(filename: string, ignored: Set<string>) {
     function traverse({ filename, children }: NodeJS.Module) {
         if (ignored.has(filename) || dependencies.has(filename) || filename.includes('/node_modules/')) return;
         dependencies.add(filename);
-        children.forEach(traverse);
+        for (const c of children) traverse(c);
     }
     traverse(require.cache[filename]);
     return dependencies;
@@ -87,13 +88,13 @@ export default class Watcher extends Service {
         this.accepted = new Set(this.stashed);
         this.declined = new Set(this.externals);
 
-        this.stashed.forEach((filename) => {
+        for (const filename of this.stashed) {
             const { children } = require.cache[filename];
             for (const { filename } of children) {
                 if (this.accepted.has(filename) || this.declined.has(filename) || filename.includes('/node_modules/')) continue;
                 pending.push(filename);
             }
-        });
+        }
 
         while (pending.length) {
             let index = 0;
@@ -168,7 +169,7 @@ export default class Watcher extends Service {
             // we only detect reloads at plugin level
             // a plugin will be reloaded if any of its dependencies are accepted
             if (!dependencies.some((dep) => this.accepted.has(dep))) continue;
-            dependencies.forEach((dep) => this.accepted.add(dep));
+            for (const dep of dependencies) this.accepted.add(dep);
 
             // prepare for reload
             let isMarked = false;

@@ -434,10 +434,10 @@ const scripts: UpgradeScript[] = [
     null,
     async function _65_66() {
         return await iterateAllDomain(async (ddoc) => {
-            Object.keys(ddoc.roles).forEach((role) => {
+            for (const role of Object.keys(ddoc.roles)) {
                 if (['guest', 'root'].includes(role)) return;
                 ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
-            });
+            }
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
     },
@@ -615,6 +615,20 @@ const scripts: UpgradeScript[] = [
             await contest.recalcStatus(tdoc.domainId, tdoc.docId);
         }
         return true;
+    },
+    async function _84_85() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                const parentId = new ObjectId(ddoc.parentId);
+                await discussion.edit(_id, ddoc.docId, { parentId });
+                try {
+                    await contest.get(_id, parentId);
+                } catch (e) {
+                    await discussion.del(_id, ddoc.docId);
+                }
+            }
+        });
     },
 ];
 

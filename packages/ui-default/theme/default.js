@@ -6,7 +6,6 @@ import 'pickadate/lib/themes/classic.date.css';
 import 'pickadate/lib/themes/classic.time.css';
 import 'katex/dist/katex.min.css';
 import '@blueprintjs/core/lib/css/blueprint.css';
-import '@blueprintjs/popover2/lib/css/blueprint-popover2.css';
 import '@fontsource/fira-code';
 import '@fontsource/source-code-pro';
 import '@fontsource/roboto-mono';

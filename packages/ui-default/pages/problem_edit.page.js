@@ -84,7 +84,7 @@ function buildCategoryFilter() {
     const $categoryTag = $category
       .find('.section__title a')
       .remove()
-      .attr('class', 'widget--category-filter__category-tag');
+      .attr('class', 'widget--category-filter__tag');
     const categoryText = $categoryTag.text();
     const $drop = $category
       .children('.chip-list')
@@ -102,7 +102,7 @@ function buildCategoryFilter() {
         .children('li')
         .attr('class', 'widget--category-filter__subcategory')
         .find('a')
-        .attr('class', 'widget--category-filter__subcategory-tag')
+        .attr('class', 'widget--category-filter__tag')
         .attr('data-category', categoryText);
       $subCategoryTags.get().forEach((subCategoryTag) => {
         const $tag = $(subCategoryTag);
@@ -114,33 +114,26 @@ function buildCategoryFilter() {
       });
     }
   });
-  $(document).on('click', '.widget--category-filter__category-tag', (ev) => {
+  $(document).on('click', '.widget--category-filter__tag', (ev) => {
     if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const category = $(ev.currentTarget).text();
-    const treeItem = categories[category];
+    const tag = $(ev.currentTarget).text();
+    const category = $(ev.currentTarget).attr('data-category');
+    const treeItem = category ? categories[category].children[tag] : categories[tag];
     // the effect should be cancelSelect if it is shown as selected when clicking
     const shouldSelect = treeItem.$tag.hasClass('selected') ? false : !treeItem.select;
     treeItem.select = shouldSelect;
-    dirtyCategories.push({ type: 'category', category });
-    if (!shouldSelect) {
+    dirtyCategories.push(category
+      ? { type: 'subcategory', subcategory: tag, category }
+      : { type: 'category', category: tag });
+    if (!category && !shouldSelect) {
       // de-select children
       _.forEach(treeItem.children, (treeSubItem, subcategory) => {
         if (treeSubItem.select) {
           treeSubItem.select = false;
-          dirtyCategories.push({ type: 'subcategory', subcategory, category });
+          dirtyCategories.push({ type: 'subcategory', subcategory, category: tag });
         }
       });
     }
-    updateSelection();
-    ev.preventDefault();
-  });
-  $(document).on('click', '.widget--category-filter__subcategory-tag', (ev) => {
-    if (ev.shiftKey || ev.metaKey || ev.ctrlKey) return;
-    const subcategory = $(ev.currentTarget).text();
-    const category = $(ev.currentTarget).attr('data-category');
-    const treeItem = categories[category].children[subcategory];
-    treeItem.select = !treeItem.select;
-    dirtyCategories.push({ type: 'subcategory', subcategory, category });
     updateSelection();
     ev.preventDefault();
   });

@@ -62,7 +62,7 @@ class FpsProblemImportHandler extends Handler {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
             };
-            if (p.remote_oj) {
+            if (p.remote_oj?.[0]) {
                 config.type = ProblemType.Remote;
                 config.subType = knownRemoteMapping[p.remote_oj[0]] || p.remote_oj[0];
                 config.target = p.remote_id[0];

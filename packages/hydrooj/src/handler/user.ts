@@ -125,10 +125,8 @@ class UserLoginHandler extends Handler {
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = (redirect ? decodeURIComponent(redirect) : '')
-            || ((this.request.referer || '/login').endsWith('/login')
-                ? this.url('homepage')
-                : this.request.referer);
+        this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
+            ? this.url('homepage') : this.request.referer);
     }
 }
 
@@ -172,7 +170,7 @@ class UserWebauthnHandler extends Handler {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = generateAuthenticationOptions({
+        const options = await generateAuthenticationOptions({
             allowCredentials: udoc._authenticators.map((authenticator) => ({
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
@@ -243,6 +241,7 @@ export class UserRegisterHandler extends Handler {
             const mailDomain = mail.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             await Promise.all([
+                this.limitRate(`send_mail_${mail}`, 60, 3, false),
                 this.limitRate('send_mail', 3600, 30, false),
                 oplog.log(this, 'user.register', {}),
             ]);
@@ -265,7 +264,11 @@ export class UserRegisterHandler extends Handler {
             } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
-            await this.limitRate('send_sms', 60, 3);
+            await Promise.all([
+                this.limitRate(`send_sms_${phoneNumber}`, 60, 1, false),
+                this.limitRate('send_sms', 3600, 15, false),
+                oplog.log(this, 'user.register', {}),
+            ]);
             const id = String.random(6, '0123456789');
             await token.add(
                 token.TYPE_REGISTRATION,
@@ -332,6 +335,11 @@ class UserLostPassHandler extends Handler {
         if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
+        await Promise.all([
+            this.limitRate('send_mail', 3600, 30, false),
+            this.limitRate(`user_lostpass_${mail}`, 60, 3, false),
+            oplog.log(this, 'user.lostpass', {}),
+        ]);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
             system.get('session.unsaved_expire_seconds'),
