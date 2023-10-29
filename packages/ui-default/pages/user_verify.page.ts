@@ -82,7 +82,10 @@ export default new AutoloadPage('user_verify', () => {
         tfa authn
       }
     `, ['data']);
-    if (!info.uname && !info.mail) Notification.error(i18n('User not found.'));
+    if (!info.uname && !info.mail) {
+      Notification.error(i18n('User not found.'));
+      return;
+    }
     const { authn, tfa } = info.uname || info.mail;
     if (authn || tfa) {
       let action = (authn && tfa) ? await chooseAction(true) : '';
