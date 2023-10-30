@@ -33,6 +33,7 @@ interface Parameter {
     execute?: string;
     memory?: number;
     processLimit?: number;
+    addressSpaceLimit?: boolean;
     copyIn?: CopyIn;
     copyOut?: string[];
     copyOutCached?: string[];
@@ -101,6 +102,7 @@ function proc(params: Parameter): Cmd {
         clockLimit: 3 * cpuLimit,
         memoryLimit: Math.floor(memory * 1024 * 1024),
         strictMemoryLimit: getConfig('strict_memory'),
+        addressSpaceLimit: params.addressSpaceLimit,
         stackLimit: getConfig('strict_memory') ? Math.floor(memory * 1024 * 1024) : 0,
         procLimit: params.processLimit || getConfig('processLimit'),
         copyOutMax: Math.floor(1024 * 1024 * stdioLimit * 3),
