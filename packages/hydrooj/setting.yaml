@@ -42,6 +42,8 @@ langs:
           target?: Compiler output file, defaults to `foo`
           display: Display name
           compile_time_limit?: Compile time limit, in milliseconds
+          address_space_limit?: Enable address space memory limit as CCF did
+          process_limit?: Limit the number of thread
     bash:
       display: Bash
       code_file: foo.sh
@@ -58,6 +60,8 @@ langs:
       highlight: cpp
       monaco: cpp
       display: C++
+      address_space_limit: true
+      process_limit: 1
     cc.cc98:
       compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
       display: C++98

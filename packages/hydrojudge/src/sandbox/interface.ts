@@ -5,6 +5,7 @@ export interface SandboxVersion {
     os: string;
     copyOutOptional?: boolean;
     pipeProxy?: boolean;
+    addressSpaceLimit?: boolean;
 }
 
 export interface LocalFile {
@@ -50,8 +51,12 @@ export interface Cmd {
     cpuRateLimit?: number;
     /** cpuSetLimit defines cpu set limit if enabled in sandbox server */
     cpuSetLimit?: string;
-    /** strictMemoryLimit set rlimit_data limit for memoryLimit */
+    /** @deprecated use dataSegmentLimit instead, keep compatibility for old versions */
     strictMemoryLimit?: boolean;
+    /** dataSegmentLimit set rlimit_data limit for memoryLimit */
+    dataSegmentLimit?: boolean;
+    /** addressSpaceLimit set rlimit_address_space limit for memoryLimit */
+    addressSpaceLimit?: boolean;
 
     /** files to be copied into sandbox before execution */
     copyIn?: Record<string, CopyInFile>;
