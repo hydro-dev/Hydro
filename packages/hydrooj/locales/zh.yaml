@@ -148,6 +148,9 @@ Contact Us: 联系我们
 Contact: 联系
 content: 内容
 Content: 内容
+Contest {0} has a new clarification about {1}, please go to contest management to reply.: 比赛 {0} 有一条关于 {1} 的新问答，请前往比赛管理页面回复。
+Contest {0} jury replied to your clarification, please go to contest page to view.: 比赛 {0} 的裁判回复了您的问答，请前往比赛页面查看。
+Contest Clarifications: 问答
 Contest Management: 比赛管理
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
@@ -342,6 +345,7 @@ Formula blocks: 公式区块
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
+General Issue: 一般问题
 Hard Deadline: 最终截止时间
 Hash: 散列
 Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
@@ -520,6 +524,7 @@ Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献�
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
 Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
+Oh, there is no clarification!: 喔，目前没有提问！
 Oh, there is no task in the queue!: 喔，队列中目前没有任务。
 Ok: 确定
 Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
@@ -691,6 +696,8 @@ Select User: 选择用户
 Selected categories: 已选标签
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
+Send Broadcast Message: 发送公告
+Send Clarification Request: 提问
 Send Code after acceptance: 通过题目后发送源代码
 Send Message: 发送站内信息
 Send Password Reset Email: 发送密码重置邮件
@@ -750,6 +757,7 @@ Storage engine endPoint: 存储桶 endPoint
 Storage engine region: 存储桶地域
 Storage engine secret: 存储桶 secretKey
 Student ID: 学号
+Subject: 主题
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
@@ -760,6 +768,7 @@ Sync problem filelist from s3 service: 从 S3 同步题目文件列表。
 Tags: 标签
 Target: 目标
 Technical Information: 技术信息
+Technical Issue: 技术问题
 Temporary session: 临时会话
 Terms of Service: 服务条款
 Test data comes from: 测试数据来自

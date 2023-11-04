@@ -493,6 +493,18 @@ export interface DiscussionTailReplyDoc {
     editor?: number;
 }
 
+export interface ContestClarificationDoc extends Document {
+    docType: document['TYPE_CONTEST_CLARIFICATION'];
+    docId: ObjectId;
+    parentType: document['TYPE_CONTEST'];
+    parentId: ObjectId;
+    // 0: contest -1: technique [pid]: problem
+    subject: number;
+    ip: string;
+    content: string;
+    reply: DiscussionTailReplyDoc[];
+}
+
 export interface TokenDoc {
     _id: string,
     tokenType: number,
