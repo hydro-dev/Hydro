@@ -46,6 +46,7 @@ export const judge = async (ctx: Context) => {
     }
     ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
+    const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     const res = await runQueued(
         ctx.execute.execute,
         {
@@ -54,6 +55,8 @@ export const judge = async (ctx: Context) => {
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
+            addressSpaceLimit: address_space_limit,
+            processLimit: process_limit,
         },
         1,
     );

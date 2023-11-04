@@ -14,6 +14,7 @@ const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
+        const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const res = await runQueued(
             ctx.execute.execute,
             {
@@ -23,6 +24,8 @@ function judgeCase(c: NormalizedCase) {
                 time: c.time,
                 memory: c.memory,
                 cacheStdoutAndStderr: true,
+                addressSpaceLimit: address_space_limit,
+                processLimit: process_limit,
             },
         );
         const {

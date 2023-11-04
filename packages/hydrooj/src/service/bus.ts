@@ -6,7 +6,7 @@ import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
-    BaseUserDict, DiscussionDoc, DomainDoc, FileInfo,
+    BaseUserDict, ContestBalloonDoc, DiscussionDoc, DomainDoc, FileInfo,
     MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
     ScoreboardRow, Tdoc, TrainingDoc, User,
 } from '../interface';
@@ -92,6 +92,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
     'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectId) => VoidReturn
     'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 

@@ -11,6 +11,7 @@ import {
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import type { Handler } from '../service/server';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
@@ -655,6 +656,8 @@ export const RULES: ContestRules = {
     acm, oi, homework, ioi, ledo, strictioi,
 };
 
+const collBalloon = db.collection('contest.balloon');
+
 function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.getTimestamp() - b.rid.getTimestamp()));
 }
@@ -705,6 +708,32 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
+export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
+    const balloon = await collBalloon.findOne({
+        domainId, tid, pid, uid,
+    });
+    if (balloon) return null;
+    const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
+    const newBdoc = {
+        _id: rid, domainId, tid, pid, uid, ...(!bdcount ? { first: true } : {}),
+    };
+    await collBalloon.insertOne(newBdoc);
+    bus.broadcast('contest/balloon', domainId, tid, newBdoc);
+    return rid;
+}
+
+export async function getBalloon(domainId: string, tid: ObjectId, _id: ObjectId) {
+    return await collBalloon.findOne({ domainId, tid, _id });
+}
+
+export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
+    return collBalloon.find({ domainId, tid, ...query });
+}
+
+export async function updateBalloon(domainId: string, tid: ObjectId, _id: ObjectId, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, _id }, { $set });
+}
+
 export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
@@ -726,6 +755,7 @@ export async function updateStatus(
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
 ) {
     const tdoc = await get(domainId, tid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
@@ -778,10 +808,9 @@ export function isDone(tdoc: Tdoc, tsdoc?: any) {
     return false;
 }
 
-export function isLocked(tdoc: Tdoc) {
+export function isLocked(tdoc: Tdoc, time = new Date()) {
     if (!tdoc.lockAt) return false;
-    const now = new Date();
-    return tdoc.lockAt < now && !tdoc.unlocked;
+    return tdoc.lockAt < time && !tdoc.unlocked;
 }
 
 export function isExtended(tdoc: Tdoc) {
@@ -910,6 +939,10 @@ global.Hydro.model.contest = {
     getAndListStatus,
     recalcStatus,
     unlockScoreboard,
+    getBalloon,
+    addBalloon,
+    getMultiBalloon,
+    updateBalloon,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,
