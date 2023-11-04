@@ -95,7 +95,7 @@ export async function buildUI() {
   }
   for (const m of lazyModules) {
     const name = basename(m).split('.')[0];
-    const { outputFiles } = await build(`window.lazyModuleResolver['${name}'](require('${relative(tmp, m)}'))`);
+    const { outputFiles } = await build(`window.lazyModuleResolver['${name}'](require('${relative(tmp, m).replace(/\\/g, '\\\\')}'))`);
     for (const file of outputFiles) {
       addFile(basename(m).replace(/\.[tj]sx?$/, '.js'), file.text);
     }
@@ -107,7 +107,7 @@ export async function buildUI() {
   }
   const entry = await build([
     `window.lazyloadMetadata = ${JSON.stringify(hashes)};`,
-    ...entryPoints.map((i) => `import '${relative(tmp, i)}';`),
+    ...entryPoints.map((i) => `import '${relative(tmp, i).replace(/\\/g, '\\\\')}';`),
   ].join('\n'));
   const pages = entry.outputFiles.map((i) => i.text);
   const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};${pages.join('\n')}`;

@@ -582,11 +582,15 @@ ${nixConfBase}`);
 
 async function main() {
     try {
-        console.log('Getting IP info to find best mirror:');
-        const res = await fetch('https://ipinfo.io', { headers: { accept: 'application/json' } }).then((r) => r.json());
-        delete res.readme;
-        console.log(res);
-        if (res.country !== 'CN') CN = false;
+        if (process.env.REGION) {
+            if (process.env.REGION !== 'CN') CN = false;
+        } else {
+            console.log('Getting IP info to find best mirror:');
+            const res = await fetch('https://ipinfo.io', { headers: { accept: 'application/json' } }).then((r) => r.json());
+            delete res.readme;
+            console.log(res);
+            if (res.country !== 'CN') CN = false;
+        }
     } catch (e) {
         console.error(e);
         console.log('Cannot find the best mirror. Fallback to default.');

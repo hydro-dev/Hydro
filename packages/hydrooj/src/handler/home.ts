@@ -36,7 +36,7 @@ export class HomeHandler extends Handler {
     uids = new Set<number>();
 
     collectUser(uids: number[]) {
-        uids.forEach((uid) => this.uids.add(uid));
+        for (const uid of uids) this.uids.add(uid);
     }
 
     async getHomework(domainId: string, limit = 5) {
@@ -280,12 +280,17 @@ class HomeSecurityHandler extends Handler {
         this.back();
     }
 
+    getAuthnHost() {
+        return system.get('authn.host') && this.request.hostname.includes(system.get('authn.host'))
+            ? system.get('authn.host') : this.request.hostname;
+    }
+
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
     async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
-        const options = await generateRegistrationOptions({
+        const options = generateRegistrationOptions({
             rpName: system.get('server.name'),
-            rpID: this.request.hostname,
+            rpID: this.getAuthnHost(),
             userID: this.user._id.toString(),
             userDisplayName: this.user.uname,
             userName: `${this.user.uname}(${this.user.mail})`,
@@ -310,7 +315,7 @@ class HomeSecurityHandler extends Handler {
             response: this.args.result,
             expectedChallenge: this.session.webauthnVerify,
             expectedOrigin: this.request.headers.origin,
-            expectedRPID: this.request.hostname,
+            expectedRPID: this.getAuthnHost(),
         }).catch(() => { throw new ValidationError('verify'); });
         if (!verification.verified) throw new ValidationError('verify');
         const info = verification.registrationInfo;
@@ -504,7 +509,7 @@ class HomeDomainCreateHandler extends Handler {
     async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);
-        avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}`;
+        avatar ||= this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
         await Promise.all([
             domain.edit(domainId, { avatar }),

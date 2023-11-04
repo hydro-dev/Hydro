@@ -637,9 +637,9 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).project({
             uid: 1, attend: 1, startAt: 1, unrank: 1,
         }).toArray();
-        tsdocs.forEach((i) => {
-            i.endAt = (this.tdoc.duration && i.startAt) ? moment(i.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
-        });
+        for (const tsdoc of tsdocs) {
+            tsdoc.endAt = (this.tdoc.duration && tsdoc.startAt) ? moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
+        }
         const udict = await user.getListForRender(domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)]);
         this.response.body = { tdoc: this.tdoc, tsdocs, udict };
         this.response.pjax = 'partials/contest_user.html';

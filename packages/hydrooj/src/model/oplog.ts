@@ -19,7 +19,7 @@ export async function add(data: Partial<OplogDoc> & { type: string }): Promise<O
 
 function safeKeys(data: any) {
     if (['string', 'number', 'boolean'].includes(typeof data)) return data;
-    if (data instanceof Array) data.forEach(safeKeys);
+    if (data instanceof Array) for (const d of data) safeKeys(d);
     else if (data instanceof ObjectId) return data;
     else if (data instanceof Object) {
         for (const key in data) {

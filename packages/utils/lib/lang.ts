@@ -9,6 +9,8 @@ export interface LangConfig {
     monaco: string;
     time_limit_rate: number;
     memory_limit_rate: number;
+    address_space_limit?: boolean;
+    process_limit?: number;
     display: string;
     target?: string;
     key: string;
@@ -27,7 +29,7 @@ export interface LangConfig {
 export function parseLang(config: string): Record<string, LangConfig> {
     const file = yaml.load(config) as Record<string, LangConfig>;
     if (typeof file === 'undefined' || typeof file === 'string' || typeof file === 'number') throw new Error();
-    Object.keys(file).filter((i) => i.startsWith('_')).forEach((k) => delete file[k]);
+    for (const key of Object.keys(file)) if (key.startsWith('_')) delete file[key];
     for (const key in file) {
         const entry = file[key];
         if (key.includes('.')) {

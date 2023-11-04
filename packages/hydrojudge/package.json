@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "3.1.29",
+    "version": "3.1.30",
     "main": "package.json",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -10,7 +10,7 @@
         "cac": "^6.7.14",
         "mongodb": "^5.9.0",
         "p-queue": "^7.4.1",
-        "schemastery": "^3.13.0",
+        "schemastery": "^3.13.1",
         "shell-quote": "^1.8.1",
         "superagent": "^8.1.2",
         "ws": "^8.14.2"
@@ -19,6 +19,6 @@
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
         "@types/shell-quote": "^1.7.2",
-        "@types/ws": "^8.5.6"
+        "@types/ws": "^8.5.7"
     }
 }

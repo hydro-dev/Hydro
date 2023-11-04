@@ -41,6 +41,7 @@ export async function judge(ctx: Context) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
+    const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     const res = await runQueued(
         execute.execute,
         {
@@ -49,6 +50,8 @@ export async function judge(ctx: Context) {
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
             cacheStdoutAndStderr: true,
+            addressSpaceLimit: address_space_limit,
+            processLimit: process_limit,
         },
     );
     const {
