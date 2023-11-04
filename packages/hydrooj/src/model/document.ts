@@ -437,7 +437,7 @@ export async function apply(ctx: Context) {
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },
         // For problem
         { key: { domainId: 1, docType: 1, search: 'text', title: 'text' }, name: 'search', sparse: true },
-        { key: { domainId: 1, docType: 1, sort: 1 }, name: 'sort', sparse: true },
+        { key: { domainId: 1, docType: 1, sort: 1, docId: 1 }, name: 'sort', sparse: true },
         { key: { domainId: 1, docType: 1, tag: 1, sort: 1 }, name: 'tag', sparse: true },
         { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, sort: 1 }, name: 'hidden', sparse: true },
         // For problem solution
