@@ -19,7 +19,7 @@
         "@aws-sdk/s3-request-presigner": "3.429.0",
         "@graphql-tools/schema": "^10.0.0",
         "@hydrooj/utils": "workspace:*",
-        "@simplewebauthn/server": "^8.3.2",
+        "@simplewebauthn/server": "7.4.0",
         "adm-zip": "0.5.5",
         "cac": "^6.7.14",
         "cordis": "2.8.8",
