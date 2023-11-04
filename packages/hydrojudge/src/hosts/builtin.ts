@@ -11,6 +11,7 @@ import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
 import logger from '../log';
+import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
 const session = {
@@ -71,8 +72,9 @@ const session = {
     },
 };
 
-export async function postInit() {
+export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
+    ctx.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
