@@ -151,6 +151,7 @@ Content: 内容
 Contest Management: 比赛管理
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
+contest_balloon: 气球状态
 contest_create: 创建比赛
 contest_detail_problem_submit: 递交比赛题目
 contest_detail_problem: 题目详情

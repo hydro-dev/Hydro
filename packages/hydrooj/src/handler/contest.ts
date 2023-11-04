@@ -4,8 +4,9 @@ import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
-    Counter, sortFiles, streamToBuffer, Time,
+    Counter, sortFiles, streamToBuffer, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
+import { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
@@ -663,7 +664,55 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         this.back();
     }
 }
-export async function apply(ctx) {
+
+export class ContestBalloonHandler extends ContestManagementBaseHandler {
+    @param('tid', Types.ObjectId)
+    @param('todo', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, todo = false) {
+        const bdocs = await contest.getMultiBalloon(domainId, tid, {
+            ...todo ? { sent: { $exists: false } } : {},
+            ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
+                ? {} : { _id: { $lt: this.tdoc.lockAt } },
+        }).sort({ _id: -1 }).project({ uid: 1 }).toArray();
+        const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => i.sent).map((i) => i.sent));
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
+            owner_udoc: await user.getById(domainId, this.tdoc.owner),
+            pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
+            bdocs,
+            udict: await user.getListForRender(domainId, uids),
+        };
+        this.response.pjax = 'partials/contest_balloon.html';
+        this.response.template = 'contest_balloon.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('color', Types.Content)
+    async postSetColor(domainId: string, tid: ObjectId, color: string) {
+        const config = yaml.load(color);
+        if (typeof config !== 'object') throw new ValidationError('color');
+        const balloon = {};
+        for (const pid of this.tdoc.pids) {
+            if (!config[pid]) throw new ValidationError('color');
+            balloon[pid] = config[pid.toString()];
+        }
+        await contest.edit(domainId, tid, { balloon });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('balloon', Types.ObjectId)
+    async postDone(domainId: string, tid: ObjectId, bid: ObjectId) {
+        const balloon = await contest.getBalloon(domainId, tid, bid);
+        if (!balloon) throw new ValidationError('balloon');
+        if (balloon.sent) throw new ValidationError('balloon', null, 'Balloon already sent');
+        await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
+        this.back();
+    }
+}
+
+export async function apply(ctx: Context) {
     ctx.Route('contest_create', '/contest/create', ContestEditHandler);
     ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
@@ -675,4 +724,5 @@ export async function apply(ctx) {
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_balloon', '/contest/:tid/balloon', ContestBalloonHandler, PERM.PERM_VIEW_CONTEST);
 }
