@@ -140,6 +140,7 @@ export class ProblemModel {
             title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
+        if (meta.difficulty) args.difficulty = meta.difficulty;
         await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
         const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
         args.content = content;
