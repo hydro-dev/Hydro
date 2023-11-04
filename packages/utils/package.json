@@ -13,14 +13,14 @@
         "fs-extra": "^11.1.1",
         "js-yaml": "^4.1.0",
         "moment-timezone": "^0.5.43",
-        "mongodb": "^5.9.0",
-        "reggol": "^1.5.2",
+        "mongodb": "^5.9.1",
+        "reggol": "^1.6.3",
         "search-query-parser": "^1.6.0",
         "source-map-support": "^0.5.21",
-        "systeminformation": "^5.21.11"
+        "systeminformation": "^5.21.15"
     },
     "devDependencies": {
-        "@types/fs-extra": "^11.0.2",
-        "@types/source-map-support": "^0.5.8"
+        "@types/fs-extra": "^11.0.3",
+        "@types/source-map-support": "^0.5.9"
     }
 }
