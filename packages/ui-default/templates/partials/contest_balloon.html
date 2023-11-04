@@ -4,17 +4,17 @@
   {%- for bdoc in bdocs -%}
   <tr data-bid="{{ bdoc.bid }}">
     {% if bdoc.sent %}
-    <td class="col--status record-status--border pass">
+      <td class="col--status record-status--border pass">
         <span class="icon record-status--icon pass"></span>
-        <span class="record-status--text pass">Sent</span>
-    </td>
+        <span class="record-status--text pass">{{ _('Sent') }}</span>
+      </td>
     {% else %}
-    <td class="col--status record-status--border pending">
+      <td class="col--status record-status--border pending">
         <span class="icon record-status--icon pending"></span>
-        <span class="record-status--text pending">Waiting</span>
-    </td>
+        <span class="record-status--text pending">{{ _('Waiting') }}</span>
+      </td>
     {% endif %}
-    <td class="col--bid">{{ bdoc._id.toHexString()|truncate(8,True,'') }}</td>
+    <td class="col--bid">{{ bdoc._id.toHexString()|truncate(8,true,'') }}</td>
     <td class="col--problem col--problem-name" style="color:{{ tdoc.balloon[bdoc.pid].color }}">
       {% if not bdoc.sent %}
         <form class="form--inline" method="post">

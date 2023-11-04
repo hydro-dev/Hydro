@@ -31,10 +31,9 @@ function Balloon({ tdoc, val }) {
               return (
                 <tr key={pid}>
                   <td>
-                    { now === pid
+                    {now === pid
                       ? (<b>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</b>)
-                      : (<span>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</span>)
-                    }
+                      : (<span>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</span>)}
                   </td>
                   <td>
                     <HexColorInput
@@ -53,11 +52,9 @@ function Balloon({ tdoc, val }) {
                       onChange={(e) => { val[+pid].name = e.target.value; }}
                     />
                   </td>
-                  { tdoc.pids.indexOf(+pid) === 0
-                  && <td rowSpan={0}>
+                  {tdoc.pids.indexOf(+pid) === 0 && <td rowSpan={0}>
                     {now && <HexColorPicker color={color} onChange={(e) => { val[+now].color = e; setColor(e); }} style={{ padding: '1rem' }} />}
-                  </td>
-                  }
+                  </td>}
                 </tr>
               );
             })}
