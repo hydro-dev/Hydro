@@ -217,8 +217,8 @@ export function runQueued(execute: string, params?: Parameter, priority = 0) {
 }
 
 export async function versionCheck(reportWarn: (str: string) => void, reportError = reportWarn) {
-    let sandboxVersion = '1.0.0';
-    let sandboxCgroup = 0;
+    let sandboxVersion: string;
+    let sandboxCgroup: number;
     try {
         const version = await client.version();
         sandboxVersion = version.buildVersion.split('v')[1];
