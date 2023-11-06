@@ -5,7 +5,7 @@ import {
 } from 'mongodb';
 import { Context } from '../context';
 import {
-    Content, DiscussionDoc,
+    Content, ContestClarificationDoc, DiscussionDoc,
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
     Tdoc, TrainingDoc,
 } from '../interface';
@@ -27,6 +27,7 @@ export const TYPE_DISCUSSION_NODE: 20 = 20;
 export const TYPE_DISCUSSION: 21 = 21;
 export const TYPE_DISCUSSION_REPLY: 22 = 22;
 export const TYPE_CONTEST: 30 = 30;
+export const TYPE_CONTEST_CLARIFICATION: 31 = 31;
 export const TYPE_TRAINING: 40 = 40;
 /** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
 export const TYPE_HOMEWORK: 60 = 60;
@@ -39,6 +40,7 @@ export interface DocType {
     [TYPE_DISCUSSION]: DiscussionDoc;
     [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc;
     [TYPE_CONTEST]: Tdoc;
+    [TYPE_CONTEST_CLARIFICATION]: ContestClarificationDoc;
     [TYPE_TRAINING]: TrainingDoc;
 }
 
@@ -437,7 +439,7 @@ export async function apply(ctx: Context) {
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },
         // For problem
         { key: { domainId: 1, docType: 1, search: 'text', title: 'text' }, name: 'search', sparse: true },
-        { key: { domainId: 1, docType: 1, sort: 1 }, name: 'sort', sparse: true },
+        { key: { domainId: 1, docType: 1, sort: 1, docId: 1 }, name: 'sort', sparse: true },
         { key: { domainId: 1, docType: 1, tag: 1, sort: 1 }, name: 'tag', sparse: true },
         { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, sort: 1 }, name: 'hidden', sparse: true },
         // For problem solution
@@ -498,6 +500,7 @@ global.Hydro.model.document = {
     setSub,
 
     TYPE_CONTEST,
+    TYPE_CONTEST_CLARIFICATION,
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,
     TYPE_DISCUSSION_REPLY,

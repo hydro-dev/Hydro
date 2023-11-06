@@ -267,7 +267,7 @@ export class ProblemMainHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             await problem.del(domainId, pid);
             i++;
-            this.progress(`Deleting: (${i}/${pids.length})`);
+            this.progress('Deleting: ({0}/{1})', [i, pids.length]);
         }
         this.back();
     }

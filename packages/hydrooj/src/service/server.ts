@@ -183,8 +183,8 @@ export class Handler extends HandlerCommon {
     }
 
     // This is beta API, may be changed in the future.
-    progress(message: string) {
-        Hydro.model.message.sendInfo(this.user._id, message);
+    progress(message: string, params: any[]) {
+        Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
     }
 
     async init() {
@@ -398,7 +398,7 @@ export function Connection(
                 closed = true;
                 bus.emit('connection/close', h);
                 if (interval) clearInterval(interval);
-                disposables.forEach((d) => d());
+                for (const d of disposables) d();
                 h.cleanup?.(args);
             };
             interval = setInterval(() => {
@@ -555,8 +555,10 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     app.use(router.routes()).use(router.allowedMethods());
-    layers.forEach((layer) => router.use(layer as any));
-    layers.forEach((layer) => app.use(layer as any));
+    for (const layer of layers) {
+        router.use(layer as any);
+        app.use(layer);
+    }
     app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
     wsServer.on('connection', async (socket, request) => {
         socket.on('error', (err) => {

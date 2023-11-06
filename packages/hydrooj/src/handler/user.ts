@@ -125,10 +125,8 @@ class UserLoginHandler extends Handler {
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = (redirect ? decodeURIComponent(redirect) : '')
-            || ((this.request.referer || '/login').endsWith('/login')
-                ? this.url('homepage')
-                : this.request.referer);
+        this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
+            ? this.url('homepage') : this.request.referer);
     }
 }
 
@@ -167,16 +165,22 @@ class UserSudoHandler extends Handler {
 class UserWebauthnHandler extends Handler {
     noCheckPermView = true;
 
+    getAuthnHost() {
+        return system.get('authn.host') && this.request.hostname.includes(system.get('authn.host'))
+            ? system.get('authn.host') : this.request.hostname;
+    }
+
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = await generateAuthenticationOptions({
+        const options = generateAuthenticationOptions({
             allowCredentials: udoc._authenticators.map((authenticator) => ({
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
             })),
+            rpID: this.getAuthnHost(),
             userVerification: 'preferred',
         });
         await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
@@ -197,7 +201,7 @@ class UserWebauthnHandler extends Handler {
             response: result,
             expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
-            expectedRPID: this.request.hostname,
+            expectedRPID: this.getAuthnHost(),
             authenticator: {
                 ...authenticator,
                 credentialID: authenticator.credentialID.buffer,

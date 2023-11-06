@@ -52,15 +52,15 @@ export default class SPOJProvider extends BasicFetcher implements IBasicProvider
         logger.info(id);
         const { document } = await this.html(`/problems/${id}/`);
         const files = {};
-        document.querySelector('#problem-body').querySelectorAll('img[src]').forEach((ele) => {
+        for (const ele of document.querySelector('#problem-body').querySelectorAll('img[src]')) {
             const src = ele.getAttribute('src');
-            if (!src.startsWith('http')) return;
+            if (!src.startsWith('http')) continue;
             const file = new PassThrough();
             this.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const meta = document.querySelector('#problem-meta').children[1];
         const window = await this.html(`/submit/${id}/`);
         const langs = Array.from(window.document.querySelector('#lang').querySelectorAll('option'))

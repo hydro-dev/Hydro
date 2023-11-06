@@ -13,6 +13,7 @@ function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
         ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
+        const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const [{
             code, signalled, time, memory,
         }, resInteractor] = await runPiped(
@@ -21,6 +22,8 @@ function judgeCase(c: NormalizedCase) {
                 copyIn: ctx.executeUser.copyIn,
                 time: c.time,
                 memory: c.memory,
+                addressSpaceLimit: address_space_limit,
+                processLimit: process_limit,
             },
             {
                 execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,

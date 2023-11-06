@@ -1,7 +1,9 @@
 import cac from 'cac';
 import PQueue from 'p-queue';
+import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
@@ -33,6 +35,7 @@ interface Parameter {
     execute?: string;
     memory?: number;
     processLimit?: number;
+    addressSpaceLimit?: boolean;
     copyIn?: CopyIn;
     copyOut?: string[];
     copyOutCached?: string[];
@@ -101,7 +104,8 @@ function proc(params: Parameter): Cmd {
         clockLimit: 3 * cpuLimit,
         memoryLimit: Math.floor(memory * 1024 * 1024),
         strictMemoryLimit: getConfig('strict_memory'),
-        // stackLimit: memory * 1024 * 1024,
+        addressSpaceLimit: params.addressSpaceLimit,
+        stackLimit: getConfig('strict_memory') ? Math.floor(memory * 1024 * 1024) : 0,
         procLimit: params.processLimit || getConfig('processLimit'),
         copyOutMax: Math.floor(1024 * 1024 * stdioLimit * 3),
         copyIn,
@@ -212,6 +216,28 @@ const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('p
 
 export function runQueued(execute: string, params?: Parameter, priority = 0) {
     return queue.add(() => run(execute, params), { priority }) as Promise<SandboxAdaptedResult>;
+}
+
+export async function versionCheck(reportWarn: (str: string) => void, reportError = reportWarn) {
+    let sandboxVersion: string;
+    let sandboxCgroup: number;
+    try {
+        const version = await client.version();
+        sandboxVersion = version.buildVersion.split('v')[1];
+        const config = await client.config();
+        sandboxCgroup = config.runnerConfig?.cgroupType || 0;
+    } catch (e) {
+        reportError('Your sandbox version is tooooooo low! Please upgrade!');
+        return false;
+    }
+    const { osinfo } = await sysinfo.get();
+    if (sandboxCgroup === 2) {
+        const kernelVersion = osinfo.kernel.split('-')[0];
+        if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
+            reportWarn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
+        }
+    }
+    return true;
 }
 
 export * from './sandbox/interface';

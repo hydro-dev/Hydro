@@ -12,6 +12,7 @@ plugins:
   - '@typescript-eslint'
   - simple-import-sort
   - eslint-plugin-import
+  - eslint-plugin-github
 rules:
   '@typescript-eslint/no-shadow': 1
 
@@ -53,10 +54,9 @@ rules:
       format: null
     - selector: variable
       modifiers: [destructured]
-      filter:
-        regex: '^_id$'
-        match: false
-      format: [camelCase, PascalCase, UPPER_CASE, snake_case]
+      format: null
+    - selector: import
+      format: null
     - selector: variable
       format: [camelCase, PascalCase, UPPER_CASE]
       modifiers: [const]
@@ -80,12 +80,10 @@ rules:
       format: null
     - selector: [typeMethod]
       format: [camelCase, PascalCase]
-    - selector: enum
+    - selector: [enum, class, interface]
       format: [PascalCase]
-    - selector: [class, interface, typeAlias, enumMember]
+    - selector: [typeAlias, enumMember, typeParameter]
       format: [PascalCase, camelCase, UPPER_CASE]
-    - selector: typeParameter
-      format: [camelCase, PascalCase, UPPER_CASE]
 
   '@typescript-eslint/no-redeclare': 0
   '@typescript-eslint/default-param-last': 0
@@ -145,6 +143,8 @@ rules:
       message: Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.
     - selector: WithStatement
       message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.'
+  
+  github/array-foreach: 1
 
   simple-import-sort/imports:
    - warn

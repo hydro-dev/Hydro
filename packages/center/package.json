@@ -10,7 +10,7 @@
         "hydrooj": "*"
     },
     "dependencies": {
-        "crypto-js": "^4.1.1",
+        "crypto-js": "^4.2.0",
         "semver": "^7.5.4"
     }
 }

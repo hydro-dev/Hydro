@@ -36,9 +36,7 @@ export function folderSize(folderPath: string) {
                 size += stats.size;
                 const files = fs.readdirSync(p);
                 if (Array.isArray(files)) {
-                    files.forEach((file) => {
-                        _next(path.join(p, file));
-                    });
+                    for (const file of files) _next(path.join(p, file));
                 }
             }
         }
@@ -247,9 +245,9 @@ export function CallableInstance(property = '__call__') {
     else func = this.constructor.prototype[property];
     const apply = function __call__(...args) { return func.apply(apply, ...args); };
     Object.setPrototypeOf(apply, this.constructor.prototype);
-    Object.getOwnPropertyNames(func).forEach((p) => {
+    for (const p of Object.getOwnPropertyNames(func)) {
         Object.defineProperty(apply, p, Object.getOwnPropertyDescriptor(func, p));
-    });
+    }
     return apply;
 }
 
