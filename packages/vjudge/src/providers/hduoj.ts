@@ -116,7 +116,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const tag = [];
         for (let i = 1; i < main.children.length; i++) {
             if (node[i - 1].innerHTML === 'Problem Description') {
-                const description = node[i].innerHTML.replace('/<center><img/g', '<img').replace('/.png"></center>/g', '.png">');
+                const description = node[i].innerHTML.replace(/<center><img/g, '<img').replace('/.png"></center>/g', '.png">');
                 logger.info(description);
                 html += `<h2>Description</h2><p>${description}</p>\n`;
             } else if (node[i - 1].innerHTML === 'Input') {
@@ -136,7 +136,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
                 }
                 html += ouput + text + end;
             } else if (node[i - 1].innerHTML === 'Source') {
-                tag.push(node[i].children[0].innerHTML.trim().replace('/ /g', '-').replace('/,/', '-'));
+                tag.push(node[i].children[0].innerHTML.trim().replace(/ /g, '-').replace('/,/', '-'));
                 html += `<h2>Source</h2><p>${node[i].children[0].innerHTML}</p>`;
             }
         }
