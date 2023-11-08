@@ -6,7 +6,7 @@ import { } from 'superagent';
 import charset from 'superagent-charset';
 import proxy from 'superagent-proxy';
 import {
-    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS, superagent,
+    Logger, parseMemoryMB, parseTimeMS, sleep, STATUS, superagent,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -69,82 +69,86 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getProblem(id: string) {
         logger.info(id);
-        const res = await superagent.get('/showproblem.php')
+        const url = new URL('/showproblem.php', this.account.endpoint || 'https://acm.hdu.edu.cn').toString();
+        const res = await superagent.get(url)
             .query({ pid: id.split('P')[1] })
             .buffer(true)
             .charset('gbk');
         const { window: { document } } = new JSDOM(res.text);
-        const images = {};
         const files = {};
-        const problemContent = document.querySelector('table>tbody').children[3].children[0];
-        for (const ele of problemContent.querySelectorAll('img[src]')) {
-            const src = ele.getAttribute('src');
+        const main = document.querySelector('table>tbody').children[3].children[0];
+        const limit = main.querySelectorAll('span')[0].innerHTML.split(' ');
+        const time = limit[2].split('/')[1];
+        const memory = parseInt(limit[6].split('/')[1], 10) / 1024;
+        const contents = {};
+        const images = {};
+        await sleep(1000);
+        main.querySelectorAll('img[src]').forEach((ele) => {
+            let src = ele.getAttribute('src');
+            if (src.startsWith('../..')) {
+                src = src.replace('../..', '');
+            }
+            if (src.startsWith('..')) {
+                src = src.replace('..', '');
+            }
+            if (src.startsWith('/..')) {
+                src = src.replace('/..', '');
+            }
+            if (!src.startsWith('/')) {
+                src = `/${src}`;
+            }
             if (images[src]) {
-                ele.setAttribute('src', `file://${images[src]}.png`);
-                continue;
+                ele.setAttribute('src', `/d/hduoj/p/${id}/file/${images[src]}.png`);
+                return;
             }
             const file = new PassThrough();
             this.get(src).pipe(file);
             const fid = String.random(8);
             images[src] = fid;
             files[`${fid}.png`] = file;
-            ele.setAttribute('src', `file://${fid}.png`);
-        }
-        const info = problemContent.children[1].children[0].children[0].innerHTML;
-        const timeMatcher = /Time Limit: \d+\/(\d+) MS/;
-        const time = info.match(timeMatcher)[1];
-        const memoryMatcher = /Memory Limit: \d+\/(\d+) K/;
-        const memory = info.match(memoryMatcher)[1];
-        const title = problemContent.children[0].innerHTML;
-        let tag = '';
-        problemContent.remove();
-        problemContent.remove();
+            ele.setAttribute('src', `/d/hduoj/p/${id}/file/${fid}.png`);
+        });
         let html = '';
-        let preId = 0;
-        let markNext = '';
-        let lastMark = '';
-        for (const node of problemContent.children) {
-            const tagName = node.tagName.toLowerCase();
-            if (tagName === 'font' || tagName === 'h1' || tagName === 'center' || node.innerHTML === '&nbsp;') {
-                continue;
-            }
-            if (node.getAttribute('align') === 'left') {
-                lastMark = node.textContent;
-                if (lastMark === 'Source') {
-                    tag = node.nextElementSibling.textContent.trim();
-                    node.nextElementSibling.innerHTML = tag;
-                    continue;
+        const end = '```\n\n';
+        const input = '\n\n```input1\n';
+        const ouput = '\n\n```output1\n';
+        const node = main.children;
+        const tag = [];
+        for (let i = 1; i < main.children.length; i++) {
+            if (node[i - 1].innerHTML === 'Problem Description') {
+                const description = node[i].innerHTML.replace('/<center><img/g', '<img').replace('/.png"></center>/g', '.png">');
+                logger.info(description);
+                html += `<h2>Description</h2><p>${description}</p>\n`;
+            } else if (node[i - 1].innerHTML === 'Input') {
+                html += `<h2>Input</h2><p>${node[i].innerHTML}</p>\n`;
+            } else if (node[i - 1].innerHTML === 'Output') {
+                html += `<h2>Output</h2><p>${node[i].innerHTML}</p>\n`;
+            } else if (node[i - 1].innerHTML === 'Sample Input') {
+                let text = node[i].children[0].children[0].innerHTML;
+                if (!text.endsWith('\n')) {
+                    text += '\n';
                 }
-                if (lastMark.startsWith('Sample ')) {
-                    if (lastMark.includes('Input')) {
-                        preId++;
-                        markNext = 'input';
-                    } else {
-                        markNext = 'output';
-                    }
-                    continue;
+                html += input + text + end;
+            } else if (node[i - 1].innerHTML === 'Sample Output') {
+                let text = node[i].children[0].children[0].innerHTML;
+                if (!text.endsWith('\n')) {
+                    text += '\n';
                 }
-                html += `<h2>${htmlEncode(node.innerHTML)}</h2>`;
-            } else {
-                if (lastMark.length === 0 || lastMark === 'Source' || node.innerHTML.length === 0) {
-                    continue;
-                }
-                if (lastMark === 'Sample Input' || lastMark === 'Sample Output') {
-                    html += `\n<pre><code class="language-${markNext}${preId}">${node.innerHTML}</code></pre>\n`;
-                } else {
-                    html += node.innerHTML;
-                }
+                html += ouput + text + end;
+            } else if (node[i - 1].innerHTML === 'Source') {
+                tag.push(node[i].children[0].innerHTML.trim().replace('/ /g', '-').replace('/,/', '-'));
+                html += `<h2>Source</h2><p>${node[i].children[0].innerHTML}</p>`;
             }
         }
-        const tagList = (tag.length === 0) ? [] : [tag];
+        contents['zh'] = html;
         return {
-            title,
+            title: node[0].textContent,
             data: {
-                'config.yaml': Buffer.from(`time: ${time}ms\nmemory: ${memory}k\ntype: remote_judge\nsubType: hduoj\ntarget: ${id}`),
+                'config.yaml': Buffer.from(`time: ${time}ms\nmemory: ${memory}m\ntype: remote_judge\nsubType: hduoj\ntarget: ${id}`),
             },
             files,
-            tag: tagList,
-            content: html,
+            tag,
+            content: JSON.stringify(contents),
         };
     }
 
@@ -154,7 +158,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         const $dom = new JSDOM(text);
         const ProblemTable = $dom.window.document.querySelector('.table_text');
         const ProblemList = ProblemTable.querySelector('script').textContent;
-        const matcher = /p\(\d+,(?<num>\d+),\d+,/g;
+        const matcher = /p\(\d+,(?<num>\d+),/g;
         let match = matcher.exec(ProblemList);
         const res = [];
         while (match != null) {
@@ -183,8 +187,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         // eslint-disable-next-line max-len
         const { text: status } = await this.get(`/status.php?first=&pid=${id}&user=${this.account.handle}&lang=${parseInt(language, 10) + 1}&status=0`);
         const $dom = new JSDOM(status);
-        const res = $dom.window.document.querySelector('.table_text>tbody');
-        return res.children[2].children[0].innerHTML;
+        return $dom.window.document.querySelector('.table_text>tbody>tr[align="center"]>td').innerHTML;
     }
 
     async waitForSubmission(id: string, next, end) {
@@ -192,7 +195,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             await sleep(3000);
             const { text } = await this.get(`/status.php?first=${id}`);
             const { window: { document } } = new JSDOM(text);
-            const submission = document.querySelector('#fixed_table>table>tbody').children[2];
+            const submission = document.querySelector('.table_text>tbody>tr[align="center"]');
             const status = StatusMapping[submission.children[2].children[0].textContent.trim()]
                 || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
