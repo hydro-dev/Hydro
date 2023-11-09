@@ -503,6 +503,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             pdoc: this.pdoc,
             udoc: this.udoc,
             tdoc: this.tdoc,
+            tsdoc: this.response.body.tsdoc,
             title: this.pdoc.title,
             page_name: this.tdoc
                 ? this.tdoc.rule === 'homework'
