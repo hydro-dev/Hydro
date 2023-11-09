@@ -222,7 +222,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome60',
+          'chrome65',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],

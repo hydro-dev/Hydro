@@ -139,6 +139,7 @@ export async function end(body: Partial<JudgeResultBody>) {
     await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
+    rdoc = await record.get(body.rid);
     bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
 }
 

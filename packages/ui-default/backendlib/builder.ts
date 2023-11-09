@@ -52,7 +52,7 @@ const build = async (contents: string) => {
     outdir: tmp,
     splitting: false,
     write: false,
-    target: ['chrome60'],
+    target: ['chrome65'],
     plugins: [
       ...(global.Hydro.ui.esbuildPlugins || []),
       federationPlugin,
