@@ -2,7 +2,6 @@ import { ObjectId } from 'mongodb';
 import { SolutionNotFoundError } from '../error';
 import * as bus from '../service/bus';
 import * as document from './document';
-import domain from './domain';
 
 class SolutionModel {
     static add(domainId: string, pid: number, owner: number, content: string) {
@@ -73,8 +72,6 @@ class SolutionModel {
     static async vote(domainId: string, psid: ObjectId, uid: number, value: number) {
         let pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
         await document.setStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid, { vote: value });
-        const { owner } = await SolutionModel.get(domainId, psid);
-        await domain.incUserInDomain(domainId, owner, 'nLike', (value === 1 ? 1 : 0) - (pssdoc && pssdoc.vote === 1 ? 1 : 0));
         if (pssdoc) value += -pssdoc.vote;
         const psdoc = await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', value);
         pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
