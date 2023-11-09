@@ -13,7 +13,6 @@
     {% include "partials/problem_sidebar.html" %}
   {% elif vnode.type == model.document.TYPE_CONTEST %}
     {% set tdoc = vnode %}
-    {% set tsdoc = vnode %}
     {% set owner_udoc = udict[vnode.owner] %}
     {% include "partials/contest_sidebar.html" %}
   {% else %}
