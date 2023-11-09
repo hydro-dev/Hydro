@@ -54,7 +54,7 @@
         {%- endfor -%}
       </tbody>
     </table>
-  {% else %}
+  {% elif not reference %}
     {{ nothing.render('No {0} at current.', compact=sidebar, args=[_(filetype)]) }}
   {% endif %}
 </div>
