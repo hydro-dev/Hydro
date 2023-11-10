@@ -189,8 +189,12 @@ export class Handler extends HandlerCommon {
 
     async init() {
         if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
-            const host = new URL(this.request.headers.referer).host;
-            if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+            try {
+                const host = new URL(this.request.headers.referer).host;
+                if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+            } catch (e) {
+                this.context.pendingError = new CsrfTokenError();
+            }
         }
         if (!argv.options.benchmark) await this.limitRate('global', 5, 100);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
