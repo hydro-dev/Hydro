@@ -201,7 +201,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
               if (packageName === 'monaco-editor-nls') {
-                return `i.monaco.${module.userRequest.split('/').pop().split('.')[0]}`;
+                return `i.monaco.${module.userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
               }
               return `n.${packageName.replace('@', '')}`;
             },
@@ -222,7 +222,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome60',
+          'chrome65',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],

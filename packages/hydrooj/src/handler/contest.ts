@@ -4,8 +4,9 @@ import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
-    Counter, sortFiles, streamToBuffer, Time,
+    Counter, sortFiles, streamToBuffer, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
+import { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
@@ -161,6 +162,7 @@ export class ContestDetailBaseHandler extends Handler {
                 checker: () => contest.canShowScoreboard.call(this, this.tdoc, true),
             },
             {
+                name: 'problem_detail',
                 displayName: `${String.fromCharCode(65 + this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
@@ -255,12 +257,13 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
     async get(domainId: string, tid: ObjectId) {
         if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         if (!this.tsdoc?.attend && !contest.isDone(this.tdoc)) throw new ContestNotAttendedError(domainId, tid);
-        const [pdict, udict] = await Promise.all([
+        const [pdict, udict, tcdocs] = await Promise.all([
             problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             user.getList(domainId, [this.tdoc.owner, this.user._id]),
+            contest.getMultiClarification(domainId, tid, this.user._id),
         ]);
         this.response.body = {
-            pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tsdoc: this.tsdoc,
+            pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tsdoc: this.tsdoc, tcdocs,
         };
         this.response.template = 'contest_problemlist.html';
         if (!this.tsdoc) return;
@@ -280,6 +283,24 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         } else {
             for (const i of psdocs) this.response.body.rdict[i.rid] = { _id: i.rid };
         }
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('content', Types.Content)
+    @param('subject', Types.Int)
+    async postClarification(domainId: string, tid: ObjectId, content: string, subject: number) {
+        if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
+        if (!contest.isOngoing(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
+        await this.limitRate('add_discussion', 3600, 60);
+        await contest.addClarification(domainId, tid, this.user._id, content, this.request.ip, subject);
+        if (!this.user.own(this.tdoc)) {
+            await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map((uid) => message.send(1, uid, JSON.stringify({
+                message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
+                params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
+                url: this.url('contest_manage', { tid }),
+            }), message.FLAG_I18N | message.FLAG_UNREAD)));
+        }
+        this.back();
     }
 }
 
@@ -557,12 +578,15 @@ export class ContestCodeHandler extends Handler {
 export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
+        const tcdocs = await contest.getMultiClarification(domainId, tid);
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             files: sortFiles(this.tdoc.files || []),
+            udict: await user.getListForRender(domainId, tcdocs.map((i) => i.owner)),
+            tcdocs,
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
         this.response.pjax = 'partials/files.html';
@@ -571,11 +595,28 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
 
     @param('tid', Types.ObjectId)
     @param('content', Types.Content)
-    async postBroadcast(domainId: string, tid: ObjectId, content: string) {
-        const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
-        const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
-        const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
-        await Promise.all(uids.map((uid) => message.send(this.user._id, uid, content, flag)));
+    @param('did', Types.ObjectId, true)
+    @param('subject', Types.Int, true)
+    async postClarification(domainId: string, tid: ObjectId, content: string, did: ObjectId, subject = 0) {
+        if (did) {
+            const tcdoc = await contest.getClarification(domainId, did);
+            await Promise.all([
+                contest.addClarificationReply(domainId, did, 0, content, this.request.ip),
+                message.send(1, tcdoc.owner, JSON.stringify({
+                    message: 'Contest {0} jury replied to your clarification, please go to contest page to view.',
+                    params: [this.tdoc.title],
+                    url: this.url('contest_problemlist', { tid }),
+                }), message.FLAG_I18N | message.FLAG_ALERT),
+            ]);
+        } else {
+            const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+            const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
+            const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
+            await Promise.all([
+                contest.addClarification(domainId, tid, 0, content, this.request.ip, subject),
+                ...uids.map((uid) => message.send(1, uid, content, flag)),
+            ]);
+        }
         this.back();
     }
 
@@ -663,7 +704,55 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         this.back();
     }
 }
-export async function apply(ctx) {
+
+export class ContestBalloonHandler extends ContestManagementBaseHandler {
+    @param('tid', Types.ObjectId)
+    @param('todo', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, todo = false) {
+        const bdocs = await contest.getMultiBalloon(domainId, tid, {
+            ...todo ? { sent: { $exists: false } } : {},
+            ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
+                ? {} : { _id: { $lt: this.tdoc.lockAt } },
+        }).sort({ _id: -1 }).toArray();
+        const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => i.sent).map((i) => i.sent));
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
+            owner_udoc: await user.getById(domainId, this.tdoc.owner),
+            pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
+            bdocs,
+            udict: await user.getListForRender(domainId, uids),
+        };
+        this.response.pjax = 'partials/contest_balloon.html';
+        this.response.template = 'contest_balloon.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('color', Types.Content)
+    async postSetColor(domainId: string, tid: ObjectId, color: string) {
+        const config = yaml.load(color);
+        if (typeof config !== 'object') throw new ValidationError('color');
+        const balloon = {};
+        for (const pid of this.tdoc.pids) {
+            if (!config[pid]) throw new ValidationError('color');
+            balloon[pid] = config[pid.toString()];
+        }
+        await contest.edit(domainId, tid, { balloon });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('balloon', Types.ObjectId)
+    async postDone(domainId: string, tid: ObjectId, bid: ObjectId) {
+        const balloon = await contest.getBalloon(domainId, tid, bid);
+        if (!balloon) throw new ValidationError('balloon');
+        if (balloon.sent) throw new ValidationError('balloon', null, 'Balloon already sent');
+        await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
+        this.back();
+    }
+}
+
+export async function apply(ctx: Context) {
     ctx.Route('contest_create', '/contest/create', ContestEditHandler);
     ctx.Route('contest_main', '/contest', ContestListHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
@@ -675,4 +764,5 @@ export async function apply(ctx) {
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_balloon', '/contest/:tid/balloon', ContestBalloonHandler, PERM.PERM_VIEW_CONTEST);
 }

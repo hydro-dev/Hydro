@@ -13,6 +13,9 @@
     {% include "partials/problem_sidebar.html" %}
   {% elif vnode.type == model.document.TYPE_CONTEST %}
     {% set tdoc = vnode %}
+    {%- if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) -%}
+    {% set tsdoc = { attend: tdoc.attend } %}
+    {%- endif -%}
     {% set owner_udoc = udict[vnode.owner] %}
     {% include "partials/contest_sidebar.html" %}
   {% else %}

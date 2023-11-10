@@ -1,5 +1,5 @@
-import { AttestationFormat } from '@simplewebauthn/server/script/helpers/decodeAttestationObject';
-import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/script/helpers/decodeAuthenticatorExtensions';
+import { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
+import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
 import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
@@ -393,6 +393,7 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
+    balloon?: Record<number, string>;
 
     /**
      * In hours
@@ -490,6 +491,18 @@ export interface DiscussionTailReplyDoc {
     ip: string;
     edited?: boolean;
     editor?: number;
+}
+
+export interface ContestClarificationDoc extends Document {
+    docType: document['TYPE_CONTEST_CLARIFICATION'];
+    docId: ObjectId;
+    parentType: document['TYPE_CONTEST'];
+    parentId: ObjectId;
+    // 0: contest -1: technique [pid]: problem
+    subject: number;
+    ip: string;
+    content: string;
+    reply: DiscussionTailReplyDoc[];
 }
 
 export interface TokenDoc {
@@ -651,6 +664,18 @@ export interface DiscussionHistoryDoc {
     ip: string;
 }
 
+export interface ContestBalloonDoc {
+    _id: ObjectId;
+    domainId: string;
+    tid: ObjectId;
+    pid: number;
+    uid: number;
+    first?: boolean;
+    /** Sent by */
+    sent?: number;
+    sentAt?: Date;
+}
+
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -678,6 +703,7 @@ declare module './service/db' {
         'event': EventDoc;
         'opcount': OpCountDoc;
         'schedule': Schedule;
+        'contest.balloon': ContestBalloonDoc;
     }
 }
 

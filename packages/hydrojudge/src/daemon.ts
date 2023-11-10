@@ -20,6 +20,7 @@ import { fs } from '@hydrooj/utils';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
 import log from './log';
+import { versionCheck } from './sandbox';
 
 const hosts: Record<string, HydroHost> = {};
 let exit = false;
@@ -44,6 +45,8 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 async function daemon() {
+    const shouldRun = await versionCheck((msg) => log.error(msg));
+    if (!shouldRun) process.exit(1);
     const _hosts = getConfig('hosts');
     const queue = new PQueue({ concurrency: Infinity });
     await fs.ensureDir(getConfig('tmp_dir'));

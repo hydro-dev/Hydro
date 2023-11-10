@@ -32,6 +32,9 @@ async function runWebpack({
         target: 'http://localhost:2333',
         ws: true,
       },
+      client: {
+        webSocketURL: 'auto://0.0.0.0:0/ws',
+      },
     }, compiler);
     server.start();
     return;
