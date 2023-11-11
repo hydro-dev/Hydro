@@ -796,6 +796,21 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     }
 
     @post('files', Types.ArrayOf(Types.Filename))
+    @post('newNames', Types.ArrayOf(Types.Filename))
+    @post('type', Types.Range(['testdata', 'additional_file']), true)
+    async postRenameFiles(domainId: string, files: string[], newNames: string[], type = 'testdata') {
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('rename files');
+        if (files.length !== newNames.length) throw new ValidationError('files', 'newNames');
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        await Promise.all(files.map(async (file, index) => {
+            const newName = newNames[index];
+            if (type === 'testdata') await problem.renameTestdata(domainId, this.pdoc.docId, file, newName, this.user._id);
+            else await problem.renameAdditionalFile(domainId, this.pdoc.docId, file, newName, this.user._id);
+        }));
+        this.back();
+    }
+
+    @post('files', Types.ArrayOf(Types.Filename))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');

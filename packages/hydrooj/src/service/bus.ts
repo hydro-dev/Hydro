@@ -85,8 +85,10 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameTestdata': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
     'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameAdditionalFile': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
     'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
