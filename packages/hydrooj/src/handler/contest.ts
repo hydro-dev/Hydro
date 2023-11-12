@@ -245,6 +245,7 @@ export class ContestDetailHandler extends Handler {
     @param('tid', Types.ObjectId)
     @param('code', Types.String, true)
     async postAttend(domainId: string, tid: ObjectId, code = '') {
+        this.checkPerm(PERM.PERM_ATTEND_CONTEST);
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
         if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
         await contest.attend(domainId, tid, this.user._id);
