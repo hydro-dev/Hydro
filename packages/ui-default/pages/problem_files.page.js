@@ -75,7 +75,7 @@ const page = new NamedPage('problem_files', () => {
   async function handleClickRenameSelected(type) {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (selectedFiles === null) return;
-    const RenameAction = await new ActionDialog({
+    const rename = await new ActionDialog({
       $body: tpl`
         <div class="typo"><div class="row">
           <div class="medium-6 small-6 columns">
@@ -116,11 +116,11 @@ const page = new NamedPage('problem_files', () => {
         return true;
       },
     }).open();
-    if (RenameAction !== 'ok') return;
-    const original = $('[name="original_content"]').val() || '';
-    const replace = $('[name="replace_content"]').val() || '';
-    const prefix = $('[name="add_prefix"]').val() || '';
-    const suffix = $('[name="add_suffix"]').val() || '';
+    if (rename !== 'ok') return;
+    const original = $('[name="original_content"]').val();
+    const replace = $('[name="replace_content"]').val();
+    const prefix = $('[name="add_prefix"]').val();
+    const suffix = $('[name="add_suffix"]').val();
     const newNames = selectedFiles.map((file) => {
       if (original) file = file.replace(original, replace);
       return prefix + file + suffix;

@@ -180,6 +180,7 @@ Confirm deleting this comment? Its replies will be deleted as well.: 确认删�
 Confirm deleting this reply?: 确认删除这个回复吗？
 Confirm rejudge this problem?: 确定要重测这道题吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
+Confirm to delete the file?: 确认删除此文件吗？
 Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirm to delete the selected problems?: 确认要删除所选题目吗？
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
@@ -375,6 +376,8 @@ Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
+File have been deleted.: 文件已被删除。
+File have been renamed.: 文件已被重命名。
 File saved.: 文件已成功保存。
 file too large: 文件过大
 File uploaded successfully.: 上传文件成功
@@ -789,6 +792,7 @@ Select Category: 选择标签
 Select User: 选择用户
 Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
+Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
