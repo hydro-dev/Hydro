@@ -695,7 +695,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             const { testdata, additional_file } = this.response.body;
             const owner = await user.getById(domainId, this.pdoc.owner);
             const args = {
-                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar,
+                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar, can_edit: true,
             };
             const tasks = [];
             if (d.includes('testdata')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));

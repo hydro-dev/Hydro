@@ -53,6 +53,44 @@ const page = new NamedPage('problem_files', () => {
     await downloadProblemFilesAsArchive(type, selectedFiles);
   }
 
+  async function handleClickRename(ev, type) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    // eslint-disable-next-line no-alert
+    const newName = prompt('Enter a new name for the file: ');
+    if (!newName) return;
+    try {
+      await request.post('./files', {
+        operation: 'rename_files',
+        files: file,
+        newNames: [newName],
+        type,
+      });
+      Notification.success(i18n('File have been renamed.'));
+      await pjax.request({ url: `./files?d=${type}`, push: false });
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
+  async function handleClickRemove(ev, type) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    const action = await new ConfirmDialog({
+      $body: tpl.typoMsg(i18n('Confirm to delete the file?')),
+    }).open();
+    if (action !== 'yes') return;
+    try {
+      await request.post('./files', {
+        operation: 'delete_files',
+        files: file,
+        type,
+      });
+      Notification.success(i18n('File have been deleted.'));
+      await pjax.request({ url: `./files?d=${type}`, push: false });
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
   async function handleClickRemoveSelected(type) {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (selectedFiles === null) return;
@@ -114,6 +152,10 @@ const page = new NamedPage('problem_files', () => {
     $(document).on('click', '[name="upload_file"]', () => handleClickUpload('additional_file'));
     $(document).on('click', '[name="create_testdata"]', () => previewFile(undefined, 'testdata'));
     $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
+    $(document).on('click', '[name="testdata__rename"]', (ev) => handleClickRename(ev, 'testdata'));
+    $(document).on('click', '[name="additional_file__rename"]', (ev) => handleClickRename(ev, 'additional_file'));
+    $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev, 'testdata'));
+    $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev, 'additional_file'));
     $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));
     $(document).on('click', '[name="remove_selected_file"]', () => handleClickRemoveSelected('additional_file'));
   }

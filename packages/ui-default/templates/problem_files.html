@@ -15,6 +15,7 @@
       </div>
       {{ noscript_note.render() }}
       {% set filetype = "testdata" %}
+      {% set can_edit = (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
       {% include "partials/problem_files.html" %}
       {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
@@ -38,6 +39,7 @@
         </div>
       </div>
       {% set filetype = "additional_file" %}
+      {% set can_edit = (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
       {% include "partials/problem_files.html" %}
       <div class="section__body">
         <button class="rounded button" name="download_selected_file">{{ _('Download Selected') }}</button>
