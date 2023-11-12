@@ -249,8 +249,8 @@ const page = new NamedPage('problem_files', () => {
     $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
     $(document).on('click', '[name="testdata__rename"]', (ev) => handleClickRename(ev, 'testdata'));
     $(document).on('click', '[name="additional_file__rename"]', (ev) => handleClickRename(ev, 'additional_file'));
-    $(document).on('click', '[name="rename_selected_testdata"]', (ev) => handleClickRenameSelected('testdata'));
-    $(document).on('click', '[name="rename_selected_file"]', (ev) => handleClickRenameSelected('additional_file'));
+    $(document).on('click', '[name="rename_selected_testdata"]', () => handleClickRenameSelected('testdata'));
+    $(document).on('click', '[name="rename_selected_file"]', () => handleClickRenameSelected('additional_file'));
     $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev, 'testdata'));
     $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev, 'additional_file'));
     $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));
