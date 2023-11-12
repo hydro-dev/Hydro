@@ -284,13 +284,17 @@ export class ProblemModel {
 
     static async renameTestdata(domainId: string, pid: number, file: string, newName: string, operator = 1) {
         if (file === newName) return;
-        await storage.rename(
-            `problem/${domainId}/${pid}/testdata/${file}`,
-            `problem/${domainId}/${pid}/testdata/${newName}`,
-            operator,
-        );
+        const [, sdoc] = await document.getSub(domainId, document.TYPE_PROBLEM, pid, 'data', newName);
+        if (sdoc) await ProblemModel.delTestdata(domainId, pid, newName);
         const payload = { _id: newName, name: newName, lastModified: new Date() };
-        await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', file, payload);
+        await Promise.all([
+            storage.rename(
+                `problem/${domainId}/${pid}/testdata/${file}`,
+                `problem/${domainId}/${pid}/testdata/${newName}`,
+                operator,
+            ),
+            document.setSub(domainId, document.TYPE_PROBLEM, pid, 'data', file, payload),
+        ]);
         await bus.emit('problem/renameTestdata', domainId, pid, file, newName);
     }
 
@@ -321,13 +325,17 @@ export class ProblemModel {
 
     static async renameAdditionalFile(domainId: string, pid: number, file: string, newName: string, operator = 1) {
         if (file === newName) return;
-        await storage.rename(
-            `problem/${domainId}/${pid}/additional_file/${file}`,
-            `problem/${domainId}/${pid}/additional_file/${newName}`,
-            operator,
-        );
+        const [, sdoc] = await document.getSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', newName);
+        if (sdoc) await ProblemModel.delAdditionalFile(domainId, pid, newName);
         const payload = { _id: newName, name: newName, lastModified: new Date() };
-        await document.setSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', file, payload);
+        await Promise.all([
+            storage.rename(
+                `problem/${domainId}/${pid}/additional_file/${file}`,
+                `problem/${domainId}/${pid}/additional_file/${newName}`,
+                operator,
+            ),
+            document.setSub(domainId, document.TYPE_PROBLEM, pid, 'additional_file', file, payload),
+        ]);
         await bus.emit('problem/renameAdditionalFile', domainId, pid, file, newName);
     }
 
