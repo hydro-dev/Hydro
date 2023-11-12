@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import { ConfirmDialog } from 'vj/components/dialog/index';
+import { ActionDialog, ConfirmDialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import { previewFile } from 'vj/components/preview/preview.page';
@@ -66,7 +66,102 @@ const page = new NamedPage('problem_files', () => {
         type,
       });
       Notification.success(i18n('File have been renamed.'));
-      await pjax.request({ url: `./files?d=${type}`, push: false });
+      await pjax.request({ push: false });
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
+  async function handleClickRenameSelected(type) {
+    const selectedFiles = ensureAndGetSelectedFiles(type);
+    if (selectedFiles === null) return;
+    const RenameAction = await new ActionDialog({
+      $body: tpl`
+        <div class="typo"><div class="row">
+          <div class="medium-6 small-6 columns">
+            <h2>${i18n('Batch Replacement')}</h2>
+            <label>${i18n('Original Content')}  
+              <div class="textbox-container">
+                <input class="textbox" type="text" name="original_content" data-autofocus></input>
+              </div>
+            </label>
+            <label>${i18n('Replace with')}  
+              <div class="textbox-container">
+                <input class="textbox" type="text" name="replace_content"></input>
+              </div>
+            </label>
+          </div>
+          <div class="medium-6 small-6 columns">
+            <h2>${i18n('Batch Add Prefix and Suffix')}</h2>
+            <label>${i18n('Add Prefix')}  
+              <div class="textbox-container">
+                <input class="textbox" type="text" name="add_prefix"></input>
+              </div>
+            </label>
+            <label>${i18n('Add Suffix')}  
+              <div class="textbox-container">
+                <input class="textbox" type="text" name="add_suffix"></input>
+              </div>
+            </label>
+          </div>
+        </div></div>
+      `,
+      width: '600px',
+      onDispatch(action) {
+        const inputs = ['original_content', 'add_prefix', 'add_suffix'];
+        if (action === 'ok' && inputs.every((input) => !$(`[name="${input}"]`).val().length)) {
+          $('[name="original_content"]').focus();
+          return false;
+        }
+        return true;
+      },
+    }).open();
+    if (RenameAction !== 'ok') return;
+    const original = $('[name="original_content"]').val() || '';
+    const replace = $('[name="replace_content"]').val() || '';
+    const prefix = $('[name="add_prefix"]').val() || '';
+    const suffix = $('[name="add_suffix"]').val() || '';
+    const newNames = selectedFiles.map((file) => {
+      if (original) file = file.replace(original, replace);
+      return prefix + file + suffix;
+    });
+    const confirm = new ConfirmDialog({
+      $body: tpl`
+        <p>${i18n('Are you sure to make the following changes to the file name?')}</p>
+        <table class="data-table rename-confirm-table">
+          <colgroup>
+            <col class="col--origin">
+            <col class="col--new">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--origin">${i18n('Original Filenames')}</th>
+              <th class="col--new">${i18n('New Filenames')}</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      `,
+      width: '500px',
+    }).open();
+    selectedFiles.forEach((file, index) => {
+      $(tpl`
+        <tr>
+          <td class="col--origin">${file}</td>
+          <td class="col--new">${newNames[index]}</td>
+        </tr>
+      `).appendTo($('.rename-confirm-table>tbody'));
+    });
+    if (await confirm !== 'yes') return;
+    try {
+      await request.post('', {
+        operation: 'rename_files',
+        files: selectedFiles,
+        newNames,
+        type,
+      });
+      Notification.success(i18n('Selected files have been renamed.'));
+      await pjax.request({ push: false });
     } catch (error) {
       Notification.error(error.message);
     }
@@ -85,7 +180,7 @@ const page = new NamedPage('problem_files', () => {
         type,
       });
       Notification.success(i18n('File have been deleted.'));
-      await pjax.request({ url: `./files?d=${type}`, push: false });
+      await pjax.request({ push: false });
     } catch (error) {
       Notification.error(error.message);
     }
@@ -154,6 +249,8 @@ const page = new NamedPage('problem_files', () => {
     $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
     $(document).on('click', '[name="testdata__rename"]', (ev) => handleClickRename(ev, 'testdata'));
     $(document).on('click', '[name="additional_file__rename"]', (ev) => handleClickRename(ev, 'additional_file'));
+    $(document).on('click', '[name="rename_selected_testdata"]', (ev) => handleClickRenameSelected('testdata'));
+    $(document).on('click', '[name="rename_selected_file"]', (ev) => handleClickRenameSelected('additional_file'));
     $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev, 'testdata'));
     $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev, 'additional_file'));
     $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));

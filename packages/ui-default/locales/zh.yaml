@@ -71,6 +71,8 @@ Add File: 添加文件
 Add module: 添加模块
 Add new data: 添加新数据
 Add new subtask: 添加新子任务
+Add Prefix: 添加前缀
+Add Suffix: 添加后缀
 Add testcase: 添加测试点
 Add User: 添加用户
 Add: 添加
@@ -91,6 +93,7 @@ An example of dataset: 测试数据集的一个例子
 Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
 Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
+Are you sure to make the following changes to the file name?: 确认对文件名作以下更改？
 Are you sure you want to delete this subtask?: 确认删除此子任务？
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
@@ -113,6 +116,8 @@ Awards: 奖项
 Balloon Status: 气球状态
 Basic Info: 基础信息
 Basic: 基础
+Batch Add Prefix and Suffix: 批量添加前缀和后缀
+Batch Replacement: 批量替换
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -555,6 +560,7 @@ Never expire: 从不过期
 New dataset: 新测试数据
 New Email: 新电子邮件
 New file: 新文件
+New Filenames: 新文件名
 New Password: 新密码
 New Training Plan: 新训练计划
 New: 创建
@@ -602,6 +608,8 @@ Operating System: 操作系统
 Ops: 运维
 Or, with automatically filled invitation code: 或者，这是可以自动填写邀请码的
 Ordered List: 有序列表
+Original Content: 原始内容
+Original Filenames: 原始文件名
 Original Score: 原始分数
 OS Info: 系统信息
 Output: 输出
@@ -733,7 +741,9 @@ Remove Selected User: 将所选用户移出
 Remove Selected: 移除选中
 Remove this data: 移除这组数据
 Remove: 移除
+Rename Selected: 重命名选中
 Repeat Password: 重复密码
+Replace with: 替换为
 Reply discussions: 回复讨论
 Reply problem solutions: 回复题解
 reply: 回复
