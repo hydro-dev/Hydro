@@ -28,9 +28,12 @@ function History({ payload }) {
     return history;
   }, { enabled: !!load });
   return (
-    <Popover usePortal interactionKind="hover" position="bottom" onOpening={() => setLoad(true)}>
-      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
-      <ol className="menu">
+    <Popover
+      usePortal
+      interactionKind="hover"
+      position="bottom"
+      onOpening={() => setLoad(true)}
+      content={<ol className="menu">
         {(isLoading || isError) && (
           <li className="menu__item">
             <a className="menu__link">
@@ -47,7 +50,9 @@ function History({ payload }) {
             </a>
           </li>
         ))}
-      </ol>
+      </ol>}
+    >
+      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
     </Popover>
   );
 }
