@@ -17,10 +17,10 @@
         "reggol": "^1.6.3",
         "search-query-parser": "^1.6.0",
         "source-map-support": "^0.5.21",
-        "systeminformation": "^5.21.15"
+        "systeminformation": "^5.21.17"
     },
     "devDependencies": {
-        "@types/fs-extra": "^11.0.3",
-        "@types/source-map-support": "^0.5.9"
+        "@types/fs-extra": "^11.0.4",
+        "@types/source-map-support": "^0.5.10"
     }
 }
