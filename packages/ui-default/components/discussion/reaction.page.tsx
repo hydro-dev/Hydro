@@ -32,7 +32,7 @@ function getRow(count) {
 }
 
 function Reaction({ payload, ele }) {
-  const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤣').split(' ');
+  const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤡').split(' ');
   const elesPerRow = getRow(Math.sqrt(emojiList.length));
   const [focus, updateFocus] = React.useState(false);
   const [finish, updateFinish] = React.useState(false);
