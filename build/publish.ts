@@ -2,8 +2,8 @@
 /* eslint-disable import/no-dynamic-require */
 import { writeFileSync } from 'fs';
 import path from 'path';
-import latest from 'latest-version';
 import ora from 'ora';
+import packageJson from 'package-json';
 import { gt } from 'semver';
 import { getWorkspaces, spawnAsync } from './utils';
 
@@ -11,7 +11,7 @@ const {
     CI, GITHUB_EVENT_NAME, GITHUB_REF,
 } = process.env;
 
-const tag = GITHUB_REF === 'refs/heads/master' ? 'latest' : GITHUB_REF === 'refs/heads/develop' ? 'dev' : null;
+const tag = GITHUB_REF === 'refs/heads/master' ? 'latest' : GITHUB_REF === 'refs/heads/develop' ? 'dev' : undefined;
 
 if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
     console.log('publish skipped.');
@@ -35,8 +35,8 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
             meta = require(`../${name}/package.json`);
             if (!meta.private && /^[0-9.]+$/.test(meta.version)) {
                 try {
-                    const version = await latest(meta.name, { version: tag });
-                    if (gt(meta.version, version)) bumpMap[name] = meta.version;
+                    const { version } = await packageJson(meta.name, { version: tag });
+                    if (typeof version === 'string' && gt(meta.version, version)) bumpMap[name] = meta.version;
                 } catch (e) {
                     if (e.name === 'VersionNotFoundError') bumpMap[name] = meta.version;
                     else throw e;

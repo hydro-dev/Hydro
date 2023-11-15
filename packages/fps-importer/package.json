@@ -12,6 +12,6 @@
         "xml2js": "^0.6.2"
     },
     "devDependencies": {
-        "@types/xml2js": "^0.4.13"
+        "@types/xml2js": "^0.4.14"
     }
 }
