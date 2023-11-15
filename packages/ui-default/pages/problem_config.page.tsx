@@ -43,7 +43,7 @@ const page = new NamedPage('problem_config', () => {
   async function handleClickRename(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
     const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
     // eslint-disable-next-line no-alert
-    const newName = prompt('Enter a new name for the file: ');
+    const newName = prompt(i18n('Enter a new name for the file: '));
     if (!newName) return;
     try {
       await request.post('./files', {

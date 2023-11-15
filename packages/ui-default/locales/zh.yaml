@@ -358,6 +358,7 @@ End Time: 结束时间
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
+'Enter a new name for the file: ': 请输入新的文件名：
 error: 错误
 Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
 Evaluated difficulty: 估计的难度
