@@ -313,7 +313,7 @@ export async function run({
     for (const tdoc of tdocs) {
         const [permissions, problems, notices] = await Promise.all([
             query(`SELECT * FROM \`contests_permissions\` WHERE \`contest_id\` = ${tdoc.id}`),
-            query(`SELECT * FROM \`contests_problems\` WHERE \`contest_id\` = ${tdoc.id} ORDER BY \`problem_rank\` ASC`),
+            query(`SELECT * FROM \`contests_problems\` WHERE \`contest_id\` = ${tdoc.id} ORDER BY \`problem_id\` ASC`),
             // query(`SELECT * FROM \`contests_asks\` WHERE \`contest_id\` = ${tdoc.id}`),
             query(`SELECT * FROM \`contests_notice\` WHERE \`contest_id\` = ${tdoc.id}`),
         ]);
@@ -323,7 +323,7 @@ export async function run({
         }
         const pids = problems.map((p) => pidMap[p.problem_id]);
         const maintainer = permissions.map((p) => uidMap[p.username]).slice(1);
-        const info = JSON.parse(tdoc.extra_config) || {};
+        const info = JSON.parse(tdoc.extra_config || '{}');
         const startAt = moment(tdoc.start_time);
         const endAt = startAt.clone().add(tdoc.last_min, 'minutes');
         const tid = await ContestModel.add(
