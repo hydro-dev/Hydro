@@ -18,11 +18,12 @@ import task from '../model/task';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
-    ConnectionHandler, Handler, post, subscribe, Types,
+    ConnectionHandler, Handler, post, subscribe, Types, param
 } from '../service/server';
 import { sleep } from '../utils';
 
 const logger = new Logger('judge');
+var judgers = [];
 
 function parseCaseResult(body: TestCase): Required<TestCase> {
     return {
@@ -183,6 +184,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
+        judgers.push(this);
         // Ensure language sent
         await sleep(100);
         this.newTask();
@@ -241,7 +243,20 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 }
 
+class TestDataSyncHandler extends Handler {
+    @param('pid', Types.String)
+    async get(domainId: string, pid: string) {
+        const files = (await problem.get(domainId, pid)).data;
+        for (const judger of judgers) {
+            if (judger.closed) continue;
+            judger.send({ 'sync': { 'source': `${domainId}/${pid}`, 'files': files } });
+        }
+        return this.back();
+    }
+}
+
 export async function apply(ctx) {
+    ctx.Route('judge_testdata_sync', '/p/:pid/syncdata', TestDataSyncHandler, builtin.PRIV.PRIV_ALL);
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);

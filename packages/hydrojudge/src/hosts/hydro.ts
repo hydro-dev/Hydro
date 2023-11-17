@@ -61,7 +61,7 @@ export default class Hydro {
         }
     }
 
-    async _cacheOpen(source: string, files: any[], next?) {
+    async _cacheOpen(source: string, files: any[], next?, dltimeLimit: number=60000) {
         const [domainId, pid] = source.split('/');
         const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
@@ -97,7 +97,7 @@ export default class Hydro {
                 const w = fs.createWriteStream(path.join(filePath, name));
                 that.get(res.body.links[name]).pipe(w);
                 await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
+                    const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, ${dltimeLimit / 1000}s)`)), dltimeLimit);
                     w.on('error', (e) => {
                         clearTimeout(timeout);
                         reject(new Error(`DownloadFail(${name}): ${e.message}`));
@@ -171,6 +171,10 @@ export default class Hydro {
         };
     }
 
+    async syncData(content) {
+        await this._cacheOpen(content.source, content.files, undefined, 60 * 60 * 1000);
+    }
+
     async consume(queue: PQueue) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
@@ -185,6 +189,7 @@ export default class Hydro {
         this.ws.on('message', (data) => {
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
+            if (request.sync) this.syncData(request.sync);
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
         });
         this.ws.on('close', (data, reason) => {
