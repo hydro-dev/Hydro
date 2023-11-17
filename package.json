@@ -67,7 +67,7 @@
         "stylus": "^0.61.0",
         "stylus-loader": "7.1.2",
         "supertest": "^6.3.3",
-        "ts-loader": "^9.5.0",
+        "ts-loader": "^9.5.1",
         "typescript": "^5.2.2",
         "webpack": "^5.89.0",
         "webpack-bundle-analyzer": "^4.10.0",

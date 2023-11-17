@@ -335,7 +335,7 @@ ${nixConfBase}`);
                     if (!docker) return;
                     const containers = exec('docker ps -a --format json').output?.split('\n')
                         .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
-                    const uoj = containers?.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running');
+                    const uoj = containers?.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
@@ -527,11 +527,12 @@ ${nixConfBase}`);
             () => {
                 const containers = exec('docker ps -a --format json').output?.split('\n')
                     .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
-                const uoj = containers!.find((i) => i.Image.toLowerCase === 'universaloj/uoj-system' && i.State === 'running')!;
-                const info = JSON.parse(exec(`docker inspect ${uoj.Id}`).output!);
+                const uoj = containers!.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running')!;
+                const id = uoj.Id || uoj.ID;
+                const info = JSON.parse(exec(`docker inspect ${id}`).output!);
                 const dir = info[0].GraphDriver.Data.MergedDir;
                 exec(`sed s/127.0.0.1/0.0.0.0/g -i ${dir}/etc/mysql/mysql.conf.d/mysqld.cnf`);
-                exec(`docker exec -i ${uoj.Id} /etc/init.d/mysql restart`);
+                exec(`docker exec -i ${id} /etc/init.d/mysql restart`);
                 const passwd = readFileSync(`${dir}/etc/mysql/debian.cnf`, 'utf-8')
                     .split('\n').find((i) => i.startsWith('password'))?.split('=')[1].trim();
                 const script = [
@@ -540,7 +541,7 @@ ${nixConfBase}`);
                     'FLUSH PRIVILEGES;',
                     '',
                 ].join('\n');
-                exec(`docker exec -i ${uoj.Id} mysql -u debian-sys-maint -p${passwd} -e "${script}"`);
+                exec(`docker exec -i ${id} mysql -u debian-sys-maint -p${passwd} -e "${script}"`);
                 const config = {
                     host: info[0].NetworkSettings.IPAddress,
                     port: 3306,
