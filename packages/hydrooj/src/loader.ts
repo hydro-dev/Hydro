@@ -179,9 +179,6 @@ export async function load() {
                 console.warn(' 这意味着除非你获得了原作者的其他授权，你需要同样以 AGPL3 协议开源所有的修改。');
                 console.warn('\x1b[39m');
                 console.log('');
-                console.log('Hydro will start in 5s.');
-                console.log('Hydro 将在五秒后继续启动。');
-                await sleep(5000);
             }
         }
     } catch (e) { }
