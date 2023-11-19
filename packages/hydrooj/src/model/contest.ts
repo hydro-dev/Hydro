@@ -652,8 +652,12 @@ const homework = buildContestRule({
     },
 });
 
+const zhengrui = buildContestRule({
+    TEXT: 'ZhengRui',
+}, oi);
+
 export const RULES: ContestRules = {
-    acm, oi, homework, ioi, ledo, strictioi,
+    acm, oi, homework, ioi, ledo, strictioi, zhengrui,
 };
 
 const collBalloon = db.collection('contest.balloon');
