@@ -14,7 +14,7 @@
     "cli": false
   },
   "devDependencies": {
-    "@blueprintjs/core": "^5.6.0",
+    "@blueprintjs/core": "5.6.0",
     "@fontsource/dm-mono": "^5.0.17",
     "@fontsource/fira-code": "^5.0.15",
     "@fontsource/inconsolata": "^5.0.15",
