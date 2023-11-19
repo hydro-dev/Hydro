@@ -71,6 +71,9 @@ Add File: 添加文件
 Add module: 添加模块
 Add new data: 添加新数据
 Add new subtask: 添加新子任务
+Add prefix: 添加前缀
+Add prefix/suffix: 添加前缀/后缀
+Add suffix: 添加后缀
 Add testcase: 添加测试点
 Add User: 添加用户
 Add: 添加
@@ -91,6 +94,7 @@ An example of dataset: 测试数据集的一个例子
 Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
 Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
+Are you sure to rename the following file?: 确认对重命名以下文件？
 Are you sure you want to delete this subtask?: 确认删除此子任务？
 Argument {0} is invalid.: 非法的参数 {0} 。
 Arguments: 参数
@@ -113,6 +117,7 @@ Awards: 奖项
 Balloon Status: 气球状态
 Basic Info: 基础信息
 Basic: 基础
+Batch replacement: 批量替换
 Be Copied: 被复制
 Begin at: 开始于
 Begin Date: 开始日期
@@ -175,6 +180,7 @@ Confirm deleting this comment? Its replies will be deleted as well.: 确认删�
 Confirm deleting this reply?: 确认删除这个回复吗？
 Confirm rejudge this problem?: 确定要重测这道题吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
+Confirm to delete the file?: 确认删除此文件吗？
 Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirm to delete the selected problems?: 确认要删除所选题目吗？
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
@@ -352,6 +358,7 @@ End Time: 结束时间
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
+'Enter a new name for the file: ': 请输入新的文件名：
 error: 错误
 Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
 Evaluated difficulty: 估计的难度
@@ -370,6 +377,8 @@ Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
+File have been deleted.: 文件已被删除。
+File have been renamed.: 文件已被重命名。
 File saved.: 文件已成功保存。
 file too large: 文件过大
 File uploaded successfully.: 上传文件成功
@@ -461,6 +470,7 @@ Instead of copying the test data directly, the test data of the copied problems 
 Introduce must not exceed 500 characters and it will be shown in the list view.: 简介不能超过 500 个字符，将显示在列表页面中。
 Introduce: 简介
 Invalid password for user {0}.: 用户 {0} 的密码错误。
+Invalid RegExp: 无效的正则表达式。
 Invalid: 无效
 Invitation Code: 邀请码
 IO: 输入输出
@@ -555,10 +565,12 @@ Never expire: 从不过期
 New dataset: 新测试数据
 New Email: 新电子邮件
 New file: 新文件
+New filename(s): 新文件名
 New Password: 新密码
 New Training Plan: 新训练计划
 New: 创建
 No {0} at current.: 当前没有{0}。
+No changes to make.: 没有任何修改。
 No comments so far...: 目前还没有评论...
 No discussion yet...: 目前没有讨论…
 No group available: 没有可用小组
@@ -602,6 +614,8 @@ Operating System: 操作系统
 Ops: 运维
 Or, with automatically filled invitation code: 或者，这是可以自动填写邀请码的
 Ordered List: 有序列表
+Original content: 原始内容
+Original filename(s): 原始文件名
 Original Score: 原始分数
 OS Info: 系统信息
 Output: 输出
@@ -720,6 +734,7 @@ Records: 评测记录
 Reference link copied to clipboard!: 引用链接已复制到剪贴板。
 Refresh Records: 刷新评测记录
 Refresh: 刷新
+RegExp supported, quote with "/": 支持正则表达式，使用 "/" 包裹。
 Registered at: 注册于
 Rejudge all submissions: 重测整题
 Rejudge problems: 重测题目
@@ -733,7 +748,9 @@ Remove Selected User: 将所选用户移出
 Remove Selected: 移除选中
 Remove this data: 移除这组数据
 Remove: 移除
+Rename Selected: 重命名选中
 Repeat Password: 重复密码
+Replace with: 替换为
 Reply discussions: 回复讨论
 Reply problem solutions: 回复题解
 reply: 回复
@@ -779,6 +796,7 @@ Select Category: 选择标签
 Select User: 选择用户
 Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
+Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
