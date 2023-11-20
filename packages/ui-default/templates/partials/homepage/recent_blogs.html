@@ -1,0 +1,40 @@
+{% if payload.length %}
+  <div class="section nojs--hide">
+    <div class="section__header">
+      <h1 class="section__title">{{ _('Recent Blogs') }}</h1>
+    </div>
+    <div class="section__body no-padding">
+      <div>
+        <table class="data-table">
+          <colgroup>
+            <col class="col--sendat">
+            <col class="col--author">
+            <col class="col--views">
+            <col class="col--title">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--sendat">{{ _('Send at') }}</th>
+              <th class="col--author">{{ _('Author') }}</th>
+              <th class="col--views">{{ _('View') }}</th>
+              <th class="col--title">{{ _('Title') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%- for bdoc in payload -%}
+              {% set udoc = udict[bdoc.owner] %}
+              <tr>
+                <td class="col--sendat">{{ datetimeSpan(bdoc._id)|safe }}</td>
+                <td class="col--author">{{ user.render_inline(udoc, levelbadge=false) }}</td>
+                <td class="col--views">{{ bdoc.views }}</td>
+                <td class="col--title">
+                  <a href="{{ url('blog_detail', uid=bdoc.owner, did=bdoc._id) }}">{{ bdoc.title }}</a>
+                </td>
+              </tr>
+            {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endif %}

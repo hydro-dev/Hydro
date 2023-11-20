@@ -106,6 +106,7 @@ Attendee Manage: 参赛者管理
 Authenticator: 认证器
 Authenticators: 认证器
 author: 作者
+Author: 作者
 Auto configure: 自动配置
 Auto detect: 自动检测
 Auto hide problems during the contest: 在比赛过程中自动隐藏题目
@@ -713,6 +714,7 @@ Ready (☆▽☆): 马上开始 (☆▽☆)
 Ready: 即将开始
 Recent {0} Records: 最近 {0} 条记录
 Recent Activities: 最近活动
+Recent Blogs: 最新博客
 Recent Problems: 最新题目
 Recent Solutions: 最近编写的题解
 Recent Submissions: 最近递交
@@ -793,6 +795,7 @@ Send Message: 发送站内信息
 Send Password Reset Email: 发送密码重置邮件
 Send Verification Email: 发送验证邮件
 Send: 发送
+Send at: 发布于
 Seperated with ',': 用 ',' 分隔
 Service Status: 服务状态
 Set Color: 设置颜色

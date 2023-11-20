@@ -3,6 +3,7 @@ import { generateRegistrationOptions, verifyRegistrationResponse } from '@simple
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectId } from 'mongodb';
+import { BlogModel } from '@hydrooj/blog';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -139,6 +140,14 @@ export class HomeHandler extends Handler {
             ? await ProblemModel.getListStatus(domainId, this.user._id, pdocs.map((pdoc) => pdoc.docId))
             : {};
         return [pdocs, psdict];
+    }
+
+    async getRecentBlogs(domainId: string, limit = 10) {
+        const bdocs = await BlogModel.getMulti().limit(limit).project({
+            title: 1, owner: 1, _id: 1, views: 1,
+        }).toArray();
+        this.collectUser(bdocs.map((bdoc) => bdoc.owner));
+        return bdocs;
     }
 
     getDiscussionNodes(domainId: string) {
