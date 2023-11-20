@@ -27,7 +27,9 @@
   reply_edit_op = 'edit_tail_reply',
   reply_edit_text = 'Update',
   comment_delete_op = 'delete_reply',
-  reply_delete_op = 'delete_tail_reply'
+  reply_delete_op = 'delete_tail_reply',
+  comment_hide_op = 'hide',
+  comment_set_nice_op = 'set_nice'
 ) %}
 <ul class="dczcomments__list view--solution">
 {% if handler.user.hasPerm(comment_post_perm) %}
@@ -80,12 +82,25 @@
 {% endif %}
 {%- for doc in docs -%}
   {% set udoc = udict[doc.owner] %}
-  <li class="dczcomments__item">
+  {% if (doc.reviewed) and (doc.passed === false) %}
+    {% set docType = 1 %}
+  {% elif doc.reviewed %}
+    {% set docType = 2 %}
+  {% else %}
+    {% set docType = 3 %}
+  {% endif %}
+  {% if (docType === 1) and (doc.owner != handler.user._id) and (handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) === false) %}
+    <li class="dczcomments__item" style="display:none">
+  {% else %}
+    <li class="dczcomments__item">
+  {% endif %}
   <div class="media">
     <div class="media__left top">
       <div class="vote vote--discussion">
       {% if handler.user.hasPerm(perm.PERM_VOTE_PROBLEM_SOLUTION) %}
-        <div class="vote-number rotator--enabled">{{ doc.vote }}</div>
+        <div class="vote-number rotator--enabled">
+          {{ doc.vote }}
+        </div>
         <form method="post" class="vote-op clearfix">
           <input type="hidden" name="psid" value="{{ doc._id }}">
           <button type="submit" name="operation" value="upvote" class="vote-button upvote{% if pssdict[doc._id].vote == 1 %} active{% endif %}" data-tooltip="{{ _('Upvote') }}" data-tooltip-pos="bottom center" aria-label="{{ _('Upvote') }}"><span class="icon icon-vote--up"></span></button>
@@ -99,7 +114,13 @@
     <div class="media__body top">
       <div class="clearfix">
         <div class="supplementary dczcomments__supplementary">
+          {% if docType === 1 %}
+            <span>{{_('(Hidden)')}}</span>
+          {% endif %}
           {{ user.render_inline(udoc) }} @ {{ datetimeSpan(doc._id)|safe }}
+          {% if docType === 2 %}
+            <span class="user-profile-badge v-center nice-solution" data-tooltip="{{ _('The solution has been set as nice.') }}">{{_('Nice solution')}}</span>
+          {% endif %}
         </div>
         <div class="dczcomments__operations nojs--hide">
         <a href="javascript:;" data-tooltip="{{ _('Copy Link') }}" data-copylink="{{ url('problem_solution_detail', pid=pdoc.pid|default(pdoc.docId), sid=doc._id) }}">
@@ -119,6 +140,14 @@
           <a href="javascript:;" data-tooltip="{{ _('Delete') }}" data-op="delete" data-type="comment"
             data-form="{{ {operation: comment_delete_op, psid: doc._id}|json }}"
           ><span class="icon icon-delete"></span></a>
+        {% endif %}
+        {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) and docType === 3 %}
+          <a href="javascript:;" data-tooltip="{{ _('Hide solution') }}" data-op="hide" data-type="comment"
+            data-form="{{ {operation: comment_hide_op, psid: doc._id}|json }}"
+          ><span class="icon icon-close"></span></a>
+          <a href="javascript:;" data-tooltip="{{ _('Set nice solution') }}" data-op="set_nice" data-type="comment"
+            data-form="{{ {operation: comment_set_nice_op, psid: doc._id}|json }}"
+          ><span class="icon icon-check"></span></a>
         {% endif %}
         </div>
       </div>

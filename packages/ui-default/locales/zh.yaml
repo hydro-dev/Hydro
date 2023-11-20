@@ -7,7 +7,7 @@ __langname: 简体中文
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
 '{0} problems': '{0} 道题'
 '{0} sections': '{0} 小节'
-'{0} solutions': '{0} 条题解'
+'{0} solutions ({1} invisible)': '{0} 条题解 ({1} 条被隐藏)'
 '{0} views': '{0} 次查看'
 '{0}: Groups': '{0}: 小组'
 '{0}: Permissions': '{0}: 权限'
@@ -47,6 +47,7 @@ __langname: 简体中文
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
 (leave blank if none): （若不需要则留空）
+(Hidden): (被隐藏)
 (None): (无)
 (Not changed): 未更改
 6-Digit Code: 6位代码
@@ -173,8 +174,10 @@ Config: 配置
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this reply?: 确认删除这个回复吗？
+Confirm hide this solution?: 确定要隐藏这个题解吗？
 Confirm rejudge this problem?: 确定要重测这道题吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
+Confirm set this solution as nice?: 确定要将这篇题解设置为精品吗?
 Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirm to delete the selected problems?: 确认要删除所选题目吗？
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
@@ -400,6 +403,7 @@ Help: 帮助
 Hidden: 隐藏
 Hide all tags: 隐藏所有标签
 Hide categorical tags: 隐藏分类标签
+Hide solution: 隐藏题解
 Hide tags: 隐藏标签
 Highlight discussions: 高亮讨论
 Highlight: 高亮
@@ -558,6 +562,7 @@ New file: 新文件
 New Password: 新密码
 New Training Plan: 新训练计划
 New: 创建
+Nice solution: 精品题解
 No {0} at current.: 当前没有{0}。
 No comments so far...: 目前还没有评论...
 No discussion yet...: 目前没有讨论…
@@ -791,6 +796,7 @@ Send: 发送
 Seperated with ',': 用 ',' 分隔
 Service Status: 服务状态
 Set Color: 设置颜色
+Set nice solution: 设置为精品题解
 Set Privilege: 设置权限
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
@@ -887,6 +893,7 @@ This message will be presented to those whose submissions are accepted.: 这条�
 This page is only for pasting code from other sources.: 此页面仅用于粘贴代码。
 This page needs JavaScript to work.: 这个页面需要 Javascript。
 This section cannot be challenged at present, so please complete the following sections first: 该章节目前不可挑战，请先完成以下章节
+The solution has been set as nice.: 这篇题解被管理员设置为精品。
 This type of files are not allowed to be uploaded.: 不允许上传这种文件。
 This user was banned.: 此用户已被封禁。
 Time (Seconds): 耗时 (秒)

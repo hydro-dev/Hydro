@@ -182,6 +182,30 @@ function onCommentClickDeleteReply(ev) {
   onCommentClickDelete('reply', ev);
 }
 
+async function onSolutionClickHide(ev) {
+  const action = await new ConfirmDialog({
+    $body: tpl.typoMsg(i18n('Confirm hide this solution?')),
+  }).open();
+  if (action !== 'yes') return;
+  const $evTarget = $(ev.currentTarget);
+  const form = JSON.parse($evTarget.attr('data-form'));
+
+  await request.post('', form);
+  window.location.reload();
+}
+
+async function onSolutionClickSetNice(ev) {
+  const action = await new ConfirmDialog({
+    $body: tpl.typoMsg(i18n('Confirm set this solution as nice?')),
+  }).open();
+  if (action !== 'yes') return;
+  const $evTarget = $(ev.currentTarget);
+  const form = JSON.parse($evTarget.attr('data-form'));
+
+  await request.post('', form);
+  window.location.reload();
+}
+
 const commentsPage = new AutoloadPage('commentsPage', () => {
   $(document).on('click', '[name="dczcomments__dummy-box"]', onClickDummyBox);
   $(document).on('click', '[data-op="reply"][data-type="comment"]', onCommentClickReplyComment);
@@ -190,6 +214,8 @@ const commentsPage = new AutoloadPage('commentsPage', () => {
   $(document).on('click', '[data-op="edit"][data-type="reply"]', onCommentClickEditReply);
   $(document).on('click', '[data-op="delete"][data-type="comment"]', onCommentClickDeleteComment);
   $(document).on('click', '[data-op="delete"][data-type="reply"]', onCommentClickDeleteReply);
+  $(document).on('click', '[data-op="hide"][data-type="comment"]', onSolutionClickHide);
+  $(document).on('click', '[data-op="set_nice"][data-type="comment"]', onSolutionClickSetNice);
 });
 
 export default commentsPage;

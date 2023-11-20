@@ -7,7 +7,9 @@ class SolutionModel {
     static add(domainId: string, pid: number, owner: number, content: string) {
         return document.add(
             domainId, content, owner, document.TYPE_PROBLEM_SOLUTION,
-            null, document.TYPE_PROBLEM, pid, { reply: [], vote: 0 },
+            null, document.TYPE_PROBLEM, pid, {
+                reply: [], vote: 0, reviewed: false, passed: false,
+            },
         );
     }
 
@@ -25,7 +27,7 @@ class SolutionModel {
     }
 
     static edit(domainId: string, psid: ObjectId, content: string) {
-        return document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { content });
+        return document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { content, passed: false, reviewed: false });
     }
 
     static async del(domainId: string, psid: ObjectId) {
@@ -85,6 +87,13 @@ class SolutionModel {
         ).project<any>({ docId: 1, vote: 1 }).toArray();
         for (const i of res) result[i.docId] = i;
         return result;
+    }
+
+    static async setReviewSolution(domainId: string, psid: ObjectId, passed: boolean) {
+        const psdoc = await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
+        if (!psdoc) throw new SolutionNotFoundError(domainId, psid);
+        await document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { reviewed: true });
+        await document.set(domainId, document.TYPE_PROBLEM_SOLUTION, psid, { passed });
     }
 }
 

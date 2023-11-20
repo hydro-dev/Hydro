@@ -22,6 +22,7 @@ import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import message from '../model/message';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
@@ -849,10 +850,25 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
             page,
             system.get('pagination.solution'),
         );
+        const invisibleCount = psdocs.filter((psdoc) => (psdoc.reviewed && !psdoc.passed)).length;
+        psdocs.forEach((psdoc) => {
+            psdoc.passed ||= false;
+            psdoc.reviewed ||= false;
+            if (psdoc.passed) psdoc.solType = 1;
+            else if (!psdoc.reviewed) psdoc.solType = 2;
+            else psdoc.solType = 3;
+        });
         if (sid) {
             psdocs = [await solution.get(domainId, sid)];
             if (!psdocs[0]) throw new SolutionNotFoundError(domainId, sid);
         }
+        psdocs.sort((a, b) => {
+            if (a.solType !== b.solType) return a.solType - b.solType;
+            return b.vote - a.vote;
+        });
+        psdocs.forEach((psdoc) => {
+            psdoc.solType = undefined;
+        });
         const uids = [this.pdoc.owner];
         const docids = [];
         for (const psdoc of psdocs) {
@@ -865,7 +881,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         const udict = await user.getList(domainId, uids);
         const pssdict = await solution.getListStatus(domainId, docids, this.user._id);
         this.response.body = {
-            psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc, sid,
+            psdocs, page, pcount, pscount, udict, pssdict, pdoc: this.pdoc, sid, invisibleCount,
         };
     }
 
@@ -873,6 +889,8 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postSubmit(domainId: string, content: string) {
         this.checkPerm(PERM.PERM_CREATE_PROBLEM_SOLUTION);
         const psid = await solution.add(domainId, this.pdoc.docId, this.user._id, content);
+        const msg = `我在题目 ${this.pdoc.pid || ''} ${this.pdoc.title}(ID=${this.pdoc.docId}) 下提交了题解，请管理员审核。`;
+        message.send(this.user._id, 2, msg, message.FLAG_UNREAD);
         this.back({ psid });
     }
 
@@ -889,8 +907,11 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     @param('psid', Types.ObjectId)
     async postDeleteSolution(domainId: string, psid: ObjectId) {
         const psdoc = await solution.get(domainId, psid);
-        if (!this.user.own(psdoc)) this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
-        else this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_SELF);
+        if (!this.user.own(psdoc)) {
+            this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION);
+            const msg = `我删除了你在 ${this.pdoc.pid || ''} ${this.pdoc.title} 下的题解，可能是由于你的题解有内容错误、格式错误等问题，请检查你的题解。`;
+            message.send(this.user._id, psdoc.owner, msg, message.FLAG_UNREAD);
+        } else this.checkPerm(PERM.PERM_DELETE_PROBLEM_SOLUTION_SELF);
         await solution.del(domainId, psdoc.docId);
         this.back();
     }
@@ -941,6 +962,20 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
     async postDownvote(domainId: string, psid: ObjectId) {
         const [psdoc, pssdoc] = await solution.vote(domainId, psid, this.user._id, -1);
         this.back({ vote: psdoc.vote, user_vote: pssdoc.vote });
+    }
+
+    @param('psid', Types.ObjectId)
+    async postHide(domainId: string, psid: ObjectId) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await solution.setReviewSolution(domainId, psid, false);
+        this.back();
+    }
+
+    @param('psid', Types.ObjectId)
+    async postSetNice(domainId: string, psid: ObjectId) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        await solution.setReviewSolution(domainId, psid, true);
+        this.back();
     }
 }
 
