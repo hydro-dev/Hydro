@@ -194,6 +194,25 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     });
   }
 
+  async function handleClickRename(ev) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    // eslint-disable-next-line no-alert
+    const newName = prompt(i18n('Enter a new name for the file: '));
+    if (!newName) return;
+    try {
+      await request.post('./files', {
+        operation: 'rename_files',
+        files: file,
+        newNames: [newName],
+        type: 'additional_file',
+      });
+      Notification.success(i18n('File have been renamed.'));
+      await pjax.request({ url: './files?d=additional_file&sidebar=true', push: false });
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
   async function handleClickRemove(ev) {
     const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
     const action = await new ConfirmDialog({
@@ -284,6 +303,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     }
   });
   $(document).on('click', '[name="additional_file__upload"]', () => handleClickUpload());
+  $(document).on('click', '[name="additional_file__rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="additional_file__download"]', () => handleClickDownloadAll());
   $(document).on('click', '[name="additional_file__section__expand"]', (ev) => handleSection(ev, 'additional_file', 'expand'));

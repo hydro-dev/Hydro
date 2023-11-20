@@ -111,7 +111,7 @@ export async function previewFile(ev?, type = '') {
   const filename = ev
     ? ev.currentTarget.closest('[data-filename]').getAttribute('data-filename')
     // eslint-disable-next-line no-alert
-    : prompt('Filename');
+    : prompt(i18n('Filename'));
   if (!filename) return null;
   const filesize = ev
     ? +ev.currentTarget.closest('[data-size]').getAttribute('data-size')

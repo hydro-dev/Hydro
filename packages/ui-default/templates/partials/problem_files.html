@@ -13,7 +13,7 @@
         {% if not sidebar %}<col class="col--checkbox">{% endif %}
         <col class="col--name">
         <col class="col--size">
-        {% if sidebar %}<col class="col--operation">{% endif %}
+        {% if can_edit %}<col class="col--operation">{% endif %}
       </colgroup>
       <thead>
         <tr>
@@ -26,7 +26,7 @@
           {% endif %}
           <th class="col--name">{{ _('Filename') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
-          {% if sidebar %}<th class="col--operation"><span class="icon icon-wrench"></span></th>{% endif %}
+          {% if can_edit %}<th class="col--operation"><span class="icon icon-wrench"></span></th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -47,8 +47,11 @@
             {% endif %}
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
-          {% if sidebar %}
-            <td class="col--operation"><a href="javascript:;" name="{{ filetype }}__delete"><span class="icon icon-delete"></span></a></td>
+          {% if can_edit %}
+          <td class="col--operation">
+            <a href="javascript:;" name="{{ filetype }}__rename"><span class="icon icon-edit"></span></a>
+            <a href="javascript:;" name="{{ filetype }}__delete"><span class="icon icon-delete"></span></a>
+          </td>
           {% endif %}
         </tr>
         {%- endfor -%}
