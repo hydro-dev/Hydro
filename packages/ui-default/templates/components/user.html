@@ -5,11 +5,17 @@
     <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
   {% endif %}
   <a class="user-profile-name" href="{{ url('user_detail', uid=udoc._id) }}">
-    {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
-      {{ udoc.displayName }} ({{ udoc.uname }})
+    {% if udoc.hasPriv(PRIV.PRIV_MOD_BADGE) %}
+      <span class="namecolor--su">
     {% else %}
-      {{ udoc.uname }}
+      <span class="namecolor--lv{{udoc.level}}">
     {% endif %}
+      {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
+        {{ udoc.displayName }} ({{ udoc.uname }})
+      {% else %}
+        {{ udoc.uname }}
+      {% endif %}
+    </span>
   </a>
   {% if badge %}
     {% if udoc.badge %}
@@ -22,9 +28,9 @@
     {% endif %}
     {% if modbadge %}
       {% if udoc.hasPriv(PRIV.PRIV_MOD_BADGE) %}
-        <span class="user-profile-badge v-center badge--su" data-tooltip="{{ _('SuperUser') }}">SU</span>
+        <span class="user-profile-badge v-center badge--su" data-tooltip="{{ _('SuperUser') }}">管理员</span>
       {% elif udoc.hasPerm(perm.PERM_MOD_BADGE) %}
-        <span class="user-profile-badge v-center badge--mod" data-tooltip="{{ _('Moderator') }}">MOD</span>
+        <span class="user-profile-badge v-center badge--mod" data-tooltip="{{ _('Moderator') }}">教练</span>
       {% endif %}
     {% endif %}
   {% endif %}

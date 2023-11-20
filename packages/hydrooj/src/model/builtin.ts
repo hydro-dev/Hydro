@@ -268,6 +268,7 @@ PRIV.PRIV_DEFAULT = PRIV.PRIV_USER_PROFILE
 
 // people whose rank is less than 1% will get Level 10
 export const LEVELS = [100, 90, 70, 55, 40, 30, 20, 10, 5, 2, 1];
+export const LEVEL_NAMES = ['', '练气境', '筑基境', '元婴境', '化神境', '渡劫境', '地仙境', '天仙境', '准圣境', '圣人境', '天道境'];
 
 export const BUILTIN_ROLES = {
     guest: PERM.PERM_BASIC,
@@ -464,6 +465,7 @@ global.Hydro.model.builtin = {
     PERMS_BY_FAMILY,
     PRIV,
     LEVELS,
+    LEVEL_NAMES,
     BUILTIN_ROLES,
     DEFAULT_NODES,
     CATEGORIES,
