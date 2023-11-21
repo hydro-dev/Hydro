@@ -52,9 +52,9 @@ function initConn(path: string, port: MessagePort, cookie: any) {
     } else {
       broadcastMsg({ type: 'message', payload });
       let acked = false;
-      ack[payload.mdoc.id] = () => { acked = true; };
+      ack[payload.mdoc._id] = () => { acked = true; };
       setTimeout(() => {
-        delete ack[payload.mdoc.id];
+        delete ack[payload.mdoc._id];
         if (acked) return;
         if (payload.mdoc.flag & FLAG_INFO) return;
         if (Notification?.permission !== 'granted') {
