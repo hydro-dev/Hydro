@@ -982,7 +982,7 @@ User ID: 用户 ID
 User Privilege: 用户权限
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户
-user_extra_files: 编译额外文件
+user_extra_files: 用户额外文件
 user_login: 登录
 user_logout: 登出
 user_lostpass: 忘记密码
