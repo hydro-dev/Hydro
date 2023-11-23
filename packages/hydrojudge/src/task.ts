@@ -10,10 +10,10 @@ import checkers from './checkers';
 import compile, { compileWithTestlib } from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
-import { NextFunction, ParsedConfig } from './interface';
+import { Execute, NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
 import { Logger } from './log';
-import { CopyIn, CopyInFile } from './sandbox';
+import { CopyIn, CopyInFile, runQueued } from './sandbox';
 import { compilerText, md5 } from './utils';
 
 interface Session {
@@ -155,5 +155,30 @@ export class JudgeTask {
         const result = await compileWithTestlib(file, type, this.session.getLang, copyIn, withTestlib, this.next);
         this.clean.push(result.clean);
         return result;
+    }
+
+    async runAnalysis(execute: Execute, input: CopyInFile) {
+        const langConfig = this.session.getLang(this.lang);
+        if (!langConfig.analysis) return;
+        try {
+            const r = await runQueued(langConfig.analysis, {
+                copyIn: {
+                    ...execute.copyIn,
+                    input,
+                    [langConfig.code_file || 'foo']: this.code,
+                    compile: { content: langConfig.compile || '' },
+                    execute: { content: langConfig.execute || '' },
+                },
+                env: this.env,
+                time: 5000,
+                memory: 256,
+            });
+            const out = r.stdout.toString();
+            if (out.length) this.next({ compilerText: out.substring(0, 1024) });
+            if (process.env.DEV) console.log(r);
+        } catch (e) {
+            logger.info('Failed to run analysis');
+            logger.error(e);
+        }
     }
 }

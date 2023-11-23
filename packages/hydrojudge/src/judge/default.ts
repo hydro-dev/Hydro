@@ -1,13 +1,10 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { Logger } from '../log';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
-
-const logger = new Logger('judge/default');
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
@@ -58,31 +55,9 @@ function judgeCase(c: NormalizedCase) {
             ctx.rerun--;
             return await runner(ctx, ctxSubtask);
         }
-        if (!ctx.request.rejudged && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-            const langConfig = ctx.session.getLang(ctx.lang);
-            if (langConfig.analysis && !ctx.analysis) {
-                ctx.analysis = true;
-                try {
-                    const r = await runQueued(langConfig.analysis, {
-                        copyIn: {
-                            ...ctx.execute.copyIn,
-                            input: { src: c.input },
-                            [langConfig.code_file || 'foo']: ctx.code,
-                            compile: { content: langConfig.compile || '' },
-                            execute: { content: langConfig.execute || '' },
-                        },
-                        time: 5000,
-                        memory: 256,
-                        env: ctx.env,
-                    });
-                    const out = r.stdout.toString();
-                    if (out.length) ctx.next({ compilerText: out.substring(0, 1024) });
-                    if (process.env.DEV) console.log(r);
-                } catch (e) {
-                    logger.info('Failed to run analysis');
-                    logger.error(e);
-                }
-            }
+        if (!ctx.request.rejudged && !ctx.analysis && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+            ctx.analysis = true;
+            await ctx.runAnalysis(ctx.execute, { src: ctx.input });
         }
         return {
             id: c.id,

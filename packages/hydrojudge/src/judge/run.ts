@@ -1,49 +1,16 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { CompileError } from '../error';
-import { Execute } from '../interface';
 import { Logger } from '../log';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { JudgeTask } from '../task';
-import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
-
-const failure = (status: number, message?: string) => ({
-    status,
-    score: 0,
-    time: 0,
-    memory: 0,
-    message,
-});
+import { parseMemoryMB, parseTimeMS } from '../utils';
 
 const logger = new Logger('judge/run');
 
 export const judge = async (ctx: JudgeTask) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
-    let execute: Execute;
-    try {
-        execute = await ctx.compile(
-            ctx.lang, ctx.code,
-            Object.fromEntries(
-                (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
-            ),
-        );
-    } catch (e) {
-        if (e instanceof CompileError) {
-            ctx.next({
-                status: STATUS.STATUS_COMPILE_ERROR,
-                case: failure(STATUS.STATUS_COMPILE_ERROR, compilerText(e.stdout, e.stderr)),
-            });
-            ctx.end(failure(STATUS.STATUS_COMPILE_ERROR));
-        } else {
-            ctx.next({
-                status: STATUS.STATUS_SYSTEM_ERROR,
-                case: failure(STATUS.STATUS_SYSTEM_ERROR, `${e.message}\n${JSON.stringify(e.params)}`),
-            });
-            ctx.end(failure(STATUS.STATUS_SYSTEM_ERROR));
-        }
-        return;
-    }
+    const execute = await ctx.compile(ctx.lang, ctx.code);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     const res = await runQueued(
@@ -76,6 +43,9 @@ export const judge = async (ctx: JudgeTask) => {
     message.push(res.stdout, res.stderr);
     ctx.next({
         status,
+        time: Math.floor(time * 1000000) / 1000000,
+        memory,
+        score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
         case: {
             subtaskId: 0,
             status,
@@ -86,39 +56,9 @@ export const judge = async (ctx: JudgeTask) => {
         },
     });
     if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-        const langConfig = ctx.session.getLang(ctx.lang);
-        if (langConfig.analysis) {
-            try {
-                const r = await runQueued(langConfig.analysis, {
-                    copyIn: {
-                        ...execute.copyIn,
-                        input: { content: ctx.input },
-                        [langConfig.code_file || 'foo']: ctx.code,
-                        compile: { content: langConfig.compile || '' },
-                        execute: { content: langConfig.execute || '' },
-                    },
-                    env: {
-                        ...ctx.env,
-                        HYDRO_PRETEST: 'true',
-                    },
-                    time: 5000,
-                    memory: 256,
-                });
-                const out = r.stdout.toString();
-                if (out.length) ctx.next({ compilerText: out.substring(0, 1024) });
-                if (process.env.DEV) console.log(r);
-            } catch (e) {
-                logger.info('Failed to run analysis');
-                logger.error(e);
-            }
-        }
+        await ctx.runAnalysis(execute, { content: ctx.input });
     }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({
-        status,
-        score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-        time: Math.floor(time * 1000000) / 1000000,
-        memory,
-    });
+    ctx.end({ status });
 };
