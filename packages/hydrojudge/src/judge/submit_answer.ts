@@ -1,8 +1,6 @@
-import { basename } from 'path';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
-import { compileChecker } from '../compile';
 import { runFlow } from '../flow';
 import { del, runQueued } from '../sandbox';
 import { NormalizedCase } from '../utils';
