@@ -1,3 +1,4 @@
+import { basename } from 'path';
 import { fs } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
@@ -5,12 +6,14 @@ import type {
     FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
+import checkers from './checkers';
+import compile, { compileWithTestlib } from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
 import { NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
 import { Logger } from './log';
-import { CopyInFile } from './sandbox';
+import { CopyIn, CopyInFile } from './sandbox';
 import { compilerText, md5 } from './utils';
 
 interface Session {
@@ -128,5 +131,29 @@ export class JudgeTask {
                 : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
+    }
+
+    async compile(lang: string, code: CopyInFile) {
+        const copyIn = Object.fromEntries(
+            (this.config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
+        ) as CopyIn;
+        const result = await compile(this.session.getLang(lang), code, copyIn, this.next);
+        this.clean.push(result.clean);
+        return result;
+    }
+
+    async compileWithTestlib(type: 'interactor' | 'validator' | 'checker', file: string, checkerType?: string) {
+        if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+        if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+        const withTestlib = type !== 'checker' || checkerType === 'testlib';
+        const copyIn = {
+            user_code: this.code,
+            ...Object.fromEntries(
+                (this.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
+            ),
+        } as CopyIn;
+        const result = await compileWithTestlib(file, type, this.session.getLang, copyIn, withTestlib, this.next);
+        this.clean.push(result.clean);
+        return result;
     }
 }

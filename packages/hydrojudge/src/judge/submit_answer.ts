@@ -69,17 +69,7 @@ function judgeCase(c: NormalizedCase) {
 export const judge = async (ctx: Context) => {
     await runFlow(ctx, {
         compile: async () => {
-            const copyIn = { user_code: ctx.code };
-            for (const file of ctx.config.judge_extra_files) {
-                copyIn[basename(file)] = { src: file };
-            }
-            ctx.checker = await compileChecker(
-                ctx.session.getLang,
-                ctx.config.checker_type,
-                ctx.config.checker,
-                copyIn,
-            );
-            ctx.clean.push(ctx.checker.clean);
+            ctx.checker = await ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type);
         },
         judgeCase,
     });

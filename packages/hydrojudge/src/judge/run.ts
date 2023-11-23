@@ -1,11 +1,11 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
-import compile from '../compile';
 import { CompileError } from '../error';
+import { Execute } from '../interface';
 import { Logger } from '../log';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
+import { JudgeTask } from '../task';
 import { compilerText, parseMemoryMB, parseTimeMS } from '../utils';
-import { Context } from './interface';
 
 const failure = (status: number, message?: string) => ({
     status,
@@ -17,16 +17,16 @@ const failure = (status: number, message?: string) => ({
 
 const logger = new Logger('judge/run');
 
-export const judge = async (ctx: Context) => {
+export const judge = async (ctx: JudgeTask) => {
     ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
+    let execute: Execute;
     try {
-        ctx.execute = await compile(
-            ctx.session.getLang(ctx.lang), ctx.code,
+        execute = await ctx.compile(
+            ctx.lang, ctx.code,
             Object.fromEntries(
                 (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
             ),
-            ctx.next,
         );
     } catch (e) {
         if (e instanceof CompileError) {
@@ -44,14 +44,13 @@ export const judge = async (ctx: Context) => {
         }
         return;
     }
-    ctx.clean.push(ctx.execute.clean);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     const res = await runQueued(
-        ctx.execute.execute,
+        execute.execute,
         {
             stdin: { content: ctx.input },
-            copyIn: ctx.execute.copyIn,
+            copyIn: execute.copyIn,
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
@@ -90,10 +89,9 @@ export const judge = async (ctx: Context) => {
         const langConfig = ctx.session.getLang(ctx.lang);
         if (langConfig.analysis) {
             try {
-                ctx.analysis = true;
                 const r = await runQueued(langConfig.analysis, {
                     copyIn: {
-                        ...ctx.execute.copyIn,
+                        ...execute.copyIn,
                         input: { content: ctx.input },
                         [langConfig.code_file || 'foo']: ctx.code,
                         compile: { content: langConfig.compile || '' },

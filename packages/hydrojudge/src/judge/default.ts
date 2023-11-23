@@ -1,9 +1,6 @@
-import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
-import compile, { compileChecker } from '../compile';
 import { runFlow } from '../flow';
-import { Execute } from '../interface';
 import { Logger } from '../log';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
@@ -101,30 +98,9 @@ function judgeCase(c: NormalizedCase) {
 
 export const judge = async (ctx: Context) => await runFlow(ctx, {
     compile: async () => {
-        const markCleanup = (i: Execute) => {
-            ctx.clean.push(i.clean);
-            return i;
-        };
         [ctx.execute, ctx.checker] = await Promise.all([
-            compile(
-                ctx.session.getLang(ctx.lang), ctx.code,
-                Object.fromEntries(
-                    (ctx.config.user_extra_files || []).map((i) => [i.split('/').pop(), { src: i }]),
-                ),
-                ctx.next,
-            ).then(markCleanup),
-            compileChecker(
-                ctx.session.getLang,
-                ctx.config.checker_type,
-                ctx.config.checker,
-                {
-                    user_code: ctx.code,
-                    ...Object.fromEntries(
-                        (ctx.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
-                    ),
-                },
-                ctx.next,
-            ).then(markCleanup),
+            ctx.compile(ctx.lang, ctx.code),
+            ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type),
         ]);
     },
     judgeCase,

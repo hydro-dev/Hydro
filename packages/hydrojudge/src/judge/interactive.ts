@@ -1,8 +1,5 @@
-import { basename } from 'path';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import compile, { compileInteractor } from '../compile';
 import { runFlow } from '../flow';
-import { Execute } from '../interface';
 import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
@@ -11,8 +8,6 @@ import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
-        ctx.executeInteractor.copyIn.in = c.input ? { src: c.input } : { content: '' };
-        ctx.executeInteractor.copyIn.out = c.output ? { src: c.output } : { content: '' };
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const [{
             code, signalled, time, memory,
@@ -27,7 +22,11 @@ function judgeCase(c: NormalizedCase) {
             },
             {
                 execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
-                copyIn: ctx.executeInteractor.copyIn,
+                copyIn: {
+                    in: c.input ? { src: c.input } : { content: '' },
+                    out: c.output ? { src: c.output } : { content: '' },
+                    ...ctx.executeInteractor.copyIn,
+                },
                 time: c.time * 2,
                 memory: c.memory * 2,
                 copyOut: ['/w/tout?'],
@@ -67,20 +66,9 @@ function judgeCase(c: NormalizedCase) {
 
 export const judge = async (ctx: Context) => await runFlow(ctx, {
     compile: async () => {
-        const markCleanup = (i: Execute) => {
-            ctx.clean.push(i.clean);
-            return i;
-        };
-        const userExtraFiles = Object.fromEntries(
-            (ctx.config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
-        );
-        const interactorFiles = { user_code: ctx.code };
-        for (const file of ctx.config.judge_extra_files) {
-            interactorFiles[basename(file)] = { src: file };
-        }
         [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
-            compile(ctx.session.getLang(ctx.lang), ctx.code, userExtraFiles, ctx.next).then(markCleanup),
-            compileInteractor(ctx.session.getLang, ctx.config.interactor, interactorFiles).then(markCleanup),
+            ctx.compile(ctx.lang, ctx.code),
+            ctx.compileWithTestlib('interactor', ctx.config.interactor),
         ]);
     },
     judgeCase,
