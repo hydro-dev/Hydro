@@ -1,11 +1,8 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { Logger } from '../log';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { JudgeTask } from '../task';
 import { parseMemoryMB, parseTimeMS } from '../utils';
-
-const logger = new Logger('judge/run');
 
 export const judge = async (ctx: JudgeTask) => {
     ctx.stat.judge = new Date();
