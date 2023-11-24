@@ -126,7 +126,11 @@ export async function postJudge(rdoc: RecordDoc) {
                 await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
             } catch (e) {
                 next({
-                    rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                    rid: rdoc._id,
+                    domainId: rdoc.domainId,
+                    key: 'next',
+                    message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                    rdoc,
                 });
             }
         }
