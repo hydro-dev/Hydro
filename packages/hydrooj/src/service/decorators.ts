@@ -46,7 +46,7 @@ function _descriptor(v: ParamOption<any>) {
             obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
-                const arglist: ParamOption<any>[] = this.__param[target.constructor.name][funcName];
+                const arglist: ParamOption<any>[] = target.__param[target.constructor.name][funcName];
                 for (const item of arglist) {
                     const src = item.source === 'all'
                         ? rawArgs
