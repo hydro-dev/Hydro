@@ -218,9 +218,7 @@ export async function run(execute: string, params?: Parameter): Promise<SandboxA
 const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('parallelism') });
 
 export function runQueued(execute: string, params?: Parameter, priority = 0) {
-    return queue.add(() => {
-        const result = await run(execute, params), { priority }
-    }) as Promise<SandboxAdaptedResult>;
+    return queue.add(() => run(execute, params), { priority }) as Promise<SandboxAdaptedResult>;
 }
 
 export async function versionCheck(reportWarn: (str: string) => void, reportError = reportWarn) {
