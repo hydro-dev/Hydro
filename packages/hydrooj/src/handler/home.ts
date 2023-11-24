@@ -511,10 +511,14 @@ class HomeDomainCreateHandler extends Handler {
         if (doc) throw new DomainAlreadyExistsError(id);
         avatar ||= this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
+        // When this domain is deleted but previously added to user's list we shouldn't push it again
+        const push = !this.user.pinnedDomains?.includes(domainId);
         await Promise.all([
             domain.edit(domainId, { avatar }),
             domain.setUserRole(domainId, this.user._id, 'root'),
-            user.setById(this.user._id, undefined, undefined, { pinnedDomains: domainId }),
+            push
+                ? user.setById(this.user._id, undefined, undefined, { pinnedDomains: domainId })
+                : Promise.resolve(),
         ]);
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
