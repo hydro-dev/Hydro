@@ -224,7 +224,8 @@ export default class Hydro {
         const res = await this.post('login', {
             uname: this.config.uname, password: this.config.password, rememberme: 'on',
         });
-        await this.setCookie(res.headers['set-cookie'].join(';'));
+        const setCookie = res.headers['set-cookie'];
+        await this.setCookie((setCookie instanceof Array) ? setCookie.join(';') : setCookie);
     }
 
     async ensureLogin() {

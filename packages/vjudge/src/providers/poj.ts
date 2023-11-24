@@ -64,10 +64,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
 
     async getCsrfToken(url: string) {
         const { header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
+        if (header['set-cookie']) await this.setCookie(header['set-cookie']);
         return '';
     }
 

@@ -145,7 +145,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         });
         console.log(res.text);
         this.state.username = username;
-        if (res.headers['set-cookie']) this.cookie = res.headers['set-cookie'];
+        if (res.headers['set-cookie']) this.setCookie(res.headers['set-cookie']);
         this.save({ cookie: this.cookie });
     }
 
@@ -378,7 +378,7 @@ export class YBTBAS extends YBT {
         this.config.login.check = '退出登录';
         this.config.login.extra = async () => {
             const captcha = await this.get('/login_xx.php').responseType('arraybuffer');
-            if (captcha.headers['set-cookie']) this.cookie = captcha.headers['set-cookie'];
+            if (captcha.headers['set-cookie']) this.setCookie(captcha.headers['set-cookie']);
             if (!global.parseCaptcha) await sleep(30000);
             if (!global.parseCaptcha) return { login: '登录' };
             return {

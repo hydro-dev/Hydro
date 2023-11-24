@@ -19,7 +19,7 @@
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
-        "@types/shell-quote": "^1.7.4",
-        "@types/ws": "^8.5.9"
+        "@types/shell-quote": "^1.7.5",
+        "@types/ws": "^8.5.10"
     }
 }
