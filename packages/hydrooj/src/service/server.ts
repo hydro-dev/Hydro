@@ -396,7 +396,7 @@ export function Connection(
             for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
             let lastHeartbeat = Date.now();
             let closed = false;
-            let interval: NodeJS.Timer;
+            let interval: NodeJS.Timeout;
             const clean = () => {
                 if (closed) return;
                 closed = true;

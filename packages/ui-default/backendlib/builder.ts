@@ -47,6 +47,7 @@ const federationPlugin: esbuild.Plugin = {
 
 const build = async (contents: string) => {
   const res = await esbuild.build({
+    tsconfigRaw: '{"compilerOptions":{"experimentalDecorators":true}}',
     format: 'iife' as 'iife',
     bundle: true,
     outdir: tmp,

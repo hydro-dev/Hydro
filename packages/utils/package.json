@@ -9,7 +9,7 @@
     "preferUnplugged": true,
     "dependencies": {
         "cac": "^6.7.14",
-        "esbuild": "^0.19.7",
+        "esbuild": "0.19.7",
         "fs-extra": "^11.1.1",
         "js-yaml": "^4.1.0",
         "moment-timezone": "^0.5.43",

@@ -2,7 +2,7 @@ import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export default class Sock {
   sock: ReconnectingWebSocket;
-  interval: NodeJS.Timer;
+  interval: number;
 
   constructor(public url: string, nocookie = false) {
     const i = new URL(url, window.location.href);

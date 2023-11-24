@@ -107,7 +107,9 @@ class SystemScriptHandler extends SystemHandler {
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
         const rdoc = await record.get(rid);
-        const report = (data) => judge.next({ domainId, rid, ...data,rdoc });
+        const report = (data) => judge.next({
+            domainId, rid, ...data, rdoc,
+        });
         report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
         // Maybe async?
