@@ -6,7 +6,7 @@ import { CAC } from 'cac';
 import fs from 'fs-extra';
 import superagent from 'superagent';
 import tar from 'tar';
-import { Logger, streamToBuffer } from '@hydrooj/utils';
+import { extractZip, Logger } from '@hydrooj/utils';
 
 const logger = new Logger('install');
 let yarnVersion = 0;
@@ -32,8 +32,8 @@ function downloadAndExtractTgz(url: string, dest: string) {
     });
 }
 async function downloadAndExtractZip(url: string, dest: string) {
-    const res = await streamToBuffer(await superagent.get(url).responseType('blob'));
-    new AdmZip(res).extractAllTo(dest, true);
+    const res = await superagent.get(url).responseType('arraybuffer');
+    await extractZip(new AdmZip(res.body), dest, true, true);
 }
 const types = {
     '.tgz': downloadAndExtractTgz,
@@ -71,6 +71,7 @@ export function register(cli: CAC) {
                 newAddonPath = path.join(addonDir, name);
                 logger.info(`Downloading ${src} to ${newAddonPath}`);
                 fs.ensureDirSync(newAddonPath);
+                fs.emptyDirSync(newAddonPath);
                 const func = types[Object.keys(types).find((i) => filename.endsWith(i))]!;
                 await func(src, newAddonPath);
             } else throw new Error('Unsupported file type');

@@ -1,12 +1,14 @@
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
-import { Duplex } from 'stream';
+import { Duplex, PassThrough } from 'stream';
 import { inspect } from 'util';
+import type AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import Logger from 'reggol';
+import type { Request } from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
@@ -80,7 +82,16 @@ export function isClass(obj: any, strict = false): obj is new (...args: any) => 
     return false;
 }
 
-export function streamToBuffer(stream: any, maxSize = 0): Promise<Buffer> {
+function isSuperagentRequest(t: NodeJS.ReadableStream | Request): t is Request {
+    return 'req' in t;
+}
+export function streamToBuffer(input: NodeJS.ReadableStream | Request, maxSize = 0): Promise<Buffer> {
+    let stream: NodeJS.ReadableStream;
+    if (isSuperagentRequest(input)) {
+        const s = new PassThrough();
+        input.pipe(s);
+        stream = s;
+    } else stream = input;
     return new Promise((resolve, reject) => {
         const buffers = [];
         let length = 0;
@@ -269,6 +280,47 @@ export function Counter<T extends (string | number) = string>() {
             return target[prop];
         },
     }) as Record<T, number>;
+}
+
+function canonical(p: string) {
+    if (!p) return '';
+    const safeSuffix = path.posix.normalize(`/${p.split('\\').join('/')}`);
+    return path.join('.', safeSuffix);
+}
+
+function sanitize(prefix: string, name: string) {
+    prefix = path.resolve(path.normalize(prefix));
+    const parts = name.split('/');
+    for (let i = 0, l = parts.length; i < l; i++) {
+        const p = path.normalize(path.join(prefix, parts.slice(i, l).join(path.sep)));
+        if (p.indexOf(prefix) === 0) {
+            return p;
+        }
+    }
+    return path.normalize(path.join(prefix, path.basename(name)));
+}
+
+export function sanitizePath(pathname: string) {
+    const parts = pathname.replace(/\\/g, '/').split('/').filter((i) => i && i !== '.' && i !== '..');
+    return parts.join(path.sep);
+}
+
+/* eslint-disable no-await-in-loop */
+export async function extractZip(zip: AdmZip, dest: string, overwrite = false, strip = false) {
+    const entries = zip.getEntries();
+    const shouldStrip = strip ? entries.every((i) => i.entryName.startsWith(entries[0].entryName)) : false;
+    for (const entry of entries) {
+        const name = shouldStrip ? entry.entryName.substring(entries[0].entryName.length) : entry.entryName;
+        const d = sanitize(dest, canonical(name));
+        if (entry.isDirectory) {
+            await fs.mkdir(d, { recursive: true });
+            continue;
+        }
+        const content = entry.getData();
+        if (!content) throw new Error('CANT_EXTRACT_FILE');
+        if (!fs.existsSync(d) || overwrite) await fs.writeFile(d, content);
+        await fs.utimes(d, entry.header.time, entry.header.time);
+    }
 }
 
 export * from '@hydrooj/utils/lib/common';
