@@ -3,7 +3,7 @@
 import path from 'path';
 import { fs } from '@hydrooj/utils';
 import {
-    JudgeResultBody, RecordModel, SettingModel,
+    JudgeResultBody, ObjectId, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
@@ -23,19 +23,21 @@ const session = {
         return target;
     },
     getNext(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
             data.rid = t.rid as any;
+            const rdoc = await RecordModel.get(new ObjectId(t.rid));
             if (data.case) data.case.message ||= '';
-            next(data);
+            next({ ...data, rdoc });
         };
     },
     getEnd(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
             data.rid = t.rid as any;
+            const rdoc = await RecordModel.get(new ObjectId(t.rid));
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end(data);
+            end({ ...data, rdoc });
         };
     },
     getLang(lang: string, doThrow = true) {

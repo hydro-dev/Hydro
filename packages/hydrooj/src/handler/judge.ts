@@ -63,13 +63,19 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     return { $set, $push };
 }
 
-export async function next(body: Partial<JudgeResultBody>) {
+export async function next(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
     body.rid = new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
+    let rdoc = body.rdoc;
+    if (!rdoc) {
+        logger.warn('Next function without rdoc is deprecated.');
+        console.trace();
+        rdoc = await record.get(body.rid);
+        if (!rdoc) return null;
+    }
     const { $set, $push } = processPayload(rdoc, body);
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
-    bus.broadcast('record/change', rdoc!, $set, $push, body);
+    rdoc = await record.update(body.rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    bus.broadcast('record/change', rdoc, $set, $push, body);
+    return rdoc;
 }
 
 export async function postJudge(rdoc: RecordDoc) {
@@ -128,10 +134,15 @@ export async function postJudge(rdoc: RecordDoc) {
     await bus.parallel('record/judge', rdoc, updated);
 }
 
-export async function end(body: Partial<JudgeResultBody>) {
-    body.rid &&= new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
+export async function end(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
+    body.rid = new ObjectId(body.rid);
+    let rdoc = body.rdoc;
+    if (!rdoc) {
+        logger.warn('End function without rdoc is deprecated.');
+        console.trace();
+        rdoc = await record.get(body.rid);
+        if (!rdoc) return null;
+    }
     const { $set, $push } = processPayload(rdoc, body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
@@ -141,6 +152,7 @@ export async function end(body: Partial<JudgeResultBody>) {
     await postJudge(rdoc);
     rdoc = await record.get(body.rid);
     bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
+    return rdoc;
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
@@ -178,6 +190,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     processing: any = null;
     closed = false;
     query: any = { type: 'judge' };
+    rdocs: Record<string, RecordDoc> = {};
     ip: string;
 
     async prepare() {
@@ -207,6 +220,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (!rdoc) t = null;
         }
         this.send({ task: { ...rdoc, ...t } });
+        this.rdocs[rdoc._id.toHexString()] = rdoc;
         this.processing = t;
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
         rdoc = await record.update(t.domainId, t.rid, $set, {});
@@ -219,15 +233,22 @@ class JudgeConnectionHandler extends ConnectionHandler {
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
         }
-        if (msg.key === 'next') await next(msg);
-        else if (msg.key === 'end') {
-            if (!msg.nop) await end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e));
-            this.processing = null;
-            await this.newTask();
+        if (['next', 'end'].includes(msg.key)) {
+            const rdoc = this.rdocs[msg.rid];
+            if (!rdoc) return;
+            if (msg.key === 'next') await next({ ...msg, rdoc });
+            if (msg.key === 'end') {
+                if (!msg.nop) await end({ judger: this.user._id, ...msg, rdoc }).catch((e) => logger.error(e));
+                this.processing = null;
+                delete this.rdocs[msg.rid];
+                await this.newTask();
+            }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
-        } else if (msg.key === 'prio') {
+        } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             this.query.priority = { $gt: msg.prio };
+        } else if (msg.key === 'lang' && msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
+            this.query.lang = { $in: msg.lang };
         }
     }
 
