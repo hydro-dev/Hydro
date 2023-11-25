@@ -112,7 +112,7 @@ export class ContestListHandler extends Handler {
 }
 
 export class ContestDetailBaseHandler extends Handler {
-    tdoc?: Tdoc<30>;
+    tdoc?: Tdoc;
     tsdoc?: any;
 
     @param('tid', Types.ObjectId, true)
@@ -172,7 +172,7 @@ export class ContestDetailBaseHandler extends Handler {
 }
 
 export class ContestDetailHandler extends Handler {
-    tdoc?: Tdoc<30>;
+    tdoc?: Tdoc;
     tsdoc?: any;
 
     @param('tid', Types.ObjectId)

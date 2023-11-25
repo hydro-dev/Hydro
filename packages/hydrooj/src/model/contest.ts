@@ -13,6 +13,7 @@ import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import type { Handler } from '../service/server';
+import { Optional } from '../typeutils';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
@@ -69,11 +70,11 @@ export function isExtended(tdoc: Tdoc) {
     return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
-function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
+function buildContestRule<T>(def: Optional<ContestRule<T>, 'applyProjection'>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
     const base = baseRule._originalRule || {};
-    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat'];
+    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat', 'applyProjection'];
     const f = {};
     const rule = { ...baseRule, ...def };
     for (const key of funcs) {
@@ -81,6 +82,7 @@ function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule
         rule[key] = f[key].bind(rule);
     }
     rule._originalRule = f;
+    rule.applyProjection ||= (_, rdoc) => rdoc;
     return rule;
 }
 
@@ -715,9 +717,6 @@ const homework = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
     },
-    applyProjection(_, rdoc) {
-        return rdoc;
-    },
 });
 
 export const RULES: ContestRules = {
@@ -733,7 +732,7 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc<30>> = {},
+    rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -765,7 +764,7 @@ export async function del(domainId: string, tid: ObjectId) {
     ]);
 }
 
-export async function get(domainId: string, tid: ObjectId): Promise<Tdoc<30>> {
+export async function get(domainId: string, tid: ObjectId): Promise<Tdoc> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
@@ -807,7 +806,7 @@ export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
 }
 
 async function _updateStatus(
-    tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
+    tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
     subtasks: Record<number, SubtaskResult>,
 ) {
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
@@ -902,25 +901,25 @@ export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     await recalcStatus(domainId, tid);
 }
 
-export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
+export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc) {
     if (this.user.own(tdoc)) return true;
     if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowRecord(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowSelfRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowSelfRecord(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowScoreboard(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
@@ -928,7 +927,7 @@ export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPer
 
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectId, config: ScoreboardConfig,
-): Promise<[Tdoc<30>, ScoreboardRow[], BaseUserDict, ProblemDict]> {
+): Promise<[Tdoc, ScoreboardRow[], BaseUserDict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
@@ -972,7 +971,7 @@ export function getMultiClarification(domainId: string, tid: ObjectId, owner = 0
     ).sort('_id', -1).toArray();
 }
 
-export function applyProjection(tdoc: Tdoc<30>, rdoc: RecordDoc, udoc: User) {
+export function applyProjection(tdoc: Tdoc, rdoc: RecordDoc, udoc: User) {
     if (!RULES[tdoc.rule]) return rdoc;
     return RULES[tdoc.rule].applyProjection(tdoc, rdoc, udoc);
 }

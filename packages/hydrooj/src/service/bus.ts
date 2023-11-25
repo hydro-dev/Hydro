@@ -91,9 +91,9 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/renameAdditionalFile': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
-    'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
-    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectId) => VoidReturn
-    'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
+    'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;

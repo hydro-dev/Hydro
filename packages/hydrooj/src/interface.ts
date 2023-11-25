@@ -373,9 +373,9 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
+export interface Tdoc extends Document {
     docId: ObjectId;
-    docType: docType & number;
+    docType: document['TYPE_CONTEST'];
     beginAt: Date;
     endAt: Date;
     attend: number;
@@ -410,7 +410,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     dag?: TrainingNode[];
 }
 
-export interface TrainingDoc extends Tdoc {
+export interface TrainingDoc extends Omit<Tdoc, 'docType'> {
+    docType: document['TYPE_TRAINING'],
     description: string;
     pin?: number;
     dag: TrainingNode[];
@@ -536,24 +537,25 @@ export interface ContestRule<T = any> {
     check: (args: any) => any;
     statusSort: Record<string, 1 | -1>;
     submitAfterAccept: boolean;
-    showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
-    showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
+    showScoreboard: (tdoc: Tdoc, now: Date) => boolean;
+    showSelfRecord: (tdoc: Tdoc, now: Date) => boolean;
+    showRecord: (tdoc: Tdoc, now: Date) => boolean;
+    stat: (this: ContestRule<T>, tdoc: Tdoc, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict,
+        tdoc: Tdoc, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
+        tdoc: Tdoc, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
+        tdoc: Tdoc, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
-    ranked: (tdoc: Tdoc<30>, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    ranked: (tdoc: Tdoc, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    applyProjection: (tdoc: Tdoc, rdoc: RecordDoc, user: User) => RecordDoc;
 }
 
 export type ContestRules = Dictionary<ContestRule>;

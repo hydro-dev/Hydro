@@ -14,3 +14,4 @@ export type Projection<O> = readonly (string & keyof O)[];
 export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 export type MaybeArray<T> = T | T[];
 export type UnionToIntersection<U> = (U extends any ? (arg: U) => void : never) extends ((arg: infer I) => void) ? I : never;
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
