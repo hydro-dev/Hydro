@@ -6,7 +6,7 @@ import {
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
-    BaseUserDict, ContestRule, ContestRules, ProblemDict,
+    BaseUserDict, ContestRule, ContestRules, ProblemDict, RecordDoc,
     ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import ranked from '../lib/rank';
@@ -30,6 +30,43 @@ interface AcmDetail extends AcmJournal {
     npending?: number;
     penalty: number;
     real: number;
+}
+
+export function isNew(tdoc: Tdoc, days = 1) {
+    const readyAt = tdoc.beginAt.getTime();
+    return Date.now() < readyAt - days * Time.day;
+}
+
+export function isUpcoming(tdoc: Tdoc, days = 7) {
+    const now = Date.now();
+    const readyAt = tdoc.beginAt.getTime();
+    return (now > readyAt - days * Time.day && now < readyAt);
+}
+
+export function isNotStarted(tdoc: Tdoc) {
+    return (new Date()) < tdoc.beginAt;
+}
+
+export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
+    const now = new Date();
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
+    return (tdoc.beginAt <= now && now < tdoc.endAt);
+}
+
+export function isDone(tdoc: Tdoc, tsdoc?: any) {
+    if (tdoc.endAt <= new Date()) return true;
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
+    return false;
+}
+
+export function isLocked(tdoc: Tdoc, time = new Date()) {
+    if (!tdoc.lockAt) return false;
+    return tdoc.lockAt < time && !tdoc.unlocked;
+}
+
+export function isExtended(tdoc: Tdoc) {
+    const now = new Date().getTime();
+    return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
 function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
@@ -217,6 +254,16 @@ const acm = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
     },
+    applyProjection(tdoc, rdoc) {
+        if (isDone(tdoc)) return rdoc;
+        delete rdoc.time;
+        delete rdoc.memory;
+        rdoc.testCases = [];
+        rdoc.judgeTexts = [];
+        delete rdoc.subtasks;
+        delete rdoc.score;
+        return rdoc;
+    },
 });
 
 const oi = buildContestRule({
@@ -367,6 +414,18 @@ const oi = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
     },
+    applyProjection(tdoc, rdoc) {
+        if (isDone(tdoc)) return rdoc;
+        delete rdoc.status;
+        rdoc.compilerTexts = [];
+        rdoc.judgeTexts = [];
+        delete rdoc.memory;
+        delete rdoc.time;
+        delete rdoc.score;
+        rdoc.testCases = [];
+        delete rdoc.subtasks;
+        return rdoc;
+    },
 });
 
 const ioi = buildContestRule({
@@ -376,6 +435,9 @@ const ioi = buildContestRule({
     showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     showSelfRecord: () => true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    applyProjection(_, rdoc) {
+        return rdoc;
+    },
 }, oi);
 
 const strictioi = buildContestRule({
@@ -500,6 +562,9 @@ const ledo = buildContestRule({
             });
         }
         return row;
+    },
+    applyProjection(_, rdoc) {
+        return rdoc;
     },
 }, oi);
 
@@ -650,6 +715,9 @@ const homework = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
     },
+    applyProjection(_, rdoc) {
+        return rdoc;
+    },
 });
 
 export const RULES: ContestRules = {
@@ -780,44 +848,6 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
-export function isNew(tdoc: Tdoc, days = 1) {
-    const now = new Date().getTime();
-    const readyAt = tdoc.beginAt.getTime();
-    return (now < readyAt - days * Time.day);
-}
-
-export function isUpcoming(tdoc: Tdoc, days = 7) {
-    const now = Date.now();
-    const readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt - days * Time.day && now < readyAt);
-}
-
-export function isNotStarted(tdoc: Tdoc) {
-    return (new Date()) < tdoc.beginAt;
-}
-
-export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
-    const now = new Date();
-    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
-    return (tdoc.beginAt <= now && now < tdoc.endAt);
-}
-
-export function isDone(tdoc: Tdoc, tsdoc?: any) {
-    if (tdoc.endAt <= new Date()) return true;
-    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
-    return false;
-}
-
-export function isLocked(tdoc: Tdoc, time = new Date()) {
-    if (!tdoc.lockAt) return false;
-    return tdoc.lockAt < time && !tdoc.unlocked;
-}
-
-export function isExtended(tdoc: Tdoc) {
-    const now = new Date().getTime();
-    return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
-}
-
 export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
 }
@@ -942,6 +972,11 @@ export function getMultiClarification(domainId: string, tid: ObjectId, owner = 0
     ).sort('_id', -1).toArray();
 }
 
+export function applyProjection(tdoc: Tdoc<30>, rdoc: RecordDoc, udoc: User) {
+    if (!RULES[tdoc.rule]) return rdoc;
+    return RULES[tdoc.rule].applyProjection(tdoc, rdoc, udoc);
+}
+
 export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
     isNew(tdoc)
         ? 'New'
@@ -990,5 +1025,6 @@ global.Hydro.model.contest = {
     isDone,
     isLocked,
     isExtended,
+    applyProjection,
     statusText,
 };

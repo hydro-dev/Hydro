@@ -85,7 +85,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
         let cursor = record.getMulti(all ? '' : domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
         const limit = full ? 10 : system.get('pagination.record');
-        const rdocs = invalid
+        let rdocs = invalid
             ? [] as RecordDoc[]
             : await cursor.skip((page - 1) * limit).limit(limit).toArray();
         const canViewProblem = tid || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
@@ -97,6 +97,9 @@ class RecordListHandler extends ContestDetailBaseHandler {
                     ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false, problem.PROJECTION_LIST)
                     : Object.fromEntries(uniqBy(rdocs, 'pid').map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])),
             ]);
+        if (this.tdoc && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+            rdocs = rdocs.map((i) => contest.applyProjection(tdoc, i, this.user));
+        }
         this.response.body = {
             page,
             rdocs,
@@ -157,6 +160,9 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
             canViewDetail = canView;
             this.args.tid = this.tdoc.docId;
+            if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+                this.rdoc = contest.applyProjection(this.tdoc, this.rdoc, this.user);
+            }
         }
 
         // eslint-disable-next-line prefer-const
@@ -237,6 +243,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     status: number;
     pretest = false;
     tdoc: Tdoc<30>;
+    applyProjection = false;
 
     @param('tid', Types.ObjectId, true)
     @param('pid', Types.ProblemId, true)
@@ -253,6 +260,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.tdoc) throw new ContestNotFoundError(domainId, tid);
             if (pretest || contest.canShowScoreboard.call(this, this.tdoc, true)) this.tid = tid.toHexString();
             else throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+                this.applyProjection = true;
+            }
         }
         if (pretest) {
             this.pretest = true;
@@ -312,6 +322,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         }
         if (this.pretest) this.send({ rdoc: omit(rdoc, ['code', 'input']) });
         else {
+            if (this.applyProjection) rdoc = contest.applyProjection(tdoc, rdoc, this.user);
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, all: this.all,
@@ -323,20 +334,25 @@ class RecordMainConnectionHandler extends ConnectionHandler {
 
 class RecordDetailConnectionHandler extends ConnectionHandler {
     pdoc: ProblemDoc;
+    tdoc?: Tdoc<30>;
     rid: string = '';
     disconnectTimeout: NodeJS.Timeout;
     throttleSend: any;
+    applyProjection = false;
 
     @param('rid', Types.ObjectId)
     async prepare(domainId: string, rid: ObjectId) {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && rdoc.input === undefined) {
-            const tdoc = await contest.get(domainId, rdoc.contest);
-            let canView = this.user.own(tdoc);
-            canView ||= contest.canShowRecord.call(this, tdoc);
-            canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, tdoc);
+            this.tdoc = await contest.get(domainId, rdoc.contest);
+            let canView = this.user.own(this.tdoc);
+            canView ||= contest.canShowRecord.call(this, this.tdoc);
+            canView ||= this.user._id === rdoc.uid && contest.canShowSelfRecord.call(this, this.tdoc);
             if (!canView) throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+                this.applyProjection = true;
+            }
         }
         const [pdoc, self] = await Promise.all([
             problem.get(rdoc.domainId, rdoc.pid),
@@ -378,6 +394,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             clearTimeout(this.disconnectTimeout);
             this.disconnectTimeout = null;
         }
+        if (this.applyProjection && rdoc.input === undefined) rdoc = contest.applyProjection(this.tdoc, rdoc, this.user);
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
