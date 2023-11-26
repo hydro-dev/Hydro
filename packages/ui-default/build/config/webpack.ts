@@ -152,13 +152,14 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          exclude: [/@types\//, /components\/message\//, /entry\.js/],
+          // FIXME latest version on esbuild cannot handle `this` in `DOMAttachedObject` properly
+          exclude: [/@types\//, /components\//, /pages\//, /entry\.js/],
           type: 'javascript/auto',
           use: [esbuildLoader()],
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          include: [/components\/message\//, /entry\.js/],
+          include: [/components\//, /pages\//, /entry\.js/],
           type: 'javascript/auto',
           use: [{
             loader: 'ts-loader',
