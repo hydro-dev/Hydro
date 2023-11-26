@@ -73,7 +73,7 @@ export function isExtended(tdoc: Tdoc) {
 function buildContestRule<T>(def: Optional<ContestRule<T>, 'applyProjection'>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
 function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
-    const base = baseRule._originalRule || {};
+    const base = baseRule._originalRule || { applyProjection: (_, rdoc) => rdoc };
     const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat', 'applyProjection'];
     const f = {};
     const rule = { ...baseRule, ...def };
@@ -82,7 +82,6 @@ function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule
         rule[key] = f[key].bind(rule);
     }
     rule._originalRule = f;
-    rule.applyProjection ||= (_, rdoc) => rdoc;
     return rule;
 }
 
