@@ -128,7 +128,7 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     if (ret.time > (params.time || 16000)) {
         ret.status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
     }
-    if (ret.memory > (params.memory || parseMemoryMB(getConfig('memoryMax')))) {
+    if (ret.memory > 1024 * (params.memory || parseMemoryMB(getConfig('memoryMax')))) {
         ret.status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
     }
     const outname = params.filename ? `${params.filename}.out` : 'stdout';
