@@ -6,7 +6,9 @@ export default class Sock {
 
   constructor(public url: string, nocookie = false) {
     const i = new URL(url, window.location.href);
-    if (i.host !== window.location.host && !nocookie) i.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
+    if (i.host !== window.location.host && !nocookie && document.cookie.includes('sid=')) {
+      i.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
+    }
     i.protocol = i.protocol.replace('http', 'ws');
     this.url = i.toString();
     this.sock = new ReconnectingWebSocket(this.url, [], {
