@@ -3,7 +3,7 @@ import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, TestCase,
+    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
@@ -191,11 +191,12 @@ export class SubmissionDataDownloadHandler extends Handler {
 
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: any = null;
+    processing: Task[] = [];
     closed = false;
     query: any = { type: 'judge' };
     rdocs: Record<string, RecordDoc> = {};
     ip: string;
+    concurrency = 1;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
@@ -211,7 +212,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async newTask() {
-        if (this.processing) return;
+        if (this.processing.length >= this.concurrency) return;
         let t;
         let rdoc: RecordDoc;
         while (!t) {
@@ -225,7 +226,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         }
         this.send({ task: { ...rdoc, ...t } });
         this.rdocs[rdoc._id.toHexString()] = rdoc;
-        this.processing = t;
+        this.processing.push(t);
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
         rdoc = await record.update(t.domainId, t.rid, $set, {});
         bus.broadcast('record/change', rdoc, $set, {});
@@ -243,7 +244,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (msg.key === 'next') await next({ ...msg, rdoc });
             if (msg.key === 'end') {
                 if (!msg.nop) await end({ judger: this.user._id, ...msg, rdoc }).catch((e) => logger.error(e));
-                this.processing = null;
+                this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
                 await this.newTask();
             }
@@ -253,16 +254,29 @@ class JudgeConnectionHandler extends ConnectionHandler {
             this.query.priority = { $gt: msg.prio };
         } else if (msg.key === 'lang' && msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
             this.query.lang = { $in: msg.lang };
+        } else if (msg.key === 'config') {
+            if (Number.isSafeInteger(msg.prio)) {
+                this.query.priority = { $gt: msg.prio };
+            }
+            if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
+                const old = this.concurrency;
+                this.concurrency = msg.concurrency;
+                if (old <= this.concurrency) {
+                    for (let i = old; i < this.concurrency; i++) {
+                        await this.newTask(); // eslint-disable-line no-await-in-loop
+                    }
+                }
+            }
         }
     }
 
     async cleanup() {
-        logger.info('Judge daemon disconnected from ', this.request.ip);
-        if (this.processing) {
-            await record.reset(this.processing.domainId, this.processing.rid, false);
-            await task.add(this.processing);
-        }
         this.closed = true;
+        logger.info('Judge daemon disconnected from ', this.request.ip);
+        await Promise.all(this.processing.map(async (t) => {
+            await record.reset(t.domainId, t.rid, false);
+            return await task.add(t);
+        }));
     }
 }
 
