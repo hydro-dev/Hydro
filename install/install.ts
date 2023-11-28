@@ -24,7 +24,7 @@ const sleep = (t: number) => new Promise((r) => { setTimeout(r, t); });
 const locales = {
     zh: {
         'install.start': '开始运行 Hydro 安装工具',
-        'warn.avx2': '检测到您的 CPU 不支持 avx2 指令集，将使用 mongodb@v4.4',
+        'warn.avx': '检测到您的 CPU 不支持 avx 指令集，将使用 mongodb@v4.4',
         'error.rootRequired': '请先使用 sudo su 切换到 root 用户后再运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
         'error.osreleaseNotFound': '无法获取系统版本信息（/etc/os-release 文件未找到），请尝试手动安装。',
@@ -51,7 +51,7 @@ const locales = {
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
-        'warn.avx2': 'Your CPU does not support avx2, will use mongodb@v4.4',
+        'warn.avx': 'Your CPU does not support avx, will use mongodb@v4.4',
         'error.rootRequired': 'Please run this tool as root user.',
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
         'error.osreleaseNotFound': 'Unable to get system version information (/etc/os-release file not found), please try to install manually.',
@@ -111,11 +111,11 @@ for (const line of lines) {
     if (d[1].startsWith('"')) values[d[0].toLowerCase()] = d[1].substring(1, d[1].length - 2);
     else values[d[0].toLowerCase()] = d[1];
 }
-let avx2 = true;
+let avx = true;
 const cpuInfoFile = readFileSync('/proc/cpuinfo', 'utf-8');
-if (!cpuInfoFile.includes('avx2') && !installAsJudge) {
-    avx2 = false;
-    log.warn('warn.avx2');
+if (!cpuInfoFile.includes('avx') && !installAsJudge) {
+    avx = false;
+    log.warn('warn.avx');
 }
 let retry = 0;
 log.info('install.start');
@@ -368,7 +368,7 @@ ${nixConfBase}`);
         "openssl-1.1.1w"
     ];
 }`),
-            `nix-env -iA hydro.mongodb${avx2 ? 5 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
+            `nix-env -iA hydro.mongodb${avx ? 6 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
         ],
     },
     {
