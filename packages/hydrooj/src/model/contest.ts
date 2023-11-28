@@ -986,6 +986,7 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
 
 global.Hydro.model.contest = {
     RULES,
+    buildContestRule,
     add,
     getListStatus,
     getMultiStatus,
