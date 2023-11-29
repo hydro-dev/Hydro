@@ -2,7 +2,7 @@
 {% import "components/problem.html" as problem with context %}
 <tr data-rid="{{ rdoc['_id'] }}">
   {% set _isPretest = rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}
-  {{ record.render_status_td(rdoc, allDomain = all) }}
+  {{ record.render_status_td(rdoc, allDomain = allDomain) }}
   <td class="col--problem col--problem-name">
   {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack and not _isPretest %}
     <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
