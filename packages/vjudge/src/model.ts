@@ -102,7 +102,7 @@ class AccountService {
                 } finally {
                     delete syncing[`${domainId}/${pid}`];
                 }
-                await sleep(5000);
+                await sleep(100);
             }
             page++;
             pids = await this.api.listProblem(page, resync, list);
