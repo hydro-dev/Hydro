@@ -366,6 +366,9 @@ ${nixConfBase}`);
         "openssl-1.1.1u"
         "openssl-1.1.1v"
         "openssl-1.1.1w"
+        "openssl-1.1.1x"
+        "openssl-1.1.1y"
+        "openssl-1.1.1z"
     ];
 }`),
             `nix-env -iA hydro.mongodb${avx ? 6 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
@@ -381,7 +384,8 @@ ${nixConfBase}`);
         init: 'install.sandbox',
         skip: () => !exec('hydro-sandbox --help').code,
         operations: [
-            'nix-env -iA hydro.sandbox',
+            'nix-env -iA nixpkgs.go-judge',
+            'ln -sf $(which go-judge) /usr/local/bin/hydro-sandbox',
         ],
     },
     {
