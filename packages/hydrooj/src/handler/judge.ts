@@ -73,7 +73,7 @@ export async function next(body: Partial<JudgeResultBody> & { rdoc: RecordDoc })
         if (!rdoc) return null;
     }
     const { $set, $push } = processPayload(rdoc, body);
-    rdoc = await record.update(body.rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
     bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }

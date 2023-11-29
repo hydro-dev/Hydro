@@ -51,10 +51,6 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
             throw new Error(id)
         if (!(problem.contest.name.length > 0))
             throw new Error(id)
-        if (problem.source) {
-            console.log(problem.source)
-            throw new Error(id)
-        }
         if (problem.inputFileName || problem.outputFileName)
             throw new Error(id)
         let content = '';
@@ -71,6 +67,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
             return ret;
         }).join('');
         content += `## 数据范围\n\n${problem.dataRange.trim()}\n\n`;
+        if (problem.source.trim()) content += `## 来源\n\n${problem.source.trim()}\n\n`;
         return {
             title: problem.title,
             data: {
@@ -94,15 +91,22 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         return data.problemList.map((problem) => `P${problem.id}`);
     }
 
-    async submitProblem(id: string, lang: string, code: string) {
-        console.log(lang)
-        // await this.post('/submission/submit')
-        //     .send({
-        //         code,
-        //         language: lang,
-        //         problemId: +id.split('P')[1],
-        //     })
-        return '';
+    async submitProblem(id: string, lang: string, code: string, info, next, end) {
+        const langs = {
+            'yacs.1': 'C++',
+            'yacs.2': 'Python 3.6',
+        };
+        if (!langs[lang]) {
+            end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
+            return null;
+        }
+        const { body } = await this.post('/submission/submit')
+            .send({
+                code,
+                language: lang,
+                problemId: +id.split('P')[1],
+            });
+        return `${body.id}`;
     }
 
     async waitForSubmission(id: string, next, end) {
