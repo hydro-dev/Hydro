@@ -18,6 +18,7 @@ const page = new NamedPage('record_detail', async () => {
     const newSummary = $(msg.summary_html);
     const oldSummary = $('#summary');
     dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
+    if (typeof msg.status === 'number' && window.parent) window.parent.postMessage({ status: msg.status });
   };
 });
 

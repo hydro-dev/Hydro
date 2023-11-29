@@ -137,6 +137,7 @@ env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
 env.addGlobal('Object', Object);
 env.addGlobal('String', String);
+env.addGlobal('Array', Array);
 env.addGlobal('Math', Math);
 env.addGlobal('process', process);
 env.addGlobal('global', global);

@@ -6,7 +6,7 @@ import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
-    BaseUserDict, DiscussionDoc, DomainDoc, FileInfo,
+    BaseUserDict, ContestBalloonDoc, DiscussionDoc, DomainDoc, FileInfo,
     MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
     ScoreboardRow, Tdoc, TrainingDoc, User,
 } from '../interface';
@@ -85,13 +85,16 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameTestdata': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
     'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameAdditionalFile': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
-    'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
-    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectId) => VoidReturn
-    'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
+    'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 

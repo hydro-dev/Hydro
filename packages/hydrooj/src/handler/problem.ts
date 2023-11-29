@@ -193,6 +193,8 @@ export class ProblemMainHandler extends Handler {
                 pcount = pcount - count + pdocs.length;
             }
         }
+        // some problems are hidden and cannot be viewed by current user
+        if (pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
             await Promise.all(
@@ -267,7 +269,7 @@ export class ProblemMainHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             await problem.del(domainId, pid);
             i++;
-            this.progress(`Deleting: (${i}/${pids.length})`);
+            this.progress('Deleting: ({0}/{1})', [i, pids.length]);
         }
         this.back();
     }
@@ -342,6 +344,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             const pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             if (!ddoc || !pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
             this.pdoc.config = pdoc.config;
+            this.pdoc.additional_file = pdoc.additional_file;
         }
         if (typeof this.pdoc.config !== 'string') {
             let baseLangs;
@@ -382,7 +385,8 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             const fields = ['attend', 'startAt'];
             if (this.tdoc.duration) fields.push('endAt');
             if (contest.canShowSelfRecord.call(this, this.tdoc, true)) fields.push('detail');
-            this.response.body.tsdoc = pick(this.tsdoc, fields);
+            this.tsdoc = pick(this.tsdoc, fields);
+            this.response.body.tsdoc = this.tsdoc;
         }
         this.response.template = 'problem_detail.html';
         this.UiContext.extraTitleContent = this.pdoc.title;
@@ -500,6 +504,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             pdoc: this.pdoc,
             udoc: this.udoc,
             tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
             title: this.pdoc.title,
             page_name: this.tdoc
                 ? this.tdoc.rule === 'homework'
@@ -690,7 +695,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             const { testdata, additional_file } = this.response.body;
             const owner = await user.getById(domainId, this.pdoc.owner);
             const args = {
-                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar,
+                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar, can_edit: true,
             };
             const tasks = [];
             if (d.includes('testdata')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
@@ -787,6 +792,21 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             // eslint-disable-next-line no-await-in-loop
             await problem[method](domainId, this.pdoc.docId, entry.name, entry.data(), this.user._id);
         }
+        this.back();
+    }
+
+    @post('files', Types.ArrayOf(Types.Filename))
+    @post('newNames', Types.ArrayOf(Types.Filename))
+    @post('type', Types.Range(['testdata', 'additional_file']), true)
+    async postRenameFiles(domainId: string, files: string[], newNames: string[], type = 'testdata') {
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('rename files');
+        if (files.length !== newNames.length) throw new ValidationError('files', 'newNames');
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        await Promise.all(files.map(async (file, index) => {
+            const newName = newNames[index];
+            if (type === 'testdata') await problem.renameTestdata(domainId, this.pdoc.docId, file, newName, this.user._id);
+            else await problem.renameAdditionalFile(domainId, this.pdoc.docId, file, newName, this.user._id);
+        }));
         this.back();
     }
 

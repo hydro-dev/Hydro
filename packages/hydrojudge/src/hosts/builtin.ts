@@ -3,7 +3,7 @@
 import path from 'path';
 import { fs } from '@hydrooj/utils';
 import {
-    JudgeResultBody, RecordModel, SettingModel,
+    JudgeResultBody, ObjectId, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { end, next } from 'hydrooj/src/handler/judge';
@@ -11,6 +11,7 @@ import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
 import logger from '../log';
+import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
 const session = {
@@ -22,19 +23,21 @@ const session = {
         return target;
     },
     getNext(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
             data.rid = t.rid as any;
+            const rdoc = await RecordModel.get(new ObjectId(t.rid));
             if (data.case) data.case.message ||= '';
-            next(data);
+            next({ ...data, rdoc });
         };
     },
     getEnd(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
             data.rid = t.rid as any;
+            const rdoc = await RecordModel.get(new ObjectId(t.rid));
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end(data);
+            end({ ...data, rdoc });
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -71,8 +74,9 @@ const session = {
     },
 };
 
-export async function postInit() {
+export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
+    ctx.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);

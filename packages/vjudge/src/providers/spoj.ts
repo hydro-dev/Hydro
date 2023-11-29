@@ -39,11 +39,7 @@ export default class SPOJProvider extends BasicFetcher implements IBasicProvider
             login_user: this.account.handle,
             password: this.account.password,
         });
-        const cookie = res.header['set-cookie'];
-        if (cookie) {
-            await this.save({ cookie });
-            this.cookie = cookie;
-        }
+        if (res.header['set-cookie']) await this.setCookie(res.header['set-cookie'], true);
         if (await this.loggedIn) return true;
         return false;
     }

@@ -106,7 +106,10 @@ class SystemScriptHandler extends SystemHandler {
             args = global.Hydro.script[id].validate(args);
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
-        const report = (data) => judge.next({ domainId, rid, ...data });
+        const rdoc = await record.get(rid);
+        const report = (data) => judge.next({
+            domainId, rid, ...data, rdoc,
+        });
         report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
         // Maybe async?
@@ -121,6 +124,7 @@ class SystemScriptHandler extends SystemHandler {
                     judger: 1,
                     time,
                     memory: 0,
+                    rdoc,
                 });
             })
             .catch((err: Error) => {
@@ -134,6 +138,7 @@ class SystemScriptHandler extends SystemHandler {
                     judger: 1,
                     time,
                     memory: 0,
+                    rdoc,
                 });
             });
         this.response.body = { rid };

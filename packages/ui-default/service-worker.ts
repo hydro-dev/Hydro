@@ -177,16 +177,23 @@ async function get(request: Request) {
   return fetch(request);
 }
 
+function transformUrl(url: string) {
+  const urlObject = new URL(url);
+  if (urlObject.pathname.startsWith('/fs/')) urlObject.search = '';
+  return urlObject.toString();
+}
+
 async function cachedRespond(request: Request) {
-  const cachedResponse = await caches.match(request.url);
+  const url = transformUrl(request.url);
+  const cachedResponse = await caches.match(url);
   if (cachedResponse) return cachedResponse;
-  console.log(`Caching ${request.url}`);
+  console.log(`Caching ${url}`);
   const [cache, response] = await Promise.all([
     caches.open(PRECACHE),
     get(request),
   ]);
   if (response.ok) {
-    cache.put(request.url, response.clone());
+    cache.put(url, response.clone());
     return response;
   }
   return fetch(request);
@@ -215,18 +222,19 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         const targets = config.domains.map((i) => {
           const t = new URL(event.request.url);
           t.host = i;
-          return t.toString();
+          return transformUrl(t.toString());
         });
         const results = await Promise.all(targets.map((i) => caches.match(i)));
-        if (results.find((i) => i)) return results.find((i) => i);
-        return cachedRespond(event.request);
+        return results.find((i) => i) || cachedRespond(event.request);
       }
-      const cachedResponse = await caches.match(url);
+      const transformedUrl = transformUrl(event.request.url);
+      const cachedResponse = await caches.match(transformedUrl);
       if (cachedResponse) return cachedResponse;
-      console.log(`Caching ${event.request.url}`);
+      console.log(`Caching ${transformedUrl}`);
       const [cache, response] = await Promise.all([
         caches.open(PRECACHE),
         fetch(url, {
+          method: event.request.method,
           headers: event.request.headers,
           redirect: event.request.redirect,
           keepalive: event.request.keepalive,
@@ -236,10 +244,10 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         }), // Fetch from url to prevent opaque response
       ]);
       if (response.ok) {
-        cache.put(url, response.clone());
+        cache.put(transformedUrl, response.clone());
         return response;
       }
-      console.log(`Failed to cache ${event.request.url}`, response);
+      console.log(`Failed to cache ${transformedUrl}`, response);
       // If response fails, re-fetch the original request to prevent
       // errors caused by different headers and do not cache them
       return fetch(event.request);

@@ -6,12 +6,14 @@ import {
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
-    BaseUserDict, ContestRule, ContestRules, ProblemDict,
+    BaseUserDict, ContestRule, ContestRules, ProblemDict, RecordDoc,
     ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import ranked from '../lib/rank';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import type { Handler } from '../service/server';
+import { Optional } from '../typeutils';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
@@ -31,11 +33,48 @@ interface AcmDetail extends AcmJournal {
     real: number;
 }
 
-function buildContestRule<T>(def: ContestRule<T>): ContestRule<T>;
-function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
-function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
-    const base = baseRule._originalRule || {};
-    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat'];
+export function isNew(tdoc: Tdoc, days = 1) {
+    const readyAt = tdoc.beginAt.getTime();
+    return Date.now() < readyAt - days * Time.day;
+}
+
+export function isUpcoming(tdoc: Tdoc, days = 7) {
+    const now = Date.now();
+    const readyAt = tdoc.beginAt.getTime();
+    return (now > readyAt - days * Time.day && now < readyAt);
+}
+
+export function isNotStarted(tdoc: Tdoc) {
+    return (new Date()) < tdoc.beginAt;
+}
+
+export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
+    const now = new Date();
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
+    return (tdoc.beginAt <= now && now < tdoc.endAt);
+}
+
+export function isDone(tdoc: Tdoc, tsdoc?: any) {
+    if (tdoc.endAt <= new Date()) return true;
+    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
+    return false;
+}
+
+export function isLocked(tdoc: Tdoc, time = new Date()) {
+    if (!tdoc.lockAt) return false;
+    return tdoc.lockAt < time && !tdoc.unlocked;
+}
+
+export function isExtended(tdoc: Tdoc) {
+    const now = new Date().getTime();
+    return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
+}
+
+export function buildContestRule<T>(def: Optional<ContestRule<T>, 'applyProjection'>): ContestRule<T>;
+export function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T>): ContestRule<T>;
+export function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: ContestRule<T> = {} as any) {
+    const base = baseRule._originalRule || { applyProjection: (_, rdoc) => rdoc };
+    const funcs = ['scoreboard', 'scoreboardRow', 'scoreboardHeader', 'stat', 'applyProjection'];
     const f = {};
     const rule = { ...baseRule, ...def };
     for (const key of funcs) {
@@ -216,6 +255,16 @@ const acm = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
     },
+    applyProjection(tdoc, rdoc) {
+        if (isDone(tdoc)) return rdoc;
+        delete rdoc.time;
+        delete rdoc.memory;
+        rdoc.testCases = [];
+        rdoc.judgeTexts = [];
+        delete rdoc.subtasks;
+        delete rdoc.score;
+        return rdoc;
+    },
 });
 
 const oi = buildContestRule({
@@ -366,6 +415,18 @@ const oi = buildContestRule({
     async ranked(tdoc, cursor) {
         return await ranked(cursor, (a, b) => a.score === b.score);
     },
+    applyProjection(tdoc, rdoc) {
+        if (isDone(tdoc)) return rdoc;
+        delete rdoc.status;
+        rdoc.compilerTexts = [];
+        rdoc.judgeTexts = [];
+        delete rdoc.memory;
+        delete rdoc.time;
+        delete rdoc.score;
+        rdoc.testCases = [];
+        delete rdoc.subtasks;
+        return rdoc;
+    },
 });
 
 const ioi = buildContestRule({
@@ -375,6 +436,9 @@ const ioi = buildContestRule({
     showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     showSelfRecord: () => true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
+    applyProjection(_, rdoc) {
+        return rdoc;
+    },
 }, oi);
 
 const strictioi = buildContestRule({
@@ -499,6 +563,9 @@ const ledo = buildContestRule({
             });
         }
         return row;
+    },
+    applyProjection(_, rdoc) {
+        return rdoc;
     },
 }, oi);
 
@@ -655,6 +722,8 @@ export const RULES: ContestRules = {
     acm, oi, homework, ioi, ledo, strictioi,
 };
 
+const collBalloon = db.collection('contest.balloon');
+
 function _getStatusJournal(tsdoc) {
     return tsdoc.journal.sort((a, b) => (a.rid.getTimestamp() - b.rid.getTimestamp()));
 }
@@ -662,7 +731,7 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc<30>> = {},
+    rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
@@ -694,7 +763,7 @@ export async function del(domainId: string, tid: ObjectId) {
     ]);
 }
 
-export async function get(domainId: string, tid: ObjectId): Promise<Tdoc<30>> {
+export async function get(domainId: string, tid: ObjectId): Promise<Tdoc> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
     return tdoc;
@@ -705,12 +774,38 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
+export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
+    const balloon = await collBalloon.findOne({
+        domainId, tid, pid, uid,
+    });
+    if (balloon) return null;
+    const bdcount = await collBalloon.countDocuments({ domainId, tid, pid });
+    const newBdoc = {
+        _id: rid, domainId, tid, pid, uid, ...(!bdcount ? { first: true } : {}),
+    };
+    await collBalloon.insertOne(newBdoc);
+    bus.broadcast('contest/balloon', domainId, tid, newBdoc);
+    return rid;
+}
+
+export async function getBalloon(domainId: string, tid: ObjectId, _id: ObjectId) {
+    return await collBalloon.findOne({ domainId, tid, _id });
+}
+
+export function getMultiBalloon(domainId: string, tid: ObjectId, query: any = {}) {
+    return collBalloon.find({ domainId, tid, ...query });
+}
+
+export async function updateBalloon(domainId: string, tid: ObjectId, _id: ObjectId, $set: any) {
+    return await collBalloon.findOneAndUpdate({ domainId, tid, _id }, { $set });
+}
+
 export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
 async function _updateStatus(
-    tdoc: Tdoc<30>, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
+    tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
     subtasks: Record<number, SubtaskResult>,
 ) {
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
@@ -726,6 +821,7 @@ export async function updateStatus(
     status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
 ) {
     const tdoc = await get(domainId, tid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
@@ -748,45 +844,6 @@ export async function attend(domainId: string, tid: ObjectId, uid: number, paylo
 
 export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
-}
-
-export function isNew(tdoc: Tdoc, days = 1) {
-    const now = new Date().getTime();
-    const readyAt = tdoc.beginAt.getTime();
-    return (now < readyAt - days * Time.day);
-}
-
-export function isUpcoming(tdoc: Tdoc, days = 7) {
-    const now = Date.now();
-    const readyAt = tdoc.beginAt.getTime();
-    return (now > readyAt - days * Time.day && now < readyAt);
-}
-
-export function isNotStarted(tdoc: Tdoc) {
-    return (new Date()) < tdoc.beginAt;
-}
-
-export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
-    const now = new Date();
-    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
-    return (tdoc.beginAt <= now && now < tdoc.endAt);
-}
-
-export function isDone(tdoc: Tdoc, tsdoc?: any) {
-    if (tdoc.endAt <= new Date()) return true;
-    if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
-    return false;
-}
-
-export function isLocked(tdoc: Tdoc) {
-    if (!tdoc.lockAt) return false;
-    const now = new Date();
-    return tdoc.lockAt < now && !tdoc.unlocked;
-}
-
-export function isExtended(tdoc: Tdoc) {
-    const now = new Date().getTime();
-    return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
 export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
@@ -843,25 +900,25 @@ export async function unlockScoreboard(domainId: string, tid: ObjectId) {
     await recalcStatus(domainId, tid);
 }
 
-export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc<30>) {
+export function canViewHiddenScoreboard(this: { user: User }, tdoc: Tdoc) {
     if (this.user.own(tdoc)) return true;
     if (tdoc.rule === 'homework') return this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
     return this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
 }
 
-export function canShowRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowRecord(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowSelfRecord(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowSelfRecord(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showSelfRecord(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
 }
 
-export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPermOverride = true) {
+export function canShowScoreboard(this: { user: User }, tdoc: Tdoc, allowPermOverride = true) {
     if (RULES[tdoc.rule].showScoreboard(tdoc, new Date())) return true;
     if (allowPermOverride && canViewHiddenScoreboard.call(this, tdoc)) return true;
     return false;
@@ -869,7 +926,7 @@ export function canShowScoreboard(this: { user: User }, tdoc: Tdoc<30>, allowPer
 
 export async function getScoreboard(
     this: Handler, domainId: string, tid: ObjectId, config: ScoreboardConfig,
-): Promise<[Tdoc<30>, ScoreboardRow[], BaseUserDict, ProblemDict]> {
+): Promise<[Tdoc, ScoreboardRow[], BaseUserDict, ProblemDict]> {
     const tdoc = await get(domainId, tid);
     if (!canShowScoreboard.call(this, tdoc)) throw new ContestScoreboardHiddenError(tid);
     const tsdocsCursor = getMultiStatus(domainId, { docId: tid }).sort(RULES[tdoc.rule].statusSort);
@@ -880,6 +937,42 @@ export async function getScoreboard(
     );
     await bus.parallel('contest/scoreboard', tdoc, rows, udict, pdict);
     return [tdoc, rows, udict, pdict];
+}
+
+export function addClarification(
+    domainId: string, tid: ObjectId, owner: number, content: string,
+    ip: string, subject = 0,
+) {
+    return document.add(
+        domainId, content, owner, document.TYPE_CONTEST_CLARIFICATION,
+        null, document.TYPE_CONTEST, tid, { ip, subject },
+    );
+}
+
+export function addClarificationReply(
+    domainId: string, did: ObjectId, owner: number,
+    content: string, ip: string,
+) {
+    return document.push(
+        domainId, document.TYPE_CONTEST_CLARIFICATION, did,
+        'reply', { content, owner, ip },
+    );
+}
+
+export function getClarification(domainId: string, did: ObjectId) {
+    return document.get(domainId, document.TYPE_CONTEST_CLARIFICATION, did);
+}
+
+export function getMultiClarification(domainId: string, tid: ObjectId, owner = 0) {
+    return document.getMulti(
+        domainId, document.TYPE_CONTEST_CLARIFICATION,
+        { parentType: document.TYPE_CONTEST, parentId: tid, ...(owner ? { owner: { $in: [owner, 0] } } : {}) },
+    ).sort('_id', -1).toArray();
+}
+
+export function applyProjection(tdoc: Tdoc, rdoc: RecordDoc, udoc: User) {
+    if (!RULES[tdoc.rule]) return rdoc;
+    return RULES[tdoc.rule].applyProjection(tdoc, rdoc, udoc);
 }
 
 export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
@@ -893,6 +986,7 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
 
 global.Hydro.model.contest = {
     RULES,
+    buildContestRule,
     add,
     getListStatus,
     getMultiStatus,
@@ -910,11 +1004,19 @@ global.Hydro.model.contest = {
     getAndListStatus,
     recalcStatus,
     unlockScoreboard,
+    getBalloon,
+    addBalloon,
+    getMultiBalloon,
+    updateBalloon,
     canShowRecord,
     canShowSelfRecord,
     canShowScoreboard,
     canViewHiddenScoreboard,
     getScoreboard,
+    addClarification,
+    addClarificationReply,
+    getClarification,
+    getMultiClarification,
     isNew,
     isUpcoming,
     isNotStarted,
@@ -922,5 +1024,6 @@ global.Hydro.model.contest = {
     isDone,
     isLocked,
     isExtended,
+    applyProjection,
     statusText,
 };

@@ -1,7 +1,6 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
-import checkers from './checkers';
 import { CompileError, FormatError } from './error';
 import { Execute } from './interface';
 import {
@@ -51,7 +50,10 @@ const testlibFile = {
     src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
 };
 
-async function _compile(src: string, type: 'checker' | 'validator' | 'interactor', getLang, copyIn, withTestlib = true, next?: any) {
+export async function compileWithTestlib(
+    src: string, type: 'checker' | 'validator' | 'interactor',
+    getLang, copyIn: CopyIn, withTestlib = true, next?: any,
+) {
     const s = src.replace('@', '.').split('.');
     let lang;
     let langId = s.pop();
@@ -64,20 +66,4 @@ async function _compile(src: string, type: 'checker' | 'validator' | 'interactor
     if (withTestlib) copyIn = { ...copyIn, 'testlib.h': testlibFile };
     // TODO cache compiled binary
     return await compile(lang, { src }, copyIn, next);
-}
-
-export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: CopyIn, next?: any) {
-    if (['default', 'strict'].includes(checkerType)) {
-        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-    }
-    if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
-    return _compile(checker, 'checker', getLang, copyIn, checkerType === 'testlib', next);
-}
-
-export async function compileInteractor(getLang: Function, interactor: string, copyIn: CopyIn) {
-    return _compile(interactor, 'interactor', getLang, copyIn);
-}
-
-export async function compileValidator(getLang: Function, validator: string, copyIn: CopyIn) {
-    return _compile(validator, 'validator', getLang, copyIn);
 }

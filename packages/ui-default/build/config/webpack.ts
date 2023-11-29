@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { ESBuildMinifyPlugin } from 'esbuild-loader';
+import { EsbuildPlugin } from 'esbuild-loader';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
@@ -152,13 +152,14 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          exclude: [/@types\//, /components\/message\//, /entry\.js/],
+          // FIXME latest version on esbuild cannot handle `this` in `DOMAttachedObject` properly
+          exclude: [/@types\//, /components\//, /pages\//, /entry\.js/],
           type: 'javascript/auto',
           use: [esbuildLoader()],
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          include: [/components\/message\//, /entry\.js/],
+          include: [/components\//, /pages\//, /entry\.js/],
           type: 'javascript/auto',
           use: [{
             loader: 'ts-loader',
@@ -201,7 +202,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
               if (packageName === 'monaco-editor-nls') {
-                return `i.monaco.${module.userRequest.split('/').pop().split('.')[0]}`;
+                return `i.monaco.${module.userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
               }
               return `n.${packageName.replace('@', '')}`;
             },
@@ -214,7 +215,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
       },
       usedExports: true,
-      minimizer: [new ESBuildMinifyPlugin({
+      minimizer: [new EsbuildPlugin({
         css: true,
         minify: true,
         minifySyntax: true,
@@ -222,7 +223,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome60',
+          'chrome65',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],

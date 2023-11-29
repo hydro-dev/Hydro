@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import { } from 'superagent';
 import charset from 'superagent-charset';
 import proxy from 'superagent-proxy';
 import {
@@ -42,10 +41,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getCsrfToken(url: string) {
         const { header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
+        if (header['set-cookie']) await this.setCookie(header['set-cookie'], true);
         return '';
     }
 
@@ -69,7 +65,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getProblem(id: string) {
         logger.info(id);
-        const res = await superagent.get('/showproblem.php')
+        const res = await this.get('/showproblem.php')
             .query({ pid: id.split('P')[1] })
             .buffer(true)
             .charset('gbk');
@@ -197,7 +193,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
                 || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
             if (status === STATUS.STATUS_COMPILE_ERROR) {
-                const { text: info } = await superagent.get(`http://acm.hdu.edu.cn/viewerror.php?rid=${id}`)
+                const { text: info } = await this.get(`http://acm.hdu.edu.cn/viewerror.php?rid=${id}`)
                     .buffer(true)
                     .charset('gbk');
                 const ceInfo = new JSDOM(info);

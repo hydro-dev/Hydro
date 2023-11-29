@@ -178,8 +178,11 @@ export default class Hydro {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        const content = this.config.minPriority !== undefined
-            ? `{"key":"prio","prio":${this.config.minPriority}}`
+        const config: { prio?: number, concurrency?: number } = {};
+        if (this.config.minPriority !== undefined) config.prio = this.config.minPriority;
+        if (this.config.concurrency !== undefined) config.concurrency = this.config.concurrency;
+        const content = Object.keys(config).length
+            ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
         setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
@@ -224,7 +227,8 @@ export default class Hydro {
         const res = await this.post('login', {
             uname: this.config.uname, password: this.config.password, rememberme: 'on',
         });
-        await this.setCookie(res.headers['set-cookie'].join(';'));
+        const setCookie = res.headers['set-cookie'];
+        await this.setCookie(Array.isArray(setCookie) ? setCookie.join(';') : setCookie);
     }
 
     async ensureLogin() {

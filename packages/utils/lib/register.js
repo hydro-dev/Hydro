@@ -26,6 +26,7 @@ const minor = +process.version.split('.')[1];
 function transform(filename) {
     const code = fs.readFileSync(filename, 'utf-8');
     const result = esbuild.transformSync(code, {
+        tsconfigRaw: '{"compilerOptions":{"experimentalDecorators":true}}',
         sourcefile: filename,
         sourcemap: 'both',
         format: 'cjs',

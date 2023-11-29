@@ -35,22 +35,22 @@ const newPath = path.resolve(os.homedir(), '.hydro', 'judge.yaml');
 const config = global.Hydro
     ? JudgeSettings({})
     : (() => {
-        const cfg = JudgeSettings({});
+        const base: any = {};
+        if (process.env.TEMP_DIR || argv.options.tmp) {
+            base.tmp_dir = path.resolve(process.env.TEMP_DIR || argv.options.tmp);
+        }
+        if (process.env.CACHE_DIR || argv.options.cache) {
+            base.cache_dir = path.resolve(process.env.CACHE_DIR || argv.options.cache);
+        }
+        if (process.env.EXECUTION_HOST || argv.options.sandbox) {
+            base.sandbox_host = path.resolve(process.env.EXECUTION_HOST || argv.options.sandbox);
+        }
         const configFilePath = (process.env.CONFIG_FILE || argv.options.config)
             ? path.resolve(process.env.CONFIG_FILE || argv.options.config)
             : fs.existsSync(oldPath) ? oldPath : newPath;
-
-        if (process.env.TEMP_DIR || argv.options.tmp) {
-            cfg.tmp_dir = path.resolve(process.env.TEMP_DIR || argv.options.tmp);
-        }
-        if (process.env.CACHE_DIR || argv.options.cache) {
-            cfg.cache_dir = path.resolve(process.env.CACHE_DIR || argv.options.cache);
-        }
-        if (process.env.EXECUTION_HOST || argv.options.sandbox) {
-            cfg.sandbox_host = path.resolve(process.env.EXECUTION_HOST || argv.options.sandbox);
-        }
         const configFile = fs.readFileSync(configFilePath, 'utf-8');
-        Object.assign(cfg, yaml.load(configFile) as any);
+        Object.assign(base, yaml.load(configFile) as any);
+        const cfg = JudgeSettings(base);
         return JudgeSettings(cfg);
     })();
 

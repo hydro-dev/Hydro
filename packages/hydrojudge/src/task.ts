@@ -1,3 +1,4 @@
+import { basename } from 'path';
 import { fs } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
@@ -5,12 +6,14 @@ import type {
     FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
+import checkers from './checkers';
+import compile, { compileWithTestlib } from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
-import { NextFunction, ParsedConfig } from './interface';
+import { Execute, NextFunction, ParsedConfig } from './interface';
 import judge from './judge';
 import { Logger } from './log';
-import { CopyInFile } from './sandbox';
+import { CopyIn, CopyInFile, runQueued } from './sandbox';
 import { compilerText, md5 } from './utils';
 
 interface Session {
@@ -128,5 +131,54 @@ export class JudgeTask {
                 : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
+    }
+
+    async compile(lang: string, code: CopyInFile) {
+        const copyIn = Object.fromEntries(
+            (this.config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
+        ) as CopyIn;
+        const result = await compile(this.session.getLang(lang), code, copyIn, this.next);
+        this.clean.push(result.clean);
+        return result;
+    }
+
+    async compileWithTestlib(type: 'interactor' | 'validator' | 'checker', file: string, checkerType?: string) {
+        if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+        if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+        const withTestlib = type !== 'checker' || checkerType === 'testlib';
+        const copyIn = {
+            user_code: this.code,
+            ...Object.fromEntries(
+                (this.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
+            ),
+        } as CopyIn;
+        const result = await compileWithTestlib(file, type, this.session.getLang, copyIn, withTestlib, this.next);
+        this.clean.push(result.clean);
+        return result;
+    }
+
+    async runAnalysis(execute: Execute, input: CopyInFile) {
+        const langConfig = this.session.getLang(this.lang);
+        if (!langConfig.analysis) return;
+        try {
+            const r = await runQueued(langConfig.analysis, {
+                copyIn: {
+                    ...execute.copyIn,
+                    input,
+                    [langConfig.code_file || 'foo']: this.code,
+                    compile: { content: langConfig.compile || '' },
+                    execute: { content: langConfig.execute || '' },
+                },
+                env: this.env,
+                time: 5000,
+                memory: 256,
+            });
+            const out = r.stdout.toString();
+            if (out.length) this.next({ compilerText: out.substring(0, 1024) });
+            if (process.env.DEV) console.log(r);
+        } catch (e) {
+            logger.info('Failed to run analysis');
+            logger.error(e);
+        }
     }
 }

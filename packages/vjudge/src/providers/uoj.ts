@@ -31,10 +31,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
 
     async getCsrfToken(url: string) {
         const { text: html, header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
+        if (header['set-cookie']) await this.setCookie(header['set-cookie'], true);
         let value = /_token *: *"(.+?)"/g.exec(html);
         if (value) return value[1];
         value = /_token" value="(.+?)"/g.exec(html);
@@ -58,9 +55,10 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
                 password: this.account.password,
             });
         if (header['set-cookie'] && this.cookie.length === 1) {
-            header['set-cookie'].push(...this.cookie);
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
+            const cookie = Array.isArray(header['set-cookie']) ? header['set-cookie'] : [header['set-cookie']];
+            cookie.push(...this.cookie);
+            await this.save({ cookie });
+            this.cookie = cookie;
         }
         if (text === 'ok') return true;
         return text;

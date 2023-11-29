@@ -72,10 +72,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         if (await this.loggedIn) return true;
         logger.info('retry login');
         const { header } = await this.get('/csgoj/user/login_ajax');
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
+        if (header['set-cookie']) await this.setCookie(header['set-cookie'], true);
         await this.post('/csgoj/user/login_ajax')
             .set('referer', 'https://cpc.csgrandeur.cn/')
             .send({

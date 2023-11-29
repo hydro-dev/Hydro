@@ -105,6 +105,18 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.9.26 / UI 4.9.26
+- core: 修复创建题目设置难度异常的问题
+- core: 优化 document 索引
+- core&ui: 比赛气球功能
+- core&ui: clarification
+- core: 修复 webauthn
+- import: add HOJ support
+- judge: address space limit (beta)
+- install: 支持使用环境变量指定安装区域
+- ui: 修复登录时用户不存在错误
+- core: 修复登录重定向
+
 ### Hydro 4.9.25 / UI 4.48.25
 - core: 修复忘记密码邮件发送速率限制
 - core: 修复比赛讨论

@@ -289,7 +289,7 @@ function buildSearchContainer() {
 async function handleDownload(ev) {
   let name = 'Export';
   // eslint-disable-next-line no-alert
-  if (ev.shiftKey) name = prompt('Filename:', name);
+  if (ev.shiftKey) name = prompt(i18n('Filename'), name);
   const pids = ensureAndGetSelectedPids();
   if (pids) await downloadProblemSet(pids, name);
 }

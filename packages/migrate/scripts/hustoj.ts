@@ -186,7 +186,7 @@ export async function run({
                 const pid = await ProblemModel.add(
                     domainId, `P${pdoc.problem_id}`,
                     pdoc.title, content,
-                    1, pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i),
+                    1, pdoc.source?.trim().length ? pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i) : [],
                     { hidden: pdoc.defunct === 'Y' },
                 );
                 pidMap[pdoc.problem_id] = pid;

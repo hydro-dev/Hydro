@@ -5,7 +5,7 @@
 {% block content %}
 {{ set(UiContext, 'tdoc', tdoc) }}
 {{ set(UiContext, 'tsdoc', tsdoc) }}
-<div class="row">
+<div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__header">
@@ -63,7 +63,7 @@
       </div>
       <div class="section__body no-padding">
       {% if not canViewRecord %}
-        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}'
+        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}
       {% elif not rdocs.length %}
         {{ nothing.render('Oh, there is no submission!') }}
       {% else %}
@@ -99,8 +99,86 @@
       {% endif %}
       </div>
     </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Contest Clarifications') }}</h1>
+      </div>
+      <div class="section__body">
+      {% if not tcdocs.length %}
+        {{ nothing.render('Oh, there is no clarification!') }}
+      {% else %}
+      <ul class="dczcomments__list">
+        {% for doc in tcdocs %}
+        <li class="dczcomments__item">
+          <div class="media">
+            <div class="media__body top">
+              <div class="clearfix">
+                <div class="supplementary dczcomments__supplementary">
+                  {{_('Subject') }}: {{ contest.render_clarification_subject(tdoc,pdict,doc.subject) }} | {% if doc.owner == 0 %}<b>{{ _('Jury') }}</b>{% else %}{{ user.render_inline(udict[doc.owner], badge=false) }}{% endif %} @ {{ datetimeSpan(doc._id)|safe }}
+                </div>
+              </div>
+              <div class="typo" data-emoji-enabled>
+                {{ doc['content']|markdown|safe }}
+              </div>
+            </div>
+          </div>
+          <ul class="dczcomments__replies">
+          {%- for rdoc in doc['reply'] -%}
+            <li class="dczcomments__reply">
+              <div class="media">
+                <div class="media__left top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                <div class="media__body top">
+                  <div class="clearfix">
+                    <div class="supplementary dczcomments__supplementary">
+                      <b>{{ _('Jury') }}</b> @ {{ datetimeSpan(rdoc['_id'])|safe }}
+                    </div>
+                  </div>
+                  <div class="typo" data-emoji-enabled>
+                    {{ rdoc['content']|markdown|safe }}
+                  </div>
+                </div>
+              </div>
+            </li>
+          {%- endfor -%}
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      </div>
+      {% if tsdoc.attend %}
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Send Clarification Request') }}</h1>
+      </div>
+      <div class="section__body typo">
+        <form method="post">
+          <input type="hidden" name="operation" value="clarification">
+          <div class="row">
+            <div class="medium-12 columns form__item">
+              <label>
+                {{ _('Subject') }}
+                <select name="subject" class="select">
+                  <option value="0">{{ _('General Issue') }}</option>
+                  <option value="-1">{{ _('Technical Issue') }}</option>
+                  {% for pid in tdoc.pids %}
+                  <option value="{{ pid }}">{{ String.fromCharCode(65+loop.index0) }}. {{ pdict[pid].title }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+            <div class="medium-12 columns form__item">
+              <label>
+                {{ _('Content') }}
+                <textarea name="content" class="textbox" data-markdown required></textarea>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="rounded primary button">{{ _('Submit') }}</button>
+      </div>
+      {% endif %}
+    </div>
   </div>
-  <div class="medium-3 columns">
+  <div class="medium-3 columns" data-sticky="large">
     {% set owner_udoc = udict[tdoc.owner] %}
     {% include "partials/contest_sidebar.html" %}
   </div>

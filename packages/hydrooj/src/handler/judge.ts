@@ -3,7 +3,7 @@ import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, TestCase,
+    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
@@ -63,13 +63,19 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     return { $set, $push };
 }
 
-export async function next(body: Partial<JudgeResultBody>) {
+export async function next(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
     body.rid = new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
+    let rdoc = body.rdoc;
+    if (!rdoc) {
+        logger.warn('Next function without rdoc is deprecated.');
+        console.trace();
+        rdoc = await record.get(body.rid);
+        if (!rdoc) return null;
+    }
     const { $set, $push } = processPayload(rdoc, body);
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
-    bus.broadcast('record/change', rdoc!, $set, $push, body);
+    rdoc = await record.update(body.rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    bus.broadcast('record/change', rdoc, $set, $push, body);
+    return rdoc;
 }
 
 export async function postJudge(rdoc: RecordDoc) {
@@ -120,7 +126,11 @@ export async function postJudge(rdoc: RecordDoc) {
                 await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
             } catch (e) {
                 next({
-                    rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                    rid: rdoc._id,
+                    domainId: rdoc.domainId,
+                    key: 'next',
+                    message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                    rdoc,
                 });
             }
         }
@@ -128,10 +138,15 @@ export async function postJudge(rdoc: RecordDoc) {
     await bus.parallel('record/judge', rdoc, updated);
 }
 
-export async function end(body: Partial<JudgeResultBody>) {
-    body.rid &&= new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
+export async function end(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
+    body.rid = new ObjectId(body.rid);
+    let rdoc = body.rdoc;
+    if (!rdoc) {
+        logger.warn('End function without rdoc is deprecated.');
+        console.trace();
+        rdoc = await record.get(body.rid);
+        if (!rdoc) return null;
+    }
     const { $set, $push } = processPayload(rdoc, body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
@@ -139,7 +154,9 @@ export async function end(body: Partial<JudgeResultBody>) {
     await sleep(100); // Make sure that all 'next' event already triggered
     rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
+    rdoc = await record.get(body.rid);
     bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
+    return rdoc;
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
@@ -174,10 +191,12 @@ export class SubmissionDataDownloadHandler extends Handler {
 
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: any = null;
+    processing: Task[] = [];
     closed = false;
     query: any = { type: 'judge' };
+    rdocs: Record<string, RecordDoc> = {};
     ip: string;
+    concurrency = 1;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
@@ -193,7 +212,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async newTask() {
-        if (this.processing) return;
+        if (this.processing.length >= this.concurrency) return;
         let t;
         let rdoc: RecordDoc;
         while (!t) {
@@ -206,7 +225,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (!rdoc) t = null;
         }
         this.send({ task: { ...rdoc, ...t } });
-        this.processing = t;
+        this.rdocs[rdoc._id.toHexString()] = rdoc;
+        this.processing.push(t);
         const $set = { status: builtin.STATUS.STATUS_FETCHED };
         rdoc = await record.update(t.domainId, t.rid, $set, {});
         bus.broadcast('record/change', rdoc, $set, {});
@@ -218,25 +238,45 @@ class JudgeConnectionHandler extends ConnectionHandler {
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
         }
-        if (msg.key === 'next') await next(msg);
-        else if (msg.key === 'end') {
-            if (!msg.nop) await end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e));
-            this.processing = null;
-            await this.newTask();
+        if (['next', 'end'].includes(msg.key)) {
+            const rdoc = this.rdocs[msg.rid];
+            if (!rdoc) return;
+            if (msg.key === 'next') await next({ ...msg, rdoc });
+            if (msg.key === 'end') {
+                if (!msg.nop) await end({ judger: this.user._id, ...msg, rdoc }).catch((e) => logger.error(e));
+                this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
+                delete this.rdocs[msg.rid];
+                await this.newTask();
+            }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
-        } else if (msg.key === 'prio') {
+        } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             this.query.priority = { $gt: msg.prio };
+        } else if (msg.key === 'lang' && msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
+            this.query.lang = { $in: msg.lang };
+        } else if (msg.key === 'config') {
+            if (Number.isSafeInteger(msg.prio)) {
+                this.query.priority = { $gt: msg.prio };
+            }
+            if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
+                const old = this.concurrency;
+                this.concurrency = msg.concurrency;
+                if (old <= this.concurrency) {
+                    for (let i = old; i < this.concurrency; i++) {
+                        await this.newTask(); // eslint-disable-line no-await-in-loop
+                    }
+                }
+            }
         }
     }
 
     async cleanup() {
-        logger.info('Judge daemon disconnected from ', this.request.ip);
-        if (this.processing) {
-            await record.reset(this.processing.domainId, this.processing.rid, false);
-            await task.add(this.processing);
-        }
         this.closed = true;
+        logger.info('Judge daemon disconnected from ', this.request.ip);
+        await Promise.all(this.processing.map(async (t) => {
+            await record.reset(t.domainId, t.rid, false);
+            return await task.add(t);
+        }));
     }
 }
 

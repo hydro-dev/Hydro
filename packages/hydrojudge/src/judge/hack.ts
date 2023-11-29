@@ -1,29 +1,18 @@
 /* eslint-disable no-sequences */
-import { basename } from 'path';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
-import compile, { compileChecker, compileValidator } from '../compile';
-import { Execute } from '../interface';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
 export async function judge(ctx: Context) {
-    const { config, session } = ctx;
     ctx.next({ status: STATUS.STATUS_COMPILING, progress: 0 });
-    const userExtraFiles = Object.fromEntries(
-        (config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
-    );
-    const judgeExtraFiles = Object.fromEntries(
-        (config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
-    );
-    const markCleanup = (i: Execute) => (ctx.clean.push(i.clean), i);
     const [execute, checker, validator, input] = await Promise.all([
-        compile(session.getLang(ctx.lang), ctx.code, userExtraFiles, ctx.next).then(markCleanup),
-        compileChecker(session.getLang, config.checker_type, config.checker, judgeExtraFiles).then(markCleanup),
-        compileValidator(session.getLang, config.validator, judgeExtraFiles).then(markCleanup),
+        ctx.compile(ctx.lang, ctx.code),
+        ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type),
+        ctx.compileWithTestlib('validator', ctx.config.validator),
         ctx.session.fetchFile(ctx.files.hack),
     ]);
     ctx.clean.push(() => fs.unlink(input));
@@ -32,7 +21,7 @@ export async function judge(ctx: Context) {
         validator.execute,
         {
             stdin: { src: input },
-            copyIn: { ...validator.copyIn, ...judgeExtraFiles },
+            copyIn: validator.copyIn,
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
