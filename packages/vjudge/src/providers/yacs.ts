@@ -9,6 +9,10 @@ import crypto from 'crypto-js';
 
 const logger = new Logger('remote/yacs');
 
+const StatusMapping: Record<string, STATUS> = {
+    '答案正确': STATUS.STATUS_ACCEPTED,
+};
+
 export default class YACSProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         super(account, 'https://api.iai.sh.cn', 'form', logger);
@@ -44,7 +48,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     async getProblem(id: string) {
         logger.info(id);
         const { problem } = await this.getData(`/problem/${id.split('P')[1]}`);
-        let tag = []
+        let tag = [];
         if (problem.level) tag.push(problem.level);
         if (problem.contest) tag.push(problem.contest.name);
         if (problem.type !== '比赛')
@@ -80,7 +84,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                 })),
             },
             files: {},
-            tag: [],
+            tag,
             content,
         };
     }
@@ -88,7 +92,9 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     async listProblem(page: number, resync = false) {
         if (resync && page > 1) return [];
         const data = await this.getData(`/problem?pi=${page}`);
-        return data.problemList.map((problem) => `P${problem.id}`);
+        return data.problemList
+            .filter((problem) => problem.contest.status === '榜单已公布')
+            .map((problem) => `P${problem.id}`);
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
@@ -101,14 +107,46 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
             return null;
         }
         const { body } = await this.post('/submission/submit')
+            .set('Yacs-Token', this.token)
             .send({
                 code,
-                language: lang,
+                language: langs[lang],
                 problemId: +id.split('P')[1],
             });
         return `${body.id}`;
     }
 
     async waitForSubmission(id: string, next, end) {
+        while (true) {
+            await sleep(3000);
+            const { submission } = await this.getData(`/submission/${id}`);
+            console.log(JSON.stringify(submission, null, '  '));
+            const status = StatusMapping[submission.finalStatus];
+            let cases = submission.finalTaskList
+                .map((task, taskId) => task.dataPointList
+                    .map((point, pointId) => ({
+                        id: pointId + 1,
+                        subtaskId: taskId + 1,
+                        score: point.scoreGet,
+                        time: point.timeUsage,
+                        memory: point.memoryUsage / 1024,
+                        status: StatusMapping[point.status],
+                        // message: string,
+                    })))
+            console.log(cases)
+            await next({
+                status,
+                score: submission.finalScoreGet,
+                time: submission.finalTimeUsage,
+                memory: submission.finalMemoryUsage / 1024,
+                cases,
+            });
+            // return await end({
+            //     status,
+            //     score,
+            //     time,
+            //     memory,
+            // });
+        }
     }
 }
