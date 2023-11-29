@@ -117,13 +117,20 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     }
 
     async waitForSubmission(id: string, next, end) {
+        const done = {};
         while (true) {
             await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
             // console.log(JSON.stringify(submission, null, '  '));
             const status = StatusMapping[submission.finalStatus];
-            const cases = submission.finalTaskList
-                .map((task, taskId) => task.dataPointList
+            // let cases;
+            // for(let [taskId,task] of Object.entries(submission.finalTaskList)){
+            //     for(let [point,pointId] of (task as any).dataPointList){
+            //         const id = `${taskId}-${pointId}`;`
+            //     }
+            // }
+            const cases = 
+                .map((task, taskId) => 
                     .map((point, pointId) => ({
                         id: pointId + 1,
                         subtaskId: taskId + 1,
