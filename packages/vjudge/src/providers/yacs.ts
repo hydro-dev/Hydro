@@ -120,9 +120,9 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         while (true) {
             await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
-            console.log(JSON.stringify(submission, null, '  '));
+            // console.log(JSON.stringify(submission, null, '  '));
             const status = StatusMapping[submission.finalStatus];
-            let cases = submission.finalTaskList
+            const cases = submission.finalTaskList
                 .map((task, taskId) => task.dataPointList
                     .map((point, pointId) => ({
                         id: pointId + 1,
@@ -133,13 +133,28 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                         status: StatusMapping[point.status],
                         // message: string,
                     })))
-            console.log(cases)
+                .flat();
+            const subtasks = submission.finalTaskList
+                .map((task) => ({
+                    type: 'min',
+                    score: task.scoreGet,
+                    status: Math.min(...task.dataPointList.map((point) => StatusMapping[point.status])),
+                }));
+            console.log({
+                status,
+                score: submission.finalScoreGet,
+                time: submission.finalTimeUsage,
+                memory: submission.finalMemoryUsage / 1024,
+                cases,
+                subtasks,
+            })
             await next({
                 status,
                 score: submission.finalScoreGet,
                 time: submission.finalTimeUsage,
                 memory: submission.finalMemoryUsage / 1024,
                 cases,
+                subtasks,
             });
             // return await end({
             //     status,
