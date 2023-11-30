@@ -1,4 +1,5 @@
 /* eslint-disable no-await-in-loop */
+import { ReadStream } from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
@@ -10,6 +11,7 @@ import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
 import { Lock } from '../utils';
@@ -18,7 +20,7 @@ function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
 }
 
-export default class Hydro {
+export default class Hydro implements Session {
     ws: WebSocket;
     language: Record<string, LangConfig>;
 
@@ -132,6 +134,10 @@ export default class Hydro {
             w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
         });
         return target;
+    }
+
+    async postFile(target: string, file: string) {
+        await this.post('judge/upload', { target }).attach('file', fs.createReadStream(file));
     }
 
     getLang(name: string, doThrow = true) {
