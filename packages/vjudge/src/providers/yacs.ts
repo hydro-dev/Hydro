@@ -10,7 +10,16 @@ import { IBasicProvider, RemoteAccount } from '../interface';
 const logger = new Logger('remote/yacs');
 
 const StatusMapping: Record<string, STATUS> = {
+    正在评测: STATUS.STATUS_JUDGING,
     答案正确: STATUS.STATUS_ACCEPTED,
+    编译失败: STATUS.STATUS_COMPILE_ERROR,
+    答案错误: STATUS.STATUS_WRONG_ANSWER,
+    部分正确: STATUS.STATUS_WRONG_ANSWER,
+    运行时错误: STATUS.STATUS_RUNTIME_ERROR,
+    运行超时: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+    内存超出: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    暂未公布: STATUS.STATUS_SYSTEM_ERROR,
+    评测机故障: STATUS.STATUS_SYSTEM_ERROR,
 };
 
 export default class YACSProvider extends BasicFetcher implements IBasicProvider {
@@ -51,23 +60,17 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         const tag = [];
         if (problem.level) tag.push(problem.level);
         if (problem.contest) tag.push(problem.contest.name);
-        if (problem.type !== '比赛')
-            throw new Error(id)
-        if (!(problem.contest.name.length > 0))
-            throw new Error(id)
-        if (problem.inputFileName || problem.outputFileName)
-            throw new Error(id)
         let content = '';
         if (problem.background.trim()) content += `## 题目背景\n\n${problem.background.trim()}\n\n`;
         content += `## 题目描述\n\n${problem.description.trim()}\n\n`;
         content += `## 输入格式\n\n${problem.inputFormat.trim()}\n\n`;
         content += `## 输出格式\n\n${problem.outputFormat.trim()}\n\n`;
         content += problem.exampleList.map((sample, index) => {
-            const id = index + 1;
+            const sampleId = index + 1;
             let ret = '';
-            ret += `\`\`\`input${id}\n${sample.input.trim()}\n\`\`\`\n\n`;
-            ret += `\`\`\`output${id}\n${sample.output.trim()}\n\`\`\`\n\n`;
-            if (sample.note && sample.note.trim()) ret += `## 样例解释 ${id}\n\n${sample.note.trim()}\n\n`;
+            ret += `\`\`\`input${sampleId}\n${sample.input.trim()}\n\`\`\`\n\n`;
+            ret += `\`\`\`output${sampleId}\n${sample.output.trim()}\n\`\`\`\n\n`;
+            if (sample.note && sample.note.trim()) ret += `## 样例解释 ${sampleId}\n\n${sample.note.trim()}\n\n`;
             return ret;
         }).join('');
         content += `## 数据范围\n\n${problem.dataRange.trim()}\n\n`;
@@ -120,54 +123,53 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         const done = {};
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            await sleep(3000);
+            // await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
-            // console.log(JSON.stringify(submission, null, '  '));
             const status = StatusMapping[submission.finalStatus];
+            if (status === STATUS.STATUS_COMPILE_ERROR) {
+                return await end({
+                    status,
+                    compilerText: submission.finalErrorInfo,
+                    score: 0,
+                    time: 0,
+                    memory: 0,
+                });
+            }
             const cases = [];
-            for (const [taskId, task] of Object.entries(submission.finalTaskList)) {
-                for (const [pointId, point] of (task as any).dataPointList) {
+            let taskId = 0;
+            for (const task of submission.finalTaskList) {
+                taskId++;
+                let pointId = 0;
+                for (const point of (task as any).dataPointList) {
+                    pointId++;
                     if (done[`${taskId}.${pointId}`]) continue;
+                    if (StatusMapping[point.status] === STATUS.STATUS_JUDGING) continue;
                     done[`${taskId}.${pointId}`] = true;
                     cases.push({
-                        id: pointId + 1,
-                        subtaskId: taskId + 1,
+                        id: pointId,
+                        subtaskId: taskId,
                         score: point.scoreGet,
-                        time: point.timeUsage,
-                        memory: point.memoryUsage / 1024,
+                        time: 0,
+                        memory: 0,
                         status: StatusMapping[point.status],
-                        // message: string,
                     });
                 }
             }
-            // const subtasks = submission.finalTaskList
-            //     .map((task) => ({
-            //         type: 'min',
-            //         score: task.scoreGet,
-            //         status: Math.min(...task.dataPointList.map((point) => StatusMapping[point.status])),
-            //     }));
-            console.log({
-                status,
-                score: submission.finalScoreGet,
-                time: submission.finalTimeUsage,
-                memory: submission.finalMemoryUsage / 1024,
-                cases,
-                // subtasks,
-            })
             await next({
                 status,
                 score: submission.finalScoreGet,
                 time: submission.finalTimeUsage,
                 memory: submission.finalMemoryUsage / 1024,
                 cases,
-                // subtasks,
             });
-            // return await end({
-            //     status,
-            //     score,
-            //     time,
-            //     memory,
-            // });
+            if (status !== STATUS.STATUS_JUDGING) {
+                return await end({
+                    status,
+                    score: submission.finalScoreGet,
+                    time: submission.finalTimeUsage,
+                    memory: submission.finalMemoryUsage / 1024,
+                });
+            }
         }
     }
 }
