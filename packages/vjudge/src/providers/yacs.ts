@@ -1,16 +1,16 @@
 /* eslint-disable no-await-in-loop */
-import {
-    Logger, parseMemoryMB, parseTimeMS, sleep, STATUS, yaml,
-} from 'hydrooj';
+import crypto from 'crypto-js';
 import { JSDOM } from 'jsdom';
+import {
+    Logger, sleep, STATUS, yaml,
+} from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
-import crypto from 'crypto-js';
 
 const logger = new Logger('remote/yacs');
 
 const StatusMapping: Record<string, STATUS> = {
-    '答案正确': STATUS.STATUS_ACCEPTED,
+    答案正确: STATUS.STATUS_ACCEPTED,
 };
 
 export default class YACSProvider extends BasicFetcher implements IBasicProvider {
@@ -27,8 +27,8 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     token: string;
 
     get loggedIn(): Promise<boolean> {
-        return new Promise(async (resolve) => {
-            await this.get('/user/fetchByToken').query({ token: this.token })
+        return new Promise((resolve) => {
+            this.get('/user/fetchByToken').query({ token: this.token })
                 .end((err, { status }) => resolve(status === 200));
         });
     }
@@ -36,7 +36,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry login');
-        const password = crypto.MD5(this.account.password + 'yacs').toString();
+        const password = crypto.MD5(`${this.account.password}yacs`).toString();
         try {
             const { body: { token } } = await this.post('/user/login')
                 .send({ username: this.account.handle, password });
@@ -48,7 +48,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     async getProblem(id: string) {
         logger.info(id);
         const { problem } = await this.getData(`/problem/${id.split('P')[1]}`);
-        let tag = [];
+        const tag = [];
         if (problem.level) tag.push(problem.level);
         if (problem.contest) tag.push(problem.contest.name);
         if (problem.type !== '比赛')
@@ -118,20 +118,18 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
 
     async waitForSubmission(id: string, next, end) {
         const done = {};
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
             // console.log(JSON.stringify(submission, null, '  '));
             const status = StatusMapping[submission.finalStatus];
-            // let cases;
-            // for(let [taskId,task] of Object.entries(submission.finalTaskList)){
-            //     for(let [point,pointId] of (task as any).dataPointList){
-            //         const id = `${taskId}-${pointId}`;`
-            //     }
-            // }
-            const cases = 
-                .map((task, taskId) => 
-                    .map((point, pointId) => ({
+            const cases = [];
+            for (const [taskId, task] of Object.entries(submission.finalTaskList)) {
+                for (const [pointId, point] of (task as any).dataPointList) {
+                    if (done[`${taskId}.${pointId}`]) continue;
+                    done[`${taskId}.${pointId}`] = true;
+                    cases.push({
                         id: pointId + 1,
                         subtaskId: taskId + 1,
                         score: point.scoreGet,
@@ -139,21 +137,22 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                         memory: point.memoryUsage / 1024,
                         status: StatusMapping[point.status],
                         // message: string,
-                    })))
-                .flat();
-            const subtasks = submission.finalTaskList
-                .map((task) => ({
-                    type: 'min',
-                    score: task.scoreGet,
-                    status: Math.min(...task.dataPointList.map((point) => StatusMapping[point.status])),
-                }));
+                    });
+                }
+            }
+            // const subtasks = submission.finalTaskList
+            //     .map((task) => ({
+            //         type: 'min',
+            //         score: task.scoreGet,
+            //         status: Math.min(...task.dataPointList.map((point) => StatusMapping[point.status])),
+            //     }));
             console.log({
                 status,
                 score: submission.finalScoreGet,
                 time: submission.finalTimeUsage,
                 memory: submission.finalMemoryUsage / 1024,
                 cases,
-                subtasks,
+                // subtasks,
             })
             await next({
                 status,
@@ -161,7 +160,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                 time: submission.finalTimeUsage,
                 memory: submission.finalMemoryUsage / 1024,
                 cases,
-                subtasks,
+                // subtasks,
             });
             // return await end({
             //     status,
