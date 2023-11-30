@@ -123,7 +123,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         const done = {};
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            // await sleep(3000);
+            await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
             const status = StatusMapping[submission.finalStatus];
             if (status === STATUS.STATUS_COMPILE_ERROR) {
@@ -158,8 +158,6 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
             await next({
                 status,
                 score: submission.finalScoreGet,
-                time: submission.finalTimeUsage,
-                memory: submission.finalMemoryUsage / 1024,
                 cases,
             });
             if (status !== STATUS.STATUS_JUDGING) {
