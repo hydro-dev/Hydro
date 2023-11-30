@@ -45,10 +45,10 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry login');
-        const password = crypto.MD5(`${this.account.password}yacs`).toString();
         try {
+            // NOTE: you should pass a pre-hashed key!
             const { body: { token } } = await this.post('/user/login')
-                .send({ username: this.account.handle, password });
+                .send({ username: this.account.handle, password: this.account.password });
             this.token = token;
         } catch (e) { }
         return await this.loggedIn;
