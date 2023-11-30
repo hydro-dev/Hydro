@@ -42,8 +42,8 @@ class AccountService {
     async judge(task) {
         const rdoc = await RecordModel.get(task.domainId, task.rid);
         task = Object.assign(rdoc, task);
-        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid });
-        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid });
+        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid, rdoc });
+        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid, rdoc });
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
@@ -102,7 +102,7 @@ class AccountService {
                 } finally {
                     delete syncing[`${domainId}/${pid}`];
                 }
-                await sleep(100);
+                await sleep(5000);
             }
             page++;
             pids = await this.api.listProblem(page, resync, list);
