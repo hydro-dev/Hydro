@@ -331,9 +331,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
+        if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
         if (this.pretest) this.send({ rdoc: omit(rdoc, ['code', 'input']) });
         else {
-            if (this.applyProjection) rdoc = contest.applyProjection(tdoc, rdoc, this.user);
             this.send({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, allDomain: this.allDomain,
