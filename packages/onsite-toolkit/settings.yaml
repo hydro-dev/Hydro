@@ -1,0 +1,4 @@
+print_server:
+  type: text
+  name: print_server
+  desc: Hydro XCPC-TOOLS Server Url
