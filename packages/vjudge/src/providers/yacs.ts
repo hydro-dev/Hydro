@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
 import {
-    Logger, sleep, STATUS, yaml,
+    Logger, md5, sleep, STATUS, yaml,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -33,9 +33,13 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         if (await this.loggedIn) return true;
         logger.info('retry login');
         try {
-            // NOTE: you should pass a pre-hashed key!
             const { body: { token } } = await this.post('/user/login')
-                .send({ username: this.account.handle, password: this.account.password });
+                .send({
+                    username: this.account.handle,
+                    password: /^[a-f0-9]{32}$/.test(this.account.password)
+                        ? this.account.password
+                        : md5(`${this.account.password}yacs`),
+                });
             this.token = token;
         } catch (e) { }
         return await this.loggedIn;
