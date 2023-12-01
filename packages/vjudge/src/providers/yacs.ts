@@ -5,21 +5,9 @@ import {
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
+import { VERDICT } from '../verdict';
 
 const logger = new Logger('remote/yacs');
-
-const StatusMapping: Record<string, STATUS> = {
-    正在评测: STATUS.STATUS_JUDGING,
-    答案正确: STATUS.STATUS_ACCEPTED,
-    编译失败: STATUS.STATUS_COMPILE_ERROR,
-    答案错误: STATUS.STATUS_WRONG_ANSWER,
-    部分正确: STATUS.STATUS_WRONG_ANSWER,
-    运行时错误: STATUS.STATUS_RUNTIME_ERROR,
-    运行超时: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-    内存超出: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    暂未公布: STATUS.STATUS_SYSTEM_ERROR,
-    评测机故障: STATUS.STATUS_SYSTEM_ERROR,
-};
 
 export default class YACSProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
@@ -124,7 +112,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
         while (true) {
             await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);
-            const status = StatusMapping[submission.finalStatus];
+            const status = VERDICT[submission.finalStatus];
             if (status === STATUS.STATUS_COMPILE_ERROR) {
                 return await end({
                     status,
@@ -142,7 +130,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                 for (const point of (task as any).dataPointList) {
                     pointId++;
                     if (done[`${taskId}.${pointId}`]) continue;
-                    if (StatusMapping[point.status] === STATUS.STATUS_JUDGING) continue;
+                    if (VERDICT[point.status] === STATUS.STATUS_JUDGING) continue;
                     done[`${taskId}.${pointId}`] = true;
                     cases.push({
                         id: pointId,
@@ -150,7 +138,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
                         score: point.scoreGet,
                         time: 0,
                         memory: 0,
-                        status: StatusMapping[point.status],
+                        status: VERDICT[point.status],
                     });
                 }
             }
