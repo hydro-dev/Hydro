@@ -9,6 +9,7 @@ import luogu from './luogu';
 import poj from './poj';
 import spoj from './spoj';
 import uoj from './uoj';
+import yacs from './yacs';
 
 const vjudge: Record<string, any> = {
     codeforces,
@@ -23,5 +24,6 @@ const vjudge: Record<string, any> = {
     ybt,
     ybtbas,
     hduoj,
+    yacs,
 };
 export default vjudge;
