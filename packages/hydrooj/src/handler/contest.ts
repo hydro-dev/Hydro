@@ -280,6 +280,12 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
                 await record.getMulti(domainId, { contest: tid, uid: this.user._id })
                     .sort({ _id: -1 }).toArray(),
             ]);
+            if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+                this.response.body.rdocs = this.response.body.rdocs.map((rdoc) => contest.applyProjection(this.tdoc, rdoc, this.user));
+                for (const psdoc of psdocs) {
+                    this.response.body.rdict[psdoc.rid] = contest.applyProjection(this.tdoc, this.response.body.rdict[psdoc.rid], this.user);
+                }
+            }
             this.response.body.canViewRecord = true;
         } else {
             for (const i of psdocs) this.response.body.rdict[i.rid] = { _id: i.rid };
