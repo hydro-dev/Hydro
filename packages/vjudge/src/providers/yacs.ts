@@ -88,11 +88,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
-        const langs = {
-            'yacs.1': 'C++',
-            'yacs.2': 'Python 3.6',
-        };
-        if (!langs[lang]) {
+        if (!['C++', 'Python 3.6'].includes(lang)) {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
             return null;
         }
@@ -100,7 +96,7 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
             .set('Yacs-Token', this.token)
             .send({
                 code,
-                language: langs[lang],
+                language: lang,
                 problemId: +id.split('P')[1],
             });
         return `${body.id}`;
