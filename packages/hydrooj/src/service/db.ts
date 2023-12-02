@@ -44,10 +44,7 @@ class MongoService {
             mongourl = mongod.getUri();
         }
         this.opts = opts;
-        this.client = await MongoClient.connect(mongourl, {
-            readPreference: 'nearest',
-            writeConcern: new WriteConcern('majority'),
-        });
+        this.client = await MongoClient.connect(mongourl);
         this.db = this.client.db(opts.name || 'hydro');
         await bus.parallel('database/connect', this.db);
         setInterval(() => this.fixExpireAfter(), Time.hour);
