@@ -5,6 +5,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
+import sanitize from 'sanitize-filename';
 import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
@@ -743,7 +744,6 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
         if (!this.request.files.file) throw new ValidationError('file');
         filename ||= this.request.files.file.originalFilename || String.random(16);
-        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
         if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
@@ -758,7 +758,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 if (!entry.name) continue;
                 files.push({
                     type,
-                    name: entry.name,
+                    name: sanitize(entry.name),
                     size: entry.header.size,
                     data: () => entry.getData(),
                 });

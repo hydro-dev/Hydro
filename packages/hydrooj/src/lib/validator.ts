@@ -3,6 +3,7 @@ import emojiRegex from 'emoji-regex';
 import { isSafeInteger } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
+import sanitize from 'sanitize-filename';
 import saslprep from 'saslprep';
 
 type InputType = string | number | Record<string, any> | any[];
@@ -78,7 +79,7 @@ export const Types: Types = {
     Key: saslprepString(/^[a-zA-Z0-9-_]+$/),
     /** @deprecated */
     Name: saslprepString(/^.{1,255}$/),
-    Filename: saslprepString(/^[^\\/?#~!|*]{1,255}$/, (i) => !['con', '.', '..'].includes(i)),
+    Filename: saslprepString(/^[^\\/?#~!|*]{1,255}$/, (i) => sanitize(i) === i),
     UidOrName: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2}|-?[0-9]+)$/),
     Username: saslprepString(/^(.{3,31}|[\u4e00-\u9fa5]{2})$/),
     Password: basicString(/^.{6,255}$/),
