@@ -46,8 +46,8 @@ const session = {
         if (doThrow) throw new SystemError('Unsupported language {0}.', [lang]);
         return null;
     },
-    async postFile(target: string, file: string) {
-        return await processJudgeFileCallback(new ObjectId(target), file);
+    async postFile(target: string, filename: string, filepath: string) {
+        return await processJudgeFileCallback(new ObjectId(target), filename, filepath);
     },
     async cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);

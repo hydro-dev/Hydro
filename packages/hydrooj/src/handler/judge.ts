@@ -1,8 +1,9 @@
 import assert from 'assert';
-import AdmZip from 'adm-zip';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import sanitize from 'sanitize-filename';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
@@ -195,7 +196,7 @@ export class SubmissionDataDownloadHandler extends Handler {
     }
 }
 
-export async function processJudgeFileCallback(rid: ObjectId, filePath: string) {
+export async function processJudgeFileCallback(rid: ObjectId, filename: string, filePath: string) {
     const rdoc = await record.get(rid);
     const [pdoc, udoc] = await Promise.all([
         problem.get(rdoc.domainId, rdoc.pid),
@@ -203,46 +204,29 @@ export async function processJudgeFileCallback(rid: ObjectId, filePath: string) 
     ]);
     if (!udoc.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF) && !udoc.hasPerm(PERM.PERM_EDIT_PROBLEM)) throw new ForbiddenError();
     if (pdoc.reference) throw new ProblemIsReferencedError('edit files');
-    const isValidName = (t: string) => t && !t.includes('/') && !t.includes('..');
-    const files = [];
-    let zip: AdmZip;
-    try {
-        zip = new AdmZip(filePath);
-    } catch (e) {
-        throw new ValidationError('zip', null, e.message);
-    }
-    const entries = zip.getEntries();
-    for (const entry of entries) {
-        if (!entry.name) continue;
-        if (!isValidName(entry.name)) throw new ValidationError('filename', null, 'Bad filename');
-        files.push({
-            name: entry.name,
-            size: entry.header.size,
-            data: () => entry.getData(),
-        });
-    }
+    const stat = await fs.stat(filePath);
     if ((pdoc.data?.length || 0)
         + (pdoc.additional_file?.length || 0)
-        + files.length
         >= system.get('limit.problem_files_max')) {
         throw new FileLimitExceededError('count');
     }
     const size = Math.sum(
         (pdoc.data || []).map((i) => i.size),
         (pdoc.additional_file || []).map((i) => i.size),
-        files.map((i) => i.size),
+        stat.size,
     );
     if (size >= system.get('limit.problem_files_max_size')) {
         throw new FileLimitExceededError('size');
     }
-    await Promise.all(files.map((entry) => problem.addTestdata(pdoc.domainId, pdoc.docId, entry.name, entry.data(), udoc._id)));
+    await problem.addTestdata(pdoc.domainId, pdoc.docId, sanitize(filename), fs.createReadStream(filePath), udoc._id);
 }
 
 export class JudgeFileUpdateHandler extends Handler {
     @post('rid', Types.ObjectId)
-    async post(domainId: string, rid: ObjectId) {
+    @post('name', Types.Filename)
+    async post(domainId: string, rid: ObjectId, filename: string) {
         if (!this.request.files.file) throw new ValidationError('file');
-        await processJudgeFileCallback(rid, this.request.files.file.filepath);
+        await processJudgeFileCallback(rid, filename, this.request.files.file.filepath);
         this.response.body = { ok: 1 };
     }
 }

@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import { ReadStream } from 'fs';
 import path from 'path';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';

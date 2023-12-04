@@ -1,4 +1,3 @@
-import type { ReadStream } from 'fs';
 import type { LangConfig } from '@hydrooj/utils/lib/lang';
 import { NormalizedSubtask } from '@hydrooj/utils/lib/utils';
 import type { JudgeRequest as OrigJudgeRequest, ObjectId } from 'hydrooj';
@@ -32,6 +31,6 @@ export interface Session {
     getEnd: (task: JudgeTask) => NextFunction;
     cacheOpen: (source: string, files: any[], next?: NextFunction) => Promise<string>;
     fetchFile: (target: string) => Promise<string>;
-    postFile: (target: string, file: string) => Promise<void>;
+    postFile: (target: string, filename: string, file: string) => Promise<void>;
     config: { detail: boolean, host?: string };
 }
