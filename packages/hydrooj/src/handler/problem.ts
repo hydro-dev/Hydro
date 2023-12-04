@@ -5,6 +5,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
+import sanitize from 'sanitize-filename';
 import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
@@ -748,7 +749,6 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         if (!this.request.files.file) throw new ValidationError('file');
         filename ||= this.request.files.file.originalFilename || String.random(16);
-        const isValidName = (t) => t && !t.includes('/') && !t.includes('..');
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
             let zip: AdmZip;
@@ -760,10 +760,9 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             const entries = zip.getEntries();
             for (const entry of entries) {
                 if (!entry.name || entry.isDirectory) continue;
-                if (!isValidName(entry.name)) throw new ValidationError('filename', null, 'Bad filename');
                 files.push({
                     type,
-                    name: entry.name,
+                    name: sanitize(entry.name),
                     size: entry.header.size,
                     data: () => entry.getData(),
                 });

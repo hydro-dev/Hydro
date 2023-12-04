@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import {
-    Collection, Db, IndexDescription, MongoClient, WriteConcern,
+    Collection, Db, IndexDescription, MongoClient,
 } from 'mongodb';
 import { Time } from '@hydrooj/utils';
 import { Logger } from '../logger';
