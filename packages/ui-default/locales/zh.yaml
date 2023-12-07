@@ -27,6 +27,7 @@ __langname: 简体中文
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
 'Drag and drop testcases here:': '拖拽测试点到此处：'
+'Enter a new name for the file: ': 请输入新的文件名：
 'Failed to get credential: {0}': '获取认证数据失败: {0}'
 'File upload failed: {0}': 文件上传失败：{0}
 'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
@@ -50,6 +51,8 @@ __langname: 简体中文
 (None): (无)
 (Not changed): 未更改
 6-Digit Code: 6位代码
+A data generator is a program that generates testdata. It should output result to stdout.: 数据生成器是一个生成测试数据的程序。它应该将结果输出到标准输出。
+A standard program is a program that solves the problem. It should output answer to stdout.: 标准程序是一个解决问题的程序。它应该将答案输出到标准输出。
 Aborted: 已放弃
 About {0}: 关于 {0}
 About Markdown: 关于 Markdown
@@ -245,6 +248,7 @@ Current Status: 当前状态
 currently offline: 目前离线
 Daily update check: 每日自动检查更新
 Dark: 暗色
+Data Generator: 数据生成器
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。
@@ -358,7 +362,6 @@ End Time: 结束时间
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
-'Enter a new name for the file: ': 请输入新的文件名：
 error: 错误
 Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
 Evaluated difficulty: 估计的难度
@@ -398,6 +401,9 @@ Freeze scoreboard with N minutes remaining: 在赛事剩余N分钟时封榜
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别
+Generate testdata is not supported for this problem type.: 此题目类型不支持生成测试数据。
+Generate Testdata: 生成测试数据
+Generate: 生成
 Gravatar URL Prefix: Gravatar地址前缀
 Group / UID: 小组或 UID
 Group Name: 名称
@@ -845,6 +851,7 @@ Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
 Standard mode: 标准模式
+Standard Program: 标准程序
 Star Topic: 收藏讨论
 Star: 收藏
 Starred Users: 关注用户

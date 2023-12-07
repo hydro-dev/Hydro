@@ -2,6 +2,7 @@ import $ from 'jquery';
 import { map } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import FileSelectAutoComplete from 'vj/components/autocomplete/FileSelectAutoComplete';
 import { ActionDialog, ConfirmDialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
@@ -316,6 +317,11 @@ const page = new NamedPage('problem_files', () => {
       }
     }
     handleClickUpload(type, files);
+  }
+
+  if (UiContext.pdoc) {
+    FileSelectAutoComplete.getOrConstruct($('[name=gen]'), { data: UiContext.pdoc.data });
+    FileSelectAutoComplete.getOrConstruct($('[name=std]'), { data: UiContext.pdoc.data });
   }
 
   if ($('[name="upload_testdata"]').length) {
