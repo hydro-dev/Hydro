@@ -422,7 +422,7 @@ class HomeAvatarHandler extends Handler {
         } else if (this.request.files.file) {
             const file = this.request.files.file;
             if (file.size > 8 * 1024 * 1024) throw new ValidationError('file');
-            const ext = path.extname(file.originalFilename);
+            const ext = path.extname(file.originalFilename).toLowerCase();
             if (!['.jpg', '.jpeg', '.png'].includes(ext)) throw new ValidationError('file');
             await storage.put(`user/${this.user._id}/.avatar${ext}`, file.filepath, this.user._id);
             // TODO: cached avatar

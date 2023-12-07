@@ -37,6 +37,7 @@ export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
+export { default as mime } from './lib/mime';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
