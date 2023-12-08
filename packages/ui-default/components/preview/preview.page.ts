@@ -121,7 +121,7 @@ export async function previewFile(ev?, type = '') {
     const link = $(ev.currentTarget).find('a').attr('href');
     if (!link) return null;
     type ||= ev.currentTarget.getAttribute('data-preview');
-    const ext = filename.split('.').pop();
+    const ext = filename.split('.').pop().toLowerCase();
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
       const action = await new ActionDialog({
         $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
