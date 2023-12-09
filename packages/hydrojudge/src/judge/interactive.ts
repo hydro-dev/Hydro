@@ -68,7 +68,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
     compile: async () => {
         [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
             ctx.compile(ctx.lang, ctx.code),
-            ctx.compileWithTestlib('interactor', ctx.config.interactor),
+            ctx.compileWithTestlib('interactor', ctx.config.interactor, ctx.config.checker_type),
         ]);
     },
     judgeCase,
