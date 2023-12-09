@@ -26,6 +26,9 @@ export default class RecordModel {
         'files',
     ];
 
+    static RECORD_PRETEST = new ObjectId('000000000000000000000000');
+    static RECORD_GENERATE = new ObjectId('000000000000000000000001');
+
     static async submissionPriority(uid: number, base: number = 0) {
         const timeRecent = await RecordModel.coll
             .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid, rejudged: { $ne: true } })
@@ -132,7 +135,7 @@ export default class RecordModel {
             data.rejudged = true;
         } else if (args.type === 'pretest') {
             data.input = args.input || '';
-            data.contest = new ObjectId('000000000000000000000000');
+            data.contest = RecordModel.RECORD_PRETEST;
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
