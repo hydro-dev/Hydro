@@ -456,8 +456,8 @@ Numeric PID: 문제 번호
 Oh, the user doesn't have any contributions!: 아직 기여가 없습니다.
 Oh, the user hasn't created any discussions yet!: 아직 토론을 시작하지 않았습니다.
 Oh, the user hasn't submitted yet!: 아직 제출하지 않았습니다 _(:зゝ∠)
-Oh, there is no task in the queue!: 대기열이 비었습니다.
 Oh, there are no tasks that match the filter!: 결과 없음
+Oh, there is no task in the queue!: 대기열이 비었습니다.
 Ok: OK
 Only A-Z, a-z, 0-9 and _ are accepted: A-Z, a-z, 0-9 와 _만 허용됨
 Oops, there are no results.: 결과 없음
@@ -544,9 +544,9 @@ Quit Scratchpad: Editor 닫기
 Quote: 문구
 Rank: 순위
 ranking: 순위
+Read all record codes: 모든 기록 코드 읽기
 Read data of own problems: 자신의 문제 데이터 읽기
 Read data of problem: 문제 데이터 읽기
-Read record codes: 점수 읽기
 Ready (☆▽☆): 준비 완료! (☆▽☆)
 Ready: 준비됨
 Recent {0} Records: 최근 {0} 점수

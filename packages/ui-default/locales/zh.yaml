@@ -27,6 +27,7 @@ __langname: 简体中文
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
 'Drag and drop testcases here:': '拖拽测试点到此处：'
+'Enter a new name for the file: ': 请输入新的文件名：
 'Failed to get credential: {0}': '获取认证数据失败: {0}'
 'File upload failed: {0}': 文件上传失败：{0}
 'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
@@ -358,7 +359,6 @@ End Time: 结束时间
 Enroll Training: 参加训练
 Enrolled: 已参加
 Enrollees: 参加人数
-'Enter a new name for the file: ': 请输入新的文件名：
 error: 错误
 Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
 Evaluated difficulty: 估计的难度
@@ -715,9 +715,9 @@ Quote: 引用
 Rank: 排名
 Ranked Users: 排名用户
 ranking: 排名
+Read all record codes: 读取所有记录的代码
 Read data of own problems: 读取自己题目的数据
 Read data of problem: 读取题目数据
-Read record codes: 读取记录的代码
 Ready (☆▽☆): 马上开始 (☆▽☆)
 Ready: 即将开始
 Recent {0} Records: 最近 {0} 条记录
