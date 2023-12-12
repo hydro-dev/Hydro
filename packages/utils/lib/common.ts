@@ -240,7 +240,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^(([A-Za-z0-9]*?)(?:(\d*)[-_])?(\d+))\.(in|txt)$/,
+        regex: /^(([A-Za-z0-9._-]*?)(?:(\d*)[-_])?(\d+))\.(in|txt)$/,
         output: [
             (a) => `${a[1]}.out`,
             (a) => `${a[1]}.ans`,
@@ -332,6 +332,7 @@ export function readSubtasksFromFiles(files: string[], config) {
                             memory: config.memory,
                             type,
                             cases: [c],
+                            id: sid,
                         };
                     } else if (!subtask[sid].cases) subtask[sid].cases = [c];
                     else subtask[sid].cases.push(c);
