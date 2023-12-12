@@ -530,7 +530,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         if (pretest) {
             if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-            if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+            if (!['default', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new ProblemNotAllowPretestError('type');
             }
         }
@@ -554,7 +554,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
-            pretest ? { input, type: 'pretest' } : { contest: tid, files, type: tid ? 'contest' : 'judge' },
+            pretest ? { input, type: 'pretest' } : { contest: tid, files, type: 'judge' },
         );
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
@@ -826,8 +826,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         if (!this.pdoc.data.find((i) => i.name === std)) throw new BadRequestError();
         if (!this.pdoc.data.find((i) => i.name === gen)) throw new BadRequestError();
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, '_', `${gen}\n${std}`, true, {
-            contest: new ObjectId('000000000000000000000001'),
-            type: 'pretest',
+            type: 'generate',
         });
         this.response.redirect = this.url('record_detail', { rid });
     }

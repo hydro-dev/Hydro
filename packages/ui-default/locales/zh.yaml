@@ -29,6 +29,7 @@ __langname: 简体中文
 'Drag and drop testcases here:': '拖拽测试点到此处：'
 'Enter a new name for the file: ': 请输入新的文件名：
 'Failed to get credential: {0}': '获取认证数据失败: {0}'
+'File IO: {0}': 文件IO：{0}
 'File upload failed: {0}': 文件上传失败：{0}
 'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
 'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以点击以下链接来激活您 {1} 账户的新电子邮件地址：
@@ -692,7 +693,6 @@ problem_main: 题库
 problem_solution: 题解
 problem_submit: 递交代码
 problem_type.default: 传统题
-problem_type.fileio: '文件IO ({0})'
 problem_type.interactive: 交互题
 problem_type.objective: 客观题
 problem_type.remote_judge: 远端评测题

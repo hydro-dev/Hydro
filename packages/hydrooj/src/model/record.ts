@@ -85,8 +85,9 @@ export default class RecordModel {
         }
         meta = { ...meta, problemOwner: pdoc.owner };
         if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-        const type = (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) ? 'remotejudge' : 'judge';
-        config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
+        let type = 'judge';
+        if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
+        else if (meta?.type === 'generate') type = 'generate';
         return await task.addMany(rids.map((rid) => ({
             ...(pdoc.config as any),
             priority,
@@ -107,7 +108,7 @@ export default class RecordModel {
             contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
-            type: 'judge' | 'rejudge' | 'contest' | 'pretest' | 'hack',
+            type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate',
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
@@ -128,6 +129,7 @@ export default class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
+        let isContest = !!args.contest;
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
         if (args.type === 'rejudge') {
@@ -135,12 +137,16 @@ export default class RecordModel {
             data.rejudged = true;
         } else if (args.type === 'pretest') {
             data.input = args.input || '';
+            isContest = false;
             data.contest = RecordModel.RECORD_PRETEST;
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {}, { rejudge: data.rejudged });
+            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (isContest ? 50 : 0));
+            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {}, {
+                type: args.type,
+                rejudge: data.rejudged,
+            });
         }
         return res.insertedId;
     }
