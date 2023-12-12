@@ -397,28 +397,17 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     @query('pjax', Types.Boolean)
     async get(...args: any[]) {
         // Navigate to current additional file download
-        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        // e.g. ![img](file://a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json || args[2]) {
-            if (args[1]) {
-                this.response.body.pdoc.content = this.response.body.pdoc.content
-                    .replace(/\(file:\/\/(.+?)\)/g, (str) => {
-                        const info = str.match(/\(file:\/\/(.+?)\)/);
-                        return `(./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]})`;
-                    })
-                    .replace(/="file:\/\/(.+?)"/g, (str) => {
-                        const info = str.match(/="file:\/\/(.+?)"/);
-                        return `="./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
-                    })
-                    .replace(/=\\"file:\/\/(.+?)\\"/g, (str) => {
-                        const info = str.match(/=\\"file:\/\/(.+?)\\"/);
-                        return `=\\"./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}\\"`;
-                    });
-            } else {
-                this.response.body.pdoc.content = this.response.body.pdoc.content
-                    .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
-                    .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`)
-                    .replace(/=\\"file:\/\//g, `=\\"${this.pdoc.docId}/file/`);
-            }
+            this.response.body.pdoc.content = this.response.body.pdoc.content
+                .replace(/file:\/\/([^ \n)\\"]+?)/g, (str) => {
+                    const info = str.match(/\]\(file:\/\/(.+?)\)/);
+                    const fileinfo = info[1];
+                    const filename = fileinfo.split('?')[0]; // remove querystring
+                    if (!this.pdoc.additional_file?.find((i) => i.name === filename)) return str;
+                    if (!args[1]) return `./${this.pdoc.docId}/file/${fileinfo}`;
+                    return `./${this.pdoc.docId}/file/${fileinfo}${fileinfo.includes('?') ? '&' : '?'}tid=${args[1]}`;
+                });
         }
         this.response.body.page_name = this.tdoc
             ? this.tdoc.rule === 'homework'
