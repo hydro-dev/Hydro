@@ -254,6 +254,7 @@ class SystemUserImportHandler extends SystemHandler {
                             groups[data.group].push(email);
                         }
                         if (data.school) payload.school = data.school;
+                        if (data.studentId) payload.studentId = data.studentId;
                     } catch (e) { }
                     udocs.push({
                         email, username, password, displayName, payload,
