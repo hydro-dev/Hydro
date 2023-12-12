@@ -829,7 +829,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             contest: new ObjectId('000000000000000000000001'),
             type: 'pretest',
         });
-        this.response.body = { rid };
+        this.response.redirect = this.url('record_detail', { rid });
     }
 }
 

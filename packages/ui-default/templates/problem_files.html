@@ -34,13 +34,11 @@
     }) }}
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Generate Testdata') }}</h1>
+        <h1 class="section__title">{{ _('Generate Testdata') }}(Beta)</h1>
       </div>
       {{ noscript_note.render() }}
       <div class="section__body generate">
         {% if pdoc.config.type === 'default' %}
-          <form method="POST">
-            <input type="hidden" name="operation" value="generate_testdata">
             {{ form.form_text({
               columns: 12,
               label:'Data Generator',
@@ -53,8 +51,7 @@
               name:'std',
               help_text:'A standard program is a program that solves the problem. It should output answer to stdout.'
             }) }}
-            <button class="rounded button" type="submit">{{ _('Generate') }}</button>
-          </form>
+            <button class="rounded button" name="generate_testdata">{{ _('Generate') }}</button>
         {% else %}
           {{ nothing.render('Generate testdata is not supported for this problem type.') }}
         {% endif %}
