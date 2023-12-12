@@ -1,5 +1,7 @@
 # Built Files & Log
 .build/
+atcoder/
+live/
 dist/
 *.cache
 .cache
