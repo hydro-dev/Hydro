@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import { ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';

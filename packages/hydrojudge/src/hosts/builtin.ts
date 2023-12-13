@@ -92,4 +92,5 @@ export async function postInit(ctx) {
     const parallelism = Math.max(getConfig('parallelism'), 2);
     for (let i = 1; i < parallelism; i++) TaskModel.consume({ type: 'judge' }, handle);
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
+    TaskModel.consume({ type: 'generate' }, handle);
 }

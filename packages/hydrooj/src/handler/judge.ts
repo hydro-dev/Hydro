@@ -235,7 +235,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     processing: Task[] = [];
     closed = false;
-    query: any = { type: 'judge' };
+    query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
     ip: string;
     concurrency = 1;
