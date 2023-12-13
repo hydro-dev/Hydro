@@ -240,7 +240,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^(([.-_A-Za-z0-9]*?)(?:(\d*)[-_])?(\d+))\.(in|txt)$/,
+        regex: /^(([A-Za-z0-9]*?)(?:(\d*)[-_])?(\d+))\.(in|txt)$/,
         output: [
             (a) => `${a[1]}.out`,
             (a) => `${a[1]}.ans`,
