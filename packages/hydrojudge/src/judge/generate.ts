@@ -22,22 +22,19 @@ export const judge = async (ctx: JudgeTask) => {
         ctx.compileLocalFile('std', std),
     ]);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
-    const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     let totalTime = 0;
     let totalMemory = 0;
-    let totalStatus = STATUS.STATUS_JUDGING;
+    let totalStatus = 0;
 
     async function runGenerator(i: number) {
         const res = await runQueued(
-            `${executeGenerator} ${i}`,
+            `${executeGenerator.execute} ${i}`,
             {
-                stdin: { content: ctx.input },
+                stdin: { content: ctx.input || '' },
                 copyIn: executeGenerator.copyIn,
                 copyOut: ['stdout'],
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
-                addressSpaceLimit: address_space_limit,
-                processLimit: process_limit,
             },
             1,
         );
@@ -68,8 +65,6 @@ export const judge = async (ctx: JudgeTask) => {
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.in`, tmp);
         }
         ctx.next({
-            status: totalStatus,
-            score: 0,
             case: {
                 id: i,
                 subtaskId: 1,
@@ -84,15 +79,13 @@ export const judge = async (ctx: JudgeTask) => {
     }
     async function runStd(i: number, stdin: CopyInFile) {
         const res = await runQueued(
-            `${executeStd} ${i}`,
+            `${executeStd.execute} ${i}`,
             {
                 stdin,
                 copyIn: executeStd.copyIn,
                 copyOut: ['stdout'],
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
-                addressSpaceLimit: address_space_limit,
-                processLimit: process_limit,
             },
             1,
         );
@@ -123,8 +116,6 @@ export const judge = async (ctx: JudgeTask) => {
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.out`, tmp);
         }
         ctx.next({
-            status: totalStatus,
-            score: 0,
             case: {
                 id: i,
                 subtaskId: 2,
@@ -146,7 +137,7 @@ export const judge = async (ctx: JudgeTask) => {
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status: totalStatus,
-        score: 100,
+        score: totalStatus === STATUS.STATUS_ACCEPTED ? 100 : 0,
         time: totalTime,
         memory: totalMemory,
     });

@@ -113,13 +113,13 @@ export class JudgeTask {
                 isSelfSubmission: this.meta.problemOwner === this.request.uid,
                 key: md5(`${this.source}/${getConfig('secret')}`),
                 lang: this.lang,
-                langConfig: (this.request.type !== 'generate' && ['objective', 'submit_answer'].includes(this.request.config.type))
+                langConfig: (this.request.type === 'generate' || ['objective', 'submit_answer'].includes(this.request.config.type))
                     ? null : this.session.getLang(this.lang),
             },
         );
         this.stat.judge = new Date();
         const type = this.request.contest?.toString() === '000000000000000000000000' ? 'run'
-            : this.request.contest?.toString() === '000000000000000000000001' ? 'generate'
+            : this.request.type === 'generate' ? 'generate'
                 : this.files?.hack ? 'hack'
                     : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
