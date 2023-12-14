@@ -342,11 +342,13 @@ export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
     rejudge?: boolean;
+    // FIXME stricter types
+    type?: string;
 }
 
 export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
     priority: number;
-    type: 'judge';
+    type: 'judge' | 'generate';
     rid: ObjectId;
     config: ProblemConfigFile;
     meta: JudgeMeta;

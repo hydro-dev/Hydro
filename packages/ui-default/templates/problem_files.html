@@ -1,3 +1,4 @@
+{% import "components/nothing.html" as nothing with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
@@ -27,6 +28,36 @@
         </div>
       {% endif %}
     </div>
+    {% if not reference and (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) %}
+    {{ set(UiContext, {
+      pdoc: pdoc
+    }) }}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Generate Testdata') }}(Beta)</h1>
+      </div>
+      {{ noscript_note.render() }}
+      <div class="section__body generate">
+        {% if pdoc.config.type === 'default' %}
+            {{ form.form_text({
+              columns: 12,
+              label:'Data Generator',
+              name:'gen',
+              help_text:'A data generator is a program that generates testdata. It should output result to stdout.'
+            }) }}
+            {{ form.form_text({
+              columns: 12,
+              label:'Standard Program',
+              name:'std',
+              help_text:'A standard program is a program that solves the problem. It should output answer to stdout.'
+            }) }}
+            <button class="rounded button" name="generate_testdata">{{ _('Generate') }}</button>
+        {% else %}
+          {{ nothing.render('Generate testdata is not supported for this problem type.') }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
   <div class="medium-4 columns">
     <div class="section">

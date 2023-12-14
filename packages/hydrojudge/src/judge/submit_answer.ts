@@ -67,7 +67,7 @@ function judgeCase(c: NormalizedCase) {
 export const judge = async (ctx: Context) => {
     await runFlow(ctx, {
         compile: async () => {
-            ctx.checker = await ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type);
+            ctx.checker = await ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type);
         },
         judgeCase,
     });

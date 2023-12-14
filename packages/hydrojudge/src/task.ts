@@ -1,29 +1,21 @@
-import { basename } from 'path';
+import { basename, join } from 'path';
 import { fs } from '@hydrooj/utils';
-import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
-    FileInfo, JudgeMeta, JudgeRequest, JudgeResultBody, TestCase,
+    FileInfo, JudgeMeta, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
 import checkers from './checkers';
-import compile, { compileWithTestlib } from './compile';
+import compile, { compileLocalFile } from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
-import { Execute, NextFunction, ParsedConfig } from './interface';
+import {
+    Execute, JudgeRequest, ParsedConfig, Session,
+} from './interface';
 import judge from './judge';
 import { Logger } from './log';
 import { CopyIn, CopyInFile, runQueued } from './sandbox';
 import { compilerText, md5 } from './utils';
-
-interface Session {
-    getLang: (name: string) => LangConfig;
-    getNext: (task: JudgeTask) => NextFunction;
-    getEnd: (task: JudgeTask) => NextFunction;
-    cacheOpen: (source: string, files: any[], next?: NextFunction) => Promise<string>;
-    fetchFile: (target: string) => Promise<string>;
-    config: { detail: boolean, host?: string };
-}
 
 const logger = new Logger('judge');
 
@@ -121,14 +113,15 @@ export class JudgeTask {
                 isSelfSubmission: this.meta.problemOwner === this.request.uid,
                 key: md5(`${this.source}/${getConfig('secret')}`),
                 lang: this.lang,
-                langConfig: ['objective', 'submit_answer'].includes(this.request.config.type) ? null : this.session.getLang(this.lang),
+                langConfig: (this.request.type === 'generate' || ['objective', 'submit_answer'].includes(this.request.config.type))
+                    ? null : this.session.getLang(this.lang),
             },
         );
         this.stat.judge = new Date();
         const type = this.request.contest?.toString() === '000000000000000000000000' ? 'run'
-            : this.files?.hack
-                ? 'hack'
-                : this.config.type || 'default';
+            : this.request.type === 'generate' ? 'generate'
+                : this.files?.hack ? 'hack'
+                    : this.config.type || 'default';
         if (!judge[type]) throw new FormatError('Unrecognized problemType: {0}', [type]);
         await judge[type].judge(this);
     }
@@ -142,17 +135,19 @@ export class JudgeTask {
         return result;
     }
 
-    async compileWithTestlib(type: 'interactor' | 'validator' | 'checker', file: string, checkerType?: string) {
+    async compileLocalFile(type: 'interactor' | 'validator' | 'checker' | 'generator' | 'std', file: string, checkerType?: string) {
         if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-        if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
-        const withTestlib = type !== 'checker' || checkerType === 'testlib';
+        if (type === 'checker' && !checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+        const withTestlib = type !== 'std' && (type !== 'checker' || checkerType === 'testlib');
+        const extra = type === 'std' ? this.config.user_extra_files : this.config.judge_extra_files;
         const copyIn = {
             user_code: this.code,
             ...Object.fromEntries(
-                (this.config.judge_extra_files || []).map((i) => [basename(i), { src: i }]),
+                (extra || []).map((i) => [basename(i), { src: i }]),
             ),
         } as CopyIn;
-        const result = await compileWithTestlib(file, type, this.session.getLang, copyIn, withTestlib, this.next);
+        if (!file.startsWith('/')) file = join(this.folder, file);
+        const result = await compileLocalFile(file, type, this.session.getLang, copyIn, withTestlib, this.next);
         this.clean.push(result.clean);
         return result;
     }

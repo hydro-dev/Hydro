@@ -75,7 +75,7 @@ export const judge = async (ctx: Context) => await runFlow(ctx, {
     compile: async () => {
         [ctx.execute, ctx.checker] = await Promise.all([
             ctx.compile(ctx.lang, ctx.code),
-            ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type),
+            ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ]);
     },
     judgeCase,

@@ -11,8 +11,8 @@ export async function judge(ctx: Context) {
     ctx.next({ status: STATUS.STATUS_COMPILING, progress: 0 });
     const [execute, checker, validator, input] = await Promise.all([
         ctx.compile(ctx.lang, ctx.code),
-        ctx.compileWithTestlib('checker', ctx.config.checker, ctx.config.checker_type),
-        ctx.compileWithTestlib('validator', ctx.config.validator),
+        ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
+        ctx.compileLocalFile('validator', ctx.config.validator),
         ctx.session.fetchFile(ctx.files.hack),
     ]);
     ctx.clean.push(() => fs.unlink(input));

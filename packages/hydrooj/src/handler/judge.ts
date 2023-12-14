@@ -1,20 +1,27 @@
 import assert from 'assert';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import sanitize from 'sanitize-filename';
+import {
+    FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
+} from '../error';
 import {
     JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
-import { STATUS } from '../model/builtin';
+import { PERM, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
+import * as system from '../model/system';
 import task from '../model/task';
+import user from '../model/user';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
@@ -189,11 +196,46 @@ export class SubmissionDataDownloadHandler extends Handler {
     }
 }
 
+export async function processJudgeFileCallback(rid: ObjectId, filename: string, filePath: string) {
+    const rdoc = await record.get(rid);
+    const [pdoc, udoc] = await Promise.all([
+        problem.get(rdoc.domainId, rdoc.pid),
+        user.getById(rdoc.domainId, rdoc.uid),
+    ]);
+    if (!udoc.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF) && !udoc.hasPerm(PERM.PERM_EDIT_PROBLEM)) throw new ForbiddenError();
+    if (pdoc.reference) throw new ProblemIsReferencedError('edit files');
+    const stat = await fs.stat(filePath);
+    if ((pdoc.data?.length || 0)
+        + (pdoc.additional_file?.length || 0)
+        >= system.get('limit.problem_files_max')) {
+        throw new FileLimitExceededError('count');
+    }
+    const size = Math.sum(
+        (pdoc.data || []).map((i) => i.size),
+        (pdoc.additional_file || []).map((i) => i.size),
+        stat.size,
+    );
+    if (size >= system.get('limit.problem_files_max_size')) {
+        throw new FileLimitExceededError('size');
+    }
+    await problem.addTestdata(pdoc.domainId, pdoc.docId, sanitize(filename), fs.createReadStream(filePath), udoc._id);
+}
+
+export class JudgeFileUpdateHandler extends Handler {
+    @post('rid', Types.ObjectId)
+    @post('name', Types.Filename)
+    async post(domainId: string, rid: ObjectId, filename: string) {
+        if (!this.request.files.file) throw new ValidationError('file');
+        await processJudgeFileCallback(rid, filename, this.request.files.file.filepath);
+        this.response.body = { ok: 1 };
+    }
+}
+
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     processing: Task[] = [];
     closed = false;
-    query: any = { type: 'judge' };
+    query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
     ip: string;
     concurrency = 1;
@@ -282,6 +324,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
 export async function apply(ctx) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
+    ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }

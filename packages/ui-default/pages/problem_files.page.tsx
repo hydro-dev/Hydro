@@ -2,7 +2,8 @@ import $ from 'jquery';
 import { map } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog/index';
+import FileSelectAutoComplete from 'vj/components/autocomplete/FileSelectAutoComplete';
+import { ActionDialog, ConfirmDialog, InfoDialog } from 'vj/components/dialog/index';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import { previewFile } from 'vj/components/preview/preview.page';
@@ -316,6 +317,48 @@ const page = new NamedPage('problem_files', () => {
       }
     }
     handleClickUpload(type, files);
+  }
+
+  async function handleGenerateTestdata(ev) {
+    ev.preventDefault();
+    const gen = $('[name=gen]').val();
+    const std = $('[name=std]').val();
+    if (!gen) {
+      Notification.error(i18n('Please input the generator.'));
+      return;
+    }
+    if (!std) {
+      Notification.error(i18n('Please input the standard program.'));
+      return;
+    }
+    try {
+      const res = await request.post('', {
+        operation: 'generate_testdata',
+        gen,
+        std,
+      });
+      if (res.error) Notification.error(res.error);
+      else {
+        Notification.success(i18n('Generating...'));
+        await new InfoDialog({
+          $body: tpl`
+            <div class="typo">
+              <iframe src="${res.url}"
+                scrolling="yes" border="0" frameborder="no" framespacing="0" width="100%" style="height: 70vh;"></iframe>
+            </div>`,
+          width: `${window.innerWidth - 200}px`,
+          height: `${window.innerHeight - 100}px`,
+        }).open();
+      }
+    } catch (error) {
+      Notification.error([error.message, ...error.params].join(' '));
+    }
+  }
+
+  if (UiContext.pdoc) {
+    FileSelectAutoComplete.getOrConstruct($('[name=gen]'), { data: UiContext.pdoc.data });
+    FileSelectAutoComplete.getOrConstruct($('[name=std]'), { data: UiContext.pdoc.data });
+    $('[name="generate_testdata"]').on('click', handleGenerateTestdata);
   }
 
   if ($('[name="upload_testdata"]').length) {
