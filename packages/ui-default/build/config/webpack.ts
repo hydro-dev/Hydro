@@ -17,6 +17,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     return {
       loader: 'esbuild-loader',
       options: {
+        tsconfigRaw: '{"compilerOptions":{"experimentalDecorators":true}}',
         loader: 'tsx',
         target: 'es2015',
         sourcemap: true,
