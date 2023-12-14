@@ -17,11 +17,11 @@ function emoji(range) {
 function qqEmoji(range) {
   return qface.data.flatMap((i) => {
     const url = qface.getUrl(i.QSid, 'https://qq-face.vercel.app');
-    return i.Input.map((input) => ({
+    return [i.QDes.substring(1), ...(i.Input || [])].map((input) => ({
       label: `/${input}`,
       kind: monaco.languages.CompletionItemKind.Keyword,
       documentation: { value: `![${i.QDes}](${url})`, isTrusted: true },
-      insertText: `![${i.Input[0]}](${url} =32x32) `,
+      insertText: `![${i.Input ? i.Input[0] : i.QDes.substring(1)}](${url} =32x32) `,
       range,
     }));
   });
