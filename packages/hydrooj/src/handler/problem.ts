@@ -399,10 +399,13 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         // e.g. ![img](file://a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json || args[2]) {
             this.response.body.pdoc.content = this.response.body.pdoc.content
-                .replace(/file:\/\/([^ \n)\\"]+?)/g, (str) => {
-                    const info = str.match(/file:\/\/([^ \n)\\"]+?)/);
+                .replace(/file:\/\/([^ \n)\\"]+)/g, (str: string) => {
+                    const info = str.match(/file:\/\/([^ \n)\\"]+)/);
                     const fileinfo = info[1];
-                    const filename = fileinfo.split('?')[0]; // remove querystring
+                    let filename = fileinfo.split('?')[0]; // remove querystring
+                    try {
+                        filename = decodeURIComponent(filename);
+                    } catch (e) { }
                     if (!this.pdoc.additional_file?.find((i) => i.name === filename)) return str;
                     if (!args[1]) return `./${this.pdoc.docId}/file/${fileinfo}`;
                     return `./${this.pdoc.docId}/file/${fileinfo}${fileinfo.includes('?') ? '&' : '?'}tid=${args[1]}`;
