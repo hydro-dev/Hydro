@@ -3,7 +3,7 @@ import { tmpdir } from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { SystemError } from 'hydrooj';
+import { SystemError } from '../error';
 import { CopyInFile, runQueued } from '../sandbox';
 import client from '../sandbox/client';
 import signals from '../signals';
