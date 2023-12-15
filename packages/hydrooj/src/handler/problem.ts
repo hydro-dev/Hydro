@@ -194,8 +194,7 @@ export class ProblemMainHandler extends Handler {
                 pcount = pcount - count + pdocs.length;
             }
         }
-        // some problems are hidden and cannot be viewed by current user
-        if (pcount > pdocs.length) pcount = pdocs.length;
+        if (text && pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
             await Promise.all(
