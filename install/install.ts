@@ -322,7 +322,7 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils',
+            'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.patch',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
                 try {
