@@ -32,7 +32,8 @@ export const judge = async (ctx: JudgeTask) => {
             {
                 stdin: { content: ctx.input || '' },
                 copyIn: executeGenerator.copyIn,
-                copyOut: ['stdout'],
+                copyOut: ['stderr'],
+                copyOutCached: ['stdout'],
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
@@ -44,10 +45,10 @@ export const judge = async (ctx: JudgeTask) => {
             return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
-            code, signalled, time, memory, fileIds,
+            code, signalled, time, memory, fileIds, stderr,
         } = res;
         let { status } = res;
-        const message: string[] = [];
+        const message = [stderr.substring(0, 1024)];
         if (time > parseTimeMS(ctx.config.time || '2s')) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > parseMemoryMB('256m') * 1024) {
@@ -61,7 +62,7 @@ export const judge = async (ctx: JudgeTask) => {
         totalMemory = Math.max(memory, totalMemory);
         totalStatus = Math.max(status, totalStatus);
         if (status === STATUS.STATUS_ACCEPTED) {
-            await client.getFile(fileIds['output'], tmp);
+            await client.getFile(fileIds['stdout'], tmp);
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.in`, tmp);
         }
         ctx.next({
@@ -83,7 +84,8 @@ export const judge = async (ctx: JudgeTask) => {
             {
                 stdin,
                 copyIn: executeStd.copyIn,
-                copyOut: ['stdout'],
+                copyOut: ['stderr'],
+                copyOutCached: ['stdout'],
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
@@ -95,10 +97,10 @@ export const judge = async (ctx: JudgeTask) => {
             return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
-            code, signalled, time, memory, fileIds,
+            code, signalled, time, memory, fileIds, stderr,
         } = res;
         let { status } = res;
-        const message: string[] = [];
+        const message = [stderr.substring(0, 1024)];
         if (time > parseTimeMS(ctx.config.time || '2s')) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > parseMemoryMB('256m') * 1024) {
@@ -112,7 +114,7 @@ export const judge = async (ctx: JudgeTask) => {
         totalMemory = Math.max(memory, totalMemory);
         totalStatus = Math.max(status, totalStatus);
         if (status === STATUS.STATUS_ACCEPTED) {
-            await client.getFile(fileIds['output'], tmp);
+            await client.getFile(fileIds['stdout'], tmp);
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.out`, tmp);
         }
         ctx.next({

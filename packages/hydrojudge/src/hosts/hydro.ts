@@ -37,11 +37,12 @@ export default class Hydro implements Session {
         return superagent.get(url).set('Cookie', this.config.cookie);
     }
 
-    post(url: string, data: any) {
+    post(url: string, data?: any) {
         url = new URL(url, this.config.server_url).toString();
-        return superagent.post(url).send(data)
+        const t = superagent.post(url)
             .set('Cookie', this.config.cookie)
             .set('Accept', 'application/json');
+        return data ? t.send(data) : t;
     }
 
     async init() {
@@ -135,8 +136,11 @@ export default class Hydro implements Session {
         return target;
     }
 
-    async postFile(target: string, file: string) {
-        await this.post('judge/upload', { target }).attach('file', fs.createReadStream(file));
+    async postFile(target: string, filename: string, file: string) {
+        await this.post('judge/upload')
+            .field('rid', target)
+            .field('name', filename)
+            .attach('file', fs.createReadStream(file));
     }
 
     getLang(name: string, doThrow = true) {
