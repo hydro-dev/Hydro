@@ -90,6 +90,7 @@ export default class RecordModel {
         else if (meta?.type === 'generate') type = 'generate';
         return await task.addMany(rids.map((rid) => ({
             ...(pdoc.config as any),
+            lang: rdoc.lang,
             priority,
             type,
             rid,

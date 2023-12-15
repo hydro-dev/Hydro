@@ -294,8 +294,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             this.query.priority = { $gt: msg.prio };
-        } else if (msg.key === 'lang' && msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
-            this.query.lang = { $in: msg.lang };
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
@@ -308,6 +306,9 @@ class JudgeConnectionHandler extends ConnectionHandler {
                         await this.newTask(); // eslint-disable-line no-await-in-loop
                     }
                 }
+            }
+            if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
+                this.query.lang = { $in: msg.lang };
             }
         }
     }

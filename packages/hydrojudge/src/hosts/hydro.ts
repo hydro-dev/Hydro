@@ -183,9 +183,10 @@ export default class Hydro implements Session {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        const config: { prio?: number, concurrency?: number } = {};
+        const config: { prio?: number, concurrency?: number, lang?: string[] } = {};
         if (this.config.minPriority !== undefined) config.prio = this.config.minPriority;
         if (this.config.concurrency !== undefined) config.concurrency = this.config.concurrency;
+        if (this.config.lang?.length) config.lang = this.config.lang;
         const content = Object.keys(config).length
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
