@@ -127,7 +127,7 @@
   },
   "dependencies": {
     "ansi_up": "^6.0.2",
-    "esbuild": "0.19.7",
+    "esbuild": "0.18.20",
     "fs-extra": "^11.2.0",
     "js-yaml": "^4.1.0",
     "jsesc": "^3.0.2",
