@@ -127,7 +127,7 @@ export async function postJudge(rdoc: RecordDoc) {
                 const rdocs = await record.getMulti(rdoc.domainId, {
                     pid: rdoc.pid,
                     status: STATUS.STATUS_ACCEPTED,
-                    contest: { $ne: new ObjectId('0'.repeat(24)) },
+                    contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
                 }).project({ _id: 1, contest: 1 }).toArray();
                 const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
                 await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
@@ -275,7 +275,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        if (msg.key !== 'ping' && msg.key !== 'prio') {
+        if (!['ping', 'prio', 'config'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));

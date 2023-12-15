@@ -442,7 +442,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         const rdocs = await record.getMulti(domainId, {
             pid,
-            contest: { $ne: new ObjectId('0'.repeat(24)) },
+            contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
             status: { $ne: STATUS.STATUS_CANCELED },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
