@@ -400,7 +400,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         if (!this.request.json || args[2]) {
             this.response.body.pdoc.content = this.response.body.pdoc.content
                 .replace(/file:\/\/([^ \n)\\"]+?)/g, (str) => {
-                    const info = str.match(/\]\(file:\/\/(.+?)\)/);
+                    const info = str.match(/file:\/\/([^ \n)\\"]+?)/);
                     const fileinfo = info[1];
                     const filename = fileinfo.split('?')[0]; // remove querystring
                     if (!this.pdoc.additional_file?.find((i) => i.name === filename)) return str;
