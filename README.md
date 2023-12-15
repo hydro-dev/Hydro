@@ -84,7 +84,7 @@ Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他�
 - [HDUOJ](https://acm.hdu.edu.cn)：杭州电子科技大学在线评测系统，其中包含多校训练题；
 - [CSGOJ](https://cpc.csgrandeur.cn)：广东省赛与湖南省赛赛题评测平台；
 - [POJ](https://poj.org)：较为古董，服务器稳定性差；
-- [YACS](https://iai.sh.cn)上海市计算机学会竞赛平台；
+- [YACS](https://iai.sh.cn)：上海市计算机学会竞赛平台；
 - HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
 
 ### 多赛制支持
@@ -102,12 +102,48 @@ Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件�
 
 Email：i@undefined.moe
 Hydro 用户群：1085853538  
-Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
+Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.9.26 / UI 4.9.26
+### Hydro 4.10.0 / UI 4.49.0
+
+新功能：
+- core&ui&judge: 支持从网页端生成测试数据
+- vjudge: 添加 yacs 支持
+- core: 支持 /record?all=1
+- core&ui: 在 ACM 赛制下隐藏测试点详情
+- onsite-toolkit: 支持基于IP地址登录
+- core&ui: 支持在网页端重命名文件
+- core&judge: 允许在单个连接中同时分发多个任务
+
+优化与修复：
+- core: 优化文件名过滤
+- utils: 优化测试数据匹配逻辑
+- install: caddy 默认开启压缩
+- ui: 补全部分翻译
+- install: 默认使用 mongodb6
+- core: 提交记录页性能优化
+- judge: 更新 testlib 版本
+- core: install: 支持 strip
+- ui: 升级最低支持目标为 chrome65
+- core: 优化搜索题目时显示的题目数量
+- core: 修复 0 分提交记录不会显示在乐多赛排行榜的问题
+- core: 修复比赛题面中 file:// 替换
+- core: discussion: 校验 vnode 输入
+- core: 移除默认 mongo connection options
+- ui: 错误页回显名称
+- ui: 修复未登录时跨域 WebSocket 连接出错的问题
+- core: 修复删除域导致 pinnedDomains 重复的问题
+- migrate: hustoj: 处理旧版本系统题目无来源字段的问题
+- migrate: 修复 UOJ 迁移脚本
+- ui: 修复 reactions 组件
+- core: 校验 referer
+- core: 修复气球发放
+- 其他漏洞修复与性能优化
+
+### Hydro 4.9.26 / UI 4.48.26
 - core: 修复创建题目设置难度异常的问题
 - core: 优化 document 索引
 - core&ui: 比赛气球功能
