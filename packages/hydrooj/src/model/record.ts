@@ -89,13 +89,16 @@ export default class RecordModel {
         if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
         else if (meta?.type === 'generate') type = 'generate';
         return await task.addMany(rids.map((rid) => ({
-            ...(pdoc.config as any),
+            ...(pdoc.config as any), // TODO deprecate this
             lang: rdoc.lang,
             priority,
             type,
             rid,
             domainId,
-            config,
+            config: {
+                ...(pdoc.config as any),
+                ...config,
+            },
             data: pdoc.data,
             source,
             meta,
