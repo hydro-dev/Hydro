@@ -72,37 +72,39 @@ export default class RecordModel {
     static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
-        const rdoc = await RecordModel.get(domainId, rids[0]);
-        if (!rdoc) return null;
-        let source = `${domainId}/${rdoc.pid}`;
+        const rdocs = (await Promise.all(rids.map((rid) => RecordModel.get(domainId, rid)))).filter((i) => i);
+        if (!rdocs.length) return null;
+        let source = `${domainId}/${rdocs[0].pid}`;
         await task.deleteMany({ rid: { $in: rids } });
-        let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
-        if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+        let pdoc = await problem.get(domainId, rdocs[0].pid);
+        if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
         if (pdoc.reference) {
             pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
-            if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+            if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
             source = `${pdoc.domainId}/${pdoc.docId}`;
         }
         meta = { ...meta, problemOwner: pdoc.owner };
-        if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-        let type = 'judge';
-        if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
-        else if (meta?.type === 'generate') type = 'generate';
-        return await task.addMany(rids.map((rid) => ({
-            ...(pdoc.config as any), // TODO deprecate this
-            lang: rdoc.lang,
-            priority,
-            type,
-            rid,
-            domainId,
-            config: {
-                ...(pdoc.config as any),
-                ...config,
-            },
-            data: pdoc.data,
-            source,
-            meta,
-        } as any)));
+        return await task.addMany(rdocs.map((rdoc) => {
+            let type = 'judge';
+            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
+            else if (meta?.type === 'generate') type = 'generate';
+            return ({
+                ...(pdoc.config as any), // TODO deprecate this
+                lang: rdoc.lang,
+                priority,
+                type,
+                rid: rdoc._id,
+                domainId,
+                config: {
+                    ...(pdoc.config as any),
+                    ...config,
+                },
+                data: pdoc.data,
+                source,
+                meta,
+            } as any);
+        }));
     }
 
     static async add(
