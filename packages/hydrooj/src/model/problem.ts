@@ -467,6 +467,7 @@ export class ProblemModel {
         try {
             const problems = await fs.readdir(tmpdir, { withFileTypes: true });
             for (const p of problems) {
+                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${p.name}`);
                 const i = p.name;
                 if (!p.isDirectory()) continue;
                 const files = await fs.readdir(path.join(tmpdir, i));
@@ -474,7 +475,7 @@ export class ProblemModel {
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 if (!pdoc) continue;
-                let pid = pdoc.pid;
+                let pid: string | undefined = pdoc.pid;
 
                 const isValidPid = async (id: string) => {
                     if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
@@ -491,8 +492,9 @@ export class ProblemModel {
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
+                const title = typeof pdoc.title === 'string' ? pdoc.title.trim() : (pdoc.title as any).toString().trim();
                 const docId = await ProblemModel.add(
-                    domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
+                    domainId, pid, title, overrideContent || pdoc.content || 'No content',
                     operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                 );
                 if (files.includes('testdata')) {
