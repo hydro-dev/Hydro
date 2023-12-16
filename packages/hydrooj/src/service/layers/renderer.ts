@@ -16,7 +16,7 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
         };
         const engine = global.Hydro.lib.template?.render
             || (() => JSON.stringify(args, serializer({
-                showDisplayName: user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
+                showDisplayName: user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
             })));
         return engine(templateName, {
             handler: ctx.handler,

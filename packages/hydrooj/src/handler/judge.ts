@@ -41,24 +41,20 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
     };
 }
 
-function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
+function processPayload(body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
     if (body.cases?.length) {
         const c = body.cases.map(parseCaseResult);
-        rdoc.testCases.push(...c);
         $push.testCases = { $each: c };
     } else if (body.case) {
         const c = parseCaseResult(body.case);
-        rdoc.testCases.push(c);
         $push.testCases = c;
     }
     if (body.message) {
-        rdoc.judgeTexts.push(body.message);
         $push.judgeTexts = body.message;
     }
     if (body.compilerText) {
-        rdoc.compilerTexts.push(body.compilerText);
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
@@ -70,17 +66,10 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     return { $set, $push };
 }
 
-export async function next(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
+export async function next(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectId(body.rid);
-    let rdoc = body.rdoc;
-    if (!rdoc) {
-        logger.warn('Next function without rdoc is deprecated.');
-        console.trace();
-        rdoc = await record.get(body.rid);
-        if (!rdoc) return null;
-    }
-    const { $set, $push } = processPayload(rdoc, body);
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    const { $set, $push } = processPayload(body);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
     bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
@@ -137,7 +126,6 @@ export async function postJudge(rdoc: RecordDoc) {
                     domainId: rdoc.domainId,
                     key: 'next',
                     message: { message: 'Unable to apply hack: {0}', params: [e.message] },
-                    rdoc,
                 });
             }
         }
@@ -145,21 +133,14 @@ export async function postJudge(rdoc: RecordDoc) {
     await bus.parallel('record/judge', rdoc, updated);
 }
 
-export async function end(body: Partial<JudgeResultBody> & { rdoc: RecordDoc }) {
+export async function end(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectId(body.rid);
-    let rdoc = body.rdoc;
-    if (!rdoc) {
-        logger.warn('End function without rdoc is deprecated.');
-        console.trace();
-        rdoc = await record.get(body.rid);
-        if (!rdoc) return null;
-    }
-    const { $set, $push } = processPayload(rdoc, body);
+    const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
     await sleep(100); // Make sure that all 'next' event already triggered
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
+    let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
     rdoc = await record.get(body.rid);
     bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
@@ -283,9 +264,9 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (['next', 'end'].includes(msg.key)) {
             const rdoc = this.rdocs[msg.rid];
             if (!rdoc) return;
-            if (msg.key === 'next') await next({ ...msg, rdoc });
+            if (msg.key === 'next') await next({ ...msg, domainId: rdoc.domainId });
             if (msg.key === 'end') {
-                if (!msg.nop) await end({ judger: this.user._id, ...msg, rdoc }).catch((e) => logger.error(e));
+                if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
                 await this.newTask();

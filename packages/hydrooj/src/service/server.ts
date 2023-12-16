@@ -348,7 +348,7 @@ export class ConnectionHandler extends HandlerCommon {
 
     send(data: any) {
         this.conn.send(JSON.stringify(data, serializer({
-            showDisplayName: this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
+            showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
         })));
     }
 

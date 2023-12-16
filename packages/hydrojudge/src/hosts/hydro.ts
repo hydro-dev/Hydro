@@ -166,6 +166,8 @@ export default class Hydro implements Session {
             if (performanceMode && data.case && !data.compilerText && !data.message) {
                 t.callbackCache ||= [];
                 t.callbackCache.push(data.case);
+                // TODO use rate-limited send
+                // FIXME handle fields like score, time, memory, etc
             } else {
                 this.send(t.request.rid, 'next', data);
             }

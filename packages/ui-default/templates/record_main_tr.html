@@ -26,15 +26,7 @@
   {% if rdoc.files.hack %}<span class="text-orange">({{ _('Hack') }})</span>{% endif %}
   {% if _isPretest %}<span class="text-orange">({{ _('Pretest') }})</span>{% endif %}
   </td>
-  <td class="col--submit-by">
-    <a href="{{ url('user_detail', uid=rdoc.uid) }}">
-      {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName %}
-        {{ udoc.displayName }} ({{ udoc.uname }})
-      {% else %}
-        {{ udoc.uname }}
-      {% endif %}
-    </a>
-  </td>
+  <td class="col--submit-by">{{ user.render_inline(udoc, avatar=false, badge=false) }}</td>
   <td class="col--time">{% if rdoc['time'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ rdoc.time|round|int }}ms{% else %}-{% endif %}</td>
   <td class="col--memory">{% if rdoc['memory'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}{% else %}-{% endif %}</td>
   <td class="col--lang">{{ model.setting.langs[rdoc['lang']].display }}</td>

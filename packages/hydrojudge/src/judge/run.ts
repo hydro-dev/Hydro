@@ -57,5 +57,10 @@ export const judge = async (ctx: JudgeTask) => {
     }
     ctx.stat.done = new Date();
     if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({ status });
+    ctx.end({
+        status,
+        time: Math.floor(time * 1000000) / 1000000,
+        memory,
+        score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
+    });
 };
