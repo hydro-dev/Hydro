@@ -264,7 +264,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (['next', 'end'].includes(msg.key)) {
             const rdoc = this.rdocs[msg.rid];
             if (!rdoc) return;
-            if (msg.key === 'next') await next({ ...message, domainId: rdoc.domainId });
+            if (msg.key === 'next') await next({ ...msg, domainId: rdoc.domainId });
             if (msg.key === 'end') {
                 if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
