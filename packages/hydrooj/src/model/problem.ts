@@ -475,7 +475,7 @@ export class ProblemModel {
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 if (!pdoc) continue;
-                let pid: string | undefined = pdoc.pid;
+                let pid = pdoc.pid;
 
                 const isValidPid = async (id: string) => {
                     if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
@@ -492,9 +492,9 @@ export class ProblemModel {
                 }
                 const overrideContent = findOverrideContent(path.join(tmpdir, i));
                 if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
-                const title = typeof pdoc.title === 'string' ? pdoc.title.trim() : (pdoc.title as any).toString().trim();
+                if (typeof pdoc.title !== 'string') throw new ValidationError('title', null, 'Invalid title');
                 const docId = await ProblemModel.add(
-                    domainId, pid, title, overrideContent || pdoc.content || 'No content',
+                    domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
                     operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                 );
                 if (files.includes('testdata')) {
