@@ -436,7 +436,7 @@ const scripts: UpgradeScript[] = [
         return await iterateAllDomain(async (ddoc) => {
             for (const role of Object.keys(ddoc.roles)) {
                 if (['guest', 'root'].includes(role)) return;
-                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_DISPLAYNAME).toString();
             }
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
