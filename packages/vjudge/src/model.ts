@@ -42,8 +42,8 @@ class AccountService {
     async judge(task) {
         const rdoc = await RecordModel.get(task.domainId, task.rid);
         task = Object.assign(rdoc, task);
-        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid, rdoc });
-        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid, rdoc });
+        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid, domainId: task.domainId });
+        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid, domainId: task.domainId });
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
