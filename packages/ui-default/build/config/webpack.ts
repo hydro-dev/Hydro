@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { EsbuildPlugin } from 'esbuild-loader';
+import { ESBuildMinifyPlugin } from 'esbuild-loader';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
@@ -17,7 +17,6 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     return {
       loader: 'esbuild-loader',
       options: {
-        tsconfigRaw: '{"compilerOptions":{"experimentalDecorators":true}}',
         loader: 'tsx',
         target: 'es2015',
         sourcemap: true,
@@ -153,14 +152,13 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          // FIXME latest version on esbuild cannot handle `this` in `DOMAttachedObject` properly
-          exclude: [/@types\//, /components\//, /pages\//, /entry\.js/],
+          exclude: [/@types\//, /components\/message\//, /entry\.js/],
           type: 'javascript/auto',
           use: [esbuildLoader()],
         },
         {
           test: /\.[mc]?[jt]sx?$/,
-          include: [/components\//, /pages\//, /entry\.js/],
+          include: [/components\/message\//, /entry\.js/],
           type: 'javascript/auto',
           use: [{
             loader: 'ts-loader',
@@ -216,7 +214,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
       },
       usedExports: true,
-      minimizer: [new EsbuildPlugin({
+      minimizer: [new ESBuildMinifyPlugin({
         css: true,
         minify: true,
         minifySyntax: true,
