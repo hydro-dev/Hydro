@@ -1,4 +1,5 @@
 {% import "components/record.html" as record with context %}
+{% import "components/user.html" as user with context %}
 {% import "components/problem.html" as problem with context %}
 <tr data-rid="{{ rdoc['_id'] }}">
   {% set _isPretest = rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}
