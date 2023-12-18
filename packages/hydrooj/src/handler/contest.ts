@@ -375,7 +375,10 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             `@submissions ${submissions.length}`,
         ].concat(
             tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
-            teams.map((i, idx) => `@t ${idx + 1},0,1,${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].uname)}`),
+            teams.map((i, idx) => {
+                const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].uname)}`;
+                return `@t ${idx + 1},0,1,${teamName}`;
+            }),
             submissions,
         );
         this.binary(res.join('\n'), `${this.tdoc.title}.ghost`);
