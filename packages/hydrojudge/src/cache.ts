@@ -37,6 +37,8 @@ export = function main() {
                         lastUsage = +content || 0;
                     }
                     if (lastUsage + duration * 24 * 3600 * 1000 > now) continue;
+                    const etags = path.resolve(problemdir, 'etags');
+                    if (fs.existsSync(etags)) fs.unlinkSync(etags);
                     fs.removeSync(problemdir);
                     cnt++;
                     logger.info('Removed cache %s', problemdir);

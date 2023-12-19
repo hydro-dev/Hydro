@@ -25,7 +25,7 @@ Feel free to create an account and then navigate to `MyAccount > MyDomains > Cre
 Email: i@undefined.moe  
 Hydro QQ User Group: 1085853538  
 Telegram Group [@hydrodev](https://t.me/hydrodev)
-Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
+Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
 
 ## License
 
