@@ -83,6 +83,11 @@ class RecordListHandler extends ContestDetailBaseHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             delete q.contest;
         }
+        if (all) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            this.checkPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
+            delete q.contest;
+        }
         let cursor = record.getMulti(allDomain ? '' : domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
         const limit = full ? 10 : system.get('pagination.record');
