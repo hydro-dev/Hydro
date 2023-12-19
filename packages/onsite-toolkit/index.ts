@@ -1,7 +1,5 @@
 import {
-    Context, db, ForbiddenError, PRIV, ContestModel, PERM, UserModel,
-    ContestScoreboardHiddenError, Types, param, ProblemModel, ObjectId, Time,
-    ContestNotLiveError, Counter, STATUS, Handler,
+    Context, db, ForbiddenError, Handler, UserModel,
 } from 'hydrooj';
 
 interface IpLoginInfo {
@@ -21,9 +19,8 @@ function normalizeIp(ip: string) {
     return ip;
 }
 
-
 export class ContestResolverHandler extends Handler {
-    async get(domainId: string, tid: ObjectId) {
+    async get() {
         this.response.template = 'resolver.html';
     }
 }

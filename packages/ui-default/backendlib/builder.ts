@@ -37,7 +37,7 @@ const federationPlugin: esbuild.Plugin = {
     const packages = {
       react: 'React',
       'react-dom': 'ReactDOM',
-      'jquery': '$',
+      jquery: '$',
     };
     b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
       path: 'api',
