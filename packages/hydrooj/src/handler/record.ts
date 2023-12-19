@@ -79,6 +79,11 @@ class RecordListHandler extends ContestDetailBaseHandler {
         }
         if (lang) q.lang = lang;
         if (typeof status === 'number') q.status = status;
+        if (all) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            this.checkPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
+            delete q.contest;
+        }
         if (allDomain) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             delete q.contest;
