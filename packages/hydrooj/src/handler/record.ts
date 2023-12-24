@@ -157,7 +157,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async get(domainId: string, rid: ObjectId, download = false) {
         const rdoc = this.rdoc;
         let canViewDetail = true;
-        if (rdoc.contest?.toString() === '000000000000000000000000') {
+        if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
             this.tdoc = await contest.get(domainId, rdoc.contest);
