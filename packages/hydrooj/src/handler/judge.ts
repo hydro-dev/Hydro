@@ -218,7 +218,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
     closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
-    ip: string;
     concurrency = 1;
 
     async prepare() {
@@ -226,7 +225,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.sendLanguageConfig();
         // Ensure language sent
         await sleep(100);
-        this.newTask();
+        this.newTask().catch((e) => logger.error(e));
     }
 
     @subscribe('system/setting')
@@ -235,24 +234,25 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async newTask() {
-        if (this.processing.length >= this.concurrency) return;
-        let t;
-        let rdoc: RecordDoc;
-        while (!t) {
-            if (this.closed) return;
+        while (!this.closed) {
             /* eslint-disable no-await-in-loop */
-            t = await task.getFirst(this.query);
-            if (!t) await sleep(500);
-            else rdoc = await record.get(t.domainId, t.rid);
-            /* eslint-enable no-await-in-loop */
-            if (!rdoc) t = null;
+            if (this.processing.length >= this.concurrency) {
+                await sleep(500);
+                continue;
+            }
+            const t = await task.getFirst(this.query);
+            if (!t) {
+                await sleep(500);
+                continue;
+            }
+            const rdoc = await record.get(t.domainId, t.rid);
+            if (!rdoc) continue;
+
+            this.send({ task: { ...rdoc, ...t } });
+            this.rdocs[rdoc._id.toHexString()] = rdoc;
+            this.processing.push(t);
+            await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
         }
-        this.send({ task: { ...rdoc, ...t } });
-        this.rdocs[rdoc._id.toHexString()] = rdoc;
-        this.processing.push(t);
-        const $set = { status: builtin.STATUS.STATUS_FETCHED };
-        rdoc = await record.update(t.domainId, t.rid, $set, {});
-        bus.broadcast('record/change', rdoc, $set, {});
     }
 
     async message(msg) {
@@ -269,24 +269,18 @@ class JudgeConnectionHandler extends ConnectionHandler {
                 if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
-                await this.newTask();
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
+            // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
-                const old = this.concurrency;
                 this.concurrency = msg.concurrency;
-                if (old <= this.concurrency) {
-                    for (let i = old; i < this.concurrency; i++) {
-                        await this.newTask(); // eslint-disable-line no-await-in-loop
-                    }
-                }
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
