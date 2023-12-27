@@ -20,7 +20,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, param, subscribe, Types,
 } from '../service/server';
-import { buildProjection } from '../utils';
+import { buildProjection, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
@@ -87,6 +87,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
         if (allDomain) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             delete q.contest;
+            q._id = { $gt: Time.getObjectID(new Date(Date.now() - 10 * Time.week)) };
         }
         let cursor = record.getMulti(allDomain ? '' : domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
