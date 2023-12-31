@@ -198,6 +198,10 @@ export default class Hydro implements Session {
             : '{"key":"ping"}';
         setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
+            if (data.toString() === 'ping') {
+                this.ws.send('pong');
+                return;
+            }
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
