@@ -301,6 +301,18 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               if (allowEmptyQuery) handleInputChange();
               setFocused(true);
             }}
+            onPaste={async (e) => {
+              if (!multi) return;
+              const text = e.clipboardData.getData('text');
+              if (!text || (!text.includes(',') && !text.includes('，'))) return;
+              e.preventDefault();
+              const ids = text.replace('，', ',').split(',').filter((v) => v?.trim().length > 0 && !selectedKeys.includes(v));
+              if (!ids.length) return;
+              const fetched = await props.fetchItems(ids.filter((v) => !valueCache[v]));
+              for (const item of fetched) valueCache[itemKey(item)] = item;
+              setSelected([...selected, ...ids.map((id) => valueCache[id])]);
+              setSelectedKeys([...selectedKeys, ...ids.map((id) => itemKey(valueCache[id]))]);
+            }}
             placeholder={props.placeholder}
             onBlur={() => setFocused(false)}
             onKeyDown={handleInputKeyDown}
