@@ -87,7 +87,7 @@ export interface KoaContext extends Koa.Context {
     request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
     render: (name: string, args: any) => Promise<void>;
-    renderHTML: (name: string, args: any) => Promise<string>;
+    renderHTML: (name: string, args: any) => string | Promise<string>;
     getUrl: (name: string, args: any) => string;
     translate: (key: string) => string;
 }

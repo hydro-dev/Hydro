@@ -125,7 +125,7 @@ export default class Hydro implements Session {
 
     async fetchFile(name: string) {
         name = name.split('#')[0];
-        const res = await this.post('judge/code', { id: name });
+        const res = await this.post('judge/files', { id: name });
         const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
         const w = fs.createWriteStream(target);
         this.get(res.body.url).pipe(w);

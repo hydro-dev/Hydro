@@ -153,9 +153,14 @@ export class JudgeFilesDownloadHandler extends Handler {
     }
 
     noCheckPermView = true;
-    @post('files', Types.Set)
-    @post('pid', Types.UnsignedInt)
-    async post(domainId: string, files: Set<string>, pid: number) {
+    @post('id', Types.String, true)
+    @post('files', Types.Set, true)
+    @post('pid', Types.UnsignedInt, true)
+    async post(domainId: string, id: string, files: Set<string>, pid: number) {
+        if (id) {
+            this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
+            return;
+        }
         const pdoc = await problem.get(domainId, pid);
         if (!pdoc) this.response.body.links = null;
         const links = {};
@@ -167,13 +172,6 @@ export class JudgeFilesDownloadHandler extends Handler {
             );
         }
         this.response.body.links = links;
-    }
-}
-
-export class SubmissionDataDownloadHandler extends Handler {
-    @post('id', Types.String)
-    async post(domainId: string, id: string) {
-        this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
     }
 }
 
@@ -301,7 +299,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
 export async function apply(ctx) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
-    ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 
