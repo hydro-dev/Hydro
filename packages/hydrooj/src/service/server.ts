@@ -124,8 +124,8 @@ export class HandlerCommon {
     ctx: Context = global.app;
 
     constructor(
-        public context: KoaContext, public args: Record<string, any>,
-        public request: HydroRequest, public response: HydroResponse,
+        public context: KoaContext, public readonly args: Record<string, any>,
+        public readonly request: HydroRequest, public response: HydroResponse,
         public user: User, public domain: DomainDoc, public UiContext: Record<string, any>,
     ) {
         this.render = context.render.bind(context);
@@ -243,6 +243,7 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         args, request, response, user, domain, UiContext,
     } = ctx.HydroContext;
     Object.assign(args, ctx.params);
+    console.log(ctx.HydroContext);
     const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
     ctx.handler = h;
     try {

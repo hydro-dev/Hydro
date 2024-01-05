@@ -36,6 +36,10 @@ function transform(filename) {
     });
     if (result.warnings.length) console.warn(result.warnings);
     map[filename] = result.map;
+    if (process.env.LOADER_DUMP_CODE && filename.endsWith(`/${process.env.LOADER_DUMP_CODE}`)) {
+        console.log(`-----${filename}-----`);
+        console.log(result.code.split('/# sourceMappingURL=')[0]);
+    }
     return result.code;
 }
 const _script = new vm.Script('"Hydro"', { produceCachedData: true });

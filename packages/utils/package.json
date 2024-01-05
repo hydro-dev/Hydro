@@ -12,12 +12,12 @@
         "esbuild": "0.18.20",
         "fs-extra": "^11.2.0",
         "js-yaml": "^4.1.0",
-        "moment-timezone": "^0.5.43",
+        "moment-timezone": "^0.5.44",
         "mongodb": "^5.9.2",
         "reggol": "^1.6.3",
         "search-query-parser": "^1.6.0",
         "source-map-support": "^0.5.21",
-        "systeminformation": "^5.21.20"
+        "systeminformation": "^5.21.22"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
