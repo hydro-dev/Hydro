@@ -110,7 +110,7 @@ export class HomeHandler extends Handler {
 
     async getRanking(domainId: string, limit = 50) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_RANKING)) return [];
-        const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 } })
+        const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } })
             .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
         const uids = dudocs.map((dudoc) => dudoc.uid);
         this.collectUser(uids);
