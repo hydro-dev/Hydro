@@ -306,7 +306,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               const text = e.clipboardData.getData('text');
               if (!text || (!text.includes(',') && !text.includes('，'))) return;
               e.preventDefault();
-              const ids = text.replace(/，/g,',').split(',').filter((v) => v?.trim().length > 0 && !selectedKeys.includes(v));
+              const ids = text.replace(/，/g, ',').split(',').filter((v) => v?.trim().length > 0 && !selectedKeys.includes(v));
               if (!ids.length) return;
               const fetched = await props.fetchItems(ids.filter((v) => !valueCache[v]));
               for (const item of fetched) valueCache[itemKey(item)] = item;
