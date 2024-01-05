@@ -125,7 +125,7 @@ export default class Hydro implements Session {
 
     async fetchFile(name: string) {
         name = name.split('#')[0];
-        const res = await this.post('judge/code', { id: name });
+        const res = await this.post('judge/files', { id: name });
         const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
         const w = fs.createWriteStream(target);
         this.get(res.body.url).pipe(w);
@@ -198,6 +198,10 @@ export default class Hydro implements Session {
             : '{"key":"ping"}';
         setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
+            if (data.toString() === 'ping') {
+                this.ws.send('pong');
+                return;
+            }
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));

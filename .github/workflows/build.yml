@@ -13,14 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Check out
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
         fetch-depth: 2
     - name: Set up Node
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 20
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
@@ -49,7 +49,7 @@ jobs:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files
       id: ui-changed-files
-      uses: tj-actions/changed-files@v23.1
+      uses: tj-actions/changed-files@v41
       with:
         files: |
           /package.json

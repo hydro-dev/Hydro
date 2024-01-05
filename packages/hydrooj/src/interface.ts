@@ -768,7 +768,6 @@ export interface Lib extends Record<string, any> {
     rank: typeof import('./lib/rank');
     rating: typeof import('./lib/rating');
     testdataConfig: typeof import('./lib/testdataConfig');
-    template?: any;
     problemSearch: ProblemSearch;
 }
 
@@ -788,6 +787,7 @@ export interface ModuleInterfaces {
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
     hash: (password: string, salt: string, user: User) => boolean | string;
+    render: (name: string, state: any) => string | Promise<string>;
 }
 
 export interface HydroGlobal {

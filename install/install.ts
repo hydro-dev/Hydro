@@ -378,7 +378,7 @@ ${nixConfBase}`);
     {
         init: 'install.compiler',
         operations: [
-            'nix-env -iA nixpkgs.gcc nixpkgs.fpc nixpkgs.python3',
+            'nix-env -iA nixpkgs.gcc nixpkgs.python3',
         ],
     },
     {

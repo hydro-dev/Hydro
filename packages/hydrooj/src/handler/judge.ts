@@ -75,7 +75,7 @@ export async function next(body: Partial<JudgeResultBody>) {
 }
 
 export async function postJudge(rdoc: RecordDoc) {
-    if (typeof rdoc.input === 'string') return;
+    if (rdoc.contest.toString().startsWith('0'.repeat(23))) return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
@@ -153,9 +153,14 @@ export class JudgeFilesDownloadHandler extends Handler {
     }
 
     noCheckPermView = true;
-    @post('files', Types.Set)
-    @post('pid', Types.UnsignedInt)
-    async post(domainId: string, files: Set<string>, pid: number) {
+    @post('id', Types.String, true)
+    @post('files', Types.Set, true)
+    @post('pid', Types.UnsignedInt, true)
+    async post(domainId: string, id: string, files: Set<string>, pid: number) {
+        if (id) {
+            this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
+            return;
+        }
         const pdoc = await problem.get(domainId, pid);
         if (!pdoc) this.response.body.links = null;
         const links = {};
@@ -167,13 +172,6 @@ export class JudgeFilesDownloadHandler extends Handler {
             );
         }
         this.response.body.links = links;
-    }
-}
-
-export class SubmissionDataDownloadHandler extends Handler {
-    @post('id', Types.String)
-    async post(domainId: string, id: string) {
-        this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
     }
 }
 
@@ -218,7 +216,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
     closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
-    ip: string;
     concurrency = 1;
 
     async prepare() {
@@ -226,7 +223,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.sendLanguageConfig();
         // Ensure language sent
         await sleep(100);
-        this.newTask();
+        this.newTask().catch((e) => logger.error(e));
     }
 
     @subscribe('system/setting')
@@ -235,24 +232,25 @@ class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async newTask() {
-        if (this.processing.length >= this.concurrency) return;
-        let t;
-        let rdoc: RecordDoc;
-        while (!t) {
-            if (this.closed) return;
+        while (!this.closed) {
             /* eslint-disable no-await-in-loop */
-            t = await task.getFirst(this.query);
-            if (!t) await sleep(500);
-            else rdoc = await record.get(t.domainId, t.rid);
-            /* eslint-enable no-await-in-loop */
-            if (!rdoc) t = null;
+            if (this.processing.length >= this.concurrency) {
+                await sleep(500);
+                continue;
+            }
+            const t = await task.getFirst(this.query);
+            if (!t) {
+                await sleep(500);
+                continue;
+            }
+            const rdoc = await record.get(t.domainId, t.rid);
+            if (!rdoc) continue;
+
+            this.send({ task: { ...rdoc, ...t } });
+            this.rdocs[rdoc._id.toHexString()] = rdoc;
+            this.processing.push(t);
+            await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
         }
-        this.send({ task: { ...rdoc, ...t } });
-        this.rdocs[rdoc._id.toHexString()] = rdoc;
-        this.processing.push(t);
-        const $set = { status: builtin.STATUS.STATUS_FETCHED };
-        rdoc = await record.update(t.domainId, t.rid, $set, {});
-        bus.broadcast('record/change', rdoc, $set, {});
     }
 
     async message(msg) {
@@ -269,24 +267,18 @@ class JudgeConnectionHandler extends ConnectionHandler {
                 if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
-                await this.newTask();
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
+            // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
-                const old = this.concurrency;
                 this.concurrency = msg.concurrency;
-                if (old <= this.concurrency) {
-                    for (let i = old; i < this.concurrency; i++) {
-                        await this.newTask(); // eslint-disable-line no-await-in-loop
-                    }
-                }
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
@@ -307,7 +299,6 @@ class JudgeConnectionHandler extends ConnectionHandler {
 export async function apply(ctx) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
-    ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 

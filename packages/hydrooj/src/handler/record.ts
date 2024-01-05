@@ -20,7 +20,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, param, subscribe, Types,
 } from '../service/server';
-import { buildProjection } from '../utils';
+import { buildProjection, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
@@ -79,9 +79,15 @@ class RecordListHandler extends ContestDetailBaseHandler {
         }
         if (lang) q.lang = lang;
         if (typeof status === 'number') q.status = status;
+        if (all) {
+            this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+            this.checkPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD);
+            delete q.contest;
+        }
         if (allDomain) {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             delete q.contest;
+            q._id = { $gt: Time.getObjectID(new Date(Date.now() - 10 * Time.week)) };
         }
         let cursor = record.getMulti(allDomain ? '' : domainId, q).sort('_id', -1);
         if (!full) cursor = cursor.project(buildProjection(record.PROJECTION_LIST));
@@ -152,7 +158,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async get(domainId: string, rid: ObjectId, download = false) {
         const rdoc = this.rdoc;
         let canViewDetail = true;
-        if (rdoc.contest?.toString() === '000000000000000000000000') {
+        if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
         } else if (rdoc.contest) {
             this.tdoc = await contest.get(domainId, rdoc.contest);

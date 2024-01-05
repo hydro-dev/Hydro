@@ -3,6 +3,6 @@
     "version": "0.1.6",
     "main": "index.ts",
     "dependencies": {
-        "prom-client": "^15.0.0"
+        "prom-client": "^15.1.0"
     }
 }

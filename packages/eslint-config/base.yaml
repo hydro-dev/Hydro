@@ -95,6 +95,7 @@ rules:
   guard-for-in: 0
   implicit-arrow-linebreak: 0
   import/extensions: 0
+  import/order: 0
   consistent-return: 1
   func-names: 0
   import/newline-after-import: 0

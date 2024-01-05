@@ -95,7 +95,7 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static async consume(query: any, cb: Function, destoryOnError = true) {
+    static consume(query: any, cb: Function, destoryOnError = true) {
         return new Consumer(query, cb, destoryOnError);
     }
 }
