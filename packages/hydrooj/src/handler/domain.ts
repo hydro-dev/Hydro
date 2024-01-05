@@ -73,8 +73,6 @@ class DomainRankHandler extends Handler {
 }
 
 class ManageHandler extends Handler {
-    domain: DomainDoc;
-
     async prepare({ domainId }) {
         this.checkPerm(PERM.PERM_EDIT_DOMAIN);
         this.domain = await domain.get(domainId);
