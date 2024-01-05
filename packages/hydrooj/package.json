@@ -12,11 +12,10 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "3.473.0",
-        "@aws-sdk/lib-storage": "3.473.0",
-        "@aws-sdk/middleware-endpoint": "3.374.0",
-        "@aws-sdk/s3-presigned-post": "3.473.0",
-        "@aws-sdk/s3-request-presigner": "3.473.0",
+        "@aws-sdk/client-s3": "3.485.0",
+        "@aws-sdk/lib-storage": "3.485.0",
+        "@aws-sdk/s3-presigned-post": "3.485.0",
+        "@aws-sdk/s3-request-presigner": "3.485.0",
         "@graphql-tools/schema": "^10.0.2",
         "@hydrooj/utils": "workspace:*",
         "@simplewebauthn/server": "7.4.0",
@@ -30,7 +29,7 @@
         "graphql": "^16.8.1",
         "graphql-scalars": "^1.22.4",
         "js-yaml": "^4.1.0",
-        "koa": "^2.14.2",
+        "koa": "^2.15.0",
         "koa-body": "^6.0.1",
         "koa-compress": "^5.1.1",
         "koa-proxies": "^0.12.4",
@@ -39,23 +38,23 @@
         "lodash": "^4.17.21",
         "lru-cache": "^10.1.0",
         "mime-types": "^2.1.35",
-        "moment-timezone": "^0.5.43",
+        "moment-timezone": "^0.5.44",
         "mongodb": "^5.9.2",
         "nanoid": "^5.0.4",
-        "nodemailer": "^6.9.7",
+        "nodemailer": "^6.9.8",
         "notp": "^2.0.3",
         "p-queue": "^8.0.1",
         "path-to-regexp": "^6.2.1",
         "require-resolve-hook": "^1.1.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
-        "schemastery": "^3.14.2",
+        "schemastery": "^3.14.3",
         "semver": "^7.5.4",
         "serialize-javascript": "^6.0.1",
         "superagent": "^8.1.2",
         "tar": "^6.2.0",
         "thirty-two": "^1.0.2",
-        "ws": "^8.15.1"
+        "ws": "^8.16.0"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
@@ -72,8 +71,8 @@
         "@types/saslprep": "^1.0.3",
         "@types/semver": "^7.5.6",
         "@types/serialize-javascript": "^5.0.4",
-        "@types/superagent": "^4.1.24",
+        "@types/superagent": "^8.1.1",
         "@types/tar": "^6.1.10",
-        "moment": "^2.29.4"
+        "moment": "^2.30.1"
     }
 }
