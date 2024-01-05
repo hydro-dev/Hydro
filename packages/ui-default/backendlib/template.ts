@@ -1,8 +1,8 @@
+import * as status from '@hydrooj/utils/lib/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import {
   avatar, buildContent, Context,
-  fs, PERM, PRIV,
-  serialize, STATUS, yaml,
+  fs, PERM, PRIV, serialize, STATUS, yaml,
 } from 'hydrooj';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
@@ -142,7 +142,7 @@ env.addGlobal('typeof', (o) => typeof o);
 env.addGlobal('instanceof', (a, b) => a instanceof b);
 env.addGlobal('paginate', misc.paginate);
 env.addGlobal('size', misc.size);
-env.addGlobal('utils', { status: STATUS });
+env.addGlobal('utils', { status });
 env.addGlobal('avatarUrl', avatar);
 env.addGlobal('formatSeconds', misc.formatSeconds);
 env.addGlobal('lib', global.Hydro.lib);
