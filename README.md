@@ -130,6 +130,18 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.10.3 / UI 4.49.3
+
+- core: 修复返回状态码异常的问题
+- core: 同步排名页行为
+- install: 不再预装 pascal 编译器
+- judge: 处理心跳包
+- core: judge: 优化任务分配
+- judge: 优化缓存管理
+- core: contest_export_ghost: 当队伍不参与排名时导出星号开头的队伍名
+- ui: 修复 monaco 粘贴动作
+- ui: 支持批量粘贴用户/题号
+
 ### Hydro 4.10.0 / UI 4.49.0
 
 新功能：
