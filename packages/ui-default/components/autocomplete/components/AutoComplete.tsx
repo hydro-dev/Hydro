@@ -327,7 +327,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
           value={disabledHint}
         />
       )}
-      {focused && itemList.length && (
+      {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
           {itemList.map((item, idx) => (
             <li
