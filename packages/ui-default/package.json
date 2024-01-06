@@ -37,8 +37,6 @@
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
     "@types/redux-logger": "^3.0.12",
-    "@types/serviceworker": "^0.0.82",
-    "@types/sharedworker": "^0.0.111",
     "@types/webpack-env": "^1.18.4",
     "@vscode/codicons": "^0.0.35",
     "ajv": "^8.12.0",

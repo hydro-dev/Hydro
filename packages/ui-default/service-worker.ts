@@ -1,8 +1,9 @@
-/// <reference no-default-lib="true"/>
-/// <reference lib="ES2015" />
-/// <reference types="@types/serviceworker" />
-/* global clients */
 /* eslint-disable no-restricted-globals */
+/// <reference no-default-lib="true" />
+/// <reference lib="webworker" />
+export { }; // make it a module so that declare self works
+declare const self: ServiceWorkerGlobalScope;
+
 const map = new Map();
 
 function createStream(port) {
@@ -78,11 +79,11 @@ self.addEventListener('notificationclick', (event) => {
   console.log('On notification click: ', event.notification.tag);
   event.notification.close();
   if (!event.notification.tag.startsWith('message-')) return;
-  event.waitUntil(clients.matchAll({ type: 'window' }).then((clientList) => {
+  event.waitUntil(self.clients.matchAll({ type: 'window' }).then((clientList) => {
     for (const client of clientList) {
       if (client.url === '/home/messages' && 'focus' in client) return client.focus();
     }
-    if (clients.openWindow) clients.openWindow('/home/messages');
+    if (self.clients.openWindow) self.clients.openWindow('/home/messages');
     return null;
   }));
 });

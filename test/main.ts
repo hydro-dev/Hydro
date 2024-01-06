@@ -13,7 +13,7 @@ const Root = {
 };
 
 describe('App', () => {
-    let agent: supertest.SuperAgentTest;
+    let agent;
     before(async () => {
         const init = Date.now();
         await new Promise((resolve) => {

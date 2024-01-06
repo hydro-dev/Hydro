@@ -8,8 +8,6 @@ if (process.env.npm_execpath?.includes('yarn')) {
     }
 }
 
-const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
-const types = fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i));
 const withoutTypes = (data) => ({
     ...data,
     compilerOptions: Object.fromEntries(Object.entries(data.compilerOptions).filter(([k]) => k !== 'types')),
@@ -29,7 +27,6 @@ const compilerOptionsBase = {
     experimentalDecorators: true,
     // emitDecoratorMetadata: true,
     incremental: true,
-    types,
 };
 const baseOutDir = path.resolve(__dirname, '../.cache/ts-out');
 const config = {
@@ -95,7 +92,6 @@ const UIConfig = {
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
         moduleResolution: 'node',
-        types,
         paths: {
             'vj/*': [
                 './packages/ui-default/*',

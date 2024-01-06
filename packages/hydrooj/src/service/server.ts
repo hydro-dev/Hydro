@@ -243,7 +243,6 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         args, request, response, user, domain, UiContext,
     } = ctx.HydroContext;
     Object.assign(args, ctx.params);
-    console.log(ctx.HydroContext);
     const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
     ctx.handler = h;
     try {
