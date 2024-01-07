@@ -64,7 +64,7 @@ class DomainRankHandler extends Handler {
             100,
         );
         const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
-        const udocs = Object.values(udict);
+        const udocs = dudocs.map((i) => udict[i.uid]);
         this.response.template = 'ranking.html';
         this.response.body = {
             udocs, upcount, ucount, page,
