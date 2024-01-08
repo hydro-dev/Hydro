@@ -807,8 +807,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('std', Types.Filename)
     @post('gen', Types.Filename)
     async postGenerateTestdata(domainId: string, std: string, gen: string) {
-        if (!this.pdoc.data.find((i) => i.name === std)) throw new BadRequestError();
-        if (!this.pdoc.data.find((i) => i.name === gen)) throw new BadRequestError();
+        if (!this.pdoc.data?.find((i) => i.name === std)) throw new BadRequestError();
+        if (!this.pdoc.data?.find((i) => i.name === gen)) throw new BadRequestError();
         const rid = await record.add(domainId, this.pdoc.docId, this.user._id, '_', `${gen}\n${std}`, true, {
             type: 'generate',
         });
