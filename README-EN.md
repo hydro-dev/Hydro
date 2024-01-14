@@ -20,6 +20,8 @@ Feel free to create an account and then navigate to `MyAccount > MyDomains > Cre
 
 [Open pre-configured test environment in Gitpod](https://gitpod.io/#https://github.com/hydro-dev/Hydro)  
 
+We are now looking for help with Korean and Japanese translation, if you are a native speaker of these languages, please contact us, pull requests are always welcome.
+
 ## Contact US
 
 Email: i@undefined.moe  
