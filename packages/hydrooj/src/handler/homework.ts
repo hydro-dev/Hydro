@@ -5,14 +5,12 @@ import { Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, HomeworkNotLiveError, NotAssignedError, ValidationError,
 } from '../error';
-import { PenaltyRules, Tdoc } from '../interface';
-import paginate from '../lib/paginate';
+import { PenaltyRules } from '../interface';
 import { PERM } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
 import problem from '../model/problem';
 import record from '../model/record';
-import * as system from '../model/system';
 import user from '../model/user';
 import { Handler, param, Types } from '../service/server';
 import { ContestCodeHandler, ContestScoreboardHandler } from './contest';
@@ -43,7 +41,7 @@ class HomeworkMainHandler extends Handler {
         }).sort({
             penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
         });
-        const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
+        const [tdocs, tpcount] = await this.paginate(cursor, page, 'contest');
         const calendar = [];
         for (const tdoc of tdocs) {
             const cal = { ...tdoc, url: this.url('homework_detail', { tid: tdoc.docId }) };
@@ -83,10 +81,10 @@ class HomeworkDetailHandler extends Handler {
         ]);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         // discussion
-        const [ddocs, dpcount, dcount] = await paginate(
+        const [ddocs, dpcount, dcount] = await this.paginate(
             discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
             page,
-            system.get('pagination.discussion'),
+            'discussion',
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(tdoc.owner);

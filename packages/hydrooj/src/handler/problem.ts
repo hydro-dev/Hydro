@@ -18,7 +18,6 @@ import {
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
-import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -854,10 +853,10 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
         // eslint-disable-next-line prefer-const
-        let [psdocs, pcount, pscount] = await paginate(
+        let [psdocs, pcount, pscount] = await this.paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
-            system.get('pagination.solution'),
+            'solution',
         );
         if (sid) {
             psdocs = [await solution.get(domainId, sid)];

@@ -9,6 +9,7 @@ import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
+import type { FindCursor } from 'mongodb';
 import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
@@ -18,6 +19,7 @@ import {
     PrivilegeError, UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
+import paginate from '../lib/paginate';
 import serializer from '../lib/serializer';
 import { Types } from '../lib/validator';
 import { Logger } from '../logger';
@@ -148,6 +150,10 @@ export class HandlerCommon {
         let id = this.request.ip;
         if (withUserId) id += `@${this.user._id}`;
         await opcount.inc(op, id, periodSecs, maxOperations);
+    }
+
+    paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
+        return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
     }
 
     renderTitle(str: string) {
