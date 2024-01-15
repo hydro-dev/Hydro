@@ -37,6 +37,7 @@ Additional terms under AGPLv3 Section 7:
 
 1. You must not remove the copyright declaration displayed in the software. (Under [AGPLv3, 7(b)](LICENSE#L356))  
 2. When you distribute a modified version of the software, you must change the software name or the version number in a reasonable way in order to distinguish it from the original version. (Under [AGPLv3, 7(c)](LICENSE#360))
+3. Unless permitted, you are not allowed to use author's name, trademark or logo to promote the software. (Under [AGPLv3, 7(d)](LICENSE#L364))
 
 ## Contributing
 
