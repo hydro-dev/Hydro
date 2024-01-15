@@ -1,4 +1,3 @@
-/* eslint-disable logical-assignment-operators */
 const map = {};
 require('source-map-support').install({
     handleUncaughtExceptions: false,
@@ -18,8 +17,7 @@ const vm = require('vm');
 const fs = require('fs-extra');
 const esbuild = require('esbuild');
 
-// Node14 doesn't support ||= syntax
-process.env.NODE_APP_INSTANCE = process.env.NODE_APP_INSTANCE || '0';
+process.env.NODE_APP_INSTANCE ||= '0';
 const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
 
@@ -54,11 +52,21 @@ require.extensions['.js'] = function loader(module, filename) {
         const content = fs.readFileSync(filename, 'utf-8');
         return module._compile(content, filename);
     } catch (e) { // ESM
-        return module._compile(transform(filename), filename);
+        try {
+            return module._compile(transform(filename), filename);
+        } catch (err) {
+            err.stack = new Error().stack;
+            throw err;
+        }
     }
 };
 require.extensions['.ts'] = require.extensions['.tsx'] = function loader(module, filename) {
-    return module._compile(transform(filename), filename);
+    try {
+        return module._compile(transform(filename), filename);
+    } catch (e) {
+        e.stack = new Error().stack;
+        throw e;
+    }
 };
 require.extensions['.jsc'] = function loader(module, filename) {
     const buf = fs.readFileSync(filename);

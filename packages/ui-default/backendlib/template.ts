@@ -170,6 +170,7 @@ const render = (name: string, state: any) => new Promise<string>((resolve, rejec
       return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
     }).join('\n'),
     datetimeSpan: (arg0, arg1, arg2) => misc.datetimeSpan(arg0, arg1, arg2, state.handler.user?.timeZone),
+    ctx: state.handler?.ctx,
     perm: PERM,
     PRIV,
     STATUS,

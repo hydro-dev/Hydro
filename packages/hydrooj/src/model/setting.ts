@@ -315,6 +315,10 @@ export class SettingService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'setting', true);
     }
+
+    get(key: string) {
+        return (this.caller ? this.caller.domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
+    }
 }
 
 export async function apply(ctx: Context) {

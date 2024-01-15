@@ -1,6 +1,6 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
-import { GeoIP, ModuleInterfaces } from './interface';
+import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import { EventMap } from './service/bus';
@@ -33,14 +33,16 @@ export interface Context {
     setImmediate: typeof setImmediate;
     addScript: typeof addScript;
     provideModule: typeof provideModule;
+    /** @deprecated use injectUI instead */
     inject: typeof inject;
+    injectUI: typeof inject;
     api: ApiMixin;
     broadcast: Context['emit'];
     geoip?: GeoIP;
 }
 
 export class Context extends cordis.Context {
-    static readonly session = Symbol('session');
+    domain?: DomainDoc;
 }
 
 export namespace Context {
@@ -64,13 +66,14 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
     };
 export class ApiMixin extends Service {
-    static readonly methods = ['addScript', 'setInterval', 'setTimeout', 'setImmediate', 'provideModule', 'inject', 'broadcast'];
+    static readonly methods = ['addScript', 'setInterval', 'setTimeout', 'setImmediate', 'provideModule', 'inject', 'injectUI', 'broadcast'];
     addScript = T(addScript);
     setInterval = T(setInterval, clearInterval);
     setTimeout = T(setTimeout, clearTimeout);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
     inject = T(inject);
+    injectUI = T(inject);
     broadcast = (event: keyof EventMap, ...payload) => this.ctx.emit('bus/broadcast', event, payload);
     constructor(ctx) {
         super(ctx, 'api', true);
