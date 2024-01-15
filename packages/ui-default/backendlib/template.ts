@@ -2,7 +2,7 @@ import * as status from '@hydrooj/utils/lib/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import {
   avatar, buildContent, Context,
-  fs, PERM, PRIV, serialize, STATUS, yaml,
+  fs, PERM, PRIV, STATUS, yaml,
 } from 'hydrooj';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
@@ -70,7 +70,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('json', (self) => (self ? JSON.stringify(self, replacer) : ''));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
-    this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
     this.addFilter('markdown', (self) => ensureTag(markdown.render(self)));
     this.addFilter('markdownInline', (self) => ensureTag(markdown.renderInline(self)));
