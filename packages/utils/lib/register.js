@@ -52,21 +52,11 @@ require.extensions['.js'] = function loader(module, filename) {
         const content = fs.readFileSync(filename, 'utf-8');
         return module._compile(content, filename);
     } catch (e) { // ESM
-        try {
-            return module._compile(transform(filename), filename);
-        } catch (err) {
-            err.stack = new Error().stack;
-            throw err;
-        }
+        return module._compile(transform(filename), filename);
     }
 };
 require.extensions['.ts'] = require.extensions['.tsx'] = function loader(module, filename) {
-    try {
-        return module._compile(transform(filename), filename);
-    } catch (e) {
-        e.stack = new Error().stack;
-        throw e;
-    }
+    return module._compile(transform(filename), filename);
 };
 require.extensions['.jsc'] = function loader(module, filename) {
     const buf = fs.readFileSync(filename);
@@ -101,4 +91,4 @@ if (argv.options.debug) {
     console.log('Debug mode enabled');
     process.env.NODE_ENV = 'development';
     process.env.DEV = 'on';
-} else process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+} else process.env.NODE_ENV ||= 'production';

@@ -59,7 +59,7 @@
         "@types/adm-zip": "^0.4.34",
         "@types/fs-extra": "^11.0.4",
         "@types/js-yaml": "^4.0.9",
-        "@types/koa": "^2.13.12",
+        "@types/koa": "^2.14.0",
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
         "@types/koa-static-cache": "^5.1.4",
