@@ -45,6 +45,7 @@ jobs:
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
         yarn
+        yarn dedupe
       env:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files
