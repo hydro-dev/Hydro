@@ -10,6 +10,7 @@ import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import type { FindCursor } from 'mongodb';
+import { Shorty } from 'shorty.js';
 import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
@@ -364,11 +365,14 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
+    compression: Shorty;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer({
+        let payload = JSON.stringify(data, serializer({
             showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
-        })));
+        }));
+        if (this.compression) payload = this.compression.deflate(payload);
+        this.conn.send(payload);
     }
 
     close(code: number, reason: string) {
@@ -409,6 +413,10 @@ export function Connection(
         const disposables = [];
         try {
             checker.call(h);
+            if (args.shorty) {
+                h.compression = new Shorty();
+                conn.send('shorty');
+            }
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow

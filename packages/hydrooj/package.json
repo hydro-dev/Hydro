@@ -50,6 +50,7 @@
         "saslprep": "^1.0.3",
         "schemastery": "^3.14.3",
         "semver": "^7.5.4",
+        "shorty.js": "^1.0.0",
         "superagent": "^8.1.2",
         "tar": "^6.2.0",
         "thirty-two": "^1.0.2",

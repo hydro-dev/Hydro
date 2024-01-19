@@ -103,6 +103,7 @@
     "redux-thunk": "^3.1.0",
     "rupture": "^0.7.1",
     "schemastery": "^3.14.3",
+    "shorty.js": "^1.0.0",
     "slideout": "^1.0.1",
     "sticky-kit": "^1.1.3",
     "style-loader": "^3.3.4",

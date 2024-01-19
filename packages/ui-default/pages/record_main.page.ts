@@ -11,12 +11,12 @@ const page = new NamedPage('record_main', async () => {
     import('diff-dom'),
   ]);
 
-  const sock = new WebSocket(UiContext.ws_prefix + UiContext.socketUrl);
+  const sock = new WebSocket(UiContext.ws_prefix + UiContext.socketUrl, false, true);
   const dd = new DiffDOM();
 
   sock.onopen = () => sock.send(JSON.stringify({ rids: UiContext.rids }));
-  sock.onmessage = (message) => {
-    const msg = JSON.parse(message.data);
+  sock.onmessage = (_, data) => {
+    const msg = JSON.parse(data);
     const $newTr = $(msg.html);
     const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
     if ($oldTr.length) {
