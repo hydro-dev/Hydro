@@ -13,3 +13,8 @@ collect_rate:
   name: Collect Rate
   desc: The collect rate scale (default:1)
   default: 1
+gateway:
+  type: text
+  name: Push gateway endpoint
+  desc: Leave blank to disable push gateway
+  default: ""
