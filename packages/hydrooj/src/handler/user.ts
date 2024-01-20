@@ -125,6 +125,7 @@ class UserLoginHandler extends Handler {
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
+        this.session.recreate = true;
         this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
             ? this.url('homepage') : this.request.referer);
     }
@@ -325,6 +326,7 @@ class UserRegisterWithCodeHandler extends Handler {
         this.session.uid = uid;
         this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
+        this.session.recreate = true;
         this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
@@ -484,6 +486,7 @@ class OauthCallbackHandler extends Handler {
                     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
                     this.session.uid = udoc._id;
                     this.session.scope = PERM.PERM_ALL.toString();
+                    this.session.recreate = true;
                     this.response.redirect = '/';
                     return;
                 }
