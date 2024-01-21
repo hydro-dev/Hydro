@@ -1,6 +1,6 @@
 import path from 'path';
 import { parse } from 'shell-quote';
-import { fs, sleep } from '@hydrooj/utils';
+import { fs } from '@hydrooj/utils';
 import { FormatError } from './error';
 
 const EMPTY_STR = /^[ \r\n\t]*$/i;
@@ -8,16 +8,21 @@ const EMPTY_STR = /^[ \r\n\t]*$/i;
 export const cmd = parse;
 
 export namespace Lock {
-    const data = {};
+    const queue: Record<string, Array<(res?: any) => void>> = {};
 
     export async function acquire(key: string) {
-        // eslint-disable-next-line no-await-in-loop
-        while (data[key]) await sleep(100);
-        data[key] = true;
+        if (!queue[key]) {
+            queue[key] = [];
+        } else {
+            await new Promise((resolve) => {
+                queue[key].push(resolve);
+            });
+        }
     }
 
     export function release(key: string) {
-        data[key] = false;
+        if (!queue[key].length) delete queue[key];
+        else queue[key].shift()();
     }
 }
 
