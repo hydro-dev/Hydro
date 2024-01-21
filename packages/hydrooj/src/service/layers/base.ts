@@ -84,7 +84,7 @@ export default async (ctx: KoaContext, next: Next) => {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     } else {
         Object.assign(ctx.session, { createIp: request.ip, createUa: ua, createHost: request.host });
-        [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, ctx.session);
+        [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     }
     if (!request.websocket) {
         const options: any = {
