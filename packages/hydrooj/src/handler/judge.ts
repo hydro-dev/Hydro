@@ -217,6 +217,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
     concurrency = 1;
+    callback: (res?: any) => void = null;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
@@ -235,7 +236,12 @@ class JudgeConnectionHandler extends ConnectionHandler {
         while (!this.closed) {
             /* eslint-disable no-await-in-loop */
             if (this.processing.length >= this.concurrency) {
-                await sleep(500);
+                await Promise.race([
+                    sleep(500),
+                    new Promise((resolve) => {
+                        this.callback = resolve;
+                    }),
+                ]);
                 continue;
             }
             const t = await task.getFirst(this.query);
@@ -264,9 +270,10 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (!rdoc) return;
             if (msg.key === 'next') await next({ ...msg, domainId: rdoc.domainId });
             if (msg.key === 'end') {
-                if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
+                this.callback?.();
+                if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
@@ -279,6 +286,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
                 this.concurrency = msg.concurrency;
+                this.callback?.();
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
