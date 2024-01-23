@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-require('@hydrooj/utils/lib/register');
+require('@hydrooj/register');
 
 const packageBasedir = require('path').resolve(__dirname, '..');
 const { homedir } = require('os');
