@@ -13,6 +13,7 @@ const logger = new Logger('model/task');
 const coll = db.collection('task');
 const collEvent = db.collection('event');
 const argv = cac().parse();
+const waiterQueue: Set<(res?: any) => void> = new Set();
 
 async function getFirst(query: Filter<Task>) {
     if (process.env.CI) return null;
@@ -25,37 +26,71 @@ async function getFirst(query: Filter<Task>) {
     return null;
 }
 
-class Consumer {
+export class Consumer {
     consuming: boolean;
+    processing: Set<Task> = new Set();
     running?: any;
+    notify: (res?: any) => void;
+    abort: (res?: any) => void;
 
-    constructor(public filter: any, public func: Function, public destoryOnError = true) {
+    constructor(public filter: any, public func: (t: Task) => Promise<void>, public destroyOnError = true, private concurrency = 1) {
         this.consuming = true;
         this.consume();
-        bus.on('app/exit', this.destory);
+        bus.on('app/exit', this.destroy);
     }
 
     async consume() {
         while (this.consuming) {
             try {
+                if (this.processing.size >= this.concurrency) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await new Promise((resolve, reject) => {
+                        this.notify = resolve;
+                        this.abort = reject;
+                    });
+                }
                 // eslint-disable-next-line no-await-in-loop
-                const res = await getFirst(this.filter);
-                if (res) {
-                    this.running = res;
+                let res = await getFirst(this.filter);
+                while (!res) {
                     // eslint-disable-next-line no-await-in-loop
-                    await this.func(res);
-                    this.running = null;
+                    await new Promise((resolve, reject) => {
+                        waiterQueue.add(resolve);
+                        this.notify = resolve;
+                        this.abort = reject;
+                    });
                     // eslint-disable-next-line no-await-in-loop
-                } else await sleep(1000);
+                    res = await getFirst(this.filter);
+                }
+                this.processing.add(res);
+                this.func(res)
+                    .catch((err) => {
+                        logger.error(err);
+                        if (this.destroyOnError) this.destroy();
+                    })
+                    .finally(() => {
+                        this.processing.delete(res);
+                        if (this.notify) this.notify();
+                    });
             } catch (err) {
                 logger.error(err);
-                if (this.destoryOnError) this.destory();
+                if (this.destroyOnError) this.destroy();
             }
         }
     }
 
-    async destory() {
+    async destroy() {
         this.consuming = false;
+        if (this.abort) this.abort('destroy');
+    }
+
+    setConcurrency(concurrency: number) {
+        this.concurrency = concurrency;
+        if (this.notify) this.notify();
+    }
+
+    setQuery(query: string) {
+        this.filter = query;
+        if (this.notify) this.notify();
     }
 }
 
@@ -69,11 +104,13 @@ class TaskModel {
             _id: new ObjectId(),
         };
         const res = await coll.insertOne(t);
+        bus.broadcast('task/add');
         return res.insertedId;
     }
 
     static async addMany(tasks: Task[]) {
         const res = await coll.insertMany(tasks);
+        bus.broadcast('task/add');
         return res.insertedIds;
     }
 
@@ -95,8 +132,8 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static consume(query: any, cb: Function, destoryOnError = true) {
-        return new Consumer(query, cb, destoryOnError);
+    static consume(query: any, cb: (t: Task) => Promise<void>, destroyOnError = true, concurrency = 1) {
+        return new Consumer(query, cb, destroyOnError, concurrency);
     }
 }
 
@@ -111,6 +148,10 @@ export async function apply(ctx: Context) {
             payload: JSON.stringify(payload),
             expire: new Date(Date.now() + 10000),
         });
+    });
+    ctx.on('task/add', () => {
+        waiterQueue.forEach((f) => f());
+        waiterQueue.clear();
     });
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;

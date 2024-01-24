@@ -20,7 +20,7 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import task from '../model/task';
+import task, { Consumer } from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
@@ -213,18 +213,15 @@ export class JudgeFileUpdateHandler extends Handler {
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     processing: Task[] = [];
-    closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
-    concurrency = 1;
-    callback: (res?: any) => void = null;
+    tasks: Record<string, (res?: any) => void> = {};
+    consumer: Consumer = null;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // Ensure language sent
-        await sleep(100);
-        this.newTask().catch((e) => logger.error(e));
+        this.consumer = task.consume(this.query, this.newTask.bind(this));
     }
 
     @subscribe('system/setting')
@@ -232,31 +229,19 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
     }
 
-    async newTask() {
-        while (!this.closed) {
-            /* eslint-disable no-await-in-loop */
-            if (this.processing.length >= this.concurrency) {
-                await Promise.race([
-                    sleep(500),
-                    new Promise((resolve) => {
-                        this.callback = resolve;
-                    }),
-                ]);
-                continue;
-            }
-            const t = await task.getFirst(this.query);
-            if (!t) {
-                await sleep(500);
-                continue;
-            }
-            const rdoc = await record.get(t.domainId, t.rid);
-            if (!rdoc) continue;
+    async newTask(t: Task) {
+        const rdoc = await record.get(t.domainId, t.rid);
+        if (!rdoc) return;
 
-            this.send({ task: { ...rdoc, ...t } });
-            this.rdocs[rdoc._id.toHexString()] = rdoc;
-            this.processing.push(t);
-            await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        }
+        const rid = rdoc._id.toHexString();
+        const promise = new Promise((resolve) => {
+            this.tasks[rid] = resolve;
+        });
+        this.send({ task: { ...rdoc, ...t } });
+        this.rdocs[rid] = rdoc;
+        this.processing.push(t);
+        await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
+        await promise;
     }
 
     async message(msg) {
@@ -272,7 +257,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (msg.key === 'end') {
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
-                this.callback?.();
+                this.tasks[msg.rid]();
+                delete this.tasks[msg.rid];
                 if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
             }
         } else if (msg.key === 'status') {
@@ -280,22 +266,24 @@ class JudgeConnectionHandler extends ConnectionHandler {
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
+            this.consumer.setQuery(this.query);
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
+                this.consumer.setQuery(this.query);
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
-                this.concurrency = msg.concurrency;
-                this.callback?.();
+                this.consumer.setConcurrency(msg.concurrency);
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
+                this.consumer.setQuery(this.query);
             }
         }
     }
 
     async cleanup() {
-        this.closed = true;
+        this.consumer.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
         await Promise.all(this.processing.map(async (t) => {
             await record.reset(t.domainId, t.rid, false);

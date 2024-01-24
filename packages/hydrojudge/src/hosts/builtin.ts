@@ -90,7 +90,10 @@ export async function postInit(ctx) {
         await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
-    for (let i = 1; i < parallelism; i++) TaskModel.consume({ type: 'judge' }, handle);
+    const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    ctx.on('system/setting', () => {
+        taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
+    });
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
     TaskModel.consume({ type: 'generate' }, handle);
 }

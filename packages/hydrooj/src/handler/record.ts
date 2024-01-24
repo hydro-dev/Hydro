@@ -253,6 +253,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pretest = false;
     tdoc: Tdoc;
     applyProjection = false;
+    throttleSend: (data: any) => void;
 
     @param('tid', Types.ObjectId, true)
     @param('pid', Types.ProblemId, true)
@@ -301,6 +302,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.allDomain = true;
         }
+        this.throttleSend = throttle(this.send, 1000, { trailing: true });
     }
 
     async message(msg: { rids: string[] }) {
@@ -338,9 +340,9 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
-        if (this.pretest) this.send({ rdoc: omit(rdoc, ['code', 'input']) });
+        if (this.pretest) this.throttleSend({ rdoc: omit(rdoc, ['code', 'input']) });
         else {
-            this.send({
+            this.throttleSend({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, allDomain: this.allDomain,
                 }),
