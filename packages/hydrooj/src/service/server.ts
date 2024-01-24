@@ -417,6 +417,7 @@ export function Connection(
                 h.compression = new Shorty();
                 conn.send('shorty');
             }
+            conn.pause();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -449,6 +450,7 @@ export function Connection(
                 h.message?.(JSON.parse(e.data.toString()));
             };
             conn.onclose = clean;
+            conn.resume();
             await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);

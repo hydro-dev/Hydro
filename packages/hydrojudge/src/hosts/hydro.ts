@@ -224,6 +224,7 @@ export default class Hydro implements Session {
                         this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf } }));
                     }, 1200000);
                 }
+                this.ws.send(content);
                 resolve(null);
             });
         });
