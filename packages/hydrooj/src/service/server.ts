@@ -438,8 +438,11 @@ export function Connection(
                     clean();
                     conn.terminate();
                 }
-                if (Date.now() - lastHeartbeat > 30000) conn.send('ping');
+                if (Date.now() - lastHeartbeat > 30000) conn.ping();
             }, 40000);
+            conn.on('pong', () => {
+                lastHeartbeat = Date.now();
+            });
             conn.onmessage = (e) => {
                 lastHeartbeat = Date.now();
                 if (e.data === 'pong') return;
