@@ -253,7 +253,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pretest = false;
     tdoc: Tdoc;
     applyProjection = false;
-    throttleSend: (f: () => Promise<any>) => void;
+    queue: Map<string, () => Promise<any>> = new Map();
+    throttleQueueClear: () => void;
 
     @param('tid', Types.ObjectId, true)
     @param('pid', Types.ProblemId, true)
@@ -302,7 +303,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.allDomain = true;
         }
-        this.throttleSend = throttle(async (f) => this.send(await f()), 1000, { trailing: true });
+        this.throttleQueueClear = throttle(this.queueClear, 1000, { trailing: true });
     }
 
     async message(msg: { rids: string[] }) {
@@ -340,14 +341,24 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
-        if (this.pretest) this.throttleSend(async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
+        if (this.pretest) this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
         else {
-            this.throttleSend(async () => ({
+            this.queueSend(rdoc._id.toHexString(), async () => ({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, allDomain: this.allDomain,
                 }),
             }));
         }
+    }
+
+    queueSend(rid: string, fn: () => Promise<any>) {
+        this.queue.set(rid, fn);
+        this.throttleQueueClear();
+    }
+
+    async queueClear() {
+        this.queue.forEach(async (fn) => this.send(await fn()));
+        this.queue.clear();
     }
 }
 
