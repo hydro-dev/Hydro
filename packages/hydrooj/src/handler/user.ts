@@ -479,6 +479,11 @@ class OauthCallbackHandler extends Handler {
             this.session.scope = PERM.PERM_ALL.toString();
             this.response.redirect = '/';
         } else {
+            if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+                await oauth.set(r._id, this.user._id);
+                this.response.redirect = '/';
+                return;
+            }
             if (r.email) {
                 const udoc = await user.getByEmail('system', r.email);
                 if (udoc) {
