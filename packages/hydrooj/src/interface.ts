@@ -656,7 +656,7 @@ export interface OauthMap {
     /** target uid */
     uid: number;
     /** platform name */
-    platform: string;
+    platform?: string;
 }
 
 export interface DiscussionHistoryDoc {
