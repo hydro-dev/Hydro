@@ -103,7 +103,6 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
     'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
-    'task/add': () => VoidReturn
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 

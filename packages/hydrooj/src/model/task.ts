@@ -104,13 +104,11 @@ class TaskModel {
             _id: new ObjectId(),
         };
         const res = await coll.insertOne(t);
-        bus.broadcast('task/add');
         return res.insertedId;
     }
 
     static async addMany(tasks: Task[]) {
         const res = await coll.insertMany(tasks);
-        bus.broadcast('task/add');
         return res.insertedIds;
     }
 
@@ -149,10 +147,10 @@ export async function apply(ctx: Context) {
             expire: new Date(Date.now() + 10000),
         });
     });
-    ctx.on('task/add', () => {
+    setInterval(() => {
         waiterQueue.forEach((f) => f());
         waiterQueue.clear();
-    });
+    }, 1000);
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     const stream = collEvent.watch();
