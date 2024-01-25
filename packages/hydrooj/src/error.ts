@@ -5,25 +5,6 @@ interface IHydroError {
     new(...args: any[]): HydroError
 }
 
-const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
-    let msg: () => string;
-    let code: number;
-    for (const item of info) {
-        if (typeof item === 'number') {
-            code = item;
-        } else if (typeof item === 'string') {
-            msg = function () { return item; };
-        } else if (typeof item === 'function') {
-            msg = item;
-        }
-    }
-    const HydroError = class extends Class { };
-    HydroError.prototype.name = name;
-    if (msg) HydroError.prototype.msg = msg;
-    if (code) HydroError.prototype.code = code;
-    return HydroError;
-};
-
 export class HydroError extends Error {
     params: any[];
     code: number;
@@ -41,6 +22,29 @@ export class HydroError extends Error {
         return this.msg();
     }
 }
+
+const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
+    let msg: () => string;
+    let code: number;
+    for (const item of info) {
+        if (typeof item === 'number') {
+            code = item;
+        } else if (typeof item === 'string') {
+            msg = function () { return item; };
+        } else if (typeof item === 'function') {
+            msg = item;
+        }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    return class HydroError extends Class {
+        name = name;
+        constructor(...args: any[]) {
+            super(...args);
+            if (msg) this.msg = msg;
+            if (code) this.code = code;
+        }
+    };
+};
 
 export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);
 export const SystemError = Err('SystemError', HydroError, 'SystemError', 500);

@@ -50,8 +50,8 @@ const testlibFile = {
     src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
 };
 
-export async function compileWithTestlib(
-    src: string, type: 'checker' | 'validator' | 'interactor',
+export async function compileLocalFile(
+    src: string, type: 'checker' | 'validator' | 'interactor' | 'generator' | 'std',
     getLang, copyIn: CopyIn, withTestlib = true, next?: any,
 ) {
     const s = src.replace('@', '.').split('.');

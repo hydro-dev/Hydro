@@ -24,6 +24,29 @@ LANG=zh . <(curl https://hydro.ac/setup.sh)
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
 
+## Merry Christmas and Happy new year
+
+```
+                                                    .''.
+                        .''.      .        *''*    :_\/_:
+                       :_\/_:   _\(/_  .:.*_\/_*   : /\ :
+                   .''.: /\ :   ./)\   ':'* /\ * :  '..'.
+                  :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_
+                  : /\ : :::::     *_\/_*     -= o =-  /)\
+                   '..'  ':::'     * /\ *     .'/.\'.   '
+                                    *..*         :
+             *
+     *      /.\   *       *           .   *
+  .        /..'\     .     .     * .
+          */'.'\*       . .          .     *   *
+      *   /.''.'\    *     .  .     .   *
+.        */.'.'.\*
+...".""""/'.''.'.\""."."...
+         ^^^[_]^^^*
+```
+
+I wish you all a Merry Christmas and a peaceful New Year 2024.
+
 ## 系统特点
 
 ### 模块化设计，插件系统，功能热插拔
@@ -77,12 +100,15 @@ Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他�
 当前支持的平台有：  
 
 - [一本通编程启蒙](https://hydro.ac/ybtbas.zip)：官方提供一本通编程启蒙题库，免费使用，参照压缩包内导入说明。
-- [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
+- [深入浅出程序设计竞赛](https://hydro.ac/srqc.zip)：官方提供洛谷《深入浅出程序设计竞赛(基础篇)》配套题库，免费使用，参照压缩包内导入说明。
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
-- [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
+- [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
 - [洛谷](https://www.luogu.com.cn)：使用此功能需要向洛谷购买授权；
+- [HDUOJ](https://acm.hdu.edu.cn)：杭州电子科技大学在线评测系统，其中包含多校训练题；
 - [CSGOJ](https://cpc.csgrandeur.cn)：广东省赛与湖南省赛赛题评测平台；
+- [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
 - [POJ](https://poj.org)：较为古董，服务器稳定性差；
+- [YACS](https://iai.sh.cn)：上海市计算机学会竞赛平台，单账号每日提交有限制；
 - HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
 
 ### 多赛制支持
@@ -100,12 +126,60 @@ Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件�
 
 Email：i@undefined.moe
 Hydro 用户群：1085853538  
-Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)  
+Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.9.26 / UI 4.9.26
+### Hydro 4.10.3 / UI 4.49.3
+
+- core: 修复返回状态码异常的问题
+- core: 同步排名页行为
+- install: 不再预装 pascal 编译器
+- judge: 处理心跳包
+- core: judge: 优化任务分配
+- judge: 优化缓存管理
+- core: contest_export_ghost: 当队伍不参与排名时导出星号开头的队伍名
+- ui: 修复 monaco 粘贴动作
+- ui: 支持批量粘贴用户/题号
+
+### Hydro 4.10.0 / UI 4.49.0
+
+新功能：
+- core&ui&judge: 支持从网页端生成测试数据
+- vjudge: 添加 yacs 支持
+- core: 支持 /record?all=1
+- core&ui: 在 ACM 赛制下隐藏测试点详情
+- onsite-toolkit: 支持基于IP地址登录
+- core&ui: 支持在网页端重命名文件
+- core&judge: 允许在单个连接中同时分发多个任务
+
+优化与修复：
+- core: 优化文件名过滤
+- utils: 优化测试数据匹配逻辑
+- install: caddy 默认开启压缩
+- ui: 补全部分翻译
+- install: 默认使用 mongodb6
+- core: 提交记录页性能优化
+- judge: 更新 testlib 版本
+- core: install: 支持 strip
+- ui: 升级最低支持目标为 chrome65
+- core: 优化搜索题目时显示的题目数量
+- core: 修复 0 分提交记录不会显示在乐多赛排行榜的问题
+- core: 修复比赛题面中 file:// 替换
+- core: discussion: 校验 vnode 输入
+- core: 移除默认 mongo connection options
+- ui: 错误页回显名称
+- ui: 修复未登录时跨域 WebSocket 连接出错的问题
+- core: 修复删除域导致 pinnedDomains 重复的问题
+- migrate: hustoj: 处理旧版本系统题目无来源字段的问题
+- migrate: 修复 UOJ 迁移脚本
+- ui: 修复 reactions 组件
+- core: 校验 referer
+- core: 修复气球发放
+- 其他漏洞修复与性能优化
+
+### Hydro 4.9.26 / UI 4.48.26
 - core: 修复创建题目设置难度异常的问题
 - core: 优化 document 索引
 - core&ui: 比赛气球功能
@@ -493,13 +567,17 @@ Telegram [@webpack_exports_undefined](https://t.me/webpack_exports_undefined)
 1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  
 2. 如确需闭源，您也可以联系我们购买其他授权。
 
-在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
-若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
-
 ### 附加条款
 
-1. 不可移除本项目的版权声明；（[AGPL3 7(b)](LICENSE#L356)）
+基于 AGPL3 协议第七条，您在使用本项目时，需要遵守以下额外条款：
+
+1. 不可移除本项目的版权声明与作者/来源署名；（[AGPL3 7(b)](LICENSE#L356)）
 2. 当重分发经修改后的本软件时，需要在软件名或版本号中采用可识别的方式进行注明；（[AGPL3 7(c)](LICENSE#L360)）
+3. 除非得到许可，不得以宣传为目的使用作者姓名；（[AGPL3 7(d)](LICENSE#364)）
+
+即：  
+在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
+若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
 
 ## 贡献代码
 

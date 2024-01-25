@@ -27,7 +27,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                         response.body.UiContext = UiContext;
                         response.body.UserContext = user;
                     }
-                    response.body = JSON.stringify(response.body, serializer({ showDisplayName: user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME) }));
+                    response.body = JSON.stringify(response.body, serializer({ showDisplayName: user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) }));
                 } catch (e) {
                     response.body = new SystemError('Serialize failure', e.message);
                 }

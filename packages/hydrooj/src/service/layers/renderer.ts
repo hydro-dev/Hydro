@@ -14,9 +14,10 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
             avatar: avatar(user?.avatar || '', 128),
             viewLang: ctx.translate('__id'),
         };
-        const engine = global.Hydro.lib.template?.render
+        const type = templateName.split('.')[1];
+        const engine = global.Hydro.module.render[type]
             || (() => JSON.stringify(args, serializer({
-                showDisplayName: user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
+                showDisplayName: user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
             })));
         return engine(templateName, {
             handler: ctx.handler,

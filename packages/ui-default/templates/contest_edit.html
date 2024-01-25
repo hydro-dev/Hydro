@@ -158,7 +158,7 @@
               value:tdoc.allowViewCode|default(true),
               row:false
             }) }}
-            <div style="display: none" class="contest-rule-settings contest-rule--acm contest-rule--ioi contest-rule--strictioi">
+            <div style="display: none" class="contest-rule-settings contest-rule--acm contest-rule--ioi">
             {{ form.form_text({
               columns:4,
               label:'Lock (minutes)',
@@ -170,7 +170,7 @@
               row:false
             }) }}
             </div>
-            <div style="display: none" class="contest-rule-settings contest-rule--oi">
+            <div style="display: none" class="contest-rule-settings contest-rule--oi contest-rule--ioi contest-rule--ledo contest-rule--strictioi">
             {{ form.form_text({
               columns:4,
               label:'Flexable Duration',

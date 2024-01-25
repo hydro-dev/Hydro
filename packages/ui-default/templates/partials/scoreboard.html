@@ -1,9 +1,9 @@
 {% import "components/user.html" as user with context %}
 {% macro renderRecord(cell, canView) %}
-  <a href="{{ url('record_detail', rid=cell.raw) if canView else '' }}"{% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %}>
-    {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
-    <span style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
-  </a>
+  {% if canView %}<a href="{{ url('record_detail', rid=cell.raw) }}">{% endif %}
+  {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
+  <span {% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %} style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
+  {% if canView %}</a>{% endif %}
 {% endmacro %}
 
 <div data-fragment-id="scoreboard">
@@ -56,17 +56,12 @@
               </button>
               {{ user.render_inline(udict[column.raw], badge=false) }}
             {%- elif column.type == 'record' and column.raw -%}
-              <a href="{{ url('record_detail', rid=column.raw) if canView else '' }}" data-tooltip="{{ column.hover }}">
-                <span style="font-weight:bold;color:{{ utils.status.getScoreColor(column.score|default(column.value)) }}">{{ column.value|string|nl2br|safe }}</span>
-              </a>
+              {{ renderRecord(column, canView) }}
             {%- elif column.type == 'records' -%}
               {%- for record in column.raw -%}
                 {%- if loop.index0 -%}/{%- endif -%}
                 {%- if record.raw -%}
-                  <a href="{{ url('record_detail', rid=record.raw) if canView else '' }}">
-                    {%- set _color = utils.status.getScoreColor(record.score|default(record.value)) -%}
-                    <span style="font-weight:bold;color:{{ _color }}">{{ record.value|string|nl2br|safe }}</span>
-                  </a>
+                  {{ renderRecord(record, canView) }}
                 {%- else -%}
                   {{ record.value|string|nl2br|safe }}
                 {%- endif -%}

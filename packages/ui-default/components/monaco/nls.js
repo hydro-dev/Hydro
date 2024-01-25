@@ -18,6 +18,14 @@ export function localize(path, message, ...args) {
   return format(CURRENT_LOCALE_DATA[path.key || path] || message, args);
 }
 
+export function localize2(data, message, ...args) {
+  const original = localize(message, args);
+  return {
+    value: original,
+    original,
+  };
+}
+
 export function setLocaleData(data) {
   CURRENT_LOCALE_DATA = Object.assign(...Object.values(data));
 }

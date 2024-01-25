@@ -33,10 +33,7 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
     if (result.timeMax < result.timeMin) result.timeMax = result.timeMin = 1000;
     if (cfg.langs) result.langs = cfg.langs;
     if (cfg.redirect) result.redirect = cfg.redirect.split('/', 2) as any;
-    if (cfg.filename && result.type === 'default') {
-        result.type = 'fileio';
-        result.subType = cfg.filename;
-    }
+    if (cfg.filename && result.type === 'default') result.subType = cfg.filename;
     return result;
 }
 

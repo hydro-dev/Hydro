@@ -32,7 +32,7 @@ const loaders = {
     if (resource) setLocaleData(resource);
   },
   markdown: () => import('./languages/markdown'),
-  typescript: () => import('./languages/typescript'),
+  typescript: () => import('./languages/typescript').then((m) => m.loadTypes()),
   yaml: () => import('./languages/yaml'),
   external: async (monaco, feat) => {
     for (const item of await getFeatures(`monaco-${feat}`)) {

@@ -85,6 +85,8 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
       ext = 'zip';
     }
     if (!ext) return;
+    ev.preventDefault();
+    ev.stopPropagation();
     const filename = `${nanoid()}.${ext}`;
     const data = new FormData();
     data.append('filename', filename);
@@ -129,7 +131,7 @@ function handlePasteEvent(editor: monaco.editor.IStandaloneCodeEditor) {
         console.error(e);
         updateText(`${i18n('Upload Failed')}: ${e.message}`);
       });
-  });
+  }, { capture: true });
 }
 
 export function registerAction(

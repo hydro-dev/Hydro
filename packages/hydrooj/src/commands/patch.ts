@@ -25,7 +25,7 @@ export function register(cli: CAC) {
         }
         await fs.writeFile(patch, res.body);
         child.execSync(`patch ${mod} -o ${mod}.tmp < ${patch}`);
-        await fs.move(`${mod}.tmp`, mod);
+        await fs.move(`${mod}.tmp`, mod, { overwrite: true });
         logger.info('Patched %s', mod);
     });
 

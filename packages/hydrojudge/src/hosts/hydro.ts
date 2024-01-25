@@ -10,6 +10,7 @@ import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
 import { Lock } from '../utils';
@@ -18,7 +19,7 @@ function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
 }
 
-export default class Hydro {
+export default class Hydro implements Session {
     ws: WebSocket;
     language: Record<string, LangConfig>;
 
@@ -36,11 +37,12 @@ export default class Hydro {
         return superagent.get(url).set('Cookie', this.config.cookie);
     }
 
-    post(url: string, data: any) {
+    post(url: string, data?: any) {
         url = new URL(url, this.config.server_url).toString();
-        return superagent.post(url).send(data)
+        const t = superagent.post(url)
             .set('Cookie', this.config.cookie)
             .set('Accept', 'application/json');
+        return data ? t.send(data) : t;
     }
 
     async init() {
@@ -123,7 +125,7 @@ export default class Hydro {
 
     async fetchFile(name: string) {
         name = name.split('#')[0];
-        const res = await this.post('judge/code', { id: name });
+        const res = await this.post('judge/files', { id: name });
         const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
         const w = fs.createWriteStream(target);
         this.get(res.body.url).pipe(w);
@@ -132,6 +134,13 @@ export default class Hydro {
             w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
         });
         return target;
+    }
+
+    async postFile(target: string, filename: string, file: string) {
+        await this.post('judge/upload')
+            .field('rid', target)
+            .field('name', filename)
+            .attach('file', fs.createReadStream(file));
     }
 
     getLang(name: string, doThrow = true) {
@@ -157,6 +166,8 @@ export default class Hydro {
             if (performanceMode && data.case && !data.compilerText && !data.message) {
                 t.callbackCache ||= [];
                 t.callbackCache.push(data.case);
+                // TODO use rate-limited send
+                // FIXME handle fields like score, time, memory, etc
             } else {
                 this.send(t.request.rid, 'next', data);
             }
@@ -178,14 +189,19 @@ export default class Hydro {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        const config: { prio?: number, concurrency?: number } = {};
+        const config: { prio?: number, concurrency?: number, lang?: string[] } = {};
         if (this.config.minPriority !== undefined) config.prio = this.config.minPriority;
         if (this.config.concurrency !== undefined) config.concurrency = this.config.concurrency;
+        if (this.config.lang?.length) config.lang = this.config.lang;
         const content = Object.keys(config).length
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
         setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
+            if (data.toString() === 'ping') {
+                this.ws.send('pong');
+                return;
+            }
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
@@ -208,6 +224,7 @@ export default class Hydro {
                         this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf } }));
                     }, 1200000);
                 }
+                this.ws.send(content);
                 resolve(null);
             });
         });

@@ -6,7 +6,8 @@
   + (("&tid=" + filterTid) if filterTid else "")
   + (("&uidOrName=" + filterUidOrName) if filterUidOrName else "")
   + (("&pid=" + filterPid) if filterPid else "")
-  + ("&allDomain=1" if all else "")
+  + ("&all=1" if all else "")
+  + ("&allDomain=1" if allDomain else "")
 ) }}
 {{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
 <div class="row">

@@ -1,6 +1,6 @@
 import { PassThrough } from 'stream';
 import type { Next } from 'koa';
-import { cloneDeep, pick } from 'lodash';
+import { cloneDeep, omit, pick } from 'lodash';
 import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import token from '../../model/token';
@@ -80,11 +80,11 @@ export default async (ctx: KoaContext, next: Next) => {
         : system.get('session.unsaved_expire_seconds');
     if (!ctx.session._id && !Object.getOwnPropertyNames(ctx.session).length) return;
     Object.assign(ctx.session, { updateIp: request.ip, updateUa: ua });
-    if (ctx.session._id) {
-        await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, ctx.session);
+    if (ctx.session._id && !ctx.session.recreate) {
+        await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     } else {
         Object.assign(ctx.session, { createIp: request.ip, createUa: ua, createHost: request.host });
-        [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, ctx.session);
+        [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     }
     if (!request.websocket) {
         const options: any = {

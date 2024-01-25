@@ -6,7 +6,9 @@
       href="{{ url('record_detail', rid=rdoc[rid_key], domainId=rdoc.domainId) if allDomain else url('record_detail', rid=rdoc[rid_key]) }}"
       class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.status] }}"
     >
+      {% if typeof(rdoc['score']) == 'number' %}
       <span style="color: {{ utils.status.getScoreColor(rdoc.score|default(0)) }}">{{ rdoc.score|default(0) }}</span>
+      {% endif %}
       {{ model.builtin.STATUS_SHORT_TEXTS[rdoc.status] if short else model.builtin.STATUS_TEXTS[rdoc.status] }}
     </a>
   </div>

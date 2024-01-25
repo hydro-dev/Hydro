@@ -1,11 +1,11 @@
 {
     "name": "@hydrooj/elastic-search",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "@elastic/elasticsearch": "^8.10.0"
+        "@elastic/elasticsearch": "^8.11.0"
     }
 }

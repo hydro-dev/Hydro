@@ -1,8 +1,9 @@
 {% import "components/record.html" as record with context %}
+{% import "components/user.html" as user with context %}
 {% import "components/problem.html" as problem with context %}
 <tr data-rid="{{ rdoc['_id'] }}">
   {% set _isPretest = rdoc.contest and rdoc.contest.toString() == '000000000000000000000000' %}
-  {{ record.render_status_td(rdoc, allDomain = all) }}
+  {{ record.render_status_td(rdoc, allDomain = allDomain) }}
   <td class="col--problem col--problem-name">
   {% if handler.user.hasPerm(perm.PERM_REJUDGE) and not rdoc.files.hack and not _isPretest %}
     <form class="form--inline" method="post" action="{{ url('record_detail', rid=rdoc._id, domainId=rdoc.domainId) }}">
@@ -26,17 +27,9 @@
   {% if rdoc.files.hack %}<span class="text-orange">({{ _('Hack') }})</span>{% endif %}
   {% if _isPretest %}<span class="text-orange">({{ _('Pretest') }})</span>{% endif %}
   </td>
-  <td class="col--submit-by">
-    <a href="{{ url('user_detail', uid=rdoc.uid) }}">
-      {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName %}
-        {{ udoc.displayName }} ({{ udoc.uname }})
-      {% else %}
-        {{ udoc.uname }}
-      {% endif %}
-    </a>
-  </td>
-  <td class="col--time">{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</td>
-  <td class="col--memory">{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}</td>
+  <td class="col--submit-by">{{ user.render_inline(udoc, avatar=false, badge=false) }}</td>
+  <td class="col--time">{% if rdoc['time'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ rdoc.time|round|int }}ms{% else %}-{% endif %}</td>
+  <td class="col--memory">{% if rdoc['memory'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rdoc['status']) %}&ge;{% endif %}{{ size(rdoc.memory, 1024) }}{% else %}-{% endif %}</td>
   <td class="col--lang">{{ model.setting.langs[rdoc['lang']].display }}</td>
   <td class="col--submit-at">{{ datetimeSpan(rdoc['_id'])|safe }}</td>
 </tr>

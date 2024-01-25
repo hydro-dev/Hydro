@@ -2,18 +2,20 @@ import codeforces from './codeforces';
 import csgoj from './csgoj';
 import hduoj from './hduoj';
 import {
-    BZOJ as bzoj, HUSTOJ as hustoj, XJOI as xjoi, YBT as ybt,
+    BZOJ as bzoj,
+    HUSTOJ as hustoj,
+    XJOI as xjoi,
+    YBT as ybt,
     YBTBAS as ybtbas,
 } from './hustoj';
-import luogu from './luogu';
 import poj from './poj';
 import spoj from './spoj';
 import uoj from './uoj';
+import yacs from './yacs';
 
 const vjudge: Record<string, any> = {
     codeforces,
     csgoj,
-    'luogu.legacy': luogu,
     poj,
     spoj,
     uoj,
@@ -23,5 +25,6 @@ const vjudge: Record<string, any> = {
     ybt,
     ybtbas,
     hduoj,
+    yacs,
 };
 export default vjudge;

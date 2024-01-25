@@ -12,7 +12,7 @@ export const PERM = {
     // Domain Settings
     PERM_VIEW: 1n << 0n,
     PERM_EDIT_DOMAIN: 1n << 1n,
-    PREM_VIEW_DISPLAYNAME: 1n << 67n,
+    PERM_VIEW_DISPLAYNAME: 1n << 67n,
     PERM_MOD_BADGE: 1n << 2n,
 
     // Problem
@@ -104,7 +104,7 @@ export const Permission = (family: string, key: BigInt, desc: string) => ({ fami
 
 export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW, 'View this domain'),
-    Permission('perm_general', PERM.PREM_VIEW_DISPLAYNAME, 'View domain user displayname'),
+    Permission('perm_general', PERM.PERM_VIEW_DISPLAYNAME, 'View domain user displayname'),
     Permission('perm_general', PERM.PERM_EDIT_DOMAIN, 'Edit domain settings'),
     Permission('perm_general', PERM.PERM_MOD_BADGE, 'Show MOD badge'),
     Permission('perm_problem', PERM.PERM_CREATE_PROBLEM, 'Create problems'),
@@ -114,7 +114,7 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
-    Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read record codes'),
+    Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read all record codes'),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE_ACCEPT, 'Read record codes after accept'),
     Permission('perm_record', PERM.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
     Permission('perm_record', PERM.PERM_REJUDGE, 'Rejudge records'),
@@ -188,7 +188,7 @@ PERM.PERM_BASIC = PERM.PERM_VIEW
     | PERM.PERM_VIEW_RANKING;
 
 PERM.PERM_DEFAULT = PERM.PERM_VIEW
-    | PERM.PREM_VIEW_DISPLAYNAME
+    | PERM.PERM_VIEW_DISPLAYNAME
     | PERM.PERM_VIEW_PROBLEM
     | PERM.PERM_EDIT_PROBLEM_SELF
     | PERM.PERM_SUBMIT_PROBLEM

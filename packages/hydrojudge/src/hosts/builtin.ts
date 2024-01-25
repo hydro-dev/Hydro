@@ -6,7 +6,7 @@ import {
     JudgeResultBody, ObjectId, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
-import { end, next } from 'hydrooj/src/handler/judge';
+import { end, next, processJudgeFileCallback } from 'hydrooj/src/handler/judge';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
@@ -28,7 +28,7 @@ const session = {
             data.rid = t.rid as any;
             const rdoc = await RecordModel.get(new ObjectId(t.rid));
             if (data.case) data.case.message ||= '';
-            next({ ...data, rdoc });
+            next({ ...data, domainId: rdoc.domainId });
         };
     },
     getEnd(t: Context) {
@@ -37,7 +37,7 @@ const session = {
             data.rid = t.rid as any;
             const rdoc = await RecordModel.get(new ObjectId(t.rid));
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end({ ...data, rdoc });
+            end({ ...data, domainId: rdoc.domainId });
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -45,6 +45,9 @@ const session = {
         if (lang === 'cpp' && SettingModel.langs['cc']) return SettingModel.langs['cc'];
         if (doThrow) throw new SystemError('Unsupported language {0}.', [lang]);
         return null;
+    },
+    async postFile(target: string, filename: string, filepath: string) {
+        return await processJudgeFileCallback(new ObjectId(target), filename, filepath);
     },
     async cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
@@ -84,9 +87,10 @@ export async function postInit(ctx) {
             logger.debug('Record not found: %o', t);
             return;
         }
-        await (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
+        await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
     for (let i = 1; i < parallelism; i++) TaskModel.consume({ type: 'judge' }, handle);
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
+    TaskModel.consume({ type: 'generate' }, handle);
 }

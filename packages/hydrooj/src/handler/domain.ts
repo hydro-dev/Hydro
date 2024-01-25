@@ -63,11 +63,8 @@ class DomainRankHandler extends Handler {
             page,
             100,
         );
-        let udocs = [];
-        for (const dudoc of dudocs) {
-            udocs.push(user.getById(domainId, dudoc.uid));
-        }
-        udocs = await Promise.all(udocs);
+        const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
+        const udocs = dudocs.map((i) => udict[i.uid]);
         this.response.template = 'ranking.html';
         this.response.body = {
             udocs, upcount, ucount, page,
@@ -76,8 +73,6 @@ class DomainRankHandler extends Handler {
 }
 
 class ManageHandler extends Handler {
-    domain: DomainDoc;
-
     async prepare({ domainId }) {
         this.checkPerm(PERM.PERM_EDIT_DOMAIN);
         this.domain = await domain.get(domainId);

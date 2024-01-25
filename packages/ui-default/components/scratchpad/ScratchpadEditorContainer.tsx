@@ -53,6 +53,7 @@ export default connect((state: any) => ({
         glyphMargin: true,
         lightbulb: { enabled: true },
         model: this.model,
+        fontLigatures: '',
       };
       this.editor = monaco.editor.create(this.containerElement, config);
       registerAction(this.editor, this.model);

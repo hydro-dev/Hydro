@@ -1,7 +1,7 @@
 import esbuild from 'esbuild';
 import {
   Context, fs, Handler, Logger, NotFoundError, param, SettingModel, sha1,
-  size, SystemModel, Types, UiContextBase,
+  size, Types, UiContextBase,
 } from 'hydrooj';
 import { debounce } from 'lodash';
 import { tmpdir } from 'os';
@@ -17,13 +17,8 @@ declare module 'hydrooj' {
     'ui-default.nav_logo_dark': string;
   }
   interface UiContextBase {
-    nav_logo_dark?: string;
     constantVersion?: string;
   }
-}
-
-function updateLogo() {
-  UiContextBase.nav_logo_dark = SystemModel.get('ui-default.nav_logo_dark');
 }
 
 const vfs: Record<string, string> = {};
@@ -140,13 +135,11 @@ export async function apply(ctx: Context) {
   ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
   ctx.Route('constant', '/resource/:version/:name', UiConstantsHandler);
-  ctx.on('app/started', updateLogo);
   ctx.on('app/started', buildUI);
   const debouncedBuildUI = debounce(buildUI, 2000, { trailing: true });
   const triggerHotUpdate = (path?: string) => {
     if (path && !path.includes('/ui-default/') && !path.includes('/public/')) return;
     debouncedBuildUI();
-    updateLogo();
   };
   ctx.on('system/setting', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);

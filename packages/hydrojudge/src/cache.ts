@@ -1,50 +1,63 @@
+/* eslint-disable no-await-in-loop */
 import './utils';
 
 import path from 'path';
 import cac from 'cac';
-import { fs } from '@hydrooj/utils';
+import {
+    Counter, folderSize, fs, size,
+} from '@hydrooj/utils';
 import { getConfig } from './config';
 import { Logger } from './log';
 
 const argv = cac().parse();
 const logger = new Logger('cache');
 
-export = function main() {
+export = async function main() {
     const CACHE_DIR = getConfig('cache_dir');
     if (argv.args[1] === 'clean') {
         fs.emptyDirSync(CACHE_DIR);
         logger.info('Cleaned cache.');
     } else if (argv.args[1] === 'prune') {
         const duration = +argv.options.duration || 30;
-        const now = new Date().getTime();
-        const hosts = fs.readdirSync(CACHE_DIR);
+        const now = Date.now();
+        const hosts = await fs.readdir(CACHE_DIR, { withFileTypes: true });
         let cnt = 0;
+        let totalSize = 0;
+        const map = Counter();
         for (const host of hosts) {
-            const hostdir = path.resolve(CACHE_DIR, host);
-            if (!fs.statSync(hostdir).isDirectory()) continue;
-            const domains = fs.readdirSync(hostdir);
+            const hostdir = path.resolve(CACHE_DIR, host.name);
+            if (!host.isDirectory()) continue;
+            const domains = await fs.readdir(hostdir, { withFileTypes: true });
             for (const domain of domains) {
-                const domaindir = path.resolve(hostdir, domain);
-                if (!fs.statSync(domaindir).isDirectory()) continue;
-                let problems = fs.readdirSync(domaindir);
-                if (problems.includes('.skip-prune')) continue;
+                if (!domain.isDirectory()) continue;
+                const domaindir = path.resolve(hostdir, domain.name);
+                const problems = await fs.readdir(domaindir, { withFileTypes: true });
+                if (problems.find((i) => i.name === '.skip-prune')) continue;
                 for (const problem of problems) {
-                    const problemdir = path.resolve(domaindir, problem);
+                    const problemdir = path.resolve(domaindir, problem.name);
                     if (!fs.statSync(problemdir).isDirectory()) continue;
                     let lastUsage = 0;
                     if (fs.existsSync(path.resolve(problemdir, 'lastUsage'))) {
-                        const content = fs.readFileSync(path.resolve(problemdir, 'lastUsage')).toString();
+                        const content = await fs.readFile(path.resolve(problemdir, 'lastUsage'), 'utf-8');
                         lastUsage = +content || 0;
                     }
                     if (lastUsage + duration * 24 * 3600 * 1000 > now) continue;
-                    fs.removeSync(problemdir);
+                    const cursize = folderSize(problemdir);
+                    const etags = path.resolve(problemdir, 'etags');
+                    if (fs.existsSync(etags)) await fs.unlink(etags);
+                    await fs.remove(problemdir);
                     cnt++;
-                    logger.info('Removed cache %s', problemdir);
+                    totalSize += cursize;
+                    map[domain.name] += cursize;
+                    logger.info('Removed cache %s (%s)', problemdir, size(cursize));
                 }
-                problems = fs.readdirSync(domaindir);
-                if (!problems.length) fs.removeSync(domaindir);
+                if (!(await fs.readdir(domaindir)).length) await fs.remove(domaindir);
             }
         }
-        logger.info('Done! %d items deleted.', cnt);
+        logger.info('Done! %d items deleted, %s freed.', cnt, size(totalSize));
+        const top10 = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        for (const [domain, s] of top10) {
+            logger.info('  %s: %s', domain, size(s));
+        }
     }
 };

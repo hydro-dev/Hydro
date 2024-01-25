@@ -1,9 +1,7 @@
-import serialize from 'serialize-javascript';
 import pwsh from './lib/hash.hydro';
 import db from './service/db';
 
 export { nanoid } from 'nanoid';
-export { serialize };
 
 export * from './pipelineUtils';
 export * from './error';
@@ -37,6 +35,7 @@ export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
+export { default as mime } from './lib/mime';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
