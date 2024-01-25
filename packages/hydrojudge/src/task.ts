@@ -42,13 +42,13 @@ class SequentialNotifier {
     decorate(fn: NextFunction): NextFunction {
         return (body) => {
             this.queue.push(() => fn(body));
-            this?.callback();
+            this.callback?.();
         };
     }
 
     destroy() {
         this.stop = true;
-        this?.callback();
+        this.callback?.();
     }
 }
 

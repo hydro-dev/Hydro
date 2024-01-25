@@ -69,7 +69,7 @@ export class Consumer {
                     })
                     .finally(() => {
                         this.processing.delete(res);
-                        this?.notify();
+                        this.notify?.();
                     });
             } catch (err) {
                 logger.error(err);
@@ -80,17 +80,17 @@ export class Consumer {
 
     async destroy() {
         this.consuming = false;
-        this?.abort('destroy');
+        this.abort?.('destroy');
     }
 
     setConcurrency(concurrency: number) {
         this.concurrency = concurrency;
-        this?.notify();
+        this.notify?.();
     }
 
     setQuery(query: string) {
         this.filter = query;
-        this?.notify();
+        this.notify?.();
     }
 }
 
