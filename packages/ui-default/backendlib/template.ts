@@ -1,15 +1,16 @@
-const path = require('path');
-const { serialize, fs, yaml } = require('hydrooj');
-const nunjucks = require('nunjucks');
-const jsesc = require('jsesc');
+import * as status from '@hydrooj/utils/lib/status';
+import { findFileSync } from '@hydrooj/utils/lib/utils';
+import {
+  avatar, buildContent, Context,
+  fs, PERM, PRIV, STATUS, yaml,
+} from 'hydrooj';
+import jsesc from 'jsesc';
+import nunjucks from 'nunjucks';
+import path from 'path';
+import markdown from './markdown';
+import { ensureTag, xss } from './markdown-it-xss';
+import * as misc from './misc';
 const argv = require('cac')().parse();
-const { findFileSync } = require('@hydrooj/utils/lib/utils');
-const status = require('@hydrooj/utils/lib/status');
-const markdown = require('./markdown');
-const { xss, ensureTag } = require('./markdown-it-xss');
-const misc = require('./misc');
-
-const { buildContent, avatar } = global.Hydro.lib;
 
 let { template } = argv.options;
 if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
@@ -69,10 +70,9 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('json', (self) => (self ? JSON.stringify(self, replacer) : ''));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
-    this.addFilter('serialize', (self, ignoreFunction = true) => serialize(self, { ignoreFunction }));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
-    this.addFilter('markdown', (self, html = false) => ensureTag(markdown.render(self, html)));
-    this.addFilter('markdownInline', (self, html = false) => ensureTag(markdown.renderInline(self, html)));
+    this.addFilter('markdown', (self) => ensureTag(markdown.render(self)));
+    this.addFilter('markdownInline', (self) => ensureTag(markdown.renderInline(self)));
     this.addFilter('ansi', (self) => misc.ansiToHtml(self));
     this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
@@ -80,7 +80,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('bitand', (self, val) => self & val);
     this.addFilter('toString', (self) => (typeof self === 'string' ? self : JSON.stringify(self, replacer)));
     this.addFilter('content', (content, language, html) => {
-      let s = '';
+      let s: any = '';
       try {
         s = JSON.parse(content);
       } catch {
@@ -97,7 +97,7 @@ class Nunjucks extends nunjucks.Environment {
       return ensureTag(html ? xss.process(s) : markdown.render(s));
     });
     this.addFilter('contentLang', (content) => {
-      let s = '';
+      let s: any = '';
       try {
         s = JSON.parse(content);
       } catch {
@@ -114,6 +114,7 @@ class Nunjucks extends nunjucks.Environment {
     });
   }
 }
+// @ts-ignore
 nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
   if ((obj || {})._original) obj = obj._original;
   if (obj === undefined || obj === null) return undefined;
@@ -127,11 +128,6 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
   return obj[val];
 };
 const env = new Nunjucks();
-env.addGlobal('static_url', (assetName) => {
-  // DEPRECATED
-  const cdnPrefix = process.env.DEV ? '/' : global.Hydro.model.system.get('server.cdn');
-  return `${cdnPrefix}${assetName}`;
-});
 // eslint-disable-next-line no-eval
 env.addGlobal('eval', eval);
 env.addGlobal('Date', Date);
@@ -165,27 +161,28 @@ env.addGlobal('set', (obj, key, val) => {
 env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template).filter((n) => n.startsWith(prefix)));
 env.addGlobal('templateExists', (name) => !!global.Hydro.ui.template[name]);
 
-async function render(name, state) {
-  return await new Promise((resolve, reject) => {
-    env.render(name, {
-      page_name: name.split('.')[0],
-      ...state,
-      formatJudgeTexts: (texts) => texts.map((text) => {
-        if (typeof text === 'string') return text;
-        return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
-      }).join('\n'),
-      datetimeSpan: (arg0, arg1, arg2) => misc.datetimeSpan(arg0, arg1, arg2, state.handler.user?.timeZone),
-      perm: global.Hydro.model.builtin.PERM,
-      PRIV: global.Hydro.model.builtin.PRIV,
-      STATUS: global.Hydro.model.builtin.STATUS,
-      UiContext: state.handler?.UiContext || {},
-    }, (err, res) => {
-      if (err) reject(err);
-      else resolve(res);
-    });
+const render = (name: string, state: any) => new Promise<string>((resolve, reject) => {
+  env.render(name, {
+    page_name: name.split('.')[0],
+    ...state,
+    formatJudgeTexts: (texts) => texts.map((text) => {
+      if (typeof text === 'string') return text;
+      return state._(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
+    }).join('\n'),
+    datetimeSpan: (arg0, arg1, arg2) => misc.datetimeSpan(arg0, arg1, arg2, state.handler.user?.timeZone),
+    ctx: state.handler?.ctx,
+    perm: PERM,
+    PRIV,
+    STATUS,
+    UiContext: state.handler?.UiContext || {},
+  }, (err, res) => {
+    if (err) reject(err);
+    else resolve(res);
   });
+});
+
+export async function apply(ctx: Context) {
+  ctx.provideModule('render', 'html', render);
+  ctx.provideModule('render', 'yaml', render);
+  ctx.provideModule('render', 'md', render);
 }
-
-module.exports = render;
-
-global.Hydro.lib.template = { render };

@@ -41,12 +41,16 @@ function _descriptor(v: ParamOption<any>) {
         target.__param ||= {};
         target.__param[target.constructor.name] ||= {};
         if (!target.__param[target.constructor.name][funcName]) {
-            target.__param[target.constructor.name][funcName] = [{ name: 'domainId', type: 'string', source: 'route' }];
             const originalMethod = obj.value;
+            const val = originalMethod.toString();
+            const firstArg = val.split(')')[0]?.split(',')[0]?.split('(')[1]?.trim() || '';
+            const domainIdStyle = firstArg.toLowerCase().includes('domainid');
+            target.__param[target.constructor.name][funcName] = [];
             obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
                 const arglist: ParamOption<any>[] = target.__param[target.constructor.name][funcName];
+                if (typeof rawArgs.domainId !== 'string' || !rawArgs.domainId) throw new ValidationError('domainId');
                 for (const item of arglist) {
                     const src = item.source === 'all'
                         ? rawArgs
@@ -65,10 +69,10 @@ function _descriptor(v: ParamOption<any>) {
                         c.push(item.convert ? item.convert(value) : value);
                     } else c.push(undefined);
                 }
-                return originalMethod.call(this, ...c);
+                return domainIdStyle ? originalMethod.call(this, rawArgs.domainId, ...c) : originalMethod.call(this, rawArgs, ...c);
             };
         }
-        target.__param[target.constructor.name][funcName].splice(1, 0, v);
+        target.__param[target.constructor.name][funcName].unshift(v);
         return obj;
     };
 }

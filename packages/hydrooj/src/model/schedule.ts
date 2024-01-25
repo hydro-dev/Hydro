@@ -6,6 +6,7 @@ import { Schedule } from '../interface';
 import { Logger } from '../logger';
 import * as bus from '../service/bus';
 import db from '../service/db';
+import RecordModel from './record';
 
 const logger = new Logger('model/schedule');
 const coll = db.collection('schedule');
@@ -136,7 +137,7 @@ export async function apply(ctx: Context) {
     ctx.worker = Worker;
 
     Worker.addHandler('task.daily', async () => {
-        await global.Hydro.model.record.coll.deleteMany({ contest: new ObjectId('000000000000000000000000') });
+        await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
         await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
         await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
         if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {

@@ -1,9 +1,9 @@
 import { extname } from 'path';
 import { escapeRegExp } from 'lodash';
-import { lookup } from 'mime-types';
 import moment from 'moment-timezone';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
+import mime from '../lib/mime';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import storage from '../service/storage';
@@ -20,9 +20,7 @@ export class StorageModel {
     static async put(path: string, file: string | Buffer | Readable, owner?: number) {
         const meta = {};
         await StorageModel.del([path]);
-        meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
-            ? 'text/plain'
-            : lookup(path) || 'application/octet-stream';
+        meta['Content-Type'] = mime(path);
         let _id = StorageModel.generateId(extname(path));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
@@ -103,9 +101,7 @@ export class StorageModel {
         );
         const meta = {};
         await StorageModel.del([dst]);
-        meta['Content-Type'] = (dst.endsWith('.ans') || dst.endsWith('.out'))
-            ? 'text/plain'
-            : lookup(dst) || 'application/octet-stream';
+        meta['Content-Type'] = mime(dst);
         let _id = StorageModel.generateId(extname(dst));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop

@@ -5,6 +5,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
+import sanitize from 'sanitize-filename';
 import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import {
@@ -17,7 +18,6 @@ import {
 import {
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
-import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -193,8 +193,7 @@ export class ProblemMainHandler extends Handler {
                 pcount = pcount - count + pdocs.length;
             }
         }
-        // some problems are hidden and cannot be viewed by current user
-        if (pcount > pdocs.length) pcount = pdocs.length;
+        if (text && pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
             await Promise.all(
@@ -396,28 +395,20 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
     @query('pjax', Types.Boolean)
     async get(...args: any[]) {
         // Navigate to current additional file download
-        // e.g. ![img](a.jpg) will navigate to ![img](./pid/file/a.jpg)
+        // e.g. ![img](file://a.jpg) will navigate to ![img](./pid/file/a.jpg)
         if (!this.request.json || args[2]) {
-            if (args[1]) {
-                this.response.body.pdoc.content = this.response.body.pdoc.content
-                    .replace(/\(file:\/\/(.+?)\)/g, (str) => {
-                        const info = str.match(/\(file:\/\/(.+?)\)/);
-                        return `(./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]})`;
-                    })
-                    .replace(/="file:\/\/(.+?)"/g, (str) => {
-                        const info = str.match(/="file:\/\/(.+?)"/);
-                        return `="./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}"`;
-                    })
-                    .replace(/=\\"file:\/\/(.+?)\\"/g, (str) => {
-                        const info = str.match(/=\\"file:\/\/(.+?)\\"/);
-                        return `=\\"./${this.pdoc.docId}/file/${info[1]}${info[1].includes('?') ? '&' : '?'}tid=${args[1]}\\"`;
-                    });
-            } else {
-                this.response.body.pdoc.content = this.response.body.pdoc.content
-                    .replace(/\(file:\/\//g, `(./${this.pdoc.docId}/file/`)
-                    .replace(/="file:\/\//g, `="./${this.pdoc.docId}/file/`)
-                    .replace(/=\\"file:\/\//g, `=\\"${this.pdoc.docId}/file/`);
-            }
+            this.response.body.pdoc.content = this.response.body.pdoc.content
+                .replace(/file:\/\/([^ \n)\\"]+)/g, (str: string) => {
+                    const info = str.match(/file:\/\/([^ \n)\\"]+)/);
+                    const fileinfo = info[1];
+                    let filename = fileinfo.split('?')[0]; // remove querystring
+                    try {
+                        filename = decodeURIComponent(filename);
+                    } catch (e) { }
+                    if (!this.pdoc.additional_file?.find((i) => i.name === filename)) return str;
+                    if (!args[1]) return `./${this.pdoc.docId}/file/${fileinfo}`;
+                    return `./${this.pdoc.docId}/file/${fileinfo}${fileinfo.includes('?') ? '&' : '?'}tid=${args[1]}`;
+                });
         }
         this.response.body.page_name = this.tdoc
             ? this.tdoc.rule === 'homework'
@@ -450,7 +441,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.checkPerm(PERM.PERM_REJUDGE_PROBLEM);
         const rdocs = await record.getMulti(domainId, {
             pid,
-            contest: { $ne: new ObjectId('0'.repeat(24)) },
+            contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
             status: { $ne: STATUS.STATUS_CANCELED },
             'files.hack': { $exists: false },
         }).project({ _id: 1, contest: 1 }).toArray();
@@ -499,19 +490,12 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         const langRange = (typeof this.pdoc.config === 'object' && this.pdoc.config.langs)
             ? Object.fromEntries(this.pdoc.config.langs.map((i) => [i, setting.langs[i]?.display || i]))
             : setting.SETTINGS_BY_KEY.codeLang.range;
-        this.response.body = {
-            langRange,
-            pdoc: this.pdoc,
-            udoc: this.udoc,
-            tdoc: this.tdoc,
-            tsdoc: this.tsdoc,
-            title: this.pdoc.title,
-            page_name: this.tdoc
-                ? this.tdoc.rule === 'homework'
-                    ? 'homework_detail_problem_submit'
-                    : 'contest_detail_problem_submit'
-                : 'problem_submit',
-        };
+        this.response.body.langRange = langRange;
+        this.response.body.page_name = this.tdoc
+            ? this.tdoc.rule === 'homework'
+                ? 'homework_detail_problem_submit'
+                : 'contest_detail_problem_submit'
+            : 'problem_submit';
     }
 
     @param('lang', Types.Name)
@@ -529,7 +513,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         if (pretest) {
             if (setting.langs[lang]?.pretest) lang = setting.langs[lang].pretest as string;
-            if (!['default', 'fileio', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
+            if (!['default', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new ProblemNotAllowPretestError('type');
             }
         }
@@ -553,7 +537,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
-            pretest ? { input, type: 'pretest' } : { contest: tid, files, type: tid ? 'contest' : 'judge' },
+            pretest ? { input, type: 'pretest' } : { contest: tid, files, type: 'judge' },
         );
         const rdoc = await record.get(domainId, rid);
         if (!pretest) {
@@ -708,6 +692,12 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         } else this.response.template = 'problem_files.html';
     }
 
+    async post() {
+        if (this.args.operation === 'get_links') return;
+        if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+    }
+
     @post('files', Types.Set)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postGetLinks(domainId: string, files: Set<string>, type = 'testdata') {
@@ -740,11 +730,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Filename, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (this.pdoc.reference) throw new ProblemIsReferencedError('edit files');
         if (!this.request.files.file) throw new ValidationError('file');
         filename ||= this.request.files.file.originalFilename || String.random(16);
-        if (filename.includes('/') || filename.includes('..')) throw new ValidationError('filename', null, 'Bad filename');
-        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
             let zip: AdmZip;
@@ -755,10 +742,10 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             }
             const entries = zip.getEntries();
             for (const entry of entries) {
-                if (!entry.name) continue;
+                if (!entry.name || entry.isDirectory) continue;
                 files.push({
                     type,
-                    name: entry.name,
+                    name: sanitize(entry.name),
                     size: entry.header.size,
                     data: () => entry.getData(),
                 });
@@ -799,9 +786,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('newNames', Types.ArrayOf(Types.Filename))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postRenameFiles(domainId: string, files: string[], newNames: string[], type = 'testdata') {
-        if (this.pdoc.reference) throw new ProblemIsReferencedError('rename files');
         if (files.length !== newNames.length) throw new ValidationError('files', 'newNames');
-        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         await Promise.all(files.map(async (file, index) => {
             const newName = newNames[index];
             if (type === 'testdata') await problem.renameTestdata(domainId, this.pdoc.docId, file, newName, this.user._id);
@@ -813,11 +798,20 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('files', Types.ArrayOf(Types.Filename))
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postDeleteFiles(domainId: string, files: string[], type = 'testdata') {
-        if (this.pdoc.reference) throw new ProblemIsReferencedError('delete files');
-        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         if (type === 'testdata') await problem.delTestdata(domainId, this.pdoc.docId, files, this.user._id);
         else await problem.delAdditionalFile(domainId, this.pdoc.docId, files, this.user._id);
         this.back();
+    }
+
+    @post('std', Types.Filename)
+    @post('gen', Types.Filename)
+    async postGenerateTestdata(domainId: string, std: string, gen: string) {
+        if (!this.pdoc.data?.find((i) => i.name === std)) throw new BadRequestError();
+        if (!this.pdoc.data?.find((i) => i.name === gen)) throw new BadRequestError();
+        const rid = await record.add(domainId, this.pdoc.docId, this.user._id, '_', `${gen}\n${std}`, true, {
+            type: 'generate',
+        });
+        this.response.redirect = this.url('record_detail', { rid });
     }
 }
 
@@ -859,10 +853,10 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
         // eslint-disable-next-line prefer-const
-        let [psdocs, pcount, pscount] = await paginate(
+        let [psdocs, pcount, pscount] = await this.paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
-            system.get('pagination.solution'),
+            'solution',
         );
         if (sid) {
             psdocs = [await solution.get(domainId, sid)];

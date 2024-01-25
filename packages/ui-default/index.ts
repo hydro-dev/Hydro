@@ -145,7 +145,6 @@ export function apply(ctx: Context) {
   ctx.Route('markdown', '/markdown', MarkdownHandler);
   ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);
   ctx.Route('media', '/media', RichMediaHandler);
-  ctx.plugin(require('./backendlib/builder'));
   ctx.on('handler/after/DiscussionRaw', async (that) => {
     if (that.args.render && that.response.type === 'text/markdown') {
       that.response.type = 'text/html';
@@ -164,4 +163,6 @@ export function apply(ctx: Context) {
       domains: SystemModel.get('ui-default.domains') || [],
     };
   });
+  ctx.plugin(require('./backendlib/template'));
+  ctx.plugin(require('./backendlib/builder'));
 }

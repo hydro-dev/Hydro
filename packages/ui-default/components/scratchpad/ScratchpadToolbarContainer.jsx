@@ -100,7 +100,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadTool
   }
 
   render() {
-    let canUsePretest = ['default', 'fileio'].includes(UiContext.pdoc.config?.type);
+    let canUsePretest = UiContext.pdoc.config?.type === 'default';
     const langInfo = availableLangs[this.props.editorLang];
     if (UiContext.pdoc.config?.type === 'remote_judge' && langInfo) {
       if (langInfo.pretest) canUsePretest = true;

@@ -9,6 +9,8 @@ import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
+import type { FindCursor } from 'mongodb';
+import { Shorty } from 'shorty.js';
 import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
@@ -18,11 +20,13 @@ import {
     PrivilegeError, UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
+import paginate from '../lib/paginate';
 import serializer from '../lib/serializer';
 import { Types } from '../lib/validator';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
+import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
 import { User } from '../model/user';
 import { builtinConfig } from '../settings';
@@ -87,7 +91,7 @@ export interface KoaContext extends Koa.Context {
     request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
     render: (name: string, args: any) => Promise<void>;
-    renderHTML: (name: string, args: any) => Promise<string>;
+    renderHTML: (name: string, args: any) => string | Promise<string>;
     getUrl: (name: string, args: any) => string;
     translate: (key: string) => string;
 }
@@ -115,17 +119,17 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
-    renderHTML: (name: string, args?: any) => Promise<string>;
+    renderHTML: (name: string, args?: any) => string | Promise<string>;
     url: (name: string, args?: any) => string;
     translate: (key: string) => string;
     session: Record<string, any>;
+    ctx: Context;
     /** @deprecated */
     domainId: string;
-    ctx: Context = global.app;
 
     constructor(
-        public context: KoaContext, public args: Record<string, any>,
-        public request: HydroRequest, public response: HydroResponse,
+        public context: KoaContext, public readonly args: Record<string, any>,
+        public readonly request: HydroRequest, public response: HydroResponse,
         public user: User, public domain: DomainDoc, public UiContext: Record<string, any>,
     ) {
         this.render = context.render.bind(context);
@@ -134,6 +138,9 @@ export class HandlerCommon {
         this.translate = context.translate.bind(context);
         this.session = context.session;
         this.domainId = args.domainId;
+        this.ctx = global.app.extend({
+            domain: this.domain,
+        });
     }
 
     async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
@@ -144,6 +151,10 @@ export class HandlerCommon {
         let id = this.request.ip;
         if (withUserId) id += `@${this.user._id}`;
         await opcount.inc(op, id, periodSecs, maxOperations);
+    }
+
+    paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
+        return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
     }
 
     renderTitle(str: string) {
@@ -243,10 +254,11 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         args, request, response, user, domain, UiContext,
     } = ctx.HydroContext;
     Object.assign(args, ctx.params);
+    const init = Date.now();
     const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
     ctx.handler = h;
+    const method = ctx.method.toLowerCase();
     try {
-        const method = ctx.method.toLowerCase();
         const operation = (method === 'post' && ctx.request.body?.operation)
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
@@ -307,8 +319,16 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             await h.onerror(e);
         } catch (err) {
             h.response.code = 500;
+            h.response.type = 'text/plain';
             h.response.body = `${err.message}\n${err.stack}`;
         }
+    } finally {
+        const finish = Date.now();
+        if (finish - init > 5000) {
+            const id = await OplogModel.log(h, 'slow_request', { method, processtime: finish - init });
+            logger.warn(`Slow handler: ID=${id}, `, method, ctx.path, `${finish - init}ms`);
+        }
+        // TODO metrics: calc avg response time
     }
 }
 
@@ -345,11 +365,14 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
+    compression: Shorty;
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer({
-            showDisplayName: this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
-        })));
+        let payload = JSON.stringify(data, serializer({
+            showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+        }));
+        if (this.compression) payload = this.compression.deflate(payload);
+        this.conn.send(payload);
     }
 
     close(code: number, reason: string) {
@@ -390,6 +413,11 @@ export function Connection(
         const disposables = [];
         try {
             checker.call(h);
+            if (args.shorty) {
+                h.compression = new Shorty();
+                conn.send('shorty');
+            }
+            conn.pause();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -410,8 +438,11 @@ export function Connection(
                     clean();
                     conn.terminate();
                 }
-                if (Date.now() - lastHeartbeat > 30000) conn.send('ping');
+                if (Date.now() - lastHeartbeat > 30000) conn.ping();
             }, 40000);
+            conn.on('pong', () => {
+                lastHeartbeat = Date.now();
+            });
             conn.onmessage = (e) => {
                 lastHeartbeat = Date.now();
                 if (e.data === 'pong') return;
@@ -422,6 +453,7 @@ export function Connection(
                 h.message?.(JSON.parse(e.data.toString()));
             };
             conn.onclose = clean;
+            conn.resume();
             await bus.parallel('connection/active', h);
         } catch (e) {
             await h.onerror(e);
@@ -532,12 +564,15 @@ export async function apply(pluginContext: Context) {
     if (process.env.DEV) {
         app.use(async (ctx: Koa.Context, next: Function) => {
             const startTime = Date.now();
-            await next();
-            const endTime = Date.now();
-            if (ctx.nolog || ctx.response.headers.nolog) return;
-            ctx._remoteAddress = ctx.request.ip;
-            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
+            try {
+                await next();
+            } finally {
+                const endTime = Date.now();
+                if (!(ctx.nolog || ctx.response.headers.nolog)) {
+                    logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
 ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+                }
+            }
         });
     }
     const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');

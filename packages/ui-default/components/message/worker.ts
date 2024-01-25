@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-globals */
 /// <reference no-default-lib="true" />
-/// <reference lib="ES2015" />
-/// <reference types="@types/sharedworker" />
+/// <reference lib="webworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { FLAG_INFO } from 'vj/constant/message';
+declare const self: SharedWorkerGlobalScope;
 
 console.log('SharedWorker init');
 
@@ -75,7 +75,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   };
 }
 
-onconnect = function (e) { // eslint-disable-line no-undef
+self.onconnect = function (e) { // eslint-disable-line no-undef
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-require('@hydrooj/utils/lib/register');
+require('@hydrooj/register');
 
 const packageBasedir = require('path').resolve(__dirname, '..');
 const { homedir } = require('os');
-const { default: hook } = require('require-resolve-hook');
+const { default: hook } = require('@undefined-moe/require-resolve-hook');
 const { bypass } = hook(/^(hydrooj|@hydrooj|cordis|lodash|js-yaml)($|\/)/, (id) => {
     if (id.startsWith('hydrooj/src')) {
         console.log('module require via %s is deprecated.', id);
@@ -33,7 +33,7 @@ const { bypass } = hook(/^(hydrooj|@hydrooj|cordis|lodash|js-yaml)($|\/)/, (id) 
             }
         }
     });
-});
+}, { ignoreModuleNotFoundError: false });
 
 // Replace pnpm paths.
 // Vscode will try to open a local file for links, so this doesn't work for remote-ssh, etc.

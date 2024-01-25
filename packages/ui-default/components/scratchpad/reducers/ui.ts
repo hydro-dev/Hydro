@@ -3,7 +3,7 @@ import { i18n } from 'vj/utils';
 
 export default function reducer(state = {
   pretest: {
-    visible: ['default', 'fileio'].includes(UiContext.pdoc.config?.type)
+    visible: UiContext.pdoc.config?.type === 'default'
       ? localStorage.getItem('scratchpad/pretest') === 'true'
       : false,
   },

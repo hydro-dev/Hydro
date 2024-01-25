@@ -1,0 +1,16 @@
+{
+    "name": "@hydrooj/register",
+    "version": "1.0.0",
+    "license": "MIT",
+    "main": "index.js",
+    "engines": {
+        "node": ">=16"
+    },
+    "dependencies": {
+        "esbuild": "0.18.20",
+        "source-map-support": "^0.5.21"
+    },
+    "devDependencies": {
+        "@types/source-map-support": "^0.5.10"
+    }
+}

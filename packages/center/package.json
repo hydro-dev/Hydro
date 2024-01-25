@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/center",
-    "version": "0.2.6",
+    "version": "0.2.7",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",

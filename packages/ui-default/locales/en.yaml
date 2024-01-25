@@ -1,4 +1,5 @@
 __langname: English
+'File IO: {0}': 'File IO: {0}'
 Can be Extended For: Extension
 Current Status: Status
 Handled Requests: Req
@@ -27,7 +28,6 @@ problem_main: Problem Set
 problem_solution: Problem Solution
 problem_submit: Problem Submit
 problem_type.default: 'Type: Default'
-problem_type.fileio: 'Type: FileIO ({0})'
 problem_type.interactive: 'Type: Interactive'
 problem_type.objective: 'Type: Objective'
 problem_type.remote_judge: 'Type: RemoteJudge'

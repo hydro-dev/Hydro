@@ -1,6 +1,8 @@
 import { hostname } from 'os';
 import { AggregatorRegistry, Metric } from 'prom-client';
-import { Context, Handler, SystemModel } from 'hydrooj';
+import {
+    Context, Handler, superagent, SystemModel,
+} from 'hydrooj';
 import { createRegistry } from './metrics';
 
 declare module 'hydrooj' {
@@ -10,6 +12,7 @@ declare module 'hydrooj' {
     interface SystemKeys {
         'prom-client.name': string;
         'prom-client.password': string;
+        'prom-client.gateway': string;
         'prom-client.collect_rate': number;
     }
 }
@@ -44,7 +47,14 @@ export function apply(ctx: Context) {
     const registry = createRegistry(ctx);
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
     ctx.setInterval(async () => {
-        ctx.broadcast('metrics', `${hostname()}/${process.env.NODE_APP_INSTANCE}`, await registry.getMetricsAsJSON());
+        const [gateway, name, pass] = SystemModel.getMany(['prom-client.gateway', 'prom-client.name', 'prom-client.password']);
+        if (gateway) {
+            const prefix = gateway.endsWith('/') ? gateway : `${gateway}/`;
+            const endpoint = `${prefix}metrics/job/hydro-web/instance/${encodeURIComponent(hostname())}:${process.env.HYDRO_INSTANCE}`;
+            let req = superagent.post(endpoint);
+            if (name) req = req.set('Authorization', `Basic ${Buffer.from(`${name}:${pass}`).toString('base64')}`);
+            await req.send(await registry.metrics());
+        } else ctx.broadcast('metrics', `${hostname()}/${process.env.NODE_APP_INSTANCE}`, await registry.getMetricsAsJSON());
     }, 5000 * (+SystemModel.get('prom-client.collect_rate') || 1));
     ctx.Route('metrics', '/metrics', MetricsHandler);
 }

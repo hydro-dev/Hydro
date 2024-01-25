@@ -12,7 +12,7 @@ import { NextFunction, ParsedConfig } from './interface';
 import { ensureFile, parseMemoryMB } from './utils';
 
 function isValidConfig(config) {
-    if (config.count > (getConfig('testcases_max') || 100)) {
+    if (config.type !== 'objective' && config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
     const time = Math.sum(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.time)));

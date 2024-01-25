@@ -97,6 +97,7 @@ export default class Editor extends DOMAttachedObject {
       overviewRulerLanes: 0,
       overviewRulerBorder: false,
       fontFamily: UserContext.codeFontFamily,
+      fontLigatures: '',
       unicodeHighlight: {
         ambiguousCharacters: language !== 'markdown',
       },

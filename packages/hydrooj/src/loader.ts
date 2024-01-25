@@ -170,13 +170,16 @@ export async function load() {
                 console.warn('DISCLAIMER:');
                 console.warn(' You are under development mode.');
                 console.warn(' The Hydro project is licensed under AGPL3,');
-                console.warn(' which means you have to open source your modifications,');
+                console.warn(' which means you have to open source all your modifications');
+                console.warn(' and keep all copyright notice');
                 console.warn(' unless you have got another license from the original author.');
                 console.warn('');
                 console.warn('声明：');
                 console.warn(' 你正在运行开发者模式。');
                 console.warn(' Hydro 项目基于 AGPL3 协议开源，');
-                console.warn(' 这意味着除非你获得了原作者的其他授权，你需要同样以 AGPL3 协议开源所有的修改。');
+                console.warn(' 这意味着除非你获得了原作者的其他授权，');
+                console.warn(' 你需要同样以 AGPL3 协议开源所有的修改，');
+                console.warn(' 并保留所有的版权声明。');
                 console.warn('\x1b[39m');
                 console.log('');
                 console.log('Hydro will start in 5s.');

@@ -26,6 +26,9 @@ export default class RecordModel {
         'files',
     ];
 
+    static RECORD_PRETEST = new ObjectId('000000000000000000000000');
+    static RECORD_GENERATE = new ObjectId('000000000000000000000001');
+
     static async submissionPriority(uid: number, base: number = 0) {
         const timeRecent = await RecordModel.coll
             .find({ _id: { $gte: Time.getObjectID(moment().add(-30, 'minutes')) }, uid, rejudged: { $ne: true } })
@@ -69,32 +72,39 @@ export default class RecordModel {
     static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
-        const rdoc = await RecordModel.get(domainId, rids[0]);
-        if (!rdoc) return null;
-        let source = `${domainId}/${rdoc.pid}`;
+        const rdocs = (await Promise.all(rids.map((rid) => RecordModel.get(domainId, rid)))).filter((i) => i);
+        if (!rdocs.length) return null;
+        let source = `${domainId}/${rdocs[0].pid}`;
         await task.deleteMany({ rid: { $in: rids } });
-        let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
-        if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+        let pdoc = await problem.get(domainId, rdocs[0].pid);
+        if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
         if (pdoc.reference) {
             pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
-            if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
+            if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
             source = `${pdoc.domainId}/${pdoc.docId}`;
         }
         meta = { ...meta, problemOwner: pdoc.owner };
-        if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-        const type = (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) ? 'remotejudge' : 'judge';
-        config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
-        return await task.addMany(rids.map((rid) => ({
-            ...(pdoc.config as any),
-            priority,
-            type,
-            rid,
-            domainId,
-            config,
-            data: pdoc.data,
-            source,
-            meta,
-        } as any)));
+        return await task.addMany(rdocs.map((rdoc) => {
+            let type = 'judge';
+            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
+            else if (meta?.type === 'generate') type = 'generate';
+            return ({
+                ...(pdoc.config as any), // TODO deprecate this
+                lang: rdoc.lang,
+                priority,
+                type,
+                rid: rdoc._id,
+                domainId,
+                config: {
+                    ...(pdoc.config as any),
+                    ...config,
+                },
+                data: pdoc.data,
+                source,
+                meta,
+            } as any);
+        }));
     }
 
     static async add(
@@ -104,7 +114,7 @@ export default class RecordModel {
             contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
-            type: 'judge' | 'rejudge' | 'contest' | 'pretest' | 'hack',
+            type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate',
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
@@ -125,6 +135,7 @@ export default class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
+        let isContest = !!args.contest;
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
         if (args.type === 'rejudge') {
@@ -132,12 +143,16 @@ export default class RecordModel {
             data.rejudged = true;
         } else if (args.type === 'pretest') {
             data.input = args.input || '';
-            data.contest = new ObjectId('000000000000000000000000');
+            isContest = false;
+            data.contest = RecordModel.RECORD_PRETEST;
         }
         const res = await RecordModel.coll.insertOne(data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {}, { rejudge: data.rejudged });
+            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (isContest ? 50 : 0));
+            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {}, {
+                type: args.type,
+                rejudge: data.rejudged,
+            });
         }
         return res.insertedId;
     }

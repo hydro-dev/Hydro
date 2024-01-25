@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
-import { ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import { STATUS } from '../model/builtin';
 import * as document from '../model/document';
+import RecordModel from '../model/record';
 import db from '../service/db';
 
 const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
@@ -10,7 +10,7 @@ const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1
 export async function udoc(report) {
     report({ message: 'Udoc' });
     const pipeline = [
-        { $match: { contest: { $ne: new ObjectId('000000000000000000000000') } } },
+        { $match: { contest: { $nin: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -49,7 +49,7 @@ export async function udoc(report) {
 export async function psdoc(report) {
     report({ message: 'Psdoc' });
     const pipeline = [
-        { $match: { contest: { $ne: new ObjectId('000000000000000000000000') } } },
+        { $match: { contest: { $nin: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } } },
         {
             $group: {
                 _id: { domainId: '$domainId', pid: '$pid', uid: '$uid' },
@@ -68,7 +68,7 @@ export async function pdoc(report) {
     const pipeline = [
         {
             $match: {
-                contest: { $ne: new ObjectId('000000000000000000000000') },
+                contest: { $nin: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] },
                 status: { $ne: STATUS.STATUS_CANCELED },
             },
         },

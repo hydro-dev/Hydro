@@ -1,3 +1,4 @@
+import fs from 'fs';
 import superagent from 'superagent';
 import { getConfig } from '../config';
 import { SandboxRequest, SandboxResult, SandboxVersion } from './interface';
@@ -8,7 +9,15 @@ const client = new Proxy({
     run(req: SandboxRequest): Promise<SandboxResult[]> {
         return superagent.post(`${url}/run`).send(req).then((res) => res.body);
     },
-    getFile(fileId: string): Promise<Buffer> {
+    getFile(fileId: string, dest?: string): Promise<Buffer> {
+        if (dest) {
+            const w = fs.createWriteStream(dest);
+            superagent.get(`${url}/file/${fileId}`).pipe(w);
+            return new Promise((resolve, reject) => {
+                w.on('finish', () => resolve(null));
+                w.on('error', reject);
+            });
+        }
         return superagent.get(`${url}/file/${fileId}`).responseType('arraybuffer').then((res) => res.body);
     },
     deleteFile(fileId: string): Promise<void> {
