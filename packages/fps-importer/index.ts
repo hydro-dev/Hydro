@@ -18,29 +18,32 @@ class FpsProblemImportHandler extends Handler {
     async run(domainId: string, result: any) {
         if (!result?.fps) throw new BadRequestError('Selected file is not a valid FPS problemset.');
         for (const p of result.fps.item) {
+            const markdown = [p.description?.[0], p.input?.[0], p.output?.[0], p.hint?.[0]].some((i) => i?.includes('[md]'));
             const content: ContentNode[] = [];
+            const stripBBCode = (input: string) => input.replace(/\[md]/g, '').replace(/\[\/md]/g, '');
+
             if (p.description?.[0]) {
                 content.push({
                     type: 'Text',
-                    subType: 'html',
+                    subType: markdown ? 'markdown' : 'html',
                     sectionTitle: this.translate('Description'),
-                    text: p.description[0],
+                    text: stripBBCode(p.description[0]),
                 });
             }
             if (p.input?.[0]) {
                 content.push({
                     type: 'Text',
-                    subType: 'html',
+                    subType: markdown ? 'markdown' : 'html',
                     sectionTitle: this.translate('Input Format'),
-                    text: p.input[0],
+                    text: stripBBCode(p.input[0]),
                 });
             }
             if (p.output?.[0]) {
                 content.push({
                     type: 'Text',
-                    subType: 'html',
+                    subType: markdown ? 'markdown' : 'html',
                     sectionTitle: this.translate('Output Format'),
-                    text: p.output[0],
+                    text: stripBBCode(p.output[0]),
                 });
             }
             if (p.sample_input?.length) {
@@ -53,9 +56,9 @@ class FpsProblemImportHandler extends Handler {
             if (p.hint?.[0]) {
                 content.push({
                     type: 'Text',
-                    subType: 'html',
+                    subType: markdown ? 'markdown' : 'html',
                     sectionTitle: this.translate('Hint'),
-                    text: p.hint[0],
+                    text: stripBBCode(p.hint[0]),
                 });
             }
             const config: ProblemConfigFile = {
@@ -70,10 +73,8 @@ class FpsProblemImportHandler extends Handler {
             const title = decodeHTML(p.title.join(' '));
             const tags = _.filter(p.source, (i: string) => i.trim()).flatMap((i) => i.split(' ')).filter((i) => i);
             const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
-            const tasks = [
-                ProblemModel.edit(domainId, pid, { html: true }),
-                ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-            ];
+            const tasks: Promise<any>[] = [ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config)))];
+            if (!markdown) tasks.push(ProblemModel.edit(domainId, pid, { html: true }));
             const addTestdata = (node: any, id: string, ext: string) => {
                 if (!node && typeof node !== 'string') return; // Ignore file not exist
                 let c = node;
