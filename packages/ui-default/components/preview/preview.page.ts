@@ -34,7 +34,7 @@ async function startEdit(filename, value, fileCategory = 'file') {
   });
   const action = await promise;
   value = (editor.value() as string).replace(/\r\n/g, '\n');
-  editor.destory();
+  editor.destroy();
   if (action !== 'ok') return null;
   return value;
 }
