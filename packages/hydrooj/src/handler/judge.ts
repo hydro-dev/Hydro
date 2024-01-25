@@ -27,7 +27,6 @@ import { updateJudge } from '../service/monitor';
 import {
     ConnectionHandler, Handler, post, subscribe, Types,
 } from '../service/server';
-import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 
@@ -139,7 +138,6 @@ export async function end(body: Partial<JudgeResultBody>) {
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    await sleep(100); // Make sure that all 'next' event already triggered
     let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
     rdoc = await record.get(body.rid);
@@ -235,6 +233,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
         const rid = rdoc._id.toHexString();
         const promise = new Promise((resolve) => {
+            this.tasks[rid]?.();
             this.tasks[rid] = resolve;
         });
         this.send({ task: { ...rdoc, ...t } });
