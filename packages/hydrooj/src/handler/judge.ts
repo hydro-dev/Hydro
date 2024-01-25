@@ -213,6 +213,7 @@ export class JudgeFileUpdateHandler extends Handler {
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     processing: Task[] = [];
+    started = false;
     closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
@@ -222,9 +223,12 @@ class JudgeConnectionHandler extends ConnectionHandler {
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // Ensure language sent
-        await sleep(100);
-        this.newTask().catch((e) => logger.error(e));
+        // TODO deprecated, just for compatibility
+        setTimeout(() => {
+            if (this.started || this.closed) return;
+            this.newTask().catch((e) => logger.error(e));
+            this.started = true;
+        }, 15000);
     }
 
     @subscribe('system/setting')
@@ -291,6 +295,10 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
             }
+        } else if (msg.key === 'start') {
+            if (this.started) return;
+            this.newTask().catch((e) => logger.error(e));
+            this.started = true;
         }
     }
 
