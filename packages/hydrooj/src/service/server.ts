@@ -417,7 +417,6 @@ export function Connection(
                 h.compression = new Shorty();
                 conn.send('shorty');
             }
-            conn.pause();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -606,6 +605,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
                 socket.close(1003, 'Websocket Error');
             } catch (e) { }
         });
+        socket.pause();
         const ctx: any = app.createContext(request, {} as any);
         await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
         for (const manager of router.wsStack) {

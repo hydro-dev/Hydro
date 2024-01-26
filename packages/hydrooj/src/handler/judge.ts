@@ -9,7 +9,7 @@ import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
+    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase, User,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
@@ -209,13 +209,36 @@ export class JudgeFileUpdateHandler extends Handler {
     }
 }
 
+class JudgeConnectionTask {
+    queue: PQueue = new PQueue({ concurrency: 1 });
+    resolve: (res?: any) => void;
+
+    constructor(private user: User, public task: Task, public rdoc: RecordDoc) {
+    }
+
+    async waitForFinish() {
+        await new Promise((resolve) => { this.resolve = resolve; });
+    }
+
+    next(msg: any) {
+        msg.domainId = this.rdoc.domainId;
+        this.queue.add(() => next(msg))
+    }
+
+    end(msg: any) {
+        msg.domainId = this.rdoc.domainId;
+        if (!msg.nop) {
+            this.queue.add(() => end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e)));
+        }
+        this.resolve?.();
+    }
+}
+
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: Task[] = [];
-    started = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
-    rdocs: Record<string, RecordDoc> = {};
-    tasks: Record<string, (res?: any) => void> = {};
+    concurrency = 1;
+    tasks: Map<string, JudgeConnectionTask> = new Map();
     consumer: Consumer = null;
     queue: PQueue = new PQueue({ concurrency: 1 });
     startTimeout: NodeJS.Timeout = null;
@@ -225,9 +248,8 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.sendLanguageConfig();
         // TODO deprecated, just for compatibility
         this.startTimeout = setTimeout(() => {
-            if (this.started) return;
-            this.consumer = task.consume(this.query, this.newTask.bind(this));
-            this.started = true;
+            if (this.consumer) return;
+            this.consumer = task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }, 15000);
     }
 
@@ -241,15 +263,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (!rdoc) return;
 
         const rid = rdoc._id.toHexString();
-        const promise = new Promise((resolve) => {
-            this.tasks[rid]?.();
-            this.tasks[rid] = resolve;
-        });
         this.send({ task: { ...rdoc, ...t } });
-        this.rdocs[rid] = rdoc;
-        this.processing.push(t);
-        await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        await promise;
+        const task = new JudgeConnectionTask(this.user, t, rdoc)
+        this.tasks.set(rid, task);
+        task.next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
+        await task.waitForFinish();
     }
 
     async message(msg) {
@@ -259,41 +277,35 @@ class JudgeConnectionHandler extends ConnectionHandler {
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const rdoc = this.rdocs[msg.rid];
-            if (!rdoc) return;
-            msg.domainId = rdoc.domainId;
-            if (msg.key === 'next') this.queue.add(() => next(msg));
+            const task = this.tasks.get(msg.rid);
+            if (!task) return;
+            if (msg.key === 'next') task.next(msg);
             if (msg.key === 'end') {
-                this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
-                delete this.rdocs[msg.rid];
-                this.tasks[msg.rid]();
-                delete this.tasks[msg.rid];
-                if (!msg.nop) {
-                    this.queue.add(() => end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e)));
-                }
+                task.end(msg);
+                this.tasks.delete(msg.rid);
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
-            this.consumer.setQuery(this.query);
+            this.consumer?.setQuery(this.query);
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
-                this.consumer.setQuery(this.query);
+                this.consumer?.setQuery(this.query);
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
-                this.consumer.setConcurrency(msg.concurrency);
+                this.concurrency = msg.concurrency;
+                this.consumer?.setConcurrency(msg.concurrency);
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
-                this.consumer.setQuery(this.query);
+                this.consumer?.setQuery(this.query);
             }
         } else if (msg.key === 'start') {
-            if (this.started) return;
-            this.consumer = task.consume(this.query, this.newTask.bind(this));
-            this.started = true;
+            if (this.consumer) return;
+            this.consumer = task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }
     }
 
@@ -301,10 +313,16 @@ class JudgeConnectionHandler extends ConnectionHandler {
         clearTimeout(this.startTimeout);
         this.consumer.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        await Promise.all(this.processing.map(async (t) => {
-            await record.reset(t.domainId, t.rid, false);
-            return await task.add(t);
-        }));
+        const promises: Array<Promise<void>> = [];
+        for (const [_, t] of this.tasks) {
+            promises.push(
+                (async () => {
+                    await record.reset(t.task.domainId, t.task.rid, false);
+                    await task.add(t.task);
+                })()
+            );
+        }
+        await Promise.all(promises);
     }
 }
 

@@ -48,18 +48,18 @@ export class Consumer {
                         this.notify = resolve;
                         this.abort = reject;
                     });
+                    continue;
                 }
                 // eslint-disable-next-line no-await-in-loop
                 let res = await getFirst(this.filter);
-                while (!res) {
+                if (!res) {
                     // eslint-disable-next-line no-await-in-loop
                     await new Promise((resolve, reject) => {
                         waiterQueue.add(resolve);
                         this.notify = resolve;
                         this.abort = reject;
                     });
-                    // eslint-disable-next-line no-await-in-loop
-                    res = await getFirst(this.filter);
+                    continue;
                 }
                 this.processing.add(res);
                 this.func(res)
