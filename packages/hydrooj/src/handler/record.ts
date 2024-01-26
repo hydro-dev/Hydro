@@ -303,7 +303,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.allDomain = true;
         }
-        this.throttleQueueClear = throttle(this.queueClear, 1000, { trailing: true });
+        this.throttleQueueClear = throttle(this.queueClear, 100, { trailing: true });
     }
 
     async message(msg: { rids: string[] }) {
@@ -357,6 +357,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async queueClear() {
+        // eslint-disable-next-line no-await-in-loop
         for (const fn of this.queue.values()) this.send(await fn());
         this.queue.clear();
     }
