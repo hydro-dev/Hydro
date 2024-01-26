@@ -13,7 +13,7 @@ const logger = new Logger('model/task');
 const coll = db.collection('task');
 const collEvent = db.collection('event');
 const argv = cac().parse();
-const waiterQueue: Set<(res?: any) => void> = new Set();
+const waiterQueue: Array<(res?: any) => void> = [];
 
 async function getFirst(query: Filter<Task>) {
     if (process.env.CI) return null;
@@ -31,7 +31,6 @@ export class Consumer {
     processing: Set<Task> = new Set();
     running?: any;
     notify: (res?: any) => void;
-    abort: (res?: any) => void;
 
     constructor(public filter: any, public func: (t: Task) => Promise<void>, public destroyOnError = true, private concurrency = 1) {
         this.consuming = true;
@@ -44,9 +43,8 @@ export class Consumer {
             try {
                 if (this.processing.size >= this.concurrency) {
                     // eslint-disable-next-line no-await-in-loop
-                    await new Promise((resolve, reject) => {
+                    await new Promise((resolve) => {
                         this.notify = resolve;
-                        this.abort = reject;
                     });
                     continue;
                 }
@@ -54,10 +52,9 @@ export class Consumer {
                 const res = await getFirst(this.filter);
                 if (!res) {
                     // eslint-disable-next-line no-await-in-loop
-                    await new Promise((resolve, reject) => {
-                        waiterQueue.add(resolve);
+                    await new Promise((resolve) => {
+                        waiterQueue.push(resolve);
                         this.notify = resolve;
-                        this.abort = reject;
                     });
                     continue;
                 }
@@ -80,7 +77,7 @@ export class Consumer {
 
     async destroy() {
         this.consuming = false;
-        this.abort?.('destroy');
+        this.notify?.();
     }
 
     setConcurrency(concurrency: number) {
@@ -147,10 +144,10 @@ export async function apply(ctx: Context) {
             expire: new Date(Date.now() + 10000),
         });
     });
-    setInterval(() => {
-        for (const f of waiterQueue) f();
-        waiterQueue.clear();
-    }, 1000);
+    (async () => {
+        waiterQueue.shift()?.();
+        await sleep(1000 / (waiterQueue.length + 1));
+    })();
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     const stream = collEvent.watch();
