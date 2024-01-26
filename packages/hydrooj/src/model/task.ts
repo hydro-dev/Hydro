@@ -51,7 +51,7 @@ export class Consumer {
                     continue;
                 }
                 // eslint-disable-next-line no-await-in-loop
-                let res = await getFirst(this.filter);
+                const res = await getFirst(this.filter);
                 if (!res) {
                     // eslint-disable-next-line no-await-in-loop
                     await new Promise((resolve, reject) => {
