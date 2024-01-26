@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
@@ -139,7 +140,6 @@ export async function end(body: Partial<JudgeResultBody>) {
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    await sleep(100); // Make sure that all 'next' event already triggered
     let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
     rdoc = await record.get(body.rid);
@@ -213,18 +213,23 @@ export class JudgeFileUpdateHandler extends Handler {
 class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     processing: Task[] = [];
+    started = false;
     closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
     rdocs: Record<string, RecordDoc> = {};
     concurrency = 1;
+    queue: PQueue = new PQueue({ concurrency: 1 });
     callback: (res?: any) => void = null;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // Ensure language sent
-        await sleep(100);
-        this.newTask().catch((e) => logger.error(e));
+        // TODO deprecated, just for compatibility
+        setTimeout(() => {
+            if (this.started || this.closed) return;
+            this.newTask().catch((e) => logger.error(e));
+            this.started = true;
+        }, 15000);
     }
 
     @subscribe('system/setting')
@@ -268,12 +273,15 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (['next', 'end'].includes(msg.key)) {
             const rdoc = this.rdocs[msg.rid];
             if (!rdoc) return;
-            if (msg.key === 'next') await next({ ...msg, domainId: rdoc.domainId });
+            msg.domainId = rdoc.domainId;
+            if (msg.key === 'next') this.queue.add(() => next(msg));
             if (msg.key === 'end') {
                 this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
                 delete this.rdocs[msg.rid];
                 this.callback?.();
-                if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
+                if (!msg.nop) {
+                    this.queue.add(() => end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e)));
+                }
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
@@ -291,6 +299,10 @@ class JudgeConnectionHandler extends ConnectionHandler {
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
             }
+        } else if (msg.key === 'start') {
+            if (this.started) return;
+            this.newTask().catch((e) => logger.error(e));
+            this.started = true;
         }
     }
 

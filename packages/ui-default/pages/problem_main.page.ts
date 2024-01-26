@@ -108,7 +108,7 @@ function buildLegacyCategoryFilter() {
   const $container = $('[data-widget-cf-container]');
   if (!$container) return;
   $container.attr('class', 'widget--category-filter row small-up-3 medium-up-2');
-  $container.children('li').get().forEach((category) => {
+  for (const category of $container.children('li').get()) {
     const $category = $(category)
       .attr('class', 'widget--category-filter__category column');
     const $categoryTag = $category
@@ -139,18 +139,18 @@ function buildLegacyCategoryFilter() {
         .find('a')
         .attr('class', 'widget--category-filter__tag')
         .attr('data-category', categoryText);
-      $subCategoryTags.get().forEach((subCategoryTag) => {
+      for (const subCategoryTag of $subCategoryTags.get()) {
         const $tag = $(subCategoryTag);
         selections.category[categoryText].children[$tag.text()] = {
           $tag,
         };
-      });
+      }
       Dropdown.getOrConstruct($categoryTag, {
         target: $drop[0],
         position: 'left center',
       });
     }
-  });
+  }
   list.push(...Object.keys(selections.category));
   list.push(..._.flatMap(Object.values(selections.category), (c: any) => Object.keys(c.children)));
   $(document).on('click', '.widget--category-filter__tag', (ev) => handleTagSelected(ev));
@@ -228,9 +228,9 @@ async function handleOperation(operation) {
 }
 
 function hideTags(target) {
-  $(target).find('.problem__tag').get()
-    .filter((i) => list.includes(i.children[0].innerHTML))
-    .forEach((i) => $(i).addClass('notag--hide'));
+  for (const i of $(target).find('.problem__tag').get()) {
+    if (list.includes(i.children[0].innerHTML)) $(i).addClass('notag--hide');
+  }
 }
 
 const categoryDialog: any = new Dialog({
@@ -265,7 +265,7 @@ function buildSearchContainer() {
   });
 
   categoryDialog.$dom.find('.subcategory__all .search-tag__item').each((_index, _element) => {
-    const [,subcategory] = $(_element).attr('data-selection').split(':');
+    const [, subcategory] = $(_element).attr('data-selection').split(':');
     selections.category[subcategory] = {
       $tag: $(_element),
       children: {},
@@ -314,9 +314,9 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('click', '[name="enter-edit-mode"]', () => {
     $body.removeClass('display-mode').addClass('edit-mode');
   });
-  ['delete', 'hide', 'unhide', 'copy'].forEach((op) => {
+  for (const op of ['delete', 'hide', 'unhide', 'copy']) {
     $(document).on('click', `[name="${op}_selected_problems"]`, () => handleOperation(op));
-  });
+  }
   $(document).on('click', '[name="download_selected_problems"]', handleDownload);
 
   $(document).on('click', '.toggle-tag', () => {

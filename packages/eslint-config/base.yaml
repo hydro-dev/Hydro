@@ -13,6 +13,7 @@ plugins:
   - simple-import-sort
   - eslint-plugin-import
   - eslint-plugin-github
+  - '@stylistic'
 rules:
   '@typescript-eslint/no-shadow': 1
 
@@ -146,6 +147,9 @@ rules:
       message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.'
   
   github/array-foreach: 1
+
+  quote-props: 0
+  '@stylistic/quote-props': [0, as-needed]
 
   simple-import-sort/imports:
    - warn
