@@ -196,7 +196,6 @@ export default class Hydro implements Session {
         const content = Object.keys(config).length
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
-        setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
             if (data.toString() === 'ping') {
                 this.ws.send('pong');
@@ -216,6 +215,8 @@ export default class Hydro implements Session {
         });
         await new Promise((resolve) => {
             this.ws.once('open', async () => {
+                this.ws.send(content);
+                this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
                     this.ws.send(JSON.stringify({ key: 'status', info }));
@@ -224,7 +225,6 @@ export default class Hydro implements Session {
                         this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf } }));
                     }, 1200000);
                 }
-                this.ws.send(content);
                 resolve(null);
             });
         });

@@ -295,7 +295,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const message = Array.from(statusDocument.querySelectorAll('.error'))
             .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
         if (message) {
-            end({ status: STATUS.STATUS_COMPILE_ERROR, message });
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
             return null;
         }
         const { document } = await this.html(type !== 'GYM'
@@ -308,6 +308,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
 
     async waitForSubmission(id: string, next, end) {
         let i = 1;
+        const start = Date.now();
         // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
@@ -319,13 +320,14 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
                     submissionId: contestId ? id.split('#')[1] : id,
                 });
             if (body.compilationError === 'true') {
-                return await end({
+                await end({
                     compilerText: body['checkerStdoutAndStderr#1'],
                     status: STATUS.STATUS_COMPILE_ERROR,
                     score: 0,
                     time: 0,
                     memory: 0,
                 });
+                break;
             }
             const time = Math.sum(Object.keys(body).filter((k) => k.startsWith('timeConsumed#')).map((k) => +body[k]));
             const memory = Math.max(...Object.keys(body).filter((k) => k.startsWith('memoryConsumed#')).map((k) => +body[k])) / 1024;
@@ -344,12 +346,16 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             if (cases.length) await next({ status: STATUS.STATUS_JUDGING, cases });
             if (body.waiting === 'true') continue;
             const status = VERDICT[Object.keys(VERDICT).find((k) => normalize(body.verdict).includes(k))];
-            return await end({
+            await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
                 time,
                 memory,
             });
+            break;
         }
+        // TODO better rate limiting
+        // Codeforces only allow 20 submission per 5 minute
+        if (Date.now() - start < 16000) await sleep(Date.now() - start);
     }
 }

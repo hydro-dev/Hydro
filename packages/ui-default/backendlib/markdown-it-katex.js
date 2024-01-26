@@ -61,6 +61,15 @@ function inline(state, silent) {
   return true;
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function block(state, start, end, silent) {
   let lastLine;
   let lastPos;
@@ -109,7 +118,7 @@ module.exports = function plugin(md) {
       return katex.renderToString(latex, options);
     } catch (error) {
       if (options.throwOnError) logger.error(error);
-      return latex;
+      return `<p class='katex-error' title='${escapeHtml(error.toString())}'>${escapeHtml(latex)}</p>`;
     }
   };
   const inlineRenderer = function (tokens, idx) {
@@ -122,7 +131,7 @@ module.exports = function plugin(md) {
       return `<p>${katex.renderToString(latex, options)}</p>`;
     } catch (error) {
       if (options.throwOnError) logger.error(error);
-      return latex;
+      return `<p class='katex-block katex-error' title='${escapeHtml(error.toString())}'>${escapeHtml(latex)}</p > `;
     }
   };
 

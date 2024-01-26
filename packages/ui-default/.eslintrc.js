@@ -59,6 +59,7 @@ module.exports = {
       2,
       { SwitchCase: 1 },
     ],
+    'github/array-foreach': 'off',
     'function-paren-newline': 'off',
     'no-mixed-operators': 'off',
     'no-await-in-loop': 'off',
