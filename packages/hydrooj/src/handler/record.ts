@@ -357,8 +357,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async queueClear() {
-        // eslint-disable-next-line no-await-in-loop
-        for (const fn of this.queue.values()) this.send(await fn());
+        await Promise.all([...this.queue.values()].map(async (fn) => this.send(await fn())));
         this.queue.clear();
     }
 }

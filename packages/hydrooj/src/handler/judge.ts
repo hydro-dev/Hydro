@@ -213,7 +213,7 @@ class JudgeConnectionTask {
     queue: PQueue = new PQueue({ concurrency: 1 });
     resolve: (res?: any) => void;
 
-    constructor(private user: User, public task: Task, public rdoc: RecordDoc) {
+    constructor(private _user: User, public t: Task, public rdoc: RecordDoc) {
     }
 
     async waitForFinish() {
@@ -222,13 +222,13 @@ class JudgeConnectionTask {
 
     next(msg: any) {
         msg.domainId = this.rdoc.domainId;
-        this.queue.add(() => next(msg))
+        this.queue.add(() => next(msg));
     }
 
     end(msg: any) {
         msg.domainId = this.rdoc.domainId;
         if (!msg.nop) {
-            this.queue.add(() => end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e)));
+            this.queue.add(() => end({ judger: this._user._id, ...msg }).catch((e) => logger.error(e)));
         }
         this.resolve?.();
     }
@@ -264,10 +264,10 @@ class JudgeConnectionHandler extends ConnectionHandler {
 
         const rid = rdoc._id.toHexString();
         this.send({ task: { ...rdoc, ...t } });
-        const task = new JudgeConnectionTask(this.user, t, rdoc)
-        this.tasks.set(rid, task);
-        task.next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        await task.waitForFinish();
+        const judgeTask = new JudgeConnectionTask(this.user, t, rdoc);
+        this.tasks.set(rid, judgeTask);
+        judgeTask.next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
+        await judgeTask.waitForFinish();
     }
 
     async message(msg) {
@@ -277,11 +277,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const task = this.tasks.get(msg.rid);
-            if (!task) return;
-            if (msg.key === 'next') task.next(msg);
+            const judgeTask = this.tasks.get(msg.rid);
+            if (!judgeTask) return;
+            if (msg.key === 'next') judgeTask.next(msg);
             if (msg.key === 'end') {
-                task.end(msg);
+                judgeTask.end(msg);
                 this.tasks.delete(msg.rid);
             }
         } else if (msg.key === 'status') {
@@ -313,16 +313,10 @@ class JudgeConnectionHandler extends ConnectionHandler {
         clearTimeout(this.startTimeout);
         this.consumer.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        const promises: Array<Promise<void>> = [];
-        for (const [_, t] of this.tasks) {
-            promises.push(
-                (async () => {
-                    await record.reset(t.task.domainId, t.task.rid, false);
-                    await task.add(t.task);
-                })()
-            );
-        }
-        await Promise.all(promises);
+        await Promise.all([...this.tasks.values()].map((t) => t.t).map(async (t) => {
+            await record.reset(t.domainId, t.rid, false);
+            return await task.add(t);
+        }));
     }
 }
 
