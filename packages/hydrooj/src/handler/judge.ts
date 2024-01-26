@@ -44,6 +44,8 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
 function processPayload(body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
+    const $unset: any = {};
+    const $inc: any = {};
     if (body.cases?.length) {
         const c = body.cases.map(parseCaseResult);
         $push.testCases = { $each: c };
@@ -63,13 +65,18 @@ function processPayload(body: Partial<JudgeResultBody>) {
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     if (body.subtasks) $set.subtasks = body.subtasks;
-    return { $set, $push };
+    if (body.addProgress) $inc.progress = body.addProgress;
+    return {
+        $set, $push, $unset, $inc,
+    };
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectId(body.rid);
-    const { $set, $push } = processPayload(body);
-    const rdoc = await record.update(body.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    const {
+        $set, $push, $unset, $inc,
+    } = processPayload(body);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
     bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
@@ -262,9 +269,11 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (!rdoc) return;
 
         const rid = rdoc._id.toHexString();
-        this.send({ task: { ...rdoc, ...t } });
+        if (this.tasks.get(rid)) return;
         const judgeTask = new JudgeConnectionTask(this.user, t, rdoc);
         this.tasks.set(rid, judgeTask);
+
+        this.send({ task: { ...rdoc, ...t } });
         judgeTask.next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
         await judgeTask.waitForFinish();
     }
