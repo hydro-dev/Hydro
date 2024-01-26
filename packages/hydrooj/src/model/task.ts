@@ -148,7 +148,7 @@ export async function apply(ctx: Context) {
         });
     });
     setInterval(() => {
-        waiterQueue.forEach((f) => f());
+        for (const f of waiterQueue) f();
         waiterQueue.clear();
     }, 1000);
 

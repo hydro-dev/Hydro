@@ -357,7 +357,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 
     async queueClear() {
-        this.queue.forEach(async (fn) => this.send(await fn()));
+        for (const fn of this.queue.values()) this.send(await fn());
         this.queue.clear();
     }
 }
