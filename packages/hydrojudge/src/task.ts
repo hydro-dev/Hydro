@@ -2,7 +2,7 @@ import { basename, join } from 'path';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
-    FileInfo, JudgeMeta, TestCase,
+    FileInfo, JudgeMeta, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
 import checkers from './checkers';
@@ -10,7 +10,7 @@ import compile, { compileLocalFile } from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
 import {
-    Execute, JudgeRequest, NextFunction, ParsedConfig, Session,
+    Execute, JudgeRequest, ParsedConfig, Session,
 } from './interface';
 import judge from './judge';
 import { Logger } from './log';
@@ -18,39 +18,6 @@ import { CopyIn, CopyInFile, runQueued } from './sandbox';
 import { compilerText, md5 } from './utils';
 
 const logger = new Logger('judge');
-
-class SequentialNotifier {
-    queue: Array<() => Promise<void> | void> = [];
-    stop = false;
-    callback: (res?: any) => void;
-
-    constructor() {
-        this.notifier();
-    }
-
-    async notifier() {
-        while (!this.stop || this.queue.length) {
-            if (this.queue.length) {
-                const promise = this.queue.shift()();
-                // eslint-disable-next-line no-await-in-loop
-                if (promise) await promise;
-                // eslint-disable-next-line no-await-in-loop
-            } else await new Promise((resolve) => { this.callback = resolve; });
-        }
-    }
-
-    decorate(fn: NextFunction): NextFunction {
-        return (body) => {
-            this.queue.push(() => fn(body));
-            this.callback?.();
-        };
-    }
-
-    destroy() {
-        this.stop = true;
-        this.callback?.();
-    }
-}
 
 export class JudgeTask {
     stat: Record<string, Date>;
@@ -65,9 +32,8 @@ export class JudgeTask {
     config: ParsedConfig;
     meta: JudgeMeta;
     files?: Record<string, string>;
-    notifier: SequentialNotifier;
-    next: NextFunction;
-    end: NextFunction;
+    next: (data: Partial<JudgeResultBody>) => void;
+    end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
     callbackCache?: TestCase[];
 
@@ -98,9 +64,8 @@ export class JudgeTask {
                 HYDRO_USER: (this.request.uid || 0).toString(),
                 HYDRO_CONTEST: tid,
             };
-            this.notifier = new SequentialNotifier();
-            this.next = this.notifier.decorate(this.session.getNext(this));
-            this.end = this.notifier.decorate(this.session.getEnd(this));
+            this.next = this.session.getNext(this);
+            this.end = this.session.getEnd(this);
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
             await this.doSubmission();
         } catch (e) {
@@ -125,7 +90,6 @@ export class JudgeTask {
         } finally {
             // eslint-disable-next-line no-await-in-loop
             for (const clean of this.clean) await clean()?.catch(() => null);
-            this.notifier?.destroy();
         }
     }
 

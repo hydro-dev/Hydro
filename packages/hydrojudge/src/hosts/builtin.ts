@@ -28,7 +28,7 @@ const session = {
             data.rid = t.rid as any;
             const rdoc = await RecordModel.get(new ObjectId(t.rid));
             if (data.case) data.case.message ||= '';
-            await next({ ...data, domainId: rdoc.domainId });
+            next({ ...data, domainId: rdoc.domainId });
         };
     },
     getEnd(t: Context) {
@@ -37,7 +37,7 @@ const session = {
             data.rid = t.rid as any;
             const rdoc = await RecordModel.get(new ObjectId(t.rid));
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            await end({ ...data, domainId: rdoc.domainId });
+            end({ ...data, domainId: rdoc.domainId });
         };
     },
     getLang(lang: string, doThrow = true) {
