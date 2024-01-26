@@ -248,8 +248,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.sendLanguageConfig();
         // TODO deprecated, just for compatibility
         this.startTimeout = setTimeout(() => {
-            if (this.consumer) return;
-            this.consumer = task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }, 15000);
     }
 
@@ -304,17 +303,18 @@ class JudgeConnectionHandler extends ConnectionHandler {
                 this.consumer?.setQuery(this.query);
             }
         } else if (msg.key === 'start') {
-            if (this.consumer) return;
-            this.consumer = task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            clearTimeout(this.startTimeout);
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }
     }
 
     async cleanup() {
         clearTimeout(this.startTimeout);
-        this.consumer.destroy();
+        this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
         await Promise.all([...this.tasks.values()].map((t) => t.t).map(async (t) => {
-            await record.reset(t.domainId, t.rid, false);
+            const rdoc = await record.reset(t.domainId, t.rid, false);
+            bus.broadcast('record/change', rdoc);
             return await task.add(t);
         }));
     }
