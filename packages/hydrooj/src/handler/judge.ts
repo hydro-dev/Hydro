@@ -218,7 +218,7 @@ class JudgeConnectionHandler extends ConnectionHandler {
     tasks: Record<string, (res?: any) => void> = {};
     consumer: Consumer = null;
     queue: PQueue = new PQueue({ concurrency: 1 });
-    startTimeout: Timeout = null;
+    startTimeout: NodeJS.Timeout = null;
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
