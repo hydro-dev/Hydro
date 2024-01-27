@@ -13,7 +13,6 @@ const logger = new Logger('model/task');
 const coll = db.collection('task');
 const collEvent = db.collection('event');
 const argv = cac().parse();
-const waiterQueue: Array<(res?: any) => void> = [];
 
 async function getFirst(query: Filter<Task>) {
     if (process.env.CI) return null;
@@ -51,11 +50,13 @@ export class Consumer {
                 // eslint-disable-next-line no-await-in-loop
                 const res = await getFirst(this.filter);
                 if (!res) {
+                    let timeout: NodeJS.Timeout = null;
                     // eslint-disable-next-line no-await-in-loop
                     await new Promise((resolve) => {
-                        waiterQueue.push(resolve);
+                        timeout = setTimeout(resolve, 1000 / (this.concurrency - this.processing.size));
                         this.notify = resolve;
                     });
+                    clearTimeout(timeout);
                     continue;
                 }
                 this.processing.add(res);
@@ -144,10 +145,6 @@ export async function apply(ctx: Context) {
             expire: new Date(Date.now() + 10000),
         });
     });
-    (async () => {
-        waiterQueue.shift()?.();
-        await sleep(1000 / (waiterQueue.length + 1));
-    })();
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     const stream = collEvent.watch();
