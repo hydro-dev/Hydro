@@ -131,6 +131,24 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.10.5 / UI 4.49.4
+
+- judge: 性能优化 (thanks @criyle)
+- utils: 解离 @hydrooj/register
+- core: 对客观题禁用测试点数量检查
+- core: 登入时切换 sessionId
+- core: 优化 require hook
+- core: 修复高并发下用户创建失败问题
+- prom-client: 支持推送至 pushgateway
+- core&ui: 压缩评测列表页 ws 传输
+- utils: 优化测试点识别
+- ui: 移除 serializer 函数
+- core: 添加 SettingService
+- fps: 支持 `[md]` 标签
+- vjudge: codeforces: 添加频率限制
+- migrate: hustoj: 支持 remote_oj 字段
+- core: 其他漏洞修复
+
 ### Hydro 4.10.3 / UI 4.49.3
 
 - core: 修复返回状态码异常的问题
