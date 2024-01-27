@@ -312,36 +312,42 @@ class UserModel {
         mail: string, uname: string, password: string,
         uid?: number, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
     ) {
-        const salt = String.random();
+        let autoAlloc = false;
         if (typeof uid !== 'number') {
             const [udoc] = await coll.find({}).sort({ _id: -1 }).limit(1).toArray();
             uid = Math.max((udoc?._id || 0) + 1, 2);
+            autoAlloc = true;
         }
-        try {
-            await coll.insertOne({
-                _id: uid,
-                mail,
-                mailLower: handleMailLower(mail),
-                uname,
-                unameLower: uname.trim().toLowerCase(),
-                hash: pwhash(password.toString(), salt),
-                salt,
-                hashType: 'hydro',
-                regat: new Date(),
-                ip: [regip],
-                loginat: new Date(),
-                loginip: regip,
-                priv,
-                avatar: `gravatar:${mail}`,
-            });
-        } catch (e) {
-            if (e?.code === 11000) {
-                // Duplicate Key Error
-                throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
+        const salt = String.random();
+        while (true) { // eslint-disable-line no-constant-condition
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await coll.insertOne({
+                    _id: uid,
+                    mail,
+                    mailLower: handleMailLower(mail),
+                    uname,
+                    unameLower: uname.trim().toLowerCase(),
+                    hash: pwhash(password.toString(), salt),
+                    salt,
+                    hashType: 'hydro',
+                    regat: new Date(),
+                    ip: [regip],
+                    loginat: new Date(),
+                    loginip: regip,
+                    priv,
+                    avatar: `gravatar:${mail}`,
+                });
+                return uid;
+            } catch (e) {
+                if (e?.code === 11000) {
+                    // Duplicate Key Error
+                    throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
+                }
+                if (!autoAlloc || JSON.stringify(e.keyPattern) !== '{"_id":1}') throw e;
             }
-            throw e;
+            uid++;
         }
-        return uid;
     }
 
     @ArgMethod
