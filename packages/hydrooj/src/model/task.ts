@@ -25,37 +25,70 @@ async function getFirst(query: Filter<Task>) {
     return null;
 }
 
-class Consumer {
+export class Consumer {
     consuming: boolean;
+    processing: Set<Task> = new Set();
     running?: any;
+    notify: (res?: any) => void;
 
-    constructor(public filter: any, public func: Function, public destoryOnError = true) {
+    constructor(public filter: any, public func: (t: Task) => Promise<void>, public destroyOnError = true, private concurrency = 1) {
         this.consuming = true;
         this.consume();
-        bus.on('app/exit', this.destory);
+        bus.on('app/exit', this.destroy);
     }
 
     async consume() {
         while (this.consuming) {
             try {
+                if (this.processing.size >= this.concurrency) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await new Promise((resolve) => {
+                        this.notify = resolve;
+                    });
+                    continue;
+                }
                 // eslint-disable-next-line no-await-in-loop
                 const res = await getFirst(this.filter);
-                if (res) {
-                    this.running = res;
+                if (!res) {
+                    let timeout: NodeJS.Timeout = null;
                     // eslint-disable-next-line no-await-in-loop
-                    await this.func(res);
-                    this.running = null;
-                    // eslint-disable-next-line no-await-in-loop
-                } else await sleep(1000);
+                    await new Promise((resolve) => {
+                        timeout = setTimeout(resolve, 1000 / (this.concurrency - this.processing.size));
+                        this.notify = resolve;
+                    });
+                    clearTimeout(timeout);
+                    continue;
+                }
+                this.processing.add(res);
+                this.func(res)
+                    .catch((err) => {
+                        logger.error(err);
+                        if (this.destroyOnError) this.destroy();
+                    })
+                    .finally(() => {
+                        this.processing.delete(res);
+                        this.notify?.();
+                    });
             } catch (err) {
                 logger.error(err);
-                if (this.destoryOnError) this.destory();
+                if (this.destroyOnError) this.destroy();
             }
         }
     }
 
-    async destory() {
+    async destroy() {
         this.consuming = false;
+        this.notify?.();
+    }
+
+    setConcurrency(concurrency: number) {
+        this.concurrency = concurrency;
+        this.notify?.();
+    }
+
+    setQuery(query: string) {
+        this.filter = query;
+        this.notify?.();
     }
 }
 
@@ -95,8 +128,8 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static consume(query: any, cb: Function, destoryOnError = true) {
-        return new Consumer(query, cb, destoryOnError);
+    static consume(query: any, cb: (t: Task) => Promise<void>, destroyOnError = true, concurrency = 1) {
+        return new Consumer(query, cb, destroyOnError, concurrency);
     }
 }
 

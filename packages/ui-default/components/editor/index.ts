@@ -256,7 +256,7 @@ export default class Editor extends DOMAttachedObject {
     if (hasFocus) this.focus();
   }
 
-  destory() {
+  destroy() {
     this.detach();
     if (this.vditor?.destroy) this.vditor.destroy();
     else if (this.editor?.dispose) this.editor.dispose();
