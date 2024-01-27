@@ -275,7 +275,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             if (msg.key === 'next') t.queue.add(() => next(msg));
             if (msg.key === 'end') {
                 if (!msg.nop) t.queue.add(() => end({ judger: this.user._id, ...msg }));
-                t.resolve();
+                t.resolve(null);
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
@@ -306,11 +306,11 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         clearTimeout(this.startTimeout);
         this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        await Promise.all(Object.values(this.tasks)).map(async ({ t }) => {
+        await Promise.all(Object.values(this.tasks).map(async ({ t }) => {
             const rdoc = await record.reset(t.domainId, t.rid, false);
             bus.broadcast('record/change', rdoc);
             return task.add(t);
-        });
+        }));
     }
 }
 
