@@ -9,7 +9,7 @@ import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase, User,
+    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
@@ -223,9 +223,10 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     consumer: Consumer = null;
     startTimeout: NodeJS.Timeout = null;
     tasks: Record<string, {
-        resolve: () => void,
+        resolve: (_: any) => void,
         queue: PQueue,
         domainId: string,
+        t: Task,
     }> = {};
 
     async prepare() {
@@ -248,11 +249,12 @@ export class JudgeConnectionHandler extends ConnectionHandler {
 
         const rid = rdoc._id.toHexString();
         let resolve: (_: any) => void;
-        const p = new Promise((r) => { resolve = r; })
+        const p = new Promise((r) => { resolve = r; });
         this.tasks[rid] = {
             queue: new PQueue({ concurrency: 1 }),
             domainId: rdoc.domainId,
             resolve,
+            t,
         };
         this.send({ task: { ...rdoc, ...t } });
         this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
@@ -267,13 +269,13 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const task = this.tasks[msg.key];
-            if (!task) return;
-            msg.domainId = task.domainId;
-            if (msg.key === 'next') task.queue.add(() => next(msg));
+            const t = this.tasks[msg.key];
+            if (!t) return;
+            msg.domainId = t.domainId;
+            if (msg.key === 'next') t.queue.add(() => next(msg));
             if (msg.key === 'end') {
-                if (!msg.nop) task.queue.add(() => end({ judger: this.user._id, ...msg }));
-                task.resolve();
+                if (!msg.nop) t.queue.add(() => end({ judger: this.user._id, ...msg }));
+                t.resolve();
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
@@ -304,11 +306,11 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         clearTimeout(this.startTimeout);
         this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        await Promise.all([...this.tasks.values()].map((t) => t.t).map(async (t) => {
+        await Promise.all(Object.values(this.tasks)).map(async ({ t }) => {
             const rdoc = await record.reset(t.domainId, t.rid, false);
             bus.broadcast('record/change', rdoc);
-            return await task.add(t);
-        }));
+            return task.add(t);
+        });
     }
 }
 
