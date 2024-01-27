@@ -216,39 +216,17 @@ export class JudgeFileUpdateHandler extends Handler {
     }
 }
 
-class JudgeConnectionTask {
-    queue: PQueue = new PQueue({ concurrency: 1 });
-    resolve: (res?: any) => void;
-
-    constructor(private _user: User, public t: Task, public rdoc: RecordDoc) {
-    }
-
-    async waitForFinish() {
-        await new Promise((resolve) => { this.resolve = resolve; });
-    }
-
-    next(msg: any) {
-        msg.domainId = this.rdoc.domainId;
-        this.queue.add(() => next(msg));
-    }
-
-    end(msg: any) {
-        msg.domainId = this.rdoc.domainId;
-        if (!msg.nop) {
-            this.queue.add(() => end({ judger: this._user._id, ...msg }).catch((e) => logger.error(e)));
-        }
-        this.resolve?.();
-    }
-}
-
-class JudgeConnectionHandler extends ConnectionHandler {
+export class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
     query: any = { type: { $in: ['judge', 'generate'] } };
     concurrency = 1;
-    tasks: Map<string, JudgeConnectionTask> = new Map();
     consumer: Consumer = null;
-    queue: PQueue = new PQueue({ concurrency: 1 });
     startTimeout: NodeJS.Timeout = null;
+    tasks: Record<string, {
+        resolve: () => void,
+        queue: PQueue,
+        domainId: string,
+    }> = {};
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
@@ -269,13 +247,17 @@ class JudgeConnectionHandler extends ConnectionHandler {
         if (!rdoc) return;
 
         const rid = rdoc._id.toHexString();
-        if (this.tasks.get(rid)) return;
-        const judgeTask = new JudgeConnectionTask(this.user, t, rdoc);
-        this.tasks.set(rid, judgeTask);
-
+        let resolve: (_: any) => void;
+        const p = new Promise((r) => { resolve = r; })
+        this.tasks[rid] = {
+            queue: new PQueue({ concurrency: 1 }),
+            domainId: rdoc.domainId,
+            resolve,
+        };
         this.send({ task: { ...rdoc, ...t } });
-        judgeTask.next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        await judgeTask.waitForFinish();
+        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
+        await p;
+        delete this.tasks[rid];
     }
 
     async message(msg) {
@@ -285,12 +267,13 @@ class JudgeConnectionHandler extends ConnectionHandler {
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const judgeTask = this.tasks.get(msg.rid);
-            if (!judgeTask) return;
-            if (msg.key === 'next') judgeTask.next(msg);
+            const task = this.tasks[msg.key];
+            if (!task) return;
+            msg.domainId = task.domainId;
+            if (msg.key === 'next') task.queue.add(() => next(msg));
             if (msg.key === 'end') {
-                judgeTask.end(msg);
-                this.tasks.delete(msg.rid);
+                if (!msg.nop) task.queue.add(() => end({ judger: this.user._id, ...msg }));
+                task.resolve();
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
