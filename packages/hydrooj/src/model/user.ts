@@ -342,11 +342,14 @@ class UserModel {
             } catch (e) {
                 if (e?.code === 11000) {
                     // Duplicate Key Error
+                    if (autoAlloc && JSON.stringify(e.keyPattern) === '{"_id":1}') {
+                        uid++;
+                        continue;
+                    }
                     throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
                 }
-                if (!autoAlloc || JSON.stringify(e.keyPattern) !== '{"_id":1}') throw e;
+                throw e;
             }
-            uid++;
         }
     }
 
