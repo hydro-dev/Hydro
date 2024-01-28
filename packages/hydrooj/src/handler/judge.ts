@@ -248,6 +248,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         if (!rdoc) return;
 
         const rid = rdoc._id.toHexString();
+        if (this.tasks[rid]) return;
         let resolve: (_: any) => void;
         const p = new Promise((r) => { resolve = r; });
         this.tasks[rid] = {
