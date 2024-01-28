@@ -72,7 +72,7 @@ function processPayload(body: Partial<JudgeResultBody>) {
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
+    body.rid = new ObjectId(body.rid); // TODO remove this
     const {
         $set, $push, $unset, $inc,
     } = processPayload(body);
@@ -141,7 +141,7 @@ export async function postJudge(rdoc: RecordDoc) {
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
+    body.rid = new ObjectId(body.rid); // TODO remove this
     const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
@@ -269,7 +269,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const t = this.tasks[msg.key];
+            const t = this.tasks[msg.rid];
             if (!t) return;
             msg.domainId = t.domainId;
             if (msg.key === 'next') t.queue.add(() => next(msg));

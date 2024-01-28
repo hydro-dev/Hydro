@@ -1,6 +1,5 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
@@ -150,8 +149,7 @@ export default class Hydro implements Session {
         return null;
     }
 
-    send(rid: string | ObjectId, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
-        data.rid = new ObjectId(rid);
+    send(rid: string, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
         data.key = key;
         if (data.case && typeof data.case.message === 'string') data.case.message = removeNixPath(data.case.message);
         if (typeof data.message === 'string') data.message = removeNixPath(data.message);

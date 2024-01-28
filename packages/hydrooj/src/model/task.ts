@@ -1,6 +1,6 @@
 import { hostname } from 'os';
 import cac from 'cac';
-import { Filter, ObjectId } from 'mongodb';
+import { BSON, Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
@@ -141,7 +141,7 @@ export async function apply(ctx: Context) {
         collEvent.insertOne({
             ack: [id],
             event,
-            payload: JSON.stringify(payload),
+            payload: BSON.EJSON.stringify(payload),
             expire: new Date(Date.now() + 10000),
         });
     });
@@ -149,8 +149,8 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     const stream = collEvent.watch();
     const handleEvent = async (doc: EventDoc) => {
-        const payload = JSON.parse(doc.payload);
-        process.send?.({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
+        process.send?.({ type: 'hydro:broadcast', data: doc });
+        const payload = BSON.EJSON.parse(doc.payload);
         await (bus.parallel as any)(doc.event, ...payload);
     };
     stream.on('change', async (change) => {
