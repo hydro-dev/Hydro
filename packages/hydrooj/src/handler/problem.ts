@@ -137,7 +137,7 @@ export class ProblemMainHandler extends Handler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
         this.response.template = 'problem_main.html';
-        if (!limit || limit > system.get('pagination.problem') || page > 1) limit = system.get('pagination.problem');
+        if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
         const psdict = {};
