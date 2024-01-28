@@ -263,7 +263,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        if (!['ping', 'prio', 'config'].includes(msg.key)) {
+        if (!['ping', 'prio', 'config', 'start'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
@@ -299,6 +299,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         } else if (msg.key === 'start') {
             clearTimeout(this.startTimeout);
             this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            logger.info('Judge daemon started');
         }
     }
 
