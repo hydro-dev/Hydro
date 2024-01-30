@@ -366,12 +366,23 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
     compression: Shorty;
+    counter = 0;
+
+    resetCompression() {
+        this.counter = 0;
+        this.compression = new Shorty();
+        this.conn.send('shorty');
+    }
 
     send(data: any) {
         let payload = JSON.stringify(data, serializer({
             showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
         }));
-        if (this.compression) payload = this.compression.deflate(payload);
+        if (this.compression) {
+            if (this.counter > 1000) this.resetCompression();
+            payload = this.compression.deflate(payload);
+            this.counter++;
+        }
         this.conn.send(payload);
     }
 
@@ -413,10 +424,7 @@ export function Connection(
         const disposables = [];
         try {
             checker.call(h);
-            if (args.shorty) {
-                h.compression = new Shorty();
-                conn.send('shorty');
-            }
+            if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
