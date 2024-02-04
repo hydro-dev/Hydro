@@ -158,7 +158,7 @@ export class HandlerCommon {
     }
 
     renderTitle(str: string) {
-        const name = this.domain?.ui?.name || system.get('server.name');
+        const name = this.ctx.setting.get('server.name');
         if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
         return `${this.translate(str)} - ${name}`;
     }
