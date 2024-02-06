@@ -42,7 +42,7 @@ export interface StreamOut {
     streamOut: boolean;
 }
 
-export type CopyInFile = LocalFile | MemoryFile | PreparedFile | Symlink;
+export type CopyInFile = LocalFile | MemoryFile | PreparedFile;
 export type CopyIn = Record<string, CopyInFile>;
 // CmdFile defines file descriptor for the command. null is reserved for group execution and it must be provided via pipeMapping
 export type CmdFile = LocalFile | MemoryFile | PreparedFile | Collector | StreamIn | StreamOut | null;
@@ -76,7 +76,7 @@ export interface Cmd {
     addressSpaceLimit?: boolean;
 
     /** files to be copied into sandbox before execution */
-    copyIn?: Record<string, CopyInFile>;
+    copyIn?: Record<string, CopyInFile | Symlink>;
 
     /**
      * files to be copied out from sandbox after execution.
