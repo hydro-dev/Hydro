@@ -1,15 +1,15 @@
-import { sleep } from '@hydrooj/utils';
+import log from './log';
 import client from './sandbox/client';
 
 export = async function terminalDemo() {
-    console.log('start');
     let resolve: (res?: any) => void;
     const promise = new Promise((r) => { resolve = r; });
     const version = await client.version();
     if (!version.stream) {
-        console.log('no stream support');
+        log.info('no stream support, please upgrade hydro-sandbox to v1.8.1+');
         return;
     }
+    process.stdin.setRawMode(true);
     const stream = client.stream({
         cmd: [{
             args: ['/bin/bash'],
@@ -26,21 +26,32 @@ export = async function terminalDemo() {
         process.stdout.write(output.content);
     });
     stream.on('end', (result) => {
-        console.log(result);
+        log.info(result);
         resolve();
     });
     stream.on('open', async () => {
-        await sleep(10);
-        stream.input({ index: 0, fd: 0, content: Buffer.from('vi\n') });
-        await sleep(1000);
-        stream.input({ index: 0, fd: 0, content: Buffer.from(':q\n') });
-        await sleep(1000);
-        stream.input({ index: 0, fd: 0, content: Buffer.from('ls /\n') });
-        await sleep(1000);
-        stream.input({ index: 0, fd: 0, content: Buffer.from('exit\n') });
+        let stop = false;
+        process.stdin.on('data', (buf) => {
+            if (buf.length === 1 && buf[0] === 3) {
+                if (stop) stream.cancel();
+                stop = true;
+            } else stop = false;
+            stream.input({ content: buf });
+        });
+        const resize = () => {
+            stream.resize({
+                rows: process.stdout.rows,
+                cols: process.stdout.columns,
+            });
+        };
+        process.stdout.on('resize', resize);
+        resize();
     });
-    stream.on('close', () => {
-        console.log('close');
+    stream.on('close', (e) => {
+        log.info('close', e.code);
+        resolve();
     });
     await promise;
+    process.stdin.setRawMode(false);
+    process.exit(0);
 };

@@ -166,17 +166,17 @@ export interface SandboxResult {
 }
 
 export interface Resize {
-    index: number;
-    fd: number;
+    index?: number;
+    fd?: number;
     rows: number;
     cols: number;
-    x: number;
-    y: number;
+    x?: number;
+    y?: number;
 }
 
 export interface Input {
-    index: number;
-    fd: number;
+    index?: number;
+    fd?: number;
     content: Buffer;
 }
 
