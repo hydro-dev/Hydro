@@ -1,7 +1,7 @@
 import log from './log';
 import client from './sandbox/client';
 
-export = async function terminalDemo() {
+export = async function terminal() {
     let resolve: (res?: any) => void;
     const promise = new Promise((r) => { resolve = r; });
     const version = await client.version();

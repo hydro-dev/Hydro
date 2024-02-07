@@ -27,7 +27,7 @@ export interface Collector {
     pipe?: boolean;
 }
 
-// Symlink creates symlink for copyIn location
+// Symlink creates symlink for copyIn location: v1.6.0+
 export interface Symlink {
     symlink: string;
 }
