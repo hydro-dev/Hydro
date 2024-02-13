@@ -96,8 +96,11 @@ export default class Hydro implements Session {
             async function download(name: string) {
                 if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
                 const w = fs.createWriteStream(path.join(filePath, name));
-                that.get(res.body.links[name]).pipe(w);
                 await new Promise((resolve, reject) => {
+                    that.get(res.body.links[name]).buffer(false).parse((resp, cb) => {
+                        if (resp.statusCode === 200) resp.pipe(w).on('end', () => { cb(null, undefined); });
+                        else throw new Error(`Download error: ${resp.statusCode}`);
+                    }).catch((e) => reject(e));
                     const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
                     w.on('error', (e) => {
                         clearTimeout(timeout);

@@ -145,7 +145,7 @@ export class HandlerCommon {
 
     async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
         if (ignoredLimit.includes(op)) return;
-        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
+        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS, PRIV.PRIV_JUDGE)) return;
         const overrideLimit = system.get(`limit.${op}`);
         if (overrideLimit) maxOperations = overrideLimit;
         let id = this.request.ip;
