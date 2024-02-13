@@ -145,7 +145,7 @@ export class HandlerCommon {
 
     async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
         if (ignoredLimit.includes(op)) return;
-        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS, PRIV.PRIV_JUDGE)) return;
+        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
         const overrideLimit = system.get(`limit.${op}`);
         if (overrideLimit) maxOperations = overrideLimit;
         let id = this.request.ip;
@@ -178,6 +178,7 @@ export class HandlerCommon {
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
+    notUsage = false;
     allowCors = false;
     __param: Record<string, decorators.ParamOption<any>[]>;
 
@@ -207,7 +208,7 @@ export class Handler extends HandlerCommon {
                 this.context.pendingError = new CsrfTokenError();
             }
         }
-        if (!argv.options.benchmark) await this.limitRate('global', 5, 100);
+        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 5, 100);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         this.loginMethods = Object.keys(global.Hydro.module.oauth)
             .map((key) => ({
