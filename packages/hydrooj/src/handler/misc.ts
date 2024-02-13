@@ -104,6 +104,7 @@ export class FSDownloadHandler extends Handler {
 
 export class StorageHandler extends Handler {
     noCheckPermView = true;
+    notUsage = true;
 
     @param('target', Types.Name)
     @param('filename', Types.Filename, true)
