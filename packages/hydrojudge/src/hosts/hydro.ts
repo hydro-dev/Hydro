@@ -3,7 +3,7 @@ import path from 'path';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
-import { fs } from '@hydrooj/utils';
+import { fs, pipeRequest } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
@@ -91,33 +91,15 @@ export default class Hydro implements Session {
                 files: filenames,
             });
             if (!res.body.links) throw new FormatError('problem not exist');
-            const that = this;
-            // eslint-disable-next-line no-inner-declarations
-            async function download(name: string) {
-                if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                const w = fs.createWriteStream(path.join(filePath, name));
-                await new Promise((resolve, reject) => {
-                    that.get(res.body.links[name]).buffer(false).parse((resp, cb) => {
-                        if (resp.statusCode === 200) resp.pipe(w).on('end', () => { cb(null, undefined); });
-                        else throw new Error(`Download error: ${resp.statusCode}`);
-                    }).catch((e) => reject(e));
-                    const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
-                    w.on('error', (e) => {
-                        clearTimeout(timeout);
-                        reject(new Error(`DownloadFail(${name}): ${e.message}`));
-                    });
-                    w.on('finish', () => {
-                        clearTimeout(timeout);
-                        resolve(null);
-                    });
-                });
-            }
             const tasks = [];
             const queue = new PQueue({ concurrency: 10 });
             for (const name in res.body.links) {
-                tasks.push(queue.add(() => download(name)));
+                tasks.push(queue.add(async () => {
+                    if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
+                    const w = fs.createWriteStream(path.join(filePath, name));
+                    await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
+                }));
             }
-            queue.start();
             await Promise.all(tasks);
             await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
         }
@@ -129,12 +111,7 @@ export default class Hydro implements Session {
         name = name.split('#')[0];
         const res = await this.post('judge/files', { id: name });
         const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
-        const w = fs.createWriteStream(target);
-        this.get(res.body.url).pipe(w);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
-        });
+        await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
         return target;
     }
 
