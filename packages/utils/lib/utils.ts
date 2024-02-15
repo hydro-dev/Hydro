@@ -324,21 +324,25 @@ export async function extractZip(zip: AdmZip, dest: string, overwrite = false, s
 }
 
 export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
-    await req.buffer(false).parse((resp, cb) => {
-        if (resp.statusCode !== 200) resp.pipe(w).on('end', () => { cb(null, undefined); });
-        else throw new Error(`Download error: ${resp.statusCode}`);
-    });
-    return new Promise<void>((resolve, reject) => {
-        const t = timeout ? setTimeout(() => reject(new Error(`DownloadTimeout(${name ? `${name}, ` : ''}${timeout})`)), timeout) : null;
-        w.on('error', (e) => {
-            if (t) clearTimeout(t);
-            reject(new Error(`DownloadFail${name ? `(${name})` : ''}: ${e.message}`));
+    try {
+        await req.buffer(false).timeout({
+            response: Math.min(10000, timeout),
+            deadline: timeout,
+        }).parse((resp, cb) => {
+            if (resp.statusCode !== 200) cb(new Error(resp.statusCode), undefined);
+            else {
+                resp.pipe(w);
+                resp.on('end', () => {
+                    cb(null, undefined);
+                });
+                resp.on('error', (err) => {
+                    cb(err, undefined);
+                });
+            }
         });
-        w.on('finish', () => {
-            if (t) clearTimeout(t);
-            resolve(null);
-        });
-    });
+    } catch (e) {
+        throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message}`);
+    }
 }
 
 export * from '@hydrooj/utils/lib/common';
