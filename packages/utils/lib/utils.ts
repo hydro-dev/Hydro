@@ -329,8 +329,7 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
             response: Math.min(10000, timeout),
             deadline: timeout,
         }).parse((resp, cb) => {
-            if (resp.statusCode !== 200) cb(new Error(resp.statusCode), undefined);
-            else {
+            if (resp.statusCode === 200) {
                 resp.pipe(w);
                 resp.on('end', () => {
                     cb(null, undefined);
@@ -341,7 +340,7 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
             }
         });
     } catch (e) {
-        throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message}`);
+        throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message})`);
     }
 }
 
