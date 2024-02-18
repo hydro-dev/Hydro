@@ -329,7 +329,8 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
             response: Math.min(10000, timeout),
             deadline: timeout,
         }).parse((resp, cb) => {
-            if (resp.statusCode === 200) {
+            if (resp.statusCode !== 200) throw new Error(`${resp.statusCode}`);
+            else {
                 resp.pipe(w);
                 resp.on('end', () => {
                     cb(null, undefined);
