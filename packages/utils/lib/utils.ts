@@ -8,7 +8,7 @@ import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import Logger from 'reggol';
-import type { Request } from 'superagent';
+import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
@@ -82,10 +82,10 @@ export function isClass(obj: any, strict = false): obj is new (...args: any) => 
     return false;
 }
 
-function isSuperagentRequest(t: NodeJS.ReadableStream | Request): t is Request {
+function isSuperagentRequest(t: NodeJS.ReadableStream | superagent.Request): t is superagent.Request {
     return 'req' in t;
 }
-export function streamToBuffer(input: NodeJS.ReadableStream | Request, maxSize = 0): Promise<Buffer> {
+export function streamToBuffer(input: NodeJS.ReadableStream | superagent.Request, maxSize = 0): Promise<Buffer> {
     let stream: NodeJS.ReadableStream;
     if (isSuperagentRequest(input)) {
         const s = new PassThrough();
@@ -320,6 +320,28 @@ export async function extractZip(zip: AdmZip, dest: string, overwrite = false, s
         if (!content) throw new Error('CANT_EXTRACT_FILE');
         if (!fs.existsSync(d) || overwrite) await fs.writeFile(d, content);
         await fs.utimes(d, entry.header.time, entry.header.time);
+    }
+}
+
+export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
+    try {
+        await req.buffer(false).timeout({
+            response: Math.min(10000, timeout),
+            deadline: timeout,
+        }).parse((resp, cb) => {
+            if (resp.statusCode !== 200) throw new Error(`${resp.statusCode}`);
+            else {
+                resp.pipe(w);
+                resp.on('end', () => {
+                    cb(null, undefined);
+                });
+                resp.on('error', (err) => {
+                    cb(err, undefined);
+                });
+            }
+        });
+    } catch (e) {
+        throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message})`);
     }
 }
 

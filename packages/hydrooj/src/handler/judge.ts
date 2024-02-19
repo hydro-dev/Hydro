@@ -154,11 +154,13 @@ export async function end(body: Partial<JudgeResultBody>) {
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    noCheckPermView = true;
+    notUsage = true;
+
     async get() {
         this.response.body = 'ok';
     }
 
-    noCheckPermView = true;
     @post('id', Types.String, true)
     @post('files', Types.Set, true)
     @post('pid', Types.UnsignedInt, true)
@@ -207,6 +209,8 @@ export async function processJudgeFileCallback(rid: ObjectId, filename: string, 
 }
 
 export class JudgeFileUpdateHandler extends Handler {
+    notUsage = true;
+
     @post('rid', Types.ObjectId)
     @post('name', Types.Filename)
     async post(domainId: string, rid: ObjectId, filename: string) {

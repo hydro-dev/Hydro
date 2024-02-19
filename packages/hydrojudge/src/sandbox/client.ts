@@ -1,5 +1,6 @@
 import fs from 'fs';
 import superagent from 'superagent';
+import { pipeRequest } from '@hydrooj/utils';
 import { getConfig } from '../config';
 import { SandboxRequest, SandboxResult, SandboxVersion } from './interface';
 
@@ -12,11 +13,7 @@ const client = new Proxy({
     getFile(fileId: string, dest?: string): Promise<Buffer> {
         if (dest) {
             const w = fs.createWriteStream(dest);
-            superagent.get(`${url}/file/${fileId}`).pipe(w);
-            return new Promise((resolve, reject) => {
-                w.on('finish', () => resolve(null));
-                w.on('error', reject);
-            });
+            return pipeRequest(superagent.get(`${url}/file/${fileId}`), w, 60000, fileId) as any;
         }
         return superagent.get(`${url}/file/${fileId}`).responseType('arraybuffer').then((res) => res.body);
     },
