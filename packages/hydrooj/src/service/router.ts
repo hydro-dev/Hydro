@@ -14,7 +14,7 @@ export class WebSocketLayer {
     clients = new Set<WebSocket>();
     regexp: RegExp;
 
-    constructor(private router: Router, path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
+    constructor(path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
         this.regexp = pathToRegexp(path);
     }
 
@@ -49,9 +49,12 @@ export class Router extends KoaRouter {
     }
 
     ws(path: Parameters<typeof pathToRegexp>[0], callback?: WebSocketCallback) {
-        const layer = new WebSocketLayer(this, path, callback);
+        const layer = new WebSocketLayer(path, callback);
         this.wsStack.push(layer);
-        this.disposeLastOp = () => remove(this.wsStack, layer);
+        this.disposeLastOp = () => {
+            layer.close();
+            remove(this.wsStack, layer);
+        };
         return layer;
     }
 }

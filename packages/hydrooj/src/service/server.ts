@@ -414,7 +414,7 @@ export function Connection(
     ...permPrivChecker: Array<number | bigint | Function>
 ) {
     const checker = Checker(permPrivChecker);
-    router.ws(prefix, async (conn, _, ctx) => {
+    const layer = router.ws(prefix, async (conn, _, ctx) => {
         const {
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
@@ -437,6 +437,7 @@ export function Connection(
                 if (closed) return;
                 closed = true;
                 bus.emit('connection/close', h);
+                layer.clients.delete(conn);
                 if (interval) clearInterval(interval);
                 for (const d of disposables) d();
                 h.cleanup?.(args);
@@ -446,7 +447,7 @@ export function Connection(
                     clean();
                     conn.terminate();
                 }
-                if (Date.now() - lastHeartbeat > 30000) conn.ping();
+                if (Date.now() - lastHeartbeat > 30000) conn.send('ping');
             }, 40000);
             conn.on('pong', () => {
                 lastHeartbeat = Date.now();
@@ -460,9 +461,11 @@ export function Connection(
                 }
                 h.message?.(JSON.parse(e.data.toString()));
             };
-            conn.onclose = clean;
-            conn.resume();
             await bus.parallel('connection/active', h);
+            if (conn.readyState === conn.OPEN) {
+                conn.on('close', clean);
+                conn.resume();
+            } else clean();
         } catch (e) {
             await h.onerror(e);
         }
