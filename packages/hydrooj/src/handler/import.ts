@@ -22,5 +22,5 @@ class ProblemImportHydroHandler extends Handler {
 
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_hydro', '/problem/import/hydro', ProblemImportHydroHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.inject('ProblemAdd', 'problem_import_hydro', { icon: 'copy', text: 'Import From Hydro' });
+    ctx.injectUI('ProblemAdd', 'problem_import_hydro', { icon: 'copy', text: 'Import From Hydro' });
 }

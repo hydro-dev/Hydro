@@ -18,7 +18,6 @@ import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
-import { inject } from './lib/ui';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -130,7 +129,7 @@ export function addon(addonPath: string, prepend = false) {
     } catch (e) {
         logger.error(`Addon not found: ${addonPath}`);
         logger.error(e);
-        inject('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+        app.injectUI('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
     }
 }
 
