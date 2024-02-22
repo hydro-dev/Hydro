@@ -90,7 +90,7 @@ export default class Editor extends DOMAttachedObject {
       theme,
       lineNumbers,
       glyphMargin: true,
-      lightbulb: { enabled: true },
+      lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.On },
       model: this.model,
       minimap: { enabled: false },
       hideCursorInOverviewRuler: true,
