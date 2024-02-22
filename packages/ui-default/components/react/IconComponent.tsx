@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import React from 'react';
 
-export default function IconComponent(props) {
+export default function IconComponent(props: { name: string, className?: string } & React.HTMLAttributes<HTMLSpanElement>) {
   const {
     name,
     className,

@@ -2,7 +2,7 @@
     "name": "@hydrooj/vjudge",
     "version": "1.9.3",
     "description": "Submit problems to remote oj",
-    "main": "src/model.ts",
+    "main": "./src/index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined",
     "license": "AGPL-3.0-or-later",

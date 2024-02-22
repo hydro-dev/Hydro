@@ -23,7 +23,7 @@ function monitorResource(resource) {
   }
 }
 
-class DOMAttachedObject {
+export default class DOMAttachedObject {
   static uniqueIdCounter = 0;
   static DOMAttachKey: string;
   static DOMAttachSelector: string;
@@ -127,5 +127,3 @@ class DOMAttachedObject {
     if (monitorDetach) monitorResource(this);
   }
 }
-
-export default DOMAttachedObject as typeof DOMAttachedObject & DOMAttachedObject;

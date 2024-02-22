@@ -27,11 +27,11 @@ async function runWebpack({
       hot: true,
       server: https ? 'https' : 'http',
       allowedHosts: 'all',
-      proxy: {
+      proxy: [{
         context: (p) => p !== '/ws',
         target: 'http://localhost:2333',
         ws: true,
-      },
+      }],
       client: {
         webSocketURL: 'auto://0.0.0.0:0/ws',
       },

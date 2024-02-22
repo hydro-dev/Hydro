@@ -54,6 +54,11 @@ const configFlat = (name) => ({
         ...compilerOptionsBase,
         outDir: path.join(baseOutDir, name),
         rootDir: '.',
+        paths: {
+            'vj/*': [
+                '../../packages/ui-default/*',
+            ],
+        },
     },
     include: ['**/*.ts'],
     exclude: ['public', 'frontend'],
@@ -130,8 +135,8 @@ for (const package of modules) {
         if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
         const name = file.split('.')[0];
         const filePath = path.resolve(basedir, `${name}.js`);
-        if (['handler', 'service', 'lib', 'model', 'script', 'index'].includes(name)) {
-            if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, `module.exports = require('./src/${name}');\n`);
+        if (name === 'index' && !fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, 'module.exports = require("./src/index");\n');
         }
     }
 }
