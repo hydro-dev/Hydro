@@ -24,29 +24,6 @@ LANG=zh . <(curl https://hydro.ac/setup.sh)
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
 
-## Merry Christmas and Happy new year
-
-```
-                                                    .''.
-                        .''.      .        *''*    :_\/_:
-                       :_\/_:   _\(/_  .:.*_\/_*   : /\ :
-                   .''.: /\ :   ./)\   ':'* /\ * :  '..'.
-                  :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_
-                  : /\ : :::::     *_\/_*     -= o =-  /)\
-                   '..'  ':::'     * /\ *     .'/.\'.   '
-                                    *..*         :
-             *
-     *      /.\   *       *           .   *
-  .        /..'\     .     .     * .
-          */'.'\*       . .          .     *   *
-      *   /.''.'\    *     .  .     .   *
-.        */.'.'.\*
-...".""""/'.''.'.\""."."...
-         ^^^[_]^^^*
-```
-
-I wish you all a Merry Christmas and a peaceful New Year 2024.
-
 ## 系统特点
 
 ### 模块化设计，插件系统，功能热插拔
@@ -130,6 +107,15 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.10.7 / 4.49.5
+- core: 优化比赛成绩版按照小组筛选
+- core: inject -> injectUI
+- core: 修复一处内存泄漏
+- ui: 支持 `/record?nopush=1`
+- judge: 修复错误的测试数据被缓存的问题 (#726)
+- judge: 比赛时不显示 `RuntimeError` 详情
+- core: 比赛中题目文件跳过 PERM_VIEW_PROBLEM 检查
 
 ### Hydro 4.10.5 / UI 4.49.4
 
