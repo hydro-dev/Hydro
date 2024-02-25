@@ -31,6 +31,6 @@ class GeoIPService extends Service {
     }
 }
 export function apply(ctx: Context) {
-    Context.service('geoip', GeoIPService);
+    ctx.provide('geoip', GeoIPService);
     ctx.geoip = new GeoIPService(ctx, 'geoip', true);
 }

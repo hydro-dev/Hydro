@@ -212,7 +212,7 @@ export async function apply(ctx: Context) {
     ctx.Route('blog_create', '/blog/:uid/create', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('blog_detail', '/blog/:uid/:did', BlogDetailHandler);
     ctx.Route('blog_edit', '/blog/:uid/:did/edit', BlogEditHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.inject('UserDropdown', 'blog_main', (h) => ({ icon: 'book', displayName: 'Blog', uid: h.user._id.toString() }),
+    ctx.injectUI('UserDropdown', 'blog_main', (h) => ({ icon: 'book', displayName: 'Blog', uid: h.user._id.toString() }),
         PRIV.PRIV_USER_PROFILE);
     ctx.i18n.load('zh', {
         "{0}'s blog": '{0} 的博客',

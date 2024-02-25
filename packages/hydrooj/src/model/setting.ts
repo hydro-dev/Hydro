@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-import cordis from 'cordis';
+import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
@@ -300,7 +300,7 @@ declare module '../context' {
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     function method(this: cordis.Service, ...args: Parameters<F>) {
         const res = origFunc(...args);
-        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
     };
 
 export class SettingService extends Service {
@@ -315,12 +315,12 @@ export class SettingService extends Service {
     }
 
     get(key: string) {
-        return (this.caller ? this.caller.domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
+        return (this[Context.current] ? this[Context.current].domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
     }
 }
 
 export async function apply(ctx: Context) {
-    Context.service('setting', SettingService);
+    ctx.provide('setting');
     ctx.setting = new SettingService(ctx);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;

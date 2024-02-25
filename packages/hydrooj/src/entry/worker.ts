@@ -40,7 +40,15 @@ export async function apply(ctx: Context) {
     await storage.loadStorageService();
     await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
-    if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
+    if (argv.options.watch) {
+        const root = [path.resolve(process.cwd())];
+        if (process.env.WATCH_ROOT) root.push(process.env.WATCH_ROOT);
+        ctx.plugin(require('@cordisjs/plugin-hmr'), {
+            root,
+            ignored: ['node_modules', '.git', 'logs', '.cache', '.yarn']
+                .map((i) => `**/${i}/**`).concat('**/tsconfig.tsbuildinfo'),
+        });
+    }
     await ctx.root.start();
     require('../lib/index');
     await lib(pending, fail, ctx);

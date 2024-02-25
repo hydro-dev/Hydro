@@ -86,7 +86,7 @@ class WorkerService extends Service {
     public addHandler(type: string, handler: Function) {
         this.handlers[type] = handler;
         this.consumer.filter = { type: 'schedule', subType: { $in: Object.keys(this.handlers) } };
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             delete this.handlers[type];
         });
     }
@@ -133,7 +133,7 @@ declare module '../context' {
 }
 
 export async function apply(ctx: Context) {
-    Context.service('worker', WorkerService);
+    ctx.provide('worker');``
     ctx.worker = Worker;
 
     Worker.addHandler('task.daily', async () => {

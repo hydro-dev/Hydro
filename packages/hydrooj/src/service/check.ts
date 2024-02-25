@@ -14,7 +14,7 @@ export class CheckService extends Service {
     c = {};
     addChecker(type: string, checkFunc: CheckItem) {
         this.checkers[`check${type}`] = checkFunc;
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             delete this.checkers[`check${type}`];
         });
     }
@@ -73,6 +73,6 @@ check.addChecker('Setting', async (ctx, log, warn) => {
 });
 
 export async function apply(ctx: Context) {
-    Context.service('check', CheckService);
+    ctx.provide('check', CheckService);
     ctx.check = check;
 }
