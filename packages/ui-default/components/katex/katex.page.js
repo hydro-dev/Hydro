@@ -18,8 +18,8 @@ const katexPage = new AutoloadPage('katexPage', () => {
         ],
       }));
     }
-    runKatex($('.typo'));
-    $(document).on('vjContentNew', (e) => runKatex($(e.target).find('.typo').addBack('.typo')));
+    runKatex($('.typo').not('.no-media'));
+    $(document).on('vjContentNew', (e) => runKatex($(e.target).find('.typo').addBack('.typo').not('.no-media')));
   });
 });
 

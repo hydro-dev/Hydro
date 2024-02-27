@@ -90,7 +90,7 @@
           <li class="menu__seperator"></li>
         </ol>
       </div>
-      <div class="section__body typo">
+      <div class="section__body typo no-media">
         <dl class="large horizontal">
         {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           <dt>{{ _('Status') }}</dt><dd>{% if tsdoc['enroll'] %}{{ _('Completed' if tsdoc['done'] else 'In Progress') }}{% else %}{{ _('Not Enrolled') }}{% endif %}</dd>
