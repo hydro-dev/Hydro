@@ -16,7 +16,7 @@
         "@aws-sdk/lib-storage": "3.521.0",
         "@aws-sdk/s3-presigned-post": "3.521.0",
         "@aws-sdk/s3-request-presigner": "3.521.0",
-        "@graphql-tools/schema": "^10.0.2",
+        "@graphql-tools/schema": "^10.0.3",
         "@hydrooj/utils": "workspace:*",
         "@simplewebauthn/server": "7.4.0",
         "@undefined-moe/require-resolve-hook": "^1.1.0",

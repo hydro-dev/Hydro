@@ -35,7 +35,7 @@ class I18nService extends Service {
     }
 }
 
-app.provide('i18n');
+app.provide('i18n', undefined, true);
 app.i18n = new I18nService(app);
 
 String.prototype.translate = function translate(...languages: string[]) {

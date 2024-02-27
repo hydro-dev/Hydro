@@ -92,8 +92,6 @@ class WorkerService extends Service {
     }
 }
 
-const Worker = new WorkerService(app, 'worker', false);
-
 class ScheduleModel {
     static coll = coll;
 
@@ -133,10 +131,10 @@ declare module '../context' {
 }
 
 export async function apply(ctx: Context) {
-    ctx.provide('worker');``
-    ctx.worker = Worker;
+    ctx.provide('worker');
+    ctx.worker = new WorkerService(app, 'worker', false);
 
-    Worker.addHandler('task.daily', async () => {
+    ctx.worker.addHandler('task.daily', async () => {
         await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
         await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
         await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);

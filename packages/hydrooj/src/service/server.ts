@@ -479,12 +479,12 @@ class NotFoundHandler extends Handler {
 }
 
 export class RouteService extends Service {
-    static readonly methods = ['Route', 'Connection', 'withHandlerClass'];
     private registry = {};
     private registrationCount = Counter();
 
-    constructor(ctx) {
+    constructor(ctx: Context) {
         super(ctx, 'server', true);
+        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
     }
 
     private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
@@ -531,7 +531,7 @@ declare module '../context' {
 }
 
 export async function apply(pluginContext: Context) {
-    pluginContext.provide('server');
+    pluginContext.provide('server', undefined, true);
     pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
     if (process.env.HYDRO_CLI) return;

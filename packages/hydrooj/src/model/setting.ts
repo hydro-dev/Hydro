@@ -304,7 +304,6 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     };
 
 export class SettingService extends Service {
-    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
     PreferenceSetting = T(PreferenceSetting);
     AccountSetting = T(AccountSetting);
     DomainSetting = T(DomainSetting);
@@ -312,6 +311,7 @@ export class SettingService extends Service {
     SystemSetting = T(SystemSetting);
     constructor(ctx: Context) {
         super(ctx, 'setting', true);
+        ctx.mixin('setting', ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting']);
     }
 
     get(key: string) {
