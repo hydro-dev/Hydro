@@ -58,7 +58,7 @@ function judgeCase(c: NormalizedCase) {
         }
         if (!ctx.request.rejudged && !ctx.analysis && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             ctx.analysis = true;
-            await ctx.runAnalysis(ctx.execute, { src: ctx.input });
+            await ctx.runAnalysis(ctx.execute, { src: c.input });
         }
         return {
             id: c.id,
