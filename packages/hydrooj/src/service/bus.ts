@@ -47,6 +47,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'system/setting': (args: Record<string, any>) => VoidReturn
     'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
+    'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
 
