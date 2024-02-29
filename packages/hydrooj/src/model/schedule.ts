@@ -121,7 +121,7 @@ class ScheduleModel {
     }
 
     static getFirst = getFirst;
-    static Worker = Worker;
+    static Worker: WorkerService;
 }
 
 declare module '../context' {
@@ -132,7 +132,9 @@ declare module '../context' {
 
 export async function apply(ctx: Context) {
     ctx.provide('worker');
-    ctx.worker = new WorkerService(app, 'worker', false);
+    const worker = new WorkerService(app, 'worker', false);
+    ctx.worker = worker;
+    ScheduleModel.Worker = worker;
 
     ctx.worker.addHandler('task.daily', async () => {
         await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
