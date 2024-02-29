@@ -1,5 +1,5 @@
 import {
-    Context, db, ForbiddenError, UserModel,
+    Context, db, ForbiddenError, Handler, UserModel,
 } from 'hydrooj';
 
 interface IpLoginInfo {
@@ -19,6 +19,12 @@ function normalizeIp(ip: string) {
     return ip;
 }
 
+export class ContestResolverHandler extends Handler {
+    async get() {
+        this.response.template = 'resolver.html';
+    }
+}
+
 export function apply(ctx: Context) {
     ctx.on('handler/init', async (that) => {
         const iplogin = await coll.findOne({ _id: normalizeIp(that.request.ip) });
@@ -33,4 +39,6 @@ export function apply(ctx: Context) {
             that.session.user = that.user;
         }
     });
+
+    ctx.Route('resolver', '/resolver', ContestResolverHandler);
 }
