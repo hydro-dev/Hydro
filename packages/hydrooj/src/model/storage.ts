@@ -3,8 +3,8 @@ import { escapeRegExp } from 'lodash';
 import moment from 'moment-timezone';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
+import { Context } from '../context';
 import mime from '../lib/mime';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import storage from '../service/storage';
 import ScheduleModel from './schedule';
@@ -135,26 +135,31 @@ async function cleanFiles() {
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
 }
-ScheduleModel.Worker.addHandler('storage.prune', cleanFiles);
-bus.on('ready', async () => {
-    if (process.env.NODE_APP_INSTANCE !== '0') return;
-    await db.ensureIndexes(
-        StorageModel.coll,
-        { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
-    );
-    if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
-        await ScheduleModel.add({
-            type: 'schedule',
-            subType: 'storage.prune',
-            executeAfter: moment().startOf('hour').toDate(),
-            interval: [1, 'hour'],
-        });
-    }
-});
-bus.on('domain/delete', async (domainId) => {
-    const files = await StorageModel.list(`problem/${domainId}`);
-    await StorageModel.del(files.map((i) => i.path));
-});
+
+export function apply(ctx: Context) {
+    ctx.inject(['worker'], (c) => {
+        c.worker.addHandler('storage.prune', cleanFiles);
+    });
+    ctx.on('domain/delete', async (domainId) => {
+        const files = await StorageModel.list(`problem/${domainId}`);
+        await StorageModel.del(files.map((i) => i.path));
+    });
+    ctx.on('ready', async () => {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
+        await db.ensureIndexes(
+            StorageModel.coll,
+            { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+        );
+        if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+            await ScheduleModel.add({
+                type: 'schedule',
+                subType: 'storage.prune',
+                executeAfter: moment().startOf('hour').toDate(),
+                interval: [1, 'hour'],
+            });
+        }
+    });
+}
 
 global.Hydro.model.storage = StorageModel;
 export default StorageModel;
