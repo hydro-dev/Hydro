@@ -38,7 +38,7 @@ export default class Watcher extends Service {
     private declined: Set<string>;
     private stashed = new Set<string>();
 
-    constructor(public ctx: Context, private config: any) {
+    constructor(public ctx: Context) {
         super(ctx, 'watcher', true);
         this.externals = new Set(Object.keys(require.cache));
     }
