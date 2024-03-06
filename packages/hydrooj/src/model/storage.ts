@@ -141,8 +141,12 @@ export function apply(ctx: Context) {
         c.worker.addHandler('storage.prune', cleanFiles);
     });
     ctx.on('domain/delete', async (domainId) => {
-        const files = await StorageModel.list(`problem/${domainId}`);
-        await StorageModel.del(files.map((i) => i.path));
+        const [problemFiles, contestFiles, trainingFiles] = await Promise.all([
+            StorageModel.list(`problem/${domainId}`),
+            StorageModel.list(`contest/${domainId}`),
+            StorageModel.list(`training/${domainId}`),
+        ]);
+        await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
     });
     ctx.on('ready', async () => {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
