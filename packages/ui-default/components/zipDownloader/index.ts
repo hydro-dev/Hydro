@@ -19,8 +19,8 @@ streamsaver.mitm = `${window.isSecureContext ? '' : 'https://hydro.ac'}/streamsa
 
 const waitForWritableStream = window.WritableStream
   ? Promise.resolve()
-  : import('web-streams-polyfill/dist/ponyfill.es6').then(({ WritableStream }) => {
-    window.WritableStream = WritableStream;
+  : import('web-streams-polyfill').then(({ WritableStream }) => {
+    window.WritableStream = WritableStream as any;
     streamsaver.WritableStream = window.WritableStream;
   });
 

@@ -49,6 +49,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         const status = await db.db.admin().serverStatus();
         info.dbVersion = status.version;
     } catch (e) { }
+    await bus.serial('monitor/collect', info);
     const payload = dump(info, {
         replacer: (key, value) => {
             if (typeof value === 'function') return '';

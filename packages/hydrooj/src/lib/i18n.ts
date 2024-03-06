@@ -21,7 +21,7 @@ class I18nService extends Service {
     load(lang: string, content: Record<string, string>) {
         translations[lang] ||= [];
         translations[lang].unshift(content);
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             translations[lang] = translations[lang].filter((i) => i !== content);
         });
     }
@@ -35,7 +35,7 @@ class I18nService extends Service {
     }
 }
 
-Context.service('i18n');
+app.provide('i18n', undefined, true);
 app.i18n = new I18nService(app);
 
 String.prototype.translate = function translate(...languages: string[]) {

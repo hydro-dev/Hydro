@@ -300,6 +300,10 @@ export class JudgeConnectionHandler extends ConnectionHandler {
                 this.query.lang = { $in: msg.lang };
                 this.consumer?.setQuery(this.query);
             }
+            if (msg.type instanceof Array && msg.type.every((i) => typeof i === 'string')) {
+                this.query.type = { $in: msg.type };
+                this.consumer?.setQuery(this.query);
+            }
         } else if (msg.key === 'start') {
             clearTimeout(this.startTimeout);
             this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);

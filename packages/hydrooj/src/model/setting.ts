@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-import cordis from 'cordis';
+import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
@@ -300,11 +300,10 @@ declare module '../context' {
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     function method(this: cordis.Service, ...args: Parameters<F>) {
         const res = origFunc(...args);
-        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
     };
 
 export class SettingService extends Service {
-    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
     PreferenceSetting = T(PreferenceSetting);
     AccountSetting = T(AccountSetting);
     DomainSetting = T(DomainSetting);
@@ -312,16 +311,16 @@ export class SettingService extends Service {
     SystemSetting = T(SystemSetting);
     constructor(ctx: Context) {
         super(ctx, 'setting', true);
+        ctx.mixin('setting', ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting']);
     }
 
     get(key: string) {
-        return (this.caller ? this.caller.domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
+        return (this[Context.current] ? this[Context.current].domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
     }
 }
 
 export async function apply(ctx: Context) {
-    Context.service('setting', SettingService);
-    ctx.setting = new SettingService(ctx);
+    ctx.plugin(SettingService);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
