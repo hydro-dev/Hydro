@@ -57,7 +57,6 @@
         "ws": "^8.16.0"
     },
     "devDependencies": {
-        "@cordisjs/plugin-hmr": "0.1.1",
         "@types/adm-zip": "^0.4.34",
         "@types/fs-extra": "^11.0.4",
         "@types/js-yaml": "^4.0.9",
@@ -73,6 +72,7 @@
         "@types/semver": "^7.5.8",
         "@types/superagent": "^8.1.4",
         "@types/tar": "^6.1.11",
+        "chokidar": "^3.6.0",
         "moment": "^2.30.1"
     }
 }

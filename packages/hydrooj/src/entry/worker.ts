@@ -41,15 +41,7 @@ export async function apply(ctx: Context) {
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
-    if (argv.options.watch) {
-        const root = [path.resolve(process.cwd())];
-        if (process.env.WATCH_ROOT) root.push(process.env.WATCH_ROOT);
-        ctx.plugin(require('@cordisjs/plugin-hmr'), {
-            root,
-            ignored: ['node_modules', '.git', 'logs', '.cache', '.yarn']
-                .map((i) => `**/${i}/**`).concat('**/tsconfig.tsbuildinfo'),
-        });
-    }
+    if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
     await ctx.root.start();
     require('../lib/index');
     await lib(pending, fail, ctx);
