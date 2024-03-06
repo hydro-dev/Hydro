@@ -479,12 +479,12 @@ class NotFoundHandler extends Handler {
 }
 
 export class RouteService extends Service {
-    static readonly methods = ['Route', 'Connection', 'withHandlerClass'];
     private registry = {};
     private registrationCount = Counter();
 
-    constructor(ctx) {
+    constructor(ctx: Context) {
         super(ctx, 'server', true);
+        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
     }
 
     private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
@@ -498,7 +498,7 @@ export class RouteService extends Service {
         this.registrationCount[name]++;
         const res = func(...args);
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             res();
@@ -508,7 +508,7 @@ export class RouteService extends Service {
     public withHandlerClass(name: string, callback: (HandlerClass: typeof HandlerCommon) => any) {
         if (this.registry[name]) callback(this.registry[name]);
         this.ctx.on(`handler/register/${name}`, callback);
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             this.ctx.off(`handler/register/${name}`, callback);
         });
     }
@@ -531,7 +531,7 @@ declare module '../context' {
 }
 
 export async function apply(pluginContext: Context) {
-    Context.service('server', RouteService);
+    pluginContext.provide('server', undefined, true);
     pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
     if (process.env.HYDRO_CLI) return;

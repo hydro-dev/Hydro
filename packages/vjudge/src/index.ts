@@ -171,7 +171,7 @@ class VJudgeService extends Service {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
             this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
         }
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             // TODO dispose session
         });
     }
@@ -193,7 +193,6 @@ export { BasicFetcher } from './fetch';
 export { VERDICT } from './verdict';
 export * from './interface';
 
-Context.service('vjudge', VJudgeService);
 export const name = 'vjudge';
 export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
@@ -205,6 +204,7 @@ export async function apply(ctx: Context) {
         vjudge.addProvider(k, v);
     }
     // });
+    ctx.provide('vjudge');
     ctx.vjudge = vjudge;
     ctx.check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
         const working = [];

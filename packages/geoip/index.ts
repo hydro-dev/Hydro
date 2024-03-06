@@ -13,7 +13,11 @@ export interface Result {
     display: string
 }
 
-class GeoIPService extends Service {
+export default class GeoIPService extends Service {
+    constructor(ctx: Context) {
+        super(ctx, 'geoip', true);
+    }
+
     provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';
     lookup(ip: string, locale: string): Result {
         const res: any = reader.get(ip);
@@ -30,7 +34,8 @@ class GeoIPService extends Service {
         return ret;
     }
 }
-export function apply(ctx: Context) {
-    Context.service('geoip', GeoIPService);
-    ctx.geoip = new GeoIPService(ctx, 'geoip', true);
+
+export async function apply(ctx: Context) {
+    ctx.provide('geoip');
+    ctx.geoip = new GeoIPService(ctx);
 }

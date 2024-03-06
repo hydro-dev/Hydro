@@ -135,7 +135,7 @@ class ImportHojHandler extends Handler {
 export const name = 'import-hoj';
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_hoj', '/problem/import/hoj', ImportHojHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.inject('ProblemAdd', 'problem_import_hoj', { icon: 'copy', text: 'From HOJ Export' });
+    ctx.injectUI('ProblemAdd', 'problem_import_hoj', { icon: 'copy', text: 'From HOJ Export' });
     ctx.i18n.load('zh', {
         'From HOJ Export': '从 HOJ 导入',
     });

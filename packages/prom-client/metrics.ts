@@ -9,8 +9,6 @@ declare module 'hydrooj' {
     }
 }
 
-Context.service('metrics');
-
 export function createRegistry(ctx: Context) {
     const registry = new Registry();
 
@@ -77,6 +75,7 @@ export function createRegistry(ctx: Context) {
 
     collectDefaultMetrics({ register: registry });
 
+    ctx.provide('metrics');
     ctx.metrics = registry;
     return registry;
 }

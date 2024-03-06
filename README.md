@@ -108,7 +108,7 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.10.7 / 4.49.5
+### Hydro 4.10.7 / UI 4.49.5
 - core: 优化比赛成绩版按照小组筛选
 - core: inject -> injectUI
 - core: 修复一处内存泄漏

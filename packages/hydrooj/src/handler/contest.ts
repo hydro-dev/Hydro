@@ -57,20 +57,6 @@ registerResolver(
     'Get a contest by ID',
 );
 
-ScheduleModel.Worker.addHandler('contest', async (doc) => {
-    const tdoc = await contest.get(doc.domainId, doc.tid);
-    if (!tdoc) return;
-    const tasks = [];
-    for (const op of doc.operation) {
-        if (op === 'unhide') {
-            for (const pid of tdoc.pids) {
-                tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
-            }
-        }
-    }
-    await Promise.all(tasks);
-});
-
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('group', Types.Name, true)
@@ -776,4 +762,17 @@ export async function apply(ctx: Context) {
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_balloon', '/contest/:tid/balloon', ContestBalloonHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.worker.addHandler('contest', async (doc) => {
+        const tdoc = await contest.get(doc.domainId, doc.tid);
+        if (!tdoc) return;
+        const tasks = [];
+        for (const op of doc.operation) {
+            if (op === 'unhide') {
+                for (const pid of tdoc.pids) {
+                    tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
+                }
+            }
+        }
+        await Promise.all(tasks);
+    });
 }

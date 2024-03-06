@@ -142,7 +142,7 @@ class FpsProblemImportHandler extends Handler {
 
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.inject('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
+    ctx.injectUI('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
     ctx.i18n.load('zh', {
         'From FPS File': '从 FPS 文件导入',
     });

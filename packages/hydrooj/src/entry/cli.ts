@@ -107,6 +107,7 @@ export async function load(ctx: Context) {
         lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
+    ctx.plugin(require('../service/worker'));
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     await setting(pending, fail, require('../model/setting'));
