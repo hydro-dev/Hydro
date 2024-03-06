@@ -18,6 +18,7 @@ export class WorkerService extends Service {
 
     constructor(ctx: Context) {
         super(ctx, 'worker', true);
+        this.consume();
     }
 
     async getFirst() {

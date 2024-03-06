@@ -73,6 +73,6 @@ check.addChecker('Setting', async (ctx, log, warn) => {
 });
 
 export async function apply(ctx: Context) {
-    ctx.provide('check', CheckService);
+    ctx.provide('check', CheckService, true);
     ctx.check = check;
 }
