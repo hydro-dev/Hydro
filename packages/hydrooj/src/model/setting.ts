@@ -320,8 +320,7 @@ export class SettingService extends Service {
 }
 
 export async function apply(ctx: Context) {
-    ctx.provide('setting');
-    ctx.setting = new SettingService(ctx);
+    ctx.plugin(SettingService);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {

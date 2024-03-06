@@ -60,7 +60,8 @@ export class ApiMixin extends Service {
     injectUI = T(inject);
     broadcast = (event: keyof EventMap, ...payload) => this.ctx.emit('bus/broadcast', event, payload);
     constructor(ctx) {
-        super(ctx, 'api', true);
+        super(ctx, '$api', true);
+        ctx.mixin('$api', ['addScript', 'setImmediate', 'provideModule', 'injectUI', 'broadcast']);
     }
 }
 
@@ -69,8 +70,7 @@ export class Context extends cordis.Context {
 
     constructor(config: {} = {}) {
         super(config);
-        this.mixin('$api', ['addScript', 'setImmediate', 'provideModule', 'injectUI', 'broadcast']);
-        this.provide('$api', new ApiMixin(this), true);
+        this.plugin(ApiMixin);
     }
 
     /** @deprecated use `ctx.root` instead */

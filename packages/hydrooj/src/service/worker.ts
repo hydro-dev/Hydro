@@ -82,3 +82,8 @@ export class WorkerService extends Service {
         await this.promise;
     }
 }
+
+export async function apply(ctx: Context) {
+    ctx.provide('worker', undefined, true);
+    ctx.worker = new WorkerService(ctx);
+};
