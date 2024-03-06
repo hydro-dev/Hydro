@@ -27,9 +27,7 @@ export type MainScope = cordis.MainScope<Context>;
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
 export interface Context {
-    // FIXME(Shigma)
-    // @ts-ignore
-    [Context.events]: Events<this>;
+    [Context.events]: Events<Context>;
     loader: Loader;
     Route: typeof import('./service/server').Route;
     Connection: typeof import('./service/server').Connection;
@@ -78,11 +76,6 @@ export class Context extends cordis.Context {
     /** @deprecated use `ctx.root` instead */
     get app() {
         return this.root;
-    }
-
-    /** @deprecated use `root.config` instead */
-    get options() {
-        return this.root.config;
     }
 }
 
