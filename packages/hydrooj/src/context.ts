@@ -27,6 +27,8 @@ export type MainScope = cordis.MainScope<Context>;
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
 export interface Context {
+    // FIXME(Shigma)
+    // @ts-ignore
     [Context.events]: Events<this>;
     loader: Loader;
     Route: typeof import('./service/server').Route;
