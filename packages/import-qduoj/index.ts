@@ -150,7 +150,7 @@ class ImportQduojHandler extends Handler {
 export const name = 'import-qduoj';
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_qduoj', '/problem/import/qduoj', ImportQduojHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.inject('ProblemAdd', 'problem_import_qduoj', { icon: 'copy', text: 'From QDUOJ Export' });
+    ctx.injectUI('ProblemAdd', 'problem_import_qduoj', { icon: 'copy', text: 'From QDUOJ Export' });
     ctx.i18n.load('zh', {
         'From QDUOJ Export': '从 QDUOJ 导入',
     });

@@ -86,4 +86,4 @@ export class WorkerService extends Service {
 export async function apply(ctx: Context) {
     ctx.provide('worker', undefined, true);
     ctx.worker = new WorkerService(ctx);
-};
+}
