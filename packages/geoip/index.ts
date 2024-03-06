@@ -34,3 +34,8 @@ export default class GeoIPService extends Service {
         return ret;
     }
 }
+
+export async function apply(ctx: Context) {
+    ctx.provide('geoip');
+    ctx.geoip = new GeoIPService(ctx);
+}
