@@ -325,20 +325,23 @@ export async function extractZip(zip: AdmZip, dest: string, overwrite = false, s
 
 export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
     try {
-        await req.buffer(false).timeout({
-            response: Math.min(10000, timeout),
-            deadline: timeout,
-        }).parse((resp, cb) => {
-            if (resp.statusCode !== 200) throw new Error(`${resp.statusCode}`);
-            else {
-                resp.pipe(w);
-                resp.on('end', () => {
-                    cb(null, undefined);
-                });
-                resp.on('error', (err) => {
-                    cb(err, undefined);
-                });
-            }
+        await new Promise((resolve, reject) => {
+            req.buffer(false).timeout({
+                response: Math.min(10000, timeout),
+                deadline: timeout,
+            }).parse((resp, cb) => {
+                if (resp.statusCode !== 200) throw new Error(`${resp.statusCode}`);
+                else {
+                    resp.pipe(w);
+                    resp.on('end', () => {
+                        cb(null, undefined);
+                        resolve(null);
+                    });
+                    resp.on('error', (err) => {
+                        cb(err, undefined);
+                    });
+                }
+            }).catch(reject);
         });
     } catch (e) {
         throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message})`);
