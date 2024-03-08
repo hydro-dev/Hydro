@@ -24,7 +24,7 @@
       </div>
     </div>
     <div class="section">
-      <div class="section__body typo">
+      <div class="section__body typo richmedia">
         {{ tdoc['content']|markdown|safe }}
       {% if model.contest.isOngoing(tdoc, tsdoc) %}
         <blockquote class="warn">

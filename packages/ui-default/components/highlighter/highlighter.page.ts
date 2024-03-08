@@ -17,7 +17,7 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
       $container.find('pre code').get().forEach((code) => {
         const $code = $(code);
         const $root = $code.parent().parent();
-        const $typo = $code.closest('.typo');
+        const $typo = $code.closest('.richmedia');
         const language = ($(code).attr('class') || '').trim();
         const m = language.match(/language-input([0-9]+)/);
         if (m?.[1]) {
