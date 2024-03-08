@@ -12,7 +12,7 @@ async function historyDialog(payload, time, uid) {
   const rawHtml = await fetch(`${payload}?time=${ts}&render=1`).then((res) => res.text());
   new InfoDialog({
     $body: tpl`
-      <div class="typo">
+      <div class="typo richmedia">
         <p><div data-user>${uid}</div> ${i18n('Edited at')} <span class="time relative" data-timestamp="${ts / 1000}">${time}</span></p>
         ${{ templateRaw: true, html: rawHtml }}
       </div>`,
