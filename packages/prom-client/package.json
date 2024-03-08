@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/prom-client",
-    "version": "0.1.7",
+    "version": "0.1.8",
     "main": "index.ts",
     "dependencies": {
         "prom-client": "^15.1.0"

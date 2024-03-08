@@ -108,6 +108,15 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.11.0 / UI 4.49.6
+- core: 升级至 cordis@3
+- core: 优化 katex 处理
+- core: 添加 monitor/collect 钩子
+- judge: 修复 analysis
+- judge: 修复独立评测机首次同步测试数据错误的问题
+- migrate: 优化 hustoj 导入
+- ui: 修复部分区域 katex 错误渲染的问题
+
 ### Hydro 4.10.7 / UI 4.49.5
 - core: 优化比赛成绩版按照小组筛选
 - core: inject -> injectUI
