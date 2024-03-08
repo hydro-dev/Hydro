@@ -25,7 +25,7 @@
             {{ datetimeSpan(ddoc._id)|safe }}
           </li>
         </ul>
-        <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
+        <div class="typo topic__content richmedia" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
           {{ ddoc['content']|markdown|safe }}
         </div>
       </div>
