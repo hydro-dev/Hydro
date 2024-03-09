@@ -50,7 +50,7 @@ async function chooseAction(authn?: boolean) {
         <div>
           <label>${i18n('6-Digit Code')}  
             <div class="textbox-container">
-              <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
+              <input class="textbox" type="number" name="tfa_code" autocomplete="off" oninput="if(value.length>6)value=value.slice(0,6)">
             </div>
           </label>
           <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
@@ -60,7 +60,7 @@ async function chooseAction(authn?: boolean) {
     $action: [],
     canCancel: false,
     onDispatch(action) {
-      if (action === 'tfa' && $('[name="tfa_code"]').val() === null) {
+      if (action === 'tfa' && $('[name="tfa_code"]').val() === '') {
         $('[name="tfa_code"]').focus();
         return false;
       }
