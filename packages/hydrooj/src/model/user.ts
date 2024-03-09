@@ -238,8 +238,8 @@ class UserModel {
     }
 
     @ArgMethod
-    static async getByUname(domainId: string, uname: string): Promise<User | null> {
-        const unameLower = uname.trim().toLowerCase();
+    static async getByUname(domainId: string, uname: any): Promise<User | null> {
+        const unameLower = String(uname).trim().toLowerCase();
         if (cache.has(`name/${unameLower}/${domainId}`)) return cache.get(`name/${unameLower}/${domainId}`);
         const udoc = (await coll.findOne({ unameLower })) || await collV.findOne({ unameLower });
         if (!udoc) return null;
