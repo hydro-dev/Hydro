@@ -50,7 +50,7 @@ async function chooseAction(authn?: boolean) {
         <div>
           <label>${i18n('6-Digit Code')}  
             <div class="textbox-container">
-              <input value="${i18n('Use Authenticator')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
+              <input class="textbox" type="number" name="tfa_code" autocomplete="off" autofocus>
             </div>
           </label>
           <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
