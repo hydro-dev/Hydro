@@ -65,6 +65,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     csrf: string;
+    taskQueue: number[] = [];
 
     getCookie(target: string) {
         return this.cookie.find((i) => i.startsWith(`${target}=`))?.split('=')[1]?.split(';')[0];
@@ -270,12 +271,25 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
+    async waitRatelimit() {
+        const nowTime = Date.now();
+        while (this.taskQueue.length > 0 && nowTime - this.taskQueue[0] > 5 * 60 * 1000) this.taskQueue = this.taskQueue.slice(1);
+        if (this.taskQueue.length < 20) return;
+        const waitTime = nowTime - this.taskQueue[0];
+        await sleep(waitTime);
+        await this.waitRatelimit();
+    }
+
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
         const [type, contestId, problemId] = parseProblemId(id);
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
+
+        await this.waitRatelimit();
+        this.taskQueue.push(Date.now());
+
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
         const { text: submit } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
@@ -308,7 +322,6 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
 
     async waitForSubmission(id: string, next, end) {
         let i = 1;
-        const start = Date.now();
         // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
@@ -354,8 +367,5 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             });
             break;
         }
-        // TODO better rate limiting
-        // Codeforces only allow 20 submission per 5 minute
-        if (Date.now() - start < 16000) await sleep(Date.now() - start);
     }
 }
