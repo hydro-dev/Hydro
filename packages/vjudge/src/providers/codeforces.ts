@@ -277,7 +277,6 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         if (this.taskQueue.length < 20) return;
         const waitTime = nowTime - this.taskQueue[0];
         await sleep(waitTime);
-        await this.waitRatelimit();
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
