@@ -271,12 +271,11 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
-    async waitRatelimit() {
+    getWaitTime() {
         const nowTime = Date.now();
         while (this.taskQueue.length > 0 && nowTime - this.taskQueue[0] > 5 * 60 * 1000) this.taskQueue = this.taskQueue.slice(1);
-        if (this.taskQueue.length < 20) return;
-        const waitTime = nowTime - this.taskQueue[0];
-        await sleep(waitTime);
+        if (this.taskQueue.length < 20) return 0;
+        return nowTime - this.taskQueue[0];
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
@@ -285,10 +284,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
-
-        await this.waitRatelimit();
         this.taskQueue.push(Date.now());
-
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
         const { text: submit } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({

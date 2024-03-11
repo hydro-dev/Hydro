@@ -38,6 +38,7 @@ export interface IBasicProvider {
     listProblem(page: number, resync: boolean, listId: string): Promise<string[]>;
     submitProblem(id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction): Promise<string | void>;
     waitForSubmission(id: string, next: NextFunction, end: NextFunction): Promise<void>;
+    getWaitTime?: () => number;
 }
 
 export interface BasicProvider {
