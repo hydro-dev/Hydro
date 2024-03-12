@@ -275,7 +275,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const nowTime = Date.now();
         while (this.taskQueue.length > 0 && nowTime - this.taskQueue[0] > 5 * 60 * 1000) this.taskQueue = this.taskQueue.slice(1);
         if (this.taskQueue.length < 20) return 0;
-        return nowTime - this.taskQueue[0];
+        return this.taskQueue[0] + 5 * 60 * 1000 - nowTime;
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
