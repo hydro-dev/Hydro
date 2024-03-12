@@ -44,7 +44,7 @@ function _descriptor(v: ParamOption<any>) {
             const originalMethod = obj.value;
             const val = originalMethod.toString();
             const firstArg = val.split(')')[0]?.split(',')[0]?.split('(')[1]?.trim() || '';
-            const domainIdStyle = firstArg.toLowerCase().includes('domainid');
+            const domainIdStyle = firstArg.toLowerCase().startsWith('domainid');
             target.__param[target.constructor.name][funcName] = [];
             obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
