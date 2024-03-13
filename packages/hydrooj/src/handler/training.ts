@@ -105,7 +105,7 @@ class TrainingDetailHandler extends Handler {
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
+            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 }, enroll: 1 })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             shouldCompare = uid !== this.user._id;
         } else uid = this.user._id;
