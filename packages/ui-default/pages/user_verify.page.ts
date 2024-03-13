@@ -45,7 +45,7 @@ async function chooseAction(authn?: boolean) {
         <h3>${i18n('Two Factor Authentication')}</h3>
         <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
         <div style="${authn ? '' : 'display:none;'}">
-          <button class="expanded rounded primary button" data-action="webauthn" data-autofocus data-press>${i18n('Use Authenticator')}</button>
+          <button class="expanded rounded primary button" data-action="webauthn" data-autofocus>${i18n('Use Authenticator')}</button>
         </div>
         <div>
           <label>${i18n('6-Digit Code')}  
@@ -53,7 +53,7 @@ async function chooseAction(authn?: boolean) {
               <input class="textbox" type="number" name="tfa_code" autocomplete="off" data-autofocus>
             </div>
           </label>
-          <button class="expanded rounded primary button" data-action="tfa" data-press>${i18n('Use TFA Code')}</button>
+          <button class="expanded rounded primary button" data-action="tfa">${i18n('Use TFA Code')}</button>
         </div>
       </div>
       `,
@@ -92,7 +92,7 @@ export default new AutoloadPage('user_verify', () => {
         if (event.key === 'Enter') {
           const code = $('[name="tfa_code"]').val() as string;
           if (code) $('[data-action="tfa"]').trigger('click');
-          else $('[data-press]').trigger('click');
+          else $('[data-action]').trigger('click');
         }
       };
       $(document).on('keydown', handleKeyDown);
