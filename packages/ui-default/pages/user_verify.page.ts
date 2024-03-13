@@ -45,7 +45,7 @@ async function chooseAction(authn?: boolean) {
         <h3>${i18n('Two Factor Authentication')}</h3>
         <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
         <div style="${authn ? '' : 'display:none;'}">
-          <button class="expanded rounded primary button" data-action="webauthn" data-autofocus>${i18n('Use Authenticator')}</button>
+          <button class="expanded rounded primary button" data-action="webauthn">${i18n('Use Authenticator')}</button>
         </div>
         <div>
           <label>${i18n('6-Digit Code')}  
