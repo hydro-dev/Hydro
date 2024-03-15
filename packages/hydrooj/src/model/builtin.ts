@@ -115,7 +115,7 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
-    Permission('perm_record', PERM.PERM_VIEW_RECORD, 'View other\'s records'),
+    Permission('perm_record', PERM.PERM_VIEW_RECORD, "View other's records"),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read all record codes'),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE_ACCEPT, 'Read record codes after accept'),
     Permission('perm_record', PERM.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),

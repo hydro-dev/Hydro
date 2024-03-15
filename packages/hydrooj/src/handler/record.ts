@@ -290,7 +290,6 @@ class RecordMainConnectionHandler extends ConnectionHandler {
                 else throw new UserNotFoundError(uidOrName);
             }
         }
-        // TODO: allow judger to view all records
         if (this.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (pid) {
             const pdoc = await problem.get(domainId, pid);

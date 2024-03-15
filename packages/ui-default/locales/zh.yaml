@@ -46,6 +46,7 @@ __langname: 简体中文
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
+"View other's records": 查看他人的记录
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
 (leave blank if none): （若不需要则留空）
@@ -1009,7 +1010,6 @@ View homework: 查看作业
 View Homework: 查看作业
 View or create discussion: 查看与发表讨论
 View or submit solution: 查看与发表题解
-View other\'s records: 查看他人的记录
 View Owned Problems: 查看自己的题目
 View Owned Training Plans: 查看自己的训练计划
 View problem solutions: 查看题解
