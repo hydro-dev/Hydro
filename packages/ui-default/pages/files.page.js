@@ -92,7 +92,7 @@ function handleDrop(ev) {
   handleClickUpload(files);
 }
 
-const page = new NamedPage(['home_files', 'contest_manage', 'training_files'], () => {
+const page = new NamedPage(['home_files', 'contest_manage', 'training_files', 'homework_files'], () => {
   $(document).on('click', '[name="upload_file"]', () => handleClickUpload());
   $(document).on('click', '[name="remove_selected"]', () => handleClickRemoveSelected());
   $(document).on('dragover', '.files', (ev) => handleDragOver(ev));

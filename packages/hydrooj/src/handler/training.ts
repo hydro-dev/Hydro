@@ -168,14 +168,6 @@ class TrainingDetailHandler extends Handler {
         await training.enroll(domainId, tdoc.docId, this.user._id);
         this.back();
     }
-
-    @param('tid', Types.ObjectId)
-    async postDelete(domainId: string, tid: ObjectId) {
-        const tdoc = await training.get(domainId, tid);
-        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        await training.del(domainId, tid);
-        this.response.redirect = this.url('training_main');
-    }
 }
 
 class TrainingEditHandler extends Handler {
@@ -205,7 +197,7 @@ class TrainingEditHandler extends Handler {
     @param('dag', Types.Content)
     @param('pin', Types.UnsignedInt)
     @param('description', Types.Content)
-    async post(
+    async postUpdate(
         domainId: string, tid: ObjectId,
         title: string, content: string,
         _dag: string, pin = 0, description: string,
@@ -223,6 +215,17 @@ class TrainingEditHandler extends Handler {
         }
         this.response.body = { tid };
         this.response.redirect = this.url('training_detail', { tid });
+    }
+
+    @param('tid', Types.ObjectId)
+    async postDelete(domainId: string, tid: ObjectId) {
+        const tdoc = await training.get(domainId, tid);
+        if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
+        await Promise.all([
+            training.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `training/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
+        this.response.redirect = this.url('training_main');
     }
 }
 
@@ -275,7 +278,7 @@ export class TrainingFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `training/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

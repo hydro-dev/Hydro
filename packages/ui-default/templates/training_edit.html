@@ -40,7 +40,7 @@
           </div></div>
           <div class="row"><div class="columns">
           {% if page_name == 'training_edit' %}
-            <button type="submit" class="rounded primary button">
+            <button name="operation" value="update" type="submit" class="rounded primary button">
               {{ _('Update') }}
             </button>
             {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING) %}
@@ -49,7 +49,7 @@
               </button>
             {% endif %}
           {% else %}
-            <button type="submit" class="rounded primary button">
+            <button name="operation" value="update" type="submit" class="rounded primary button">
               {{ _('Create') }}
             </button>
           {% endif %}

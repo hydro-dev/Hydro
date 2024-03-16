@@ -20,6 +20,7 @@ import ScheduleModel from './model/schedule';
 import StorageModel from './model/storage';
 import * as system from './model/system';
 import TaskModel from './model/task';
+import * as training from './model/training';
 import user from './model/user';
 import {
     iterateAllContest,
@@ -628,6 +629,23 @@ const scripts: UpgradeScript[] = [
                     await discussion.del(_id, ddoc.docId);
                 }
             }
+        });
+    },
+    async function _86_87() {
+        logger.info('Removing unused files...');
+        return await iterateAllDomain(async ({ _id }) => {
+            logger.info('Processing domain %s', _id);
+            const contestFilesList = await StorageModel.list(`contest/${_id}`);
+            const trainingFilesList = await StorageModel.list(`training/${_id}`);
+            const tdocs = await contest.getMulti(_id, {}).toArray();
+            const trdocs = await training.getMulti(_id, {}).toArray();
+            let existsFilesList = [];
+            for (const tdoc of tdocs) existsFilesList = existsFilesList.concat(tdoc.files.map((i) => `contest/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(contestFilesList.filter((i) => !existsFilesList.includes(i.name)).map((i) => i.name));
+            existsFilesList = [];
+            for (const tdoc of trdocs) existsFilesList = existsFilesList.concat(tdoc.files.map((i) => `training/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(trainingFilesList.filter((i) => !existsFilesList.includes(i.name)).map((i) => i.name));
+            logger.info('Domain %s done', _id);
         });
     },
 ];

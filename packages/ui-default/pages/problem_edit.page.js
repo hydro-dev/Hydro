@@ -156,10 +156,10 @@ async function handleSection(ev, sidebar, type) {
 
 export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
   let confirmed = false;
-  $(document).on('click', '[name="operation"]', (ev) => {
+  $(document).on('click', '[value="delete"]', (ev) => {
     ev.preventDefault();
     if (confirmed) {
-      return request.post('.', { operation: 'delete' }).then((res) => {
+      return request.post('', { operation: 'delete' }).then((res) => {
         window.location.href = res.url;
       }).catch((e) => {
         Notification.error(e.message);

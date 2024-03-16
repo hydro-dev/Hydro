@@ -64,7 +64,7 @@
           <textarea name="content" class="textbox hasjs--hide" data-markdown-upload style="height: 500px">{% if pdoc %}{{ pdoc['content']|toString }}{% else %}{% include 'partials/problem_default.md' %}{% endif %}</textarea>
           <div class="row"><div class="columns">
           {% if page_name == 'problem_edit' %}
-            <button type="submit" class="rounded primary button">
+            <button name="operation" value="update" type="submit" class="rounded primary button">
               {{ _('Update') }}
             </button>
             {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
@@ -73,7 +73,7 @@
               </button>
             {% endif %}
           {% else %}
-            <button type="submit" class="rounded primary button">
+            <button name="operation" value="update" type="submit" class="rounded primary button">
               {{ _('Create') }}
             </button>
           {% endif %}
