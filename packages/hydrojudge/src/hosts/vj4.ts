@@ -151,6 +151,7 @@ export default class VJ4 implements Session {
             const zip = new AdmZip(tmpFilePath);
             const entries = zip.getEntries();
             if (entries.length > 512) throw new FormatError('Too many files');
+            if (Math.sum(entries.map((i) => i.header.size)) > 256 * 1024 * 1024) throw new FormatError('File too large');
             await new Promise((resolve, reject) => {
                 zip.extractAllToAsync(savePath, true, (e) => {
                     if (e) reject(e);
