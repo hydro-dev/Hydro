@@ -24,29 +24,6 @@ LANG=zh . <(curl https://hydro.ac/setup.sh)
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
 
-## Merry Christmas and Happy new year
-
-```
-                                                    .''.
-                        .''.      .        *''*    :_\/_:
-                       :_\/_:   _\(/_  .:.*_\/_*   : /\ :
-                   .''.: /\ :   ./)\   ':'* /\ * :  '..'.
-                  :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_
-                  : /\ : :::::     *_\/_*     -= o =-  /)\
-                   '..'  ':::'     * /\ *     .'/.\'.   '
-                                    *..*         :
-             *
-     *      /.\   *       *           .   *
-  .        /..'\     .     .     * .
-          */'.'\*       . .          .     *   *
-      *   /.''.'\    *     .  .     .   *
-.        */.'.'.\*
-...".""""/'.''.'.\""."."...
-         ^^^[_]^^^*
-```
-
-I wish you all a Merry Christmas and a peaceful New Year 2024.
-
 ## 系统特点
 
 ### 模块化设计，插件系统，功能热插拔
@@ -130,6 +107,42 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.11.0 / UI 4.49.6
+- core: 升级至 cordis@3
+- core: 优化 katex 处理
+- core: 添加 monitor/collect 钩子
+- judge: 修复 analysis
+- judge: 修复独立评测机首次同步测试数据错误的问题
+- migrate: 优化 hustoj 导入
+- ui: 修复部分区域 katex 错误渲染的问题
+
+### Hydro 4.10.7 / UI 4.49.5
+- core: 优化比赛成绩版按照小组筛选
+- core: inject -> injectUI
+- core: 修复一处内存泄漏
+- ui: 支持 `/record?nopush=1`
+- judge: 修复错误的测试数据被缓存的问题 (#726)
+- judge: 比赛时不显示 `RuntimeError` 详情
+- core: 比赛中题目文件跳过 PERM_VIEW_PROBLEM 检查
+
+### Hydro 4.10.5 / UI 4.49.4
+
+- judge: 性能优化 (thanks @criyle)
+- utils: 解离 @hydrooj/register
+- core: 对客观题禁用测试点数量检查
+- core: 登入时切换 sessionId
+- core: 优化 require hook
+- core: 修复高并发下用户创建失败问题
+- prom-client: 支持推送至 pushgateway
+- core&ui: 压缩评测列表页 ws 传输
+- utils: 优化测试点识别
+- ui: 移除 serializer 函数
+- core: 添加 SettingService
+- fps: 支持 `[md]` 标签
+- vjudge: codeforces: 添加频率限制
+- migrate: hustoj: 支持 remote_oj 字段
+- core: 其他漏洞修复
 
 ### Hydro 4.10.3 / UI 4.49.3
 

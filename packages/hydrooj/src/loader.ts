@@ -18,7 +18,6 @@ import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
-import { inject } from './lib/ui';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -35,7 +34,6 @@ export function resolveConfig(plugin: any, config: any) {
     if (schema && plugin['schema'] !== false) config = schema(config);
     return config;
 }
-Context.service('loader');
 
 const timeout = Symbol.for('loader.timeout');
 const showLoadTime = argv.options.showLoadTime;
@@ -44,7 +42,7 @@ export class Loader {
     static readonly Record = Symbol.for('loader.record');
 
     public app: Context;
-    public config: Context.Config;
+    public config: {};
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
 
@@ -130,7 +128,7 @@ export function addon(addonPath: string, prepend = false) {
     } catch (e) {
         logger.error(`Addon not found: ${addonPath}`);
         logger.error(e);
-        inject('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+        app.injectUI('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
     }
 }
 
@@ -148,8 +146,8 @@ export function addScript(name: string, description: string) {
     };
 }
 
-Context.service('loader');
 const loader = new Loader();
+app.provide('loader');
 app.loader = loader;
 loader.app = app;
 app.state[Loader.Record] = Object.create(null);

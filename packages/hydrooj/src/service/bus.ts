@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
-import type {
-    Db, Filter, ObjectId, OnlyFieldsOfType,
+import {
+    BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
@@ -47,6 +47,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'system/setting': (args: Record<string, any>) => VoidReturn
     'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
+    'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
 
@@ -111,10 +112,10 @@ try {
     pm2.launchBus((err, bus) => {
         if (err) throw new Error();
         bus.on('hydro:broadcast', (packet) => {
-            (app.parallel as any)(packet.data.event, ...packet.data.payload);
+            (app.parallel as any)(packet.data.event, ...BSON.EJSON.parse(packet.data.payload));
         });
         app.on('bus/broadcast', (event, payload) => {
-            process.send({ type: 'hydro:broadcast', data: { event, payload } });
+            process.send({ type: 'hydro:broadcast', data: { event, payload: BSON.EJSON.stringify(payload) } });
         });
         console.debug('Using pm2 event bus');
     });

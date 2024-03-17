@@ -138,7 +138,7 @@ export async function apply(ctx: Context) {
   ctx.on('app/started', buildUI);
   const debouncedBuildUI = debounce(buildUI, 2000, { trailing: true });
   const triggerHotUpdate = (path?: string) => {
-    if (path && !path.includes('/ui-default/') && !path.includes('/public/')) return;
+    if (path && !path.includes('/ui-default/') && !path.includes('/public/') && !path.includes('/frontend/')) return;
     debouncedBuildUI();
   };
   ctx.on('system/setting', () => triggerHotUpdate());

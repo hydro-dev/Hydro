@@ -51,7 +51,7 @@ export default connect((state: any) => ({
         ...customOptions,
         lineNumbers: 'on',
         glyphMargin: true,
-        lightbulb: { enabled: true },
+        lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.On },
         model: this.model,
         fontLigatures: '',
       };

@@ -137,7 +137,7 @@ export class ProblemMainHandler extends Handler {
     @param('pjax', Types.Boolean)
     async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
         this.response.template = 'problem_main.html';
-        if (!limit || limit > system.get('pagination.problem') || page > 1) limit = system.get('pagination.problem');
+        if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = buildQuery(this.user);
         const psdict = {};
@@ -819,7 +819,9 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @query('type', Types.Range(['additional_file', 'testdata']), true)
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
-    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false) {
+    @query('tid', Types.ObjectId, true)
+    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false, tid: ObjectId) {
+        if (!tid) this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         if (this.pdoc.reference) {
             if (type === 'testdata') throw new ProblemIsReferencedError('download testdata');
             this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
@@ -1045,7 +1047,7 @@ export async function apply(ctx) {
     ctx.Route('problem_edit', '/p/:pid/edit', ProblemEditHandler);
     ctx.Route('problem_config', '/p/:pid/config', ProblemConfigHandler);
     ctx.Route('problem_files', '/p/:pid/files', ProblemFilesHandler, PERM.PERM_VIEW_PROBLEM);
-    ctx.Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_file_download', '/p/:pid/file/:filename', ProblemFileDownloadHandler);
     ctx.Route('problem_solution', '/p/:pid/solution', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);

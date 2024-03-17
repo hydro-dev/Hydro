@@ -4,7 +4,7 @@ import path from 'path';
 import mariadb from 'mariadb';
 import TurndownService from 'turndown';
 import {
-    _, buildContent, ContestModel, DomainModel, fs, MessageModel, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
+    _, buildContent, ContestModel, DomainModel, fs, MessageModel, moment, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
     RecordDoc, RecordModel, SolutionModel, STATUS, StorageModel, SystemModel, Time, UserModel,
 } from 'hydrooj';
 
@@ -251,9 +251,11 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
             description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
         }
+        // WHY you allow contest with end time BEFORE start time? WHY???
+        const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
         const tid = await ContestModel.add(
             domainId, tdoc.title, tdoc.description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, true,
+            adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             { _code: password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();

@@ -21,14 +21,13 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import task from '../model/task';
+import task, { Consumer } from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
     ConnectionHandler, Handler, post, subscribe, Types,
 } from '../service/server';
-import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 
@@ -45,6 +44,8 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
 function processPayload(body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
+    const $unset: any = {};
+    const $inc: any = {};
     if (body.cases?.length) {
         const c = body.cases.map(parseCaseResult);
         $push.testCases = { $each: c };
@@ -64,13 +65,18 @@ function processPayload(body: Partial<JudgeResultBody>) {
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     if (body.subtasks) $set.subtasks = body.subtasks;
-    return { $set, $push };
+    if (body.addProgress) $inc.progress = body.addProgress;
+    return {
+        $set, $push, $unset, $inc,
+    };
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
-    const { $set, $push } = processPayload(body);
-    const rdoc = await record.update(body.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    body.rid = new ObjectId(body.rid); // TODO remove this
+    const {
+        $set, $push, $unset, $inc,
+    } = processPayload(body);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
     bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
@@ -135,7 +141,7 @@ export async function postJudge(rdoc: RecordDoc) {
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
+    body.rid = new ObjectId(body.rid); // TODO remove this
     const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
@@ -148,11 +154,13 @@ export async function end(body: Partial<JudgeResultBody>) {
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    noCheckPermView = true;
+    notUsage = true;
+
     async get() {
         this.response.body = 'ok';
     }
 
-    noCheckPermView = true;
     @post('id', Types.String, true)
     @post('files', Types.Set, true)
     @post('pid', Types.UnsignedInt, true)
@@ -201,6 +209,8 @@ export async function processJudgeFileCallback(rid: ObjectId, filename: string, 
 }
 
 export class JudgeFileUpdateHandler extends Handler {
+    notUsage = true;
+
     @post('rid', Types.ObjectId)
     @post('name', Types.Filename)
     async post(domainId: string, rid: ObjectId, filename: string) {
@@ -210,25 +220,25 @@ export class JudgeFileUpdateHandler extends Handler {
     }
 }
 
-class JudgeConnectionHandler extends ConnectionHandler {
+export class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: Task[] = [];
-    started = false;
-    closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
-    rdocs: Record<string, RecordDoc> = {};
     concurrency = 1;
-    queue: PQueue = new PQueue({ concurrency: 1 });
-    callback: (res?: any) => void = null;
+    consumer: Consumer = null;
+    startTimeout: NodeJS.Timeout = null;
+    tasks: Record<string, {
+        resolve: (_: any) => void,
+        queue: PQueue,
+        domainId: string,
+        t: Task,
+    }> = {};
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
         // TODO deprecated, just for compatibility
-        setTimeout(() => {
-            if (this.started || this.closed) return;
-            this.newTask().catch((e) => logger.error(e));
-            this.started = true;
+        this.startTimeout = setTimeout(() => {
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }, 15000);
     }
 
@@ -237,81 +247,78 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
     }
 
-    async newTask() {
-        while (!this.closed) {
-            /* eslint-disable no-await-in-loop */
-            if (this.processing.length >= this.concurrency) {
-                await Promise.race([
-                    sleep(500),
-                    new Promise((resolve) => {
-                        this.callback = resolve;
-                    }),
-                ]);
-                continue;
-            }
-            const t = await task.getFirst(this.query);
-            if (!t) {
-                await sleep(500);
-                continue;
-            }
-            const rdoc = await record.get(t.domainId, t.rid);
-            if (!rdoc) continue;
+    async newTask(t: Task) {
+        const rdoc = await record.get(t.domainId, t.rid);
+        if (!rdoc) return;
 
-            this.send({ task: { ...rdoc, ...t } });
-            this.rdocs[rdoc._id.toHexString()] = rdoc;
-            this.processing.push(t);
-            await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        }
+        const rid = rdoc._id.toHexString();
+        let resolve: (_: any) => void;
+        const p = new Promise((r) => { resolve = r; });
+        this.tasks[rid] = {
+            queue: new PQueue({ concurrency: 1 }),
+            domainId: rdoc.domainId,
+            resolve,
+            t,
+        };
+        this.send({ task: { ...rdoc, ...t } });
+        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
+        await p;
+        delete this.tasks[rid];
     }
 
     async message(msg) {
-        if (!['ping', 'prio', 'config'].includes(msg.key)) {
+        if (!['ping', 'prio', 'config', 'start'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const rdoc = this.rdocs[msg.rid];
-            if (!rdoc) return;
-            msg.domainId = rdoc.domainId;
-            if (msg.key === 'next') this.queue.add(() => next(msg));
+            const t = this.tasks[msg.rid];
+            if (!t) return;
+            msg.domainId = t.domainId;
+            if (msg.key === 'next') t.queue.add(() => next(msg));
             if (msg.key === 'end') {
-                this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
-                delete this.rdocs[msg.rid];
-                this.callback?.();
-                if (!msg.nop) {
-                    this.queue.add(() => end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e)));
-                }
+                if (!msg.nop) t.queue.add(() => end({ judger: this.user._id, ...msg }));
+                t.resolve(null);
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
+            this.consumer?.setQuery(this.query);
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
+                this.consumer?.setQuery(this.query);
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
                 this.concurrency = msg.concurrency;
-                this.callback?.();
+                this.consumer?.setConcurrency(msg.concurrency);
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
+                this.consumer?.setQuery(this.query);
+            }
+            if (msg.type instanceof Array && msg.type.every((i) => typeof i === 'string')) {
+                this.query.type = { $in: msg.type };
+                this.consumer?.setQuery(this.query);
             }
         } else if (msg.key === 'start') {
-            if (this.started) return;
-            this.newTask().catch((e) => logger.error(e));
-            this.started = true;
+            clearTimeout(this.startTimeout);
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            logger.info('Judge daemon started');
         }
     }
 
     async cleanup() {
-        this.closed = true;
+        clearTimeout(this.startTimeout);
+        this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        await Promise.all(this.processing.map(async (t) => {
-            await record.reset(t.domainId, t.rid, false);
-            return await task.add(t);
+        await Promise.all(Object.values(this.tasks).map(async ({ t }) => {
+            const rdoc = await record.reset(t.domainId, t.rid, false);
+            bus.broadcast('record/change', rdoc);
+            return task.add(t);
         }));
     }
 }

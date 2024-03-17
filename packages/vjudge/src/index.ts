@@ -152,7 +152,7 @@ declare module 'hydrooj' {
 }
 
 class VJudgeService extends Service {
-    constructor(ctx) {
+    constructor(ctx: Context) {
         super(ctx, 'vjudge', false);
     }
 
@@ -171,7 +171,7 @@ class VJudgeService extends Service {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
             this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
         }
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             // TODO dispose session
         });
     }
@@ -193,28 +193,28 @@ export { BasicFetcher } from './fetch';
 export { VERDICT } from './verdict';
 export * from './interface';
 
-Context.service('vjudge', VJudgeService);
 export const name = 'vjudge';
 export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (process.env.HYDRO_CLI) return;
-    const vjudge = new VJudgeService(ctx);
-    await vjudge.start();
-    // ctx.on('app/started', () => {
-    for (const [k, v] of Object.entries(providers)) {
-        vjudge.addProvider(k, v);
-    }
-    // });
-    ctx.vjudge = vjudge;
-    ctx.check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
-        const working = [];
-        const pool = await vjudge.checkStatus(true);
-        for (const [k, v] of Object.entries(pool)) {
-            if (!v.working) error(`vjudge worker ${k}: ${v.error}`);
-            else working.push(k);
-            if (v.status) log(`vjudge worker ${k}: ${v.status}`);
+    ctx.plugin(VJudgeService);
+    ctx.inject(['vjudge'], async (c) => {
+        await c.vjudge.start();
+        for (const [k, v] of Object.entries(providers)) {
+            c.vjudge.addProvider(k, v);
         }
-        if (!working.length) warn('no vjudge worker is working');
-        log(`vjudge working workers: ${working.join(', ')}`);
+        c.inject(['check'], ({ check }) => {
+            check.addChecker('Vjudge', async (_ctx, log, warn, error) => {
+                const working = [];
+                const pool = await c.vjudge.checkStatus(true);
+                for (const [k, v] of Object.entries(pool)) {
+                    if (!v.working) error(`vjudge worker ${k}: ${v.error}`);
+                    else working.push(k);
+                    if (v.status) log(`vjudge worker ${k}: ${v.status}`);
+                }
+                if (!working.length) warn('no vjudge worker is working');
+                log(`vjudge working workers: ${working.join(', ')}`);
+            });
+        });
     });
 }

@@ -9,8 +9,6 @@ declare module 'hydrooj' {
     }
 }
 
-Context.service('metrics');
-
 export function createRegistry(ctx: Context) {
     const registry = new Registry();
 
@@ -40,7 +38,7 @@ export function createRegistry(ctx: Context) {
     const submissionCounter = createMetric(Counter, 'hydro_submission', 'submissioncount', {
         labelNames: ['lang', 'domainId'],
     });
-    ctx.on('handler/after/ProblemSubmit', (that) => {
+    ctx.on('handler/after/ProblemSubmit#post', (that) => {
         submissionCounter.inc({ lang: that.args.lang, domainId: that.args.domainId });
     });
 
@@ -77,6 +75,7 @@ export function createRegistry(ctx: Context) {
 
     collectDefaultMetrics({ register: registry });
 
+    ctx.provide('metrics');
     ctx.metrics = registry;
     return registry;
 }

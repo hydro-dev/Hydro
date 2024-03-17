@@ -50,7 +50,7 @@ export function apply(ctx: Context) {
         const [gateway, name, pass] = SystemModel.getMany(['prom-client.gateway', 'prom-client.name', 'prom-client.password']);
         if (gateway) {
             const prefix = gateway.endsWith('/') ? gateway : `${gateway}/`;
-            const endpoint = `${prefix}metrics/job/hydro-web/instance/${encodeURIComponent(hostname())}:${process.env.HYDRO_INSTANCE}`;
+            const endpoint = `${prefix}metrics/job/hydro-web/instance/${encodeURIComponent(hostname())}:${process.env.NODE_APP_INSTANCE}`;
             let req = superagent.post(endpoint);
             if (name) req = req.set('Authorization', `Basic ${Buffer.from(`${name}:${pass}`).toString('base64')}`);
             await req.send(await registry.metrics());

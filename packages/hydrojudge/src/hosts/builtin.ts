@@ -25,8 +25,8 @@ const session = {
     getNext(t: Context) {
         return async (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
-            data.rid = t.rid as any;
-            const rdoc = await RecordModel.get(new ObjectId(t.rid));
+            data.rid = new ObjectId(t.rid);
+            const rdoc = await RecordModel.get(data.rid);
             if (data.case) data.case.message ||= '';
             next({ ...data, domainId: rdoc.domainId });
         };
@@ -34,8 +34,8 @@ const session = {
     getEnd(t: Context) {
         return async (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
-            data.rid = t.rid as any;
-            const rdoc = await RecordModel.get(new ObjectId(t.rid));
+            data.rid = new ObjectId(t.rid);
+            const rdoc = await RecordModel.get(data.rid);
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
             end({ ...data, domainId: rdoc.domainId });
         };
@@ -79,7 +79,9 @@ const session = {
 
 export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
-    ctx.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+    ctx.inject(['check'], (c) => {
+        c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+    });
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
@@ -90,7 +92,10 @@ export async function postInit(ctx) {
         await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
-    for (let i = 1; i < parallelism; i++) TaskModel.consume({ type: 'judge' }, handle);
+    const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    ctx.on('system/setting', () => {
+        taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
+    });
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
     TaskModel.consume({ type: 'generate' }, handle);
 }

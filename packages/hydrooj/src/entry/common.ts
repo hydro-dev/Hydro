@@ -46,7 +46,7 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
                 else logger.info(`${name} init: %s`, i);
             } catch (e) {
                 fail.push(i);
-                app.inject(
+                app.injectUI(
                     'Notification', `${name} load fail: {0}`,
                     { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION,
                 );
@@ -89,7 +89,7 @@ export async function locale(pending: string[], fail: string[]) {
                 logger.info('Locale init: %s', i);
             } catch (e) {
                 fail.push(i);
-                app.inject('Notification', 'Locale load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+                app.injectUI('Notification', 'Locale load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Locale Load Fail: %s', i);
                 logger.error(e);
             }
@@ -131,7 +131,7 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
                 }
                 logger.info('Config load: %s', i);
             } catch (e) {
-                app.inject('Notification', 'Config load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+                app.injectUI('Notification', 'Config load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Config Load Fail: %s', i);
                 logger.error(e);
             }
@@ -155,7 +155,7 @@ export async function template(pending: string[], fail: string[]) {
                 logger.info('Template init: %s', i);
             } catch (e) {
                 fail.push(i);
-                app.inject('Notification', 'Template load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+                app.injectUI('Notification', 'Template load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Template Load Fail: %s', i);
                 logger.error(e);
             }
