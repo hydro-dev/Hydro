@@ -1,11 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import AdmZip from 'adm-zip';
-import fs from 'fs-extra';
-import { noop } from 'lodash';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
+import { fs, noop } from '@hydrooj/utils';
 import { parseLang } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type { JudgeResultBody } from 'hydrooj';
