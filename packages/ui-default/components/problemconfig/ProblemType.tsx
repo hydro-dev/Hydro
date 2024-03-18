@@ -1,7 +1,7 @@
 import {
-  Card, Classes, Switch, Tab, Tabs,
+  Card, Classes, Switch, Tab, Tabs, TabsExpander,
 } from '@blueprintjs/core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import { testlibCheckers } from '../monaco/schema/problemconfig';
@@ -17,6 +17,11 @@ export default function ProblemType() {
   const [category, setCategory] = React.useState(checker?.includes('.') ? 'preset' : 'custom');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
+  useEffect(() => {
+    if (!checker) return;
+    if (checker?.includes('.')) setCategory('preset');
+    else setCategory('custom');
+  }, [checker]);
   return (
     <FormItem columns={12} label="" disableLabel>
       <Card style={{ padding: 10 }}>
@@ -43,7 +48,7 @@ export default function ProblemType() {
                 renderActiveTabPanelOnly
               >
                 <span className={Classes.TAB}>{i18n('CheckerType')}</span>
-                <Tabs.Expander />
+                <TabsExpander />
                 <Tab
                   id="default"
                   title={i18n('default')}
