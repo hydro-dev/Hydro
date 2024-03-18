@@ -131,7 +131,15 @@ export default class VJ4 implements Session {
         if (res.status === 404) throw new FormatError(`没有找到测试数据 ${domainId}/${pid}`);
         if (res.status === 302) {
             location = res.headers.location;
-            if (!location.includes('/fs/')) throw new Error();
+            if (!location.includes('/fs/')) {
+                const _res = await this.get(location).redirects(0).ok((r) => r.status === 302 || r.status === 404);
+                if (_res.status === 404) throw new FormatError(`没有找到测试数据 ${domainId}/${pid}`);
+                if (_res.status === 302) {
+                    location = _res.headers.location;
+                    if (!location.includes('/fs/')) throw new Error();
+                }
+                return _res.headers.location;
+            }
         }
         return res.headers.location;
     }
