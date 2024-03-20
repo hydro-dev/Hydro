@@ -14,12 +14,12 @@ export default function ProblemType() {
   const filename = useSelector((state: RootState) => state.config.filename);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
-  const [category, setCategory] = React.useState('custom');
+  const [category, setCategory] = React.useState('');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
   useEffect(() => {
-    if (!checker) return;
-    if (checker?.includes('.')) setCategory('custom');
+    if (category || !checker) return;
+    if (checker.includes('.')) setCategory('custom');
     else setCategory('preset');
   }, [checker]);
   return (
@@ -44,7 +44,10 @@ export default function ProblemType() {
                   ['strict', 'default'].includes(checkerType) || !checkerType
                     ? 'default' : (checkerType !== 'testlib' ? 'other' : 'testlib')
                 }
-                onChange={dispatcher({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type' })}
+                onChange={(value) => {
+                  dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type', value });
+                  if (value === 'testlib' && !category) setCategory('custom');
+                }}
                 renderActiveTabPanelOnly
               >
                 <span className={Classes.TAB}>{i18n('CheckerType')}</span>
