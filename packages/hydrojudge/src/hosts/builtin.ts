@@ -79,7 +79,9 @@ const session = {
 
 export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
-    ctx.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+    ctx.inject(['check'], (c) => {
+        c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+    });
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);

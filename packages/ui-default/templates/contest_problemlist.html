@@ -117,7 +117,7 @@
                   {{_('Subject') }}: {{ contest.render_clarification_subject(tdoc,pdict,doc.subject) }} | {% if doc.owner == 0 %}<b>{{ _('Jury') }}</b>{% else %}{{ user.render_inline(udict[doc.owner], badge=false) }}{% endif %} @ {{ datetimeSpan(doc._id)|safe }}
                 </div>
               </div>
-              <div class="typo" data-emoji-enabled>
+              <div class="typo richmedia" data-emoji-enabled>
                 {{ doc['content']|markdown|safe }}
               </div>
             </div>
@@ -133,7 +133,7 @@
                       <b>{{ _('Jury') }}</b> @ {{ datetimeSpan(rdoc['_id'])|safe }}
                     </div>
                   </div>
-                  <div class="typo" data-emoji-enabled>
+                  <div class="typo richmedia" data-emoji-enabled>
                     {{ rdoc['content']|markdown|safe }}
                   </div>
                 </div>

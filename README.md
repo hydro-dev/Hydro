@@ -37,7 +37,7 @@ Hydro 的所有历史版本均可平滑升级到最新版本。
 ### 跨平台兼容，数据一键备份/导入
 
 Hydro 支持所有主流的 Linux 发行版，兼容 x86_64 和 arm64 架构设备，且均可一键安装。  
-Hydro 可在 树莓派 / Apple M1 上正常运行。
+Hydro 可在 树莓派 或是 Apple M1/M2 上正常运行。
 
 使用 `hydrooj backup` 即可备份系统全部数据，使用 `hydrooj restore 文件名` 即可导入备份数据。
 整个过程无需手工干预。
@@ -102,13 +102,25 @@ Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件�
 ## 联系我们
 
 Email：i@undefined.moe
-Hydro 用户群：1085853538  
 Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
+Hydro 用户群：1085853538  
+
+注：加入用户群请先阅读[《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)。  
+同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.10.7 / 4.49.5
+### Hydro 4.11.0 / UI 4.49.6
+- core: 升级至 cordis@3
+- core: 优化 katex 处理
+- core: 添加 monitor/collect 钩子
+- judge: 修复 analysis
+- judge: 修复独立评测机首次同步测试数据错误的问题
+- migrate: 优化 hustoj 导入
+- ui: 修复部分区域 katex 错误渲染的问题
+
+### Hydro 4.10.7 / UI 4.49.5
 - core: 优化比赛成绩版按照小组筛选
 - core: inject -> injectUI
 - core: 修复一处内存泄漏

@@ -630,6 +630,15 @@ const scripts: UpgradeScript[] = [
             }
         });
     },
+    async function _85_86() {
+        return await iterateAllDomain(async (ddoc) => {
+            for (const role of Object.keys(ddoc.roles)) {
+                if (role === 'root') return;
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_RECORD).toString();
+            }
+            await domain.setRoles(ddoc._id, ddoc.roles);
+        });
+    },
 ];
 
 export default scripts;

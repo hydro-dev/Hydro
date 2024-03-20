@@ -7,7 +7,7 @@ import type * as monaco from 'monaco-editor';
 import React from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import Dom from 'vj/components/react/DomComponent';
-import { Context, ctx, Service } from 'vj/context';
+import { ctx, Service } from 'vj/context';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
@@ -54,7 +54,6 @@ class ScratchpadService extends Service {
     rerenderCallback?.();
   }
 }
-Context.service('scratchpad', ScratchpadService);
 declare module '../../context' {
   interface Context {
     scratchpad: ScratchpadService;
@@ -63,6 +62,7 @@ declare module '../../context' {
 
 export default function ScratchpadContainer() {
   const store = useStore();
+  ctx.provide('scratchpad');
   ctx.scratchpad ||= new ScratchpadService(store);
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);

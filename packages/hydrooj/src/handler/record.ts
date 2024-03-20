@@ -54,6 +54,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             if (udoc) q.uid = udoc._id;
             else invalid = true;
         }
+        if (q.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (tid) {
             tdoc = await contest.get(domainId, tid);
             this.tdoc = tdoc;
@@ -136,6 +137,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async prepare(domainId: string, rid: ObjectId) {
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc) throw new RecordNotFoundError(rid);
+        if (this.rdoc.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
     }
 
     async download() {
@@ -288,6 +290,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
                 else throw new UserNotFoundError(uidOrName);
             }
         }
+        if (this.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) this.pid = pdoc.docId;

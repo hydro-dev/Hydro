@@ -328,6 +328,7 @@ export function readSubtasksFromFiles(files: string[], config) {
             for (const func of rule.output) {
                 if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
+                if (c.output === file) continue;
                 if (c.output === '/dev/null' || files.includes(c.output)) {
                     match = true;
                     if (!subtask[sid]) {
