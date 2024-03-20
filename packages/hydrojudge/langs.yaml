@@ -10,6 +10,7 @@ java:
     execute: /usr/bin/java -Dfile.encoding=UTF-8 Main
 py3:
     compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo.pyc', doraise=True)"
+    code_file: foo.py
     execute: /usr/bin/python3 foo.pyc
 php:
     execute: /usr/bin/php foo.php
