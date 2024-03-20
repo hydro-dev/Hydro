@@ -632,6 +632,15 @@ const scripts: UpgradeScript[] = [
         });
     },
     async function _85_86() {
+        return await iterateAllDomain(async (ddoc) => {
+            for (const role of Object.keys(ddoc.roles)) {
+                if (role === 'root') return;
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_RECORD).toString();
+            }
+            await domain.setRoles(ddoc._id, ddoc.roles);
+        });
+    },
+    async function _86_87() {
         return await iterateAllDomain(async ({ _id }) => {
             const url = system.get('server.url');
             const cursor = contest.getMulti(_id, { rule: 'homework' });
@@ -657,7 +666,7 @@ const scripts: UpgradeScript[] = [
             }
         });
     },
-    async function _86_87() {
+    async function _87_88() {
         logger.info('Removing unused files...');
         return await iterateAllDomain(async ({ _id }) => {
             logger.info('Processing domain %s', _id);

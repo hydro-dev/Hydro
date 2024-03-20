@@ -332,7 +332,7 @@ export async function run({
                 if (judgeState.compile?.message) data.compilerTexts.push(judgeState.compile.message.replace(/<.+?>/g, ''));
                 if (judgeState.judge) {
                     for (let i = 0; i < judgeState.judge.subtasks.length; i++) {
-                        const subtask = judgeState.judge.subtasks.length[i];
+                        const subtask = judgeState.judge.subtasks[i];
                         for (let j = 0; j < subtask.cases.length; j++) {
                             const curCase = subtask.cases[j];
                             data.testCases.push({

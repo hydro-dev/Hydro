@@ -85,6 +85,12 @@ langs:
     cc.cc17o2:
       compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2 -I/include
       display: C++17(O2)
+    cc.cc20:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -I/include
+      display: C++20
+    cc.cc20o2:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -O2 -I/include
+      display: C++20(O2)
     pas:
       compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
       highlight: pascal
