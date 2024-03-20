@@ -14,13 +14,13 @@ export default function ProblemType() {
   const filename = useSelector((state: RootState) => state.config.filename);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
-  const [category, setCategory] = React.useState(checker?.includes('.') ? 'preset' : 'custom');
+  const [category, setCategory] = React.useState('custom');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
   useEffect(() => {
     if (!checker) return;
-    if (checker?.includes('.')) setCategory('preset');
-    else setCategory('custom');
+    if (checker?.includes('.')) setCategory('custom');
+    else setCategory('preset');
   }, [checker]);
   return (
     <FormItem columns={12} label="" disableLabel>
@@ -76,7 +76,7 @@ export default function ProblemType() {
                           value={category}
                           onChange={(ev) => {
                             setCategory(ev.currentTarget.value);
-                            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: null });
+                            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: ev.currentTarget.value === 'preset' ? 'acmp' : null });
                           }}
                           className="select"
                         >
