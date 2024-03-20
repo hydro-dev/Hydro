@@ -1,7 +1,7 @@
 import {
-  Card, Classes, Switch, Tab, Tabs,
+  Card, Classes, Switch, Tab, Tabs, TabsExpander,
 } from '@blueprintjs/core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import { testlibCheckers } from '../monaco/schema/problemconfig';
@@ -14,9 +14,14 @@ export default function ProblemType() {
   const filename = useSelector((state: RootState) => state.config.filename);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
-  const [category, setCategory] = React.useState(checker?.includes('.') ? 'preset' : 'custom');
+  const [category, setCategory] = React.useState('');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
+  useEffect(() => {
+    if (category || !checker) return;
+    if (checker.includes('.')) setCategory('custom');
+    else setCategory('preset');
+  }, [checker]);
   return (
     <FormItem columns={12} label="" disableLabel>
       <Card style={{ padding: 10 }}>
@@ -39,11 +44,14 @@ export default function ProblemType() {
                   ['strict', 'default'].includes(checkerType) || !checkerType
                     ? 'default' : (checkerType !== 'testlib' ? 'other' : 'testlib')
                 }
-                onChange={dispatcher({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type' })}
+                onChange={(value) => {
+                  dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker_type', value });
+                  if (value === 'testlib' && !category) setCategory('custom');
+                }}
                 renderActiveTabPanelOnly
               >
                 <span className={Classes.TAB}>{i18n('CheckerType')}</span>
-                <Tabs.Expander />
+                <TabsExpander />
                 <Tab
                   id="default"
                   title={i18n('default')}
@@ -71,7 +79,7 @@ export default function ProblemType() {
                           value={category}
                           onChange={(ev) => {
                             setCategory(ev.currentTarget.value);
-                            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: null });
+                            dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: ev.currentTarget.value === 'preset' ? 'acmp' : null });
                           }}
                           className="select"
                         >
