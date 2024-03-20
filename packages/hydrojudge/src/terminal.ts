@@ -9,6 +9,10 @@ export = async function terminal() {
         log.info('no stream support, please upgrade hydro-sandbox to v1.8.1+');
         return;
     }
+    if (!process.stdin.isTTY) {
+        log.info('interactive terminal requires available tty');
+        return;
+    }
     process.stdin.setRawMode(true);
     const stream = client.stream({
         cmd: [{
