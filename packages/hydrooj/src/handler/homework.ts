@@ -100,6 +100,9 @@ class HomeworkDetailHandler extends Handler {
         this.response.body = {
             tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
+        this.response.body.tdoc.content = this.response.body.tdoc.content
+            .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
+            .replace(/="file:\/\//g, `="./${tdoc.docId}/file/`);
         if (
             (contest.isNotStarted(tdoc) || (!tsdoc?.attend && !contest.isDone(tdoc)))
             && !this.user.own(tdoc)
