@@ -674,12 +674,12 @@ const scripts: UpgradeScript[] = [
             const trainingFilesList = await StorageModel.list(`training/${_id}`);
             const tdocs = await contest.getMulti(_id, {}).toArray();
             const trdocs = await training.getMulti(_id, {}).toArray();
-            let existsFilesList = [];
-            for (const tdoc of tdocs) existsFilesList = existsFilesList.concat(tdoc.files.map((i) => `contest/${_id}/${tdoc.docId}/${i.name}`));
-            await StorageModel.del(contestFilesList.filter((i) => !existsFilesList.includes(i.name)).map((i) => i.name));
-            existsFilesList = [];
-            for (const tdoc of trdocs) existsFilesList = existsFilesList.concat(tdoc.files.map((i) => `training/${_id}/${tdoc.docId}/${i.name}`));
-            await StorageModel.del(trainingFilesList.filter((i) => !existsFilesList.includes(i.name)).map((i) => i.name));
+            let existsFiles = [];
+            for (const tdoc of tdocs) existsFiles = existsFiles.concat((tdoc.files || []).map((i) => `contest/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(contestFilesList.filter((i) => !existsFiles.includes(i.name)).map((i) => i.name));
+            existsFiles = [];
+            for (const tdoc of trdocs) existsFiles = existsFiles.concat((tdoc.files || []).map((i) => `training/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(trainingFilesList.filter((i) => !existsFiles.includes(i.name)).map((i) => i.name));
             logger.info('Domain %s done', _id);
         });
     },
