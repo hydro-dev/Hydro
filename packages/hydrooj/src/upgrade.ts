@@ -660,7 +660,7 @@ const scripts: UpgradeScript[] = [
                     files.push({
                         _id: filename, name: filename, size: storageMeta.size, lastModified: storageMeta.lastModified, etag: storageMeta.etag,
                     });
-                    tdoc.content = tdoc.content.replace(file, `file://${filename}`);
+                    tdoc.content = tdoc.content.replace(fileUrl, `file://${filename}`);
                 }
                 await contest.edit(_id, tdoc.docId, { content: tdoc.content, files });
             }
