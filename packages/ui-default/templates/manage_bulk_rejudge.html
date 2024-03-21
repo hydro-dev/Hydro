@@ -1,0 +1,58 @@
+{% import "components/user.html" as user %}
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title" data-heading>{{ _('Bulk Rejudge') }}</h1>
+  </div>
+  <div class="section__body">
+    {{ noscript_note.render() }}
+    <p name="message">{{ message }}</p>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label class="filter-user">
+          {{ _('By Username / UID') }}
+          <input name="uidOrName" type="text" class="textbox" value="{{ filterUidOrName }}" autocomplete="off" data-autofocus>
+        </label>
+      </div>
+      <div class="medium-6 columns">
+        <label>
+          {{ _('By Problem') }}
+          <input name="pid" type="text" class="textbox" value="{{ filterPid }}">
+        </label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label>
+          {{ _('By Contest') }}
+          <input name="tid" type="text" class="textbox" value="{{ filterTid }}">
+        </label>
+      </div>
+      <div class="medium-6 columns">
+        <label>
+          {{ _('By Language') }}
+          <input name="lang" type="text" class="textbox" value="{{ filterLang }}">
+        </label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <label>
+          {{ _('By Status') }}
+        </label>
+        <select class="select" name="status">
+          <option value="" {% if typeof(filterStatus) != 'number' %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
+          {%- for k,v in utils.status.STATUS_TEXTS -%}
+          <option value="{{k}}" {% if filterStatus == k %}selected{% else %}{% endif %}>{{v}}</option>
+          {%- endfor -%}
+        </select>
+      </div>
+    </div>
+    <div class="row"><div class="columns">
+      <button name="preview" class="rounded primary button">{{ _('Preview') }}</button>
+      <button name="submit" class="rounded button">{{ _('Submit') }}</button>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -134,6 +134,7 @@ Bold: 加粗
 Boom!: 炸了！
 Browser: 浏览器
 Built-in: 内置
+Bulk Rejudge: 批量重测
 Bulletin: 公告
 By clicking the button, you will become a member of the domain {0}.: 点击按钮，您将成为域 {0} 的成员。
 By Contest: 由比赛
@@ -530,6 +531,7 @@ Logout This Session: 注销该会话
 Logout: 登出
 Lost Password: 忘记密码
 Lucky: 手气不错
+manage_bulk_rejudge: 批量重测
 manage_config: 配置管理
 manage_dashboard: 控制面板
 manage_join_applications: 加域申请
@@ -746,6 +748,7 @@ Registered at: 注册于
 Rejudge all submissions: 重测整题
 Rejudge problems: 重测题目
 Rejudge records: 重测记录
+Rejudge request submitted.: 重测请求已提交。
 Rejudge: 重测
 Related Discussions: 相关讨论
 Related: 相关
