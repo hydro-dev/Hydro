@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import Koa, { Context } from 'koa';
 import Body from 'koa-body';
 import { MongoClient, WriteConcern } from 'mongodb';
+import mongoUri from 'mongodb-uri';
 import { Logger } from '../logger';
 
 const logger = new Logger('setup');
@@ -18,10 +19,7 @@ async function get(ctx: Context) {
     <head>
       <meta charset="UTF-8">
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-      <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      <meta name="msapplication-TileColor" content="#579e9a">
-      <meta name="theme-color" content="#56758f">
       <link rel="stylesheet" media="all" href="/default.theme.css">
       <title>Setup</title>
     </head>
@@ -34,32 +32,8 @@ async function get(ctx: Context) {
           <form method="POST">
             <div class="row"><div class="columns">
               <label class="inverse material textbox">
-                Database Host
-                <input name="host" type="text" value="127.0.0.1" autofocus>
-              </label>
-            </div></div>
-            <div class="row"><div class="columns">
-              <label class="inverse material textbox">
-                Database Port
-                <input name="port" type="number" value="27017">
-              </label>
-            </div></div>
-            <div class="row"><div class="columns">
-              <label class="inverse material textbox">
-                Database Name
-                <input name="name" type="text" value="hydro">
-              </label>
-            </div></div>
-            <div class="row"><div class="columns">
-              <label class="inverse material textbox">
-                Database Username
-                <input name="username" type="text" placeholder="Leave blank if none">
-              </label>
-            </div></div>
-            <div class="row"><div class="columns">
-              <label class="inverse material textbox">
-                Database Password
-                <input name="password" type="password" placeholder="Leave blank if none">
+                MongoDB Connection URI
+                <input name="url" type="text" value="mongodb://user:pass@127.0.0.1:27017/hydro" autofocus>
               </label>
             </div></div>
             <div class="row"><div class="columns">
@@ -78,18 +52,13 @@ async function get(ctx: Context) {
 }
 
 async function post(ctx: Context) {
-    const {
-        host, port, name, username, password,
-    } = (ctx.request as any).body;
-    let mongourl = 'mongodb://';
-    if (username) mongourl += `${username}:${password}@`;
-    mongourl += `${host}:${port}/${name}`;
     try {
-        const Database = await MongoClient.connect(mongourl, {
+        const url = mongoUri.parse(ctx.request.body?.url);
+        const Database = await MongoClient.connect((ctx.request as any).body, {
             readPreference: 'nearest',
             writeConcern: new WriteConcern('majority'),
         });
-        const db = Database.db(name);
+        const db = Database.db(url.database);
         const coll = db.collection<any>('system');
         await Promise.all([
             coll.updateOne(
@@ -104,9 +73,7 @@ async function post(ctx: Context) {
             ),
         ]);
         fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
-        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
-            host, port, name, username, password,
-        }));
+        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({ url }));
         ctx.body = '<h1>Done! Hydro is now starting.</h1>';
         resolve?.();
     } catch (e) {
