@@ -363,6 +363,7 @@ export interface ScoreboardNode {
     score?: number;
     style?: string;
     hover?: string;
+    original?: number;
 }
 export type ScoreboardRow = ScoreboardNode[] & { raw?: any };
 
@@ -396,6 +397,7 @@ export interface Tdoc extends Document {
     unlocked?: boolean;
     autoHide?: boolean;
     balloon?: Record<number, string>;
+    scoreRatio?: Record<number, number>;
 
     /**
      * In hours
