@@ -188,6 +188,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
+            canViewCode ||= this.user.own(this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
                 canViewCode ||= tsdoc?.attend;
             }
