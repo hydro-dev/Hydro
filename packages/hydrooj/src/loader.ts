@@ -7,6 +7,7 @@ import './init';
 import './interface';
 import Schema from 'schemastery';
 import path from 'path';
+import child from 'child_process';
 // eslint-disable-next-line import/no-duplicates
 import './utils';
 import cac from 'cac';
@@ -25,6 +26,21 @@ logger.debug('%o', argv);
 
 process.on('unhandledRejection', logger.error);
 process.on('uncaughtException', logger.error);
+
+const HYDROPATH = [];
+
+if (process.env.NIX_PROFILES) {
+    try {
+        const result = JSON.parse(child.execSync('nix-env -q --json --out-path --meta').toString()) as Record<string, any>;
+        for (const derivation of Object.values(result)) {
+            if (derivation.name.startsWith('hydro-plugin-') && derivation.outputs?.out) {
+                HYDROPATH.push(derivation.outputs.out);
+            }
+        }
+    } catch (e) {
+        logger.error('Nix detected, but failed to list installed derivations.');
+    }
+}
 
 export function resolveConfig(plugin: any, config: any) {
     if (config === false) return;
@@ -108,8 +124,12 @@ export class Loader {
         try {
             this.cache[name] ||= require.resolve(name);
         } catch (err) {
-            logger.error(err.message);
-            return;
+            try {
+                this.cache[name] ||= require.resolve(name, { paths: HYDROPATH });
+            } catch (e) {
+                logger.error(err.message);
+                return;
+            }
         }
         return unwrapExports(require(this.cache[name]));
     }

@@ -94,7 +94,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
 
     'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
     'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
-    'contest/list': (query: Fileter<Tdoc>, handler: any) => VoidReturn
+    'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn
     'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
