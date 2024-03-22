@@ -2,18 +2,17 @@ import log from './log';
 import client from './sandbox/client';
 
 export = async function terminal() {
-    let resolve: (res?: any) => void;
-    const promise = new Promise((r) => { resolve = r; });
     const version = await client.version();
     if (!version.stream) {
-        log.info('no stream support, please upgrade hydro-sandbox to v1.8.1+');
+        log.error('no stream support, please upgrade hydro-sandbox to v1.8.1+');
         return;
     }
     if (!process.stdin.isTTY) {
-        log.info('interactive terminal requires available tty');
+        log.error('interactive terminal requires available tty');
         return;
     }
     process.stdin.setRawMode(true);
+    log.info('Starting /bin/bash, double press Ctrl+C to kill all child processes.');
     const stream = client.stream({
         cmd: [{
             args: ['/bin/bash'],
@@ -28,10 +27,6 @@ export = async function terminal() {
     });
     stream.on('output', (output) => {
         process.stdout.write(output.content);
-    });
-    stream.on('end', (result) => {
-        log.info(result);
-        resolve();
     });
     stream.on('open', async () => {
         let stop = false;
@@ -51,11 +46,14 @@ export = async function terminal() {
         process.stdout.on('resize', resize);
         resize();
     });
-    stream.on('close', (e) => {
-        log.info('close', e.code);
-        resolve();
+    stream.on('end', (result) => {
+        process.stdin.setRawMode(false);
+        log.info(result);
+        process.exit(0);
     });
-    await promise;
-    process.stdin.setRawMode(false);
-    process.exit(0);
+    stream.on('close', (e) => {
+        process.stdin.setRawMode(false);
+        log.info('close', e.code);
+        process.exit(0);
+    });
 };
