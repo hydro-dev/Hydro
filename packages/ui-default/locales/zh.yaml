@@ -642,6 +642,7 @@ Password: 密码
 Passwords don't match.: 验证密码不匹配。
 Path {0} not found.: 路径 {0} 不存在。
 Peak Memory: 峰值内存
+Peak Time: 峰值时间
 perm_contest: 比赛
 perm_discussion: 讨论
 perm_general: 一般
