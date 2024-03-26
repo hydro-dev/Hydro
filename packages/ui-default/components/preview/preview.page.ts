@@ -138,9 +138,17 @@ export async function previewFile(ev?, type = '') {
     type ||= ev.currentTarget.getAttribute('data-preview');
     const ext = filename.split('.').pop().toLowerCase();
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
-      const action = await new ActionDialog({
+      const id = nanoid();
+      const dialog = new ActionDialog({
         $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
-      }).open();
+        $action: [
+          tpl`<button class="rounded button" data-action="copy" id="copy-${id}">${i18n('Copy Link')}</button>`,
+          tpl`<button class="rounded button" data-action="cancel">${i18n('Cancel')}</button>`,
+          tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
+        ],
+      });
+      bindCopyLink(id, link);
+      const action = await dialog.open();
       if (action === 'ok') window.open(link);
       return null;
     }
