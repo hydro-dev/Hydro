@@ -53,12 +53,13 @@ async function get(ctx: Context) {
 
 async function post(ctx: Context) {
     try {
-        const url = mongoUri.parse(ctx.request.body?.url);
-        const Database = await MongoClient.connect((ctx.request as any).body, {
+        const url = ctx.request.body?.url;
+        const urlOptions = mongoUri.parse(ctx.request.body?.url);
+        const Database = await MongoClient.connect(ctx.request.body.url, {
             readPreference: 'nearest',
             writeConcern: new WriteConcern('majority'),
         });
-        const db = Database.db(url.database);
+        const db = Database.db(urlOptions.database);
         const coll = db.collection<any>('system');
         await Promise.all([
             coll.updateOne(
@@ -73,7 +74,11 @@ async function post(ctx: Context) {
             ),
         ]);
         fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
-        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({ url }));
+        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({
+            ...urlOptions,
+            host: urlOptions.hosts[0].host,
+            port: urlOptions.hosts[0].port,
+        }));
         ctx.body = '<h1>Done! Hydro is now starting.</h1>';
         resolve?.();
     } catch (e) {
