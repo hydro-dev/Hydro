@@ -73,7 +73,7 @@ async function post(ctx: Context) {
             ),
         ]);
         fs.ensureDirSync(path.resolve(os.homedir(), '.hydro'));
-        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({ url }));
+        fs.writeFileSync(path.resolve(os.homedir(), '.hydro', 'config.json'), JSON.stringify({ url: ctx.request.body.url }));
         ctx.body = '<h1>Done! Hydro is now starting.</h1>';
         resolve?.();
     } catch (e) {
