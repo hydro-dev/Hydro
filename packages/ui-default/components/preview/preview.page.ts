@@ -53,6 +53,21 @@ function bindCopyLink(id, src: string) {
   clip.on('error', () => Notification.error(i18n('Copy failed :(')));
 }
 
+async function previewVideo(link) {
+  const id = nanoid();
+  const dialog = new InfoDialog({
+    $body: tpl`
+    <div class="typo"><video width="100%" controls>
+      <source src="${link}" type="${link.endsWith('ogg') ? 'video/ogg' : 'video/mp4'}">
+      Your browser doesn't support video tag.
+    </video></div>`,
+    $action: dialogAction(id),
+  });
+  bindCopyLink(id, link);
+  const action = await dialog.open();
+  if (action === 'download') window.open(link);
+}
+
 async function previewImage(link) {
   const id = nanoid();
   const dialog = new InfoDialog({
@@ -129,6 +144,7 @@ export async function previewFile(ev?, type = '') {
       if (action === 'ok') window.open(link);
       return null;
     }
+    if (['mp4', 'webm', 'ogg'].includes(ext)) return previewVideo(link);
     if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) return previewImage(link);
     if (ext === 'pdf') return previewPDF(`${link}${link.includes('?') ? '&' : '?'}noDisposition=1`);
     Notification.info(i18n('Loading file...'));
