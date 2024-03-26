@@ -164,3 +164,7 @@ langs:
       highlight: csharp
       monaco: csharp
       display: 'C#'
+    r:
+      display: R
+      execute: /bin/sh -c "cat /dev/stdin >stdin && /usr/bin/Rscript --vanilla foo.r"
+      highlight: r

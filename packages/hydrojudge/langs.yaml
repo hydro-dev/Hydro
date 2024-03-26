@@ -5,9 +5,12 @@ cc:
 pas:
     compile: /usr/bin/fpc -O2 -ofoo foo.pas
 java:
-    compile: /usr/bin/javac -d /w -encoding UTF-8 Main.java
+    compile: /usr/bin/bash -c "javac -d /w -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
     code_file: Main.java
-    execute: /usr/bin/java -Dfile.encoding=UTF-8 Main
+    target: Main.jar
+    execute: /usr/bin/java -Dfile.encoding="UTF-8" -cp Main.jar Main
+    time_limit_rate: 2
+    compile_time_limit: 30000
 py3:
     compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
     code_file: foo.py
