@@ -53,8 +53,9 @@ async function get(ctx: Context) {
 
 async function post(ctx: Context) {
     try {
-        const url = mongoUri.parse(ctx.request.body?.url);
-        const Database = await MongoClient.connect((ctx.request as any).body, {
+        if (!ctx.request.body?.url) throw new Error('no url found');
+        const url = mongoUri.parse(ctx.request.body.url);
+        const Database = await MongoClient.connect(ctx.request.body.url, {
             readPreference: 'nearest',
             writeConcern: new WriteConcern('majority'),
         });
