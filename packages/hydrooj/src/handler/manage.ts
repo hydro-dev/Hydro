@@ -2,13 +2,18 @@ import { exec } from 'child_process';
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import { omit } from 'lodash';
+import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import {
-    CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
+    CannotEditSuperAdminError, ContestNotFoundError,
+    NotLaunchedByPM2Error, ProblemConfigError, ProblemNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
+import { RecordDoc } from '../interface';
 import { Logger } from '../logger';
 import { PRIV, STATUS } from '../model/builtin';
+import * as contest from '../model/contest';
 import domain from '../model/domain';
+import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
@@ -48,7 +53,7 @@ function set(key: string, value: any) {
 }
 
 class SystemHandler extends Handler {
-    async prepare() {
+    async _prepare() {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
     }
 }
@@ -319,6 +324,79 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+class SystemBulkRejudgeHandler extends SystemHandler {
+    @requireSudo
+    async get() {
+        this.response.template = 'manage_bulk_rejudge.html';
+        this.response.body = {
+            filterPid: null,
+            filterTid: null,
+            filterUidOrName: null,
+            filterLang: null,
+            filterStatus: null,
+            message: '',
+        };
+    }
+
+    @requireSudo
+    @param('pid', Types.ProblemId, true)
+    @param('tid', Types.ObjectId, true)
+    @param('uidOrName', Types.UidOrName, true)
+    @param('lang', Types.String, true)
+    @param('status', Types.Int, true)
+    @param('draft', Types.Boolean)
+    async post(domainId: string, pid: string, tid: ObjectId, uidOrName: string, lang: string, status: number, draft = false) {
+        if (!pid && !tid && !uidOrName && !lang && status === undefined) throw new ValidationError();
+        const q: Filter<RecordDoc> = { 'files.hack': { $exists: false } };
+        let tdoc = null;
+        if (uidOrName) {
+            const udoc = await user.getById(domainId, +uidOrName)
+                || await user.getByUname(domainId, uidOrName)
+                || await user.getByEmail(domainId, uidOrName);
+            if (udoc) q.uid = udoc._id;
+            else throw new UserNotFoundError(uidOrName);
+        }
+        if (tid) {
+            if ([record.RECORD_GENERATE, record.RECORD_PRETEST].includes(tid)) throw new ValidationError('tid');
+            tdoc = await contest.get(domainId, tid);
+            if (tdoc) q.contest = tid;
+            else throw new ContestNotFoundError(domainId, tid);
+        } else q.contest = { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] };
+        if (pid) {
+            if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {
+                pid = tdoc.pids[parseInt(pid, 36) - 10];
+            }
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) q.pid = pdoc.docId;
+            else throw new ProblemNotFoundError(domainId, pid);
+            if (!pdoc.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
+        }
+        if (lang) q.lang = lang;
+        if (typeof status === 'number') q.status = status;
+        this.response.body = {
+            filterPid: pid,
+            filterTid: tid,
+            filterUidOrName: uidOrName,
+            filterLang: lang,
+            filterStatus: status,
+        };
+        if (draft) {
+            const count = await record.coll.count(q);
+            this.response.body.message = `${count} records found, please confirm.`;
+            this.response.template = 'manage_bulk_rejudge.html';
+        } else {
+            const rdocs = await record.getMulti(domainId, q).project({ _id: 1, contest: 1 }).toArray();
+            const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
+            await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+            await Promise.all([
+                record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false }, { rejudge: true }),
+                record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {}, { rejudge: true }),
+            ]);
+            this.back();
+        }
+    }
+}
+
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
@@ -327,5 +405,6 @@ export async function apply(ctx) {
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Route('manage_bulk_rejudge', '/manage/bulkrejudge', SystemBulkRejudgeHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
