@@ -5,14 +5,14 @@ import { i18n, request, tpl } from 'vj/utils';
 
 export default new NamedPage('training_edit', () => {
   let confirmed = false;
-  $(document).on('click', '[value="delete"]', (ev) => {
+  $(document).on('click', '[name="operation"]', (ev) => {
     ev.preventDefault();
     if (confirmed) {
-      return request.post('', { operation: 'delete' }).then((res) => {
+      return request.post('.', { operation: 'delete' }).then((res) => {
         window.location.href = res.url;
       });
     }
-    const message = 'Confirm deleting this training? Its files and status will be deleted as well.';
+    const message = 'Confirm deleting this training? Its status will be deleted as well.';
     return new ConfirmDialog({
       $body: tpl.typoMsg(i18n(message)),
     }).open().then((action) => {
