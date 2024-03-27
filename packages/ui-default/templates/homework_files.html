@@ -1,0 +1,24 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+        <div class="section__tools">
+          <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+        </div>
+      </div>
+      {{ noscript_note.render() }}
+      {% include "partials/files.html" %}
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/homework_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}

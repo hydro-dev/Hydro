@@ -55,6 +55,9 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
       </a></li>
+      <li class="menu__item"><a class="menu__link" href="{{ url('homework_files', tid=tdoc.docId) }}">
+        <span class="icon icon-file"></span> {{ _('Files') }}
+      </a></li>
     {% endif %}
     {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}" data-no-instant>

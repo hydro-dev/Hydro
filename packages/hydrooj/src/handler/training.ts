@@ -173,7 +173,10 @@ class TrainingDetailHandler extends Handler {
     async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await training.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        await training.del(domainId, tid);
+        await Promise.all([
+            training.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `training/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
         this.response.redirect = this.url('training_main');
     }
 }
@@ -275,7 +278,7 @@ export class TrainingFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `training/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();
