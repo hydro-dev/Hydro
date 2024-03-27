@@ -992,7 +992,7 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    async post(
+    async postUpdate(
         domainId: string, title: string, content: string, pid: string | number = '',
         hidden = false, difficulty = 0, tag: string[] = [],
     ) {
