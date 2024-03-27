@@ -467,6 +467,14 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         const docId = await problem.copy(domainId, this.pdoc.docId, target);
         this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
     }
+
+    async postDelete() {
+        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        const tdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
+        if (tdocs.length) throw new ProblemAlreadyUsedByContestError(this.pdoc.docId, tdocs[0]._id);
+        await problem.del(this.pdoc.domainId, this.pdoc.docId);
+        this.response.redirect = this.url('problem_main');
+    }
 }
 
 export class ProblemSubmitHandler extends ProblemDetailHandler {
@@ -626,7 +634,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
-    async postUpdate(
+    async post(
         domainId: string, pid: string | number, title: string, content: string,
         newPid: string | number = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
@@ -637,14 +645,6 @@ export class ProblemEditHandler extends ProblemManageHandler {
         };
         const pdoc = await problem.edit(domainId, this.pdoc.docId, $update);
         this.response.redirect = this.url('problem_detail', { pid: newPid || pdoc.docId });
-    }
-
-    async postDelete() {
-        if (!this.user.own(this.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        const tdocs = await contest.getRelated(this.args.domainId, this.pdoc.docId);
-        if (tdocs.length) throw new ProblemAlreadyUsedByContestError(this.pdoc.docId, tdocs[0]._id);
-        await problem.del(this.pdoc.domainId, this.pdoc.docId);
-        this.response.redirect = this.url('problem_main');
     }
 }
 
@@ -992,7 +992,7 @@ export class ProblemCreateHandler extends Handler {
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
-    async postUpdate(
+    async post(
         domainId: string, title: string, content: string, pid: string | number = '',
         hidden = false, difficulty = 0, tag: string[] = [],
     ) {
