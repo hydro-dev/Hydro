@@ -641,32 +641,6 @@ const scripts: UpgradeScript[] = [
         });
     },
     async function _86_87() {
-        return await iterateAllDomain(async ({ _id }) => {
-            const url = system.get('server.url');
-            const cursor = contest.getMulti(_id, { rule: 'homework' });
-            for await (const tdoc of cursor) {
-                // find markdown files and pics
-                const filesList = tdoc.content.match(/\[.*?\]\((.*?)\)/g);
-                if (!filesList) continue;
-                const files = [];
-                for (const file of filesList) {
-                    const fileUrl = file.match(/\[.*?\]\((.*?)\)/)[1];
-                    if (!fileUrl.startsWith('/file/') || !fileUrl.startsWith(`${url}file/`)) continue;
-                    const storageUrl = fileUrl.split('/file/')[1];
-                    const filename = fileUrl.split('/').pop();
-                    if (files.find((i) => i.name === filename)) continue;
-                    const storageMeta = await StorageModel.getMeta(`user/${storageUrl}`);
-                    await StorageModel.copy(`user/${storageUrl}`, `contest/${_id}/${tdoc.docId}/${filename}`);
-                    files.push({
-                        _id: filename, name: filename, size: storageMeta.size, lastModified: storageMeta.lastModified, etag: storageMeta.etag,
-                    });
-                    tdoc.content = tdoc.content.replace(fileUrl, `file://${filename}`);
-                }
-                await contest.edit(_id, tdoc.docId, { content: tdoc.content, files });
-            }
-        });
-    },
-    async function _87_88() {
         logger.info('Removing unused files...');
         return await iterateAllDomain(async ({ _id }) => {
             logger.info('Processing domain %s', _id);
