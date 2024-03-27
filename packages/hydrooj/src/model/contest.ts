@@ -211,6 +211,7 @@ const acm = buildContestRule({
                     value,
                     hover: accept ? formatSeconds(doc.time) : '',
                     raw: doc.rid,
+                    original: accept ? 100 : 0,
                     style: accept && doc.rid.getTimestamp().getTime() === meta?.first?.[pid]
                         ? 'background-color: rgb(217, 240, 199);'
                         : undefined,
@@ -358,9 +359,11 @@ const oi = buildContestRule({
                     raw: [{
                         value: tsddict[pid]?.score ?? '-',
                         raw: tsddict[pid]?.rid || null,
+                        original: tsddict[pid]?.original ?? null,
                     }, {
                         value: meta?.psdict?.[index]?.score ?? '-',
                         raw: meta?.psdict?.[index]?.rid ?? null,
+                        original: meta?.psdict?.[index]?.original ?? null,
                     }],
                 } : {
                     type: 'record',
@@ -487,6 +490,7 @@ const strictioi = buildContestRule({
                 value: tsddict[pid]?.score || '',
                 hover: Object.values(tsddict[pid]?.subtasks || {}).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
+                original: tsddict[pid]?.original || 0,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
@@ -557,6 +561,7 @@ const ledo = buildContestRule({
                 value: tsddict[pid]?.penaltyScore?.toString() || '',
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
+                original: tsddict[pid]?.original || 0,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
@@ -695,6 +700,7 @@ const homework = buildContestRule({
                         ? '{0}\n{1}'.format(colScore, colTimeStr)
                         : '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
                     raw: rid,
+                    original: tsddict[pid]?.original || 0,
                 });
             }
         }
@@ -808,8 +814,9 @@ async function _updateStatus(
     tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
     subtasks: Record<number, SubtaskResult>,
 ) {
+    const tscore = score * (tdoc.scoreRatio?.[pid] || 1);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
-        rid, pid, status, score, subtasks,
+        rid, pid, status, score: tscore, original: score, subtasks,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
