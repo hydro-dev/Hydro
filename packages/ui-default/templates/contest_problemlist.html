@@ -47,9 +47,7 @@
               {% endif %}
             {% endif %}
               <td class="col--problem col--problem-name">
-                <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}">
-                  <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
-                </a>
+                {{ problem.render_problem_title(pdict[pid], tdoc, alphabetic=true) }}
               </td>
             </tr>
           {%- endfor -%}
