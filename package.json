@@ -57,7 +57,7 @@
         "semver": "^7.6.0",
         "simple-git": "^3.23.0",
         "supertest": "^6.3.4",
-        "typescript": "^5.3.3",
+        "typescript": "^5.4.3",
         "wtfnode": "^0.9.1"
     }
 }

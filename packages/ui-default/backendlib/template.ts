@@ -13,8 +13,8 @@ import * as misc from './misc';
 const argv = require('cac')().parse();
 
 let { template } = argv.options;
-if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
-else template &&= findFileSync(template);
+if (!template || typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
+else template = findFileSync(template);
 
 class Loader extends nunjucks.Loader {
   getSource(name) {
