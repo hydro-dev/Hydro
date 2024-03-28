@@ -351,7 +351,8 @@ const oi = buildContestRule({
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             const node: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
-                && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString())
+                && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()
+                && meta?.psdict?.[index]?.rid?.getTimestamp() > tdoc.endAt)
                 ? {
                     type: 'records',
                     value: '',
