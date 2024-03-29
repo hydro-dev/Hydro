@@ -459,7 +459,17 @@ export function Connection(
                     conn.send('pong');
                     return;
                 }
-                h.message?.(JSON.parse(e.data.toString()));
+                let payload;
+                try {
+                    payload = JSON.parse(e.data.toString());
+                } catch {
+                    conn.close();
+                }
+                try {
+                    h.message?.(payload);
+                } catch (err) {
+                    logger.error(e);
+                }
             };
             await bus.parallel('connection/active', h);
             if (conn.readyState === conn.OPEN) {
