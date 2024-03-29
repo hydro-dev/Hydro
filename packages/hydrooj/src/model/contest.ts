@@ -352,7 +352,8 @@ const oi = buildContestRule({
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             const node: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
-                && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString())
+                && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()
+                && meta?.psdict?.[index]?.rid?.getTimestamp() > tdoc.endAt)
                 ? {
                     type: 'records',
                     value: '',
@@ -765,7 +766,6 @@ export async function del(domainId: string, tid: ObjectId) {
     await Promise.all([
         document.deleteOne(domainId, document.TYPE_CONTEST, tid),
         document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
-        document.deleteMulti(domainId, document.TYPE_DISCUSSION, { parentType: document.TYPE_CONTEST, parentId: tid }),
     ]);
 }
 

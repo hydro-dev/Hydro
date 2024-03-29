@@ -34,7 +34,7 @@
     "devDependencies": {
         "@simplewebauthn/typescript-types": "7.4.0",
         "@types/autocannon": "^7.12.5",
-        "@types/chai": "^4.3.12",
+        "@types/chai": "^4.3.14",
         "@types/cross-spawn": "^6.0.6",
         "@types/node": "20.10.6",
         "@types/semver": "^7.5.8",
@@ -50,14 +50,14 @@
         "fs-extra": "^11.2.0",
         "globby": "^14.0.1",
         "inspectpack": "^4.7.1",
-        "mongodb-memory-server": "^9.1.6",
+        "mongodb-memory-server": "^9.1.7",
         "nyc": "^15.1.0",
         "ora": "^8.0.1",
         "package-json": "^10.0.0",
         "semver": "^7.6.0",
-        "simple-git": "^3.22.0",
+        "simple-git": "^3.23.0",
         "supertest": "^6.3.4",
-        "typescript": "^5.3.3",
+        "typescript": "^5.4.3",
         "wtfnode": "^0.9.1"
     }
 }

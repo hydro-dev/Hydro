@@ -111,11 +111,9 @@ export const xss = new FilterXSS({
   },
   allowCommentTag: false,
   stripIgnoreTagBody: ['script'],
-  safeAttrValue(tag, name, value) {
+  safeAttrValue(tag, name, value) { // eslint-disable-line consistent-return
     if (name === 'id') return `xss-id-${value}`;
     if (name === 'class') return value.replace(/badge/g, 'xss-badge');
-    if (name === 'href') return value.trim().startsWith('javascript:') ? '#' : value;
-    return value;
   },
 });
 
@@ -168,11 +166,9 @@ export const xssInline = new FilterXSS({
   allowCommentTag: false,
   stripIgnoreTag: true,
   stripIgnoreTagBody: ['script'],
-  safeAttrValue(tag, name, value) {
+  safeAttrValue(tag, name, value) { // eslint-disable-line consistent-return
     if (name === 'id') return `xss-id-${value}`;
     if (name === 'class') return value.replace(/badge/g, 'xss-badge');
-    if (name === 'href') return value.trim().startsWith('javascript:') ? '#' : value;
-    return value;
   },
 });
 

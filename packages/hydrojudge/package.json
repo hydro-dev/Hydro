@@ -10,7 +10,7 @@
         "adm-zip": "0.5.5",
         "cac": "^6.7.14",
         "p-queue": "^8.0.1",
-        "schemastery": "^3.14.3",
+        "schemastery": "^3.14.5",
         "semver": "^7.6.0",
         "shell-quote": "^1.8.1",
         "superagent": "^8.1.2",

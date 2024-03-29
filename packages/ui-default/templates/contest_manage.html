@@ -1,5 +1,6 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
+{% import "components/problem.html" as problem with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
@@ -21,7 +22,7 @@
                 <tr>
                   <td class="col--problem col--problem-name">
                     <a href="{{ url('problem_detail', pid=pid) }}">
-                      <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
+                      {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
                     </a>
                   </td>
                 </tr>

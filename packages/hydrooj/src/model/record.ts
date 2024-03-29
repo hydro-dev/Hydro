@@ -147,6 +147,7 @@ export default class RecordModel {
             data.contest = RecordModel.RECORD_PRETEST;
         }
         const res = await RecordModel.coll.insertOne(data);
+        bus.broadcast('record/change', data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (isContest ? 50 : 0));
             await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {}, {
