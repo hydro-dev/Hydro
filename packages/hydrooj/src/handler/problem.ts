@@ -539,7 +539,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
             pretest ? { input, type: 'pretest' } : { contest: tid, files, type: 'judge' },
         );
-        const rdoc = await record.get(domainId, rid);
         if (!pretest) {
             await Promise.all([
                 problem.inc(domainId, this.pdoc.docId, 'nSubmit', 1),
@@ -548,7 +547,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 tid && contest.updateStatus(domainId, tid, this.user._id, rid, this.pdoc.docId),
             ]);
         }
-        this.ctx.broadcast('record/change', rdoc);
         if (tid && !pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
             this.response.redirect = this.url(this.tdoc.rule === 'homework' ? 'homework_detail' : 'contest_detail', { tid });
@@ -607,9 +605,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
             this.rdoc.lang, this.rdoc.code, true,
             { contest: tid, type: 'hack', files: { hack: `${id}#input.txt` } },
         );
-        const rdoc = await record.get(domainId, rid);
         // TODO contest: update status;
-        this.ctx.broadcast('record/change', rdoc);
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
