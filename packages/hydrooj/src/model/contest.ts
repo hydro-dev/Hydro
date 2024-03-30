@@ -374,9 +374,10 @@ const oi = buildContestRule({
                     }],
                 } : {
                     type: 'record',
-                    value: `${tsddict[pid]?.score ?? '-'}${tsddict[pid]?.npending
+                    value: `${displayScore(pid, tsddict[pid]?.score)}${tsddict[pid]?.npending
                         ? `<span style="color:orange">+${tsddict[pid]?.npending}</span>` : ''}`,
                     raw: tsddict[pid]?.rid || null,
+                    original: tsddict[pid]?.score || 0,
                 };
             if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]) {
                 node.style = 'background-color: rgb(217, 240, 199);';
@@ -470,7 +471,7 @@ const strictioi = buildContestRule({
             j.status = Math.max(...Object.values(subtasks[j.pid]).map((i) => i.status));
             if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = { ...j, subtasks: subtasks[j.pid] };
         }
-        for (const i in detail) score += detail[i].score;
+        for (const i in detail) score += ((tdoc.score?.[i] || 100) * (detail[i].score || 0)) / 100;
         return { score, detail };
     },
     async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {

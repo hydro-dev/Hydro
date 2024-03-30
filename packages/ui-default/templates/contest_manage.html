@@ -27,8 +27,8 @@
                       {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
                     </a>
                   </td>
-                  <td class="col--score" data-pid="{{ pid }}">
-                    {{ tdoc.score[pid]|default(100) }}
+                  <td class="col--score">
+                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
                   </td>
                 </tr>
               {%- endfor -%}
