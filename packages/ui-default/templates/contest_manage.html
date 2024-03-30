@@ -11,10 +11,12 @@
             <table class="data-table">
               <colgroup>
                 <col class="col--problem">
+                <col class="col--score">
               </colgroup>
               <thead>
                 <tr>
                   <th class="col--problem">{{ _('Problem') }}</th>
+                  <th class="col--score">{{ _('Score') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -24,6 +26,9 @@
                     <a href="{{ url('problem_detail', pid=pid) }}">
                       {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
                     </a>
+                  </td>
+                  <td class="col--score" data-pid="{{ pid }}">
+                    {{ tdoc.score[pid]|default(100) }}
                   </td>
                 </tr>
               {%- endfor -%}

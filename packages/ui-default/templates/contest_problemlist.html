@@ -53,7 +53,7 @@
               {% endif %}
             {% endif %}
             {% if showScore %}
-              <td class="col--score">{{ (tdoc.scoreRatio[pid]||1)*100 }}</td>
+              <td class="col--score">{{ tdoc.score[pid]|default(100) }}</td>
             {% endif %}
               <td class="col--problem col--problem-name">
                 {{ problem.render_problem_title(pdict[pid], tdoc, alphabetic=true) }}

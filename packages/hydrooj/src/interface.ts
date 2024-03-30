@@ -397,7 +397,7 @@ export interface Tdoc extends Document {
     unlocked?: boolean;
     autoHide?: boolean;
     balloon?: Record<number, string>;
-    scoreRatio?: Record<number, number>;
+    score?: Record<number, number>;
 
     /**
      * In hours

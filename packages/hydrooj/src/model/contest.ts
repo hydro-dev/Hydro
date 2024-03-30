@@ -292,7 +292,9 @@ const oi = buildContestRule({
                 display[j.pid] = j;
             }
         }
-        for (const i in display) score += display[i].score || 0;
+        for (const i in display) {
+            score += ((tdoc.score?.[i] || 100) * (display[i].score || 0)) / 100;
+        }
         return { score, detail, display };
     },
     showScoreboard: (tdoc, now) => now > tdoc.endAt,
@@ -333,6 +335,10 @@ const oi = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
+        const displayScore = (pid: number, score?: number) => {
+            if (typeof score !== 'number') return '-';
+            return score * ((tdoc.score?.[pid] || 100) / 100);
+        };
         if (config.isExport) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
@@ -358,13 +364,13 @@ const oi = buildContestRule({
                     type: 'records',
                     value: '',
                     raw: [{
-                        value: tsddict[pid]?.score ?? '-',
+                        value: displayScore(pid, tsddict[pid]?.score),
                         raw: tsddict[pid]?.rid || null,
-                        original: tsddict[pid]?.original ?? null,
+                        original: tsddict[pid]?.score ?? null,
                     }, {
-                        value: meta?.psdict?.[index]?.score ?? '-',
+                        value: displayScore(pid, meta?.psdict?.[index]?.score),
                         raw: meta?.psdict?.[index]?.rid ?? null,
-                        original: meta?.psdict?.[index]?.original ?? null,
+                        original: meta?.psdict?.[index]?.score ?? null,
                     }],
                 } : {
                     type: 'record',
@@ -488,10 +494,10 @@ const strictioi = buildContestRule({
         for (const pid of tdoc.pids) {
             row.push({
                 type: 'record',
-                value: tsddict[pid]?.score || '',
+                value: ((tsddict[pid]?.score || 0) * ((tdoc.score?.[pid] || 100) / 100)).toString() || '',
                 hover: Object.values(tsddict[pid]?.subtasks || {}).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
-                original: tsddict[pid]?.original || 0,
+                original: tsddict[pid]?.score || 0,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
@@ -527,8 +533,9 @@ const ledo = buildContestRule({
         let originalScore = 0;
         for (const pid of tdoc.pids) {
             if (!detail[pid]) continue;
-            score += detail[pid].penaltyScore;
-            originalScore += detail[pid].score;
+            const rate = (tdoc.score?.[pid] || 100) / 100;
+            score += detail[pid].penaltyScore * rate;
+            originalScore += detail[pid].score * rate;
         }
         return {
             score, originalScore, detail,
@@ -562,7 +569,7 @@ const ledo = buildContestRule({
                 value: tsddict[pid]?.penaltyScore?.toString() || '',
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
-                original: tsddict[pid]?.original || 0,
+                original: tsddict[pid]?.score || 0,
                 style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
@@ -592,17 +599,18 @@ const homework = buildContestRule({
         }
 
         function penaltyScore(jdoc) {
+            const rate = (tdoc.score?.[jdoc.pid] || 100) / 100;
             const exceedSeconds = Math.floor(
                 (jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime()) / 1000,
             );
-            if (exceedSeconds < 0) return jdoc.score;
+            if (exceedSeconds < 0) return rate * jdoc.score;
             let coefficient = 1;
             const keys = Object.keys(tdoc.penaltyRules).map(parseFloat).sort((a, b) => a - b);
             for (const i of keys) {
                 if (i * 3600 <= exceedSeconds) coefficient = tdoc.penaltyRules[i];
                 else break;
             }
-            return jdoc.score * coefficient;
+            return rate * jdoc.score * coefficient;
         }
         const detail = [];
         for (const j in effective) {
@@ -701,7 +709,7 @@ const homework = buildContestRule({
                         ? '{0}\n{1}'.format(colScore, colTimeStr)
                         : '{0} / {1}\n{2}'.format(colScore, colOriginalScore, colTimeStr),
                     raw: rid,
-                    original: tsddict[pid]?.original || 0,
+                    original: tsddict[pid]?.score || 0,
                 });
             }
         }
@@ -814,9 +822,8 @@ async function _updateStatus(
     tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
     subtasks: Record<number, SubtaskResult>,
 ) {
-    const tscore = score * (tdoc.scoreRatio?.[pid] || 1);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
-        rid, pid, status, score: tscore, original: score, subtasks,
+        rid, pid, status, score, subtasks,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
