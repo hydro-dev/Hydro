@@ -16,10 +16,10 @@
           <colgroup>
           {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
             <col class="col--status">
-            <col class="col--submit-at">
-          {% endif %}
-          {% if showScore %}
+            {% if showScore %}
             <col class="col--score">
+            {% endif %}
+            <col class="col--submit-at">
           {% endif %}
             <col class="col--problem">
           </colgroup>
@@ -27,10 +27,10 @@
             <tr>
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
-              <th class="col--submit-at">{{ _('Last Submit At') }}</th>
-            {% endif %}
-            {% if showScore %}
+              {% if showScore %}
               <th class="col--score">{{ _('Score') }}</th>
+              {% endif %}
+              <th class="col--submit-at">{{ _('Last Submit At') }}</th>
             {% endif %}
               <th class="col--problem">{{ _('Problem') }}</th>
             </tr>
@@ -41,20 +41,23 @@
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
                 {% set rdoc = rdict[psdict[pid].rid] %}
-                {% set extraScore = ((tdoc.score[pid]|default(100)) * (psdict[pid].score|default(0)) / 100) if showScore else (psdict[pid].penaltyScore|default(psdict[pid].score)) %}
+                {% set displayScore = ((tdoc.score[pid]|default(100)) * (psdict[pid].score|default(0)) / 100) if showScore else (psdict[pid].penaltyScore|default(psdict[pid].score)) %}
                 {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
-                  {{ record.render_status_td(rdoc, extraScore=extraScore) }}
+                  {{ record.render_status_td(rdoc, displayScore=displayScore) }}
                 {% else %}
                   <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
+                {% endif %}
+                {% if showScore %}
+                <td class="col--score">{{ tdoc.score[pid]|default(100) }}</td>
                 {% endif %}
                 <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
               {% else %}
                 <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
+                {% if showScore %}
+                <td class="col--score">{{ tdoc.score[pid]|default(100) }}</td>
+                {% endif %}
                 <td class="col--submit-at">-</td>
               {% endif %}
-            {% endif %}
-            {% if showScore %}
-              <td class="col--score">{{ tdoc.score[pid]|default(100) }}</td>
             {% endif %}
               <td class="col--problem col--problem-name">
                 {{ problem.render_problem_title(pdict[pid], tdoc, alphabetic=true) }}
