@@ -1,4 +1,4 @@
-import { FilterXSS, safeAttrValue } from 'xss';
+import { escapeAttrValue, FilterXSS, safeAttrValue } from 'xss';
 
 const stack = [];
 const voidTags = ['br', 'hr', 'input', 'img', 'link', 'source', 'col', 'area', 'base', 'meta', 'embed', 'param', 'track', 'wbr'];
@@ -112,8 +112,8 @@ export const xss = new FilterXSS({
   allowCommentTag: false,
   stripIgnoreTagBody: ['script'],
   safeAttrValue(tag, name, value) {
-    if (name === 'id') return `xss-id-${value}`;
-    if (name === 'class') return value.replace(/badge/g, 'xss-badge');
+    if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
+    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
     return safeAttrValue(tag, name, value, this.cssFilter);
   },
 });
@@ -168,8 +168,8 @@ export const xssInline = new FilterXSS({
   stripIgnoreTag: true,
   stripIgnoreTagBody: ['script'],
   safeAttrValue(tag, name, value) {
-    if (name === 'id') return `xss-id-${value}`;
-    if (name === 'class') return value.replace(/badge/g, 'xss-badge');
+    if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
+    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
     return safeAttrValue(tag, name, value, this.cssFilter);
   },
 });
