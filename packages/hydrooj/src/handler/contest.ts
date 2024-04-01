@@ -253,6 +253,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tsdoc: this.tsdoc, tcdocs,
         };
         this.response.template = 'contest_problemlist.html';
+        this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 100);
         if (!this.tsdoc) return;
         if (this.tsdoc.attend && !this.tsdoc.startAt && contest.isOngoing(this.tdoc)) {
             await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
@@ -276,7 +277,6 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         } else {
             for (const i of psdocs) this.response.body.rdict[i.rid] = { _id: i.rid };
         }
-        this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 100);
     }
 
     @param('tid', Types.ObjectId)
