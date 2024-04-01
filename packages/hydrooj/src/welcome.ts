@@ -18,7 +18,7 @@ const bulletin = `\
 您也可以下载 [一本通编程启蒙](https://hydro.ac/ybtbas.zip) 和 [深入浅出程序设计竞赛（基础篇）](https://hydro.ac/srqc.zip) 题库并按照压缩包内说明导入系统。  
 如果您需要题目配置指南，可以 [查看文档](https://hydro.js.org) 或是 [查看配置示例](https://hydro.ac/d/system_test/) 。
 
-当你已经熟悉本系统的操作，可以在 [管理域 > 编辑域资料](/domain/edit) 页面修改或隐藏这条消息。
+当你已经熟悉本系统的操作，可以在 [管理域 > 编辑域资料](/domain/edit) 页面修改这条置顶信息。
 
 ### Welcome to Hydro !  
 

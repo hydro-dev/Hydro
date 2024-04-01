@@ -111,6 +111,29 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.11.2 / UI 4.49.8
+core: 支持给比赛题目设置分数倍率 (#765)
+workspace: 升级 ts 版本至 5.4.3
+core: ws: 处理 JSON 解析异常
+core: 允许向作业中上传文件 (#755)
+ui: 在比赛管理页显示赛题的题目标签
+judge: 修复部分情况下客观题返回结果异常的问题 (#770)
+ui: 在 `mdInline` 中禁用部分标签 (#767)
+core: 添加 R 语言和 cpp20 支持
+ui: 在评测记录页显示峰值耗时
+core: 修复比赛管理员无法查看代码的问题 (#764)
+judge: 提供 `hydrojudge terminal` 入口 (#725)
+core: 支持从 `/nix/store` 加载插件
+core: 添加 `contest/list` 钩子
+judge: vj4 支持
+ui: 修复评测设置面板 testlib 选择 (#762)
+fps-importer: 支持设置大小限制
+core: 添加 `PERM_VIEW_RECORD` 权限组 (#753)
+core: 修复未登录可以查看比赛公告的问题 (#756)
+ui: 允许使用 Enter 键提交 2FA (#752)
+core: 优化训练参与成员列表 (#750)
+core&ui: 其他性能优化和漏洞修复
+
 ### Hydro 4.11.0 / UI 4.49.6
 - core: 升级至 cordis@3
 - core: 优化 katex 处理

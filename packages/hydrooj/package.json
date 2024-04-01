@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.11.1",
+    "version": "4.11.2",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -65,7 +65,7 @@
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
         "@types/koa-static-cache": "^5.1.4",
-        "@types/lodash": "^4.14.202",
+        "@types/lodash": "^4.17.0",
         "@types/mime-types": "^2.1.4",
         "@types/mongodb-uri": "^0.9.4",
         "@types/nodemailer": "^6.4.14",
