@@ -376,6 +376,7 @@ homework_detail_problem_submit: 递交作业题目
 homework_detail_problem: 题目详情
 homework_detail: 作业详情
 homework_edit: 编辑作业
+homework_files: 作业文件
 homework_main: 作业
 homework_scoreboard: 作业成绩表
 homework_status: 作业成绩表
@@ -816,6 +817,7 @@ Training requirement is not satisfied.: 不满足训练条件。
 training_create: 创建训练
 training_detail: 训练详情
 training_edit: 编辑训练
+training_files: 训练文件
 training_main: 训练
 Training: 训练
 Trainings per page: 每页展示的训练数量
