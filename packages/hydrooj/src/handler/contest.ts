@@ -276,7 +276,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         } else {
             for (const i of psdocs) this.response.body.rdict[i.rid] = { _id: i.rid };
         }
-        this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 1);
+        this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 100);
     }
 
     @param('tid', Types.ObjectId)

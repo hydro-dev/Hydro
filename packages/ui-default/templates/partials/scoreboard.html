@@ -1,7 +1,7 @@
 {% import "components/user.html" as user with context %}
 {% macro renderRecord(cell, canView) %}
   {% if canView %}<a href="{{ url('record_detail', rid=cell.raw) }}">{% endif %}
-  {%- set _color = utils.status.getScoreColor(cell.original|default(cell.value)) -%}
+  {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
   <span {% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %} style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
   {% if canView %}</a>{% endif %}
 {% endmacro %}
