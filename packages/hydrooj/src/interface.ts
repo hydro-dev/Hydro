@@ -358,9 +358,9 @@ export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
 
 export interface ScoreboardNode {
     type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
-    value: string;
+    value: string; // 显示分数
     raw?: any;
-    score?: number;
+    score?: number; // 原始分数（100，不含赛制加成）
     style?: string;
     hover?: string;
 }
@@ -396,6 +396,7 @@ export interface Tdoc extends Document {
     unlocked?: boolean;
     autoHide?: boolean;
     balloon?: Record<number, string>;
+    score?: Record<number, number>;
 
     /**
      * In hours
