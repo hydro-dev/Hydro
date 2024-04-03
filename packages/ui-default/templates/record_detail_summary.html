@@ -6,9 +6,9 @@
   {% set _ge = rdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}
   {% if rdoc['time'] %}
     <dt>{{ _('Total Time') }}</dt>
-    <dd>{% if _ge %}&ge;{% endif %}{{ rdoc.time|round|int }}ms</dd>
+    <dd>{% if _ge %}&ge;{% endif %}{{ rdoc.time|round(0) }}ms</dd>
     <dt>{{ _('Peak Time') }}</dt>
-    <dd>{% if _ge %}&ge;{% endif %}{{ (rdoc.testCases|sort(attr="time")|first())["time"]|round(0) }}ms</dd>
+    <dd>{% if _ge %}&ge;{% endif %}{{ (rdoc.testCases|sort(true, true, "time")|first)["time"]|round(0) }}ms</dd>
   {% endif %}
   {% if rdoc['memory'] %}
     <dt>{{ _('Peak Memory') }}</dt>
