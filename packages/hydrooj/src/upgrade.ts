@@ -23,8 +23,7 @@ import TaskModel from './model/task';
 import * as training from './model/training';
 import user from './model/user';
 import {
-    iterateAllContest,
-    iterateAllDomain, iterateAllProblem, iterateAllUser,
+    iterateAllContest, iterateAllDomain, iterateAllProblem, iterateAllUser,
 } from './pipelineUtils';
 import db from './service/db';
 import { setBuiltinConfig } from './settings';
@@ -433,15 +432,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     null,
-    async function _65_66() {
-        return await iterateAllDomain(async (ddoc) => {
-            for (const role of Object.keys(ddoc.roles)) {
-                if (['guest', 'root'].includes(role)) return;
-                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_DISPLAYNAME).toString();
-            }
-            await domain.setRoles(ddoc._id, ddoc.roles);
-        });
-    },
+    null,
     async function _66_67() {
         const [
             endPoint, accessKey, secretKey, bucket, region,
@@ -631,15 +622,7 @@ const scripts: UpgradeScript[] = [
             }
         });
     },
-    async function _85_86() {
-        return await iterateAllDomain(async (ddoc) => {
-            for (const role of Object.keys(ddoc.roles)) {
-                if (role === 'root') return;
-                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_RECORD).toString();
-            }
-            await domain.setRoles(ddoc._id, ddoc.roles);
-        });
-    },
+    null,
     async function _86_87() {
         logger.info('Removing unused files...');
         return await iterateAllDomain(async ({ _id }) => {
@@ -655,6 +638,15 @@ const scripts: UpgradeScript[] = [
             for (const tdoc of trdocs) existsFiles = existsFiles.concat((tdoc.files || []).map((i) => `training/${_id}/${tdoc.docId}/${i.name}`));
             await StorageModel.del(trainingFilesList.filter((i) => !existsFiles.includes(i.name)).map((i) => i.name));
             logger.info('Domain %s done', _id);
+        });
+    },
+    async function _87_88() {
+        return await iterateAllDomain(async (ddoc) => {
+            for (const role of Object.keys(ddoc.roles)) {
+                if (role === 'root') continue;
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_RECORD).toString();
+            }
+            await domain.setRoles(ddoc._id, ddoc.roles);
         });
     },
 ];
