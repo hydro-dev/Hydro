@@ -1,7 +1,7 @@
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from '../../error';
 import serializer from '../../lib/serializer';
-import { PERM } from '../../model/builtin';
+import { PERM, PRIV } from '../../model/builtin';
 import type { KoaContext } from '../server';
 
 export default (logger) => async (ctx: KoaContext, next) => {
@@ -13,7 +13,9 @@ export default (logger) => async (ctx: KoaContext, next) => {
             response.body ||= {};
             response.body.url = response.redirect;
         }
-        if (!response.type) {
+        if (!user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) && !request.json) {
+            response.body = {};
+        } else if (!response.type) {
             if (response.pjax && args.pjax) {
                 const html = await ctx.renderHTML(response.pjax, response.body);
                 response.body = { fragments: [{ html }] };
