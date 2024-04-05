@@ -13,9 +13,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
             response.body ||= {};
             response.body.url = response.redirect;
         }
-        if (!user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) && !request.json) {
-            response.body = {};
-        } else if (!response.type) {
+        if (!response.type) {
             if (response.pjax && args.pjax) {
                 const html = await ctx.renderHTML(response.pjax, response.body);
                 response.body = { fragments: [{ html }] };
