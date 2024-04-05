@@ -1,7 +1,7 @@
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from '../../error';
 import serializer from '../../lib/serializer';
-import { PERM, PRIV } from '../../model/builtin';
+import { PERM } from '../../model/builtin';
 import type { KoaContext } from '../server';
 
 export default (logger) => async (ctx: KoaContext, next) => {
