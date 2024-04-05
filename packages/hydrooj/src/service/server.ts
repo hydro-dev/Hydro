@@ -4,7 +4,7 @@ import { join, resolve } from 'path';
 import cac from 'cac';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
-import Koa from 'koa';
+import Koa, { Next } from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
@@ -612,7 +612,22 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     pluginContext.on('app/exit', () => {
         fs.emptyDirSync(uploadDir);
     });
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
+    const jsonCheckLayer = async (ctx: KoaContext, next: Next) => {
+        const { user, request } = ctx.HydroContext;
+        const allowPaths = [
+            /^\/login/,
+            /^\/logout/,
+            /^\/constant\/\w*/,
+            /^\/lazy\/\w*\/\w*/,
+            /^\/resource\/\w*\/\w*/,
+        ];
+        if (allowPaths.some((p) => p.test(request.path)) || request.json || user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
+            await next();
+            return;
+        }
+        ctx.redirect('/login');
+    };
+    const layers = [baseLayer, rendererLayer(router, logger), userLayer, jsonCheckLayer, responseLayer(logger)];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     app.use(router.routes()).use(router.allowedMethods());
     for (const layer of layers) {
