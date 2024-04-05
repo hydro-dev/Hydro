@@ -335,6 +335,7 @@ class LocalStorageService {
     async copy(src: string, target: string) {
         src = resolve(this.dir, convertPath(src));
         target = resolve(this.dir, convertPath(target));
+        await ensureDir(dirname(target));
         await copyFile(src, target);
         return { etag: target, lastModified: new Date() };
     }
