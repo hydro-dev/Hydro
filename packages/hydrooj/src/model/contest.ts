@@ -632,8 +632,14 @@ const homework = buildContestRule({
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
-            { type: 'total_score', value: _('Score') },
         ];
+        if (config.isExport) {
+            columns.push({ type: 'email', value: _('Email') });
+            columns.push({ type: 'string', value: _('School') });
+            columns.push({ type: 'string', value: _('Name') });
+            columns.push({ type: 'string', value: _('Student ID') });
+        }
+        columns.push({ type: 'total_score', value: _('Score') });
         if (config.isExport) {
             columns.push({ type: 'string', value: _('Original Score') });
         }
@@ -675,11 +681,14 @@ const homework = buildContestRule({
                 value: udoc.uname,
                 raw: tsdoc.uid,
             },
-            {
-                type: 'string',
-                value: tsdoc.penaltyScore || 0,
-            },
         ];
+        if (config.isExport) {
+            row.push({ type: 'email', value: udoc.mail });
+            row.push({ type: 'string', value: udoc.school || '' });
+            row.push({ type: 'string', value: udoc.displayName || '' });
+            row.push({ type: 'string', value: udoc.studentId || '' });
+        }
+        row.push({ type: 'string', value: tsdoc.penaltyScore || 0 });
         if (config.isExport) {
             row.push({ type: 'string', value: tsdoc.score || 0 });
         }
