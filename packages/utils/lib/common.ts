@@ -199,6 +199,10 @@ export function size(s: number, base = 1) {
     return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
+export function randomPick<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export type StringKeys<O> = {
     [K in keyof O]: string extends O[K] ? K : never
 }[keyof O];

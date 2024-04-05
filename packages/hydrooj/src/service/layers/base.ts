@@ -1,6 +1,7 @@
 import { PassThrough } from 'stream';
 import type { Next } from 'koa';
 import { cloneDeep, omit, pick } from 'lodash';
+import { randomPick } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import token from '../../model/token';
@@ -59,8 +60,12 @@ export default async (ctx: KoaContext, next: Next) => {
         domainId, ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
     };
     const UiContext: any = cloneDeep(UiContextBase);
-    if (!process.env.DEV) UiContext.cdn_prefix = system.get('server.cdn');
-    if (!process.env.DEV) UiContext.ws_prefix = system.get('server.ws');
+    if (!process.env.DEV) {
+        UiContext.cdn_prefix = system.get('server.cdn');
+        if (UiContext.cdn_prefix.includes(',')) UiContext.cdn_prefix = randomPick(UiContext.cdn_prefix.split(','));
+        UiContext.ws_prefix = system.get('server.ws');
+        if (UiContext.ws_prefix.includes(',')) UiContext.ws_prefix = randomPick(UiContext.ws_prefix.split(','));
+    }
     UiContext.domainId = domainId;
     UiContext.domain = domainInfo;
     ctx.HydroContext = {
