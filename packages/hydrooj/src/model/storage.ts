@@ -106,7 +106,7 @@ export class StorageModel {
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(dst));
-        const result = await storage.copy(value._id, dst);
+        const result = await storage.copy(value._id, _id);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path: dst, size, etag, lastModified: new Date(), owner: value.owner || 1,
