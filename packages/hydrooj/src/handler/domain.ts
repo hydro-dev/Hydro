@@ -146,8 +146,9 @@ class DomainUserHandler extends ManageHandler {
         const udict = await user.getList(domainId, uids);
         for (const role of roles) rudocs[role._id] = [];
         for (const dudoc of dudocs) {
-            const ud = udict[dudoc.uid];
-            rudocs[ud.role || 'default'].push(ud);
+            const udoc = udict[dudoc.uid];
+            if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) continue;
+            rudocs[udoc.role || 'default'].push(udoc);
         }
         this.response.template = 'domain_user.html';
         this.response.body = {
