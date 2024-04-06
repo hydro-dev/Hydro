@@ -108,4 +108,5 @@ user_login: Login
 user_logout: Logout
 user_lostpass: Lost Password
 user_register: Register
+wiki_about: About
 wiki_help: Help
