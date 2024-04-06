@@ -1,3 +1,4 @@
+import os from 'os';
 import log from './log';
 import client from './sandbox/client';
 
@@ -11,17 +12,19 @@ export = async function terminal() {
         log.error('interactive terminal requires available tty');
         return;
     }
+    const memoryLimit = Math.floor(os.totalmem() / 4);
     process.stdin.setRawMode(true);
     log.info('Starting /bin/bash, double press Ctrl+C to kill all child processes.');
+    log.info(`Current memory limit is ${Math.floor(memoryLimit / 1024 / 1024)}m`);
     const stream = client.stream({
         cmd: [{
             args: ['/bin/bash'],
             env: ['PATH=/usr/local/bin:/usr/bin:/bin', 'HOME=/tmp', `TERM=${process.env['TERM']}`],
             files: [{ streamIn: true }, { streamOut: true }, { streamOut: true }],
-            cpuLimit: (20 * 1e9),
-            clockLimit: (30 * 60 * 1e9),
-            memoryLimit: (256 << 20),
-            procLimit: 50,
+            cpuLimit: (120 * 1e9),
+            clockLimit: (30 * 120 * 1e9),
+            memoryLimit,
+            procLimit: 128,
             tty: true,
         }],
     });
