@@ -33,6 +33,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   else if (conn && conn.readyState === conn.OPEN) return;
   lcookie = cookie;
   console.log('Init connection for', path);
+  conn?.close();
   conn = new ReconnectingWebsocket(path);
   ports.push(port);
   conn.onopen = () => conn.send(cookie);
