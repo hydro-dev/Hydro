@@ -22,4 +22,6 @@ docker exec -it codemate-core-hydro-1 /bin/sh
 npx hydrooj cli user create admin_email@example.com admin 123456 2
 # Gave this user super admin
 npx hydrooj cli user setSuperAdmin 2
+# Quit the docker shell
+exit
 ```
