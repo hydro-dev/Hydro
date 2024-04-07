@@ -1,0 +1,13 @@
+version: '3.7'
+
+services:
+  hydro:
+    build: .
+    ports:
+      - "8888:8888"
+    restart: always
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: db_password
