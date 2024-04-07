@@ -24,7 +24,7 @@
         "lint:ui": "yarn workspace @hydrooj/ui-default lint --ext .js,.ts,.jsx,.tsx . --fix",
         "lint:ui:ci": "yarn workspace @hydrooj/ui-default lint --ext .js,.ts,.jsx,.tsx . --max-warnings=0",
         "debug": "node --trace-warnings --async-stack-traces --trace-deprecation packages/hydrooj/bin/hydrooj --debug --template",
-        "start": "packages/hydrooj/bin/hydrooj",
+        "start": "node packages/hydrooj/bin/hydrooj",
         "postinstall": "node build/prepare.js",
         "gen-patch": "node -r @hydrooj/register build/gen-patch.ts",
         "hydrooj": "./node_modules/.bin/hydrooj"

@@ -30,6 +30,7 @@ yarn.lock
 pnpm-lock.yaml
 tsconfig.json
 tsconfig.*.json
+.idea/
 
 # Project Rules
 ## Core
