@@ -141,10 +141,13 @@ export class User {
         return false;
     }
 
-    checkPassword(password: string) {
+    async checkPassword(password: string) {
         const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
-        const result = h(password, this._salt, this);
+        let result = h(password, this._salt, this);
+        if (result instanceof Promise) {
+            result = await result;
+        }
         if (result !== true && result !== this._hash) {
             throw new LoginError(this.uname);
         }
@@ -290,7 +293,7 @@ class UserModel {
         const salt = String.random();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
-            { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
+            { $set: { salt, hash: await pwhash(password, salt), hashType: 'hydro' } },
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
@@ -328,7 +331,8 @@ class UserModel {
                     mailLower: handleMailLower(mail),
                     uname,
                     unameLower: uname.trim().toLowerCase(),
-                    hash: pwhash(password.toString(), salt),
+                    // eslint-disable-next-line no-await-in-loop
+                    hash: await pwhash(password.toString(), salt),
                     salt,
                     hashType: 'hydro',
                     regat: new Date(),

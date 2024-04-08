@@ -787,7 +787,7 @@ export interface ModuleInterfaces {
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
-    hash: (password: string, salt: string, user: User) => boolean | string;
+    hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
     render: (name: string, state: any) => string | Promise<string>;
 }
 
