@@ -144,10 +144,7 @@ export class User {
     async checkPassword(password: string) {
         const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
-        let result = h(password, this._salt, this);
-        if (result instanceof Promise) {
-            result = await result;
-        }
+        const result = await h(password, this._salt, this);
         if (result !== true && result !== this._hash) {
             throw new LoginError(this.uname);
         }
