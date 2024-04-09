@@ -9,6 +9,7 @@ import { escapeRegExp, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
 import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
@@ -446,27 +447,27 @@ export class ProblemModel {
     static async import(domainId: string, filepath: string, operator = 1, preferredPrefix?: string) {
         let tmpdir = '';
         let del = false;
-        if (filepath.endsWith('.zip')) {
-            tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
-            let zip: AdmZip;
-            try {
-                zip = new AdmZip(filepath);
-            } catch (e) {
-                throw new ValidationError('zip', null, e.message);
-            }
-            del = true;
-            await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(tmpdir, true, (err) => {
-                    if (err) reject(err);
-                    resolve(null);
-                });
-            });
-        } else if (fs.statSync(filepath).isDirectory()) {
-            tmpdir = filepath;
-        } else {
-            throw new ValidationError('file', null, 'Invalid file');
-        }
         try {
+            if (filepath.endsWith('.zip')) {
+                tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
+                let zip: AdmZip;
+                try {
+                    zip = new AdmZip(filepath);
+                } catch (e) {
+                    throw new ValidationError('zip', null, e.message);
+                }
+                del = true;
+                await new Promise((resolve, reject) => {
+                    zip.extractAllToAsync(tmpdir, true, (err) => {
+                        if (err) reject(err);
+                        resolve(null);
+                    });
+                });
+            } else if (fs.statSync(filepath).isDirectory()) {
+                tmpdir = filepath;
+            } else {
+                throw new ValidationError('file', null, 'Invalid file');
+            }
             const problems = await fs.readdir(tmpdir, { withFileTypes: true });
             for (const p of problems) {
                 if (process.env.HYDRO_CLI) logger.info(`Importing problem ${p.name}`);
@@ -592,24 +593,26 @@ export class ProblemModel {
     }
 }
 
-bus.on('problem/addTestdata', async (domainId, docId, name) => {
-    if (!['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(name)) return;
-    const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${name}`);
-    await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
-});
-bus.on('problem/delTestdata', async (domainId, docId, names) => {
-    if (!names.includes('config.yaml')) return;
-    await ProblemModel.edit(domainId, docId, { config: '' });
-});
-bus.on('problem/renameTestdata', async (domainId, docId, file, newName) => {
-    if (['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(file)) {
-        await ProblemModel.edit(domainId, docId, { config: '' });
-    }
-    if (['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(newName)) {
-        const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${newName}`);
+export function apply(ctx: Context) {
+    ctx.on('problem/addTestdata', async (domainId, docId, name) => {
+        if (!['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(name)) return;
+        const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${name}`);
         await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
-    }
-});
+    });
+    ctx.on('problem/delTestdata', async (domainId, docId, names) => {
+        if (!names.includes('config.yaml')) return;
+        await ProblemModel.edit(domainId, docId, { config: '' });
+    });
+    ctx.on('problem/renameTestdata', async (domainId, docId, file, newName) => {
+        if (['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(file)) {
+            await ProblemModel.edit(domainId, docId, { config: '' });
+        }
+        if (['config.yaml', 'config.yml', 'Config.yaml', 'Config.yml'].includes(newName)) {
+            const buf = await storage.get(`problem/${domainId}/${docId}/testdata/${newName}`);
+            await ProblemModel.edit(domainId, docId, { config: (await streamToBuffer(buf)).toString() });
+        }
+    });
+}
 
 global.Hydro.model.problem = ProblemModel;
 export default ProblemModel;
