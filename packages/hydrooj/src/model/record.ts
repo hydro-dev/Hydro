@@ -23,7 +23,7 @@ export default class RecordModel {
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
         'contest', 'judger', 'judgeAt', 'status', 'source',
-        'files',
+        'files', 'hackTarget',
     ];
 
     static RECORD_PRETEST = new ObjectId('000000000000000000000000');
@@ -114,6 +114,7 @@ export default class RecordModel {
             contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
+            hackTarget?: ObjectId,
             type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate',
         } = { type: 'judge' },
     ) {
@@ -138,6 +139,7 @@ export default class RecordModel {
         let isContest = !!args.contest;
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
+        if (args.hackTarget) data.hackTarget = args.hackTarget;
         if (args.type === 'rejudge') {
             args.type = 'judge';
             data.rejudged = true;

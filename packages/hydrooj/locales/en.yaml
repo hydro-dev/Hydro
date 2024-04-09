@@ -71,6 +71,7 @@ problem_create: Problem Create
 problem_detail: Problem Detail
 problem_edit: Problem Edit
 problem_files: Problem Files
+problem_hack: Hack
 problem_import: Import Problem
 problem_main: Problem Set
 problem_solution: Problem Solution

@@ -181,6 +181,8 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             problem.getStatus(domainId, rdoc.pid, this.user._id),
             user.getById(domainId, rdoc.uid),
         ]);
+        const hackrdoc = this.rdoc.hackTarget ? await record.get(domainId, this.rdoc.hackTarget) : null;
+        const hackudoc = hackrdoc ? await user.getById(domainId, hackrdoc.uid) : null;
 
         let canViewCode = rdoc.uid === this.user._id;
         canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
@@ -201,7 +203,11 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         } else if (download) return await this.download();
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
+            udoc,
+            rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']),
+            pdoc,
+            tdoc: this.tdoc,
+            hackudoc,
         };
     }
 

@@ -329,8 +329,10 @@ export interface RecordDoc {
     judgeAt: Date;
     status: number;
     progress?: number;
-    /** pretest & hack */
+    /** pretest */
     input?: string;
+    /** hack target rid */
+    hackTarget?: ObjectId;
     /** 0 if pretest&script */
     contest?: ObjectId;
 

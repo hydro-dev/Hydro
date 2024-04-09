@@ -36,6 +36,7 @@ __langname: 简体中文
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
+"Or upload a file:": 或者上传一个文件：
 "Split by ',' '.'": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
@@ -87,7 +88,9 @@ Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
+Auto adjust the format of line breaks and remove unnecessary whitespace characters.: 自动调整换行符格式，并移除不必要的空白字符。
 Auto format code: 自动格式化代码
+Auto organize input: 自动整理输入
 Avatar: 头像
 Back to contest list: 返回比赛列表
 Be Copied: 被复制
@@ -280,6 +283,7 @@ Domain: 域
 Don't have an account?: 还没有账户？
 Done: 已结束
 Download Dataset: 下载数据集
+Download Hack Input: 下载 Hack 输入
 Download link copied to clipboard!: 下载链接已复制到剪贴板。
 Download: 下载
 Downvote: 差评
@@ -602,6 +606,7 @@ problem_create: 创建题目
 problem_detail: 题目详情
 problem_edit: 编辑题目
 problem_files: 题目文件
+problem_hack: Hack
 problem_import: 导入题目
 problem_main: 题库
 problem_solution: 题解
