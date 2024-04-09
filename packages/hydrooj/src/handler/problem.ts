@@ -587,8 +587,9 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     }
 
     @param('input', Types.String, true)
+    @param('autoOrganizeInput', Types.Boolean, true)
     @param('tid', Types.ObjectId, true)
-    async post(domainId: string, input = '', tid?: ObjectId) {
+    async post(domainId: string, input = '', autoOrganizeInput = false, tid?: ObjectId) {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         const id = `${this.user._id}/${nanoid()}`;
@@ -597,12 +598,20 @@ export class ProblemHackHandler extends ProblemDetailHandler {
             if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');
             await storage.put(`submission/${id}`, file.filepath, this.user._id);
         } else if (input) {
+            if (autoOrganizeInput) {
+                input = input.split('\n').map((line) => line.replace(/\s+$/, '')).join('\n').replace(/\n*$/, '\n');
+            }
             await storage.put(`submission/${id}`, Buffer.from(input), this.user._id);
         }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
             this.rdoc.lang, this.rdoc.code, true,
-            { contest: tid, type: 'hack', files: { hack: `${id}#input.txt` } },
+            {
+                contest: tid,
+                type: 'hack',
+                hackTarget: this.rdoc._id,
+                files: { hack: `${id}#input.txt` },
+            },
         );
         // TODO contest: update status;
         this.response.body = { rid };

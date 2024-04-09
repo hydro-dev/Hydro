@@ -862,6 +862,7 @@ user_logout: 登出
 user_lostpass: 忘记密码
 user_register_mail_sent: 注册邮件已发送
 user_register: 注册
+user_sudo: 用户安全授权
 User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID

@@ -14,7 +14,10 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Code') }}</h1>
         <div class="section__tools">
-          <a class="primary rounded button" href="?download=true"><span class="icon icon-download"></span> {% if rdoc.files.hack %}{{ _('Download Hack Input') }}{% else %}{{ _('Download') }}{% endif %}</a>
+          <a class="primary rounded button" href="?download=true">
+            <span class="icon icon-download"></span>
+            {% if rdoc.files.hack %}{{ _('Download Hack Input') }}{% else %}{{ _('Download') }}{% endif %}
+          </a>
         </div>
       </div>
       <div class="section__body">
@@ -65,7 +68,6 @@
           <dd>{{ user.render_inline(udoc, modbadge=false) }}</dd>
           {% if hackudoc %}
             <dt>{{ _('Hacked') }}</dt>
-            <dd>{{ user.render_inline(hackudoc, modbadge=false) }}</dd>
             <dd>{{ user.render_inline(hackudoc, modbadge=false) }}</dd>
             <dt>{{ _('Submission') }}</dt>
             <dd><a href="{{ url('record_detail', rid=rdoc.hackTarget) }}">{{ rdoc.hackTarget }}</a></dd>
