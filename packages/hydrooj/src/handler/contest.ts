@@ -260,6 +260,9 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             this.tsdoc.startAt = new Date();
         }
         this.response.body.psdict = this.tsdoc.detail || {};
+        for (const pid in this.response.body.psdict) {
+            this.response.body.psdict[pid] = contest.applyProjection(this.tdoc, this.response.body.psdict[pid], this.user);
+        }
         const psdocs: any[] = Object.values(this.response.body.psdict);
         if (contest.canShowSelfRecord.call(this, this.tdoc)) {
             [this.response.body.rdict, this.response.body.rdocs] = await Promise.all([
