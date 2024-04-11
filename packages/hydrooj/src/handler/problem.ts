@@ -54,7 +54,6 @@ registerValue('Problem', [
     ['pid', 'String'],
     ['title', 'String!'],
     ['content', 'String!'],
-    ['config', 'String!'],
     ['data', '[FileInfo]'],
     ['additional_file', '[FileInfo]'],
     ['nSubmit', 'Int'],
