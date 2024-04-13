@@ -23,7 +23,7 @@ export class HydroError extends Error {
     }
 }
 
-const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
+export const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
     let msg: () => string;
     let code: number;
     for (const item of info) {
