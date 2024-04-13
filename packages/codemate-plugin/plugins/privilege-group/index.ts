@@ -1,4 +1,4 @@
-import { DeleteResult, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import {
     db, Err, GDoc, HydroGlobal, NotFoundError,
 } from 'hydrooj';
