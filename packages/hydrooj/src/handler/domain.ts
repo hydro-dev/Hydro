@@ -1,3 +1,4 @@
+import { GroupModel } from 'codemate-plugin';
 import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
@@ -44,15 +45,15 @@ registerResolver('Domain', 'manage', 'DomainManage', async (args, ctx) => {
 registerResolver('DomainManage', 'group', 'DomainGroup', (args, ctx) => ctx.parent);
 registerResolver(
     'DomainGroup', 'list(uid: Int)', '[GroupInfo]',
-    (args, ctx) => user.listGroup(ctx.parent._id, args.uid),
+    (args, ctx) => GroupModel.list(ctx.parent._id, args.uid),
 );
 registerResolver(
     'DomainGroup', 'update(name: String!, uids: [Int]!)', 'Boolean',
-    async (args, ctx) => !!(await user.updateGroup(ctx.parent._id, args.name, args.uids)).upsertedCount,
+    async (args, ctx) => !!(await GroupModel.update(ctx.parent._id, args.name, args.uids)).upsertedCount,
 );
 registerResolver(
     'DomainGroup', 'del(name: String!)', 'Boolean',
-    async (args, ctx) => !!(await user.delGroup(ctx.parent._id, args.name)).deletedCount,
+    async (args, ctx) => !!(await GroupModel.del(ctx.parent._id, args.name)).deletedCount,
 );
 
 class DomainRankHandler extends Handler {
@@ -290,20 +291,20 @@ class DomainUserGroupHandler extends ManageHandler {
         this.response.template = 'domain_group.html';
         this.response.body = {
             domain: this.domain,
-            groups: await user.listGroup(domainId),
+            groups: await GroupModel.list(domainId),
         };
     }
 
     @param('name', Types.Name)
     async postDel(domainId: string, name: string) {
-        await user.delGroup(domainId, name);
+        await GroupModel.del(domainId, name);
         this.back();
     }
 
     @param('name', Types.Name)
     @param('uids', Types.NumericArray)
     async postUpdate(domainId: string, name: string, uids: number[]) {
-        await user.updateGroup(domainId, name, uids);
+        await GroupModel.update(domainId, name, uids);
         this.back();
     }
 }

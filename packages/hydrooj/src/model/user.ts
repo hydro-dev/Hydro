@@ -446,6 +446,7 @@ class UserModel {
         ]);
     }
 
+    /** @deprecated use codemate-plugin GroupModel instead */
     static async listGroup(domainId: string, uid?: number) {
         const groups = await collGroup.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
         if (uid) {
@@ -456,11 +457,13 @@ class UserModel {
         return groups;
     }
 
+    /** @deprecated use codemate-plugin GroupModel instead */
     static delGroup(domainId: string, name: string) {
         deleteUserCache(domainId);
         return collGroup.deleteOne({ domainId, name });
     }
 
+    /** @deprecated use codemate-plugin GroupModel instead */
     static updateGroup(domainId: string, name: string, uids: number[]) {
         deleteUserCache(domainId);
         return collGroup.updateOne({ domainId, name }, { $set: { uids } }, { upsert: true });

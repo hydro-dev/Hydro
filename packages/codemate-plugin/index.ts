@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Context } from 'hydrooj';
+import { Context, unwrapExports } from 'hydrooj';
 
 export default async function apply(ctx: Context) {
     fs.readdir('./plugins/', (err, files) => {
@@ -8,11 +8,17 @@ export default async function apply(ctx: Context) {
         for (const plugin of files) {
             const pluginPath = path.join('./plugins/', plugin);
             if (fs.statSync(pluginPath).isDirectory()) {
-                // eslint-disable-next-line import/no-dynamic-require
-                if (fs.existsSync(`${pluginPath}/index.ts`)) require(`${pluginPath}/index.ts`).apply?.(ctx);
+                if (fs.existsSync(`${pluginPath}/index.ts`)) {
+                    // eslint-disable-next-line import/no-dynamic-require
+                    const _ = require(`${pluginPath}/index.ts`);
+                    _?.apply?.(ctx);
+                    unwrapExports(_);
+                }
             } else {
                 // eslint-disable-next-line import/no-dynamic-require
-                require(pluginPath).apply?.(ctx);
+                const _ = require(pluginPath);
+                _?.apply?.(ctx);
+                unwrapExports(_);
             }
         }
     });

@@ -1,6 +1,6 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, UpdateResult } from 'mongodb';
 import {
-    db, Err, GDoc, HydroGlobal, NotFoundError,
+    db, deleteUserCache, Err, GDoc, HydroGlobal, NotFoundError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -35,10 +35,11 @@ export class GroupModel {
     static async del(domainId: string, name: string) {
         const gdoc = await this.coll.findOne({ domainId, name });
         if (!gdoc) throw new GroupNotFoundError();
-        for (const child of gdoc.children) {
+        for (const child of gdoc.children || []) {
             // eslint-disable-next-line no-await-in-loop
             await this.coll.updateOne({ _id: child }, { $unset: { parent: 1 } });
         }
+        deleteUserCache(domainId);
         return await this.coll.deleteOne({ domainId, name });
     }
 
@@ -46,15 +47,38 @@ export class GroupModel {
         // check if a user has a group
         let gdoc = await this.coll.findOne({ domainId, name });
         if (!gdoc) throw new GroupNotFoundError();
-        while (!gdoc.uids.includes(uid) && gdoc.parent) {
+        while (gdoc && !gdoc.uids.includes(uid) && gdoc.parent) {
             // eslint-disable-next-line no-await-in-loop
             gdoc = await this.coll.findOne({ _id: gdoc.parent });
         }
-        return gdoc.uids.includes(uid);
+        return gdoc && gdoc.uids.includes(uid);
     }
 
     static async get(domainId: string, name: string) {
         return await this.coll.findOne({ domainId, name });
+    }
+
+    static async list(domainId: string, uid?: number) {
+        const groups = await this.coll.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
+        console.log(groups);
+        if (uid) {
+            groups.push({
+                _id: new ObjectId(), domainId, uids: [uid], name: uid.toString(),
+            });
+        }
+        return groups;
+    }
+
+    static async update(domainId: string, name: string, uids: number[], parent?: ObjectId): Promise<UpdateResult> {
+        const gdoc = await this.coll.findOne({ domainId, name });
+        if (!gdoc) {
+            await this.add(domainId, name, parent);
+            return await this.update(domainId, name, uids, parent);
+        }
+        if (parent) {
+            await this.coll.updateOne({ _id: parent }, { $addToSet: { children: gdoc._id } });
+        }
+        return await this.coll.updateOne({ _id: gdoc._id }, { $set: { uids, parent } });
     }
 }
 

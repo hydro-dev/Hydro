@@ -3,5 +3,7 @@
   "packageManager": "yarn@4.0.2",
   "dependencies": {
     "hydrooj": "workspace:^"
-  }
+  },
+  "module": "api.ts",
+  "main": "api.ts"
 }

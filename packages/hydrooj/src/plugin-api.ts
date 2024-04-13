@@ -18,7 +18,7 @@ export { DocType } from './model/document';
 export * as BuiltinModel from './model/builtin';
 export * as ContestModel from './model/contest';
 export { default as TokenModel } from './model/token';
-export { default as UserModel } from './model/user';
+export { deleteUserCache, default as UserModel } from './model/user';
 export { default as ProblemModel } from './model/problem';
 export { default as RecordModel } from './model/record';
 export { default as SolutionModel } from './model/solution';
