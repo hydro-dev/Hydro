@@ -2,6 +2,7 @@ import { GroupModel } from 'codemate-plugin';
 import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
+import { ObjectId } from 'mongodb';
 import { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
@@ -303,8 +304,9 @@ class DomainUserGroupHandler extends ManageHandler {
 
     @param('name', Types.Name)
     @param('uids', Types.NumericArray)
-    async postUpdate(domainId: string, name: string, uids: number[]) {
-        await GroupModel.update(domainId, name, uids);
+    @param('parent', Types.ObjectId, true) // 兼容旧版本 Hydro
+    async postUpdate(domainId: string, name: string, uids: number[], parent?: ObjectId) {
+        await GroupModel.update(domainId, name, uids, parent);
         this.back();
     }
 }
