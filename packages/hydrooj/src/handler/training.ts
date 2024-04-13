@@ -7,7 +7,6 @@ import {
     FileLimitExceededError, FileUploadError, ProblemNotFoundError, ValidationError,
 } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
-import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
@@ -64,10 +63,10 @@ class TrainingMainHandler extends Handler {
     async get(domainId: string, page = 1) {
         const query: Filter<TrainingDoc> = {};
         await this.ctx.parallel('training/list', query, this);
-        const [tdocs, tpcount] = await paginate(
+        const [tdocs, tpcount] = await this.paginate(
             training.getMulti(domainId),
             page,
-            system.get('pagination.training'),
+            'training',
         );
         const tids: Set<ObjectId> = new Set();
         for (const tdoc of tdocs) tids.add(tdoc.docId);
@@ -106,7 +105,7 @@ class TrainingDetailHandler extends Handler {
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
+            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 }, enroll: 1 })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             shouldCompare = uid !== this.user._id;
         } else uid = this.user._id;
@@ -150,8 +149,10 @@ class TrainingDetailHandler extends Handler {
             donePids: Array.from(donePids),
             done: doneNids.size === tdoc.dag.length,
         });
+        const groups = this.user.hasPerm(PERM.PERM_EDIT_DOMAIN)
+            ? await user.listGroup(domainId) : [];
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict, groups,
         };
         this.response.body.tdoc.description = this.response.body.tdoc.description
             .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
@@ -172,7 +173,10 @@ class TrainingDetailHandler extends Handler {
     async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await training.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        await training.del(domainId, tid);
+        await Promise.all([
+            training.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `training/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
         this.response.redirect = this.url('training_main');
     }
 }
@@ -202,20 +206,19 @@ class TrainingEditHandler extends Handler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('dag', Types.Content)
-    @param('pin', Types.Boolean)
+    @param('pin', Types.UnsignedInt)
     @param('description', Types.Content)
     async post(
         domainId: string, tid: ObjectId,
         title: string, content: string,
-        _dag: string, pin = false, description: string,
+        _dag: string, pin = 0, description: string,
     ) {
-        if ((!!this.tdoc?.pin) !== pin) this.checkPerm(PERM.PERM_PIN_TRAINING);
+        if ((!!this.tdoc?.pin) !== (!!pin)) this.checkPerm(PERM.PERM_PIN_TRAINING);
         const dag = await _parseDagJson(domainId, _dag);
         const pids = training.getPids(dag);
         assert(pids.length, new ValidationError('dag', null, 'Please specify at least one problem'));
         if (!tid) {
-            tid = await training.add(domainId, title, content, this.user._id, dag, description);
-            if (pin) await training.edit(domainId, tid, { pin });
+            tid = await training.add(domainId, title, content, this.user._id, dag, description, pin);
         } else {
             await training.edit(domainId, tid, {
                 title, content, dag, description, pin,
@@ -275,7 +278,7 @@ export class TrainingFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `training/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

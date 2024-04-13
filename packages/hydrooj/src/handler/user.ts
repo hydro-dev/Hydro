@@ -117,7 +117,7 @@ class UserLoginHandler extends Handler {
                 await token.del(authnChallenge, token.TYPE_WEBAUTHN);
             } else throw new ValidationError('2FA', 'Authn');
         }
-        udoc.checkPassword(password);
+        await udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
         this.session.viewLang = '';
@@ -125,10 +125,9 @@ class UserLoginHandler extends Handler {
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
-        this.response.redirect = (redirect ? decodeURIComponent(redirect) : '')
-            || ((this.request.referer || '/login').endsWith('/login')
-                ? this.url('homepage')
-                : this.request.referer);
+        this.session.recreate = true;
+        this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
+            ? this.url('homepage') : this.request.referer);
     }
 }
 
@@ -154,7 +153,7 @@ class UserSudoHandler extends Handler {
             await token.del(authnChallenge, token.TYPE_WEBAUTHN);
         } else if (this.user.tfa && tfa) {
             if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-        } else this.user.checkPassword(password);
+        } else await this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -167,6 +166,11 @@ class UserSudoHandler extends Handler {
 class UserWebauthnHandler extends Handler {
     noCheckPermView = true;
 
+    getAuthnHost() {
+        return system.get('authn.host') && this.request.hostname.includes(system.get('authn.host'))
+            ? system.get('authn.host') : this.request.hostname;
+    }
+
     @param('uname', Types.Username, true)
     async get(domainId: string, uname: string) {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
@@ -177,6 +181,7 @@ class UserWebauthnHandler extends Handler {
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
             })),
+            rpID: this.getAuthnHost(),
             userVerification: 'preferred',
         });
         await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
@@ -197,7 +202,7 @@ class UserWebauthnHandler extends Handler {
             response: result,
             expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
-            expectedRPID: this.request.hostname,
+            expectedRPID: this.getAuthnHost(),
             authenticator: {
                 ...authenticator,
                 credentialID: authenticator.credentialID.buffer,
@@ -222,6 +227,7 @@ class UserLogoutHandler extends Handler {
     async post() {
         this.session.uid = 0;
         this.session.sudo = null;
+        this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.response.redirect = '/';
     }
@@ -242,6 +248,7 @@ export class UserRegisterHandler extends Handler {
             const mailDomain = mail.split('@')[1];
             if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
             await Promise.all([
+                this.limitRate(`send_mail_${mail}`, 60, 3, false),
                 this.limitRate('send_mail', 3600, 30, false),
                 oplog.log(this, 'user.register', {}),
             ]);
@@ -264,7 +271,11 @@ export class UserRegisterHandler extends Handler {
             } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
         } else if (phoneNumber) {
             if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
-            await this.limitRate('send_sms', 60, 3);
+            await Promise.all([
+                this.limitRate(`send_sms_${phoneNumber}`, 60, 1, false),
+                this.limitRate('send_sms', 3600, 15, false),
+                oplog.log(this, 'user.register', {}),
+            ]);
             const id = String.random(6, '0123456789');
             await token.add(
                 token.TYPE_REGISTRATION,
@@ -301,18 +312,21 @@ class UserRegisterWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_REGISTRATION);
         if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
         if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${tdoc.phone}@hydro.local`;
+        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
         const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = tdoc.mail.split('@');
         const $set: any = tdoc.set || {};
+        if (tdoc.phone) $set.phone = tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
         this.session.viewLang = '';
         this.session.uid = uid;
+        this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
+        this.session.recreate = true;
         this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
@@ -329,6 +343,11 @@ class UserLostPassHandler extends Handler {
         if (!system.get('smtp.user')) throw new SystemError('Cannot send mail');
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
+        await Promise.all([
+            this.limitRate('send_mail', 3600, 30, false),
+            this.limitRate(`user_lostpass_${mail}`, 60, 3, false),
+            oplog.log(this, 'user.lostpass', {}),
+        ]);
         const [tid] = await token.add(
             token.TYPE_LOSTPASS,
             system.get('session.unsaved_expire_seconds'),
@@ -427,7 +446,7 @@ class UserDetailHandler extends Handler {
 
 class UserDeleteHandler extends Handler {
     async post({ password }) {
-        this.user.checkPassword(password);
+        await this.user.checkPassword(password);
         const tid = await ScheduleModel.add({
             executeAfter: moment().add(7, 'days').toDate(),
             type: 'script',
@@ -464,9 +483,11 @@ class OauthCallbackHandler extends Handler {
             if (r.email) {
                 const udoc = await user.getByEmail('system', r.email);
                 if (udoc) {
+                    await oauth.set(r._id, udoc._id);
                     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
                     this.session.uid = udoc._id;
                     this.session.scope = PERM.PERM_ALL.toString();
+                    this.session.recreate = true;
                     this.response.redirect = '/';
                     return;
                 }
@@ -496,7 +517,7 @@ class OauthCallbackHandler extends Handler {
                     username,
                     redirect: this.domain.registerRedirect,
                     set,
-                    oauth: [args.type, r.email],
+                    oauth: [args.type, r._id],
                 },
             );
             this.response.redirect = this.url('user_register_with_code', { code: t });

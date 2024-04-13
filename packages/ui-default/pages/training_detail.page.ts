@@ -32,11 +32,13 @@ async function handleSection(ev: JQuery.ClickEvent<Document>, type: SectionActio
 
 function searchUser() {
   const val = $('input[name=uid]').val().toString().toLowerCase();
+  const group = $('select[name=group]').val().toString().toLowerCase();
   $('.enroll_user_menu_item').each((i, e) => {
     const $item = $(e);
     const $username = $item.data('uname').toString().toLowerCase();
+    const $displayName = $item.data('displayname')?.toString().toLowerCase();
     const $uid = $item.data('uid').toString();
-    $item.toggle($username.includes(val) || $uid === val);
+    $item.toggle((($displayName?.includes(val) || $username.includes(val)) && (group === 'all' || group.split(',').includes($uid))) || $uid === val);
   });
 }
 
@@ -70,6 +72,7 @@ async function handleHashChange() {
 
 const page = new NamedPage('training_detail', () => {
   $('.search__input').on('input', _.debounce(searchUser, 500));
+  $('select[name=group]').on('change', searchUser);
   $('#searchForm').on('submit', selectUser);
   $(document).on('click', '[name="training__section__expand"]', (ev) => handleSection(ev, 'expand'));
   $(document).on('click', '[name="training__section__collapse"]', (ev) => handleSection(ev, 'collapse'));

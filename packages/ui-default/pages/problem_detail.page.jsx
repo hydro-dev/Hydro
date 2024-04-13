@@ -186,8 +186,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   async function loadObjective() {
     $('.outer-loader-container').show();
     const ans = {};
+    const pids = [];
     let cnt = 0;
-    const reg = /{{ (input|select|multiselect)\(\d+(-\d+)?\) }}/g;
+    const reg = /{{ (input|select|multiselect|textarea)\(\d+(-\d+)?\) }}/g;
     $('.problem-content .typo').children().each((i, e) => {
       if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
       const questions = [];
@@ -195,11 +196,18 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       while (q = reg.exec(e.innerText)) questions.push(q); // eslint-disable-line no-cond-assign
       for (const [info, type] of questions) {
         cnt++;
-        const id = info.replace(/{{ (input|select|multiselect)\((\d+(-\d+)?)\) }}/, '$2');
+        const id = info.replace(/{{ (input|select|multiselect|textarea)\((\d+(-\d+)?)\) }}/, '$2');
+        pids.push(id);
         if (type === 'input') {
           $(e).html($(e).html().replace(info, tpl`
-            <div class="objective_${id} medium-3" style="display: inline-block;">
+            <div class="objective_${id} medium-3" id="p${id}" style="display: inline-block;">
               <input type="text" name="${id}" class="textbox objective-input">
+            </div>
+          `));
+        } else if (type === 'textarea') {
+          $(e).html($(e).html().replace(info, tpl`
+            <div class="objective_${id} medium-6" id="p${id}">
+              <textarea name="${id}" class="textbox objective-input"></textarea>
             </div>
           `));
         } else {
@@ -210,7 +218,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           $(e).html($(e).html().replace(info, ''));
           $(e).next('ul').children().each((j, ele) => {
             $(ele).after(tpl`
-              <label class="objective_${id} radiobox">
+              <label class="objective_${id} radiobox" id="p${id}">
                 <input type="${type === 'select' ? 'radio' : 'checkbox'}" name="${id}" class="objective-input" value="${String.fromCharCode(65 + j)}">
                 ${String.fromCharCode(65 + j)}. ${{ templateRaw: true, html: ele.innerHTML }}
               </label>
@@ -220,12 +228,49 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         }
       }
     });
+
+    let cacheKey = `${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`;
+    if (UiContext.tdoc?._id && UiContext.tdoc.rule !== 'homework') cacheKey += `@${UiContext.tdoc._id}`;
+
+    let setUpdate;
+    function ProblemNavigation() {
+      [, setUpdate] = React.useState(0);
+      return <div className="contest-problems" style={{ margin: '1em' }}>
+        {pids.map((i) => <a href={`#p${i}`} className={ans[i] ? 'pass ' : ''}>
+          <span class="id">{i}</span>
+          {ans[i] && <span class="icon icon-check"></span>}
+        </a>)}
+      </div>;
+    }
+
+    function saveAns() {
+      localStorage.setItem(`${cacheKey}#objective`, JSON.stringify(ans));
+      setUpdate?.((i) => i + 1);
+    }
+    function loadAns() {
+      const saved = localStorage.getItem(`${cacheKey}#objective`);
+      if (saved) {
+        Object.assign(ans, JSON.parse(saved));
+        for (const [id, val] of Object.entries(ans)) {
+          if (Array.isArray(val)) {
+            for (const v of val) {
+              $(`.objective_${id} input[value=${v}]`).prop('checked', true);
+            }
+          }
+          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
+          $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
+        }
+      }
+    }
+
     if (cnt) {
+      loadAns();
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
         : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
-      $('input.objective-input[type!=checkbox]').on('input', (e) => {
+      $('.objective-input[type!=checkbox]').on('input', (e) => {
         ans[e.target.name] = e.target.value;
+        saveAns();
       });
       $('input.objective-input[type=checkbox]').on('input', (e) => {
         if (e.target.checked) {
@@ -234,6 +279,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         } else {
           ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
         }
+        saveAns();
       });
       $('input[type="submit"]').on('click', (e) => {
         e.preventDefault();
@@ -250,8 +296,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           });
       });
     }
-    $('.scratchpad--hide').hide();
+    const ele = document.createElement('div');
+    $(ele).insertBefore($('.scratchpad--hide').get(0));
+    createRoot(ele).render(<ProblemNavigation />);
     $('.non-scratchpad--hide').hide();
+    $('.scratchpad--hide').hide();
     $('.outer-loader-container').hide();
   }
 
@@ -303,6 +352,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       statusChart.resize();
       scoreChart.resize();
     };
+    if (UiContext.pdoc.config?.type === 'objective') $($status).hide();
   }
 
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {

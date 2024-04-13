@@ -1,4 +1,5 @@
 import child from 'child_process';
+import path from 'path';
 import { CAC } from 'cac';
 import fs from 'fs-extra';
 import superagent from 'superagent';
@@ -14,16 +15,17 @@ export function register(cli: CAC) {
             return;
         }
         logger.info('Patching %s', mod);
-        const res = await superagent.get(patch);
+        const res = await superagent.get(patch).responseType('arraybuffer');
         logger.info('Downloaded patch');
         for (let i = 0; i <= 100; i++) {
-            const fp = `${mod}.${i}.patch`;
+            const fp = path.join(path.dirname(mod), `${path.basename(mod)}.${i}.patch`);
             if (fs.existsSync(fp)) continue;
             patch = fp;
             break;
         }
-        await fs.writeFile(patch, res.text);
-        child.execSync(`patch ${mod} -o ${mod} < ${patch}`);
+        await fs.writeFile(patch, res.body);
+        child.execSync(`patch ${mod} -o ${mod}.tmp < ${patch}`);
+        await fs.move(`${mod}.tmp`, mod, { overwrite: true });
         logger.info('Patched %s', mod);
     });
 

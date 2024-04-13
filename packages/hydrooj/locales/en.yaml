@@ -42,11 +42,13 @@ homework_main: Homework
 homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
+manage_config: System Configurations
 manage_dashboard: System
 manage_module: Module Management
 manage_script: Scripts
 manage_setting: System Settings
 manage_user_import: Import Users
+manage_user_priv: User Privilege
 manage: System Manage
 no_translation_warn: <blockquote class="warn">This part of content is under translation.</blockquote>
 page.problem_detail.sidebar.show_category: Click to Show
@@ -106,4 +108,5 @@ user_login: Login
 user_logout: Logout
 user_lostpass: Lost Password
 user_register: Register
+wiki_about: About
 wiki_help: Help

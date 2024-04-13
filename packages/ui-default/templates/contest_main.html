@@ -60,10 +60,19 @@
         <div class="section__tools">
           <form method="get" name="filter-form">
             {{ _('Show') }}:
+            <select class="inline compact select" name="group">
+              <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
+              {%- for g in groups -%}
+                <option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>
+              {%- endfor -%}
+              {%- if not groups|length -%}
+                <option disabled>{{ _('No group available') }}</option>
+              {%- endif -%}
+            </select>
             <select class="inline compact select" name="rule">
               <option value=""{% if not rule %} selected{% endif %}>{{ _('All') }}</option>
               {%- for k, v in model.contest.RULES -%}
-                {% if k != 'homework' %}
+                {% if not v.hidden %}
                   <option value="{{ k }}"{% if rule == k %} selected{% endif %}>{{ _('All {0} Contests').format(v.TEXT) }}</option>
                 {% endif %}
               {%- endfor -%}

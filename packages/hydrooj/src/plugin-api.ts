@@ -1,8 +1,7 @@
-import serialize from 'serialize-javascript';
+import pwsh from './lib/hash.hydro';
 import db from './service/db';
 
 export { nanoid } from 'nanoid';
-export { serialize };
 
 export * from './pipelineUtils';
 export * from './error';
@@ -34,9 +33,9 @@ export * as JudgeHandler from './handler/judge';
 export { registerResolver, registerValue, registerUnion } from './handler/api';
 export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
-// export { Collections } from './interface';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
+export { default as mime } from './lib/mime';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
@@ -50,4 +49,4 @@ export {
 export { UiContextBase } from './service/layers/base';
 export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
-export { db };
+export { db, pwsh };

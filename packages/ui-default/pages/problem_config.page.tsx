@@ -40,6 +40,25 @@ const page = new NamedPage('problem_config', () => {
     });
   }
 
+  async function handleClickRename(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
+    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
+    // eslint-disable-next-line no-alert
+    const newName = prompt(i18n('Enter a new name for the file: '));
+    if (!newName) return;
+    try {
+      await request.post('./files', {
+        operation: 'rename_files',
+        files: file,
+        newNames: [newName],
+        type: 'testdata',
+      });
+      Notification.success(i18n('File have been renamed.'));
+      await pjax.request({ url: './files?d=testdata&sidebar=true', push: false });
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
   async function handleClickRemove(ev: JQuery.ClickEvent<Document, undefined, any, any>) {
     const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
     const action = await new ConfirmDialog({
@@ -113,7 +132,7 @@ const page = new NamedPage('problem_config', () => {
         delete state.config.cases;
         delete state.config.score;
       }
-      if (state.config.subtasks) return;
+      if (state.config.subtasks?.length) return;
       const testdata = (state.testdata || []).map((i) => i.name);
       unsubscribe();
       const subtasks = readSubtasksFromFiles(testdata, state.config);
@@ -132,6 +151,7 @@ const page = new NamedPage('problem_config', () => {
   mountComponent();
 
   $(document).on('click', '[name="testdata__upload"]', () => handleClickUpload());
+  $(document).on('click', '[name="testdata__rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="testdata__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="testdata__download__all"]', () => handleClickDownloadAll());
 });

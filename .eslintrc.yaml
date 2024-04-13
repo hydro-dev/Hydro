@@ -8,6 +8,7 @@ overrides:
   - files: 
       - '**/{public,frontend}/**/*.{ts,tsx,page.js}'
     rules:
+      github/array-foreach: 0
       '@typescript-eslint/indent':
         - warn
         - 2

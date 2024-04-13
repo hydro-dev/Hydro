@@ -1,12 +1,12 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
-import { GeoIP, ModuleInterfaces } from './interface';
+import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import { EventMap } from './service/bus';
+import type { CheckService } from './service/check';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap {
-}
+export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
@@ -20,58 +20,75 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
     return () => delete global.Hydro.module[type][id];
 }
 
+export type EffectScope = cordis.EffectScope<Context>;
+export type ForkScope = cordis.ForkScope<Context>;
+export type MainScope = cordis.MainScope<Context>;
+
+export type { Disposable, ScopeStatus, Plugin } from 'cordis';
+
 export interface Context {
     [Context.events]: Events<Context>;
     loader: Loader;
     Route: typeof import('./service/server').Route;
     Connection: typeof import('./service/server').Connection;
     withHandlerClass: import('./service/server').RouteService['withHandlerClass'];
-    setTimeout: typeof setTimeout;
-    setInterval: typeof setInterval;
+    check: CheckService;
     setImmediate: typeof setImmediate;
     addScript: typeof addScript;
     provideModule: typeof provideModule;
-    inject: typeof inject;
-    api: ApiMixin;
+    injectUI: typeof inject;
     broadcast: Context['emit'];
     geoip?: GeoIP;
 }
 
-export class Context extends cordis.Context {
-    static readonly session = Symbol('session');
-}
-
-export namespace Context {
-    export interface Config extends cordis.Context.Config { }
-}
-
-export type MainScope = cordis.MainScope<Context>;
-export type EffectScope = cordis.EffectScope<Context>;
-export type ForkScope = cordis.ForkScope<Context>;
-export type Plugin = cordis.Plugin<Context>;
-export const Service = cordis.Service<Context>;
-export namespace Plugin {
-    export type Function<T = any> = cordis.Plugin.Function<T, Context>;
-    export type Constructor<T = any> = cordis.Plugin.Constructor<T, Context>;
-    export type Object<S = any, T = any> = cordis.Plugin.Object<S, T, Context>;
+export abstract class Service<T = any, C extends Context = Context> extends cordis.Service<T, C> {
+    [cordis.Service.setup]() {
+        this.ctx = new Context() as C;
+    }
 }
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     function method(this: cordis.Service, ...args: Parameters<F>) {
         const res = origFunc(...args);
-        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
     };
+
 export class ApiMixin extends Service {
-    static readonly methods = ['addScript', 'setInterval', 'setTimeout', 'setImmediate', 'provideModule', 'inject', 'broadcast'];
     addScript = T(addScript);
-    setInterval = T(setInterval, clearInterval);
-    setTimeout = T(setTimeout, clearTimeout);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
-    inject = T(inject);
+    injectUI = T(inject);
     broadcast = (event: keyof EventMap, ...payload) => this.ctx.emit('bus/broadcast', event, payload);
     constructor(ctx) {
-        super(ctx, 'api', true);
+        super(ctx, '$api', true);
+        ctx.mixin('$api', ['addScript', 'setImmediate', 'provideModule', 'injectUI', 'broadcast']);
     }
 }
-Context.service('api', ApiMixin);
+
+export class Context extends cordis.Context {
+    domain?: DomainDoc;
+
+    constructor(config: {} = {}) {
+        super(config);
+        this.plugin(ApiMixin);
+    }
+
+    /** @deprecated use `ctx.root` instead */
+    get app() {
+        return this.root;
+    }
+}
+
+export namespace Context {
+    export type Associate<P extends string, C extends Context = Context> = cordis.Context.Associate<P, C>;
+}
+
+const old = cordis.Registry.prototype.inject;
+// cordis.Registry.prototype.using = old;
+cordis.Registry.prototype.inject = function wrapper(...args) {
+    if (typeof args[0] === 'string') {
+        console.warn('old functionality of ctx.inject is deprecated. please use ctx.injectUI instead.');
+        return T(inject).call(this, ...args as any) as any;
+    }
+    return old.call(this, ...args);
+};

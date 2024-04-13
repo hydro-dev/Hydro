@@ -2,7 +2,7 @@ import yaml from 'js-yaml';
 import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
 import { Logger } from './logger';
-import { NestKeys } from './typeutils';
+import { Flatten } from './typeutils';
 
 const defaultPath = process.env.CI ? '/tmp/file'
     : process.env.DEFAULT_STORE_PATH || '/data/file/hydro';
@@ -80,7 +80,7 @@ export async function setConfig(key: string, value: any) {
 
 export function requestConfig<T, S>(s: Schema<T, S>): {
     config: ReturnType<Schema<T, S>>,
-    setConfig: (key: NestKeys<ReturnType<Schema<T, S>>>, value: any) => Promise<void>,
+    setConfig: (key: keyof Flatten<ReturnType<Schema<T, S>>> & string, value: any) => Promise<void>,
 } {
     SystemSettings.push(s);
     let curValue = s(systemConfig);

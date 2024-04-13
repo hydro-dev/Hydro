@@ -23,6 +23,6 @@ export default async (ctx: KoaContext, next) => {
     }
     ctx.domainId = inferDomain?._id || domainId;
     ctx.domainInfo = inferDomain || absoluteDomain;
-    if (ctx.domainId !== ctx.domainInfo._id) ctx.redirect(ctx.originalPath.replace(/^\/d\/[^/]+\//, `/d/${ctx.domainInfo._id}/`));
+    if (ctx.domainInfo && ctx.domainId !== ctx.domainInfo._id) ctx.redirect(ctx.originalPath.replace(/^\/d\/[^/]+\//, `/d/${ctx.domainInfo._id}/`));
     else await next();
 };

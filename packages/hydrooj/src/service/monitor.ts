@@ -18,11 +18,11 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
     const [mid, $update, inf] = await sysinfo.update();
     const [installId, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
     const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
-        domain.coll.countDocuments(),
-        user.coll.countDocuments(),
-        document.coll.countDocuments({ docType: document.TYPE_PROBLEM }),
-        document.coll.countDocuments({ docType: document.TYPE_DISCUSSION }),
-        record.coll.countDocuments(),
+        domain.coll.count(),
+        user.coll.count(),
+        document.coll.count({ docType: document.TYPE_PROBLEM }),
+        document.coll.count({ docType: document.TYPE_DISCUSSION }),
+        record.coll.count(),
     ]);
     const info: Record<string, any> = {
         mid: mid.toString(),
@@ -49,6 +49,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         const status = await db.db.admin().serverStatus();
         info.dbVersion = status.version;
     } catch (e) { }
+    await bus.serial('monitor/collect', info);
     const payload = dump(info, {
         replacer: (key, value) => {
             if (typeof value === 'function') return '';
@@ -61,6 +62,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         .then((res) => {
             if (res.body.updateUrl?.startsWith('https://')) system.set('server.center', res.body.updateUrl);
             if (res.body.notification) global.Hydro.model.message.sendNotification(res.body.notification);
+            if (res.body.reassignId) system.set('installid', res.body.reassignId);
         })
         .catch(() => logger.debug('Cannot connect to hydro center.'));
     return [mid, $update];

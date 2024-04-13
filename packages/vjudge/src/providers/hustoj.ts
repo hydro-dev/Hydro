@@ -9,6 +9,14 @@ import { VERDICT } from '../verdict';
 //       You may find it just works, or you may not.
 //       Feel free to open a pull request if you want to fix any issue.
 
+// WARN: https://github.com/zhblue/hustoj/pull/932/files
+//       The remote result might be incorrect.
+//       possible fix1: submit every submission twice and compare the results.
+//       however it consumes more resources and time.
+//       possible fix2: auto register new accounts after the limit was reached.
+//       but the server might limit the number of accounts per IP address.
+//       Those fixes won't be implemented officially. Use at your own risk.
+
 /* eslint-disable no-await-in-loop */
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36';
 const logger = new Logger('vjudge/hustoj');
@@ -18,7 +26,8 @@ interface HustOJRemoteConfig {
         endpoint?: string;
         usernameField?: string;
         passwordField?: string;
-        extra?: Record<string, string>;
+        extra?: Record<string, string> | (() => Promise<Record<string, string>>);
+        check?: string;
     };
     // NOTE: CAPTCHAS ARE NOT SUPPORTED
     submit?: {
@@ -29,6 +38,7 @@ interface HustOJRemoteConfig {
         extra?: Record<string, string>;
         tooFrequent?: string;
         rid?: RegExp;
+        noRefetch?: boolean;
     };
     monit?: {
         endpoint?: string;
@@ -36,6 +46,7 @@ interface HustOJRemoteConfig {
     ceInfo?: {
         endpoint?: string;
         matcher?: RegExp;
+        selector?: string;
     },
     server?: string;
 }
@@ -67,6 +78,7 @@ const defaultConfig: HustOJRemoteConfig = {
         usernameField: 'username',
         passwordField: 'password',
         extra: {},
+        check: '',
     },
     submit: {
         endpoint: '/submit.php',
@@ -104,6 +116,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         });
         this.config = config;
         this.updateConfig();
+        if (this.config.server) this.setEndpoint(this.config.server);
     }
 
     updateConfig() { }
@@ -116,24 +129,40 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         return [];
     }
 
+    get loggedIn() {
+        if (!this.config.login.check) return !!this.cookie?.length;
+        return this.get('/').then(({ text }) => !!text.includes(this.config.login.check));
+    }
+
     async login(username: string, password: string) {
         this.cookie = [];
-        const res = await this.post(this.config.login[0]).send({
-            [this.config.login.usernameField]: username,
-            [this.config.login.passwordField]: password,
-            ...this.config.login.extra,
+        const c = this.config.login;
+        const ex = typeof c.extra === 'function' ? await c.extra() : c.extra;
+        const res = await this.post(c.endpoint).send({
+            [c.usernameField]: username,
+            [c.passwordField]: password,
+            ...ex,
         });
+        console.log(res.text);
         this.state.username = username;
-        this.cookie = res.headers['set-cookie'].join('\n');
+        if (res.headers['set-cookie']) this.setCookie(res.headers['set-cookie']);
+        this.save({ cookie: this.cookie });
     }
 
     async ensureLogin() {
         if (!this.account.handle || !this.account.password) return false;
+        if (await this.loggedIn) return true;
         await this.login(this.account.handle, this.account.password);
-        return true;
+        if (!await this.loggedIn) {
+            // assume rate limit triggered or incorrect captcha
+            await this.login(this.account.handle, this.account.password);
+        }
+        return this.loggedIn;
     }
 
-    async submitProblem(id: string, lang: string, code: string, info, next) {
+    async submitProblem(id: string, lang: string, code: string, info, next, end) {
+        await this.ensureLogin();
+        if (id.startsWith('P')) id = id.substring(1);
         const res = await this.post(this.config.submit.endpoint).send({
             [this.config.submit.idField]: id,
             [this.config.submit.langField]: lang.split('.')[1],
@@ -142,11 +171,18 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         });
         // if (res.text.includes(this.config.submit.tooFrequent)) throw new TooFrequentError();
         console.log(res.text);
+        if (this.config.submit.noRefetch) {
+            const match = res.text.match(this.config.submit.rid);
+            if (!match?.length) {
+                end({ message: res.text.substring(0, 1024) });
+                return null;
+            }
+            return match[0].split('=')[1];
+        }
         const url = this.config.monit.endpoint.replace('{uid}', this.state.username).replace('{pid}', id);
         this.state.pid = id;
         const r = await this.get(url);
-        next({ message: `ID: ${this.config.submit.rid.exec(r.text)[1]}` });
-        return this.config.submit.rid.exec(r.text)[1];
+        return r.text.match(this.config.submit.rid)[0].split('=')[1];
     }
 
     async waitForSubmission(rid, next, end) {
@@ -235,9 +271,16 @@ export class YBT extends HUSTOJ {
         }
         if (VERDICT[staText[4]] === STATUS.STATUS_COMPILE_ERROR) {
             const ceInfoUrl = this.config.ceInfo.endpoint.replace('{rid}', rid);
-            const resp = await this.get(ceInfoUrl);
-            const compilerText = decodeURIComponent(this.config.ceInfo.matcher.exec(resp.text)[1]
-                .replace('\n', '').replace('<br/>', '\n').replace('\n\n', '\n'));
+            let compilerText = 'Cannot get compiler text';
+            if (this.config.ceInfo.matcher) {
+                const resp = await this.get(ceInfoUrl);
+                const match = this.config.ceInfo.matcher.exec(resp.text);
+                if (match) compilerText = decodeURIComponent(match[1]).replace(/\n/g, '').replace(/<br\/>/g, '\n').replace(/\n\n/g, '\n');
+            } else if (this.config.ceInfo.selector) {
+                const { document } = await this.html(ceInfoUrl);
+                const match = document.querySelector(this.config.ceInfo.selector)?.innerHTML;
+                if (match) compilerText = decodeURIComponent(match).replace(/\n/g, '').replace(/<br\/>/g, '\n').replace(/\n\n/g, '\n');
+            }
             end({
                 status: STATUS.STATUS_COMPILE_ERROR,
                 score: 0,
@@ -279,12 +322,88 @@ export class YBT extends HUSTOJ {
         if (VERDICT[staText4[0]] === STATUS.STATUS_ACCEPTED) {
             totalScore = 100;
             totalStatus = STATUS.STATUS_ACCEPTED;
+        } else if (totalScore >= 100) {
+            totalScore = 0;
         }
         end({
             status: totalStatus,
             score: totalScore,
             time: totalTime,
             memory: totalMem,
+        });
+    }
+}
+
+// 已弃用。请直接从 https://hydro.ac/ybtbas.zip 下载题库文件并按照压缩包内说明导入系统。
+export class YBTBAS extends YBT {
+    static langs = {
+        ybtbas: {
+            display: 'YBTBAS',
+            hidden: true,
+            remote: 'ybtbas',
+        },
+        'ybtbas.7': {
+            display: 'G++14',
+            monaco: 'cpp',
+            highlight: 'cpp',
+        },
+        'ybtbas.1': {
+            display: 'G++',
+            monaco: 'cpp',
+            highlight: 'cpp',
+        },
+        'ybtbas.2': {
+            display: 'GCC',
+            monaco: 'cpp',
+            highlight: 'cpp',
+        },
+        'ybtbas.3': {
+            display: 'Java',
+            monaco: 'java',
+            highlight: 'java',
+        },
+        'ybtbas.4': {
+            display: 'Pascal',
+            monaco: 'pas',
+            highlight: 'pascal',
+        },
+        'ybtbas.5': {
+            display: 'Python',
+            monaco: 'python',
+            highlight: 'python',
+        },
+    };
+
+    updateConfig() {
+        this.config.login.check = '退出登录';
+        this.config.login.extra = async () => {
+            const captcha = await this.get('/login_xx.php').responseType('arraybuffer');
+            if (captcha.headers['set-cookie']) this.setCookie(captcha.headers['set-cookie']);
+            if (!global.parseCaptcha) await sleep(30000);
+            if (!global.parseCaptcha) return { login: '登录' };
+            return {
+                login: '登录',
+                auth: await global.parseCaptcha(captcha.body).toLowerCase(),
+            };
+        };
+        this.config.submit = {
+            endpoint: '/action.php',
+            idField: 'problem_id',
+            langField: 'language',
+            codeField: 'source',
+            extra: { submit: '提交', user_id: this.account.handle },
+            tooFrequent: '提交频繁啦！',
+            rid: /runidx=([0-9]+)/mi,
+            noRefetch: true,
+        };
+        this.config.ceInfo = {
+            endpoint: '/show_ce_info.php?runid={rid}',
+            selector: 'table[width="900px"]>tbody>tr>td>div>center>table>tbody>tr>td',
+        };
+        this.config.server = 'http://bas.ssoier.cn:8086/';
+        sleep(30000).then(() => {
+            // Prevent cookie expiration
+            if (!global.parseCaptcha) setInterval(() => this.get('/'), 60000);
         });
     }
 }
@@ -299,7 +418,7 @@ export class BZOJ extends HUSTOJ {
         };
         this.config.submit.tooFrequent = 'You should not submit more than twice in 10 seconds.....';
         this.config.submit.rid = /Submit_Time<\/td><\/tr>\n<tr align="center" class="evenrow"><td>([0-9]+)/igm;
-        this.config.ceInfo.matcher = /<pre>([\s\S]*?)<\/pre>/igm;
+        this.config.ceInfo.matcher = /<pre>([\s\S]*?)<\/pre>/im;
     }
 }
 

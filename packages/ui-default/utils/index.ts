@@ -32,7 +32,7 @@ export function getAvailableLangs(langsList?: string[]) {
   const Langs = {};
   for (const key in window.LANGS) {
     if (prefixes.has(key)) continue;
-    if (langsList && langsList.length && langsList.join('') && !langsList.includes(key)) continue;
+    if ((langsList instanceof Array) && !langsList.includes(key)) continue;
     if (window.LANGS[key].hidden && !langsList?.includes(key)) continue;
     if (window.LANGS[key].disabled) continue;
     Langs[key] = window.LANGS[key];
@@ -77,21 +77,6 @@ export function mongoId(idstring: string) {
   };
 }
 
-const loaded = {};
-
-export async function loadExternalModule(target: string) {
-  if (loaded[target]) return loaded[target];
-  const ele = document.createElement('script');
-  ele.src = target;
-  await new Promise((resolve, reject) => {
-    ele.onload = resolve;
-    ele.onerror = reject;
-    document.head.appendChild(ele);
-  });
-  loaded[target] = window.exports;
-  return loaded[target];
-}
-
 export function emulateAnchorClick(ev: KeyboardEvent, targetUrl: string, alwaysOpenInNewWindow = false) {
   let openInNewWindow;
   if (alwaysOpenInNewWindow) openInNewWindow = true;
@@ -112,6 +97,5 @@ Object.assign(window.Hydro.utils, {
   zip,
   pipeStream,
   mongoId,
-  loadExternalModule,
   emulateAnchorClick,
 });

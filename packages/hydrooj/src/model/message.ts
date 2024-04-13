@@ -7,12 +7,14 @@ import { PRIV } from './builtin';
 import * as system from './system';
 import user from './user';
 
-const coll = db.collection('message');
-
 class MessageModel {
     static FLAG_UNREAD = 1;
     static FLAG_ALERT = 2;
     static FLAG_RICHTEXT = 4;
+    static FLAG_INFO = 8;
+    static FLAG_I18N = 16;
+
+    static coll = db.collection('message');
 
     @ArgMethod
     static async send(
@@ -23,29 +25,37 @@ class MessageModel {
         const mdoc: MessageDoc = {
             _id, from, to, content, flag,
         };
-        await coll.insertOne(mdoc);
+        await MessageModel.coll.insertOne(mdoc);
         if (from !== to) bus.broadcast('user/message', to, mdoc);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
         return mdoc;
     }
 
+    static async sendInfo(to: number, content: string) {
+        const _id = new ObjectId();
+        const mdoc: MessageDoc = {
+            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
+        };
+        bus.broadcast('user/message', to, mdoc);
+    }
+
     static async get(_id: ObjectId) {
-        return await coll.findOne({ _id });
+        return await MessageModel.coll.findOne({ _id });
     }
 
     @ArgMethod
     static async getByUser(uid: number) {
-        return await coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', -1).limit(1000).toArray();
+        return await MessageModel.coll.find({ $or: [{ from: uid }, { to: uid }] }).sort('_id', -1).limit(1000).toArray();
     }
 
     static async getMany(query: Filter<MessageDoc>, sort: any, page: number, limit: number) {
-        return await coll.find(query).sort(sort)
+        return await MessageModel.coll.find(query).sort(sort)
             .skip((page - 1) * limit).limit(limit)
             .toArray();
     }
 
     static async setFlag(messageId: ObjectId, flag: number) {
-        const result = await coll.findOneAndUpdate(
+        const result = await MessageModel.coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
             { returnDocument: 'after' },
@@ -54,16 +64,16 @@ class MessageModel {
     }
 
     static async del(_id: ObjectId) {
-        return await coll.deleteOne({ _id });
+        return await MessageModel.coll.deleteOne({ _id });
     }
 
     @ArgMethod
     static count(query: Filter<MessageDoc> = {}) {
-        return coll.countDocuments(query);
+        return MessageModel.coll.countDocuments(query);
     }
 
     static getMulti(uid: number) {
-        return coll.find({ $or: [{ from: uid }, { to: uid }] });
+        return MessageModel.coll.find({ $or: [{ from: uid }, { to: uid }] });
     }
 
     static async sendNotification(message: string, ...args: any[]) {
@@ -78,7 +88,7 @@ class MessageModel {
 
 export async function apply() {
     return db.ensureIndexes(
-        coll,
+        MessageModel.coll,
         { key: { to: 1, _id: -1 }, name: 'to' },
         { key: { from: 1, _id: -1 }, name: 'from' },
     );

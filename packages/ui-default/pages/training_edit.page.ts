@@ -12,7 +12,7 @@ export default new NamedPage('training_edit', () => {
         window.location.href = res.url;
       });
     }
-    const message = 'Confirm deleting this training? Its status will be deleted as well.';
+    const message = 'Confirm deleting this training? Its files and status will be deleted as well.';
     return new ConfirmDialog({
       $body: tpl.typoMsg(i18n(message)),
     }).open().then((action) => {

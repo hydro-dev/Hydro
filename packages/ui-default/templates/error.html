@@ -8,7 +8,7 @@
     <h1>{{ _('Oops!') }}</h1>
     <p>{{ _(error.message).formatFromArray(error.params) }}</p>
     <p>{{ _('Technical Information') }}:</p>
-    <p>{{ _('Type') }}: {{ error.code }}</p>
+    <p>{{ _('Type') }}: {{ error.name }}</p>
     <p>{{ _('Arguments') }}:
       <ol>
       {%- for param in error.params -%}

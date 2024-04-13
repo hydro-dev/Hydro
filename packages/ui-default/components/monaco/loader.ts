@@ -1,6 +1,22 @@
-import { loadExternalModule } from 'vj/utils';
+import { getFeatures, load as loadModule } from '../../lazyload';
 
 let loaded;
+
+const val: Record<string, any> = {};
+/** @deprecated */
+export async function legacyLoadExternalModule(target: string) {
+  if (val[target]) return val[target];
+  const ele = document.createElement('script');
+  ele.src = target;
+  await new Promise((resolve, reject) => {
+    ele.onload = resolve;
+    ele.onerror = reject;
+    document.head.appendChild(ele);
+  });
+  val[target] = window.exports;
+  return val[target];
+}
+
 const loaders = {
   i18n: async () => {
     const { setLocaleData } = await import('./nls');
@@ -16,12 +32,15 @@ const loaders = {
     if (resource) setLocaleData(resource);
   },
   markdown: () => import('./languages/markdown'),
-  typescript: () => import('./languages/typescript'),
+  typescript: () => import('./languages/typescript').then((m) => m.loadTypes()),
   yaml: () => import('./languages/yaml'),
   external: async (monaco, feat) => {
-    const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
-    for (const item of items) {
-      let apply = await loadExternalModule(window.externalModules[item]);
+    for (const item of await getFeatures(`monaco-${feat}`)) {
+      let apply = typeof item === 'function'
+        ? item
+        : (item.startsWith('http') || item.startsWith('/'))
+          ? await legacyLoadExternalModule(item)
+          : (await loadModule(item)).apply;
       if (typeof apply !== 'function') apply = apply.default || apply.apply;
       if (typeof apply === 'function') await apply(monaco);
     }
@@ -47,7 +66,7 @@ export async function load(features = ['markdown']) {
   for (const feat of features) {
     if (loaded.includes(feat)) continue;
     if (!loaders[feat]) {
-      const items = Object.keys(window.externalModules).filter((i) => i === `monaco-${feat}` || i.startsWith(`monaco-${feat}@`));
+      const items = await getFeatures(`monaco-${feat}`);
       if (!items.length) {
         console.warn('Unknown monaco feature:', feat);
         continue;
@@ -66,7 +85,7 @@ export async function load(features = ['markdown']) {
   }
   await res.loadThemePromise;
   resolve();
-  return { monaco: res.default, registerAction: res.registerAction, customOptions: {} };
+  return { monaco: res.default, registerAction: res.registerAction, customOptions: res.customOptions };
 }
 
 export default load;

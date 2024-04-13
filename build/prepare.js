@@ -2,14 +2,16 @@ const fs = require('fs-extra');
 const path = require('path');
 const child = require('child_process');
 
-if (process.env.npm_execpath.includes('yarn')) {
+if (process.env.npm_execpath?.includes('yarn')) {
     if (fs.existsSync('plugins/patch-package/package.json') && fs.existsSync('node_modules/patch-package/package.json')) {
         child.execSync('npx patch-package --patch-dir=plugins/patch-package/patches', { stdio: 'inherit' });
     }
 }
 
-const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
-const types = fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i));
+const withoutTypes = (data) => ({
+    ...data,
+    compilerOptions: Object.fromEntries(Object.entries(data.compilerOptions).filter(([k]) => k !== 'types')),
+});
 
 /** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
@@ -25,7 +27,6 @@ const compilerOptionsBase = {
     experimentalDecorators: true,
     // emitDecoratorMetadata: true,
     incremental: true,
-    types,
 };
 const baseOutDir = path.resolve(__dirname, '../.cache/ts-out');
 const config = {
@@ -53,6 +54,11 @@ const configFlat = (name) => ({
         ...compilerOptionsBase,
         outDir: path.join(baseOutDir, name),
         rootDir: '.',
+        paths: {
+            'vj/*': [
+                '../../packages/ui-default/*',
+            ],
+        },
     },
     include: ['**/*.ts'],
     exclude: ['public', 'frontend'],
@@ -91,7 +97,6 @@ const UIConfig = {
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
         moduleResolution: 'node',
-        types,
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
@@ -119,7 +124,8 @@ for (const package of modules) {
     } catch (e) { }
     if (!files.includes('src') && !files.filter((i) => i.endsWith('.ts')).length && package !== 'packages/utils') continue;
     config.references.push({ path: package });
-    const expectedConfig = JSON.stringify((files.includes('src') ? configSrc : configFlat)(package));
+    const origConfig = (files.includes('src') ? configSrc : configFlat)(package);
+    const expectedConfig = JSON.stringify(package.startsWith('modules/') ? withoutTypes(origConfig) : origConfig);
     const configPath = path.resolve(basedir, 'tsconfig.json');
     const currentConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf-8') : '';
     if (expectedConfig !== currentConfig) fs.writeFileSync(configPath, expectedConfig);
@@ -129,8 +135,8 @@ for (const package of modules) {
         if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
         const name = file.split('.')[0];
         const filePath = path.resolve(basedir, `${name}.js`);
-        if (['handler', 'service', 'lib', 'model', 'script', 'index'].includes(name)) {
-            if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, `module.exports = require('./src/${name}');\n`);
+        if (name === 'index' && !fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, 'module.exports = require("./src/index");\n');
         }
     }
 }

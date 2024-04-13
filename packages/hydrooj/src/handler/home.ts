@@ -36,13 +36,28 @@ export class HomeHandler extends Handler {
     uids = new Set<number>();
 
     collectUser(uids: number[]) {
-        uids.forEach((uid) => this.uids.add(uid));
+        for (const uid of uids) this.uids.add(uid);
     }
 
     async getHomework(domainId: string, limit = 5) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK)) return [[], {}];
-        const tdocs = await contest.getMulti(domainId, { rule: 'homework' })
-            .limit(limit).toArray();
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? undefined : this.user._id))
+            .map((i) => i.name);
+        const tdocs = await contest.getMulti(domainId, {
+            rule: 'homework',
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)
+                ? {}
+                : {
+                    $or: [
+                        { maintainer: this.user._id },
+                        { owner: this.user._id },
+                        { assign: { $in: groups } },
+                        { assign: { $size: 0 } },
+                    ],
+                },
+        }).sort({
+            penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
+        }).limit(limit).toArray();
         const tsdict = await contest.getListStatus(
             domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
         );
@@ -52,7 +67,22 @@ export class HomeHandler extends Handler {
     async getContest(domainId: string, limit = 10) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_CONTEST)) return [[], {}];
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        const tdocs = await contest.getMulti(domainId, { rule: { $in: rules } })
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
+            .map((i) => i.name);
+        const q = {
+            rule: { $in: rules },
+            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)
+                ? {}
+                : {
+                    $or: [
+                        { maintainer: this.user._id },
+                        { owner: this.user._id },
+                        { assign: { $in: groups } },
+                        { assign: { $size: 0 } },
+                    ],
+                },
+        };
+        const tdocs = await contest.getMulti(domainId, q).sort({ endAt: -1, beginAt: -1, _id: -1 })
             .limit(limit).toArray();
         const tsdict = await contest.getListStatus(
             domainId, this.user._id, tdocs.map((tdoc) => tdoc.docId),
@@ -80,7 +110,7 @@ export class HomeHandler extends Handler {
 
     async getRanking(domainId: string, limit = 50) {
         if (!this.user.hasPerm(PERM.PERM_VIEW_RANKING)) return [];
-        const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 } })
+        const dudocs = await domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } })
             .sort({ rp: -1 }).project({ uid: 1 }).limit(limit).toArray();
         const uids = dudocs.map((dudoc) => dudoc.uid);
         this.collectUser(uids);
@@ -116,7 +146,7 @@ export class HomeHandler extends Handler {
     }
 
     async get({ domainId }) {
-        const homepageConfig = this.domain.homepage || system.get('hydrooj.homepage');
+        const homepageConfig = this.ctx.setting.get('hydrooj.homepage');
         const info = yaml.load(homepageConfig) as any;
         const contents = [];
         for (const column of info) {
@@ -166,6 +196,7 @@ class HomeSecurityHandler extends Handler {
         }
         this.response.template = 'home_security.html';
         this.response.body = {
+            sudoUid: this.session.sudoUid || null,
             sessions,
             authenticators: this.user._authenticators.map((c) => pick(c, [
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
@@ -180,9 +211,13 @@ class HomeSecurityHandler extends Handler {
     @param('current', Types.String)
     @param('password', Types.Password)
     @param('verifyPassword', Types.Password)
-    async postChangePassword(_: string, current: string, password: string, verify: string) {
+    async postChangePassword(domainId: string, current: string, password: string, verify: string) {
         if (password !== verify) throw new VerifyPasswordError();
-        this.user.checkPassword(current);
+        if (this.session.sudoUid) {
+            const udoc = await user.getById(domainId, this.session.sudoUid);
+            if (!udoc) throw new UserNotFoundError(this.session.sudoUid);
+            await udoc.checkPassword(current);
+        } else await this.user.checkPassword(current);
         await user.setPassword(this.user._id, password);
         await token.delByUid(this.user._id);
         this.response.redirect = this.url('user_login');
@@ -194,7 +229,11 @@ class HomeSecurityHandler extends Handler {
     async postChangeMail(domainId: string, current: string, email: string) {
         const mailDomain = email.split('@')[1];
         if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-        this.user.checkPassword(current);
+        if (this.session.sudoUid) {
+            const udoc = await user.getById(domainId, this.session.sudoUid);
+            if (!udoc) throw new UserNotFoundError(this.session.sudoUid);
+            await udoc.checkPassword(current);
+        } else await this.user.checkPassword(current);
         const udoc = await user.getByEmail(domainId, email);
         if (udoc) throw new UserAlreadyExistError(email);
         await this.limitRate('send_mail', 3600, 30);
@@ -241,12 +280,17 @@ class HomeSecurityHandler extends Handler {
         this.back();
     }
 
+    getAuthnHost() {
+        return system.get('authn.host') && this.request.hostname.includes(system.get('authn.host'))
+            ? system.get('authn.host') : this.request.hostname;
+    }
+
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
     async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
         const options = generateRegistrationOptions({
             rpName: system.get('server.name'),
-            rpID: this.request.hostname,
+            rpID: this.getAuthnHost(),
             userID: this.user._id.toString(),
             userDisplayName: this.user.uname,
             userName: `${this.user.uname}(${this.user.mail})`,
@@ -271,7 +315,7 @@ class HomeSecurityHandler extends Handler {
             response: this.args.result,
             expectedChallenge: this.session.webauthnVerify,
             expectedOrigin: this.request.headers.origin,
-            expectedRPID: this.request.hostname,
+            expectedRPID: this.getAuthnHost(),
         }).catch(() => { throw new ValidationError('verify'); });
         if (!verification.verified) throw new ValidationError('verify');
         const info = verification.registrationInfo;
@@ -378,7 +422,7 @@ class HomeAvatarHandler extends Handler {
         } else if (this.request.files.file) {
             const file = this.request.files.file;
             if (file.size > 8 * 1024 * 1024) throw new ValidationError('file');
-            const ext = path.extname(file.originalFilename);
+            const ext = path.extname(file.originalFilename).toLowerCase();
             if (!['.jpg', '.jpeg', '.png'].includes(ext)) throw new ValidationError('file');
             await storage.put(`user/${this.user._id}/.avatar${ext}`, file.filepath, this.user._id);
             // TODO: cached avatar
@@ -441,7 +485,7 @@ class HomeDomainHandler extends Handler {
 
     @param('id', Types.String)
     async postStar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.concat(id) });
+        await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
         this.back({ star: true });
     }
 
@@ -465,12 +509,16 @@ class HomeDomainCreateHandler extends Handler {
     async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);
-        avatar = avatar || this.user.avatar || `gravatar:${this.user.mail}`;
+        avatar ||= this.user.avatar || `gravatar:${this.user.mail}`;
         const domainId = await domain.add(id, this.user._id, name, bulletin);
+        // When this domain is deleted but previously added to user's list we shouldn't push it again
+        const push = !this.user.pinnedDomains?.includes(domainId);
         await Promise.all([
             domain.edit(domainId, { avatar }),
             domain.setUserRole(domainId, this.user._id, 'root'),
-            user.setById(this.user._id, undefined, undefined, { pinnedDomains: [domainId] }),
+            push
+                ? user.setById(this.user._id, undefined, undefined, { pinnedDomains: domainId })
+                : Promise.resolve(),
         ]);
         this.response.redirect = this.url('domain_dashboard', { domainId });
         this.response.body = { domainId };
@@ -554,6 +602,6 @@ export async function apply(ctx: Context) {
     ctx.Route('home_avatar', '/home/avatar', HomeAvatarHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
-    if (system.get('server.message')) ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
 }

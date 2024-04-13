@@ -2,12 +2,15 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import cac from 'cac';
+import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
+import type { FindCursor } from 'mongodb';
+import { Shorty } from 'shorty.js';
 import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
@@ -17,11 +20,13 @@ import {
     PrivilegeError, UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
+import paginate from '../lib/paginate';
 import serializer from '../lib/serializer';
 import { Types } from '../lib/validator';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
+import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
 import { User } from '../model/user';
 import { builtinConfig } from '../settings';
@@ -83,9 +88,10 @@ interface HydroContext {
 export interface KoaContext extends Koa.Context {
     HydroContext: HydroContext;
     handler: any;
+    request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
     render: (name: string, args: any) => Promise<void>;
-    renderHTML: (name: string, args: any) => Promise<string>;
+    renderHTML: (name: string, args: any) => string | Promise<string>;
     getUrl: (name: string, args: any) => string;
     translate: (key: string) => string;
 }
@@ -113,17 +119,17 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
-    renderHTML: (name: string, args?: any) => Promise<string>;
+    renderHTML: (name: string, args?: any) => string | Promise<string>;
     url: (name: string, args?: any) => string;
     translate: (key: string) => string;
     session: Record<string, any>;
+    ctx: Context;
     /** @deprecated */
     domainId: string;
-    ctx: Context = global.app;
 
     constructor(
-        public context: KoaContext, public args: Record<string, any>,
-        public request: HydroRequest, public response: HydroResponse,
+        public context: KoaContext, public readonly args: Record<string, any>,
+        public readonly request: HydroRequest, public response: HydroResponse,
         public user: User, public domain: DomainDoc, public UiContext: Record<string, any>,
     ) {
         this.render = context.render.bind(context);
@@ -132,6 +138,9 @@ export class HandlerCommon {
         this.translate = context.translate.bind(context);
         this.session = context.session;
         this.domainId = args.domainId;
+        this.ctx = global.app.extend({
+            domain: this.domain,
+        });
     }
 
     async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
@@ -144,8 +153,12 @@ export class HandlerCommon {
         await opcount.inc(op, id, periodSecs, maxOperations);
     }
 
+    paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
+        return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+    }
+
     renderTitle(str: string) {
-        const name = this.domain?.ui?.name || system.get('server.name');
+        const name = this.ctx.setting.get('server.name');
         if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
         return `${this.translate(str)} - ${name}`;
     }
@@ -165,6 +178,7 @@ export class HandlerCommon {
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
+    notUsage = false;
     allowCors = false;
     __param: Record<string, decorators.ParamOption<any>[]>;
 
@@ -180,12 +194,21 @@ export class Handler extends HandlerCommon {
         if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
+    // This is beta API, may be changed in the future.
+    progress(message: string, params: any[]) {
+        Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
+    }
+
     async init() {
         if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
-            const host = new URL(this.request.headers.referer).host;
-            if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+            try {
+                const host = new URL(this.request.headers.referer).host;
+                if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+            } catch (e) {
+                this.context.pendingError = new CsrfTokenError();
+            }
         }
-        if (!argv.options.benchmark) await this.limitRate('global', 5, 100);
+        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 5, 100);
         if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
         this.loginMethods = Object.keys(global.Hydro.module.oauth)
             .map((key) => ({
@@ -232,10 +255,11 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
         args, request, response, user, domain, UiContext,
     } = ctx.HydroContext;
     Object.assign(args, ctx.params);
+    const init = Date.now();
     const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
     ctx.handler = h;
+    const method = ctx.method.toLowerCase();
     try {
-        const method = ctx.method.toLowerCase();
         const operation = (method === 'post' && ctx.request.body?.operation)
             ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
             : '';
@@ -296,8 +320,16 @@ async function handle(ctx: KoaContext, HandlerClass, checker) {
             await h.onerror(e);
         } catch (err) {
             h.response.code = 500;
+            h.response.type = 'text/plain';
             h.response.body = `${err.message}\n${err.stack}`;
         }
+    } finally {
+        const finish = Date.now();
+        if (finish - init > 5000) {
+            const id = await OplogModel.log(h, 'slow_request', { method, processtime: finish - init });
+            logger.warn(`Slow handler: ID=${id}, `, method, ctx.path, `${finish - init}ms`);
+        }
+        // TODO metrics: calc avg response time
     }
 }
 
@@ -334,11 +366,25 @@ export function Route(name: string, path: string, RouteHandler: any, ...permPriv
 
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
+    compression: Shorty;
+    counter = 0;
+
+    resetCompression() {
+        this.counter = 0;
+        this.compression = new Shorty();
+        this.conn.send('shorty');
+    }
 
     send(data: any) {
-        this.conn.send(JSON.stringify(data, serializer({
-            showDisplayName: this.user?.hasPerm(PERM.PREM_VIEW_DISPLAYNAME),
-        })));
+        let payload = JSON.stringify(data, serializer({
+            showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+        }));
+        if (this.compression) {
+            if (this.counter > 1000) this.resetCompression();
+            payload = this.compression.deflate(payload);
+            this.counter++;
+        }
+        this.conn.send(payload);
     }
 
     close(code: number, reason: string) {
@@ -368,7 +414,7 @@ export function Connection(
     ...permPrivChecker: Array<number | bigint | Function>
 ) {
     const checker = Checker(permPrivChecker);
-    router.ws(prefix, async (conn, _, ctx) => {
+    const layer = router.ws(prefix, async (conn, _, ctx) => {
         const {
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
@@ -379,15 +425,33 @@ export function Connection(
         const disposables = [];
         try {
             checker.call(h);
+            if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
             for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
             let lastHeartbeat = Date.now();
-            const interval = setInterval(() => {
-                if (Date.now() - lastHeartbeat > 80000) conn.close(4000, 'Heartbeat timeout');
+            let closed = false;
+            let interval: NodeJS.Timeout;
+            const clean = () => {
+                if (closed) return;
+                closed = true;
+                bus.emit('connection/close', h);
+                layer.clients.delete(conn);
+                if (interval) clearInterval(interval);
+                for (const d of disposables) d();
+                h.cleanup?.(args);
+            };
+            interval = setInterval(() => {
+                if (Date.now() - lastHeartbeat > 80000) {
+                    clean();
+                    conn.terminate();
+                }
                 if (Date.now() - lastHeartbeat > 30000) conn.send('ping');
             }, 40000);
+            conn.on('pong', () => {
+                lastHeartbeat = Date.now();
+            });
             conn.onmessage = (e) => {
                 lastHeartbeat = Date.now();
                 if (e.data === 'pong') return;
@@ -395,15 +459,23 @@ export function Connection(
                     conn.send('pong');
                     return;
                 }
-                h.message?.(JSON.parse(e.data.toString()));
-            };
-            conn.onclose = () => {
-                bus.emit('connection/close', h);
-                clearInterval(interval);
-                disposables.forEach((d) => d());
-                h.cleanup?.(args);
+                let payload;
+                try {
+                    payload = JSON.parse(e.data.toString());
+                } catch {
+                    conn.close();
+                }
+                try {
+                    h.message?.(payload);
+                } catch (err) {
+                    logger.error(e);
+                }
             };
             await bus.parallel('connection/active', h);
+            if (conn.readyState === conn.OPEN) {
+                conn.on('close', clean);
+                conn.resume();
+            } else clean();
         } catch (e) {
             await h.onerror(e);
         }
@@ -417,12 +489,12 @@ class NotFoundHandler extends Handler {
 }
 
 export class RouteService extends Service {
-    static readonly methods = ['Route', 'Connection', 'withHandlerClass'];
     private registry = {};
     private registrationCount = Counter();
 
-    constructor(ctx) {
+    constructor(ctx: Context) {
         super(ctx, 'server', true);
+        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
     }
 
     private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
@@ -436,7 +508,7 @@ export class RouteService extends Service {
         this.registrationCount[name]++;
         const res = func(...args);
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             res();
@@ -446,7 +518,7 @@ export class RouteService extends Service {
     public withHandlerClass(name: string, callback: (HandlerClass: typeof HandlerCommon) => any) {
         if (this.registry[name]) callback(this.registry[name]);
         this.ctx.on(`handler/register/${name}`, callback);
-        this.caller?.on('dispose', () => {
+        this[Context.current]?.on('dispose', () => {
             this.ctx.off(`handler/register/${name}`, callback);
         });
     }
@@ -469,7 +541,7 @@ declare module '../context' {
 }
 
 export async function apply(pluginContext: Context) {
-    Context.service('server', RouteService);
+    pluginContext.provide('server', undefined, true);
     pluginContext.server = new RouteService(pluginContext);
     app.keys = system.get('session.keys') as unknown as string[];
     if (process.env.HYDRO_CLI) return;
@@ -513,12 +585,15 @@ export async function apply(pluginContext: Context) {
     if (process.env.DEV) {
         app.use(async (ctx: Koa.Context, next: Function) => {
             const startTime = Date.now();
-            await next();
-            const endTime = Date.now();
-            if (ctx.nolog || ctx.response.headers.nolog) return;
-            ctx._remoteAddress = ctx.request.ip;
-            logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
+            try {
+                await next();
+            } finally {
+                const endTime = Date.now();
+                if (!(ctx.nolog || ctx.response.headers.nolog)) {
+                    logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
 ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+                }
+            }
         });
     }
     const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
@@ -540,8 +615,10 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
     const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
     app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
     app.use(router.routes()).use(router.allowedMethods());
-    layers.forEach((layer) => router.use(layer as any));
-    layers.forEach((layer) => app.use(layer as any));
+    for (const layer of layers) {
+        router.use(layer as any);
+        app.use(layer);
+    }
     app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
     wsServer.on('connection', async (socket, request) => {
         socket.on('error', (err) => {
@@ -550,6 +627,7 @@ ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
                 socket.close(1003, 'Websocket Error');
             } catch (e) { }
         });
+        socket.pause();
         const ctx: any = app.createContext(request, {} as any);
         await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
         for (const manager of router.wsStack) {

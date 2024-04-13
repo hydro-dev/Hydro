@@ -1,4 +1,4 @@
-<div class="section__body typo" data-fragment-id="problem-description">
+<div class="section__body typo richmedia" data-fragment-id="problem-description">
   {% if not pdoc.data.length and not pdoc.reference %}
     <blockquote class="warn">
       <p>{{ _('No {0} at current.').format(_("testdata")) }}</p>
@@ -7,6 +7,11 @@
   {% if typeof(pdoc.config) == 'string' %}
     <blockquote class="warn">
       <p>{{ pdoc.config }}</p>
+    </blockquote>
+  {% endif %}
+  {% if pdoc.config.langs and not pdoc.config.langs|length %}
+    <blockquote class="warn">
+      <p>{{ _('No submission language available for this problem.') }}</p>
     </blockquote>
   {% endif %}
   {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}

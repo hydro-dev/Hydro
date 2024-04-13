@@ -1,8 +1,9 @@
 /* eslint-disable no-restricted-globals */
 /// <reference no-default-lib="true" />
-/// <reference lib="ES2015" />
-/// <reference types="@types/sharedworker" />
+/// <reference lib="webworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
+import { FLAG_INFO } from 'vj/constant/message';
+declare const self: SharedWorkerGlobalScope;
 
 console.log('SharedWorker init');
 
@@ -32,6 +33,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   else if (conn && conn.readyState === conn.OPEN) return;
   lcookie = cookie;
   console.log('Init connection for', path);
+  conn?.close();
   conn = new ReconnectingWebsocket(path);
   ports.push(port);
   conn.onopen = () => conn.send(cookie);
@@ -39,6 +41,10 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   conn.onclose = (ev) => broadcastMsg({ type: 'close', error: ev.reason });
   conn.onmessage = (message) => {
     if (process.env.NODE_ENV !== 'production') console.log('SharedWorker.port.onmessage: ', message);
+    if (message.data === 'ping') {
+      conn.send('pong');
+      return;
+    }
     const payload = JSON.parse(message.data);
     if (payload.event === 'auth') {
       if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
@@ -51,10 +57,11 @@ function initConn(path: string, port: MessagePort, cookie: any) {
     } else {
       broadcastMsg({ type: 'message', payload });
       let acked = false;
-      ack[payload.mdoc.id] = () => { acked = true; };
+      ack[payload.mdoc._id] = () => { acked = true; };
       setTimeout(() => {
-        delete ack[payload.mdoc.id];
+        delete ack[payload.mdoc._id];
         if (acked) return;
+        if (payload.mdoc.flag & FLAG_INFO) return;
         if (Notification?.permission !== 'granted') {
           console.log('Notification permission denied');
           return;
@@ -73,7 +80,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   };
 }
 
-onconnect = function (e) { // eslint-disable-line no-undef
+self.onconnect = function (e) { // eslint-disable-line no-undef
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {

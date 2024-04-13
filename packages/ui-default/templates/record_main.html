@@ -6,7 +6,8 @@
   + (("&tid=" + filterTid) if filterTid else "")
   + (("&uidOrName=" + filterUidOrName) if filterUidOrName else "")
   + (("&pid=" + filterPid) if filterPid else "")
-  + ("&allDomain=1" if all else "")
+  + ("&all=1" if all else "")
+  + ("&allDomain=1" if allDomain else "")
 ) }}
 {{ set(UiContext, 'rids', rdocs.map(eval("rdoc=>rdoc._id.toString()"))) }}
 <div class="row">
@@ -53,7 +54,7 @@
                 {{ _('By Status') }}
               </label>
               <select class="compact select" name="status">
-                <option value="" {% if not filterStatus %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
+                <option value="" {% if typeof(filterStatus) != 'number' %}selected{% else %}{% endif %}>{{ _('All Submissions') }}</option>
                 {%- for k,v in utils.status.STATUS_TEXTS -%}
                 <option value="{{k}}" {% if filterStatus == k %}selected{% else %}{% endif %}>{{v}}</option>
                 {%- endfor -%}
@@ -69,7 +70,7 @@
         {% if not filterUidOrName and not filterPid and not filterTid %}
         {{ nothing.render('Oh, there is no task in the queue!') }}
         {% else %}
-        {{ nothing.render('Oh, there is no task that matches the filter!') }}
+        {{ nothing.render('Oh, there are no tasks that match the filter!') }}
         {% endif %}
       {% else %}
         <table class="data-table record_main__table">
@@ -107,7 +108,7 @@
             <a class="pager__item next link" href="?page={{ page + 1 }}{{
               (('&tid=' + filterTid) if filterTid else '')
               + (('&uidOrName=' + filterUidOrName) if filterUidOrName else '')
-              + (('&language=' + filterLanguage) if filterLanguage else '')
+              + (('&lang=' + filterLang) if filterLang else '')
               + (('&status=' + filterStatus) if filterStatus else '')
               + (('&pid=' + filterPid) if filterPid else '')
               + ('&allDomain=1' if all else '') }}">{{ _('pager_next') }}</a>

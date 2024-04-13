@@ -1,12 +1,12 @@
 /* eslint-disable no-await-in-loop */
-import type {
-    Db, Filter, ObjectId, OnlyFieldsOfType,
+import {
+    BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
-    BaseUserDict, DiscussionDoc, DomainDoc, FileInfo,
+    BaseUserDict, ContestBalloonDoc, DiscussionDoc, DomainDoc, FileInfo,
     MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
     ScoreboardRow, Tdoc, TrainingDoc, User,
 } from '../interface';
@@ -47,6 +47,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'system/setting': (args: Record<string, any>) => VoidReturn
     'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
+    'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
 
@@ -85,20 +86,24 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameTestdata': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn
     'problem/addAdditionalFile': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
+    'problem/renameAdditionalFile': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delAdditionalFile': (domainId: string, docId: number, name: string[]) => VoidReturn
 
-    'contest/before-add': (payload: Partial<Tdoc<30>>) => VoidReturn
-    'contest/add': (payload: Partial<Tdoc<30>>, id: ObjectId) => VoidReturn
-    'contest/scoreboard': (tdoc: Tdoc<30>, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
+    'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
+    'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn
+    'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
+    'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 
     'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
-    'record/change': (rdoc: RecordDoc, $set?: any, $push?: any) => void
+    'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
     'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
 }
 /* eslint-enable @typescript-eslint/naming-convention */
@@ -108,10 +113,10 @@ try {
     pm2.launchBus((err, bus) => {
         if (err) throw new Error();
         bus.on('hydro:broadcast', (packet) => {
-            (app.parallel as any)(packet.data.event, ...packet.data.payload);
+            (app.parallel as any)(packet.data.event, ...BSON.EJSON.parse(packet.data.payload));
         });
         app.on('bus/broadcast', (event, payload) => {
-            process.send({ type: 'hydro:broadcast', data: { event, payload } });
+            process.send({ type: 'hydro:broadcast', data: { event, payload: BSON.EJSON.stringify(payload) } });
         });
         console.debug('Using pm2 event bus');
     });

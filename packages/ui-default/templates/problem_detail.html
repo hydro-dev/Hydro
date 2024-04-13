@@ -15,6 +15,7 @@
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}', query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId + "&tid=" + tdoc.docId) }}
   {{ set(UiContext, 'tdoc', tdoc) }}
+  {{ set(UiContext, 'tsdoc', tsdoc) }}
 {% else %}
   {{ set(UiContext, 'canViewRecord', true) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId)) }}
@@ -23,7 +24,7 @@
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId) }}
 {% endif %}
 </script>
-<div class="row">
+<div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__header">
@@ -65,23 +66,26 @@
       <div class="section__body">
         <ul class="problem__tags">
           {% if not tdoc %}
-            <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
+            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
           {% endif %}
-          <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
+          <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
+          {% if pdoc.config.type == 'default' and pdoc.config.subType %}
+            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-book">{{ _('File IO: {0}').format(pdoc.config.subType) }}</span>
+          {% endif %}
           {% if pdoc.config.type != 'objective' and pdoc.config.type != 'submit_answer' %}
-            <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
-            <span class="bp4-tag bp4-large bp4-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
           {% if not tdoc %}
-            <a class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
-            <a class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
-            <span class="bp4-tag bp4-large bp4-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
-            <span class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
+            <a class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
+            <a class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
+            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
+            <span class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% endif %}
           {% if pdoc.tag.length %}
-            <span name="show_tags" class="bp4-tag bp4-large bp4-minimal bp4-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
+            <span name="show_tags" class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
             {%- for tag in pdoc.tag -%}
-              <span class="bp4-tag bp4-large bp4-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
+              <span class="bp5-tag bp5-large bp5-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
             {%- endfor -%}
           {% endif %}
         </ul>
@@ -109,10 +113,9 @@
       </div></div>
     </div>
   </div>
-  <div class="medium-3 columns">
-    {% set owner_udoc = udoc %}
+  <div class="medium-3 columns"><div data-sticky="large">
     {% include "partials/problem_sidebar.html" %}
-  </div>
+  </div></div>
 </div>
 <div style="display:none" class="outer-loader-container"><div class="loader"></div></div>
 <div class="scratchpad-container" style="display:none">

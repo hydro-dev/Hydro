@@ -38,6 +38,7 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
+    await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
     if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
@@ -48,6 +49,7 @@ export async function apply(ctx: Context) {
 
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/monitor'));
+    ctx.plugin(require('../service/check'));
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
@@ -55,7 +57,7 @@ export async function apply(ctx: Context) {
 
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
-    for (const h of handlers) {
+    for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
         ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
     await handler(pending, fail, ctx);
@@ -96,7 +98,7 @@ export async function apply(ctx: Context) {
     for (const f of global.addons) {
         const dir = path.join(f, 'public');
         // eslint-disable-next-line no-await-in-loop
-        if (await fs.pathExists(dir)) await fs.copy(dir, '/root/.hydro/static');
+        if (await fs.pathExists(dir)) await fs.copy(dir, path.join(os.homedir(), '.hydro/static'));
     }
     await ctx.parallel('app/listen');
     logger.success('Server started');

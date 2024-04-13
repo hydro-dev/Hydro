@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: backend
+  name: backend-deployment
+  namespace: hydro-namespace
+spec:
+  replicas: {{.Values.Backend.Replicas}}
+  revisionHistoryLimit: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: oj-backend
+          image: {{.Values.Backend.Image}}
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /data/file
+              name: file-volume
+            - mountPath: /root/.hydro
+              name: backend-volume
+            - mountPath: /root/.hydro-config-map
+              name: config-json-volume
+          ports:
+            - name: server-port
+              containerPort: 80
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cp /root/.hydro-config-map/addon.json /root/.hydro/ &&
+              cp /root/.hydro-config-map/config.json /root/.hydro/ &&
+              hydrooj
+
+      initContainers:
+        - name: init-mydb
+          image: busybox
+          command:
+            [
+              "sh",
+              "-c",
+              "until nslookup {{.Values.Global.Mongo.SvcDomain}}; do echo waiting for {{.Values.Global.Mongo.SvcDomain}}; sleep 2; done;",
+            ]
+      restartPolicy: Always
+      volumes:
+        - name: file-volume
+          hostPath:
+            path: {{.Values.Backend.FileVolume}}
+            type: DirectoryOrCreate
+        - name: backend-volume
+          hostPath:
+            path: {{.Values.Backend.BackendVolume}}
+            type: DirectoryOrCreate
+        - name: config-volume
+          configMap:
+            name: backend-config-map

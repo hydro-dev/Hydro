@@ -121,7 +121,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     queryCache[query] ||= await queryItems(query);
     for (const item of queryCache[query]) valueCache[itemKey(item)] = item;
     setItemList(queryCache[query]);
-    setCurrentItem((!freeSolo && queryCache[query].length > 0) ? 0 : null);
+    setCurrentItem((!freeSolo && queryCache[query].length) ? 0 : null);
   };
 
   useEffect(() => {
@@ -129,7 +129,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   }, [JSON.stringify(props.selectedKeys)]);
   const dispatchChange = () => {
     if (!multi) onChange(inputRef.current?.value);
-    else onChange(selectedKeys.filter((v) => v?.trim().length > 0).join(','));
+    else onChange(selectedKeys.filter((v) => v?.trim().length).join(','));
   };
 
   let first = !multi;
@@ -200,8 +200,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       return;
     }
     if (key === 'Backspace') {
-      if (target.value.length > 0) return;
-      if (selectedKeys.length > 0) {
+      if (target.value.length) return;
+      if (selectedKeys.length) {
         setSelected((s) => s.slice(0, -1));
         setSelectedKeys((s) => s.slice(0, -1));
       }
@@ -231,8 +231,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
 
   useImperativeHandle(ref, () => ({
     getSelectedItems: () => selected,
-    getSelectedItemKeys: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0),
-    getSelectedItemsAsString: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length > 0).join(','),
+    getSelectedItemKeys: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length),
+    getSelectedItemsAsString: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length).join(','),
     setSelectedItems: (items) => {
       setSelected(items);
       setSelectedKeys(items.map((i) => itemKey(i)));
@@ -300,6 +300,18 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
             onFocus={() => {
               if (allowEmptyQuery) handleInputChange();
               setFocused(true);
+            }}
+            onPaste={async (e) => {
+              if (!multi) return;
+              const text = e.clipboardData.getData('text');
+              if (!text || (!text.includes(',') && !text.includes('，'))) return;
+              e.preventDefault();
+              const ids = text.replace(/，/g, ',').split(',').filter((v) => v?.trim().length && !selectedKeys.includes(v));
+              if (!ids.length) return;
+              const fetched = await props.fetchItems(ids.filter((v) => !valueCache[v]));
+              for (const item of fetched) valueCache[itemKey(item)] = item;
+              setSelected([...selected, ...ids.map((id) => valueCache[id])]);
+              setSelectedKeys([...selectedKeys, ...ids.map((id) => itemKey(valueCache[id]))]);
             }}
             placeholder={props.placeholder}
             onBlur={() => setFocused(false)}

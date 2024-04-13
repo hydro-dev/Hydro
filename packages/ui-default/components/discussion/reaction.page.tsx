@@ -10,9 +10,9 @@ import { request } from 'vj/utils';
 
 function renderReactions(reactions, self, rootEle) {
   let html = '';
-  for (const key in reactions) {
-    if (!reactions[key]) continue;
-    html += `<div class="reaction${self[key] ? ' active' : ''}""><span class="emoji">${key}</span> ${reactions[key]}</div>\n`;
+  for (const [k, v] of Object.entries(reactions).sort(([, v1], [, v2]) => +v2 - +v1)) {
+    if (!v) continue;
+    html += `<div class="reaction${self[k] ? ' active' : ''}""><span class="emoji">${k}</span> ${v}</div>\n`;
   }
   rootEle.html(html);
 }
@@ -32,15 +32,17 @@ function getRow(count) {
 }
 
 function Reaction({ payload, ele }) {
-  const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤣').split(' ');
+  const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤡').split(' ');
   const elesPerRow = getRow(Math.sqrt(emojiList.length));
   const [focus, updateFocus] = React.useState(false);
   const [finish, updateFinish] = React.useState(false);
   if (finish) setTimeout(() => updateFinish(false), 1000);
   return (
-    <Popover usePortal interactionKind="hover" isOpen={finish ? false : (focus ? true : undefined)}>
-      <span className="icon icon-emoji"></span>
-      <div>
+    <Popover
+      usePortal
+      interactionKind="hover"
+      isOpen={finish ? false : (focus ? true : undefined)}
+      content={<div>
         {chunk(emojiList, elesPerRow).map((line, i) => (
           <div className="row" key={+i} style={{ paddingBottom: 4, paddingTop: 4 }}>
             {line.map((emoji) => (
@@ -60,6 +62,8 @@ function Reaction({ payload, ele }) {
           </div>
         </div>
       </div>
+      }>
+      <span className="icon icon-emoji"></span>
     </Popover>
   );
 }
@@ -68,7 +72,7 @@ const reactionPage = new AutoloadPage('reactionPage', () => {
   const canUseReaction = $('[data-op="react"]').length > 0;
   $('[data-op="react"]').each((i, e) => {
     ReactDOM.createRoot(e).render(
-      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').type}='${$(e).data('form').id}']`)} />,
+      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').nodeType}='${$(e).data('form').id}']`)} />,
     );
   });
   $(document).on('click', '.reaction', async (e) => {

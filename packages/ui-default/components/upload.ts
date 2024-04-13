@@ -18,12 +18,12 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
   const dialog = new Dialog({
     $body: `
       <div class="file-label" style="text-align: center; margin-bottom: 5px; color: gray; font-size: small;"></div>
-      <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-        <div class="file-progress bp4-progress-meter" style="width: 0"></div>
+      <div class="bp5-progress-bar bp5-intent-primary bp5-no-stripes">
+        <div class="file-progress bp5-progress-meter" style="width: 0"></div>
       </div>
       <div class="upload-label" style="text-align: center; margin: 5px 0; color: gray; font-size: small;"></div>
-      <div class="bp4-progress-bar bp4-intent-primary bp4-no-stripes">
-        <div class="upload-progress bp4-progress-meter" style="width: 0"></div>
+      <div class="bp5-progress-bar bp5-intent-primary bp5-no-stripes">
+        <div class="upload-progress bp5-progress-meter" style="width: 0"></div>
       </div>`,
   });
   try {

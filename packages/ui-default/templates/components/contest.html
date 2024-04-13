@@ -6,3 +6,7 @@
 {% macro render_duration(tdoc) %}
 {{ tdoc.duration|round(1) if tdoc.duration else ((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) /1000 / 3600)|round(1) }}
 {% endmacro %}
+
+{% macro render_clarification_subject(tdoc, pdict, subject) %}
+{% if subject == 0 %}{{ _('General Issue') }}{% elif subject == -1 %}{{ _('Technical Issue') }}{% else %}{{ String.fromCharCode(65 + tdoc.pids.indexOf(subject)) + 1 }}. {{ pdict[subject].title }}{% endif %}
+{% endmacro %}

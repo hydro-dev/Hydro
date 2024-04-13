@@ -3,14 +3,15 @@
 import path from 'path';
 import { fs } from '@hydrooj/utils';
 import {
-    JudgeResultBody, RecordModel, SettingModel,
+    JudgeResultBody, ObjectId, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
-import { end, next } from 'hydrooj/src/handler/judge';
+import { end, next, processJudgeFileCallback } from 'hydrooj/src/handler/judge';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
 import logger from '../log';
+import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
 const session = {
@@ -22,19 +23,21 @@ const session = {
         return target;
     },
     getNext(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
-            data.rid = t.rid as any;
+            data.rid = new ObjectId(t.rid);
+            const rdoc = await RecordModel.get(data.rid);
             if (data.case) data.case.message ||= '';
-            next(data);
+            next({ ...data, domainId: rdoc.domainId });
         };
     },
     getEnd(t: Context) {
-        return (data: Partial<JudgeResultBody>) => {
+        return async (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
-            data.rid = t.rid as any;
+            data.rid = new ObjectId(t.rid);
+            const rdoc = await RecordModel.get(data.rid);
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end(data);
+            end({ ...data, domainId: rdoc.domainId });
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -42,6 +45,9 @@ const session = {
         if (lang === 'cpp' && SettingModel.langs['cc']) return SettingModel.langs['cc'];
         if (doThrow) throw new SystemError('Unsupported language {0}.', [lang]);
         return null;
+    },
+    async postFile(target: string, filename: string, filepath: string) {
+        return await processJudgeFileCallback(new ObjectId(target), filename, filepath);
     },
     async cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
@@ -71,8 +77,11 @@ const session = {
     },
 };
 
-export async function postInit() {
+export async function postInit(ctx) {
     if (SystemModel.get('hydrojudge.disable')) return;
+    ctx.inject(['check'], (c) => {
+        c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+    });
     await fs.ensureDir(getConfig('tmp_dir'));
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
@@ -80,8 +89,13 @@ export async function postInit() {
             logger.debug('Record not found: %o', t);
             return;
         }
-        (new JudgeTask(session, Object.assign(rdoc, t))).handle().catch(logger.error);
+        await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
-    TaskModel.consume({ type: 'judge' }, handle);
+    const parallelism = Math.max(getConfig('parallelism'), 2);
+    const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    ctx.on('system/setting', () => {
+        taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
+    });
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
+    TaskModel.consume({ type: 'generate' }, handle);
 }

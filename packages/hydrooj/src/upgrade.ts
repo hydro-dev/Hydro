@@ -20,10 +20,10 @@ import ScheduleModel from './model/schedule';
 import StorageModel from './model/storage';
 import * as system from './model/system';
 import TaskModel from './model/task';
+import * as training from './model/training';
 import user from './model/user';
 import {
-    iterateAllContest,
-    iterateAllDomain, iterateAllProblem, iterateAllUser,
+    iterateAllContest, iterateAllDomain, iterateAllProblem, iterateAllUser,
 } from './pipelineUtils';
 import db from './service/db';
 import { setBuiltinConfig } from './settings';
@@ -432,15 +432,7 @@ const scripts: UpgradeScript[] = [
         return true;
     },
     null,
-    async function _65_66() {
-        return await iterateAllDomain(async (ddoc) => {
-            Object.keys(ddoc.roles).forEach((role) => {
-                if (['guest', 'root'].includes(role)) return;
-                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PREM_VIEW_DISPLAYNAME).toString();
-            });
-            await domain.setRoles(ddoc._id, ddoc.roles);
-        });
-    },
+    null,
     async function _66_67() {
         const [
             endPoint, accessKey, secretKey, bucket, region,
@@ -563,13 +555,99 @@ const scripts: UpgradeScript[] = [
             r.journal = r.journal.filter((i) => i.rid !== null);
             await document.collStatus.updateOne({ _id: r._id }, { $set: { journal: r.journal } });
         }
-        await iterateAllContest(async (tdoc) => {
+        return await iterateAllContest(async (tdoc) => {
             if (tdoc.rule !== 'acm') return;
             logger.info(tdoc.domainId, tdoc.title);
             await contest.recalcStatus(tdoc.domainId, tdoc.docId);
             if (contest.isDone(tdoc)) await contest.unlockScoreboard(tdoc.domainId, tdoc.docId);
         });
+    },
+    async function _79_80() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                try {
+                    await contest.get(_id, ddoc.parentId as ObjectId);
+                } catch (e) {
+                    await discussion.del(_id, ddoc.docId);
+                }
+            }
+        });
+    },
+    async function _80_81() {
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: false }, { $set: { pin: 0 } });
+        await document.coll.updateMany({ docType: document.TYPE_TRAINING, pin: true }, { $set: { pin: 1 } });
         return true;
+    },
+    async function _81_82() {
+        return await iterateAllUser(async (udoc) => {
+            if (!udoc.pinnedDomains) return;
+            let pinnedDomains = new Set<string>();
+            for (const d of udoc.pinnedDomains) {
+                if (typeof d === 'string') pinnedDomains.add(d);
+                else pinnedDomains = Set.union(pinnedDomains, d);
+            }
+            await user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
+        });
+    },
+    async function _82_83() {
+        await document.coll.updateMany({ docType: document.TYPE_CONTEST, assign: null }, { $set: { assign: [] } });
+        return true;
+    },
+    async function _83_84() {
+        const tdocs = await document.coll.find({ docType: document.TYPE_CONTEST, rule: 'strictioi' }).toArray();
+        for (const tdoc of tdocs) {
+            logger.info(tdoc.domainId, tdoc.title);
+            const rdocs = await RecordModel.coll.find({ domainId: tdoc.domainId, contest: tdoc.docId }).toArray();
+            for (const rdoc of rdocs) {
+                await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, rdoc.uid, 'journal', {
+                    rid: rdoc._id, pid: rdoc.pid, status: rdoc.status, score: rdoc.score, subtasks: rdoc.subtasks,
+                }, 'rid');
+            }
+            await contest.recalcStatus(tdoc.domainId, tdoc.docId);
+        }
+        return true;
+    },
+    async function _84_85() {
+        return await iterateAllDomain(async ({ _id }) => {
+            const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
+            for await (const ddoc of cursor) {
+                const parentId = new ObjectId(ddoc.parentId);
+                await discussion.edit(_id, ddoc.docId, { parentId });
+                try {
+                    await contest.get(_id, parentId);
+                } catch (e) {
+                    await discussion.del(_id, ddoc.docId);
+                }
+            }
+        });
+    },
+    null,
+    async function _86_87() {
+        logger.info('Removing unused files...');
+        return await iterateAllDomain(async ({ _id }) => {
+            logger.info('Processing domain %s', _id);
+            const contestFilesList = await StorageModel.list(`contest/${_id}`);
+            const trainingFilesList = await StorageModel.list(`training/${_id}`);
+            const tdocs = await contest.getMulti(_id, {}).toArray();
+            const trdocs = await training.getMulti(_id, {}).toArray();
+            let existsFiles = [];
+            for (const tdoc of tdocs) existsFiles = existsFiles.concat((tdoc.files || []).map((i) => `contest/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(contestFilesList.filter((i) => !existsFiles.includes(i.name)).map((i) => i.name));
+            existsFiles = [];
+            for (const tdoc of trdocs) existsFiles = existsFiles.concat((tdoc.files || []).map((i) => `training/${_id}/${tdoc.docId}/${i.name}`));
+            await StorageModel.del(trainingFilesList.filter((i) => !existsFiles.includes(i.name)).map((i) => i.name));
+            logger.info('Domain %s done', _id);
+        });
+    },
+    async function _87_88() {
+        return await iterateAllDomain(async (ddoc) => {
+            for (const role of Object.keys(ddoc.roles)) {
+                if (role === 'root') continue;
+                ddoc.roles[role] = (BigInt(ddoc.roles[role]) | PERM.PERM_VIEW_RECORD).toString();
+            }
+            await domain.setRoles(ddoc._id, ddoc.roles);
+        });
     },
 ];
 

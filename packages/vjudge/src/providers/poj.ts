@@ -64,10 +64,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
 
     async getCsrfToken(url: string) {
         const { header } = await this.get(url);
-        if (header['set-cookie']) {
-            await this.save({ cookie: header['set-cookie'] });
-            this.cookie = header['set-cookie'];
-        }
+        if (header['set-cookie']) await this.setCookie(header['set-cookie']);
         return '';
     }
 
@@ -113,11 +110,11 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
             content.children[0].remove();
             content.children[0].remove();
             content.children[0].remove();
-            content.querySelectorAll('img[src]').forEach((ele) => {
+            for (const ele of content.querySelectorAll('img[src]')) {
                 const src = ele.getAttribute('src');
                 if (images[src]) {
                     ele.setAttribute('src', `file://${images[src]}.png`);
-                    return;
+                    continue;
                 }
                 const file = new PassThrough();
                 this.get(src).pipe(file);
@@ -125,7 +122,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
                 images[src] = fid;
                 files[`${fid}.png`] = file;
                 ele.setAttribute('src', `file://${fid}.png`);
-            });
+            }
             let lastId = 0;
             let markNext = '';
             let html = '';

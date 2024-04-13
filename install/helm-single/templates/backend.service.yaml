@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: backend
+  name: backend-service
+  namespace: hydro-namespace
+spec:
+  ports:
+    - port: {{.Values.Backend.ClusterPort}}
+      name: backend-cluster-endpoint
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app: backend
+  type: ClusterIP

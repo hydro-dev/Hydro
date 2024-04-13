@@ -44,7 +44,6 @@ export async function judge({
                 subtasks[subtaskId].status = Math.max(subtasks[subtaskId].status, status);
             }
             next({
-                status: totalStatus,
                 case: {
                     subtaskId,
                     id: caseId,

@@ -11,12 +11,12 @@ const page = new NamedPage('record_main', async () => {
     import('diff-dom'),
   ]);
 
-  const sock = new WebSocket(UiContext.ws_prefix + UiContext.socketUrl);
+  const sock = new WebSocket(UiContext.ws_prefix + UiContext.socketUrl, false, true);
   const dd = new DiffDOM();
 
   sock.onopen = () => sock.send(JSON.stringify({ rids: UiContext.rids }));
-  sock.onmessage = (message) => {
-    const msg = JSON.parse(message.data);
+  sock.onmessage = (_, data) => {
+    const msg = JSON.parse(data);
     const $newTr = $(msg.html);
     const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
     if ($oldTr.length) {
@@ -24,6 +24,8 @@ const page = new NamedPage('record_main', async () => {
       dd.apply($oldTr[0], dd.diff($oldTr[0], $newTr[0]));
       $oldTr.trigger('vjContentNew');
     } else {
+      if (+new URLSearchParams(window.location.search).get('page') > 1
+         || new URLSearchParams(window.location.search).get('nopush')) return;
       $('.record_main__table tbody').prepend($newTr);
       $('.record_main__table tbody tr:last').remove();
       $newTr.trigger('vjContentNew');
@@ -35,7 +37,8 @@ const page = new NamedPage('record_main', async () => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pid"]'), {
     clearDefaultValue: false,
   });
-  const availableLangs = getAvailableLangs(UiContext.domain.langs?.split(','));
+  const langs = UiContext.domain.langs?.split(',').map((i) => i.trim()).filter((i) => i);
+  const availableLangs = getAvailableLangs(langs?.length ? langs : undefined);
   Object.keys(availableLangs).map(
     (i) => ($('select[name="lang"]').append(tpl`<option value="${i}" key="${i}">${availableLangs[i].display}</option>`)));
   const lang = new URL(window.location.href).searchParams.get('lang');

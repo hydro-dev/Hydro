@@ -97,7 +97,7 @@ export function Media(md: MarkdownIt) {
       if (src.toLowerCase().startsWith('av')) src = src.toLowerCase().split('av')[1];
       src = src.split('?')[0];
       return `\
-        <iframe src="//player.bilibili.com/player.html?${src.startsWith('BV') ? 'bvid' : 'aid'}=${src}"
+        <iframe src="//player.bilibili.com/player.html?${src.startsWith('BV') ? 'bvid' : 'aid'}=${src}&autoplay=0"
           scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
       `;
     }

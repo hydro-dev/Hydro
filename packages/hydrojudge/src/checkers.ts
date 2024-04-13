@@ -1,7 +1,7 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { FormatError, SystemError } from './error';
-import { CopyInFile, run } from './sandbox';
+import { CopyInFile, runQueued } from './sandbox';
 import { parse } from './testlib';
 
 export interface CheckConfig {
@@ -54,7 +54,7 @@ function parseDiffMsg(msg: string) {
 
 const checkers: Record<string, Checker> = new Proxy({
     async default(config) {
-        const { stdout } = await run('/usr/bin/diff -BZ usrout answer', {
+        const { stdout } = await runQueued('/usr/bin/diff -BZ usrout answer', {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -76,7 +76,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async strict(config) {
-        const { stdout } = await run('/usr/bin/diff usrout answer', {
+        const { stdout } = await runQueued('/usr/bin/diff usrout answer', {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -98,7 +98,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * exit code：返回判断结果
      */
     async hustoj(config) {
-        const { code, stdout } = await run(`${config.execute} input answer usrout`, {
+        const { code, stdout } = await runQueued(`${config.execute} input answer usrout`, {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -123,7 +123,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * argv[6]：输出错误报告的文件
      */
     async lemon(config) {
-        const { files, code } = await run(`${config.execute} input usrout answer ${config.score} score message`, {
+        const { files, code } = await runQueued(`${config.execute} input usrout answer ${config.score} score message`, {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -156,7 +156,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * exit code：返回判断结果
      */
     async qduoj(config) {
-        const { status, stdout } = await run(`${config.execute} input usrout`, {
+        const { status, stdout } = await runQueued(`${config.execute} input usrout`, {
             copyIn: {
                 usrout: config.user_stdout,
                 input: config.input,
@@ -182,7 +182,7 @@ const checkers: Record<string, Checker> = new Proxy({
      */
     async syzoj(config) {
         // eslint-disable-next-line prefer-const
-        let { status, stdout, stderr } = await run(config.execute, {
+        let { status, stdout, stderr } = await runQueued(config.execute, {
             copyIn: {
                 input: config.input,
                 user_out: config.user_stdout,
@@ -198,7 +198,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status, code } = await run(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { stderr, status, code } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -207,16 +207,21 @@ const checkers: Record<string, Checker> = new Proxy({
             },
             env: config.env,
         });
-        if (status === STATUS.STATUS_SYSTEM_ERROR) {
+        if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
+            const message = {
+                [STATUS.STATUS_SYSTEM_ERROR]: stderr,
+                [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Checker Time Limit Exceeded',
+                [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Checker Memory Limit Exceeded',
+            }[status];
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
-                message: stderr,
+                message,
             };
         }
         if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
             return {
-                status: STATUS.STATUS_WRONG_ANSWER,
+                status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
                 message: `Checker exited with code ${code}`,
             };

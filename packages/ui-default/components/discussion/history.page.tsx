@@ -12,7 +12,7 @@ async function historyDialog(payload, time, uid) {
   const rawHtml = await fetch(`${payload}?time=${ts}&render=1`).then((res) => res.text());
   new InfoDialog({
     $body: tpl`
-      <div class="typo">
+      <div class="typo richmedia">
         <p><div data-user>${uid}</div> ${i18n('Edited at')} <span class="time relative" data-timestamp="${ts / 1000}">${time}</span></p>
         ${{ templateRaw: true, html: rawHtml }}
       </div>`,
@@ -28,9 +28,12 @@ function History({ payload }) {
     return history;
   }, { enabled: !!load });
   return (
-    <Popover usePortal interactionKind="hover" position="bottom" onOpening={() => setLoad(true)}>
-      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
-      <ol className="menu">
+    <Popover
+      usePortal
+      interactionKind="hover"
+      position="bottom"
+      onOpening={() => setLoad(true)}
+      content={<ol className="menu">
         {(isLoading || isError) && (
           <li className="menu__item">
             <a className="menu__link">
@@ -47,7 +50,9 @@ function History({ payload }) {
             </a>
           </li>
         ))}
-      </ol>
+      </ol>}
+    >
+      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
     </Popover>
   );
 }

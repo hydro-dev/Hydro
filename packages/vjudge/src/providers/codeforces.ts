@@ -13,7 +13,7 @@ const logger = new Logger('remote/codeforces');
 
 function parseProblemId(id: string) {
     const [, type, contestId, problemId] = id.startsWith('P921')
-        ? ['', '921', '01']
+        ? ['', 'P', '921', '01']
         : /^(P|GYM)(\d+)([A-Z]+[0-9]*)$/.exec(id);
     if (type === 'GYM' && (+contestId) < 100000) {
         return [type, ((+contestId) + 100000).toString(), problemId];
@@ -83,37 +83,37 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     async getCsrfToken(url: string) {
-        const { document, html } = await this.html(url);
+        const { document, html, headers } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
-            throw new Error(document.body.textContent);
+            throw new Error(document.body.textContent!);
         }
-        const ftaa = this.getCookie('70a7c28f3de');
-        const bfaa = /_bfaa = "(.{32})"/.exec(html)?.[1] || this.getCookie('raa') || this.getCookie('bfaa');
+        const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
+        const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
         return [
             (
                 document.querySelector('meta[name="X-Csrf-Token"]')
                 || document.querySelector('input[name="csrf_token"]')
             )?.getAttribute('content'),
-            ftaa, bfaa,
+            ftaa, bfaa, headers,
         ];
     }
 
     get loggedIn() {
-        return this.get('/enter').then((res) => {
+        return this.get('/').then((res) => {
             const html = res.text;
-            if (html.includes('Login into Codeforces')) return false;
             if (html.length < 1000 && html.includes('Redirecting...')) {
                 logger.debug('Got a redirect', html);
                 return false;
             }
-            return true;
+            return html.includes('header-bell__img');
         });
     }
 
     async ensureLogin() {
         if (await this.loggedIn) return true;
         logger.info('retry normal login');
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken('/enter');
+        const [csrf, ftaa, bfaa, header] = await this.getCsrfToken('/enter');
+        if (header['set-cookie']) this.setCookie(header['set-cookie']);
         const res = await this.post('/enter').send({
             csrf_token: csrf,
             action: 'enter',
@@ -177,15 +177,15 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const text = $dom.window.document.querySelector('.problem-statement').innerHTML;
         const { window: { document } } = new JSDOM(text);
         const files = {};
-        document.querySelectorAll('img[src]').forEach((ele) => {
+        for (const ele of document.querySelectorAll('img[src]')) {
             const src = ele.getAttribute('src');
-            if (!src.startsWith('http')) return;
+            if (!src.startsWith('http')) continue;
             const file = new PassThrough();
             this.get(src).pipe(file);
             const fid = String.random(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
-        });
+        }
         const title = document.querySelector('.title').innerHTML.trim().split('. ')[1];
         const time = parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
         const memory = parseInt(document.querySelector('.memory-limit').innerHTML.substr(55, 4), 10);
@@ -200,11 +200,11 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const note = document.querySelector('.note')?.innerHTML.trim();
         document.querySelector('.note')?.remove();
         document.querySelector('.sample-tests')?.remove();
-        document.querySelectorAll('.section-title').forEach((ele) => {
+        for (const ele of document.querySelectorAll('.section-title')) {
             const e = document.createElement('h2');
             e.innerHTML = ele.innerHTML;
             ele.replaceWith(e);
-        });
+        }
         const description = document.body.innerHTML.trim();
         return {
             title: id.startsWith('P921') ? title.replace('1', id.split('P921')[1]) : title,
@@ -295,33 +295,39 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const message = Array.from(statusDocument.querySelectorAll('.error'))
             .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
         if (message) {
-            end({ status: STATUS.STATUS_COMPILE_ERROR, message });
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
             return null;
         }
         const { document } = await this.html(type !== 'GYM'
             ? '/problemset/status?my=on'
             : `/gym/${contestId}/my`);
         this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        return document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        return type !== 'GYM' ? submission : `${contestId}#${submission}`;
     }
 
     async waitForSubmission(id: string, next, end) {
         let i = 1;
+        const start = Date.now();
         // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
-            const { body } = await this.post('/data/submitSource').send({
-                csrf_token: this.csrf,
-                submissionId: id,
-            });
+            const contestId = id.includes('#') ? id.split('#')[0] : null;
+            const { body } = await this.post('/data/submitSource')
+                .set('referer', contestId ? `https://codeforces.com/gym/${contestId}/my` : 'https://codeforces.com/problemset/status?my=on')
+                .send({
+                    csrf_token: this.csrf,
+                    submissionId: contestId ? id.split('#')[1] : id,
+                });
             if (body.compilationError === 'true') {
-                return await end({
+                await end({
                     compilerText: body['checkerStdoutAndStderr#1'],
                     status: STATUS.STATUS_COMPILE_ERROR,
                     score: 0,
                     time: 0,
                     memory: 0,
                 });
+                break;
             }
             const time = Math.sum(Object.keys(body).filter((k) => k.startsWith('timeConsumed#')).map((k) => +body[k]));
             const memory = Math.max(...Object.keys(body).filter((k) => k.startsWith('memoryConsumed#')).map((k) => +body[k])) / 1024;
@@ -340,12 +346,16 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             if (cases.length) await next({ status: STATUS.STATUS_JUDGING, cases });
             if (body.waiting === 'true') continue;
             const status = VERDICT[Object.keys(VERDICT).find((k) => normalize(body.verdict).includes(k))];
-            return await end({
+            await end({
                 status,
                 score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
                 time,
                 memory,
             });
+            break;
         }
+        // TODO better rate limiting
+        // Codeforces only allow 20 submission per 5 minute
+        if (Date.now() - start < 16000) await sleep(Date.now() - start);
     }
 }

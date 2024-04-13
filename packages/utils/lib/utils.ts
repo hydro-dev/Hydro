@@ -1,12 +1,14 @@
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
-import { Duplex } from 'stream';
+import { Duplex, PassThrough } from 'stream';
 import { inspect } from 'util';
+import type AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import Logger from 'reggol';
+import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
@@ -36,9 +38,7 @@ export function folderSize(folderPath: string) {
                 size += stats.size;
                 const files = fs.readdirSync(p);
                 if (Array.isArray(files)) {
-                    files.forEach((file) => {
-                        _next(path.join(p, file));
-                    });
+                    for (const file of files) _next(path.join(p, file));
                 }
             }
         }
@@ -82,7 +82,16 @@ export function isClass(obj: any, strict = false): obj is new (...args: any) => 
     return false;
 }
 
-export function streamToBuffer(stream: any, maxSize = 0): Promise<Buffer> {
+function isSuperagentRequest(t: NodeJS.ReadableStream | superagent.Request): t is superagent.Request {
+    return 'req' in t;
+}
+export function streamToBuffer(input: NodeJS.ReadableStream | superagent.Request, maxSize = 0): Promise<Buffer> {
+    let stream: NodeJS.ReadableStream;
+    if (isSuperagentRequest(input)) {
+        const s = new PassThrough();
+        input.pipe(s);
+        stream = s;
+    } else stream = input;
     return new Promise((resolve, reject) => {
         const buffers = [];
         let length = 0;
@@ -247,9 +256,9 @@ export function CallableInstance(property = '__call__') {
     else func = this.constructor.prototype[property];
     const apply = function __call__(...args) { return func.apply(apply, ...args); };
     Object.setPrototypeOf(apply, this.constructor.prototype);
-    Object.getOwnPropertyNames(func).forEach((p) => {
+    for (const p of Object.getOwnPropertyNames(func)) {
         Object.defineProperty(apply, p, Object.getOwnPropertyDescriptor(func, p));
-    });
+    }
     return apply;
 }
 
@@ -271,6 +280,72 @@ export function Counter<T extends (string | number) = string>() {
             return target[prop];
         },
     }) as Record<T, number>;
+}
+
+function canonical(p: string) {
+    if (!p) return '';
+    const safeSuffix = path.posix.normalize(`/${p.split('\\').join('/')}`);
+    return path.join('.', safeSuffix);
+}
+
+function sanitize(prefix: string, name: string) {
+    prefix = path.resolve(path.normalize(prefix));
+    const parts = name.split('/');
+    for (let i = 0, l = parts.length; i < l; i++) {
+        const p = path.normalize(path.join(prefix, parts.slice(i, l).join(path.sep)));
+        if (p.indexOf(prefix) === 0) {
+            return p;
+        }
+    }
+    return path.normalize(path.join(prefix, path.basename(name)));
+}
+
+export function sanitizePath(pathname: string) {
+    const parts = pathname.replace(/\\/g, '/').split('/').filter((i) => i && i !== '.' && i !== '..');
+    return parts.join(path.sep);
+}
+
+/* eslint-disable no-await-in-loop */
+export async function extractZip(zip: AdmZip, dest: string, overwrite = false, strip = false) {
+    const entries = zip.getEntries();
+    const shouldStrip = strip ? entries.every((i) => i.entryName.startsWith(entries[0].entryName)) : false;
+    for (const entry of entries) {
+        const name = shouldStrip ? entry.entryName.substring(entries[0].entryName.length) : entry.entryName;
+        const d = sanitize(dest, canonical(name));
+        if (entry.isDirectory) {
+            await fs.mkdir(d, { recursive: true });
+            continue;
+        }
+        const content = entry.getData();
+        if (!content) throw new Error('CANT_EXTRACT_FILE');
+        if (!fs.existsSync(d) || overwrite) await fs.writeFile(d, content);
+        await fs.utimes(d, entry.header.time, entry.header.time);
+    }
+}
+
+export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
+    try {
+        await new Promise((resolve, reject) => {
+            req.buffer(false).timeout({
+                response: Math.min(10000, timeout),
+                deadline: timeout,
+            }).parse((resp, cb) => {
+                if (resp.statusCode !== 200) throw new Error(`${resp.statusCode}`);
+                else {
+                    resp.pipe(w);
+                    resp.on('end', () => {
+                        cb(null, undefined);
+                        resolve(null);
+                    });
+                    resp.on('error', (err) => {
+                        cb(err, undefined);
+                    });
+                }
+            }).catch(reject);
+        });
+    } catch (e) {
+        throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message})`);
+    }
 }
 
 export * from '@hydrooj/utils/lib/common';

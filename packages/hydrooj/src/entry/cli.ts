@@ -73,6 +73,17 @@ async function cli() {
             args[i] = +args[i];
         } else if (args[i].startsWith('~')) {
             args[i] = argv.options[args[i].substr(1)];
+        } else if ((args[i].startsWith('[') && args[i].endsWith(']')) || (args[i].startsWith('{') && args[i].endsWith('}'))) {
+            try {
+                args[i] = JSON.parse(args[i]);
+                for (const key in args[i]) {
+                    if (typeof args[i][key] === 'string' && ObjectId.isValid(args[i][key])) {
+                        args[i][key] = new ObjectId(args[i][key]);
+                    }
+                }
+            } catch (e) {
+                console.error(`Cannot parse argument at position ${i}`);
+            }
         }
     }
     let result = global.Hydro.model[modelName][func](...args);
@@ -96,6 +107,7 @@ export async function load(ctx: Context) {
         lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
+    ctx.plugin(require('../service/worker'));
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     await setting(pending, fail, require('../model/setting'));

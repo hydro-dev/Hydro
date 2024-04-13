@@ -12,7 +12,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, requireSudo, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
 import { builtinConfig } from '../settings';
@@ -84,7 +84,6 @@ export class FSDownloadHandler extends Handler {
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     async get(domainId: string, uid: number, filename: string, noDisposition = false) {
-        this.response.addHeader('Cache-Control', 'public');
         const target = `user/${uid}/${filename}`;
         const file = await storage.getMeta(target);
         await oplog.log(this, 'download.file.user', {
@@ -95,6 +94,7 @@ export class FSDownloadHandler extends Handler {
             this.response.redirect = await storage.signDownloadLink(
                 target, noDisposition ? undefined : filename, false, 'user',
             );
+            this.response.addHeader('Cache-Control', 'public');
         } catch (e) {
             if (e.message.includes('Invalid path')) throw new NotFoundError(filename);
             throw e;
@@ -104,6 +104,7 @@ export class FSDownloadHandler extends Handler {
 
 export class StorageHandler extends Handler {
     noCheckPermView = true;
+    notUsage = true;
 
     @param('target', Types.Name)
     @param('filename', Types.Filename, true)
@@ -122,8 +123,10 @@ export class StorageHandler extends Handler {
 }
 
 export class SwitchAccountHandler extends Handler {
+    @requireSudo
     @param('uid', Types.Int)
     async get(domainId: string, uid: number) {
+        this.session.sudoUid = this.user._id;
         this.session.uid = uid;
         this.back();
     }
@@ -134,5 +137,5 @@ export async function apply(ctx) {
     ctx.Route('home_files', '/file', FilesHandler);
     ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
     ctx.Route('storage', '/storage', StorageHandler);
-    ctx.Route('switch_account', '/account', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Route('switch_account', '/account/:uid', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
 }

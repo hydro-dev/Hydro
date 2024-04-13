@@ -1,0 +1,48 @@
+{% import "components/nothing.html" as nothing with context %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Balloon Status') }}</h1>
+        <div class="section__tools">
+          <button class="primary rounded button" name="set_color">{{ _('Set Color') }}</button>
+        </div>
+      </div>
+      {{ noscript_note.render() }}
+      <div class="section__body no-padding">
+        {% if not tdoc.balloon|length %}
+          {{ nothing.render('Please set the balloon color for each problem first.') }}
+        {% else %}
+        <table class="data-table record_main__table">
+          <colgroup>
+            <col class="col--status">
+            <col class="col--bid">
+            <col class="col--problem">
+            <col class="col--submit-by">
+            <col class="col--send-by">
+            <col class="col--awards">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--status record-status--border">{{ _('Status') }}</th>
+              <th class="col--bid">{{ _('#') }}</th>
+              <th class="col--problem">{{ _('Problem') }}</th>
+              <th class="col--submit-by">{{ _('Submit By') }}</th>
+              <th class="col--send-by">{{ _('Send By') }}</th>
+              <th class="col--awards">{{ _('Awards') }}</th>
+            </tr>
+          </thead>
+          {% include "partials/contest_balloon.html" %}
+        </table>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include 'partials/contest_sidebar_management.html' %}
+  </div>
+</div>
+{% endblock %}

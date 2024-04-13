@@ -1,5 +1,5 @@
 import {
-  Button, Dialog, DialogBody, DialogFooter, Icon,
+  Button, Classes, Dialog, DialogBody, DialogFooter, Icon,
 } from '@blueprintjs/core';
 import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
 import React, { useEffect, useRef } from 'react';
@@ -83,17 +83,14 @@ export function AddTestcase() {
   }
 
   return (<>
-    <li
-      className="bp4-tree-node"
-      onClick={auto}
-    >
-      <div className="bp4-tree-node-content bp4-tree-node-content-0">
+    <li className={Classes.TREE_NODE} onClick={auto}>
+      <div className="bp5-tree-node-content bp5-tree-node-content-0">
         <Icon icon="clean" />&nbsp;
-        <span className="bp4-tree-node-label">{i18n('Auto detect')}</span>
+        <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto detect')}</span>
       </div>
     </li>
     <li
-      className="bp4-tree-node"
+      className={Classes.TREE_NODE}
       onClick={() => {
         setInput('');
         setOutput('');
@@ -102,9 +99,9 @@ export function AddTestcase() {
         setOpen(true);
       }}
     >
-      <div className="bp4-tree-node-content bp4-tree-node-content-0">
+      <div className="bp5-tree-node-content bp5-tree-node-content-0">
         <Icon icon="clean" />&nbsp;
-        <span className="bp4-tree-node-label">{i18n('Add testcase')}</span>
+        <span className={Classes.TREE_NODE_LABEL}>{i18n('Add testcase')}</span>
       </div>
     </li>
     <Dialog title="Add testcase" icon="cog" isOpen={open} onClose={() => setOpen(false)}>

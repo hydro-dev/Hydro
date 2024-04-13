@@ -125,8 +125,10 @@ export async function run({
                 udoc.email || `${udoc.username}@syzoj.local`, udoc.username, '',
                 null, udoc.ip, SystemModel.get('default.priv'),
             );
-            if (udoc.is_admin) await UserModel.setSuperAdmin(uid);
-            superAdmin.push(uid);
+            if (udoc.is_admin) {
+                await UserModel.setSuperAdmin(uid);
+                superAdmin.push(uid);
+            }
             uidMap[udoc.id] = uid;
             await UserModel.setById(uid, {
                 regat: new Date(udoc.register_time * 1000),
@@ -237,7 +239,7 @@ export async function run({
                 const additionalFile = await query(`SELECT * FROM \`file\` WHERE \`id\` = ${pdoc.additional_file_id}`);
                 if (additionalFile.length) {
                     const [afdoc] = additionalFile;
-                    await ProblemModel.addAdditionalFile(domainId, pdoc.docId,
+                    await ProblemModel.addAdditionalFile(domainId, pidMap[pdoc.id],
                         `additional_file_${pdoc.additional_file_id}.zip`, `${dataDir}/additional_file/${afdoc.md5}`);
                 }
             }
@@ -329,19 +331,21 @@ export async function run({
             if (judgeState) {
                 if (judgeState.compile?.message) data.compilerTexts.push(judgeState.compile.message.replace(/<.+?>/g, ''));
                 if (judgeState.judge) {
-                    judgeState.judge.subtasks.forEach((subtask, index) => {
-                        subtask.cases.forEach((curCase, caseIndex) => {
+                    for (let i = 0; i < judgeState.judge.subtasks.length; i++) {
+                        const subtask = judgeState.judge.subtasks[i];
+                        for (let j = 0; j < subtask.cases.length; j++) {
+                            const curCase = subtask.cases[j];
                             data.testCases.push({
-                                subtaskId: index + 1,
-                                id: caseIndex + 1,
+                                subtaskId: i + 1,
+                                id: j + 1,
                                 score: Math.trunc((curCase.result?.scoringRate || 0) * 100),
                                 time: curCase.result?.time || 0,
                                 memory: curCase.result?.memory || 0,
                                 message: curCase.result?.spjMessage || curCase.result?.systemMessage || curCase.result?.userError || '',
                                 status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
                             });
-                        });
-                    });
+                        }
+                    }
                 }
             }
             if (rdoc.type) {

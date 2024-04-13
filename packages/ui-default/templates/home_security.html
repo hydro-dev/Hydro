@@ -20,7 +20,7 @@
         <form method="post">
           {{ form.form_text({
                type:'password',
-               label:'Current Password',
+               label:"SuperUser's Password" if sudoUid else 'Current Password',
                columns:10,
                name:'password',
                required:true
@@ -57,7 +57,7 @@
         <form method="post">
           {{ form.form_text({
                type:'password',
-               label:'Current Password',
+               label:"SuperUser's Password" if sudoUid else 'Current Password',
                columns:10,
                name:'current',
                required:true

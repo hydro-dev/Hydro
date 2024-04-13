@@ -32,14 +32,18 @@ langs:
       - ~ Compiling be be ignored if compile option wasn't set
       - ~ Key marked with a ? means the option is optional
       - (name):
+          disabled?: whether to disable this language
           compile?: Compile Command
-          code_file?: Where to write code file when compiling
-          execute?: Command to execute the program
+          code_file?: Where to write code file when compiling, defaults to `foo.[name]`
+          execute: Command to execute the program
           highlight?: PrismJS highlight mode
           monaco?: Monaco editor mode
-          time_limit_rate: Time limit rate
-          target: Compiler output file
+          time_limit_rate?: Time limit rate
+          target?: Compiler output file, defaults to `foo`
           display: Display name
+          compile_time_limit?: Compile time limit, in milliseconds
+          address_space_limit?: Enable address space memory limit as CCF did
+          process_limit?: Limit the number of thread
     bash:
       display: Bash
       code_file: foo.sh
@@ -56,6 +60,8 @@ langs:
       highlight: cpp
       monaco: cpp
       display: C++
+      address_space_limit: true
+      process_limit: 1
     cc.cc98:
       compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
       display: C++98
@@ -79,6 +85,12 @@ langs:
     cc.cc17o2:
       compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2 -I/include
       display: C++17(O2)
+    cc.cc20:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -I/include
+      display: C++20
+    cc.cc20o2:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -O2 -I/include
+      display: C++20(O2)
     pas:
       compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
       highlight: pascal
@@ -92,6 +104,7 @@ langs:
       highlight: java astyle-java
       monaco: java
       display: Java
+      compile_time_limit: 30000
     kt:
       compile: echo "Invalid language selection"
       code_file: foo.kt
@@ -114,6 +127,7 @@ langs:
       display: Python
     py.py2:
       display: Python 2
+      disabled: true
     py.py3:
       compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       execute: /usr/bin/python3 foo
@@ -150,3 +164,7 @@ langs:
       highlight: csharp
       monaco: csharp
       display: 'C#'
+    r:
+      display: R
+      execute: /bin/sh -c "cat /dev/stdin >stdin && /usr/bin/Rscript --vanilla foo.r"
+      highlight: r

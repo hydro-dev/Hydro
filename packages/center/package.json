@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/center",
-    "version": "0.2.3",
+    "version": "0.2.7",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
@@ -10,6 +10,7 @@
         "hydrooj": "*"
     },
     "dependencies": {
-        "crypto-js": "^4.1.1"
+        "crypto-js": "^4.2.0",
+        "semver": "^7.6.0"
     }
 }

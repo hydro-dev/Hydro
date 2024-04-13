@@ -1,11 +1,10 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
-import checkers from './checkers';
 import { CompileError, FormatError } from './error';
 import { Execute } from './interface';
 import {
-    CopyIn, CopyInFile, del, run,
+    CopyIn, CopyInFile, del, runQueued,
 } from './sandbox';
 import { compilerText } from './utils';
 
@@ -17,7 +16,7 @@ export default async function compile(
     if (lang.compile) {
         const {
             status, stdout, stderr, fileIds,
-        } = await run(
+        } = await runQueued(
             copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
             {
                 copyIn: { ...copyIn, [lang.code_file]: code },
@@ -26,7 +25,9 @@ export default async function compile(
                 time: lang.compile_time_limit || 10000,
                 memory: lang.compile_memory_limit || 256 * 1024 * 1024,
             },
+            3,
         );
+        // TODO: distinguish user program and checker
         if (status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) next?.({ message: 'Compile timeout.' });
         if (status === STATUS.STATUS_MEMORY_LIMIT_EXCEEDED) next?.({ message: 'Compile memory limit exceeded.' });
         if (status !== STATUS.STATUS_ACCEPTED) throw new CompileError({ status, stdout, stderr });
@@ -49,7 +50,10 @@ const testlibFile = {
     src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
 };
 
-async function _compile(src: string, type: 'checker' | 'validator' | 'interactor', getLang, copyIn, withTestlib = true) {
+export async function compileLocalFile(
+    src: string, type: 'checker' | 'validator' | 'interactor' | 'generator' | 'std',
+    getLang, copyIn: CopyIn, withTestlib = true, next?: any,
+) {
     const s = src.replace('@', '.').split('.');
     let lang;
     let langId = s.pop();
@@ -61,21 +65,5 @@ async function _compile(src: string, type: 'checker' | 'validator' | 'interactor
     if (!lang) throw new FormatError(`Unknown ${type} language.`);
     if (withTestlib) copyIn = { ...copyIn, 'testlib.h': testlibFile };
     // TODO cache compiled binary
-    return await compile(lang, { src }, copyIn);
-}
-
-export async function compileChecker(getLang: Function, checkerType: string, checker: string, copyIn: CopyIn) {
-    if (['default', 'strict'].includes(checkerType)) {
-        return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
-    }
-    if (!checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
-    return _compile(checker, 'checker', getLang, copyIn, checkerType === 'testlib');
-}
-
-export async function compileInteractor(getLang: Function, interactor: string, copyIn: CopyIn) {
-    return _compile(interactor, 'interactor', getLang, copyIn);
-}
-
-export async function compileValidator(getLang: Function, validator: string, copyIn: CopyIn) {
-    return _compile(validator, 'validator', getLang, copyIn);
+    return await compile(lang, { src }, copyIn, next);
 }

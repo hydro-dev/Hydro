@@ -280,6 +280,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
+        if (!ObjectId.isValid(id)) throw new DiscussionNodeNotFoundError(id);
         const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
         if (!tdoc) throw new DiscussionNodeNotFoundError(id);
@@ -288,7 +289,7 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
         }
         return {
-            ...tdoc, type, id, hidden: false,
+            ...tdoc, type, id: _id, hidden: false,
         };
     }
     return {

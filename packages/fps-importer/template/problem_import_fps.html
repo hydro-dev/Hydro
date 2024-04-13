@@ -4,29 +4,14 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__body">
-        <form method="post">
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('FPS FILE') }}
-              <textarea name="input" class="textbox" data-xml style="height: 500px"></textarea>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
-            <button type="submit" class="rounded primary button">
-              {{ _('Import') }}
-            </button>
-            <button type="button" class="rounded button" onclick="window.history.go(-1)">
-              {{ _('Cancel') }}
-            </button>
-          </div></div>
-        </form>
-        <form method="post" enctype="multipart/form-data" action="{{ url('file_upload') }}">
-          <p>{{ _('Upload file') }}:
-            <input type="hidden" name="title" value="FPS_IMPORT">
-            <input type="hidden" name="redirect" value="{{ url('problem_import_fps') }}">
+        <form method="post" enctype="multipart/form-data">
+          <p>{{ _('Upload fps file') }}:
             <input type="file" name="file">
             <input type="submit" value="{{ _('Upload') }}" class="rounded primary button">
           </p>
+          <p>{{ _('problem.import.fps.hint1') }}</p>
+          <p>{{ _('problem.import.fps.hint2') }}</p>
+          <p>{{ _('problem.import.fps.hint3') }}</p>
         </form>
       </div>
     </div>

@@ -17,13 +17,11 @@ pre > code
 pre
   position: relative
   padding: rem(5px)
+  margin-bottom: rem(20px)
 
 code
   color: $code-color
   font-size: rem($font-size-secondary)
-
-[data-syntax-hl-show-line-number] pre.line-numbers > code
-  white-space: pre
 
 .line-highlight 
   position: absolute
@@ -59,36 +57,6 @@ code
     border-radius: 0px !important
     background: none !important
 
-[data-syntax-hl-show-line-number]
-  pre
-    padding-left: 3.8em
-    counter-reset: linenumber
-
-  pre > code
-    position: relative
-
-  .line-numbers-rows
-    position: absolute
-    pointer-events: none
-    top: 0
-    font-size: 100%
-    left: -3.8em
-    width: 3em
-    letter-spacing: -1px
-    user-select: none
-
-    span
-      pointer-events: none
-      display: block
-      counter-increment: linenumber
-
-      &:before
-        content: counter(linenumber)
-        color: #ddd
-        display: block
-        padding-right: 0.8em
-        text-align: right
-
 .token.tab:not(:empty),
 .token.cr,
 .token.lf,
@@ -117,3 +85,9 @@ code
 
 .token.space:before
 	content: '\00B7'
+
+@media print {
+  .code-toolbar>.toolbar {
+    display: none !important;
+  }
+}

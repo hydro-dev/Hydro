@@ -61,7 +61,7 @@ class RemoteStorageService {
     public client: S3Client;
     public error = '';
     public bucket = 'hydro';
-    private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
+    private replaceWithAlternativeUrlFor: Partial<Record<'user' | 'judge', (originalUrl: string) => string>>;
     private alternatives: Record<'user' | 'judge', S3Client> = {
         user: null,
         judge: null,
@@ -93,21 +93,22 @@ class RemoteStorageService {
                 endpoint: endPoint,
                 ...base,
             });
-            this.replaceWithAlternativeUrlFor = {
-                user: parseAlternativeEndpointUrl(endPointForUser),
-                judge: parseAlternativeEndpointUrl(endPointForJudge),
-            };
+            this.replaceWithAlternativeUrlFor = {};
             if (/^https?:\/\//.test(endPointForUser)) {
                 this.alternatives.user = new S3Client({
                     endpoint: endPointForUser,
                     ...base,
                 });
+            } else {
+                this.replaceWithAlternativeUrlFor.user = parseAlternativeEndpointUrl(endPointForUser);
             }
             if (/^https?:\/\//.test(endPointForJudge)) {
                 this.alternatives.judge = new S3Client({
                     endpoint: endPointForJudge,
                     ...base,
                 });
+            } else {
+                this.replaceWithAlternativeUrlFor.judge = parseAlternativeEndpointUrl(endPointForJudge);
             }
             logger.success('Storage connected.');
             this.error = null;
@@ -210,7 +211,10 @@ class RemoteStorageService {
         }), {
             expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
         });
-        if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+        // using something like /fs/
+        if (useAlternativeEndpointFor && this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor]) {
+            return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url);
+        }
         return url;
     }
 
@@ -230,10 +234,13 @@ class RemoteStorageService {
             },
             Expires: 600,
         });
-        return {
-            url: this.replaceWithAlternativeUrlFor.user(url),
-            fields,
-        };
+        if (this.replaceWithAlternativeUrlFor.user) {
+            return {
+                url: this.replaceWithAlternativeUrlFor.user(url),
+                fields,
+            };
+        }
+        return { url, fields };
     }
 
     async copy(src: string, target: string) {
@@ -245,11 +252,20 @@ class RemoteStorageService {
             CopySource: src,
         }));
     }
+
+    async status() {
+        return {
+            type: 'S3',
+            status: !this.error,
+            error: this.error,
+            bucket: this.bucket,
+        };
+    }
 }
 
 class LocalStorageService {
     client: null;
-    error: null;
+    error = '';
     dir: string;
     opts: null;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
@@ -319,8 +335,18 @@ class LocalStorageService {
     async copy(src: string, target: string) {
         src = resolve(this.dir, convertPath(src));
         target = resolve(this.dir, convertPath(target));
+        await ensureDir(dirname(target));
         await copyFile(src, target);
         return { etag: target, lastModified: new Date() };
+    }
+
+    async status() {
+        return {
+            type: 'Local',
+            status: !this.error,
+            error: this.error,
+            bucket: 'Hydro',
+        };
     }
 }
 

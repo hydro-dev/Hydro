@@ -2,9 +2,6 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-  {{ set(UiContext, {
-      currentCategory: category
-  }) }}
   <div class="row">
     <div class="medium-9 columns">
       <div class="section display-mode">
@@ -18,6 +15,8 @@
               </button>
             </div>
           </form>
+        </div>
+        <div class="section__body no-padding">
           {% include "partials/problem_list.html" %}
         </div>
       </div>
@@ -74,7 +73,7 @@
           </ol>
           <div class="section__body">
             <div class="typo supplementary">
-              <p>{{ _('You have permissions to create problems for this domain.') }}</p>
+              <p>{{ _('You have permission to create problems for this domain.') }}</p>
             </div>
           </div>
         </div>

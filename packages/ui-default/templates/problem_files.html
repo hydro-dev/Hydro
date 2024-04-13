@@ -1,3 +1,4 @@
+{% import "components/nothing.html" as nothing with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
@@ -15,40 +16,73 @@
       </div>
       {{ noscript_note.render() }}
       {% set filetype = "testdata" %}
+      {% set can_edit = (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
       {% include "partials/problem_files.html" %}
       {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
           <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
           {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="rounded button" name="remove_selected_testdata">{{ _('Remove Selected') }}</button>
+            <button class="rounded button" name="rename_selected_testdata">{{ _('Rename Selected') }}</button>
           {% endif %}
         </div>
       {% endif %}
     </div>
+    {% if not reference and (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) %}
+    {{ set(UiContext, {
+      pdoc: pdoc
+    }) }}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Generate Testdata') }}(Beta)</h1>
+      </div>
+      {{ noscript_note.render() }}
+      <div class="section__body generate">
+        {% if pdoc.config.type === 'default' %}
+            {{ form.form_text({
+              columns: 12,
+              label:'Data Generator',
+              name:'gen',
+              help_text:'A data generator is a program that generates testdata. It should output result to stdout.'
+            }) }}
+            {{ form.form_text({
+              columns: 12,
+              label:'Standard Program',
+              name:'std',
+              help_text:'A standard program is a program that solves the problem. It should output answer to stdout.'
+            }) }}
+            <button class="rounded button" name="generate_testdata">{{ _('Generate') }}</button>
+        {% else %}
+          {{ nothing.render('Generate testdata is not supported for this problem type.') }}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
   <div class="medium-4 columns">
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Files') }}</h1>
         <div class="section__tools">
-          {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+          {% if (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
             <button class="primary rounded button" name="create_file">{{ _('Create File') }}</button>
             <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
           {% endif %}
         </div>
       </div>
       {% set filetype = "additional_file" %}
+      {% set can_edit = (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
       {% include "partials/problem_files.html" %}
       <div class="section__body">
         <button class="rounded button" name="download_selected_file">{{ _('Download Selected') }}</button>
-        {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
+        {% if (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
           <button class="rounded button" name="remove_selected_file">{{ _('Remove Selected') }}</button>
+          <button class="rounded button" name="rename_selected_file">{{ _('Rename Selected') }}</button>
         {% endif %}
       </div>
     </div>
   </div>
   <div class="medium-3 columns">
-    {% set owner_udoc = udoc %}
     {% include "partials/problem_sidebar.html" %}
   </div>
 </div>

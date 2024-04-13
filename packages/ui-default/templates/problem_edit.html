@@ -107,10 +107,10 @@
           </li>
         </ol>
         {% set sidebar = true %}
+        {% set can_edit = true %}
         {% set filetype = "additional_file" %}
         {% include "partials/problem_files.html" %}
       </div>
-      {% set owner_udoc = udoc %}
       {% include "partials/problem_sidebar.html" %}
     {% else %}
       {% include 'components/md_hint.html' %}

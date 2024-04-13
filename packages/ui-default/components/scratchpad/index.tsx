@@ -1,4 +1,5 @@
 import ProblemIcon from '@vscode/codicons/src/icons/file.svg?react';
+import SettingsIcon from '@vscode/codicons/src/icons/settings-gear.svg?react';
 import { Allotment } from 'allotment';
 import $ from 'jquery';
 import _ from 'lodash';
@@ -6,16 +7,21 @@ import type * as monaco from 'monaco-editor';
 import React from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import Dom from 'vj/components/react/DomComponent';
-import { Context, ctx, Service } from 'vj/context';
+import { ctx, Service } from 'vj/context';
 import ScratchpadEditor from './ScratchpadEditorContainer';
 import ScratchpadPretest from './ScratchpadPretestContainer';
 import ScratchpadRecords from './ScratchpadRecordsContainer';
+import ScratchpadSettings from './ScratchpadSettings';
 import ScratchpadToolbar from './ScratchpadToolbarContainer';
 
 const pages = {
   problem: {
     icon: () => <ProblemIcon />,
     component: () => <Dom childDom={$('.problem-content').get(0)} />,
+  },
+  settings: {
+    icon: () => <SettingsIcon />,
+    component: () => <ScratchpadSettings />,
   },
 };
 
@@ -48,7 +54,6 @@ class ScratchpadService extends Service {
     rerenderCallback?.();
   }
 }
-Context.service('scratchpad', ScratchpadService);
 declare module '../../context' {
   interface Context {
     scratchpad: ScratchpadService;
@@ -57,6 +62,7 @@ declare module '../../context' {
 
 export default function ScratchpadContainer() {
   const store = useStore();
+  ctx.provide('scratchpad');
   ctx.scratchpad ||= new ScratchpadService(store);
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);

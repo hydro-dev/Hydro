@@ -60,7 +60,7 @@
           </div>
         {% endif %}
         {% if node['content'] %}
-          <div class="section__body typo">
+          <div class="section__body typo richmedia">
             {{ node['content']|markdown|safe }}
           </div>
         {% endif %}
@@ -131,7 +131,7 @@
                       {% endif %}
                       {{ problem.render_problem_title(
                         pdoc,
-                        invalid=not tsdoc['enroll'],
+                        invalid=not tsdoc['enroll'] or nsdict[node['_id']]['isInvalid'],
                         show_tags=false
                       ) }}
                     </td>

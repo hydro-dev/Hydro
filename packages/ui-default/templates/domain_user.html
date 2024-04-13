@@ -1,5 +1,7 @@
 {% extends "domain_base.html" %}
 {% block domain_content %}
+{% set _rolesSelect = roles.filter(eval("(i) => i._id !== 'guest'")).map(eval('(role) => [role._id, role._id]')) %}
+{% set _rolesSelectWithoutDefault = _rolesSelect.filter(eval("(i) => i[0] !== 'default'")) %}
 <div style="display: none" class="dialog__body--add-user">
   <div>
     <div class="row"><div class="columns">
@@ -17,9 +19,8 @@
           {{ _('Role') }}
           {{ form.select({
                label:_('Select a role'),
-               options:rolesSelect,
-               name:'role',
-               value:'default'
+               options:_rolesSelectWithoutDefault,
+               name:'role'
              }) }}
         </label>
       </div>
@@ -37,7 +38,7 @@
           {{ _('Set Roles for selected users') }}
           {{ form.select({
                label:_('Select a role'),
-               options:rolesSelect,
+               options:_rolesSelect,
                name:'role'
              }) }}
         </label>
@@ -91,7 +92,7 @@
           </td>
           <td class="col--role">
             {{ form.select({
-                 options:rolesSelect,
+                 options:_rolesSelect,
                  name:'role',
                  value:rudoc.role,
                  extra_class:'compact',

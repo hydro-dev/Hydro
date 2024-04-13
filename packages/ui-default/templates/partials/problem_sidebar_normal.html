@@ -61,7 +61,8 @@
         </form>
       </li>
     {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) or handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
+    {% set _canViewSolution = handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) or (handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT) and psdoc.status == STATUS.STATUS_ACCEPTED) %}
+    {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) or _canViewSolution %}
       <li class="menu__seperator"></li>
     {% endif %}
     {% if handler.user.hasPerm(perm.PERM_VIEW_DISCUSSION) %}
@@ -69,7 +70,7 @@
         <span class="icon icon-comment--text"></span> {{ _('Discussions') }}{% if discussionCount !== undefined %} ({{ discussionCount }}){% endif %}
       </a></li>
     {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_SOLUTION) %}
+    {% if _canViewSolution %}
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_solution' %} active{% endif %}" href="{{ url('problem_solution', pid=pdoc.pid|default(pdoc.docId)) }}">
         <span class="icon icon-comment--text"></span> {{ _('Solutions') }}{% if solutionCount !== undefined %} ({{ solutionCount }}){% endif %}
       </a></li>

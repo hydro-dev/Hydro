@@ -1,15 +1,15 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
-import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
-import { fs } from '@hydrooj/utils';
+import { fs, pipeRequest } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
 import { Lock } from '../utils';
@@ -18,7 +18,7 @@ function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
 }
 
-export default class Hydro {
+export default class Hydro implements Session {
     ws: WebSocket;
     language: Record<string, LangConfig>;
 
@@ -36,11 +36,12 @@ export default class Hydro {
         return superagent.get(url).set('Cookie', this.config.cookie);
     }
 
-    post(url: string, data: any) {
+    post(url: string, data?: any) {
         url = new URL(url, this.config.server_url).toString();
-        return superagent.post(url).send(data)
+        const t = superagent.post(url)
             .set('Cookie', this.config.cookie)
             .set('Accept', 'application/json');
+        return data ? t.send(data) : t;
     }
 
     async init() {
@@ -90,30 +91,15 @@ export default class Hydro {
                 files: filenames,
             });
             if (!res.body.links) throw new FormatError('problem not exist');
-            const that = this;
-            // eslint-disable-next-line no-inner-declarations
-            async function download(name: string) {
-                if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                const w = fs.createWriteStream(path.join(filePath, name));
-                that.get(res.body.links[name]).pipe(w);
-                await new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => reject(new Error(`DownloadTimeout(${name}, 60s)`)), 60000);
-                    w.on('error', (e) => {
-                        clearTimeout(timeout);
-                        reject(new Error(`DownloadFail(${name}): ${e.message}`));
-                    });
-                    w.on('finish', () => {
-                        clearTimeout(timeout);
-                        resolve(null);
-                    });
-                });
-            }
             const tasks = [];
             const queue = new PQueue({ concurrency: 10 });
             for (const name in res.body.links) {
-                tasks.push(queue.add(() => download(name)));
+                tasks.push(queue.add(async () => {
+                    if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
+                    const w = fs.createWriteStream(path.join(filePath, name));
+                    await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
+                }));
             }
-            queue.start();
             await Promise.all(tasks);
             await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
         }
@@ -123,15 +109,17 @@ export default class Hydro {
 
     async fetchFile(name: string) {
         name = name.split('#')[0];
-        const res = await this.post('judge/code', { id: name });
+        const res = await this.post('judge/files', { id: name });
         const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
-        const w = fs.createWriteStream(target);
-        this.get(res.body.url).pipe(w);
-        await new Promise((resolve, reject) => {
-            w.on('finish', resolve);
-            w.on('error', (e) => reject(new Error(`DownloadFail(${name}): ${e.message}`)));
-        });
+        await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
         return target;
+    }
+
+    async postFile(target: string, filename: string, file: string) {
+        await this.post('judge/upload')
+            .field('rid', target)
+            .field('name', filename)
+            .attach('file', fs.createReadStream(file));
     }
 
     getLang(name: string, doThrow = true) {
@@ -141,13 +129,11 @@ export default class Hydro {
         return null;
     }
 
-    send(rid: string | ObjectId, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
-        data.rid = new ObjectId(rid);
-        data.key = key;
+    send(rid: string, key: 'next' | 'end', data: Partial<JudgeResultBody>) {
         if (data.case && typeof data.case.message === 'string') data.case.message = removeNixPath(data.case.message);
         if (typeof data.message === 'string') data.message = removeNixPath(data.message);
         if (typeof data.compilerText === 'string') data.compilerText = removeNixPath(data.compilerText);
-        this.ws.send(JSON.stringify(data));
+        this.ws.send(JSON.stringify({ ...data, rid, key }));
     }
 
     getNext(t: JudgeTask) {
@@ -157,6 +143,8 @@ export default class Hydro {
             if (performanceMode && data.case && !data.compilerText && !data.message) {
                 t.callbackCache ||= [];
                 t.callbackCache.push(data.case);
+                // TODO use rate-limited send
+                // FIXME handle fields like score, time, memory, etc
             } else {
                 this.send(t.request.rid, 'next', data);
             }
@@ -178,11 +166,18 @@ export default class Hydro {
                 Authorization: `Bearer ${this.config.cookie.split('sid=')[1].split(';')[0]}`,
             },
         });
-        const content = this.config.minPriority !== undefined
-            ? `{"key":"prio","prio":${this.config.minPriority}}`
+        const config: { prio?: number, concurrency?: number, lang?: string[] } = {};
+        if (this.config.minPriority !== undefined) config.prio = this.config.minPriority;
+        if (this.config.concurrency !== undefined) config.concurrency = this.config.concurrency;
+        if (this.config.lang?.length) config.lang = this.config.lang;
+        const content = Object.keys(config).length
+            ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
-        setInterval(() => this.ws?.send?.(content), 30000);
         this.ws.on('message', (data) => {
+            if (data.toString() === 'ping') {
+                this.ws.send('pong');
+                return;
+            }
             const request = JSON.parse(data.toString());
             if (request.language) this.language = request.language;
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
@@ -197,6 +192,8 @@ export default class Hydro {
         });
         await new Promise((resolve) => {
             this.ws.once('open', async () => {
+                this.ws.send(content);
+                this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
                     this.ws.send(JSON.stringify({ key: 'status', info }));
@@ -224,7 +221,8 @@ export default class Hydro {
         const res = await this.post('login', {
             uname: this.config.uname, password: this.config.password, rememberme: 'on',
         });
-        await this.setCookie(res.headers['set-cookie'].join(';'));
+        const setCookie = res.headers['set-cookie'];
+        await this.setCookie(Array.isArray(setCookie) ? setCookie.join(';') : setCookie);
     }
 
     async ensureLogin() {

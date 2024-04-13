@@ -1,4 +1,4 @@
-{% macro render_status_td(rdoc, rid_key='_id', class='', allDomain=false, short=false) %}
+{% macro render_status_td(rdoc, rid_key='_id', class='', allDomain=false, short=false, displayScore) %}
 <td class="col--status record-status--border {{ class }} {{ model.builtin.STATUS_CODES[rdoc.status] }}">
   <div class="col--status__text">
     <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc.status] }}"></span>
@@ -6,7 +6,9 @@
       href="{{ url('record_detail', rid=rdoc[rid_key], domainId=rdoc.domainId) if allDomain else url('record_detail', rid=rdoc[rid_key]) }}"
       class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.status] }}"
     >
-      <span style="color: {{ utils.status.getScoreColor(rdoc.score|default(0)) }}">{{ rdoc.score|default(0) }}</span>
+      {% if typeof(rdoc['score']) == 'number' %}
+      <span style="color: {{ utils.status.getScoreColor(rdoc.score|default(0)) }}">{{ displayScore|default(rdoc.score|default(0)) }}</span>
+      {% endif %}
       {{ model.builtin.STATUS_SHORT_TEXTS[rdoc.status] if short else model.builtin.STATUS_TEXTS[rdoc.status] }}
     </a>
   </div>

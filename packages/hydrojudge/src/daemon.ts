@@ -19,9 +19,11 @@ import PQueue from 'p-queue';
 import { fs } from '@hydrooj/utils';
 import { getConfig } from './config';
 import HydroHost from './hosts/hydro';
+import Vj4Host from './hosts/vj4';
 import log from './log';
+import { versionCheck } from './sandbox';
 
-const hosts: Record<string, HydroHost> = {};
+const hosts: Record<string, HydroHost | Vj4Host> = {};
 let exit = false;
 
 const terminate = async () => {
@@ -44,13 +46,15 @@ process.on('unhandledRejection', (reason, p) => {
 });
 
 async function daemon() {
+    const shouldRun = await versionCheck((msg) => log.error(msg));
+    if (!shouldRun) process.exit(1);
     const _hosts = getConfig('hosts');
     const queue = new PQueue({ concurrency: Infinity });
     await fs.ensureDir(getConfig('tmp_dir'));
     queue.on('error', (e) => log.error(e));
     for (const i in _hosts) {
         _hosts[i].host ||= i;
-        hosts[i] = new HydroHost(_hosts[i]);
+        hosts[i] = _hosts[i].type === 'vj4' ? new Vj4Host(_hosts[i]) : new HydroHost(_hosts[i]);
         await hosts[i].init();
     }
     for (const i in hosts) hosts[i].consume(queue);

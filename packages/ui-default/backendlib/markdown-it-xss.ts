@@ -1,4 +1,4 @@
-import { FilterXSS } from 'xss';
+import { escapeAttrValue, FilterXSS, safeAttrValue } from 'xss';
 
 const stack = [];
 const voidTags = ['br', 'hr', 'input', 'img', 'link', 'source', 'col', 'area', 'base', 'meta', 'embed', 'param', 'track', 'wbr'];
@@ -21,6 +21,7 @@ const tagCheck = new FilterXSS({
     }
     if (stack.length - 2 >= 0 && stack[stack.length - 2] === tag) {
       // 可能丢失了一个结束标签
+      html = `</${stack[stack.length - 1]}>${html}`;
       stack.pop();
       stack.pop();
       return html;
@@ -111,10 +112,65 @@ export const xss = new FilterXSS({
   allowCommentTag: false,
   stripIgnoreTagBody: ['script'],
   safeAttrValue(tag, name, value) {
-    if (name === 'id') return `xss-id-${value}`;
-    if (name === 'class') return value.replace(/badge/g, 'xss-badge');
-    if (name === 'href') return value.trim().startsWith('javascript:') ? '#' : value;
-    return value;
+    if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
+    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
+    return safeAttrValue(tag, name, value, this.cssFilter);
+  },
+});
+
+export const xssInline = new FilterXSS({
+  whiteList: {
+    a: ['target', 'href', 'title'],
+    abbr: ['title'],
+    address: [],
+    aside: [],
+    b: [],
+    bdi: ['dir'],
+    bdo: ['dir'],
+    big: [],
+    blockquote: ['cite', 'class'],
+    br: [],
+    caption: [],
+    center: [],
+    cite: [],
+    code: ['class'],
+    del: ['datetime'],
+    div: ['id', 'class'],
+    dl: [],
+    em: [],
+    font: ['color', 'size', 'face'],
+    header: [],
+    i: [],
+    ins: ['datetime'],
+    mark: [],
+    ol: [],
+    p: ['align', 'style'],
+    pre: [],
+    s: [],
+    small: [],
+    span: ['class', 'style'],
+    sub: [],
+    sup: [],
+    strong: ['id'],
+    tt: [],
+    u: [],
+    var: [],
+  },
+  css: {
+    whiteList: {
+      'font-size': true,
+      'font-family': true,
+      'text-indent': true,
+      color: true,
+    },
+  },
+  allowCommentTag: false,
+  stripIgnoreTag: true,
+  stripIgnoreTagBody: ['script'],
+  safeAttrValue(tag, name, value) {
+    if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
+    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
+    return safeAttrValue(tag, name, value, this.cssFilter);
   },
 });
 
@@ -126,16 +182,17 @@ export function ensureTag(html: string) {
 
 export function xssProtector(md) {
   function protector(state) {
+    const processor = state.inlineMode ? xssInline : xss;
     for (let i = 0; i < state.tokens.length; i++) {
       const cur = state.tokens[i];
       if (cur.type === 'html_block') {
-        cur.content = xss.process(cur.content);
+        cur.content = processor.process(cur.content);
       }
       if (cur.type === 'inline') {
         const inlineTokens = cur.children;
         for (let ii = 0; ii < inlineTokens.length; ii++) {
           if (inlineTokens[ii].type === 'html_inline') {
-            inlineTokens[ii].content = xss.process(inlineTokens[ii].content);
+            inlineTokens[ii].content = processor.process(inlineTokens[ii].content);
           }
         }
       }

@@ -10,7 +10,7 @@
   <div class="row"><div class="columns clearfix">
     <ol class="nav__list nav__list--main clearfix">
       <li class="nav__list-item">
-        <a href="/"><img class="nav__logo" src="{{ UiContext.domain.nav_logo_dark or UiContext.nav_logo_dark }}"></a>
+        <a href="/"><img class="nav__logo" src="{{ ctx.setting.get('ui-default.nav_logo_dark') }}"></a>
       </li>
       {%- for item in overrideNav|default(ui.getNodes('Nav')) -%}{% if item.checker(handler) %}
         {{ nav_item(item) }}
@@ -19,7 +19,9 @@
     <ol class="nav__list nav__list--secondary clearfix">
     {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <li class="nav__list-item"><a href="{{ url('user_login') }}" class="nav__item" name="nav_login">{{ _('Login') }}</a></li>
+      {% if handler.user.hasPriv(PRIV.PRIV_REGISTER_USER) %}
       <li class="nav__list-item"><a href="{{ url('user_register') }}" class="nav__item--round">{{ _('Sign Up') }}</a></li>
+      {% endif %}
       <li class="nav__list-item nojs--hide" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
         <a href="javascript:;" class="nav__item">
           <span class="icon icon-global"></span>Language <span class="icon icon-expand_more"></span>
@@ -31,6 +33,7 @@
         </ol>
       </li>
     {% else %}
+    {% if model.system.get('ui-default.domainNavigation') %}
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-domain" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
         <span class="nav__item"><span class="icon"><img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(UiContext.domain.avatar|default('')) }}" width="20" height="20"></span> {{ UiContext.domain.name }} <span class="icon icon-expand_more nojs--hide"></span></span>
         <ol class="dropdown-target menu" id="menu-nav-domain">
@@ -52,6 +55,7 @@
           </li>
         </ol>
       </li>
+    {% endif %}
       <li class="nav__list-item" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>
         <a href="{{ url('user_detail', uid=handler.user._id) }}" class="nav__item">{{ handler.user.uname }} <span class="icon icon-expand_more nojs--hide"></span></a>
         <ol class="dropdown-target menu" id="menu-nav-user">

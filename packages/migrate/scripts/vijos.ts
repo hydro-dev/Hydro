@@ -187,7 +187,7 @@ const tasks = {
         num_problems: 'nProblem',
         num_submit: 'nSubmit',
         num_accept: 'nAccept',
-        num_liked: 'nLike',
+        num_liked: 'nLiked',
         level: 'level',
         role: 'role',
         join_at: 'joinAt',

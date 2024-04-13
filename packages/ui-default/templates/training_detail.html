@@ -7,17 +7,23 @@
       <ol class="menu">
         <li class="menu__item nojs--hide">
           <form method="get" id="searchForm">
+            <select name="group" class="select"{% if not groups.length %} style="display:none"{% endif %}>
+              <option value="all" selected>{{ _('All') }}</option>
+              {% for group in groups %}
+                <option value="{{ group.uids.join(',') }}">{{ group.name }}</option>
+              {% endfor %}
+            </select>
             <input name="uid" type="text" class="search__input textbox" placeholder="{{ _('Select User') }}">
           </form>
         </li>
         <ul class="enroll_user_menu">
         {%- for uid, udoc in udict -%}
-        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udoc.uname }}">
+        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udoc.uname }}" {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName %}data-displayname="{{ udoc.displayName }}"{% endif %}>
           <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
             <span class="user-profile-link">
               <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
               <span class="user-profile-name">
-                {% if handler.user.hasPerm(perm.PREM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
+                {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
                   {{ udoc.displayName }} ({{ udoc.uname }})
                 {% else %}
                   {{ udoc.uname }}
@@ -39,7 +45,7 @@
       <div class="section__body typo">
         {{ tdoc['content'] }}
       </div>
-      <div class="section__body typo">
+      <div class="section__body typo richmedia">
         {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
           <blockquote class="typo note">
             <p>{{ _('Login to join training plan') }}</p>

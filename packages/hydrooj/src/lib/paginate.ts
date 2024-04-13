@@ -12,8 +12,9 @@ async function paginate<T>(
         filter = cursor[key];
         break;
     }
+    const coll = db.collection(cursor.namespace.collection as any);
     const [count, pageDocs] = await Promise.all([
-        db.collection(cursor.namespace.collection as any).countDocuments(filter),
+        Object.keys(filter).length ? coll.count(filter) : coll.countDocuments(filter),
         cursor.skip((page - 1) * pageSize).limit(pageSize).toArray(),
     ]);
     const numPages = Math.floor((count + pageSize - 1) / pageSize);

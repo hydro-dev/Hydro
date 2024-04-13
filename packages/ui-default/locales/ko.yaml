@@ -439,7 +439,7 @@ New Password: 새 비밀번호
 New Training Plan: 새 학습 계획
 No comments so far...: 아직 댓글이 없네요...
 No dataset at present.: 데이터셋 없음
-no discussion yet...: 토론 없음
+No discussion yet...: 토론 없음
 No Permission to Attend Contest: 대회에 참여할 권한이 없습니다.
 No Permission to Claim Homework: 과제를 할당받을 권한이 없습니다.
 No Permission to Create a Discussion: 토론을 시작할 권한이 없습니다.
@@ -460,8 +460,8 @@ Numeric PID: 문제 번호
 Oh, the user doesn't have any contributions!: 아직 기여가 없습니다.
 Oh, the user hasn't created any discussions yet!: 아직 토론을 시작하지 않았습니다.
 Oh, the user hasn't submitted yet!: 아직 제출하지 않았습니다 _(:зゝ∠)
+Oh, there are no tasks that match the filter!: 결과 없음
 Oh, there is no task in the queue!: 대기열이 비었습니다.
-Oh, there is no task that matches the filter!: 결과 없음
 Ok: OK
 Only A-Z, a-z, 0-9 and _ are accepted: A-Z, a-z, 0-9 와 _만 허용됨
 Oops, there are no results.: 결과 없음
@@ -499,7 +499,7 @@ perm_record: 제출
 perm_training: 학습
 Permission: 권한
 Permissions: 권한
-Pick a problem randomly based on current filter: 필터 기반 무작위 추천
+Pick a problem randomly based on the current filter.: 필터 기반 무작위 추천
 Plan: 계획
 Please attend contest to see the problems.: 문제를 보려면 대회에 참가하십시오.
 Please claim the assignment to see the problems.: 문제를 보려면 과제를 할당받으십시오
@@ -547,9 +547,9 @@ Quit Scratchpad: Editor 닫기
 Quote: 문구
 Rank: 순위
 ranking: 순위
+Read all record codes: 모든 기록 코드 읽기
 Read data of own problems: 자신의 문제 데이터 읽기
 Read data of problem: 문제 데이터 읽기
-Read record codes: 점수 읽기
 Ready (☆▽☆): 준비 완료! (☆▽☆)
 Ready: 준비됨
 Recent {0} Records: 최근 {0} 점수
@@ -649,9 +649,9 @@ Solutions Liked: 연결된 해설
 Solutions: 해설
 Solve: 해결
 Solved: 해결한 문제
-Sorry, there is no problem in the problem set: 문제 모음에 문제가 없습니다.
-Sorry, there is no training plan.: 학습 계획 없음
-Sorry, there is no user in this domain.: 그룹에 사용자가 없습니다.
+Sorry, there are no problems in the problem set.: 문제 모음에 문제가 없습니다.
+Sorry, there are no training plans.: 학습 계획 없음
+Sorry, there are no users in this domain.: 그룹에 사용자가 없습니다.
 Sorry: 죄송합니다.
 Sort by: '정렬 기준'
 Source type: 소스 방식
@@ -803,7 +803,7 @@ Write Your Comment: 댓글 작성
 Write Your Solution: 해설 작성
 Year: 년
 You are not allowed to join the domain. The link is either invalid or expired.: 그룹에 참여할 수 없습니다. 잘못되거나 만료된 링크입니다.
-You can create your own training plans and share with others.: 자신의 학습 계획을 공유할 수 있습니다.
+You can create your own training plans and share them with others.: 자신의 학습 계획을 공유할 수 있습니다.
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 대회가 끝났으므로 답안을 제출할 수 있습니다. "믄제에서 열기"를 누르세요.
 You cannot submit for this problem because the homework's deadline is due.: 과제 기한이 지나서 제출할 수 없습니다.
 You cannot visit this domain.: 이 그룹을 방문할 수 없습니다.
@@ -811,7 +811,7 @@ You don't have the required permission ({0}) in this domain.: 그룹 권한이 �
 You don't have the required privilege.: 권한이 없습니다.
 You don't own any domain and don't have privilege to create domain.: 그룹을 만들 권한이 없습니다.
 You have not submitted any solutions for this problem: 아직 답안을 제출하지 않았습니다.
-You have permissions to create problems for this domain.: 이 그룹에서 문제를 만들기 위한 권한이 있습니다.
+You have permission to create problems for this domain.: 이 그룹에서 문제를 만들기 위한 권한이 있습니다.
 You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 그룹 생성이 끝나지 않았습니다. "계속"을 눌러 생성을 완료하십시오.
 You haven't attended this contest yet.: 아직 대회에 참가하지 않음
 You haven't claimed this homework yet.: 아직 숙제를 받지 않음

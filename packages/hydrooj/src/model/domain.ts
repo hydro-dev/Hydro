@@ -1,5 +1,5 @@
-import { Dictionary } from 'lodash';
-import LRU from 'lru-cache';
+import { Dictionary, escapeRegExp } from 'lodash';
+import { LRUCache } from 'lru-cache';
 import { Filter } from 'mongodb';
 import { DomainDoc } from '../interface';
 import * as bus from '../service/bus';
@@ -11,7 +11,7 @@ import UserModel, { deleteUserCache } from './user';
 
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
-const cache = new LRU<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
+const cache = new LRUCache<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
 
 interface DomainUserArg {
     _id: number,
@@ -102,7 +102,7 @@ class DomainModel {
         const result = await coll.findOneAndUpdate({ lower: domainId }, { $set }, { returnDocument: 'after' });
         if (result.value) {
             await bus.parallel('domain/update', domainId, $set, result.value);
-            cache.delete(`id::${domainId}`);
+            bus.broadcast('domain/delete-cache', domainId);
         }
         return result.value;
     }
@@ -142,7 +142,7 @@ class DomainModel {
         const affected = await UserModel.getMulti({ _id: { $in: uid } })
             .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
             .toArray();
-        affected.forEach((udoc) => deleteUserCache(udoc));
+        for (const udoc of affected) deleteUserCache(udoc);
         return await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
     }
 
@@ -268,7 +268,7 @@ class DomainModel {
 
     @ArgMethod
     static async getPrefixSearch(prefix: string, limit: number = 50) {
-        const $regex = new RegExp(prefix, 'mi');
+        const $regex = new RegExp(escapeRegExp(prefix), 'mi');
         const ddocs = await coll.find({
             $or: [{ _id: { $regex } }, { name: { $regex } }],
         }).limit(limit).toArray();
@@ -295,7 +295,12 @@ bus.on('ready', () => Promise.all([
         { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
     ),
 ]));
-bus.on('domain/delete-cache', (domainId: string) => {
+bus.on('domain/delete-cache', async (domainId: string) => {
+    const ddoc = await DomainModel.get(domainId);
+    if (!ddoc) return;
+    for (const host of ddoc.hosts || []) {
+        cache.delete(`host::${host}`);
+    }
     cache.delete(`id::${domainId}`);
 });
 export default DomainModel;

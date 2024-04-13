@@ -101,35 +101,35 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
       </DialogBody>
       <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
-    <li className="bp4-tree-node" onClick={() => setOpen(true)}>
-      <div className="bp4-tree-node-content">
-        <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
+    <li className="bp5-tree-node" onClick={() => setOpen(true)}>
+      <div className="bp5-tree-node-content">
+        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${time ? '' : ' text-gray'}`}>{time || props.time || '1s'}</span>
+        <span className={`bp5-tree-node-label${time ? '' : ' text-gray'}`}>{time || props.time || '1s'}</span>
         <Icon icon="comparison" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${memory ? '' : ' text-gray'}`}>{memory || props.memory || '256m'}</span>
+        <span className={`bp5-tree-node-label${memory ? '' : ' text-gray'}`}>{memory || props.memory || '256m'}</span>
         <Icon icon="star" />
         {' '}
-        <span className="bp4-tree-node-secondary-label">{score || 0}</span>
+        <span className="bp5-tree-node-secondary-label">{score || 0}</span>
       </div>
     </li>
-    <li className="bp4-tree-node" onClick={() => setDepsOpen(true)}>
-      <div className="bp4-tree-node-content">
-        <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
+    <li className="bp5-tree-node" onClick={() => setDepsOpen(true)}>
+      <div className="bp5-tree-node-content">
+        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
         <Icon icon="diagram-tree" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</span>
+        <span className="bp5-tree-node-label">{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</span>
       </div>
     </li>
-    <li className="bp4-tree-node">
-      <div className="bp4-tree-node-content">
-        <span className="bp4-tree-node-caret-none bp4-icon-standard"></span>
+    <li className="bp5-tree-node">
+      <div className="bp5-tree-node-content">
+        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
         <Icon icon="asterisk" />
         &nbsp;&nbsp;
-        <span className="bp4-tree-node-label">{i18n('Scoring method')}</span>
-        <span className="bp4-tree-node-secondary-label">
+        <span className="bp5-tree-node-label">{i18n('Scoring method')}</span>
+        <span className="bp5-tree-node-secondary-label">
           <select className="compact select" value={ctype} onChange={(e) => setType(e.target.value)}>
             <option value="min">Min</option>
             <option value="max">Max</option>
@@ -184,14 +184,14 @@ export function GlobalSettings() {
       </DialogBody>
       <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
-    <li className="bp4-tree-node" onClick={() => setOpen(true)}>
-      <div className="bp4-tree-node-content">
+    <li className="bp5-tree-node" onClick={() => setOpen(true)}>
+      <div className="bp5-tree-node-content">
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp4-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
+        <span className={`bp5-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
         <Icon icon="comparison" />
         {' '}
-        <span className={`bp4-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256MB'}</span>
+        <span className={`bp5-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256MB'}</span>
       </div>
     </li>
   </>);

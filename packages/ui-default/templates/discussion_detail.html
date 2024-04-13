@@ -25,7 +25,7 @@
             {{ datetimeSpan(ddoc._id)|safe }}
           </li>
         </ul>
-        <div class="typo topic__content" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
+        <div class="typo topic__content richmedia" data-emoji-enabled data-raw-url="{{ url('discussion_raw', did=ddoc.docId) }}">
           {{ ddoc['content']|markdown|safe }}
         </div>
       </div>
@@ -62,7 +62,7 @@
           <span class="icon icon-warning"></span> {{ _('Report') }}
         </a></li>
       {% if handler.user.hasPerm(perm.PERM_ADD_REACTION) %}
-        <li><a href="javascript:;" data-op="react" data-type="discuss" data-form="{{ {operation: 'reaction', type:'did', id: ddoc._id }|json }}">
+        <li><a href="javascript:;" data-op="react" data-type="discuss" data-form="{{ {operation: 'reaction', nodeType:'did', id: ddoc._id }|json }}">
           <span class="icon icon-emoji"></span>
         </a></li>
       {% endif %}
@@ -91,13 +91,11 @@
           reply_edit_op = 'edit_tail_reply',
           reply_delete_op = 'delete_tail_reply',
           comment_post_perm = perm.PERM_REPLY_DISCUSSION,
-          comment_edit_perm = perm.PERM_NEVER,
           comment_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
           comment_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
           comment_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
           reply_post_perm = perm.PERM_REPLY_DISCUSSION,
-          reply_edit_perm = perm.PERM_NEVER,
-          reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION if handler.user.own(ddoc) else perm.PERM_DELETE_DISCUSSION_REPLY,
+          reply_delete_perm = perm.PERM_DELETE_DISCUSSION_REPLY,
           reply_edit_self_perm = perm.PERM_EDIT_DISCUSSION_REPLY_SELF,
           reply_delete_self_perm = perm.PERM_DELETE_DISCUSSION_REPLY_SELF,
           reactions = reactions,

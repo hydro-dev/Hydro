@@ -7,7 +7,7 @@
         <h1 class="section__title">{{ _('All Training Plans') }}</h1>
       </div>
       {% if not tdocs.length %}
-        {{ nothing.render('Sorry, there is no training plan.') }}
+        {{ nothing.render('Sorry, there are no training plans.') }}
       {% else %}
         <ol class="section__list all primary training__list">
           {%- for tdoc in tdocs -%}
@@ -52,30 +52,6 @@
     </div>
   </div>
   <div class="large-3 columns">
-    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-      <div class="section side">
-        <div class="section__header">
-          <h1 class="section__title">{{ _('Enrolled') }}</h1>
-        </div>
-        <div class="section__body">
-          <ol class="my secondary training__list">
-            {%- for tsdoc in tsdict -%}
-              {% if tsdoc['enroll'] %}
-                <li class="training__item"><div class="media">
-                  <div class="media__left">
-                    <span class="icon training-status--icon {% if tsdoc['done'] %}done{% else %}progress{% endif %}"></span>
-                  </div>
-                  <div class="media__body">
-                    <h1 class="training__title"><a href="{{ url('training_detail', tid=tsdoc.docId) }}" data-emoji-enabled>{{ tdict[tsdoc['docId']]['title'] }}</a></h1>
-                    <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ (100 * tsdoc['donePids']|length / model.training.getPids(tdict[tsdoc['docId']].dag)|length)|round|int }}%;"></div></div> {{ _('Complete') }} {{ (100 * tsdoc['donePids']|length / handler.getPids(tdict[tsdoc.docId].dag)|length)|round|int }}%</div>
-                  </div>
-                </div></li>
-              {% endif %}
-            {%- endfor -%}
-          </ol>
-        </div>
-      </div>
-    {% endif %}
     {% if handler.user.hasPerm(perm.PERM_CREATE_TRAINING) %}
       <div class="section side">
         <div class="section__header">
@@ -88,8 +64,33 @@
         </ol>
         <div class="section__body">
           <div class="typo supplementary">
-            <p>{{ _('You can create your own training plans and share with others.') }}</p>
+            <p>{{ _('You can create your own training plans and share them with others.') }}</p>
           </div>
+        </div>
+      </div>
+    {% endif %}
+    {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+      <div class="section side">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Enrolled') }}</h1>
+        </div>
+        <div class="section__body">
+          <ol class="my secondary training__list">
+            {%- for tid, tsdoc in tsdict -%}
+              {% if tsdoc['enroll'] %}
+                {% set progress = (100 * (tsdoc['donePids']|length) / (model.training.getPids(tdict[tsdoc['docId']].dag)|length))|round|int %}
+                <li class="training__item"><div class="media">
+                  <div class="media__left">
+                    <span class="icon training-status--icon {% if tsdoc['done'] %}done{% else %}progress{% endif %}"></span>
+                  </div>
+                  <div class="media__body">
+                    <h1 class="training__title"><a href="{{ url('training_detail', tid=tsdoc.docId) }}" data-emoji-enabled>{{ tdict[tsdoc['docId']]['title'] }}</a></h1>
+                    <div class="supplementary training__progress"><div class="training__progress-bar"><div class="training__progress-track" style="width:{{ progress }}%;"></div></div> {{ _('Complete') }} {{ progress }}%</div>
+                  </div>
+                </div></li>
+              {% endif %}
+            {%- endfor -%}
+          </ol>
         </div>
       </div>
     {% endif %}

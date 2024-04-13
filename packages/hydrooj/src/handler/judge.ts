@@ -1,26 +1,33 @@
 import assert from 'assert';
+import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import PQueue from 'p-queue';
+import sanitize from 'sanitize-filename';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, TestCase,
+    FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
+} from '../error';
+import {
+    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
-import { STATUS } from '../model/builtin';
+import { PERM, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import domain from '../model/domain';
 import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
-import task from '../model/task';
+import * as system from '../model/system';
+import task, { Consumer } from '../model/task';
+import user from '../model/user';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
     ConnectionHandler, Handler, post, subscribe, Types,
 } from '../service/server';
-import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 
@@ -34,24 +41,22 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
     };
 }
 
-function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
+function processPayload(body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
+    const $unset: any = {};
+    const $inc: any = {};
     if (body.cases?.length) {
         const c = body.cases.map(parseCaseResult);
-        rdoc.testCases.push(...c);
         $push.testCases = { $each: c };
     } else if (body.case) {
         const c = parseCaseResult(body.case);
-        rdoc.testCases.push(c);
         $push.testCases = c;
     }
     if (body.message) {
-        rdoc.judgeTexts.push(body.message);
         $push.judgeTexts = body.message;
     }
     if (body.compilerText) {
-        rdoc.compilerTexts.push(body.compilerText);
         $push.compilerTexts = body.compilerText;
     }
     if (body.status) $set.status = body.status;
@@ -60,20 +65,24 @@ function processPayload(rdoc: RecordDoc, body: Partial<JudgeResultBody>) {
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     if (body.subtasks) $set.subtasks = body.subtasks;
-    return { $set, $push };
+    if (body.addProgress) $inc.progress = body.addProgress;
+    return {
+        $set, $push, $unset, $inc,
+    };
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
-    const { $set, $push } = processPayload(rdoc, body);
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
-    bus.broadcast('record/change', rdoc!, $set, $push);
+    body.rid = new ObjectId(body.rid); // TODO remove this
+    const {
+        $set, $push, $unset, $inc,
+    } = processPayload(body);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
+    bus.broadcast('record/change', rdoc, $set, $push, body);
+    return rdoc;
 }
 
 export async function postJudge(rdoc: RecordDoc) {
-    if (typeof rdoc.input === 'string') return;
+    if (rdoc.contest?.toString().startsWith('0'.repeat(23))) return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
@@ -114,13 +123,16 @@ export async function postJudge(rdoc: RecordDoc) {
                 const rdocs = await record.getMulti(rdoc.domainId, {
                     pid: rdoc.pid,
                     status: STATUS.STATUS_ACCEPTED,
-                    contest: { $ne: new ObjectId('0'.repeat(24)) },
+                    contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
                 }).project({ _id: 1, contest: 1 }).toArray();
                 const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
                 await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
             } catch (e) {
                 next({
-                    rid: rdoc._id, domainId: rdoc.domainId, key: 'next', message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+                    rid: rdoc._id,
+                    domainId: rdoc.domainId,
+                    key: 'next',
+                    message: { message: 'Unable to apply hack: {0}', params: [e.message] },
                 });
             }
         }
@@ -129,28 +141,34 @@ export async function postJudge(rdoc: RecordDoc) {
 }
 
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid &&= new ObjectId(body.rid);
-    let rdoc = await record.get(body.rid);
-    if (!rdoc) return;
-    const { $set, $push } = processPayload(rdoc, body);
+    body.rid = new ObjectId(body.rid); // TODO remove this
+    const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    await sleep(100); // Make sure that all 'next' event already triggered
-    rdoc = await record.update(rdoc.domainId, body.rid, $set, $push, $unset);
+    let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
-    bus.broadcast('record/change', rdoc); // trigger a full update
+    rdoc = await record.get(body.rid);
+    bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
+    return rdoc;
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    noCheckPermView = true;
+    notUsage = true;
+
     async get() {
         this.response.body = 'ok';
     }
 
-    noCheckPermView = true;
-    @post('files', Types.Set)
-    @post('pid', Types.UnsignedInt)
-    async post(domainId: string, files: Set<string>, pid: number) {
+    @post('id', Types.String, true)
+    @post('files', Types.Set, true)
+    @post('pid', Types.UnsignedInt, true)
+    async post(domainId: string, id: string, files: Set<string>, pid: number) {
+        if (id) {
+            this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
+            return;
+        }
         const pdoc = await problem.get(domainId, pid);
         if (!pdoc) this.response.body.links = null;
         const links = {};
@@ -165,26 +183,63 @@ export class JudgeFilesDownloadHandler extends Handler {
     }
 }
 
-export class SubmissionDataDownloadHandler extends Handler {
-    @post('id', Types.String)
-    async post(domainId: string, id: string) {
-        this.response.body = { url: await storage.signDownloadLink(`submission/${id}`, 'code', true, 'judge') };
+export async function processJudgeFileCallback(rid: ObjectId, filename: string, filePath: string) {
+    const rdoc = await record.get(rid);
+    const [pdoc, udoc] = await Promise.all([
+        problem.get(rdoc.domainId, rdoc.pid),
+        user.getById(rdoc.domainId, rdoc.uid),
+    ]);
+    if (!udoc.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF) && !udoc.hasPerm(PERM.PERM_EDIT_PROBLEM)) throw new ForbiddenError();
+    if (pdoc.reference) throw new ProblemIsReferencedError('edit files');
+    const stat = await fs.stat(filePath);
+    if ((pdoc.data?.length || 0)
+        + (pdoc.additional_file?.length || 0)
+        >= system.get('limit.problem_files_max')) {
+        throw new FileLimitExceededError('count');
+    }
+    const size = Math.sum(
+        (pdoc.data || []).map((i) => i.size),
+        (pdoc.additional_file || []).map((i) => i.size),
+        stat.size,
+    );
+    if (size >= system.get('limit.problem_files_max_size')) {
+        throw new FileLimitExceededError('size');
+    }
+    await problem.addTestdata(pdoc.domainId, pdoc.docId, sanitize(filename), fs.createReadStream(filePath), udoc._id);
+}
+
+export class JudgeFileUpdateHandler extends Handler {
+    notUsage = true;
+
+    @post('rid', Types.ObjectId)
+    @post('name', Types.Filename)
+    async post(domainId: string, rid: ObjectId, filename: string) {
+        if (!this.request.files.file) throw new ValidationError('file');
+        await processJudgeFileCallback(rid, filename, this.request.files.file.filepath);
+        this.response.body = { ok: 1 };
     }
 }
 
-class JudgeConnectionHandler extends ConnectionHandler {
+export class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: any = null;
-    closed = false;
-    query: any = { type: 'judge' };
-    ip: string;
+    query: any = { type: { $in: ['judge', 'generate'] } };
+    concurrency = 1;
+    consumer: Consumer = null;
+    startTimeout: NodeJS.Timeout = null;
+    tasks: Record<string, {
+        resolve: (_: any) => void,
+        queue: PQueue,
+        domainId: string,
+        t: Task,
+    }> = {};
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // Ensure language sent
-        await sleep(100);
-        this.newTask();
+        // TODO deprecated, just for compatibility
+        this.startTimeout = setTimeout(() => {
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+        }, 15000);
     }
 
     @subscribe('system/setting')
@@ -192,57 +247,85 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
     }
 
-    async newTask() {
-        if (this.processing) return;
-        let t;
-        let rdoc: RecordDoc;
-        while (!t) {
-            if (this.closed) return;
-            /* eslint-disable no-await-in-loop */
-            t = await task.getFirst(this.query);
-            if (!t) await sleep(500);
-            else rdoc = await record.get(t.domainId, t.rid);
-            /* eslint-enable no-await-in-loop */
-            if (!rdoc) t = null;
-        }
+    async newTask(t: Task) {
+        const rdoc = await record.get(t.domainId, t.rid);
+        if (!rdoc) return;
+
+        const rid = rdoc._id.toHexString();
+        let resolve: (_: any) => void;
+        const p = new Promise((r) => { resolve = r; });
+        this.tasks[rid] = {
+            queue: new PQueue({ concurrency: 1 }),
+            domainId: rdoc.domainId,
+            resolve,
+            t,
+        };
         this.send({ task: { ...rdoc, ...t } });
-        this.processing = t;
-        const $set = { status: builtin.STATUS.STATUS_FETCHED };
-        rdoc = await record.update(t.domainId, t.rid, $set, {});
-        bus.broadcast('record/change', rdoc, $set, {});
+        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
+        await p;
+        delete this.tasks[rid];
     }
 
     async message(msg) {
-        if (msg.key !== 'ping' && msg.key !== 'prio') {
+        if (!['ping', 'prio', 'config', 'start'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
         }
-        if (msg.key === 'next') await next(msg);
-        else if (msg.key === 'end') {
-            if (!msg.nop) await end({ judger: this.user._id, ...msg }).catch((e) => logger.error(e));
-            this.processing = null;
-            await this.newTask();
+        if (['next', 'end'].includes(msg.key)) {
+            const t = this.tasks[msg.rid];
+            if (!t) return;
+            msg.domainId = t.domainId;
+            if (msg.key === 'next') t.queue.add(() => next(msg));
+            if (msg.key === 'end') {
+                if (!msg.nop) t.queue.add(() => end({ judger: this.user._id, ...msg }));
+                t.resolve(null);
+            }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
-        } else if (msg.key === 'prio') {
+        } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
+            // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
+            this.consumer?.setQuery(this.query);
+        } else if (msg.key === 'config') {
+            if (Number.isSafeInteger(msg.prio)) {
+                this.query.priority = { $gt: msg.prio };
+                this.consumer?.setQuery(this.query);
+            }
+            if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
+                this.concurrency = msg.concurrency;
+                this.consumer?.setConcurrency(msg.concurrency);
+            }
+            if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
+                this.query.lang = { $in: msg.lang };
+                this.consumer?.setQuery(this.query);
+            }
+            if (msg.type instanceof Array && msg.type.every((i) => typeof i === 'string')) {
+                this.query.type = { $in: msg.type };
+                this.consumer?.setQuery(this.query);
+            }
+        } else if (msg.key === 'start') {
+            clearTimeout(this.startTimeout);
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            logger.info('Judge daemon started');
         }
     }
 
     async cleanup() {
+        clearTimeout(this.startTimeout);
+        this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        if (this.processing) {
-            await record.reset(this.processing.domainId, this.processing.rid, false);
-            await task.add(this.processing);
-        }
-        this.closed = true;
+        await Promise.all(Object.values(this.tasks).map(async ({ t }) => {
+            const rdoc = await record.reset(t.domainId, t.rid, false);
+            bus.broadcast('record/change', rdoc);
+            return task.add(t);
+        }));
     }
 }
 
 export async function apply(ctx) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
-    ctx.Route('judge_submission_download', '/judge/code', SubmissionDataDownloadHandler, builtin.PRIV.PRIV_JUDGE);
+    ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
 }
 

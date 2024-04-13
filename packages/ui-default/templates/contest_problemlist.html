@@ -4,7 +4,8 @@
 {% import "components/problem.html" as problem with context %}
 {% block content %}
 {{ set(UiContext, 'tdoc', tdoc) }}
-<div class="row">
+{{ set(UiContext, 'tsdoc', tsdoc) }}
+<div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__header">
@@ -17,6 +18,9 @@
             <col class="col--status">
             <col class="col--submit-at">
           {% endif %}
+          {% if showScore %}
+            <col class="col--score">
+          {% endif %}
             <col class="col--problem">
           </colgroup>
           <thead>
@@ -24,6 +28,9 @@
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
               <th class="col--submit-at">{{ _('Last Submit At') }}</th>
+            {% endif %}
+            {% if showScore %}
+              <th class="col--score">{{ _('Score') }}</th>
             {% endif %}
               <th class="col--problem">{{ _('Problem') }}</th>
             </tr>
@@ -33,22 +40,24 @@
             <tr>
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
-              {% set rdoc = rdict[psdict[pid].rid] %}
-              {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
-                {{ record.render_status_td(rdoc) }}
-              {% else %}
-                <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
-              {% endif %}
+                {% set rdoc = rdict[psdict[pid].rid] %}
+                {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
+                  {% set displayScore = ((tdoc.score[pid]|default(100)) * (psdict[pid].score|default(0)) / 100) if showScore else (psdict[pid].penaltyScore|default(psdict[pid].score)) %}
+                  {{ record.render_status_td(rdoc, displayScore=displayScore) }}
+                {% else %}
+                  <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
+                {% endif %}
                 <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
               {% else %}
                 <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
                 <td class="col--submit-at">-</td>
               {% endif %}
             {% endif %}
+            {% if showScore %}
+              <td class="col--score">{{ tdoc.score[pid]|default(100) }}</td>
+            {% endif %}
               <td class="col--problem col--problem-name">
-                <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}">
-                  <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
-                </a>
+                {{ problem.render_problem_title(pdict[pid], tdoc, alphabetic=true) }}
               </td>
             </tr>
           {%- endfor -%}
@@ -62,7 +71,7 @@
       </div>
       <div class="section__body no-padding">
       {% if not canViewRecord %}
-        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}'
+        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}
       {% elif not rdocs.length %}
         {{ nothing.render('Oh, there is no submission!') }}
       {% else %}
@@ -98,8 +107,86 @@
       {% endif %}
       </div>
     </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Contest Clarifications') }}</h1>
+      </div>
+      <div class="section__body">
+      {% if not tcdocs.length %}
+        {{ nothing.render('Oh, there is no clarification!') }}
+      {% else %}
+      <ul class="dczcomments__list">
+        {% for doc in tcdocs %}
+        <li class="dczcomments__item">
+          <div class="media">
+            <div class="media__body top">
+              <div class="clearfix">
+                <div class="supplementary dczcomments__supplementary">
+                  {{_('Subject') }}: {{ contest.render_clarification_subject(tdoc,pdict,doc.subject) }} | {% if doc.owner == 0 %}<b>{{ _('Jury') }}</b>{% else %}{{ user.render_inline(udict[doc.owner], badge=false) }}{% endif %} @ {{ datetimeSpan(doc._id)|safe }}
+                </div>
+              </div>
+              <div class="typo richmedia" data-emoji-enabled>
+                {{ doc['content']|markdown|safe }}
+              </div>
+            </div>
+          </div>
+          <ul class="dczcomments__replies">
+          {%- for rdoc in doc['reply'] -%}
+            <li class="dczcomments__reply">
+              <div class="media">
+                <div class="media__left top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                <div class="media__body top">
+                  <div class="clearfix">
+                    <div class="supplementary dczcomments__supplementary">
+                      <b>{{ _('Jury') }}</b> @ {{ datetimeSpan(rdoc['_id'])|safe }}
+                    </div>
+                  </div>
+                  <div class="typo richmedia" data-emoji-enabled>
+                    {{ rdoc['content']|markdown|safe }}
+                  </div>
+                </div>
+              </div>
+            </li>
+          {%- endfor -%}
+          </ul>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      </div>
+      {% if tsdoc.attend %}
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Send Clarification Request') }}</h1>
+      </div>
+      <div class="section__body typo">
+        <form method="post">
+          <input type="hidden" name="operation" value="clarification">
+          <div class="row">
+            <div class="medium-12 columns form__item">
+              <label>
+                {{ _('Subject') }}
+                <select name="subject" class="select">
+                  <option value="0">{{ _('General Issue') }}</option>
+                  <option value="-1">{{ _('Technical Issue') }}</option>
+                  {% for pid in tdoc.pids %}
+                  <option value="{{ pid }}">{{ String.fromCharCode(65+loop.index0) }}. {{ pdict[pid].title }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+            </div>
+            <div class="medium-12 columns form__item">
+              <label>
+                {{ _('Content') }}
+                <textarea name="content" class="textbox" data-markdown required></textarea>
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="rounded primary button">{{ _('Submit') }}</button>
+      </div>
+      {% endif %}
+    </div>
   </div>
-  <div class="medium-3 columns">
+  <div class="medium-3 columns" data-sticky="large">
     {% set owner_udoc = udict[tdoc.owner] %}
     {% include "partials/contest_sidebar.html" %}
   </div>

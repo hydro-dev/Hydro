@@ -39,9 +39,21 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     SUBMIT_FAILED_PERM: STATUS.STATUS_SYSTEM_ERROR,
     SUBMIT_FAILED_TEMP: STATUS.STATUS_SYSTEM_ERROR,
 
+    // YACS
+    正在评测: STATUS.STATUS_JUDGING,
+    答案正确: STATUS.STATUS_ACCEPTED,
+    编译失败: STATUS.STATUS_COMPILE_ERROR,
+    部分正确: STATUS.STATUS_WRONG_ANSWER,
+    运行超时: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+    内存超出: STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    暂未公布: STATUS.STATUS_SYSTEM_ERROR,
+    评测机故障: STATUS.STATUS_SYSTEM_ERROR,
+
     // HustOJ
+    WAITING: STATUS.STATUS_WAITING,
     等待: STATUS.STATUS_WAITING,
     运行并评判: STATUS.STATUS_JUDGING,
+    正在评测中: STATUS.STATUS_JUDGING,
     编译成功: STATUS.STATUS_JUDGING,
     RUNNING_JUDGING: STATUS.STATUS_JUDGING,
     正确: STATUS.STATUS_ACCEPTED,
@@ -65,8 +77,8 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     get(self, key) {
         if (typeof key === 'symbol') return null;
         key = normalize(key);
-        if (STATUS[key]) return STATUS[key];
-        if (self[key]) return self[key];
+        if (typeof STATUS[key] === 'number') return STATUS[key];
+        if (typeof self[key] === 'number') return self[key];
         return null;
     },
 });

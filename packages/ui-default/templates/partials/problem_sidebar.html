@@ -1,7 +1,7 @@
+{% if not owner_udoc %}
+  {% set owner_udoc = udoc %}
+{% endif %}
 {% if tdoc %}
-  {% if not owner_udoc %}
-    {% set owner_udoc = udoc %}
-  {% endif %}
   {% if tdoc.rule == 'homework' %}
     {% include "partials/problem_sidebar_homework.html" %}
     {% include "partials/homework_sidebar.html" %}

@@ -2,12 +2,24 @@ import { nanoid } from 'nanoid';
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { InfoDialog } from 'vj/components/dialog';
 import VjNotification from 'vj/components/notification/index';
-import { FLAG_ALERT } from 'vj/constant/message';
+import {
+  FLAG_ALERT, FLAG_I18N, FLAG_INFO, FLAG_RICHTEXT,
+} from 'vj/constant/message';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
 
+let previous: VjNotification;
 const onmessage = (msg) => {
   console.log('Received message', msg);
+  if (msg.mdoc.flag & FLAG_I18N) {
+    try {
+      msg.mdoc.content = JSON.parse(msg.mdoc.content);
+      if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
+      msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
+    } catch (e) {
+      msg.mdoc.content = i18n(msg.mdoc.content);
+    }
+  }
   if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
     new InfoDialog({
@@ -18,30 +30,36 @@ const onmessage = (msg) => {
           <p>${i18n(msg.mdoc.content)}</p>
         </div>`,
     }).open();
-    return true;
+    return false;
+  }
+  if (msg.mdoc.flag & FLAG_INFO) {
+    if (previous) previous.hide();
+    previous = new VjNotification({
+      message: msg.mdoc.content,
+      duration: 3000,
+    });
+    previous.show();
+    return false;
   }
   if (document.hidden) return false;
   // Is message
   new VjNotification({
-    ...(msg.udoc._id === 1 && msg.mdoc.flag & 4)
-      ? { message: i18n('You received a system message, click here to view.') }
-      : {
+    ...(msg.udoc._id === 1)
+      ? {
+        type: 'info',
+        message: msg.mdoc.flag & FLAG_RICHTEXT ? i18n('You received a system message, click here to view.') : msg.mdoc.content,
+      } : {
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
         message: msg.mdoc.content,
       },
     duration: 15000,
-    action: () => window.open(`/home/messages?uid=${msg.udoc._id}`, '_blank'),
+    action: () => window.open(msg.mdoc.url ? msg.mdoc.url : `/home/messages?uid=${msg.udoc._id}`, '_blank'),
   }).show();
   return true;
 };
 
-const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
-// TODO handle a better way for cookie
-if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
-const endpoint = url.toString().replace('http', 'ws');
-
-const initWorkerMode = () => {
+const initWorkerMode = (endpoint) => {
   console.log('Messages: using SharedWorker');
   const worker = new SharedWorker('/messages-shared-worker.js', { name: 'HydroMessagesWorker' });
   worker.port.start();
@@ -71,9 +89,13 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
       action: () => window.open('/home/messages', '_blank'),
     }).show();
   }
+  const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
+  // TODO handle a better way for cookie
+  if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
+  const endpoint = url.toString().replace('http', 'ws');
   if (window.SharedWorker) {
     try {
-      initWorkerMode();
+      initWorkerMode(endpoint);
       return;
     } catch (e) {
       console.error('SharedWorker init fail: ', e.message);

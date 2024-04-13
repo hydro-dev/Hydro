@@ -16,6 +16,7 @@ export default function DataInputComponent(props) {
           className="scratchpad__data-input"
           style={{ overflowY: 'scroll' }}
           wrap="off"
+          spellCheck="false"
         >
           {/* eslint-disable-next-line react/no-danger */}
           <pre dangerouslySetInnerHTML={{ __html: value }} contentEditable />
@@ -24,6 +25,7 @@ export default function DataInputComponent(props) {
         <textarea
           className="scratchpad__data-input"
           wrap="off"
+          spellCheck="false"
           value={value}
           onChange={(ev) => {
             ev.stopPropagation();

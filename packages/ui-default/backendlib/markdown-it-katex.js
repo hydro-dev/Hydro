@@ -61,6 +61,15 @@ function inline(state, silent) {
   return true;
 }
 
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function block(state, start, end, silent) {
   let lastLine;
   let lastPos;
@@ -102,32 +111,24 @@ function block(state, start, end, silent) {
 
 module.exports = function plugin(md) {
   const options = { throwOnError: false, strict: 'ignore' };
-  const katexInline = function (latex) {
-    options.displayMode = false;
+  const render = (latex: string, displayMode = false) => {
+    options.displayMode = displayMode;
     try {
       latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
       return katex.renderToString(latex, options);
     } catch (error) {
       if (options.throwOnError) logger.error(error);
-      return latex;
+      return `<p class='${displayMode ? 'katex-block ' : ''}katex-error' title='${escapeHtml(error.toString())}'>${escapeHtml(latex)}</p>`;
     }
   };
   const inlineRenderer = function (tokens, idx) {
-    return katexInline(tokens[idx].content);
-  };
-  const katexBlock = function (latex) {
-    options.displayMode = true;
-    try {
-      latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
-      return `<p>${katex.renderToString(latex, options)}</p>`;
-    } catch (error) {
-      if (options.throwOnError) logger.error(error);
-      return latex;
-    }
+    if (tokens[idx].content.length > 50) return `$${tokens[idx].content}$`;
+    return render(tokens[idx].content);
   };
 
   const blockRenderer = function (tokens, idx) {
-    return `${katexBlock(tokens[idx].content)}\n`;
+    if (tokens[idx].content.length > 50) return `$$${tokens[idx].content}$$`;
+    return `${render(tokens[idx].content, true)}\n`;
   };
   md.inline.ruler.after('escape', 'math_inline', inline);
   md.block.ruler.after('blockquote', 'math_block', block, {

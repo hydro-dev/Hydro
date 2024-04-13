@@ -163,6 +163,7 @@ export enum ProblemType {
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
     Objective = 'objective',
+    Remote = 'remote_judge',
 }
 
 export enum SubtaskType {
@@ -341,11 +342,13 @@ export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
     rejudge?: boolean;
+    // FIXME stricter types
+    type?: string;
 }
 
 export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
     priority: number;
-    type: 'judge';
+    type: 'judge' | 'generate';
     rid: ObjectId;
     config: ProblemConfigFile;
     meta: JudgeMeta;
@@ -355,9 +358,9 @@ export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
 
 export interface ScoreboardNode {
     type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
-    value: string;
+    value: string; // 显示分数
     raw?: any;
-    score?: number;
+    score?: number; // 原始分数（100，不含赛制加成）
     style?: string;
     hover?: string;
 }
@@ -372,9 +375,9 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINING']> extends Document {
+export interface Tdoc extends Document {
     docId: ObjectId;
-    docType: docType & number;
+    docType: document['TYPE_CONTEST'];
     beginAt: Date;
     endAt: Date;
     attend: number;
@@ -392,6 +395,8 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
+    balloon?: Record<number, string>;
+    score?: Record<number, number>;
 
     /**
      * In hours
@@ -408,9 +413,10 @@ export interface Tdoc<docType = document['TYPE_CONTEST'] | document['TYPE_TRAINI
     dag?: TrainingNode[];
 }
 
-export interface TrainingDoc extends Tdoc {
+export interface TrainingDoc extends Omit<Tdoc, 'docType'> {
+    docType: document['TYPE_TRAINING'],
     description: string;
-    pin?: boolean;
+    pin?: number;
     dag: TrainingNode[];
 }
 
@@ -491,6 +497,18 @@ export interface DiscussionTailReplyDoc {
     editor?: number;
 }
 
+export interface ContestClarificationDoc extends Document {
+    docType: document['TYPE_CONTEST_CLARIFICATION'];
+    docId: ObjectId;
+    parentType: document['TYPE_CONTEST'];
+    parentId: ObjectId;
+    // 0: contest -1: technique [pid]: problem
+    subject: number;
+    ip: string;
+    content: string;
+    reply: DiscussionTailReplyDoc[];
+}
+
 export interface TokenDoc {
     _id: string,
     tokenType: number,
@@ -522,24 +540,25 @@ export interface ContestRule<T = any> {
     check: (args: any) => any;
     statusSort: Record<string, 1 | -1>;
     submitAfterAccept: boolean;
-    showScoreboard: (tdoc: Tdoc<30>, now: Date) => boolean;
-    showSelfRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    showRecord: (tdoc: Tdoc<30>, now: Date) => boolean;
-    stat: (this: ContestRule<T>, tdoc: Tdoc<30>, journal: any[]) => ContestStat & T;
+    showScoreboard: (tdoc: Tdoc, now: Date) => boolean;
+    showSelfRecord: (tdoc: Tdoc, now: Date) => boolean;
+    showRecord: (tdoc: Tdoc, now: Date) => boolean;
+    stat: (this: ContestRule<T>, tdoc: Tdoc, journal: any[]) => ContestStat & T;
     scoreboardHeader: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict,
+        tdoc: Tdoc, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
+        tdoc: Tdoc, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc<30>, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
+        tdoc: Tdoc, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
-    ranked: (tdoc: Tdoc<30>, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    ranked: (tdoc: Tdoc, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    applyProjection: (tdoc: Tdoc, rdoc: RecordDoc, user: User) => RecordDoc;
 }
 
 export type ContestRules = Dictionary<ContestRule>;
@@ -650,6 +669,18 @@ export interface DiscussionHistoryDoc {
     ip: string;
 }
 
+export interface ContestBalloonDoc {
+    _id: ObjectId;
+    domainId: string;
+    tid: ObjectId;
+    pid: number;
+    uid: number;
+    first?: boolean;
+    /** Sent by */
+    sent?: number;
+    sentAt?: Date;
+}
+
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -677,6 +708,7 @@ declare module './service/db' {
         'event': EventDoc;
         'opcount': OpCountDoc;
         'schedule': Schedule;
+        'contest.balloon': ContestBalloonDoc;
     }
 }
 
@@ -737,7 +769,6 @@ export interface Lib extends Record<string, any> {
     rank: typeof import('./lib/rank');
     rating: typeof import('./lib/rating');
     testdataConfig: typeof import('./lib/testdataConfig');
-    template?: any;
     problemSearch: ProblemSearch;
 }
 
@@ -756,7 +787,8 @@ export interface ModuleInterfaces {
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
-    hash: (password: string, salt: string, user: User) => boolean | string;
+    hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
+    render: (name: string, state: any) => string | Promise<string>;
 }
 
 export interface HydroGlobal {

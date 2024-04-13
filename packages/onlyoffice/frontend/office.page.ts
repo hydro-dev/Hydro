@@ -1,3 +1,4 @@
+/* eslint-disable github/array-foreach */
 import { $, addPage, AutoloadPage } from '@hydrooj/ui-default';
 
 /* global DocsAPI */

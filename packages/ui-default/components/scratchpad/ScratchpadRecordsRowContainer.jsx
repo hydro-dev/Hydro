@@ -9,7 +9,7 @@ import {
   emulateAnchorClick, i18n, mongoId, substitute,
 } from 'vj/utils';
 
-const shouldShowDetail = (data) => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status];
+const shouldShowDetail = (data) => recordEnum.STATUS_SCRATCHPAD_SHOW_DETAIL_FLAGS[data.status] && data.testCases?.length;
 
 const getRecordDetail = (data) => {
   if (!shouldShowDetail(data)) {

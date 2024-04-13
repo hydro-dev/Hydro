@@ -32,7 +32,11 @@ export const nodes = new Proxy({}, {
 });
 export function inject(node: UIInjectableFields, name: string, args: Record<string, any> = {}, ...permPrivChecker: PermPrivChecker) {
     const obj = { name, args: args || {}, checker: buildChecker(...permPrivChecker) };
-    nodes[node].push(obj);
+    const idx = obj.args.before ? nodes[node].findIndex((i) => i.name === obj.args.before) : -1;
+    if (idx !== -1) {
+        nodes[node] = nodes[node].filter((i) => i.name !== obj.name);
+        nodes[node].splice(idx, 0, obj);
+    } else nodes[node].push(obj);
     return () => { nodes[node] = nodes[node].filter((i) => i !== obj); };
 }
 export function getNodes(name: UIInjectableFields) {

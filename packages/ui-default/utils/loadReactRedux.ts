@@ -1,9 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Action, AnyAction, Reducer } from 'redux';
+import type { Action, Reducer, UnknownAction } from 'redux';
 
-export default async function loadReactRedux<S, A extends Action = AnyAction>(storeReducer: Reducer<S, A>) {
-  const [{ Provider }, { createStore, applyMiddleware }, { default: reduxThunk }, { default: reduxPromise }] = await Promise.all([
+export default async function loadReactRedux<S, A extends Action = UnknownAction>(storeReducer: Reducer<S, A>) {
+  const [{ Provider }, { createStore, applyMiddleware }, { thunk: reduxThunk }, { default: reduxPromise }] = await Promise.all([
     import('react-redux'),
     import('redux'),
     import('redux-thunk'),

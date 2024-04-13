@@ -5,25 +5,6 @@ interface IHydroError {
     new(...args: any[]): HydroError
 }
 
-const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
-    let msg: () => string;
-    let code: number;
-    for (const item of info) {
-        if (typeof item === 'number') {
-            code = item;
-        } else if (typeof item === 'string') {
-            msg = function () { return item; };
-        } else if (typeof item === 'function') {
-            msg = item;
-        }
-    }
-    const HydroError = class extends Class { };
-    HydroError.prototype.name = name;
-    if (msg) HydroError.prototype.msg = msg;
-    if (code) HydroError.prototype.code = code;
-    return HydroError;
-};
-
 export class HydroError extends Error {
     params: any[];
     code: number;
@@ -41,6 +22,29 @@ export class HydroError extends Error {
         return this.msg();
     }
 }
+
+const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
+    let msg: () => string;
+    let code: number;
+    for (const item of info) {
+        if (typeof item === 'number') {
+            code = item;
+        } else if (typeof item === 'string') {
+            msg = function () { return item; };
+        } else if (typeof item === 'function') {
+            msg = item;
+        }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-shadow
+    return class HydroError extends Class {
+        name = name;
+        constructor(...args: any[]) {
+            super(...args);
+            if (msg) this.msg = msg;
+            if (code) this.code = code;
+        }
+    };
+};
 
 export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);
 export const SystemError = Err('SystemError', HydroError, 'SystemError', 500);
@@ -107,8 +111,8 @@ export const FileExistsError = Err('FileExistsError', ForbiddenError, 'File {0} 
 export const HackFailedError = Err('HackFailedError', ForbiddenError, 'Hack failed: {0}');
 export const ProblemAlreadyExistError = Err('ProblemAlreadyExistError', ForbiddenError, 'Problem {0} already exists.');
 export const ProblemAlreadyUsedByContestError = Err('ProblemAlreadyUsedByContestError', ForbiddenError, 'Problem {0} is already used by contest {1}.');
-export const ProblemNotAllowPretestError = Err('ProblemNotAllowPretestError', ForbiddenError, 'This {0} is not allow run pretest.');
-export const ProblemNotAllowLanguageError = Err('ProblemNotAllowSubmitError', ForbiddenError, 'This language is not allow to submit.');
+export const ProblemNotAllowPretestError = Err('ProblemNotAllowPretestError', ForbiddenError, 'Pretesting is not supported for {0}.');
+export const ProblemNotAllowLanguageError = Err('ProblemNotAllowSubmitError', ForbiddenError, 'This language is not allowed to submit.');
 
 export const HackRejudgeFailedError = Err('HackRejudgeFailedError', BadRequestError, 'Cannot rejudge a hack record.');
 export const CannotDeleteSystemDomainError = Err('CannotDeleteSystemDomainError', BadRequestError, 'You are not allowed to delete system domain.');

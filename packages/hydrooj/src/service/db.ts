@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import {
-    Collection, Db, IndexDescription, MongoClient, WriteConcern,
+    Collection, Db, IndexDescription, MongoClient,
 } from 'mongodb';
+import mongoUri from 'mongodb-uri';
 import { Time } from '@hydrooj/utils';
 import { Logger } from '../logger';
 import options from '../options';
@@ -38,17 +39,15 @@ class MongoService {
     async start() {
         const opts = options() || {};
         let mongourl = MongoService.buildUrl(opts);
+        const url = mongoUri.parse(mongourl);
         if (process.env.CI) {
             const { MongoMemoryServer } = require('mongodb-memory-server');
             const mongod = await MongoMemoryServer.create();
             mongourl = mongod.getUri();
         }
         this.opts = opts;
-        this.client = await MongoClient.connect(mongourl, {
-            readPreference: 'nearest',
-            writeConcern: new WriteConcern('majority'),
-        });
-        this.db = this.client.db(opts.name || 'hydro');
+        this.client = await MongoClient.connect(mongourl);
+        this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
         setInterval(() => this.fixExpireAfter(), Time.hour);
     }

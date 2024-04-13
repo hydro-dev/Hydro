@@ -8,16 +8,27 @@ interface ScratchpadOptions {
   value?: string;
   language?: string;
   handleUpdateCode?: (str: string, event: monaco.editor.IModelContentChangedEvent) => void;
+  settings?: any;
+  pendingCommand?: string;
+  commandDone?: () => void;
 }
 
 export default connect((state: any) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,
+  settings: state.ui.settings.config,
+  pendingCommand: state.ui.pendingCommand,
 }), (dispatch) => ({
   handleUpdateCode: (code: string) => {
     dispatch({
       type: 'SCRATCHPAD_EDITOR_UPDATE_CODE',
       payload: code,
+    });
+  },
+  commandDone: () => {
+    dispatch({
+      type: 'SCRATCHPAD_TRIGGER_EDITOR_COMMAND',
+      payload: { command: '' },
     });
   },
 }))(class MonacoEditor extends React.PureComponent<ScratchpadOptions> {
@@ -31,17 +42,18 @@ export default connect((state: any) => ({
     const value = this.props.value || '';
     const { language } = this.props;
     const { monaco, registerAction, customOptions } = await load([language]);
-    const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+    const uri = monaco.Uri.parse(`hydro:${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
     this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(value, language, uri);
     if (this.containerElement) {
       const config: monaco.editor.IStandaloneEditorConstructionOptions = {
         theme: 'vs-light',
-        ...customOptions,
         fontFamily: UserContext.codeFontFamily,
+        ...customOptions,
         lineNumbers: 'on',
         glyphMargin: true,
-        lightbulb: { enabled: true },
+        lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.On },
         model: this.model,
+        fontLigatures: '',
       };
       this.editor = monaco.editor.create(this.containerElement, config);
       registerAction(this.editor, this.model);
@@ -84,9 +96,17 @@ export default connect((state: any) => ({
     if (model && editor && prevProps.language !== language) {
       const val = model.getValue(LF, false);
       model.dispose();
-      const uri = monaco.Uri.parse(`hydro://${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
+      const uri = monaco.Uri.parse(`hydro:${UiContext.pdoc.pid || UiContext.pdoc.docId}.${language}`);
       this.model = monaco.editor.getModel(uri) || monaco.editor.createModel(val, language, uri);
       editor.setModel(this.model);
+    }
+    if (editor && this.props.settings) {
+      editor.updateOptions(this.props.settings);
+    }
+    if (this.props.pendingCommand) {
+      editor.focus();
+      editor.getAction(this.props.pendingCommand)?.run();
+      this.props.commandDone();
     }
   }
 

@@ -1,10 +1,10 @@
 import { extname } from 'path';
 import { escapeRegExp } from 'lodash';
-import { lookup } from 'mime-types';
 import moment from 'moment-timezone';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
-import * as bus from '../service/bus';
+import { Context } from '../context';
+import mime from '../lib/mime';
 import db from '../service/db';
 import storage from '../service/storage';
 import ScheduleModel from './schedule';
@@ -13,16 +13,18 @@ import * as system from './system';
 export class StorageModel {
     static coll = db.collection('storage');
 
+    static generateId(ext: string) {
+        return `${nanoid(3).replace(/[_-]/g, '0')}/${nanoid().replace(/[_-]/g, '0')}${ext}`.toLowerCase();
+    }
+
     static async put(path: string, file: string | Buffer | Readable, owner?: number) {
         const meta = {};
         await StorageModel.del([path]);
-        meta['Content-Type'] = (path.endsWith('.ans') || path.endsWith('.out'))
-            ? 'text/plain'
-            : lookup(path) || 'application/octet-stream';
-        let _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        meta['Content-Type'] = mime(path);
+        let _id = StorageModel.generateId(extname(path));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
-        while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(path)}`;
+        while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(path));
         await storage.put(_id, file, meta);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
@@ -99,14 +101,12 @@ export class StorageModel {
         );
         const meta = {};
         await StorageModel.del([dst]);
-        meta['Content-Type'] = (dst.endsWith('.ans') || dst.endsWith('.out'))
-            ? 'text/plain'
-            : lookup(dst) || 'application/octet-stream';
-        let _id = `${nanoid(3)}/${nanoid()}${extname(dst)}`;
+        meta['Content-Type'] = mime(dst);
+        let _id = StorageModel.generateId(extname(dst));
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
-        while (await StorageModel.coll.findOne({ _id })) _id = `${nanoid(3)}/${nanoid()}${extname(dst)}`;
-        const result = await storage.copy(value._id, dst);
+        while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(dst));
+        const result = await storage.copy(value._id, _id);
         const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
             _id, meta: metaData, path: dst, size, etag, lastModified: new Date(), owner: value.owner || 1,
@@ -135,26 +135,35 @@ async function cleanFiles() {
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
 }
-ScheduleModel.Worker.addHandler('storage.prune', cleanFiles);
-bus.on('ready', async () => {
-    if (process.env.NODE_APP_INSTANCE !== '0') return;
-    await db.ensureIndexes(
-        StorageModel.coll,
-        { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
-    );
-    if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
-        await ScheduleModel.add({
-            type: 'schedule',
-            subType: 'storage.prune',
-            executeAfter: moment().startOf('hour').toDate(),
-            interval: [1, 'hour'],
-        });
-    }
-});
-bus.on('domain/delete', async (domainId) => {
-    const files = await StorageModel.list(`problem/${domainId}`);
-    await StorageModel.del(files.map((i) => i.path));
-});
+
+export function apply(ctx: Context) {
+    ctx.inject(['worker'], (c) => {
+        c.worker.addHandler('storage.prune', cleanFiles);
+    });
+    ctx.on('domain/delete', async (domainId) => {
+        const [problemFiles, contestFiles, trainingFiles] = await Promise.all([
+            StorageModel.list(`problem/${domainId}`),
+            StorageModel.list(`contest/${domainId}`),
+            StorageModel.list(`training/${domainId}`),
+        ]);
+        await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
+    });
+    ctx.on('ready', async () => {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
+        await db.ensureIndexes(
+            StorageModel.coll,
+            { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+        );
+        if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+            await ScheduleModel.add({
+                type: 'schedule',
+                subType: 'storage.prune',
+                executeAfter: moment().startOf('hour').toDate(),
+                interval: [1, 'hour'],
+            });
+        }
+    });
+}
 
 global.Hydro.model.storage = StorageModel;
 export default StorageModel;

@@ -11,6 +11,7 @@ declare global {
     UserContext: any;
     UiContext: any;
     Hydro: any;
+    /** @deprecated */
     externalModules: Record<string, string>;
     captureException?: (e: Error) => void;
   }

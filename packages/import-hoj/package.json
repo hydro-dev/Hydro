@@ -1,0 +1,10 @@
+{
+    "name": "@hydrooj/import-hoj",
+    "version": "0.0.3",
+    "description": "Import HOJ problem export",
+    "main": "index.ts",
+    "repository": "https://github.com/hydro-dev/Hydro.git",
+    "author": "panda <panda_dtdyy@outlook.com>",
+    "license": "AGPL-3.0-or-later",
+    "preferUnplugged": true
+}

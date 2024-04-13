@@ -3,7 +3,7 @@ import { i18n } from 'vj/utils';
 
 export default function reducer(state = {
   pretest: {
-    visible: ['default', 'fileio'].includes(UiContext.pdoc.config?.type)
+    visible: UiContext.pdoc.config?.type === 'default'
       ? localStorage.getItem('scratchpad/pretest') === 'true'
       : false,
   },
@@ -11,11 +11,16 @@ export default function reducer(state = {
     visible: UiContext.canViewRecord && localStorage.getItem('scratchpad/records') === 'true',
     isLoading: false,
   },
+  settings: {
+    visible: false,
+    config: JSON.parse(localStorage.getItem('editor.config') || '{}'),
+  },
   isPosting: false,
   pretestWaitSec: 0,
   submitWaitSec: 0,
   lastTick: 0,
   activePage: 'problem',
+  pendingCommand: '',
 }, action: any = {}) {
   switch (action.type) {
     case 'SCRATCHPAD_UI_SET_VISIBILITY': {
@@ -38,6 +43,27 @@ export default function reducer(state = {
           ...state[uiElement],
           visible: !state[uiElement].visible,
         },
+      };
+    }
+    case 'SCRATCHPAD_SETTING_UPDATE': {
+      const { setting, value } = action.payload;
+      const config = {
+        ...state.settings.config,
+        [setting]: value,
+      };
+      localStorage.setItem('editor.config', JSON.stringify(config));
+      return {
+        ...state,
+        settings: {
+          ...state.settings,
+          config,
+        },
+      };
+    }
+    case 'SCRATCHPAD_TRIGGER_EDITOR_COMMAND': {
+      return {
+        ...state,
+        pendingCommand: action.payload.command,
       };
     }
     case 'SCRATCHPAD_POST_PRETEST_PENDING':

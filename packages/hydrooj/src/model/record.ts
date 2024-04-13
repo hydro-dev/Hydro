@@ -8,7 +8,7 @@ import {
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import {
-    FileInfo, JudgeMeta, ProblemConfigFile, RecordDoc,
+    JudgeMeta, ProblemConfigFile, RecordDoc,
 } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
@@ -25,6 +25,9 @@ export default class RecordModel {
         'contest', 'judger', 'judgeAt', 'status', 'source',
         'files',
     ];
+
+    static RECORD_PRETEST = new ObjectId('000000000000000000000000');
+    static RECORD_GENERATE = new ObjectId('000000000000000000000001');
 
     static async submissionPriority(uid: number, base: number = 0) {
         const timeRecent = await RecordModel.coll
@@ -49,14 +52,17 @@ export default class RecordModel {
 
     @ArgMethod
     static async stat(domainId?: string) {
+        // INFO:
+        // using .count() for a much better performace
+        // @see https://www.mongodb.com/docs/manual/reference/command/count/
         const [d5min, d1h, day, week, month, year, total] = await Promise.all([
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }),
-            RecordModel.coll.countDocuments(domainId ? { domainId } : {}),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
+            RecordModel.coll.find(domainId ? { domainId } : {}).count(),
         ]);
         return {
             d5min, d1h, day, week, month, year, total,
@@ -66,46 +72,39 @@ export default class RecordModel {
     static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
-        const rdoc = await RecordModel.get(domainId, rids[0]);
-        if (!rdoc) return null;
-        let data: FileInfo[] = [];
-        let source = `${domainId}/${rdoc.pid}`;
-        meta = { ...meta, problemOwner: 1 };
+        const rdocs = (await Promise.all(rids.map((rid) => RecordModel.get(domainId, rid)))).filter((i) => i);
+        if (!rdocs.length) return null;
+        let source = `${domainId}/${rdocs[0].pid}`;
         await task.deleteMany({ rid: { $in: rids } });
-        if (rdoc.pid) {
-            let pdoc = await problem.get(rdoc.domainId, rdoc.pid);
-            if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
-            if (pdoc.reference) {
-                pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
-                if (!pdoc) throw new ProblemNotFoundError(rdoc.domainId, rdoc.pid);
-            }
-            meta.problemOwner = pdoc.owner;
+        let pdoc = await problem.get(domainId, rdocs[0].pid);
+        if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
+        if (pdoc.reference) {
+            pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
+            if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
             source = `${pdoc.domainId}/${pdoc.docId}`;
-            data = pdoc.data;
-            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
-            config.type = pdoc.config.type === 'fileio' ? 'default' : pdoc.config.type as any;
-            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) {
-                return await task.addMany(rids.map((rid) => ({
-                    ...(pdoc.config as any),
-                    priority,
-                    type: 'remotejudge',
-                    rid,
-                    domainId,
-                    config,
-                    data,
-                } as any)));
-            }
         }
-        return await task.addMany(rids.map((rid) => ({
-            priority,
-            type: 'judge',
-            rid,
-            domainId,
-            config,
-            data,
-            source,
-            meta,
-        } as any)));
+        meta = { ...meta, problemOwner: pdoc.owner };
+        return await task.addMany(rdocs.map((rdoc) => {
+            let type = 'judge';
+            if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
+            if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
+            else if (meta?.type === 'generate') type = 'generate';
+            return ({
+                ...(pdoc.config as any), // TODO deprecate this
+                lang: rdoc.lang,
+                priority,
+                type,
+                rid: rdoc._id,
+                domainId,
+                config: {
+                    ...(pdoc.config as any),
+                    ...config,
+                },
+                data: pdoc.data,
+                source,
+                meta,
+            } as any);
+        }));
     }
 
     static async add(
@@ -115,7 +114,7 @@ export default class RecordModel {
             contest?: ObjectId,
             input?: string,
             files?: Record<string, string>,
-            type: 'judge' | 'rejudge' | 'contest' | 'pretest' | 'hack',
+            type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate',
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
@@ -136,6 +135,7 @@ export default class RecordModel {
             judgeAt: null,
             rejudged: false,
         };
+        let isContest = !!args.contest;
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
         if (args.type === 'rejudge') {
@@ -143,12 +143,17 @@ export default class RecordModel {
             data.rejudged = true;
         } else if (args.type === 'pretest') {
             data.input = args.input || '';
-            data.contest = new ObjectId('000000000000000000000000');
+            isContest = false;
+            data.contest = RecordModel.RECORD_PRETEST;
         }
         const res = await RecordModel.coll.insertOne(data);
+        bus.broadcast('record/change', data);
         if (addTask) {
-            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (args.type === 'contest' ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, args.type === 'contest' ? { detail: false } : {}, { rejudge: data.rejudged });
+            const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (isContest ? 50 : 0));
+            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {}, {
+                type: args.type,
+                rejudge: data.rejudged,
+            });
         }
         return res.insertedId;
     }

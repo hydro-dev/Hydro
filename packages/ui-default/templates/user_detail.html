@@ -20,7 +20,7 @@
             <div class="media__body profile-header__main">
               <h1>
                 {{ udoc['uname'] }}
-                {% if udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
+                {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
               </h1>
               <p>
                 {{ _('UID') }}: {{ udoc['_id'] }},
@@ -95,9 +95,9 @@
               <h1 class="section__tab-title">{{ _('Bio') }}</h1>
               <div class="section__tab-main">
               {% if not udoc.bio %}
-                {{ nothing.render("This person is lazy and didn't wrote anything.") }}
+                {{ nothing.render("This person is lazy and didn't write anything.") }}
               {% else %}
-                <div class="section__body typo">
+                <div class="section__body typo richmedia">
                   {{ udoc.bio|default('')|markdown|safe }}
                 </div>
               {% endif %}
@@ -153,7 +153,7 @@
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ udoc.nLiked or 0 }}</div>
+              <div class="numbox__num medium">{{ udoc.nLike or 0 }}</div>
               <div class="numbox__text">{{ _('Solutions Liked') }}</div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-import cordis from 'cordis';
+import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
@@ -243,7 +243,6 @@ SystemSetting(
     Setting('setting_smtp', 'smtp.verify', true, 'boolean', 'smtp.verify', 'Verify register email'),
     Setting('setting_server', 'server.center', 'https://hydro.ac/center', 'text', 'server.center', '', FLAG_HIDDEN),
     Setting('setting_server', 'server.name', 'Hydro', 'text', 'server.name', 'Server Name'),
-    Setting('setting_server', 'server.displayName', 'Hydro', 'text', 'server.name', 'Server Name (Global Display)', FLAG_PRO),
     Setting('setting_server', 'server.url', '/', 'text', 'server.url', 'Server BaseURL'),
     Setting('setting_server', 'server.upload', '256m', 'text', 'server.upload', 'Max upload file size'),
     Setting('setting_server', 'server.cdn', '/', 'text', 'server.cdn', 'CDN Prefix'),
@@ -255,7 +254,6 @@ SystemSetting(
     Setting('setting_server', 'server.cors', '', 'text', 'server.cors', 'CORS domains'),
     Setting('setting_server', 'server.language', 'zh_CN', langRange, 'server.language', 'Default display language'),
     Setting('setting_server', 'server.login', true, 'boolean', 'server.login', 'Allow builtin-login', FLAG_PRO),
-    Setting('setting_server', 'server.message', true, 'boolean', 'server.message', 'Allow users send messages'),
     Setting('setting_server', 'server.checkUpdate', true, 'boolean', 'server.checkUpdate', 'Daily update check'),
     Setting('setting_server', 'server.ignoreUA', ignoreUA, 'textarea', 'server.ignoreUA', 'ignoredUA'),
     ServerLangSettingNode,
@@ -293,7 +291,36 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export const langs: Record<string, LangConfig> = {};
 
+declare module '../context' {
+    interface Context {
+        setting: SettingService;
+    }
+}
+
+const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
+    function method(this: cordis.Service, ...args: Parameters<F>) {
+        const res = origFunc(...args);
+        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+    };
+
+export class SettingService extends Service {
+    PreferenceSetting = T(PreferenceSetting);
+    AccountSetting = T(AccountSetting);
+    DomainSetting = T(DomainSetting);
+    DomainUserSetting = T(DomainUserSetting);
+    SystemSetting = T(SystemSetting);
+    constructor(ctx: Context) {
+        super(ctx, 'setting', true);
+        ctx.mixin('setting', ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting']);
+    }
+
+    get(key: string) {
+        return (this[Context.current] ? this[Context.current].domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
+    }
+}
+
 export async function apply(ctx: Context) {
+    ctx.plugin(SettingService);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
@@ -319,31 +346,6 @@ export async function apply(ctx: Context) {
         ServerLangSettingNode.range = range;
     });
 }
-
-declare module '../context' {
-    interface Context {
-        setting: SettingService;
-    }
-}
-
-const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
-    function method(this: cordis.Service, ...args: Parameters<F>) {
-        const res = origFunc(...args);
-        this.caller?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
-    };
-
-export class SettingService extends Service {
-    static readonly methods = ['PreferenceSetting', 'AccountSetting', 'DomainSetting', 'DomainUserSetting', 'SystemSetting'];
-    PreferenceSetting = T(PreferenceSetting);
-    AccountSetting = T(AccountSetting);
-    DomainSetting = T(DomainSetting);
-    DomainUserSetting = T(DomainUserSetting);
-    SystemSetting = T(SystemSetting);
-    constructor(ctx: Context) {
-        super(ctx, 'setting', true);
-    }
-}
-Context.service('setting', SettingService);
 
 global.Hydro.model.setting = {
     apply,
