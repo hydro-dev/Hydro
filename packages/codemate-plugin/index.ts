@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Context, unwrapExports } from 'hydrooj';
 
-export default async function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     fs.readdir('./plugins/', (err, files) => {
         if (err) throw err;
         for (const plugin of files) {
