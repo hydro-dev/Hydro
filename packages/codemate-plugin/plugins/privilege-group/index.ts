@@ -1,6 +1,7 @@
 import { ObjectId, UpdateResult } from 'mongodb';
 import {
-    db, deleteUserCache, Err, GDoc, HydroGlobal, NotFoundError,
+    Context,
+    db, Err, GDoc, HydroGlobal, NotFoundError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -12,6 +13,8 @@ declare module 'hydrooj' {
         GroupModel: typeof GroupModel,
     }
 }
+
+let deleteUserCache: (domainId: string) => void;
 
 export const GroupNotFoundError = Err('GroupNotFoundError', NotFoundError);
 
@@ -79,6 +82,7 @@ export class GroupModel {
     }
 }
 
-export function apply() {
+export function apply(ctx: Context) {
     (global.Hydro as HydroGlobal).GroupModel = GroupModel;
+    deleteUserCache = (domainId: string) => { ctx.emit('user/delcache', domainId); };
 }
