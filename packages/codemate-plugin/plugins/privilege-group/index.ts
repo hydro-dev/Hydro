@@ -35,10 +35,8 @@ export class GroupModel {
     static async del(domainId: string, name: string) {
         const gdoc = await this.coll.findOne({ domainId, name });
         if (!gdoc) throw new GroupNotFoundError();
-        for (const child of gdoc.children || []) {
-            // eslint-disable-next-line no-await-in-loop
-            await this.coll.updateOne({ _id: child }, { $unset: { parent: 1 } });
-        }
+        await Promise.all((gdoc.children || []).map((child) => this.coll.updateOne({ _id: child }, { $unset: { parent: 1 } })));
+        if (gdoc.parent) await this.coll.updateOne({ _id: gdoc.parent }, { $pull: { children: gdoc._id } });
         deleteUserCache(domainId);
         return await this.coll.deleteOne({ domainId, name });
     }
@@ -60,7 +58,6 @@ export class GroupModel {
 
     static async list(domainId: string, uid?: number) {
         const groups = await this.coll.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
-        console.log(groups);
         if (uid) {
             groups.push({
                 _id: new ObjectId(), domainId, uids: [uid], name: uid.toString(),
