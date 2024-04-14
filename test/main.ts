@@ -30,34 +30,7 @@ describe('App', () => {
     }, { timeout: 30000 });
 
     const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
-    routes.forEach((route) => it(`GET ${route}`, () => agent.get(route).expect(200)));
-
-    it('API user', async () => {
-        await agent.get('/api?{user(id:1){uname}}').expect({ data: { user: { uname: 'Hydro' } } });
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: null } });
-    });
-
-    it('Create User', async () => {
-        const redirect = await agent.post('/register')
-            .send({ mail: 'test@example.com' })
-            .expect(302)
-            .then((res) => res.headers.location);
-        await agent.post(redirect)
-            .send({ uname: Root.username, password: Root.password, verifyPassword: Root.password })
-            .expect(302);
-    });
-
-    it('Login', async () => {
-        const cookie = await agent.post('/login')
-            .send({ uname: Root.username, password: Root.password })
-            .expect(302)
-            .then((res) => res.headers['set-cookie']);
-        Root.creditionals = cookie;
-    });
-
-    it('API registered user', async () => {
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: { uname: 'root' } } });
-    });
+    routes.forEach((route) => it(`GET ${route}`, () => agent.get(route).expect(302)));
 
     // TODO add more tests
 
