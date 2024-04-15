@@ -28,6 +28,7 @@ export const TYPE_DISCUSSION: 21 = 21;
 export const TYPE_DISCUSSION_REPLY: 22 = 22;
 export const TYPE_CONTEST: 30 = 30;
 export const TYPE_CONTEST_CLARIFICATION: 31 = 31;
+export const TYPE_SYSTEM_PLIST: 32 = 32;
 export const TYPE_TRAINING: 40 = 40;
 /** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
 export const TYPE_HOMEWORK: 60 = 60;
@@ -35,13 +36,14 @@ export const TYPE_HOMEWORK: 60 = 60;
 export interface DocType {
     [TYPE_PROBLEM]: ProblemDoc;
     [TYPE_PROBLEM_SOLUTION]: any;
-    [TYPE_PROBLEM_LIST]: any;
+    [TYPE_PROBLEM_LIST]: Tdoc;
     [TYPE_DISCUSSION_NODE]: any;
     [TYPE_DISCUSSION]: DiscussionDoc;
     [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc;
     [TYPE_CONTEST]: Tdoc;
     [TYPE_CONTEST_CLARIFICATION]: ContestClarificationDoc;
     [TYPE_TRAINING]: TrainingDoc;
+    [TYPE_SYSTEM_PLIST]: any;
 }
 
 export interface DocStatusType {
@@ -501,6 +503,7 @@ global.Hydro.model.document = {
 
     TYPE_CONTEST,
     TYPE_CONTEST_CLARIFICATION,
+    TYPE_SYSTEM_PLIST,
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,
     TYPE_DISCUSSION_REPLY,
