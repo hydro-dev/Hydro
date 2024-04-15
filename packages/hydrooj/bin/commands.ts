@@ -31,7 +31,7 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
     if (!cli.matchedCommand) {
         for (const i of addons) {
             try {
-                require(`${i}/command.ts`).apply(cli);
+                require(`${i}/command.ts`).apply(cli); // comment by clzh: 这里证明了addon也可以添加cli命令
             } catch (e) {
                 try {
                     require(`${i}/command.js`).apply(cli);

@@ -26,8 +26,9 @@ export async function apply(ctx: Context) {
         logger.info('Starting setup');
         await require('./setup').load();
     }
-    const pending = global.addons;
+    const pending = global.addons; // comment by clzh: 开始加载插件列表
     const fail = [];
+    // comment by clzh: 加载template和locale（语言）文件，ui-default也是这样加载的
     await Promise.all([
         locale(pending, fail),
         template(pending, fail),
@@ -61,7 +62,7 @@ export async function apply(ctx: Context) {
         ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
     await handler(pending, fail, ctx);
-    await addon(pending, fail, ctx);
+    await addon(pending, fail, ctx); // comment by clzh: 插件加载入口
     await ctx.lifecycle.flush();
     for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     const scriptDir = path.resolve(__dirname, '..', 'script');

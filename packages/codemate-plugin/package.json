@@ -2,8 +2,12 @@
   "name": "codemate-plugin",
   "packageManager": "yarn@4.0.2",
   "dependencies": {
+    "fs-extra": "^11.2.0",
     "hydrooj": "workspace:^"
   },
   "module": "api.ts",
-  "main": "api.ts"
+  "main": "api.ts",
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4"
+  }
 }

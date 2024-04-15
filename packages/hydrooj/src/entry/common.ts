@@ -34,6 +34,7 @@ function locateFile(basePath: string, filenames: string[]) {
     return null;
 }
 
+// comment by clzh: 通用加载器，也是addon的加载器
 type LoadTask = 'handler' | 'model' | 'addon' | 'lib' | 'script' | 'service';
 const getLoader = (type: LoadTask, filename: string) => async function loader(pending: string[], fail: string[], ctx: Context) {
     for (const i of pending) {

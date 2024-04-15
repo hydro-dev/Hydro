@@ -17,7 +17,7 @@ import './lib/i18n';
 import { Logger } from './logger';
 import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
-import { sleep, unwrapExports } from './utils';
+import { unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 
 const argv = cac().parse();
@@ -173,7 +173,9 @@ loader.app = app;
 app.state[Loader.Record] = Object.create(null);
 
 export async function load() {
-    addon(path.resolve(__dirname, '..'), true);
+    addon(path.resolve(__dirname, '..'), true); // comment by clzh: 这里是hydro加载自己的第一步
+    // modified by clzh: 在这里自动挂载codemate拓展插件
+    addon(path.resolve(__dirname, '../../codemate-plugin'));
     Error.stackTraceLimit = 50;
     try {
         const { simpleGit } = require('simple-git') as typeof import('simple-git');
@@ -199,10 +201,10 @@ export async function load() {
                 console.warn(' 你需要同样以 AGPL3 协议开源所有的修改，');
                 console.warn(' 并保留所有的版权声明。');
                 console.warn('\x1b[39m');
-                console.log('');
-                console.log('Hydro will start in 5s.');
-                console.log('Hydro 将在五秒后继续启动。');
-                await sleep(5000);
+                // console.log('');
+                // console.log('Hydro will start in 5s.');
+                // console.log('Hydro 将在五秒后继续启动。');
+                // await sleep(5000);
             }
         }
     } catch (e) { }

@@ -1,7 +1,6 @@
 import { ObjectId, UpdateResult } from 'mongodb';
 import {
-    Context,
-    db, Err, GDoc, HydroGlobal, NotFoundError,
+    db, Err, GDoc, NotFoundError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -9,12 +8,10 @@ declare module 'hydrooj' {
         parent?: ObjectId,
         children?: ObjectId[],
     }
-    interface HydroGlobal {
-        GroupModel: typeof GroupModel,
+    interface Model {
+        group: GroupModel;
     }
 }
-
-let deleteUserCache: (domainId: string) => void;
 
 export const GroupNotFoundError = Err('GroupNotFoundError', NotFoundError);
 
@@ -40,7 +37,7 @@ export class GroupModel {
         if (!gdoc) throw new GroupNotFoundError();
         await Promise.all((gdoc.children || []).map((child) => this.coll.updateOne({ _id: child }, { $unset: { parent: 1 } })));
         if (gdoc.parent) await this.coll.updateOne({ _id: gdoc.parent }, { $pull: { children: gdoc._id } });
-        deleteUserCache(domainId);
+        await app.parallel('user/delcache', domainId);
         return await this.coll.deleteOne({ domainId, name });
     }
 
@@ -82,7 +79,6 @@ export class GroupModel {
     }
 }
 
-export function apply(ctx: Context) {
-    (global.Hydro as HydroGlobal).GroupModel = GroupModel;
-    deleteUserCache = (domainId: string) => { ctx.emit('user/delcache', domainId); };
+export function apply() {
+    global.Hydro.model.group = GroupModel;
 }
