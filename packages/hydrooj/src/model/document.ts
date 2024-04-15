@@ -1,5 +1,6 @@
 /* eslint-disable object-curly-newline */
 import assert from 'assert';
+import { SystemPList } from 'codemate-plugin';
 import {
     Filter, FindCursor, ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
@@ -43,7 +44,7 @@ export interface DocType {
     [TYPE_CONTEST]: Tdoc;
     [TYPE_CONTEST_CLARIFICATION]: ContestClarificationDoc;
     [TYPE_TRAINING]: TrainingDoc;
-    [TYPE_SYSTEM_PLIST]: any;
+    [TYPE_SYSTEM_PLIST]: SystemPList;
 }
 
 export interface DocStatusType {

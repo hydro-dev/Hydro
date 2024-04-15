@@ -25,3 +25,9 @@ npx hydrooj cli user setSuperAdmin 2
 # Quit the docker shell
 exit
 ```
+
+## FAQ
+
+### Q: 我的Typescript挂了（比如一直重启中）怎么办？
+
+该项目的`tsconfig.json`依赖`postinstall`hook运行`build/prepare.js`来生成，如果你的TS挂了，很可能是该脚本没有正常运行，可以尝试手动运行一次。
