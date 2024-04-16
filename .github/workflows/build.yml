@@ -67,11 +67,11 @@ jobs:
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi
-    - name: Publish
-      if: ${{ github.event_name == 'push' }}
-      run: node -r @hydrooj/register build/publish.ts
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    # - name: Publish
+    #   if: ${{ github.event_name == 'push' }}
+    #   run: node -r @hydrooj/register build/publish.ts
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # - name: Benchmark
     #   run: yarn benchmark
     # - name: Benchmark result

@@ -272,6 +272,7 @@ declare module './model/problem' {
             domainId: string;
             pid: number;
         };
+        assign?: string[];
 
         /** string (errormsg) */
         config: string | ProblemConfig;
