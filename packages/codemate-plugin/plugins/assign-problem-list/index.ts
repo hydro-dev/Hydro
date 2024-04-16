@@ -4,7 +4,7 @@ import {
     PermissionError,
     PRIV, ProblemModel as problem, SettingModel,
     Time,
-    Types, ValidationError, yaml,
+    Types, yaml,
 } from 'hydrooj';
 import { GroupModel } from '../privilege-group/model';
 import * as plist from './model';

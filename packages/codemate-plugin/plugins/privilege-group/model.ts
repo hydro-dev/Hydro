@@ -4,6 +4,17 @@ import { GroupNotFoundError } from './lib';
 
 export const collGroup = db.collection('user.group');
 
+declare module 'hydrooj' {
+    interface GDoc {
+        parent?: ObjectId,
+        children?: ObjectId[],
+        activation?: { code: string, remaining: number }[],
+    }
+    interface Model {
+        group: GroupModel;
+    }
+}
+
 export class GroupModel {
     static coll = collGroup;
     static async add(domainId: string, name: string, parent?: ObjectId) {

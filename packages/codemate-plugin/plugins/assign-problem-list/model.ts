@@ -1,7 +1,8 @@
 import {
-  ContestNotFoundError, DocumentModel as document, ObjectId,
-  Tdoc, Filter,
-} from "hydrooj";
+    ContestNotFoundError, DocumentModel as document, Filter,
+    ObjectId,
+    Tdoc,
+} from 'hydrooj';
 
 const TYPE_SYSTEM_PLIST = document.TYPE_SYSTEM_PLIST;
 

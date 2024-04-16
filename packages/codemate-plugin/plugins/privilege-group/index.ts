@@ -1,21 +1,9 @@
-import { ObjectId } from 'mongodb';
 import {
     Context, Handler,
     param, Types,
 } from 'hydrooj';
 import { ActivationCodeNotFoundError } from './lib';
 import { collGroup, GroupModel } from './model';
-
-declare module 'hydrooj' {
-    interface GDoc {
-        parent?: ObjectId,
-        children?: ObjectId[],
-        activation?: { code: string, remaining: number }[],
-    }
-    interface Model {
-        group: GroupModel;
-    }
-}
 
 export class GroupOperationHandler extends Handler {
     @param('group', Types.String)
