@@ -290,47 +290,6 @@ export class UserRegisterHandler extends Handler {
     }
 }
 
-class UserRegisterWithCodeHandler extends Handler {
-    noCheckPermView = true;
-
-    @param('code', Types.String)
-    async get(domainId: string, code: string) {
-        this.response.template = 'user_register_with_code.html';
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
-        this.response.body = tdoc;
-    }
-
-    @param('password', Types.Password)
-    @param('verifyPassword', Types.Password)
-    @param('uname', Types.Username)
-    @param('code', Types.String)
-    async post(
-        domainId: string, password: string, verify: string,
-        uname: string, code: string,
-    ) {
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
-        if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
-        const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
-        await token.del(code, token.TYPE_REGISTRATION);
-        const [id, mailDomain] = tdoc.mail.split('@');
-        const $set: any = tdoc.set || {};
-        if (tdoc.phone) $set.phone = tdoc.phone;
-        if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
-        if (this.session.viewLang) $set.viewLang = this.session.viewLang;
-        if (Object.keys($set).length) await user.setById(uid, $set);
-        if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
-        this.session.viewLang = '';
-        this.session.uid = uid;
-        this.session.sudoUid = null;
-        this.session.scope = PERM.PERM_ALL.toString();
-        this.session.recreate = true;
-        this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
-    }
-}
-
 class UserLostPassHandler extends Handler {
     noCheckPermView = true;
 
@@ -548,8 +507,8 @@ export async function apply(ctx) {
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_webauthn', '/user/webauthn', UserWebauthnHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
-    ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
-    ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
+    // ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
+    // ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
     ctx.Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_lostpass', '/lostpass', UserLostPassHandler);
     ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);

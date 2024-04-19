@@ -61,6 +61,7 @@ export class User {
     _authenticators: Authenticator[];
 
     mail: string;
+    phoneNumber?: string;
     uname: string;
     hashType: string;
     priv: number;
@@ -100,6 +101,7 @@ export class User {
         this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
         this.authn = (udoc.authenticators || []).length > 0;
+        this.phoneNumber = udoc.phoneNumber;
         if (dudoc.group) this.group = dudoc.group;
 
         for (const key in setting.SETTINGS_BY_KEY) {
@@ -190,6 +192,7 @@ async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
     cache.set(`id/${udoc._id}/${dudoc.domainId}`, res);
     cache.set(`name/${udoc.unameLower}/${dudoc.domainId}`, res);
     cache.set(`mail/${udoc.mailLower}/${dudoc.domainId}`, res);
+    if (udoc.phoneNumber) cache.set(`phone/${udoc.phoneNumber}/${dudoc.domainId}`, res);
     return res;
 }
 
@@ -227,6 +230,14 @@ class UserModel {
         dudoc.group = groups.map((i) => i.name);
         if (typeof scope === 'string') scope = BigInt(scope);
         return initAndCache(udoc, dudoc, scope);
+    }
+
+    static async getByPhone(domainId: string, phoneNumber: string) {
+        if (cache.has(`phone/${phoneNumber}/${domainId}`)) return cache.get(`phone/${phoneNumber}/${domainId}`);
+        const udoc = await coll.findOne({ phoneNumber });
+        if (!udoc) return null;
+        const dudoc = await domain.getDomainUser(domainId, udoc);
+        return initAndCache(udoc, dudoc);
     }
 
     static async getList(domainId: string, uids: number[]): Promise<Udict> {

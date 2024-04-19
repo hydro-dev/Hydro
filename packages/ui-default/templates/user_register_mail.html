@@ -1,6 +1,6 @@
 {% extends "layout/mail.html" %}
-{% block title %}{{ _('Sign Up') }}{% endblock %}
+{% block title %}Codemate 注册验证码{% endblock %}
 {% block content %}
-<p>{{ _('Hello! You can click following link to sign up your {0} account:').format(handler.domain.ui.name|default(model.system.get('server.name'))) }}</p>
-<p><a href="{{ url_prefix|safe }}{{ path|safe }}">{{ url_prefix|safe }}{{ path|safe }}</a></p>
+<p>同学，您好！欢迎加入 Codemate，您的验证码是：{{ verifyCode }}，600 秒内有效。</p>
+<p>如果你没有注册 Codemate，请忽略这封邮件。</p>
 {% endblock %}

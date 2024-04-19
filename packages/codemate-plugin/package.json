@@ -3,7 +3,8 @@
   "packageManager": "yarn@4.0.2",
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "hydrooj": "workspace:^"
+    "hydrooj": "workspace:^",
+    "nanoid": "^5.0.6"
   },
   "module": "api.ts",
   "main": "api.ts",

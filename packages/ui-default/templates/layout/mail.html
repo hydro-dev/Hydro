@@ -18,13 +18,12 @@ body, .hydro { margin:0;color:#333;font-size:14px;font-family:"Tahoma","Segoe UI
 </style>
 <div class="hydro">
 <div class="hydro-box">
-<div class="hydro-header">{% block title %}{% endblock %} - {{ handler.domain.ui.name|default(model.system.get('server.name')) }}</div>
+<div class="hydro-header">{% block title %}{% endblock %}</div>
 <div class="hydro-content">
 {% block content %}{% endblock %}
 </div>
 <div class="hydro-footer">
-<p>{{ _('This email was sent by {0} automatically, and please do not reply directly.').format('<a href="' + url_prefix + '/" target="_blank">' + model.system.get('server.name') + '</a>')|safe }}</p>
-<p>{{ _('This email was requested from {0}').format(handler.request.ip) }}
+<p>这封邮件由系统自动发送，请不要回复。</p>
 </div>
 </div>
 </div>
