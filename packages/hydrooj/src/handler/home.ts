@@ -592,7 +592,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
 }
 
 export async function apply(ctx: Context) {
-    ctx.using(['geoip'], (g) => {
+    ctx.inject(['geoip'], (g) => {
         geoip = g.geoip;
     });
     ctx.Route('homepage', '/', HomeHandler);
