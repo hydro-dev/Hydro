@@ -20,7 +20,8 @@
           {{ form.select({
                label:_('Select a role'),
                options:_rolesSelectWithoutDefault,
-               name:'role'
+               name:'role',
+               value:_rolesSelectWithoutDefault[0]
              }) }}
         </label>
       </div>
