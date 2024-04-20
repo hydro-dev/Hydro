@@ -384,6 +384,7 @@ class UserLostPassWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_LOSTPASS], code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
+        await user.setById(tdoc.uid, { authenticators: [], tfa: false });
         await user.setPassword(tdoc.uid, password);
         await token.del(code, token.TYPE_LOSTPASS);
         this.response.redirect = this.url('homepage');
