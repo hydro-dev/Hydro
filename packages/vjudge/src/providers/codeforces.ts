@@ -278,7 +278,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             : `/problemset/submit/${contestId}/${problemId}`;
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
-        const { text: submit } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
+        const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
             csrf_token: csrf,
             action: 'submitSolutionFormSubmitted',
             programTypeId,
@@ -296,6 +296,11 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
         if (message) {
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
+            return null;
+        }
+        if (redirects.length === 0 || !redirects.toString().includes('my')) {
+            // Submit failed so the request is not redirected
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit failed' });
             return null;
         }
         const { document } = await this.html(type !== 'GYM'

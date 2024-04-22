@@ -12,10 +12,11 @@ interface FetchOptions {
     get?: Omit<FetchOptions, 'get' | 'post'>
 }
 
-const UA = `Hydro/${global.Hydro.version.hydrooj} VJudge/${global.Hydro.version.vjudge}`;
+const defaultUA = `Hydro/${global.Hydro.version.hydrooj} VJudge/${global.Hydro.version.vjudge}`;
 
 export class BasicFetcher {
     cookie: string[] = [];
+    UA: string = defaultUA;
 
     constructor(
         public account: RemoteAccount, private defaultEndpoint: string,
@@ -23,12 +24,13 @@ export class BasicFetcher {
         public fetchOptions: FetchOptions = {},
     ) {
         if (account.cookie) this.cookie = account.cookie;
+        if (account.UA) this.UA = account.UA;
     }
 
     get(url: string) {
         this.logger.debug('get', url);
         url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
-        let req = superagent.get(url).set('Cookie', this.cookie).set('User-Agent', UA);
+        let req = superagent.get(url).set('Cookie', this.cookie).set('User-Agent', this.UA);
         if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
         if (this.fetchOptions.get?.headers) req = req.set(this.fetchOptions.get.headers);
         return this.account.proxy ? req.proxy(this.account.proxy) : req;
@@ -45,7 +47,7 @@ export class BasicFetcher {
     post(url: string) {
         this.logger.debug('post', url, this.cookie);
         url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
-        let req = superagent.post(url).set('Cookie', this.cookie).set('User-Agent', UA).type(this.formType);
+        let req = superagent.post(url).set('Cookie', this.cookie).set('User-Agent', this.UA).type(this.formType);
         if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
         if (this.fetchOptions.post?.headers) req = req.set(this.fetchOptions.post.headers);
         return this.account.proxy ? req.proxy(this.account.proxy) : req;
