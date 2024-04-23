@@ -58,6 +58,6 @@
         "simple-git": "^3.24.0",
         "supertest": "^6.3.4",
         "typescript": "^5.4.3",
-        "wtfnode": "^0.9.1"
+        "wtfnode": "^0.9.2"
     }
 }

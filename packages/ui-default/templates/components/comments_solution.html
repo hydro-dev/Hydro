@@ -102,9 +102,11 @@
           {{ user.render_inline(udoc) }} @ {{ datetimeSpan(doc._id)|safe }}
         </div>
         <div class="dczcomments__operations nojs--hide">
-        <a href="javascript:;" data-tooltip="{{ _('Copy Link') }}" data-copylink="{{ url('problem_solution_detail', pid=pdoc.pid|default(pdoc.docId), sid=doc._id) }}">
-          <span class="icon icon-link"></span>
-        </a>
+        {% if pdoc %}
+          <a href="javascript:;" data-tooltip="{{ _('Copy Link') }}" data-copylink="{{ url('problem_solution_detail', pid=pdoc.pid|default(pdoc.docId), sid=doc._id) }}">
+            <span class="icon icon-link"></span>
+          </a>
+        {% endif %}
         {% if handler.user.hasPerm(reply_post_perm) %}
           <a href="javascript:;" data-tooltip="{{ _('Reply') }}" data-op="reply" data-type="comment" 
             data-form="{{ {operation: reply_post_op, psid: doc._id}|json }}"

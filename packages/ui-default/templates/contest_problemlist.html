@@ -41,8 +41,8 @@
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
                 {% set rdoc = rdict[psdict[pid].rid] %}
-                {% set displayScore = ((tdoc.score[pid]|default(100)) * (psdict[pid].score|default(0)) / 100) if showScore else (psdict[pid].penaltyScore|default(psdict[pid].score)) %}
                 {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
+                  {% set displayScore = ((tdoc.score[pid]|default(100)) * (psdict[pid].score|default(0)) / 100) if showScore else (psdict[pid].penaltyScore|default(psdict[pid].score)) %}
                   {{ record.render_status_td(rdoc, displayScore=displayScore) }}
                 {% else %}
                   <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>

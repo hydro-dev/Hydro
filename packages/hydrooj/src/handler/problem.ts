@@ -54,7 +54,6 @@ registerValue('Problem', [
     ['pid', 'String'],
     ['title', 'String!'],
     ['content', 'String!'],
-    ['config', 'String!'],
     ['data', '[FileInfo]'],
     ['additional_file', '[FileInfo]'],
     ['nSubmit', 'Int'],
@@ -549,7 +548,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         }
         if (tid && !pretest && !contest.canShowSelfRecord.call(this, this.tdoc)) {
             this.response.body = { tid };
-            this.response.redirect = this.url(this.tdoc.rule === 'homework' ? 'homework_detail' : 'contest_detail', { tid });
+            this.response.redirect = this.url(this.tdoc.rule === 'homework' ? 'homework_detail' : 'contest_problemlist', { tid });
         } else {
             this.response.body = { rid };
             this.response.redirect = this.url('record_detail', { rid });
