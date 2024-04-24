@@ -55,20 +55,13 @@ jobs:
           .github/workflows/**
     - name: Lint
       run: |
-        if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
-        then
-          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci
-        else
-          parallel --tty -j+0 yarn ::: lint:ci
-        fi
+        yarn build:ui:gulp
+        parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci
     - name: Test
       run: yarn test
     - name: Build UI
       if: steps.ui-changed-files.outputs.any_changed == true
-      run: |
-        yarn build:ui:gulp
-        yarn build:ui:production:webpack
-
+      run: yarn build:ui:production:webpack
     - name: Build
       run: |
         yarn build
