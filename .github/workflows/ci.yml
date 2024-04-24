@@ -43,16 +43,6 @@ jobs:
       run: |
         yarn
         yarn dedupe
-    - name: Get specific changed files
-      id: ui-changed-files
-      uses: tj-actions/changed-files@v41
-      with:
-        files: |
-          /package.json
-          .eslint*
-          packages/ui-default/**
-          packages/utils/**
-          .github/workflows/**
     - name: Lint
       run: |
         yarn build:ui:gulp
@@ -60,7 +50,6 @@ jobs:
     - name: Test
       run: yarn test
     - name: Build UI
-      if: steps.ui-changed-files.outputs.any_changed == true
       run: yarn build:ui:production:webpack
     - name: Build
       run: |
@@ -88,6 +77,4 @@ jobs:
       with:
         push: true
         context: .
-        tags: |
-          docker.pkg.github.com/codemate-oj/backend:${{ github.sha }}
-          docker.pkg.github.com/codemate-oj/backend:${{ github.ref }}
+        tags: docker.pkg.github.com/codemate-oj/backend:${{ github.sha }}
