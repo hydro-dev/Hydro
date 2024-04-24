@@ -1,4 +1,4 @@
-name: CI
+name: 持续集成
 
 on:
 - push
@@ -36,18 +36,13 @@ jobs:
           cache-${{ github.ref }}-
           cache-
     - name: Clear Cache
-      if: "contains(github.event.head_commit.message, 'skip-cache')"
+      if: contains(github.event.head_commit.message, 'skip-cache')
       run: |
         rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
-    - name: Config And Install
+    - name: Install Dependencies
       run: |
-        [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
-        git config --global user.name undefined
-        git config --global user.email i@undefined.moe
         yarn
         yarn dedupe
-      env:
-        LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files
       id: ui-changed-files
       uses: tj-actions/changed-files@v41
@@ -58,77 +53,48 @@ jobs:
           packages/ui-default/**
           packages/utils/**
           .github/workflows/**
-    - name: Build And Lint
+    - name: Lint
       run: |
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
         then
-          yarn build:ui:gulp
-          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
+          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci
         else
-          parallel --tty -j+0 yarn ::: lint:ci build test
+          parallel --tty -j+0 yarn ::: lint:ci
         fi
-    # - name: Publish
-    #   if: ${{ github.event_name == 'push' }}
-    #   run: node -r @hydrooj/register build/publish.ts
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    # - name: Benchmark
-    #   run: yarn benchmark
-    # - name: Benchmark result
-    #   uses: benchmark-action/github-action-benchmark@v1
-    #   with:
-    #     name: Benchmark
-    #     tool: customBiggerIsBetter
-    #     output-file-path: benchmark.json
-  # web:
-  #   needs: build
-  #   permissions:
-  #     packages: write
-  #     contents: read
-  #   runs-on: ubuntu-latest
-  #   if: ${{ github.event_name == 'push' }}
-  #   steps:
-  #   - name: Check out
-  #     uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-  #   - name: Log in to GitHub Docker Registry
-  #     uses: docker/login-action@v1
-  #     with:
-  #       registry: docker.pkg.github.com
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: Docker:Web
-  #     uses: docker/build-push-action@v2
-  #     with:
-  #       push: true
-  #       context: ./install/docker/backend
-  #       tags: |
-  #         docker.pkg.github.com/hydro-dev/web:${{ github.sha }}
-  #         docker.pkg.github.com/hydro-dev/web:${{ github.ref }}
-  # judge:
-  #   needs: build
-  #   if: ${{ github.event_name == 'push' }}
-  #   permissions:
-  #     packages: write
-  #     contents: read
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Check out
-  #     uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-  #   - name: Log in to GitHub Docker Registry
-  #     uses: docker/login-action@v1
-  #     with:
-  #       registry: docker.pkg.github.com
-  #       username: ${{ github.actor }}
-  #       password: ${{ secrets.GITHUB_TOKEN }}
-  #   - name: Docker:Judge
-  #     uses: docker/build-push-action@v2
-  #     with:
-  #       push: true  
-  #       context: ./install/docker/judge
-  #       tags: |
-  #         docker.pkg.github.com/hydro-dev/judge:${{ github.sha }}
-  #         docker.pkg.github.com/hydro-dev/judge:${{ github.ref }}
+    - name: Test
+      run: yarn test
+    - name: Build UI
+      if: steps.ui-changed-files.outputs.any_changed == true
+      run: |
+        yarn build:ui:gulp
+        yarn build:ui:production:webpack
+
+    - name: Build
+      run: |
+        yarn build
+  build-docker:
+    needs: build
+    permissions:
+      packages: write
+      contents: read
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Log in to GitHub Docker Registry
+      uses: docker/login-action@v1
+      with:
+        registry: docker.pkg.github.com
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build Image & Push
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        context: .
+        tags: |
+          docker.pkg.github.com/codemate-oj/backend:${{ github.sha }}
+          docker.pkg.github.com/codemate-oj/backend:${{ github.ref }}
