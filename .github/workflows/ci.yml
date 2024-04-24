@@ -77,4 +77,4 @@ jobs:
       with:
         push: true
         context: .
-        tags: docker.pkg.github.com/codemate-oj/backend:${{ github.sha }}
+        tags: docker.pkg.github.com/codemateDao/codemate-core:${{ github.sha }}
