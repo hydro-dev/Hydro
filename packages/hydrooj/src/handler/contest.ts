@@ -388,7 +388,9 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
             html: (rows, tdoc) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
         };
-        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, { isExport: true, lockAt: this.tdoc.lockAt });
+        const [, rows] = await contest.getScoreboard.call(this, domainId, tid, {
+            isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+        });
         this.binary(await getContent[ext](rows, this.tdoc), `${this.tdoc.title}.${ext}`);
     }
 
