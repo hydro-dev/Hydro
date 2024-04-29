@@ -384,16 +384,16 @@ class UserModel {
         return projection ? coll.find(params).project<Udoc>(buildProjection(projection)) : coll.find(params);
     }
 
-    static async getListForRender(domainId: string, uids: number[]) {
+    static async getListForRender(domainId: string, uids: number[], showDisplayName = true) {
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: true }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: showDisplayName }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
         for (const udoc of vudocs) udict[udoc._id] = udoc;
-        for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
+        if (showDisplayName) for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
         for (const uid of uids) udict[uid] ||= { ...UserModel.defaultUser };
         for (const key in udict) {
             udict[key].school ||= '';
