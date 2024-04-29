@@ -530,6 +530,7 @@ export interface ContestStat extends Record<string, any> {
 
 export interface ScoreboardConfig {
     isExport: boolean;
+    showDisplayName: boolean;
     lockAt?: Date;
 }
 

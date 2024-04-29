@@ -314,7 +314,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             await this.exportScoreboard(domainId, tid, ext);
             return;
         }
-        const config: ScoreboardConfig = { isExport: false };
+        const config: ScoreboardConfig = { isExport: false, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) };
         if (!realtime && this.tdoc.lockAt && !this.tdoc.unlocked) {
             config.lockAt = this.tdoc.lockAt;
         }
@@ -588,7 +588,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             files: sortFiles(this.tdoc.files || []),
-            udict: await user.getListForRender(domainId, tcdocs.map((i) => i.owner)),
+            udict: await user.getListForRender(domainId, tcdocs.map((i) => i.owner), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
             tcdocs,
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
@@ -693,7 +693,8 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         for (const tsdoc of tsdocs) {
             tsdoc.endAt = (this.tdoc.duration && tsdoc.startAt) ? moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
         }
-        const udict = await user.getListForRender(domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)]);
+        const udict = await user.getListForRender(domainId,
+            [this.tdoc.owner, ...tsdocs.map((i) => i.uid)], this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME));
         this.response.body = { tdoc: this.tdoc, tsdocs, udict };
         this.response.pjax = 'partials/contest_user.html';
         this.response.template = 'contest_user.html';
@@ -733,7 +734,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             bdocs,
-            udict: await user.getListForRender(domainId, uids),
+            udict: await user.getListForRender(domainId, uids, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
         };
         this.response.pjax = 'partials/contest_balloon.html';
         this.response.template = 'contest_balloon.html';
