@@ -120,6 +120,7 @@ class UserLoginHandler extends Handler {
         await udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
+        this.context.HydroContext.user = udoc;
         this.session.viewLang = '';
         this.session.uid = udoc._id;
         this.session.sudo = null;
@@ -224,7 +225,8 @@ class UserLogoutHandler extends Handler {
         this.response.template = 'user_logout.html';
     }
 
-    async post() {
+    async post(domainId: string) {
+        this.context.HydroContext.user = await user.getById(domainId, 0);
         this.session.uid = 0;
         this.session.sudo = null;
         this.session.sudoUid = null;
@@ -322,6 +324,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
+        this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.sudoUid = null;
