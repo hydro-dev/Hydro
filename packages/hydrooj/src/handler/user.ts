@@ -120,6 +120,7 @@ class UserLoginHandler extends Handler {
         await udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
+        this.context.HydroContext.user = udoc;
         this.session.viewLang = '';
         this.session.uid = udoc._id;
         this.session.sudo = null;
