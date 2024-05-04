@@ -972,6 +972,23 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     }
 }
 
+export class ProblemStatasticHandler extends ProblemDetailHandler {
+    @param('type', Types.Range(['fastest', 'slowest', 'latest', 'earliest', 'longest', 'shortest', 'min_memory', 'max_memory']), true)
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, type = 'fastest', page = 1) {
+        const [rsdocs, pcount, rscount] = await this.paginate(
+            record.getMultiStat(domainId, this.pdoc.docId, record.STAT_QUERY[type]),
+            page,
+            'record',
+        );
+        const udict = await user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME));
+        this.response.template = 'problem_statastic.html';
+        this.response.body = {
+            rsdocs, page, pcount, rscount, type, pdoc: this.pdoc, udict,
+        };
+    }
+}
+
 export class ProblemCreateHandler extends Handler {
     async get() {
         this.response.template = 'problem_edit.html';
@@ -1014,7 +1031,7 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const projection = ['domainId', 'docId', 'pid', 'title'] as const;
+        const projection = ['domainId', 'docId', 'pid', 'title', 'hidden'] as const;
         const [pdocs, pdoc, apdoc] = await Promise.all([
             problem.getPrefixList(domainId, prefix),
             problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
@@ -1047,6 +1064,7 @@ export async function apply(ctx) {
     ctx.Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_statastic', '/p/:pid/statastic', ProblemStatasticHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
 }
