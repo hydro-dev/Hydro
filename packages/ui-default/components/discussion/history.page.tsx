@@ -14,7 +14,9 @@ async function historyDialog(payload, time, uid) {
     $body: tpl`
       <div class="typo richmedia">
         <p><div data-user>${uid}</div> ${i18n('Edited at')} <span class="time relative" data-timestamp="${ts / 1000}">${time}</span></p>
-        ${{ templateRaw: true, html: rawHtml }}
+        <div style="scroll-behavior: smooth; max-height: 60vh; overflow: auto;">
+          ${{ templateRaw: true, html: rawHtml }}
+        </div>
       </div>`,
   }).open();
 }
