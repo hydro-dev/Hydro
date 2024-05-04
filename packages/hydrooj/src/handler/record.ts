@@ -3,7 +3,7 @@ import {
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import {
-    ContestNotFoundError, ForbiddenError, HackRejudgeFailedError,
+    ContestNotFoundError, HackRejudgeFailedError,
     PermissionError, PretestRejudgeFailedError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
