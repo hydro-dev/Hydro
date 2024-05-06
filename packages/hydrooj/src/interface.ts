@@ -345,7 +345,7 @@ export interface RecordStatDoc {
     uid: number;
     time: number;
     memory: number;
-    length: number;
+    code: number;
     lang: string;
 }
 export interface JudgeMeta {

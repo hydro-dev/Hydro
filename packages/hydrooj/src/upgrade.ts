@@ -649,6 +649,22 @@ const scripts: UpgradeScript[] = [
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
     },
+    async function _88_89() {
+        const cursor = RecordModel.getMulti(undefined, { status: STATUS.STATUS_ACCEPTED });
+        for await (const doc of cursor) {
+            await RecordModel.collStat.insertOne({
+                _id: doc._id,
+                domainId: doc.domainId,
+                pid: doc.pid,
+                uid: doc.uid,
+                time: doc.time,
+                memory: doc.memory,
+                code: doc.code?.length || 0,
+                lang: doc.lang,
+            });
+        }
+        return true;
+    },
 ];
 
 export default scripts;

@@ -175,8 +175,8 @@ export default class RecordModel {
         return RecordModel.coll.find(query);
     }
 
-    static getMultiStat(domainId: string, pid: number, query: any) {
-        return RecordModel.collStat.find({ domainId, pid, ...query });
+    static getMultiStat(domainId: string, query: any, sortBy: any = { _id: -1 }) {
+        return RecordModel.collStat.find({ domainId, ...query }).sort(sortBy);
     }
 
     static async update(
@@ -268,7 +268,7 @@ export function apply(ctx: Context) {
                 uid: rdoc.uid,
                 time: rdoc.time,
                 memory: rdoc.memory,
-                length: rdoc.code?.length || 0,
+                code: rdoc.code?.length || 0,
                 lang: rdoc.lang,
             });
         }
@@ -287,7 +287,7 @@ export function apply(ctx: Context) {
             { key: { domainId: 1, pid: 1, uid: 1, _id: -1 }, name: 'basic' },
             { key: { domainId: 1, pid: 1, uid: 1, time: 1 }, name: 'time' },
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
-            { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
+            { key: { domainId: 1, pid: 1, uid: 1, code: 1 }, name: 'code' },
         );
     });
 }

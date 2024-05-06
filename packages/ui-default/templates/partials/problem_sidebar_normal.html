@@ -78,6 +78,9 @@
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_files' %} active{% endif %}" href="{{ url('problem_files', pid=pdoc.pid|default(pdoc.docId)) }}">
         <span class="icon icon-file"></span> {{ _('Files') }}
       </a></li>
+      <li class="menu__item"><a class="menu__link{% if page_name == 'problem_statistics' %} active{% endif %}" href="{{ url('problem_statistics', pid=pdoc.pid|default(pdoc.docId)) }}">
+        <span class="icon icon-statistics"></span> {{ _('Statistics') }}
+      </a></li>
     {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
       <li class="menu__seperator"></li>
       <li class="menu__item"><a class="menu__link{% if page_name == 'problem_edit' %} active{% endif %}" href="{{ url('problem_edit', pid=pdoc.pid|default(pdoc.docId)) }}">

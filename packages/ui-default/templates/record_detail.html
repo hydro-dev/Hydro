@@ -80,10 +80,10 @@
             <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
           {% endif %}
           <dt>{{ _('Submit At') }}</dt>
-          <dd>{{ datetimeSpan(rdoc._id)|safe }}</dd>
+          <dd>{{ datetimeSpan(rdoc._id, false)|safe }}</dd>
           {% if rdoc.judgeAt %}
             <dt>{{ _('Judged At') }}</dt>
-            <dd>{{ datetimeSpan(rdoc.judgeAt)|safe }}</dd>
+            <dd>{{ datetimeSpan(rdoc.judgeAt, false)|safe }}</dd>
           {% endif %}
           {% if judge_udoc %}
             <dt>{{ _('Judged By') }}</dt>

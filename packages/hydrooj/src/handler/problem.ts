@@ -667,6 +667,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
     async get(domainId: string, d = ['testdata', 'additional_file'], pjax = false, sidebar = false) {
+        if (this.tdoc) throw new ContestNotEndedError();
         this.response.body.testdata = d.includes('testdata') ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.reference = this.pdoc.reference;
         this.response.body.additional_file = d.includes('additional_file') ? sortFiles(this.pdoc.additional_file || []) : [];
@@ -972,19 +973,20 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     }
 }
 
-export class ProblemStatasticHandler extends ProblemDetailHandler {
-    @param('type', Types.Range(['fastest', 'slowest', 'latest', 'earliest', 'longest', 'shortest', 'min_memory', 'max_memory']), true)
+export class ProblemStatisticsHandler extends ProblemDetailHandler {
+    @param('type', Types.Range(Object.keys(record.STAT_QUERY)), true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, type = 'fastest', page = 1) {
+        if (this.tdoc) throw new ContestNotEndedError();
         const [rsdocs, pcount, rscount] = await this.paginate(
-            record.getMultiStat(domainId, this.pdoc.docId, record.STAT_QUERY[type]),
+            record.getMultiStat(domainId, { pid: this.pdoc.docId }, record.STAT_QUERY[type]),
             page,
             'record',
         );
         const udict = await user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME));
-        this.response.template = 'problem_statastic.html';
+        this.response.template = 'problem_statistics.html';
         this.response.body = {
-            rsdocs, page, pcount, rscount, type, pdoc: this.pdoc, udict,
+            rsdocs, page, pcount, rscount, type, pdoc: this.pdoc, udict, types: Object.keys(record.STAT_QUERY),
         };
     }
 }
@@ -1064,7 +1066,7 @@ export async function apply(ctx) {
     ctx.Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
-    ctx.Route('problem_statastic', '/p/:pid/statastic', ProblemStatasticHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
 }
