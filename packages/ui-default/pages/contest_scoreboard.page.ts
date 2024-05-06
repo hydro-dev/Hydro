@@ -8,7 +8,8 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => 
   const read = () => JSON.parse(localStorage.getItem(key) || '[]');
   const write = (data) => localStorage.setItem(key, JSON.stringify(data));
 
-  read().forEach((uid) => $(`.star.user--${uid}`).addClass('activated'));
+  $(`.star.user--${UserContext._id}`).closest('tr').addClass('star-highlight');
+  read().forEach((uid) => $(`.star.user--${uid}`).addClass('activated').closest('tr').addClass('star-highlight'));
   $('.star').on('click', (e) => {
     const star = read();
     const $target = $(e.currentTarget);
@@ -27,9 +28,10 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], () => 
     const val = $(e.target).val();
     if (val === 'all') {
       $('.data-table tbody tr').show();
+      read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').addClass('star-highlight'));
     } else if (val === 'star') {
       $('.data-table tbody tr').hide();
-      read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show());
+      read().forEach((uid) => $(`.star.user--${uid}`).closest('tr').show().removeClass('star-highlight'));
     } else if (val === 'rank') {
       $('.data-table tbody tr').show();
       $('.rank--unrank').closest('tr').hide();
