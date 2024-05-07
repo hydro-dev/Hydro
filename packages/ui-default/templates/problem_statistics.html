@@ -6,6 +6,15 @@
 {{ set(UiContext, 'pdoc', pdoc) }}
 <div class="row">
   <div class="medium-9 columns">
+    <div class="section nojs--hide">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Statistics') }}</h1>
+      </div>
+      <div class="row">
+        <div class="medium-6 columns" id="submission-status-placeholder" style="height:230px"></div>
+        <div class="medium-6 columns" id="submission-score-placeholder" style="height:230px"></div>
+      </div>
+    </div>
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Submission Statistics') }}</h1>
@@ -17,7 +26,10 @@
                 <option value="{{ g }}"{% if type == g %} selected{% endif %}>{{ _(g) }}</option>
               {%- endfor -%}
             </select>
-            <button type="submit" class="compact button hasjs--hide">
+            <select class="inline compact select" name="lang">
+                <option value="">{{ _('All Languages') }}</option>
+              </select>
+            <button type="submit" class="compact button">
               {{ _('Search') }}
             </button>
           </form>
@@ -54,7 +66,7 @@
               <td class="col--status record-status--border pass">
                 <div class="col--status__text">
                   <span class="icon record-status--icon pass"></span>
-                  <a href="{{ url('record_detail', rid=rsdoc._id) }}" class="record-status--text pass">Accepted</a>
+                  <a href="{{ url('record_detail', rid=rsdoc._id) }}" class="record-status--text pass">AC</a>
                 </div>
               </td>
               <td class="col--submit-by">{{ user.render_inline(udict[rsdoc['uid']], badge=false) }}</td>

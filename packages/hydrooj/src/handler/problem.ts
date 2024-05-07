@@ -975,11 +975,15 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
 
 export class ProblemStatisticsHandler extends ProblemDetailHandler {
     @param('type', Types.Range(Object.keys(record.STAT_QUERY)), true)
+    @param('lang', Types.String, true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, type = 'fastest', page = 1) {
+    async get(domainId: string, type = 'fastest', lang?: string, page = 1) {
         if (this.tdoc) throw new ContestNotEndedError();
         const [rsdocs, pcount, rscount] = await this.paginate(
-            record.getMultiStat(domainId, { pid: this.pdoc.docId }, record.STAT_QUERY[type]),
+            record.getMultiStat(domainId, {
+                pid: this.pdoc.docId,
+                ...lang ? { lang } : {},
+            }, record.STAT_QUERY[type]),
             page,
             'record',
         );

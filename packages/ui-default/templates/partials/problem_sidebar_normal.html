@@ -115,14 +115,6 @@
   </div>
   {% include "partials/problem-sidebar-information.html" %}
 </div>
-{% elif page_name != 'contest_detail_problem' and page_name != 'problem_config' %}
-<div class="section side nojs--hide">
-  <div class="section__header">
-    <h1 class="section__title">{{ _('Statistics') }}</h1>
-  </div>
-  <div id="submission-status-placeholder" style="width: 100%; height:230px"></div>
-  <div id="submission-score-placeholder" style="width: 100%; height:230px"></div>
-</div>
 {% endif %}
 {% if page_name == 'problem_detail' and (tdocs.length or ctdocs.length or htdocs.length) %}
 <div class="section side">

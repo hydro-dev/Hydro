@@ -1,4 +1,3 @@
-import { getScoreColor } from '@hydrooj/utils/lib/status';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
@@ -101,7 +100,7 @@ class ProblemPageExtender {
   }
 }
 
-const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], async (pagename) => {
+const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], async () => {
   let reactLoaded = false;
   let renderReact = null;
   let unmountReact = null;
@@ -306,57 +305,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('.outer-loader-container').hide();
   }
 
-  async function initChart() {
-    if (!Object.keys(UiContext.pdoc.stats || {}).length) {
-      $('#submission-status-placeholder').parent().hide();
-      return;
-    }
-    const echarts = await import('echarts');
-    const $status = document.getElementById('submission-status-placeholder');
-    const statusChart = echarts.init($status);
-    statusChart.setOption({
-      tooltip: { trigger: 'item' },
-      series: [
-        {
-          name: 'Submissions',
-          type: 'pie',
-          radius: '70%',
-          label: { show: false },
-          labelLine: { show: false },
-          data: [
-            { value: UiContext.pdoc.stats.TLE, name: 'TLE' },
-            { value: UiContext.pdoc.stats.AC, name: 'AC' },
-            { value: UiContext.pdoc.stats.MLE, name: 'MLE' },
-            { value: UiContext.pdoc.stats.WA, name: 'WA' },
-            { value: UiContext.pdoc.stats.RE, name: 'RE' },
-            { value: UiContext.pdoc.stats.CE, name: 'CE' },
-          ],
-        },
-      ],
-    });
-    const $score = document.getElementById('submission-score-placeholder');
-    const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => UiContext.pdoc.stats[`s${i}`]);
-    const scoreChart = echarts.init($score);
-    scoreChart.setOption({
-      tooltip: { trigger: 'item' },
-      xAxis: { data: x },
-      yAxis: {},
-      series: [{
-        data: x.map((i) => ({
-          value: UiContext.pdoc.stats[`s${i}`],
-          itemStyle: { color: getScoreColor(i) },
-        })),
-        type: 'bar',
-      }],
-    });
-
-    window.onresize = function () {
-      statusChart.resize();
-      scoreChart.resize();
-    };
-    if (UiContext.pdoc.config?.type === 'objective') $($status).hide();
-  }
-
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
     enterScratchpadMode();
     ev.preventDefault();
@@ -380,7 +328,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
   if (UiContext.pdoc.config?.type === 'objective') loadObjective();
-  if (pagename !== 'contest_detail_problem') initChart();
 });
 
 export default page;
