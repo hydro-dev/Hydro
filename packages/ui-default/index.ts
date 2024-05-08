@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import {
   ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
-  Setting, SettingModel, SystemModel, SystemSettings, Types, UserModel,
+  SettingModel, SystemModel, SystemSettings, Types, UserModel,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
@@ -137,6 +137,12 @@ class RichMediaHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
+  ctx.inject(['setting'], (c) => {
+    c.setting.PreferenceSetting(
+      SettingModel.Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
+      SettingModel.Setting('setting_display', 'showTimeAgo', true, 'boolean', 'Enable Time Ago'),
+    );
+  });
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
@@ -165,11 +171,4 @@ export function apply(ctx: Context) {
   });
   ctx.plugin(require('./backendlib/template'));
   ctx.plugin(require('./backendlib/builder'));
-
-  ctx.inject(['setting'], (c) => {
-    c.setting.PreferenceSetting(
-      Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
-      Setting('setting_display', 'showTimeAgo', true, 'boolean', 'Enable Time Ago'),
-    );
-  });
 }
