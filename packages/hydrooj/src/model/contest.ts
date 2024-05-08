@@ -183,11 +183,15 @@ const acm = buildContestRule({
             value: `${tsdoc.accept || 0}\n${formatSeconds(tsdoc.time || 0.0, false)}`,
             hover: formatSeconds(tsdoc.time || 0.0),
         });
+        const accepted = {};
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
             pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+            if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
+                pdict[s.pid].nAccept++;
+                accepted[s.pid] = true;
+            }
         }
         const tsddict = (config.lockAt ? tsdoc.display : tsdoc.detail) || {};
         for (const pid of tdoc.pids) {
@@ -345,11 +349,15 @@ const oi = buildContestRule({
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
+        const accepted = {};
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
             pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+            if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
+                pdict[s.pid].nAccept++;
+                accepted[s.pid] = true;
+            }
         }
         const tsddict = (config.lockAt ? tsdoc.display : tsdoc.detail) || {};
         for (const pid of tdoc.pids) {
@@ -486,10 +494,14 @@ const strictioi = buildContestRule({
             row.push({ type: 'string', value: udoc.studentId || '' });
         }
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
+        const accepted = {};
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+            if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
+                pdict[s.pid].nAccept++;
+                accepted[s.pid] = true;
+            }
         }
         for (const pid of tdoc.pids) {
             row.push({
@@ -558,10 +570,14 @@ const ledo = buildContestRule({
             value: tsdoc.score || 0,
             hover: tsdoc.score !== tsdoc.originalScore ? _('Original score: {0}').format(tsdoc.originalScore) : '',
         });
+        const accepted = {};
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+            if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
+                pdict[s.pid].nAccept++;
+                accepted[s.pid] = true;
+            }
         }
         for (const pid of tdoc.pids) {
             row.push({
@@ -693,10 +709,14 @@ const homework = buildContestRule({
             row.push({ type: 'string', value: tsdoc.score || 0 });
         }
         row.push({ type: 'time', value: formatSeconds(tsdoc.time || 0, false), raw: tsdoc.time });
+        const accepted = {};
         for (const s of tsdoc.journal || []) {
             if (!pdict[s.pid]) continue;
             pdict[s.pid].nSubmit++;
-            if (s.status === STATUS.STATUS_ACCEPTED) pdict[s.pid].nAccept++;
+            if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
+                pdict[s.pid].nAccept++;
+                accepted[s.pid] = true;
+            }
         }
         for (const pid of tdoc.pids) {
             const rid = tsddict[pid]?.rid;

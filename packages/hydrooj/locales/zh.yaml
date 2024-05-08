@@ -264,6 +264,7 @@ Domain {0} is bulit-in and cannot be modified.: 域 {0} 为内置，不可修改
 Domain {0} not found.: 域 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在创建后不能更改 ID。
 Domain ID: 域 ID
+domain_create: 创建域
 domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料

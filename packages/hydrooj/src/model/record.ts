@@ -227,6 +227,7 @@ export default class RecordModel {
             time: 0,
             memory: 0,
             testCases: [],
+            subtasks: {},
             judgeTexts: [],
             compilerTexts: [],
             judgeAt: null,
