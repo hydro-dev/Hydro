@@ -178,7 +178,6 @@ const ServerLangSettingNode = {
 
 PreferenceSetting(
     Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
-    Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
     Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
     LangSettingNode,
     Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',

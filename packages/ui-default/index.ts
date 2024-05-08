@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import {
   ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, Types, UserModel,
+  Setting, SettingModel, SystemModel, SystemSettings, Types, UserModel,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
@@ -165,4 +165,11 @@ export function apply(ctx: Context) {
   });
   ctx.plugin(require('./backendlib/template'));
   ctx.plugin(require('./backendlib/builder'));
+
+  ctx.inject(['setting'], (c) => {
+    c.setting.PreferenceSetting(
+      Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
+      Setting('setting_display', 'showTimeAgo', true, 'boolean', 'Enable Time Ago'),
+    );
+  });
 }
