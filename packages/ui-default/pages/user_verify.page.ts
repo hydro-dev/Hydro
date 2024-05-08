@@ -45,22 +45,22 @@ async function chooseAction(authn?: boolean) {
         <h3>${i18n('Two Factor Authentication')}</h3>
         <p>${i18n('Your account has two factor authentication enabled. Please choose an authenticator to verify.')}</p>
         <div style="${authn ? '' : 'display:none;'}">
-          <input value="${i18n('Use Authenticator')}" class="expanded rounded primary button" data-action="webauthn" autofocus>
+          <button class="expanded rounded primary button" data-action="webauthn">${i18n('Use Authenticator')}</button>
         </div>
         <div>
           <label>${i18n('6-Digit Code')}  
             <div class="textbox-container">
-              <input class="textbox" type="text" name="tfa_code" autocomplete="off" autofocus>
+              <input class="textbox" type="number" name="tfa_code" autocomplete="off" data-autofocus>
             </div>
           </label>
-          <input value="${i18n('Use TFA Code')}" class="expanded rounded primary button" data-action="tfa">
+          <button class="expanded rounded primary button" data-action="tfa">${i18n('Use TFA Code')}</button>
         </div>
       </div>
       `,
     $action: [],
     canCancel: false,
     onDispatch(action) {
-      if (action === 'tfa' && $('[name="tfa_code"]').val() === null) {
+      if (action === 'tfa' && $('[name="tfa_code"]').val() === '') {
         $('[name="tfa_code"]').focus();
         return false;
       }
@@ -88,8 +88,17 @@ export default new AutoloadPage('user_verify', () => {
     }
     const { authn, tfa } = info.uname || info.mail;
     if (authn || tfa) {
+      const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+          const code = $('[name="tfa_code"]').val() as string;
+          if (code) $('[data-action="tfa"]').trigger('click');
+          else $('[data-action]').trigger('click');
+        }
+      };
+      $(document).on('keydown', handleKeyDown);
       let action = (authn && tfa) ? await chooseAction(true) : '';
       action ||= tfa ? await chooseAction(false) : 'webauthn';
+      $(document).off('keydown', handleKeyDown);
       if (action === 'webauthn') {
         const challenge = await verifywebauthn(form);
         if (challenge) form['authnChallenge'].value = challenge;

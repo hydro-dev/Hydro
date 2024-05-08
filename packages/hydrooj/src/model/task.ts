@@ -1,6 +1,6 @@
 import { hostname } from 'os';
 import cac from 'cac';
-import { Filter, ObjectId } from 'mongodb';
+import { BSON, Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import { sleep } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
@@ -25,37 +25,70 @@ async function getFirst(query: Filter<Task>) {
     return null;
 }
 
-class Consumer {
+export class Consumer {
     consuming: boolean;
+    processing: Set<Task> = new Set();
     running?: any;
+    notify: (res?: any) => void;
 
-    constructor(public filter: any, public func: Function, public destoryOnError = true) {
+    constructor(public filter: any, public func: (t: Task) => Promise<void>, public destroyOnError = true, private concurrency = 1) {
         this.consuming = true;
         this.consume();
-        bus.on('app/exit', this.destory);
+        bus.on('app/exit', this.destroy);
     }
 
     async consume() {
         while (this.consuming) {
             try {
+                if (this.processing.size >= this.concurrency) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await new Promise((resolve) => {
+                        this.notify = resolve;
+                    });
+                    continue;
+                }
                 // eslint-disable-next-line no-await-in-loop
                 const res = await getFirst(this.filter);
-                if (res) {
-                    this.running = res;
+                if (!res) {
+                    let timeout: NodeJS.Timeout = null;
                     // eslint-disable-next-line no-await-in-loop
-                    await this.func(res);
-                    this.running = null;
-                    // eslint-disable-next-line no-await-in-loop
-                } else await sleep(1000);
+                    await new Promise((resolve) => {
+                        timeout = setTimeout(resolve, 1000 / (this.concurrency - this.processing.size));
+                        this.notify = resolve;
+                    });
+                    clearTimeout(timeout);
+                    continue;
+                }
+                this.processing.add(res);
+                this.func(res)
+                    .catch((err) => {
+                        logger.error(err);
+                        if (this.destroyOnError) this.destroy();
+                    })
+                    .finally(() => {
+                        this.processing.delete(res);
+                        this.notify?.();
+                    });
             } catch (err) {
                 logger.error(err);
-                if (this.destoryOnError) this.destory();
+                if (this.destroyOnError) this.destroy();
             }
         }
     }
 
-    async destory() {
+    async destroy() {
         this.consuming = false;
+        this.notify?.();
+    }
+
+    setConcurrency(concurrency: number) {
+        this.concurrency = concurrency;
+        this.notify?.();
+    }
+
+    setQuery(query: string) {
+        this.filter = query;
+        this.notify?.();
     }
 }
 
@@ -95,8 +128,8 @@ class TaskModel {
 
     static getFirst = getFirst;
 
-    static consume(query: any, cb: Function, destoryOnError = true) {
-        return new Consumer(query, cb, destoryOnError);
+    static consume(query: any, cb: (t: Task) => Promise<void>, destroyOnError = true, concurrency = 1) {
+        return new Consumer(query, cb, destroyOnError, concurrency);
     }
 }
 
@@ -108,7 +141,7 @@ export async function apply(ctx: Context) {
         collEvent.insertOne({
             ack: [id],
             event,
-            payload: JSON.stringify(payload),
+            payload: BSON.EJSON.stringify(payload),
             expire: new Date(Date.now() + 10000),
         });
     });
@@ -116,8 +149,8 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     const stream = collEvent.watch();
     const handleEvent = async (doc: EventDoc) => {
-        const payload = JSON.parse(doc.payload);
-        process.send?.({ type: 'hydro:broadcast', data: { event: doc.event, payload } });
+        process.send?.({ type: 'hydro:broadcast', data: doc });
+        const payload = BSON.EJSON.parse(doc.payload);
         await (bus.parallel as any)(doc.event, ...payload);
     };
     stream.on('change', async (change) => {

@@ -24,29 +24,6 @@ LANG=zh . <(curl https://hydro.ac/setup.sh)
 相关文档若说明的不够详细，请提交 Pull Request 或联系开发组说明。  
 bug 和功能建议请在 Issues 提出。  
 
-## Merry Christmas and Happy new year
-
-```
-                                                    .''.
-                        .''.      .        *''*    :_\/_:
-                       :_\/_:   _\(/_  .:.*_\/_*   : /\ :
-                   .''.: /\ :   ./)\   ':'* /\ * :  '..'.
-                  :_\/_:'.:::.    ' *''*    * '.\'/.' _\(/_
-                  : /\ : :::::     *_\/_*     -= o =-  /)\
-                   '..'  ':::'     * /\ *     .'/.\'.   '
-                                    *..*         :
-             *
-     *      /.\   *       *           .   *
-  .        /..'\     .     .     * .
-          */'.'\*       . .          .     *   *
-      *   /.''.'\    *     .  .     .   *
-.        */.'.'.\*
-...".""""/'.''.'.\""."."...
-         ^^^[_]^^^*
-```
-
-I wish you all a Merry Christmas and a peaceful New Year 2024.
-
 ## 系统特点
 
 ### 模块化设计，插件系统，功能热插拔
@@ -60,7 +37,7 @@ Hydro 的所有历史版本均可平滑升级到最新版本。
 ### 跨平台兼容，数据一键备份/导入
 
 Hydro 支持所有主流的 Linux 发行版，兼容 x86_64 和 arm64 架构设备，且均可一键安装。  
-Hydro 可在 树莓派 / Apple M1 上正常运行。
+Hydro 可在 树莓派 或是 Apple M1/M2 上正常运行。
 
 使用 `hydrooj backup` 即可备份系统全部数据，使用 `hydrooj restore 文件名` 即可导入备份数据。
 整个过程无需手工干预。
@@ -100,14 +77,15 @@ Hydro 同时支持 VJudge，这意味着你可以直接在系统内导入其他�
 当前支持的平台有：  
 
 - [一本通编程启蒙](https://hydro.ac/ybtbas.zip)：官方提供一本通编程启蒙题库，免费使用，参照压缩包内导入说明。
-- [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
+- [深入浅出程序设计竞赛](https://hydro.ac/srqc.zip)：官方提供洛谷《深入浅出程序设计竞赛(基础篇)》配套题库，免费使用，参照压缩包内导入说明。
 - [UOJ](https://uoj.ac)：国内知名 OJ，国家集训队常用；
-- [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
+- [Codeforces](https://codeforces.com)：国外大型竞赛平台，大量高质量题目；
 - [洛谷](https://www.luogu.com.cn)：使用此功能需要向洛谷购买授权；
 - [HDUOJ](https://acm.hdu.edu.cn)：杭州电子科技大学在线评测系统，其中包含多校训练题；
 - [CSGOJ](https://cpc.csgrandeur.cn)：广东省赛与湖南省赛赛题评测平台；
+- [SPOJ](https://www.spoj.com)：国内连接很不稳定，不推荐；
 - [POJ](https://poj.org)：较为古董，服务器稳定性差；
-- [YACS](https://iai.sh.cn)：上海市计算机学会竞赛平台；
+- [YACS](https://iai.sh.cn)：上海市计算机学会竞赛平台，单账号每日提交有限制；
 - HUSTOJ：理论上支持所有 HUSTOJ 驱动的系统，但由于各个系统中 UI 有差异，通常需要手动适配。
 
 ### 多赛制支持
@@ -124,11 +102,85 @@ Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件�
 ## 联系我们
 
 Email：i@undefined.moe
-Hydro 用户群：1085853538  
 Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
+Hydro 用户群：1085853538  
+
+注：加入用户群请先阅读[《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)。  
+同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.11.2 / UI 4.49.8
+- core: 支持给比赛题目设置分数倍率 (#765)
+- workspace: 升级 ts 版本至 5.4.3
+- core: ws: 处理 JSON 解析异常
+- core: 允许向作业中上传文件 (#755)
+- ui: 在比赛管理页显示赛题的题目标签
+- judge: 修复部分情况下客观题返回结果异常的问题 (#770)
+- ui: 在 `mdInline` 中禁用部分标签 (#767)
+- core: 添加 R 语言和 cpp20 支持
+- ui: 在评测记录页显示峰值耗时
+- core: 修复比赛管理员无法查看代码的问题 (#764)
+- judge: 提供 `hydrojudge terminal` 入口 (#725)
+- core: 支持从 `/nix/store` 加载插件
+- core: 添加 `contest/list` 钩子
+- judge: vj4 支持
+- ui: 修复评测设置面板 testlib 选择 (#762)
+- fps-importer: 支持设置大小限制
+- core: 添加 `PERM_VIEW_RECORD` 权限组 (#753)
+- core: 修复未登录可以查看比赛公告的问题 (#756)
+- ui: 允许使用 Enter 键提交 2FA (#752)
+- core: 优化训练参与成员列表 (#750)
+- core&ui: 其他性能优化和漏洞修复
+
+### Hydro 4.11.0 / UI 4.49.6
+- core: 升级至 cordis@3
+- core: 优化 katex 处理
+- core: 添加 monitor/collect 钩子
+- judge: 修复 analysis
+- judge: 修复独立评测机首次同步测试数据错误的问题
+- migrate: 优化 hustoj 导入
+- ui: 修复部分区域 katex 错误渲染的问题
+
+### Hydro 4.10.7 / UI 4.49.5
+- core: 优化比赛成绩版按照小组筛选
+- core: inject -> injectUI
+- core: 修复一处内存泄漏
+- ui: 支持 `/record?nopush=1`
+- judge: 修复错误的测试数据被缓存的问题 (#726)
+- judge: 比赛时不显示 `RuntimeError` 详情
+- core: 比赛中题目文件跳过 PERM_VIEW_PROBLEM 检查
+
+### Hydro 4.10.5 / UI 4.49.4
+
+- judge: 性能优化 (thanks @criyle)
+- utils: 解离 @hydrooj/register
+- core: 对客观题禁用测试点数量检查
+- core: 登入时切换 sessionId
+- core: 优化 require hook
+- core: 修复高并发下用户创建失败问题
+- prom-client: 支持推送至 pushgateway
+- core&ui: 压缩评测列表页 ws 传输
+- utils: 优化测试点识别
+- ui: 移除 serializer 函数
+- core: 添加 SettingService
+- fps: 支持 `[md]` 标签
+- vjudge: codeforces: 添加频率限制
+- migrate: hustoj: 支持 remote_oj 字段
+- core: 其他漏洞修复
+
+### Hydro 4.10.3 / UI 4.49.3
+
+- core: 修复返回状态码异常的问题
+- core: 同步排名页行为
+- install: 不再预装 pascal 编译器
+- judge: 处理心跳包
+- core: judge: 优化任务分配
+- judge: 优化缓存管理
+- core: contest_export_ghost: 当队伍不参与排名时导出星号开头的队伍名
+- ui: 修复 monaco 粘贴动作
+- ui: 支持批量粘贴用户/题号
 
 ### Hydro 4.10.0 / UI 4.49.0
 
@@ -554,13 +606,17 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  
 2. 如确需闭源，您也可以联系我们购买其他授权。
 
-在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
-若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
-
 ### 附加条款
 
-1. 不可移除本项目的版权声明；（[AGPL3 7(b)](LICENSE#L356)）
+基于 AGPL3 协议第七条，您在使用本项目时，需要遵守以下额外条款：
+
+1. 不可移除本项目的版权声明与作者/来源署名；（[AGPL3 7(b)](LICENSE#L356)）
 2. 当重分发经修改后的本软件时，需要在软件名或版本号中采用可识别的方式进行注明；（[AGPL3 7(c)](LICENSE#L360)）
+3. 除非得到许可，不得以宣传为目的使用作者姓名；（[AGPL3 7(d)](LICENSE#364)）
+
+即：  
+在您部署 Hydro 时，需要保留底部的 `Powered by Hydro` 字样，其中的 `Hydro` 字样需指向 `hydro.js.org/本仓库/fork` 之一的链接。  
+若您对源码做出修改/扩展，同样需要以 AGPL-3.0-or-later 开源，您可以以 `Powered by Hydro, Modified by xxx` 格式在页脚注明。  
 
 ## 贡献代码
 

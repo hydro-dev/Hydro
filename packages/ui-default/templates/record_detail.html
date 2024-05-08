@@ -52,7 +52,7 @@
       <div class="section__body no-padding">
         <ol class="menu">
           <li class="menu__item">
-            <a class="menu__link" href="{{ url('problem_hack', pid=pdoc.pid|default(pdoc.docId), rid=rdoc._id) }}">
+            <a class="menu__link" href="{{ url('problem_hack', pid=pdoc.pid|default(pdoc.docId), rid=rdoc._id, query={tid:rdoc.contest} if rdoc.contest else {}) }}">
               <span class="icon icon-debug"></span> {{ _('Hack') }}
             </a>
           </li>

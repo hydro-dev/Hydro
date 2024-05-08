@@ -199,6 +199,10 @@ export function size(s: number, base = 1) {
     return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
 }
 
+export function randomPick<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
 export type StringKeys<O> = {
     [K in keyof O]: string extends O[K] ? K : never
 }[keyof O];
@@ -240,10 +244,12 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^(([A-Za-z0-9._-]*?)(?:(\d*)[-_])?(\d+))\.(in|txt)$/,
+        regex: /^(([A-Za-z0-9._-]*?)(?:(\d*)[-_])?(\d+))\.(in|txt|in\.txt)$/,
         output: [
             (a) => `${a[1]}.out`,
+            (a) => `${a[1]}.out.txt`,
             (a) => `${a[1]}.ans`,
+            (a) => `${a[1]}.ans.txt`,
             (a) => `${a[1]}.out`.replace(/input/g, 'output'),
             (a) => (a[1].includes('input') ? `${a[1]}.txt`.replace(/input/g, 'output') : null),
         ],
@@ -256,6 +262,8 @@ const SubtaskMatcher: MatchRule[] = [
         output: [
             (a) => `${a[1]}.ou${a[2]}`,
             (a) => `${a[1]}.ou${a[2]}`.replace(/input/g, 'output'),
+            (a) => `${a[1]}.out${a[2]}`,
+            (a) => `${a[1]}.out${a[2]}`.replace(/input/g, 'output'),
         ],
         id: (a) => +a[2],
         subtask: () => 1,
@@ -324,6 +332,7 @@ export function readSubtasksFromFiles(files: string[], config) {
             for (const func of rule.output) {
                 if (config.noOutputFile) c.output = '/dev/null';
                 else c.output = func(data);
+                if (c.output === file) continue;
                 if (c.output === '/dev/null' || files.includes(c.output)) {
                     match = true;
                     if (!subtask[sid]) {

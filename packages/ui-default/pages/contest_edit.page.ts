@@ -39,7 +39,7 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
           window.location.href = res.url;
         });
       }
-      const message = `Confirm deleting this ${pagename.split('_')[0]}? Its status will be deleted as well.`;
+      const message = `Confirm deleting this ${pagename.split('_')[0]}? Its files and status will be deleted as well.`;
       return new ConfirmDialog({
         $body: tpl.typoMsg(i18n(message)),
       }).open().then((action) => {

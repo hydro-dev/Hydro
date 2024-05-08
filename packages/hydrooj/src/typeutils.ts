@@ -1,12 +1,21 @@
+/* eslint-disable @typescript-eslint/indent */
+export type Atomic = number | string | boolean | bigint | symbol | Date | any[];
+export type Values<S> = S[keyof S];
+export type Intersect<U> = (U extends any ? (arg: U) => void : never) extends ((arg: infer I) => void) ? I : never;
 export type NumberKeys<O> = {
     [K in keyof O]: number extends O[K] ? K : never
 }[keyof O];
 export type ArrayKeys<O, P = any> = {
     [K in keyof O]: P[] extends O[K] ? K : never
 }[keyof O];
-export type NestKeys<O, T = any, S = any[]> = O extends object ? O extends S ? never : {
-    [K in keyof O]: (O[K] extends T ? K : never) | `${K & string}.${NestKeys<O[K], T, S | O>}`
-}[keyof O] & string : never;
+type FlatWrap<S, T, P extends string> = { [K in P]?: S } | (S extends T ? never // rule out atomic / recursive types
+    : S extends any[] ? never // rule out array types
+    : string extends keyof S ? never // rule out dict / infinite types
+    : FlatMap<S, T, `${P}.`>);
+type FlatMap<S, T = Atomic, P extends string = ''> = Values<{
+    [K in keyof S & string as `${P}${K}`]: FlatWrap<S[K], S | T, `${P}${K}`>
+}>;
+export type Flatten<S> = Intersect<FlatMap<S>>;
 export type Value<O, V = ''> = {
     [K in keyof O]: V
 };

@@ -90,7 +90,7 @@ export default class Editor extends DOMAttachedObject {
       theme,
       lineNumbers,
       glyphMargin: true,
-      lightbulb: { enabled: true },
+      lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.On },
       model: this.model,
       minimap: { enabled: false },
       hideCursorInOverviewRuler: true,
@@ -256,7 +256,7 @@ export default class Editor extends DOMAttachedObject {
     if (hasFocus) this.focus();
   }
 
-  destory() {
+  destroy() {
     this.detach();
     if (this.vditor?.destroy) this.vditor.destroy();
     else if (this.editor?.dispose) this.editor.dispose();

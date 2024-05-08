@@ -38,6 +38,7 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
+    await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
     if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
@@ -56,7 +57,7 @@ export async function apply(ctx: Context) {
 
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
-    for (const h of handlers) {
+    for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
         ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
     await handler(pending, fail, ctx);

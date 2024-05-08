@@ -358,9 +358,9 @@ export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
 
 export interface ScoreboardNode {
     type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
-    value: string;
+    value: string; // 显示分数
     raw?: any;
-    score?: number;
+    score?: number; // 原始分数（100，不含赛制加成）
     style?: string;
     hover?: string;
 }
@@ -396,6 +396,7 @@ export interface Tdoc extends Document {
     unlocked?: boolean;
     autoHide?: boolean;
     balloon?: Record<number, string>;
+    score?: Record<number, number>;
 
     /**
      * In hours
@@ -529,6 +530,7 @@ export interface ContestStat extends Record<string, any> {
 
 export interface ScoreboardConfig {
     isExport: boolean;
+    showDisplayName: boolean;
     lockAt?: Date;
 }
 
@@ -786,7 +788,7 @@ export interface ModuleInterfaces {
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
-    hash: (password: string, salt: string, user: User) => boolean | string;
+    hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
     render: (name: string, state: any) => string | Promise<string>;
 }
 

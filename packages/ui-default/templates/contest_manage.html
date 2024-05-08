@@ -1,5 +1,6 @@
 {% extends "layout/basic.html" %}
 {% import "components/contest.html" as contest with context %}
+{% import "components/problem.html" as problem with context %}
 {% block content %}
 <div class="row">
   <div class="medium-9 columns">
@@ -10,10 +11,12 @@
             <table class="data-table">
               <colgroup>
                 <col class="col--problem">
+                <col class="col--score">
               </colgroup>
               <thead>
                 <tr>
                   <th class="col--problem">{{ _('Problem') }}</th>
+                  <th class="col--score">{{ _('Score') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -21,8 +24,11 @@
                 <tr>
                   <td class="col--problem col--problem-name">
                     <a href="{{ url('problem_detail', pid=pid) }}">
-                      <b>{{ String.fromCharCode(65+loop.index0) }}</b>&nbsp;&nbsp;{{ pdict[pid].title }}
+                      {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
                     </a>
+                  </td>
+                  <td class="col--score">
+                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
                   </td>
                 </tr>
               {%- endfor -%}
@@ -74,7 +80,7 @@
                     </div>
                     {% endif %}
                   </div>
-                  <div class="typo" data-emoji-enabled>
+                  <div class="typo richmedia" data-emoji-enabled>
                     {{ doc['content']|markdown|safe }}
                   </div>
                 </div>
@@ -90,7 +96,7 @@
                           <b>{{ _('Jury') }}</b>
                         </div>
                       </div>
-                      <div class="typo" data-emoji-enabled>
+                      <div class="typo richmedia" data-emoji-enabled>
                         {{ rdoc['content']|markdown|safe }}
                       </div>
                     </div>

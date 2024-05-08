@@ -1,20 +1,25 @@
+import { statSync } from 'fs-extra';
 import yaml from 'js-yaml';
+import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import { Time } from '@hydrooj/utils/lib/utils';
+import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
-    ContestNotFoundError, HomeworkNotLiveError, NotAssignedError, ValidationError,
+    ContestNotFoundError, FileLimitExceededError, FileUploadError, HomeworkNotLiveError, NotAssignedError, ValidationError,
 } from '../error';
 import { PenaltyRules, Tdoc } from '../interface';
-import paginate from '../lib/paginate';
 import { PERM } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
+import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
+import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
-import { Handler, param, Types } from '../service/server';
+import {
+    Handler, param, post, Types,
+} from '../service/server';
 import { ContestCodeHandler, ContestScoreboardHandler } from './contest';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
@@ -24,7 +29,7 @@ class HomeworkMainHandler extends Handler {
     @param('group', Types.Name, true)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, group = '', page = 1) {
-        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
+        const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? undefined : this.user._id))
             .map((i) => i.name);
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
         const cursor = contest.getMulti(domainId, {
@@ -43,7 +48,7 @@ class HomeworkMainHandler extends Handler {
         }).sort({
             penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
         });
-        const [tdocs, tpcount] = await paginate<Tdoc>(cursor, page, system.get('pagination.contest'));
+        const [tdocs, tpcount] = await this.paginate(cursor, page, 'contest');
         const calendar = [];
         for (const tdoc of tdocs) {
             const cal = { ...tdoc, url: this.url('homework_detail', { tid: tdoc.docId }) };
@@ -83,10 +88,10 @@ class HomeworkDetailHandler extends Handler {
         ]);
         if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         // discussion
-        const [ddocs, dpcount, dcount] = await paginate(
+        const [ddocs, dpcount, dcount] = await this.paginate(
             discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
             page,
-            system.get('pagination.discussion'),
+            'discussion',
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(tdoc.owner);
@@ -95,6 +100,9 @@ class HomeworkDetailHandler extends Handler {
         this.response.body = {
             tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
+        this.response.body.tdoc.content = this.response.body.tdoc.content
+            .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
+            .replace(/="file:\/\//g, `="./${tdoc.docId}/file/`);
         if (
             (contest.isNotStarted(tdoc) || (!tsdoc?.attend && !contest.isDone(tdoc)))
             && !this.user.own(tdoc)
@@ -228,8 +236,86 @@ class HomeworkEditHandler extends Handler {
     async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await contest.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
-        await contest.del(domainId, tid);
+        await Promise.all([
+            record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' }),
+            contest.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
         this.response.redirect = this.url('homework_main');
+    }
+}
+
+export class HomeworkFilesHandler extends Handler {
+    tdoc: Tdoc;
+
+    @param('tid', Types.ObjectId)
+    async prepare(domainId: string, tid: ObjectId) {
+        this.tdoc = await contest.get(domainId, tid);
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
+    }
+
+    @param('tid', Types.ObjectId)
+    async get(domainId: string, tid: ObjectId) {
+        if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: await contest.getStatus(domainId, this.tdoc.docId, this.user._id),
+            udoc: await user.getById(domainId, this.tdoc.owner),
+            files: sortFiles(this.tdoc.files || []),
+            urlForFile: (filename: string) => this.url('homework_file_download', { tid, filename }),
+        };
+        this.response.pjax = 'partials/files.html';
+        this.response.template = 'homework_files.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @post('filename', Types.Filename, true)
+    async postUploadFile(domainId: string, tid: ObjectId, filename: string) {
+        if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
+            throw new FileLimitExceededError('count');
+        }
+        const file = this.request.files?.file;
+        if (!file) throw new ValidationError('file');
+        const f = statSync(file.filepath);
+        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
+        if (size >= system.get('limit.contest_files_size')) {
+            throw new FileLimitExceededError('size');
+        }
+        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
+        if (!meta) throw new FileUploadError();
+        await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @post('files', Types.ArrayOf(Types.Filename))
+    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
+        await Promise.all([
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            contest.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
+        ]);
+        this.back();
+    }
+}
+
+export class HomeworkFileDownloadHandler extends Handler {
+    @param('tid', Types.ObjectId)
+    @param('filename', Types.Filename)
+    @param('noDisposition', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false) {
+        this.response.addHeader('Cache-Control', 'public');
+        const target = `contest/${domainId}/${tid}/${filename}`;
+        const file = await storage.getMeta(target);
+        await oplog.log(this, 'download.file.contest', {
+            target,
+            size: file?.size || 0,
+        });
+        this.response.redirect = await storage.signDownloadLink(
+            target, noDisposition ? undefined : filename, false, 'user',
+        );
     }
 }
 
@@ -244,4 +330,6 @@ export async function apply(ctx) {
     );
     ctx.Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     ctx.Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
+    ctx.Route('homework_files', '/homework/:tid/file', HomeworkFilesHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_file_download', '/homework/:tid/file/:filename', HomeworkFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
 }

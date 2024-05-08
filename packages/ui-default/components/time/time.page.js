@@ -38,6 +38,7 @@ function cancelRelativeTime($container) {
 }
 
 const relativeTimePage = new AutoloadPage('relativeTimePage', () => {
+  if (!UserContext.showTimeAgo) return;
   runRelativeTime($('body'));
   $(document).on('vjContentNew', (e) => runRelativeTime($(e.target)));
   $(document).on('vjContentRemove', (e) => cancelRelativeTime($(e.target)));

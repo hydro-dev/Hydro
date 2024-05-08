@@ -45,6 +45,7 @@ jobs:
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
         yarn
+        yarn dedupe
       env:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files
@@ -68,7 +69,7 @@ jobs:
         fi
     - name: Publish
       if: ${{ github.event_name == 'push' }}
-      run: node -r @hydrooj/utils/lib/register build/publish.ts
+      run: node -r @hydrooj/register build/publish.ts
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # - name: Benchmark

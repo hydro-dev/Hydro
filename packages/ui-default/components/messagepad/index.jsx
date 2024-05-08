@@ -11,7 +11,7 @@ const mapDispatchToProps = (dispatch) => ({
   loadDialogues() {
     dispatch({
       type: 'DIALOGUES_LOAD_DIALOGUES',
-      payload: request.get(''),
+      payload: request.get('', { _: Date.now() }),
     });
   },
 });

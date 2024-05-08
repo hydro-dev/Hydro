@@ -7,6 +7,7 @@ import './init';
 import './interface';
 import Schema from 'schemastery';
 import path from 'path';
+import child from 'child_process';
 // eslint-disable-next-line import/no-duplicates
 import './utils';
 import cac from 'cac';
@@ -18,7 +19,6 @@ import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
-import { inject } from './lib/ui';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -26,6 +26,21 @@ logger.debug('%o', argv);
 
 process.on('unhandledRejection', logger.error);
 process.on('uncaughtException', logger.error);
+
+const HYDROPATH = [];
+
+if (process.env.NIX_PROFILES) {
+    try {
+        const result = JSON.parse(child.execSync('nix-env -q --json --out-path --meta').toString()) as Record<string, any>;
+        for (const derivation of Object.values(result)) {
+            if (derivation.name.startsWith('hydro-plugin-') && derivation.outputs?.out) {
+                HYDROPATH.push(derivation.outputs.out);
+            }
+        }
+    } catch (e) {
+        logger.error('Nix detected, but failed to list installed derivations.');
+    }
+}
 
 export function resolveConfig(plugin: any, config: any) {
     if (config === false) return;
@@ -35,7 +50,6 @@ export function resolveConfig(plugin: any, config: any) {
     if (schema && plugin['schema'] !== false) config = schema(config);
     return config;
 }
-Context.service('loader');
 
 const timeout = Symbol.for('loader.timeout');
 const showLoadTime = argv.options.showLoadTime;
@@ -44,7 +58,7 @@ export class Loader {
     static readonly Record = Symbol.for('loader.record');
 
     public app: Context;
-    public config: Context.Config;
+    public config: {};
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
 
@@ -110,8 +124,12 @@ export class Loader {
         try {
             this.cache[name] ||= require.resolve(name);
         } catch (err) {
-            logger.error(err.message);
-            return;
+            try {
+                this.cache[name] ||= require.resolve(name, { paths: HYDROPATH });
+            } catch (e) {
+                logger.error(err.message);
+                return;
+            }
         }
         return unwrapExports(require(this.cache[name]));
     }
@@ -130,7 +148,7 @@ export function addon(addonPath: string, prepend = false) {
     } catch (e) {
         logger.error(`Addon not found: ${addonPath}`);
         logger.error(e);
-        inject('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+        app.injectUI('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
     }
 }
 
@@ -148,8 +166,8 @@ export function addScript(name: string, description: string) {
     };
 }
 
-Context.service('loader');
 const loader = new Loader();
+app.provide('loader');
 app.loader = loader;
 loader.app = app;
 app.state[Loader.Record] = Object.create(null);
@@ -170,13 +188,16 @@ export async function load() {
                 console.warn('DISCLAIMER:');
                 console.warn(' You are under development mode.');
                 console.warn(' The Hydro project is licensed under AGPL3,');
-                console.warn(' which means you have to open source your modifications,');
+                console.warn(' which means you have to open source all your modifications');
+                console.warn(' and keep all copyright notice');
                 console.warn(' unless you have got another license from the original author.');
                 console.warn('');
                 console.warn('声明：');
                 console.warn(' 你正在运行开发者模式。');
                 console.warn(' Hydro 项目基于 AGPL3 协议开源，');
-                console.warn(' 这意味着除非你获得了原作者的其他授权，你需要同样以 AGPL3 协议开源所有的修改。');
+                console.warn(' 这意味着除非你获得了原作者的其他授权，');
+                console.warn(' 你需要同样以 AGPL3 协议开源所有的修改，');
+                console.warn(' 并保留所有的版权声明。');
                 console.warn('\x1b[39m');
                 console.log('');
                 console.log('Hydro will start in 5s.');

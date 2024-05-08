@@ -90,7 +90,7 @@ pjax.request = async (opt) => {
       window.history.replaceState(currentState, null, meta.url);
     }
     if (meta.title) document.title = meta.title;
-    data.fragments.forEach((fragment) => {
+    for (const fragment of data.fragments) {
       if (process.env.NODE_ENV !== 'production') {
         if (fragment.html === undefined) {
           throw new Error("Fragement should contain 'html'");
@@ -117,7 +117,7 @@ pjax.request = async (opt) => {
       $target.trigger('vjContentRemove');
       $target.replaceWith($el);
       $el.trigger('vjContentNew');
-    });
+    }
   } catch (err) {
     if (!err.aborted) {
       Notification.error(err.message);

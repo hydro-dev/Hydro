@@ -80,6 +80,7 @@ export const STATUS_CODES: Record<STATUS, string> = {
 };
 
 export function getScoreColor(score: number | string): string {
+    if (score === null || score === undefined || !Number.isFinite(+score)) return '#000000';
     return [
         '#ff4f4f',
         '#ff694f',

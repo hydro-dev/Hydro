@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
@@ -20,14 +21,13 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import task from '../model/task';
+import task, { Consumer } from '../model/task';
 import user from '../model/user';
 import * as bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
     ConnectionHandler, Handler, post, subscribe, Types,
 } from '../service/server';
-import { sleep } from '../utils';
 
 const logger = new Logger('judge');
 
@@ -44,6 +44,8 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
 function processPayload(body: Partial<JudgeResultBody>) {
     const $set: Partial<RecordDoc> = {};
     const $push: any = {};
+    const $unset: any = {};
+    const $inc: any = {};
     if (body.cases?.length) {
         const c = body.cases.map(parseCaseResult);
         $push.testCases = { $each: c };
@@ -63,19 +65,24 @@ function processPayload(body: Partial<JudgeResultBody>) {
     if (Number.isFinite(body.memory)) $set.memory = body.memory;
     if (body.progress !== undefined) $set.progress = body.progress;
     if (body.subtasks) $set.subtasks = body.subtasks;
-    return { $set, $push };
+    if (body.addProgress) $inc.progress = body.addProgress;
+    return {
+        $set, $push, $unset, $inc,
+    };
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
-    const { $set, $push } = processPayload(body);
-    const rdoc = await record.update(body.domainId, body.rid, $set, $push, {}, body.addProgress ? { progress: body.addProgress } : {});
+    body.rid = new ObjectId(body.rid); // TODO remove this
+    const {
+        $set, $push, $unset, $inc,
+    } = processPayload(body);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
     bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
 
 export async function postJudge(rdoc: RecordDoc) {
-    if (rdoc.contest.toString().startsWith('0'.repeat(23))) return;
+    if (rdoc.contest?.toString().startsWith('0'.repeat(23))) return;
     const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
     const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
     if (rdoc.contest) {
@@ -91,55 +98,54 @@ export async function postJudge(rdoc: RecordDoc) {
     const pdoc = (accept && updated)
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid, undefined, true);
-    if (pdoc) {
-        if (isNormalSubmission) {
-            await Promise.all([
-                problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-                problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
-            ]);
-        }
-        if (rdoc.status === STATUS.STATUS_HACK_SUCCESSFUL) {
-            try {
-                const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
-                assert(config.subtasks instanceof Array);
-                const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
-                assert(file);
-                const hackSubtask = config.subtasks[config.subtasks.length - 1];
-                hackSubtask.cases ||= [];
-                const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
-                hackSubtask.cases.push({ input, output: '/dev/null' });
-                await Promise.all([
-                    problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
-                    problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-                ]);
-                // trigger rejudge
-                const rdocs = await record.getMulti(rdoc.domainId, {
-                    pid: rdoc.pid,
-                    status: STATUS.STATUS_ACCEPTED,
-                    contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
-                }).project({ _id: 1, contest: 1 }).toArray();
-                const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
-                await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
-            } catch (e) {
-                next({
-                    rid: rdoc._id,
-                    domainId: rdoc.domainId,
-                    key: 'next',
-                    message: { message: 'Unable to apply hack: {0}', params: [e.message] },
-                });
-            }
-        }
+    if (pdoc && isNormalSubmission) {
+        await Promise.all([
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
+        ]);
     }
-    await bus.parallel('record/judge', rdoc, updated);
+    await bus.parallel('record/judge', rdoc, updated, pdoc);
 }
 
+bus.on('record/judge', async (rdoc, updated, pdoc) => {
+    if (!pdoc || rdoc.status !== STATUS.STATUS_HACK_SUCCESSFUL) return;
+    try {
+        const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
+        assert(config.subtasks instanceof Array);
+        const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
+        assert(file);
+        const hackSubtask = config.subtasks[config.subtasks.length - 1];
+        hackSubtask.cases ||= [];
+        const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
+        hackSubtask.cases.push({ input, output: '/dev/null' });
+        await Promise.all([
+            problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
+            problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+        ]);
+        // trigger rejudge
+        const rdocs = await record.getMulti(rdoc.domainId, {
+            pid: rdoc.pid,
+            status: STATUS.STATUS_ACCEPTED,
+            contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
+        }).project({ _id: 1, contest: 1 }).toArray();
+        const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
+        await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
+    } catch (e) {
+        next({
+            rid: rdoc._id,
+            domainId: rdoc.domainId,
+            key: 'next',
+            message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+        });
+    }
+});
+
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid);
+    body.rid = new ObjectId(body.rid); // TODO remove this
     const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    await sleep(100); // Make sure that all 'next' event already triggered
     let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
     await postJudge(rdoc);
     rdoc = await record.get(body.rid);
@@ -148,11 +154,13 @@ export async function end(body: Partial<JudgeResultBody>) {
 }
 
 export class JudgeFilesDownloadHandler extends Handler {
+    noCheckPermView = true;
+    notUsage = true;
+
     async get() {
         this.response.body = 'ok';
     }
 
-    noCheckPermView = true;
     @post('id', Types.String, true)
     @post('files', Types.Set, true)
     @post('pid', Types.UnsignedInt, true)
@@ -201,6 +209,8 @@ export async function processJudgeFileCallback(rid: ObjectId, filename: string, 
 }
 
 export class JudgeFileUpdateHandler extends Handler {
+    notUsage = true;
+
     @post('rid', Types.ObjectId)
     @post('name', Types.Filename)
     async post(domainId: string, rid: ObjectId, filename: string) {
@@ -210,20 +220,26 @@ export class JudgeFileUpdateHandler extends Handler {
     }
 }
 
-class JudgeConnectionHandler extends ConnectionHandler {
+export class JudgeConnectionHandler extends ConnectionHandler {
     category = '#judge';
-    processing: Task[] = [];
-    closed = false;
     query: any = { type: { $in: ['judge', 'generate'] } };
-    rdocs: Record<string, RecordDoc> = {};
     concurrency = 1;
+    consumer: Consumer = null;
+    startTimeout: NodeJS.Timeout = null;
+    tasks: Record<string, {
+        resolve: (_: any) => void,
+        queue: PQueue,
+        domainId: string,
+        t: Task,
+    }> = {};
 
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // Ensure language sent
-        await sleep(100);
-        this.newTask().catch((e) => logger.error(e));
+        // TODO deprecated, just for compatibility
+        this.startTimeout = setTimeout(() => {
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+        }, 15000);
     }
 
     @subscribe('system/setting')
@@ -231,67 +247,78 @@ class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
     }
 
-    async newTask() {
-        while (!this.closed) {
-            /* eslint-disable no-await-in-loop */
-            if (this.processing.length >= this.concurrency) {
-                await sleep(500);
-                continue;
-            }
-            const t = await task.getFirst(this.query);
-            if (!t) {
-                await sleep(500);
-                continue;
-            }
-            const rdoc = await record.get(t.domainId, t.rid);
-            if (!rdoc) continue;
+    async newTask(t: Task) {
+        const rdoc = await record.get(t.domainId, t.rid);
+        if (!rdoc) return;
 
-            this.send({ task: { ...rdoc, ...t } });
-            this.rdocs[rdoc._id.toHexString()] = rdoc;
-            this.processing.push(t);
-            await next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id });
-        }
+        const rid = rdoc._id.toHexString();
+        let resolve: (_: any) => void;
+        const p = new Promise((r) => { resolve = r; });
+        this.tasks[rid] = {
+            queue: new PQueue({ concurrency: 1 }),
+            domainId: rdoc.domainId,
+            resolve,
+            t,
+        };
+        this.send({ task: { ...rdoc, ...t } });
+        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
+        await p;
+        delete this.tasks[rid];
     }
 
     async message(msg) {
-        if (!['ping', 'prio', 'config'].includes(msg.key)) {
+        if (!['ping', 'prio', 'config', 'start'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
         }
         if (['next', 'end'].includes(msg.key)) {
-            const rdoc = this.rdocs[msg.rid];
-            if (!rdoc) return;
-            if (msg.key === 'next') await next({ ...msg, domainId: rdoc.domainId });
+            const t = this.tasks[msg.rid];
+            if (!t) return;
+            msg.domainId = t.domainId;
+            if (msg.key === 'next') t.queue.add(() => next(msg));
             if (msg.key === 'end') {
-                if (!msg.nop) await end({ judger: this.user._id, ...msg, domainId: rdoc.domainId }).catch((e) => logger.error(e));
-                this.processing = this.processing.filter((t) => t.rid.toHexString() !== msg.rid);
-                delete this.rdocs[msg.rid];
+                if (!msg.nop) t.queue.add(() => end({ judger: this.user._id, ...msg }));
+                t.resolve(null);
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
         } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
             // TODO deprecated, use config instead
             this.query.priority = { $gt: msg.prio };
+            this.consumer?.setQuery(this.query);
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
+                this.consumer?.setQuery(this.query);
             }
             if (Number.isSafeInteger(msg.concurrency) && msg.concurrency > 0) {
                 this.concurrency = msg.concurrency;
+                this.consumer?.setConcurrency(msg.concurrency);
             }
             if (msg.lang instanceof Array && msg.lang.every((i) => typeof i === 'string')) {
                 this.query.lang = { $in: msg.lang };
+                this.consumer?.setQuery(this.query);
             }
+            if (msg.type instanceof Array && msg.type.every((i) => typeof i === 'string')) {
+                this.query.type = { $in: msg.type };
+                this.consumer?.setQuery(this.query);
+            }
+        } else if (msg.key === 'start') {
+            clearTimeout(this.startTimeout);
+            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            logger.info('Judge daemon started');
         }
     }
 
     async cleanup() {
-        this.closed = true;
+        clearTimeout(this.startTimeout);
+        this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
-        await Promise.all(this.processing.map(async (t) => {
-            await record.reset(t.domainId, t.rid, false);
-            return await task.add(t);
+        await Promise.all(Object.values(this.tasks).map(async ({ t }) => {
+            const rdoc = await record.reset(t.domainId, t.rid, false);
+            bus.broadcast('record/change', rdoc);
+            return task.add(t);
         }));
     }
 }

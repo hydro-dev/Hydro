@@ -1,9 +1,7 @@
-import serialize from 'serialize-javascript';
 import pwsh from './lib/hash.hydro';
 import db from './service/db';
 
 export { nanoid } from 'nanoid';
-export { serialize };
 
 export * from './pipelineUtils';
 export * from './error';

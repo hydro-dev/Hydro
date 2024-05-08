@@ -7,7 +7,6 @@ import {
     FileLimitExceededError, FileUploadError, ProblemNotFoundError, ValidationError,
 } from '../error';
 import { Tdoc, TrainingDoc } from '../interface';
-import paginate from '../lib/paginate';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
@@ -64,10 +63,10 @@ class TrainingMainHandler extends Handler {
     async get(domainId: string, page = 1) {
         const query: Filter<TrainingDoc> = {};
         await this.ctx.parallel('training/list', query, this);
-        const [tdocs, tpcount] = await paginate(
+        const [tdocs, tpcount] = await this.paginate(
             training.getMulti(domainId),
             page,
-            system.get('pagination.training'),
+            'training',
         );
         const tids: Set<ObjectId> = new Set();
         for (const tdoc of tdocs) tids.add(tdoc.docId);
@@ -106,14 +105,14 @@ class TrainingDetailHandler extends Handler {
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 } })
+            enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 }, enroll: 1 })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             shouldCompare = uid !== this.user._id;
         } else uid = this.user._id;
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            user.getListForRender(domainId, enrollUsers),
+            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
             problem.getList(domainId, pids, canViewHidden, true),
             problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
@@ -174,7 +173,10 @@ class TrainingDetailHandler extends Handler {
     async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await training.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        await training.del(domainId, tid);
+        await Promise.all([
+            training.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `training/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
         this.response.redirect = this.url('training_main');
     }
 }
@@ -276,7 +278,7 @@ export class TrainingFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `training/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

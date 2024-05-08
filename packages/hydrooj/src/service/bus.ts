@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
-import type {
-    Db, Filter, ObjectId, OnlyFieldsOfType,
+import {
+    BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import type { ProblemSolutionHandler } from '../handler/problem';
@@ -47,6 +47,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'system/setting': (args: Record<string, any>) => VoidReturn
     'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
+    'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
 
@@ -93,6 +94,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
 
     'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
     'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
+    'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn
     'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
 
@@ -102,7 +104,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
-    'record/judge': (rdoc: RecordDoc, updated: boolean) => VoidReturn
+    'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc) => VoidReturn
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -111,10 +113,10 @@ try {
     pm2.launchBus((err, bus) => {
         if (err) throw new Error();
         bus.on('hydro:broadcast', (packet) => {
-            (app.parallel as any)(packet.data.event, ...packet.data.payload);
+            (app.parallel as any)(packet.data.event, ...BSON.EJSON.parse(packet.data.payload));
         });
         app.on('bus/broadcast', (event, payload) => {
-            process.send({ type: 'hydro:broadcast', data: { event, payload } });
+            process.send({ type: 'hydro:broadcast', data: { event, payload: BSON.EJSON.stringify(payload) } });
         });
         console.debug('Using pm2 event bus');
     });

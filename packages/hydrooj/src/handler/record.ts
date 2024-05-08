@@ -4,7 +4,7 @@ import {
 import { Filter, ObjectId } from 'mongodb';
 import {
     ContestNotFoundError, HackRejudgeFailedError,
-    PermissionError, ProblemConfigError,
+    PermissionError, PretestRejudgeFailedError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -54,6 +54,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             if (udoc) q.uid = udoc._id;
             else invalid = true;
         }
+        if (q.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (tid) {
             tdoc = await contest.get(domainId, tid);
             this.tdoc = tdoc;
@@ -136,6 +137,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async prepare(domainId: string, rid: ObjectId) {
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc) throw new RecordNotFoundError(rid);
+        if (this.rdoc.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
     }
 
     async download() {
@@ -175,7 +177,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         // eslint-disable-next-line prefer-const
         let [pdoc, self, udoc] = await Promise.all([
-            problem.get(rdoc.domainId, rdoc.pid),
+            problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
             user.getById(domainId, rdoc.uid),
         ]);
@@ -186,10 +188,11 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
+            canViewCode ||= this.user.own(this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
                 canViewCode ||= tsdoc?.attend;
             }
-            if (!tsdoc?.attend && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';
@@ -206,6 +209,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
         if (this.rdoc.files?.hack) throw new HackRejudgeFailedError();
+        if (this.rdoc.contest?.toString().startsWith('0'.repeat(23))) throw new PretestRejudgeFailedError();
     }
 
     @param('rid', Types.ObjectId)
@@ -213,10 +217,9 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         const pdoc = await problem.get(domainId, this.rdoc.pid);
         if (!pdoc?.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -20);
-        const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         const rdoc = await record.reset(domainId, rid, true);
         this.ctx.broadcast('record/change', rdoc);
-        await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
+        await record.judge(domainId, rid, priority, this.rdoc.contest ? { detail: false } : {});
         this.back();
     }
 
@@ -230,6 +233,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             testCases: [{
                 id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
             }],
+            subtasks: {},
         };
         const [latest] = await Promise.all([
             record.update(domainId, rid, $set),
@@ -253,6 +257,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pretest = false;
     tdoc: Tdoc;
     applyProjection = false;
+    queue: Map<string, () => Promise<any>> = new Map();
+    throttleQueueClear: () => void;
 
     @param('tid', Types.ObjectId, true)
     @param('pid', Types.ProblemId, true)
@@ -286,6 +292,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
                 else throw new UserNotFoundError(uidOrName);
             }
         }
+        if (this.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) this.pid = pdoc.docId;
@@ -301,6 +308,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.allDomain = true;
         }
+        this.throttleQueueClear = throttle(this.queueClear, 100, { trailing: true });
     }
 
     async message(msg: { rids: string[] }) {
@@ -338,14 +346,24 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
-        if (this.pretest) this.send({ rdoc: omit(rdoc, ['code', 'input']) });
+        if (this.pretest) this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
         else {
-            this.send({
+            this.queueSend(rdoc._id.toHexString(), async () => ({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, allDomain: this.allDomain,
                 }),
-            });
+            }));
         }
+    }
+
+    queueSend(rid: string, fn: () => Promise<any>) {
+        this.queue.set(rid, fn);
+        this.throttleQueueClear();
+    }
+
+    async queueClear() {
+        await Promise.all([...this.queue.values()].map(async (fn) => this.send(await fn())));
+        this.queue.clear();
     }
 }
 

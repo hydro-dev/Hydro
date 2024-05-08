@@ -117,14 +117,16 @@ class UserLoginHandler extends Handler {
                 await token.del(authnChallenge, token.TYPE_WEBAUTHN);
             } else throw new ValidationError('2FA', 'Authn');
         }
-        udoc.checkPassword(password);
+        await udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
+        this.context.HydroContext.user = udoc;
         this.session.viewLang = '';
         this.session.uid = udoc._id;
         this.session.sudo = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.save = rememberme;
+        this.session.recreate = true;
         this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
             ? this.url('homepage') : this.request.referer);
     }
@@ -152,7 +154,7 @@ class UserSudoHandler extends Handler {
             await token.del(authnChallenge, token.TYPE_WEBAUTHN);
         } else if (this.user.tfa && tfa) {
             if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-        } else this.user.checkPassword(password);
+        } else await this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -223,7 +225,8 @@ class UserLogoutHandler extends Handler {
         this.response.template = 'user_logout.html';
     }
 
-    async post() {
+    async post(domainId: string) {
+        this.context.HydroContext.user = await user.getById(domainId, 0);
         this.session.uid = 0;
         this.session.sudo = null;
         this.session.sudoUid = null;
@@ -321,10 +324,12 @@ class UserRegisterWithCodeHandler extends Handler {
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
+        this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
+        this.session.recreate = true;
         this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
@@ -382,6 +387,7 @@ class UserLostPassWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_LOSTPASS], code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
+        await user.setById(tdoc.uid, { authenticators: [], tfa: false });
         await user.setPassword(tdoc.uid, password);
         await token.del(code, token.TYPE_LOSTPASS);
         this.response.redirect = this.url('homepage');
@@ -443,7 +449,7 @@ class UserDetailHandler extends Handler {
 
 class UserDeleteHandler extends Handler {
     async post({ password }) {
-        this.user.checkPassword(password);
+        await this.user.checkPassword(password);
         const tid = await ScheduleModel.add({
             executeAfter: moment().add(7, 'days').toDate(),
             type: 'script',
@@ -484,6 +490,7 @@ class OauthCallbackHandler extends Handler {
                     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
                     this.session.uid = udoc._id;
                     this.session.scope = PERM.PERM_ALL.toString();
+                    this.session.recreate = true;
                     this.response.redirect = '/';
                     return;
                 }

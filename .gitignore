@@ -37,7 +37,7 @@ packages/**/*.js
 !/build/*.js
 !**/bin/*.js
 !*.page.js
-!packages/utils/lib/register.js
+!packages/register/index.js
 ## ui-default
 !packages/ui-default/**/*.js
 !packages/geoip/download.js

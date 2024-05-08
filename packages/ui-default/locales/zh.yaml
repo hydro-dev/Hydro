@@ -46,6 +46,7 @@ __langname: 简体中文
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
+"View other's records": 查看他人的记录
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
 (leave blank if none): （若不需要则留空）
@@ -641,6 +642,7 @@ Password: 密码
 Passwords don't match.: 验证密码不匹配。
 Path {0} not found.: 路径 {0} 不存在。
 Peak Memory: 峰值内存
+Peak Time: 峰值时间
 perm_contest: 比赛
 perm_discussion: 讨论
 perm_general: 一般
@@ -819,6 +821,7 @@ Set Privilege: 设置权限
 Set Role: 设置角色
 Set Roles for Selected User: 设置所选用户的角色
 Set Roles for selected users: 为所选用户设置角色
+Set Score for Contest: 设置赛时分数
 Set time and memory limits: 设置时空限制
 setting_customize: 个性化
 setting_display: 显示偏好

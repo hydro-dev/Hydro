@@ -141,10 +141,10 @@ export class User {
         return false;
     }
 
-    checkPassword(password: string) {
+    async checkPassword(password: string) {
         const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
-        const result = h(password, this._salt, this);
+        const result = await h(password, this._salt, this);
         if (result !== true && result !== this._hash) {
             throw new LoginError(this.uname);
         }
@@ -290,7 +290,7 @@ class UserModel {
         const salt = String.random();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
-            { $set: { salt, hash: pwhash(password, salt), hashType: 'hydro' } },
+            { $set: { salt, hash: await pwhash(password, salt), hashType: 'hydro' } },
             { returnDocument: 'after' },
         );
         deleteUserCache(res.value);
@@ -312,36 +312,46 @@ class UserModel {
         mail: string, uname: string, password: string,
         uid?: number, regip: string = '127.0.0.1', priv: number = system.get('default.priv'),
     ) {
-        const salt = String.random();
+        let autoAlloc = false;
         if (typeof uid !== 'number') {
             const [udoc] = await coll.find({}).sort({ _id: -1 }).limit(1).toArray();
             uid = Math.max((udoc?._id || 0) + 1, 2);
+            autoAlloc = true;
         }
-        try {
-            await coll.insertOne({
-                _id: uid,
-                mail,
-                mailLower: handleMailLower(mail),
-                uname,
-                unameLower: uname.trim().toLowerCase(),
-                hash: pwhash(password.toString(), salt),
-                salt,
-                hashType: 'hydro',
-                regat: new Date(),
-                ip: [regip],
-                loginat: new Date(),
-                loginip: regip,
-                priv,
-                avatar: `gravatar:${mail}`,
-            });
-        } catch (e) {
-            if (e?.code === 11000) {
-                // Duplicate Key Error
-                throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
+        const salt = String.random();
+        while (true) { // eslint-disable-line no-constant-condition
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                await coll.insertOne({
+                    _id: uid,
+                    mail,
+                    mailLower: handleMailLower(mail),
+                    uname,
+                    unameLower: uname.trim().toLowerCase(),
+                    // eslint-disable-next-line no-await-in-loop
+                    hash: await pwhash(password.toString(), salt),
+                    salt,
+                    hashType: 'hydro',
+                    regat: new Date(),
+                    ip: [regip],
+                    loginat: new Date(),
+                    loginip: regip,
+                    priv,
+                    avatar: `gravatar:${mail}`,
+                });
+                return uid;
+            } catch (e) {
+                if (e?.code === 11000) {
+                    // Duplicate Key Error
+                    if (autoAlloc && JSON.stringify(e.keyPattern) === '{"_id":1}') {
+                        uid++;
+                        continue;
+                    }
+                    throw new UserAlreadyExistError(Object.values(e?.keyValue || {}));
+                }
+                throw e;
             }
-            throw e;
         }
-        return uid;
     }
 
     @ArgMethod
@@ -374,16 +384,16 @@ class UserModel {
         return projection ? coll.find(params).project<Udoc>(buildProjection(projection)) : coll.find(params);
     }
 
-    static async getListForRender(domainId: string, uids: number[]) {
+    static async getListForRender(domainId: string, uids: number[], showDisplayName = true) {
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: true }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: showDisplayName }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
         for (const udoc of vudocs) udict[udoc._id] = udoc;
-        for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
+        if (showDisplayName) for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
         for (const uid of uids) udict[uid] ||= { ...UserModel.defaultUser };
         for (const key in udict) {
             udict[key].school ||= '';

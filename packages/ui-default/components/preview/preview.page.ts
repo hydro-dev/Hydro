@@ -34,7 +34,7 @@ async function startEdit(filename, value, fileCategory = 'file') {
   });
   const action = await promise;
   value = (editor.value() as string).replace(/\r\n/g, '\n');
-  editor.destory();
+  editor.destroy();
   if (action !== 'ok') return null;
   return value;
 }
@@ -46,11 +46,27 @@ const dialogAction = (id) => [
 ];
 
 function bindCopyLink(id, src: string) {
-  const url = !(window.location.href.endsWith('file') || window.location.href.endsWith('files')) || window.location.href.match('contest/.*/file')
+  const url = !(window.location.href.endsWith('file') || window.location.href.endsWith('files'))
+  || window.location.href.match('homework/.*/file') || window.location.href.match('training/.*/file')
     ? `file://${src.substring(src.lastIndexOf('/') + 1)}` : src;
   const clip = new Clipboard(`#copy-${id}`, { text: () => `${url}` });
   clip.on('success', () => Notification.success(i18n(`${url.startsWith('file://') ? 'Reference' : 'Download'} link copied to clipboard!`)));
   clip.on('error', () => Notification.error(i18n('Copy failed :(')));
+}
+
+async function previewVideo(link) {
+  const id = nanoid();
+  const dialog = new InfoDialog({
+    $body: tpl`
+    <div class="typo"><video width="100%" controls>
+      <source src="${link}" type="${link.endsWith('ogg') ? 'video/ogg' : 'video/mp4'}">
+      Your browser doesn't support video tag.
+    </video></div>`,
+    $action: dialogAction(id),
+  });
+  bindCopyLink(id, link);
+  const action = await dialog.open();
+  if (action === 'download') window.open(link);
 }
 
 async function previewImage(link) {
@@ -123,12 +139,21 @@ export async function previewFile(ev?, type = '') {
     type ||= ev.currentTarget.getAttribute('data-preview');
     const ext = filename.split('.').pop().toLowerCase();
     if (['zip', 'rar', '7z'].includes(ext) || filesize > 8 * 1024 * 1024) {
-      const action = await new ActionDialog({
+      const id = nanoid();
+      const dialog = new ActionDialog({
         $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
-      }).open();
+        $action: [
+          tpl`<button class="rounded button" data-action="copy" id="copy-${id}">${i18n('Copy Link')}</button>`,
+          tpl`<button class="rounded button" data-action="cancel">${i18n('Cancel')}</button>`,
+          tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
+        ],
+      });
+      bindCopyLink(id, link);
+      const action = await dialog.open();
       if (action === 'ok') window.open(link);
       return null;
     }
+    if (['mp4', 'webm', 'ogg'].includes(ext)) return previewVideo(link);
     if (['png', 'jpeg', 'jpg', 'gif', 'webp', 'bmp'].includes(ext)) return previewImage(link);
     if (ext === 'pdf') return previewPDF(`${link}${link.includes('?') ? '&' : '?'}noDisposition=1`);
     Notification.info(i18n('Loading file...'));

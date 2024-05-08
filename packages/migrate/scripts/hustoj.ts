@@ -4,7 +4,7 @@ import path from 'path';
 import mariadb from 'mariadb';
 import TurndownService from 'turndown';
 import {
-    _, buildContent, ContestModel, DomainModel, fs, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
+    _, buildContent, ContestModel, DomainModel, fs, MessageModel, moment, noop, NotFoundError, ObjectId, postJudge, ProblemModel,
     RecordDoc, RecordModel, SolutionModel, STATUS, StorageModel, SystemModel, Time, UserModel,
 } from 'hydrooj';
 
@@ -65,6 +65,7 @@ export async function run({
     username, password, domainId, contestType = 'oi',
     dataDir, uploadDir = '/home/judge/src/web/upload/', rerun = true, randomMail = false,
 }, report: Function) {
+    let remoteUsed = false;
     const src = await mariadb.createConnection({
         host,
         port,
@@ -199,16 +200,30 @@ export async function run({
             await ProblemModel.edit(domainId, pidMap[pdoc.problem_id], {
                 nAccept: 0,
                 nSubmit: pdoc.submit,
-                config: `time: ${pdoc.time_limit}s\nmemory: ${pdoc.memory_limit}m`,
+                config: `time: ${pdoc.time_limit}s
+memory: ${pdoc.memory_limit}m
+${pdoc.remote_oj === 'bas' ? `type: remote_judge
+subType: ybtbas
+target: ybtbas/${+pdoc.id - 3000}
+` : ''}`,
                 owner: uidMap[cdoc[0]?.user_id] || 1,
                 maintainer,
                 html: true,
             });
+            if (pdoc.remote_oj === 'bas') remoteUsed = true;
             if (pdoc.solution) {
                 const md = turndown.turndown(pdoc.solution);
                 await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
             }
         }
+    }
+    if (remoteUsed) {
+        MessageModel.sendNotification(`您导入的数据中使用了一本通编程启蒙远端测试题目。
+请在迁移脚本运行完成后，在终端中运行
+hydrooj install https://hydro.ac/hydroac-client.zip
+安装远端评测所需要的插件。插件安装完成后，请重启 hydrooj，待一分钟后，再次重启 hydrooj。
+在此之后，远端评测应当能够正常进行。
+（注：您无需再使用申请的评测账号）`);
     }
     report({ message: 'problem finished' });
 
@@ -236,9 +251,11 @@ export async function run({
             files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
             description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
         }
+        // WHY you allow contest with end time BEFORE start time? WHY???
+        const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
         const tid = await ContestModel.add(
             domainId, tdoc.title, tdoc.description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, tdoc.end_time, pids, true,
+            adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             { _code: password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();

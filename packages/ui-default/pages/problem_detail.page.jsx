@@ -254,11 +254,13 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         for (const [id, val] of Object.entries(ans)) {
           if (Array.isArray(val)) {
             for (const v of val) {
-              $(`.objective_${id} input[value=${v}]`).prop('checked', true);
+              if (val.length === 1
+                && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id} input[value=${v}]`).prop('checked', true);
             }
           }
           $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
-          $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
+          if (val.length === 1
+            && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
     }

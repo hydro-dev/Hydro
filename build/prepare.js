@@ -8,8 +8,6 @@ if (process.env.npm_execpath?.includes('yarn')) {
     }
 }
 
-const dir = path.dirname(path.dirname(require.resolve('@types/node/package.json')));
-const types = fs.readdirSync(dir).filter((i) => !['sharedworker', 'serviceworker'].includes(i));
 const withoutTypes = (data) => ({
     ...data,
     compilerOptions: Object.fromEntries(Object.entries(data.compilerOptions).filter(([k]) => k !== 'types')),
@@ -29,7 +27,6 @@ const compilerOptionsBase = {
     experimentalDecorators: true,
     // emitDecoratorMetadata: true,
     incremental: true,
-    types,
 };
 const baseOutDir = path.resolve(__dirname, '../.cache/ts-out');
 const config = {
@@ -57,6 +54,11 @@ const configFlat = (name) => ({
         ...compilerOptionsBase,
         outDir: path.join(baseOutDir, name),
         rootDir: '.',
+        paths: {
+            'vj/*': [
+                '../../packages/ui-default/*',
+            ],
+        },
     },
     include: ['**/*.ts'],
     exclude: ['public', 'frontend'],
@@ -95,7 +97,6 @@ const UIConfig = {
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
         moduleResolution: 'node',
-        types,
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
@@ -134,8 +135,8 @@ for (const package of modules) {
         if (!fs.statSync(path.resolve(basedir, 'src', file)).isFile()) continue;
         const name = file.split('.')[0];
         const filePath = path.resolve(basedir, `${name}.js`);
-        if (['handler', 'service', 'lib', 'model', 'script', 'index'].includes(name)) {
-            if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, `module.exports = require('./src/${name}');\n`);
+        if (name === 'index' && !fs.existsSync(filePath)) {
+            fs.writeFileSync(filePath, 'module.exports = require("./src/index");\n');
         }
     }
 }

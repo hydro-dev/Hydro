@@ -25,6 +25,7 @@ export const PERM = {
     PERM_READ_PROBLEM_DATA: 1n << 10n,
 
     // Record
+    PERM_VIEW_RECORD: 1n << 70n,
     PERM_READ_RECORD_CODE: 1n << 12n,
     PERM_READ_RECORD_CODE_ACCEPT: 1n << 66n,
     PERM_REJUDGE_PROBLEM: 1n << 13n,
@@ -114,6 +115,7 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
+    Permission('perm_record', PERM.PERM_VIEW_RECORD, "View other's records"),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE, 'Read all record codes'),
     Permission('perm_record', PERM.PERM_READ_RECORD_CODE_ACCEPT, 'Read record codes after accept'),
     Permission('perm_record', PERM.PERM_REJUDGE_PROBLEM, 'Rejudge problems'),
@@ -185,7 +187,8 @@ PERM.PERM_BASIC = PERM.PERM_VIEW
     | PERM.PERM_VIEW_HOMEWORK
     | PERM.PERM_VIEW_HOMEWORK_SCOREBOARD
     | PERM.PERM_VIEW_TRAINING
-    | PERM.PERM_VIEW_RANKING;
+    | PERM.PERM_VIEW_RANKING
+    | PERM.PERM_VIEW_RECORD;
 
 PERM.PERM_DEFAULT = PERM.PERM_VIEW
     | PERM.PERM_VIEW_DISPLAYNAME
@@ -229,7 +232,8 @@ PERM.PERM_DEFAULT = PERM.PERM_VIEW
     | PERM.PERM_ATTEND_CONTEST
     | PERM.PERM_CREATE_TRAINING
     | PERM.PERM_ATTEND_HOMEWORK
-    | PERM.PERM_VIEW_RANKING;
+    | PERM.PERM_VIEW_RANKING
+    | PERM.PERM_VIEW_RECORD;
 
 PERM.PERM_ADMIN = PERM.PERM_ALL;
 
