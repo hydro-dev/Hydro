@@ -69,7 +69,7 @@ export function apply(ctx: Context) {
             domainId: Schema.string().default('system'),
             contestType: Schema.string().default('oi'),
             dataDir: Schema.string().required(),
-            uploadDir: Schema.string().required(),
+            imageDir: Schema.string().required(),
         }),
         (...args) => require('./scripts/hustoj').run(...args),
     );
@@ -99,5 +99,6 @@ export function apply(ctx: Context) {
         'migrate from vijos': '从 Vijos 导入',
         'migrate from syzoj': '从 SYZOJ 导入',
         'migrate from universaloj': '从 UniversalOJ 导入',
+        'migrate from poj': '从 POJ 导入',
     });
 }
