@@ -233,6 +233,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             testCases: [{
                 id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
             }],
+            subtasks: {},
         };
         const [latest] = await Promise.all([
             record.update(domainId, rid, $set),
