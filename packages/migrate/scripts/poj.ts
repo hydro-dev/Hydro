@@ -251,7 +251,8 @@ memory: ${pdoc.memory_limit}k`,
             const ceInfo = await query(`SELECT \`error\` FROM \`compileinfo\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
             if (ceInfo[0]?.error) data.judgeTexts.push(ceInfo[0].error);
             const source = await query(`SELECT \`source\` FROM \`source_code\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
-            if (source[0]?.source) data.code = zlib.gunzipSync(source[0].source.substr(4, source[0].source.length)).toString();
+            // decompress mysql buffer, slice 4 then it can start at 78 9c (zlib header)
+            if (source[0]?.source) data.code = zlib.inflateSync(source[0].source.slice(4)).toString('utf-8');
             if (rdoc.contest_id) {
                 data.contest = new ObjectId(tidMap[rdoc.contest_id]);
                 await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);

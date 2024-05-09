@@ -71,7 +71,7 @@ export function apply(ctx: Context) {
             dataDir: Schema.string().required(),
             imageDir: Schema.string().required(),
         }),
-        (...args) => require('./scripts/hustoj').run(...args),
+        (...args) => require('./scripts/poj').run(...args),
     );
 
     ctx.provideModule('hash', 'hust', ($password, $saved) => {
