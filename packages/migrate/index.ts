@@ -9,13 +9,13 @@ export function apply(ctx: Context) {
     ctx.addScript(
         'migrateHustoj', 'migrate from hustoj',
         Schema.object({
-            host: Schema.string().required(),
-            port: Schema.number().required(),
-            name: Schema.string().required(),
+            host: Schema.string().default('localhost'),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('jol'),
             username: Schema.string().required(),
             password: Schema.string().required(),
-            domainId: Schema.string().required(),
-            contestType: Schema.string().required(),
+            domainId: Schema.string().default('system'),
+            contestType: Schema.string().default('oi'),
             dataDir: Schema.string().required(),
             uploadDir: Schema.string().default('/home/judge/src/web/upload/'),
         }),
@@ -46,7 +46,7 @@ export function apply(ctx: Context) {
         (...args) => require('./scripts/vijos').run(...args),
     );
     ctx.addScript(
-        'migrateuniversaloj', 'migrate from universaloj',
+        'migrateUniversaloj', 'migrate from universaloj',
         Schema.object({
             host: Schema.string().default('172.17.0.2'),
             port: Schema.number().default(3306),
@@ -57,6 +57,21 @@ export function apply(ctx: Context) {
             dataDir: Schema.string().required(),
         }),
         (...args) => require('./scripts/universaloj').run(...args),
+    );
+    ctx.addScript(
+        'migratePoj', 'migrate from poj',
+        Schema.object({
+            host: Schema.string().required(),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('judgeonline'),
+            username: Schema.string().required(),
+            password: Schema.string().required(),
+            domainId: Schema.string().default('system'),
+            contestType: Schema.string().default('oi'),
+            dataDir: Schema.string().required(),
+            imageDir: Schema.string().required(),
+        }),
+        (...args) => require('./scripts/poj').run(...args),
     );
 
     ctx.provideModule('hash', 'hust', ($password, $saved) => {
@@ -84,5 +99,6 @@ export function apply(ctx: Context) {
         'migrate from vijos': '从 Vijos 导入',
         'migrate from syzoj': '从 SYZOJ 导入',
         'migrate from universaloj': '从 UniversalOJ 导入',
+        'migrate from poj': '从 POJ 导入',
     });
 }
