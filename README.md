@@ -111,6 +111,26 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.12.0 / UI 4.50.0
+- core: 添加题目统计页
+- core: 在记录详情页显示测评进度
+- core: problem_list: 允许 hook 修改排序逻辑
+- migrate: 添加 poj 支持
+- core: api: 支持查询 rpInfo 与 avatarUrl
+- ui: 允许禁用 timeago
+- core: 修复 IOI(strict) 下取消成绩
+- ui: 比赛计分板中高亮自己与关注的用户
+- core: 修正比赛榜单 AC 量计算
+- core: 禁止重测自测提交
+- ui: 优化讨论编辑历史显示
+- core: 登录/注册后返回当前的 UserContext
+- core: 修复比赛计分板导出的 PERM_VIEW_DISPLAYNAME 检查
+- ui: 修复 domain_user 选择框的默认值
+- ui: 修复客观题加载上次答案
+- core: 重置密码时自动禁用 2FA
+- core: import: 题目包导入时支持导入题解和标程
+- core: 性能优化和漏洞修复
+
 ### Hydro 4.11.2 / UI 4.49.8
 - core: 支持给比赛题目设置分数倍率 (#765)
 - workspace: 升级 ts 版本至 5.4.3

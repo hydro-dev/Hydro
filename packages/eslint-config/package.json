@@ -4,7 +4,7 @@
     "license": "MIT",
     "main": "react.yaml",
     "dependencies": {
-        "@stylistic/eslint-plugin": "^1.8.1",
+        "@stylistic/eslint-plugin": "^2.1.0",
         "@typescript-eslint/eslint-plugin": "^7.8.0",
         "@typescript-eslint/parser": "^7.8.0",
         "eslint-config-airbnb": "^19.0.4",

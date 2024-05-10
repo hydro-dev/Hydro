@@ -11,7 +11,7 @@
         "cac": "^6.7.14",
         "p-queue": "^8.0.1",
         "schemastery": "^3.14.6",
-        "semver": "^7.6.1",
+        "semver": "^7.6.2",
         "shell-quote": "^1.8.1",
         "superagent": "^9.0.2",
         "ws": "^8.17.0"
