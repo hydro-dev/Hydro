@@ -82,7 +82,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'problem/edit': (doc: ProblemDoc) => VoidReturn
     'problem/before-del': (domainId: string, docId: number) => VoidReturn
     'problem/del': (domainId: string, docId: number) => VoidReturn
-    'problem/list': (query: Filter<ProblemDoc>, handler: any) => VoidReturn
+    'problem/list': (query: Filter<ProblemDoc>, handler: any, sort?: string[]) => VoidReturn
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn

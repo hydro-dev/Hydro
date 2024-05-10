@@ -141,7 +141,7 @@ export class ProblemMainHandler extends Handler {
         const query = buildQuery(this.user);
         const psdict = {};
         const search = global.Hydro.lib.problemSearch || defaultSearch;
-        let sort: string[];
+        let sort: string[] = [];
         let fail = false;
         let pcountRelation = 'eq';
         const parsed = parser.parse(q, {
@@ -173,7 +173,7 @@ export class ProblemMainHandler extends Handler {
             });
             sort = result.hits;
         }
-        await this.ctx.parallel('problem/list', query, this);
+        await this.ctx.parallel('problem/list', query, this, sort);
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = fail
             ? [[], 0, 0]
@@ -182,7 +182,7 @@ export class ProblemMainHandler extends Handler {
             pcount = total;
             ppcount = Math.ceil(total / limit);
         }
-        if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
+        if (sort.length) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (q && page === 1) {
             const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
             if (pdoc && problem.canViewBy(pdoc, this.user)) {
