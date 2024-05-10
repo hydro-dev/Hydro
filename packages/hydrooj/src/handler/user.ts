@@ -75,6 +75,8 @@ registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: 
     return udocs;
 }, 'Get a list of user by ids, or search users with the prefix.');
 
+registerResolver('User', 'avatarUrl(size: Int)', 'String', (arg, ctx) => avatar(ctx.user.avatar, arg.size || 128));
+
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
 
@@ -227,7 +229,7 @@ class UserLogoutHandler extends Handler {
         this.response.template = 'user_logout.html';
     }
 
-    async post(domainId: string) {
+    async post({ domainId }) {
         this.context.HydroContext.user = await user.getById(domainId, 0);
         this.session.uid = 0;
         this.session.sudo = null;
