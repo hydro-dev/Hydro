@@ -1,8 +1,11 @@
 import moment from 'moment-timezone';
 import { Filter, ObjectId } from 'mongodb';
+import { Time } from '@hydrooj/utils';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import { Context } from '../context';
 import { Schedule } from '../interface';
 import { Logger } from '../logger';
+import { ContestModel, DocumentModel } from '../plugin-api';
 import db from '../service/db';
 import type { WorkerService } from '../service/worker';
 import RecordModel from './record';
@@ -64,6 +67,29 @@ export async function apply(ctx: Context) {
         ScheduleModel.Worker = c.worker;
         c.worker.addHandler('task.daily', async () => {
             await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
+            const tdocs = await db.collection('document').find({
+                docType: DocumentModel.TYPE_CONTEST,
+                endAt: { $gt: new Date(Date.now() - 2 * Time.day) },
+            }).project({ docId: 1, beginAt: 1 }).toArray();
+            const first = Math.min(...tdocs.map((i) => i.beginAt.getTime()));
+            const bulk = RecordModel.collStat.initializeUnorderedBulkOp();
+            const cursor = RecordModel.coll.find({
+                status: STATUS.STATUS_ACCEPTED,
+                contest: { $in: tdocs.map((i) => i.docId) },
+                _id: { $gt: Time.getObjectID(new Date(first)) },
+            });
+            for await (const rdoc of cursor) {
+                bulk.find({ _id: rdoc._id }).upsert().updateOne({
+                    domainId: rdoc.domainId,
+                    pid: rdoc.pid,
+                    uid: rdoc.uid,
+                    time: rdoc.time,
+                    memory: rdoc.memory,
+                    length: rdoc.code?.length || 0,
+                    lang: rdoc.lang,
+                });
+            }
+            await bulk.execute();
             await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
             await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
             if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {

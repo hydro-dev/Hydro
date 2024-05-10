@@ -650,11 +650,13 @@ const scripts: UpgradeScript[] = [
         });
     },
     async function _88_89() {
-        const cursor = RecordModel.getMulti(undefined, { status: STATUS.STATUS_ACCEPTED });
-        let bulk = [];
+        const cursor = RecordModel.getMulti(undefined, {
+            status: STATUS.STATUS_ACCEPTED,
+            contest: { $nin: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] },
+        });
+        let bulk = RecordModel.collStat.initializeUnorderedBulkOp();
         for await (const doc of cursor) {
-            bulk.push({
-                _id: doc._id,
+            bulk.find({ _id: doc._id }).upsert().updateOne({
                 domainId: doc.domainId,
                 pid: doc.pid,
                 uid: doc.uid,
@@ -663,12 +665,12 @@ const scripts: UpgradeScript[] = [
                 length: doc.code?.length || 0,
                 lang: doc.lang,
             });
-            if (bulk.length > 500) {
-                await RecordModel.collStat.insertMany(bulk);
-                bulk = [];
+            if (bulk.batches.length > 500) {
+                await bulk.execute();
+                bulk = RecordModel.collStat.initializeUnorderedBulkOp();
             }
         }
-        if (bulk.length) await RecordModel.collStat.insertMany(bulk);
+        if (bulk.batches.length) await bulk.execute();
         return true;
     },
 ];

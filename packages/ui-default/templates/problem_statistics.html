@@ -77,7 +77,7 @@
               <td class="col--time">{% if rsdoc['time'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rsdoc['status']) %}&ge;{% endif %}{{ rsdoc.time|round|int }}ms{% else %}-{% endif %}</td>
               <td class="col--memory">{% if rsdoc['memory'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rsdoc['status']) %}&ge;{% endif %}{{ size(rsdoc.memory, 1024) }}{% else %}-{% endif %}</td>
               <td class="col--lang">{{ model.setting.langs[rsdoc['lang']].display }}</td>
-              <td class="col--code">{{ size(rsdoc.code) }}</td>
+              <td class="col--code">{{ size(rsdoc.length) }}</td>
               <td class="col--submit-at">{{ datetimeSpan(rsdoc['_id'], false)|safe }}</td>
             </tr>
           {%- endfor -%}

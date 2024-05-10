@@ -256,20 +256,26 @@ export default class RecordModel {
 
 export function apply(ctx: Context) {
     // Mark problem as deleted
-    ctx.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
+    ctx.on('problem/delete', (domainId, docId) => Promise.all([
+        RecordModel.coll.deleteMany({ domainId, pid: docId }),
+        RecordModel.collStat.deleteMany({ domainId, pid: docId }),
+    ]));
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
-    ctx.on('record/judge', (rdoc, updated) => {
-        if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
-            RecordModel.collStat.insertOne({
+    ctx.on('record/judge', async (rdoc, updated) => {
+        if (rdoc.status === STATUS.STATUS_ACCEPTED && updated && !rdoc.contest) {
+            await RecordModel.collStat.updateOne({
                 _id: rdoc._id,
-                domainId: rdoc.domainId,
-                pid: rdoc.pid,
-                uid: rdoc.uid,
-                time: rdoc.time,
-                memory: rdoc.memory,
-                length: rdoc.code?.length || 0,
-                lang: rdoc.lang,
-            });
+            }, {
+                $set: {
+                    domainId: rdoc.domainId,
+                    pid: rdoc.pid,
+                    uid: rdoc.uid,
+                    time: rdoc.time,
+                    memory: rdoc.memory,
+                    length: rdoc.code?.length || 0,
+                    lang: rdoc.lang,
+                },
+            }, { upsert: true });
         }
     });
     ctx.on('ready', async () => {
