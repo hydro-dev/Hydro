@@ -153,6 +153,8 @@ export default class RecordModel {
             data.input = args.input || '';
             isContest = false;
             data.contest = RecordModel.RECORD_PRETEST;
+        } else if (args.type === 'generate') {
+            data.contest = RecordModel.RECORD_GENERATE;
         }
         const res = await RecordModel.coll.insertOne(data);
         bus.broadcast('record/change', data);
@@ -265,7 +267,7 @@ export function apply(ctx: Context) {
                 uid: rdoc.uid,
                 time: rdoc.time,
                 memory: rdoc.memory,
-                code: rdoc.code?.length || 0,
+                length: rdoc.code?.length || 0,
                 lang: rdoc.lang,
             });
         }
@@ -284,7 +286,7 @@ export function apply(ctx: Context) {
             { key: { domainId: 1, pid: 1, uid: 1, _id: -1 }, name: 'basic' },
             { key: { domainId: 1, pid: 1, uid: 1, time: 1 }, name: 'time' },
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
-            { key: { domainId: 1, pid: 1, uid: 1, code: 1 }, name: 'code' },
+            { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
         );
     });
 }

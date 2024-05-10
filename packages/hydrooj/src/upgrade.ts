@@ -660,7 +660,7 @@ const scripts: UpgradeScript[] = [
                 uid: doc.uid,
                 time: doc.time,
                 memory: doc.memory,
-                code: doc.code?.length || 0,
+                length: doc.code?.length || 0,
                 lang: doc.lang,
             });
             if (bulk.length > 500) {
