@@ -23,7 +23,7 @@
             {{ _('Show') }}:
             <select class="inline compact select" name="sort">
               {%- for g in types -%}
-                <option value="{{ g }}"{% if sort == g %} selected{% endif %}>{{ _(g) }}</option>
+                <option value="{{ g }}"{% if sort == g %} selected{% endif %}>{{ _('problem.stats.sort.'+g) }}</option>
               {%- endfor -%}
             </select>
             <select class="inline compact select" name="direction">

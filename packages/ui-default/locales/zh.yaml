@@ -328,7 +328,6 @@ Download: 下载
 Downvote: 差评
 Duration (hours): 持续时间 (小时)
 Duration: 持续时间
-earliest: 最早
 Edit any contests: 修改任意的比赛
 Edit any homework: 修改任意的作业
 Edit Contest: 编辑比赛
@@ -380,7 +379,6 @@ Failed to fetch registration data.: 获取注册数据失败。
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
 Failed to parse subtask.: 无法解析子任务信息。
 Failed to parse testcase.: 无法解析测试点信息。
-fastest: 最快
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
@@ -504,7 +502,6 @@ last active at: 最后活动于
 last login at: 最后登录于
 Last Submit At: 最后递交于
 Last Update At: 最后活动时间
-latest: 最晚
 LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
@@ -531,7 +528,6 @@ Login: 登录
 Logout All Sessions: 注销所有会话
 Logout This Session: 注销该会话
 Logout: 登出
-longest: 最长
 Lost Password: 忘记密码
 Lucky: 手气不错
 manage_config: 配置管理
@@ -547,7 +543,6 @@ Manager: 管理
 Mark Green: 标绿
 Mark Red: 标红
 Mark Yellow: 标黄
-max_memory: 最大内存
 Memory Cost: 内存占用
 Memory Info: 内存信息
 Memory: 内存
@@ -555,7 +550,6 @@ Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
 Microsoft Yahei: 微软雅黑
-min_memory: 最小内存
 Moderator: 管理员
 Month: 月
 Monthly Popular: 月度最受欢迎
@@ -714,6 +708,10 @@ problem.import.input_format: '## 输入格式'
 problem.import.limit_and_hint: '## 限制'
 problem.import.output_format: '## 输出格式'
 problem.import.problem_description: '## 题目描述'
+problem.stats.sort.date: 提交时间
+problem.stats.sort.length: 代码长度
+problem.stats.sort.memory: 内存占用
+problem.stats.sort.time: 运行时间
 Problems Sets: 题库
 Problems: 题目
 Processing...: 处理中...
@@ -839,7 +837,6 @@ setting_usage: 使用偏好
 Settings: 设置
 Share: 分享
 She: 她
-shortest: 最短
 Show all tags: 显示所有标签
 Show MOD badge: 展示 MOD 徽章
 Show tags: 显示标签
@@ -850,7 +847,6 @@ Sign up mail has been sent to your email.: 注册邮件已经发送到您的电�
 Sign Up Now: 现在注册
 Sign Up: 注册
 Size: 大小
-slowest: 最慢
 Solutions Liked: 题解被赞
 Solutions: 题解
 Solve: 解决
