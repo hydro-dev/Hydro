@@ -75,8 +75,6 @@ registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: 
     return udocs;
 }, 'Get a list of user by ids, or search users with the prefix.');
 
-registerResolver('User', 'avatarUrl(size: Int)', 'String', (arg, ctx) => avatar(ctx.user.avatar, arg.size || 128));
-
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
 
