@@ -388,7 +388,7 @@ class UserModel {
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: showDisplayName }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: 1, ...(showDisplayName ? { displayName: 1 } : {}) }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
