@@ -217,7 +217,7 @@ memory: ${pdoc.memory_limit}k`,
         memory	int	11	N	所用空间（）
         className
         in_date	datetime		N	加入时间
-        result	smallint	6	N	结果（4：AC）
+        result	smallint	6	N	结果（0：AC）
         language	tinyint	4	N	语言
         ip	char	15	N	用户ip
         contest_id	int	11	Y	所属于竞赛组
@@ -235,10 +235,10 @@ memory: ${pdoc.memory_limit}k`,
                 _id: Time.getObjectID(rdoc.in_date, false),
                 uid: uidMap[rdoc.user_id] || 0,
                 code: "POJ didn't provide user code",
-                lang: langMap[rdoc.language] || '',
+                lang: langMap[rdoc.language || 0],
                 pid: pidMap[rdoc.problem_id] || 0,
                 domainId,
-                score: rdoc.pass_rate ? Math.ceil(rdoc.pass_rate * 100) : rdoc.result === 4 ? 100 : 0,
+                score: rdoc.result === 0 ? 100 : 0,
                 time: rdoc.time || 0,
                 memory: rdoc.memory || 0,
                 judgeTexts: [],
