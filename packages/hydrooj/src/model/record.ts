@@ -19,12 +19,20 @@ import task from './task';
 
 export default class RecordModel {
     static coll = db.collection('record');
+    static collStat = db.collection('record.stat');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
         'contest', 'judger', 'judgeAt', 'status', 'source',
         'files',
     ];
+
+    static STAT_QUERY = {
+        time: [{ time: -1 }, { time: 1 }],
+        memory: [{ memory: -1 }, { memory: 1 }],
+        length: [{ length: -1 }, { length: 1 }],
+        date: [{ _id: -1 }, { _id: 1 }],
+    };
 
     static RECORD_PRETEST = new ObjectId('000000000000000000000000');
     static RECORD_GENERATE = new ObjectId('000000000000000000000001');
@@ -163,6 +171,10 @@ export default class RecordModel {
         return RecordModel.coll.find(query);
     }
 
+    static getMultiStat(domainId: string, query: any, sortBy: any = { _id: -1 }) {
+        return RecordModel.collStat.find({ domainId, ...query }).sort(sortBy);
+    }
+
     static async update(
         domainId: string, _id: MaybeArray<ObjectId>,
         $set?: MatchKeysAndValues<RecordDoc>,
@@ -218,6 +230,7 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
+        await RecordModel.collStat.deleteOne(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
         await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
         return RecordModel.update(domainId, rid, upd);
     }
@@ -243,14 +256,36 @@ export function apply(ctx: Context) {
     // Mark problem as deleted
     ctx.on('problem/delete', (domainId, docId) => RecordModel.coll.deleteMany({ domainId, pid: docId }));
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
-    ctx.on('ready', () => db.ensureIndexes(
-        RecordModel.coll,
-        { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
-        { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
-        { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
-        { key: { domainId: 1, contest: 1, pid: 1, uid: 1, _id: -1 }, name: 'withUserAndProblem' },
-        { key: { domainId: 1, contest: 1, status: 1, _id: -1 }, name: 'withStatus' },
-    ));
+    ctx.on('record/judge', (rdoc, updated) => {
+        if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
+            RecordModel.collStat.insertOne({
+                _id: rdoc._id,
+                domainId: rdoc.domainId,
+                pid: rdoc.pid,
+                uid: rdoc.uid,
+                time: rdoc.time,
+                memory: rdoc.memory,
+                code: rdoc.code?.length || 0,
+                lang: rdoc.lang,
+            });
+        }
+    });
+    ctx.on('ready', async () => {
+        await db.ensureIndexes(
+            RecordModel.coll,
+            { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
+            { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
+            { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
+            { key: { domainId: 1, contest: 1, pid: 1, uid: 1, _id: -1 }, name: 'withUserAndProblem' },
+            { key: { domainId: 1, contest: 1, status: 1, _id: -1 }, name: 'withStatus' },
+        );
+        await db.ensureIndexes(
+            RecordModel.collStat,
+            { key: { domainId: 1, pid: 1, uid: 1, _id: -1 }, name: 'basic' },
+            { key: { domainId: 1, pid: 1, uid: 1, time: 1 }, name: 'time' },
+            { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
+            { key: { domainId: 1, pid: 1, uid: 1, code: 1 }, name: 'code' },
+        );
+    });
 }
-
 global.Hydro.model.record = RecordModel;

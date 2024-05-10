@@ -338,6 +338,16 @@ export interface RecordDoc {
     subtasks?: Record<number, SubtaskResult>;
 }
 
+export interface RecordStatDoc {
+    _id: ObjectId;
+    domainId: string;
+    pid: number;
+    uid: number;
+    time: number;
+    memory: number;
+    code: number;
+    lang: string;
+}
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
@@ -688,6 +698,7 @@ declare module './service/db' {
         'domain': DomainDoc;
         'domain.user': any;
         'record': RecordDoc;
+        'record.stat': RecordStatDoc;
         'document': any;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];

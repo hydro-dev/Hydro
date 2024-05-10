@@ -708,6 +708,10 @@ problem.import.input_format: '## 输入格式'
 problem.import.limit_and_hint: '## 限制'
 problem.import.output_format: '## 输出格式'
 problem.import.problem_description: '## 题目描述'
+problem.stats.sort.date: 提交时间
+problem.stats.sort.length: 代码长度
+problem.stats.sort.memory: 内存占用
+problem.stats.sort.time: 运行时间
 Problems Sets: 题库
 Problems: 题目
 Processing...: 处理中...

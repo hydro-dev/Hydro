@@ -667,6 +667,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
     async get(domainId: string, d = ['testdata', 'additional_file'], pjax = false, sidebar = false) {
+        if (this.tdoc) throw new ContestNotEndedError();
         this.response.body.testdata = d.includes('testdata') ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.reference = this.pdoc.reference;
         this.response.body.additional_file = d.includes('additional_file') ? sortFiles(this.pdoc.additional_file || []) : [];
@@ -972,6 +973,32 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     }
 }
 
+export class ProblemStatisticsHandler extends ProblemDetailHandler {
+    @param('sort', Types.Range(Object.keys(record.STAT_QUERY)), true)
+    @param('direction', Types.Range([-1, 1]), true)
+    @param('lang', Types.String, true)
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, sort = 'time', direction: 1 | -1 = 1, lang?: string, page = 1) {
+        if (this.tdoc) throw new ContestNotEndedError();
+        const [rsdocs, pcount, rscount] = await this.paginate(
+            record.getMultiStat(domainId, {
+                pid: this.pdoc.docId,
+                ...lang ? { lang } : {},
+            }, record.STAT_QUERY[sort][Math.max(direction, 0)]),
+            page,
+            'record',
+        );
+        const [udict, udoc] = await Promise.all([
+            user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
+            user.getById(domainId, this.pdoc.owner),
+        ]);
+        this.response.template = 'problem_statistics.html';
+        this.response.body = {
+            rsdocs, page, pcount, rscount, sort, direction, pdoc: this.pdoc, udict, types: Object.keys(record.STAT_QUERY), udoc,
+        };
+    }
+}
+
 export class ProblemCreateHandler extends Handler {
     async get() {
         this.response.template = 'problem_edit.html';
@@ -1014,7 +1041,7 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const projection = ['domainId', 'docId', 'pid', 'title'] as const;
+        const projection = ['domainId', 'docId', 'pid', 'title', 'hidden'] as const;
         const [pdocs, pdoc, apdoc] = await Promise.all([
             problem.getPrefixList(domainId, prefix),
             problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
@@ -1047,6 +1074,7 @@ export async function apply(ctx) {
     ctx.Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
 }

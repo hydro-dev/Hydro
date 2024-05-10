@@ -649,6 +649,28 @@ const scripts: UpgradeScript[] = [
             await domain.setRoles(ddoc._id, ddoc.roles);
         });
     },
+    async function _88_89() {
+        const cursor = RecordModel.getMulti(undefined, { status: STATUS.STATUS_ACCEPTED });
+        let bulk = [];
+        for await (const doc of cursor) {
+            bulk.push({
+                _id: doc._id,
+                domainId: doc.domainId,
+                pid: doc.pid,
+                uid: doc.uid,
+                time: doc.time,
+                memory: doc.memory,
+                code: doc.code?.length || 0,
+                lang: doc.lang,
+            });
+            if (bulk.length > 500) {
+                await RecordModel.collStat.insertMany(bulk);
+                bulk = [];
+            }
+        }
+        if (bulk.length) await RecordModel.collStat.insertMany(bulk);
+        return true;
+    },
 ];
 
 export default scripts;
