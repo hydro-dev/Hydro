@@ -21,10 +21,14 @@
         <div class="section__tools">
           <form method="get" class="filter-form" name="filter-form">
             {{ _('Show') }}:
-            <select class="inline compact select" name="type">
+            <select class="inline compact select" name="sort">
               {%- for g in types -%}
-                <option value="{{ g }}"{% if type == g %} selected{% endif %}>{{ _(g) }}</option>
+                <option value="{{ g }}"{% if sort == g %} selected{% endif %}>{{ _(g) }}</option>
               {%- endfor -%}
+            </select>
+            <select class="inline compact select" name="direction">
+              <option value="1"{% if direction == 1 %} selected{% endif %}>ASC</option>
+              <option value="-1"{% if direction == -1 %} selected{% endif %}>DESC</option>
             </select>
             <select class="inline compact select" name="lang">
                 <option value="">{{ _('All Languages') }}</option>
@@ -79,7 +83,7 @@
           {%- endfor -%}
           </tbody>
         </table>
-        {{ paginator.render(page, pcount, add_qs=('type=' + type if type else '')) }}
+        {{ paginator.render(page, pcount, add_qs=('direction=' + direction + ('&sort=' + sort if sort else ''))) }}
         {% endif %}
       </div>
     </div>

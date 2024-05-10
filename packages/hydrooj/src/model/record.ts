@@ -28,14 +28,10 @@ export default class RecordModel {
     ];
 
     static STAT_QUERY = {
-        fastest: { time: 1 },
-        slowest: { time: -1 },
-        latest: { _id: -1 },
-        earliest: { _id: 1 },
-        longest: { length: -1 },
-        shortest: { length: 1 },
-        min_memory: { memory: 1 },
-        max_memory: { memory: -1 },
+        time: [{ time: -1 }, { time: 1 }],
+        memory: [{ memory: -1 }, { memory: 1 }],
+        length: [{ length: -1 }, { length: 1 }],
+        date: [{ _id: -1 }, { _id: 1 }],
     };
 
     static RECORD_PRETEST = new ObjectId('000000000000000000000000');

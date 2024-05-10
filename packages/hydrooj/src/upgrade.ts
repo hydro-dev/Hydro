@@ -651,8 +651,9 @@ const scripts: UpgradeScript[] = [
     },
     async function _88_89() {
         const cursor = RecordModel.getMulti(undefined, { status: STATUS.STATUS_ACCEPTED });
+        let bulk = [];
         for await (const doc of cursor) {
-            await RecordModel.collStat.insertOne({
+            bulk.push({
                 _id: doc._id,
                 domainId: doc.domainId,
                 pid: doc.pid,
@@ -662,7 +663,12 @@ const scripts: UpgradeScript[] = [
                 code: doc.code?.length || 0,
                 lang: doc.lang,
             });
+            if (bulk.length > 500) {
+                await RecordModel.collStat.insertMany(bulk);
+                bulk = [];
+            }
         }
+        if (bulk.length) await RecordModel.collStat.insertMany(bulk);
         return true;
     },
 ];

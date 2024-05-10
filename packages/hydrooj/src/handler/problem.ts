@@ -974,23 +974,27 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
 }
 
 export class ProblemStatisticsHandler extends ProblemDetailHandler {
-    @param('type', Types.Range(Object.keys(record.STAT_QUERY)), true)
+    @param('sort', Types.Range(Object.keys(record.STAT_QUERY)), true)
+    @param('direction', Types.Range([-1, 1]), true)
     @param('lang', Types.String, true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, type = 'fastest', lang?: string, page = 1) {
+    async get(domainId: string, sort = 'time', direction: 1 | -1 = 1, lang?: string, page = 1) {
         if (this.tdoc) throw new ContestNotEndedError();
         const [rsdocs, pcount, rscount] = await this.paginate(
             record.getMultiStat(domainId, {
                 pid: this.pdoc.docId,
                 ...lang ? { lang } : {},
-            }, record.STAT_QUERY[type]),
+            }, record.STAT_QUERY[sort][Math.max(direction, 0)]),
             page,
             'record',
         );
-        const udict = await user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME));
+        const [udict, udoc] = await Promise.all([
+            user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
+            user.getById(domainId, this.pdoc.owner),
+        ]);
         this.response.template = 'problem_statistics.html';
         this.response.body = {
-            rsdocs, page, pcount, rscount, type, pdoc: this.pdoc, udict, types: Object.keys(record.STAT_QUERY),
+            rsdocs, page, pcount, rscount, sort, direction, pdoc: this.pdoc, udict, types: Object.keys(record.STAT_QUERY), udoc,
         };
     }
 }
