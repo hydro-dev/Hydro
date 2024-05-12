@@ -27,7 +27,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         from,
         query: {
             simple_query_string: {
-                query: q,
+                query: q.replace(/([a-z0-9]{2,})/gi, (i) => `${i}~5`),
                 fields: ['tag^5', 'pid^4', 'title^3', 'content'],
             },
         },
