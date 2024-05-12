@@ -657,13 +657,15 @@ const scripts: UpgradeScript[] = [
         let bulk = RecordModel.collStat.initializeUnorderedBulkOp();
         for await (const doc of cursor) {
             bulk.find({ _id: doc._id }).upsert().updateOne({
-                domainId: doc.domainId,
-                pid: doc.pid,
-                uid: doc.uid,
-                time: doc.time,
-                memory: doc.memory,
-                length: doc.code?.length || 0,
-                lang: doc.lang,
+                $set: {
+                    domainId: doc.domainId,
+                    pid: doc.pid,
+                    uid: doc.uid,
+                    time: doc.time,
+                    memory: doc.memory,
+                    length: doc.code?.length || 0,
+                    lang: doc.lang,
+                },
             });
             if (bulk.batches.length > 500) {
                 await bulk.execute();
