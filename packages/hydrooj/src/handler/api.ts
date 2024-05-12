@@ -1,8 +1,10 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { graphql, GraphQLSchema } from 'graphql';
+import { getDirective, MapperKind, mapSchema } from '@graphql-tools/utils';
+import { defaultFieldResolver, graphql, GraphQLSchema } from 'graphql';
 import { resolvers, typeDefs } from 'graphql-scalars';
 import { debounce } from 'lodash';
 import { Context as PluginContext } from '../context';
+import { PERM, PRIV } from '../model/builtin';
 import * as bus from '../service/bus';
 import { Handler } from '../service/server';
 
@@ -42,13 +44,18 @@ export function registerResolver(
     const wrappedFunc = async (arg, ctx, info) => {
         const res = await func(arg, ctx, info);
         if (typeof res !== 'object' || res === null) return res;
-        const node = value.includes('!') ? value.split('!')[0] : value;
-        if (handlers[node]) Object.assign(res, handlers[node]);
+        let node = value.includes('!') ? value.split('!')[0] : value;
+        const isArray = node.includes('[');
+        node = node.replace('[', '').replace(']', '');
+        if (handlers[node]) {
+            if (!isArray) Object.assign(res, handlers[node]);
+            else if (res instanceof Array) for (const i of res) { Object.assign(i, handlers[node]); }
+        }
         ctx.parent = res;
         return res;
     };
-    if (handlers[typeName]) handlers[typeName][key.split('(')[0].trim()] = wrappedFunc;
-    else handlers[typeName] = { [key.split('(')[0].trim()]: wrappedFunc };
+    handlers[typeName] ||= {};
+    handlers[typeName][key.split('(')[0].trim()] = wrappedFunc;
     bus.emit('api/update');
 }
 
@@ -66,15 +73,53 @@ let schema: GraphQLSchema;
 let schemaStr = '';
 root = handlers.Query;
 
+const applyAuthDirective = (s) => mapSchema(s, {
+    // eslint-disable-next-line consistent-return
+    [MapperKind.OBJECT_FIELD]: (fieldConfig) => {
+        const authDirective = getDirective(s, fieldConfig, 'auth')?.[0];
+        if (authDirective) {
+            const { resolve = defaultFieldResolver } = fieldConfig;
+            return {
+                ...fieldConfig,
+                async resolve(source, args, context, info) {
+                    if (authDirective.perm) {
+                        const perm = PERM[authDirective.perm];
+                        if (!context.user.hasPerm(perm)) throw new Error(`Permission denied: ${authDirective.perm}`);
+                    }
+                    if (authDirective.priv) {
+                        const priv = PRIV[authDirective.priv];
+                        if (!context.user.hasPriv(priv)) throw new Error(`Permission denied: ${authDirective.priv}`);
+                    }
+                    return await resolve(source, args, context, info);
+                },
+            };
+        }
+        const ifDirective = getDirective(s, fieldConfig, 'if')?.[0];
+        if (ifDirective) {
+            const { resolve = defaultFieldResolver } = fieldConfig;
+            return {
+                ...fieldConfig,
+                async resolve(source, args, context, info) {
+                    if (ifDirective.perm && !context.user.hasPerm(PERM[ifDirective.perm])) return null;
+                    if (ifDirective.priv && !context.user.hasPriv(PRIV[ifDirective.priv])) return null;
+                    return await resolve(source, args, context, info);
+                },
+            };
+        }
+    },
+});
+
 export function rebuild() {
     try {
         const defs = [
             ...Object.keys(unions).map((i) => `union ${i} = ${unions[i]}`),
+            'directive @auth(perm: String, priv: String) on FIELD_DEFINITION',
+            'directive @if(perm: String, priv: String) on FIELD_DEFINITION',
             ...typeDefs,
             ...Object.keys(types).map((key) => {
                 let def = '';
                 if (descriptions[key]?._description) def += `${setDescription(descriptions[key]._description)}\n`;
-                def += `type ${key}{\n`;
+                def += `type ${key} {\n`;
                 for (const k in types[key]) {
                     if (descriptions[key]?.[k]) def += `  ${setDescription(descriptions[key][k])}\n`;
                     def += `  ${k}: ${types[key][k]}\n`;
@@ -87,6 +132,7 @@ export function rebuild() {
             typeDefs: defs,
             resolvers,
         });
+        schema = applyAuthDirective(schema);
         schemaStr = defs.join('\n');
     } catch (e) {
         console.error(e);

@@ -40,7 +40,7 @@ registerValue('User', [
     ['avatarUrl', 'String'],
     ['tfa', 'Boolean!'],
     ['authn', 'Boolean!'],
-    ['displayName', 'String'],
+    ['displayName', 'String @if(perm: "PERM_VIEW_DISPLAYNAME")'],
     ['rpInfo', 'JSONObject'],
 ]);
 

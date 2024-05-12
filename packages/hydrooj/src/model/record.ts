@@ -232,7 +232,7 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
-        await RecordModel.collStat.deleteOne(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
+        await RecordModel.collStat.deleteMany(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
         await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
         return RecordModel.update(domainId, rid, upd);
     }
