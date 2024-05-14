@@ -74,7 +74,7 @@ const langMap = {
 export async function run({
     host = 'localhost', port = 3306, name = 'syzoj',
     username, password, domainId, dataDir,
-    rerun = true, randomMail = false,
+    rerun = true, randomMail = 'never',
 }, report: Function) {
     const src = await mariadb.createConnection({
         host,
@@ -114,9 +114,13 @@ export async function run({
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
-        if (randomMail) delete udoc.email;
+        if (randomMail === 'always') delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
         current ||= await UserModel.getByUname(domainId, udoc.username);
+        if (current && randomMail === 'needed') {
+            delete udoc.email;
+            current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
+        }
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
             uidMap[udoc.id] = current._id;

@@ -7,6 +7,8 @@
   {% if rdoc['time'] %}
     <dt>{{ _('Total Time') }}</dt>
     <dd>{% if _ge %}&ge;{% endif %}{{ rdoc.time|round(0) }}ms</dd>
+  {% endif %}
+  {% if rdoc.testCases.length %}
     <dt>{{ _('Peak Time') }}</dt>
     <dd>{% if _ge %}&ge;{% endif %}{{ (rdoc.testCases|sort(true, true, "time")|first)["time"]|round(0) }}ms</dd>
   {% endif %}

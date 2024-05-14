@@ -31,6 +31,7 @@ export function apply(ctx: Context) {
             password: Schema.string().required(),
             domainId: Schema.string().default('system'),
             dataDir: Schema.string().default('/opt/syzoj/web/uploads'),
+            randomMail: Schema.union(['never', 'needed', 'always']).default('never'),
         }),
         (...args) => require('./scripts/syzoj').run(...args),
     );
