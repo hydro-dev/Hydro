@@ -72,6 +72,7 @@ problem_create: Problem Create
 problem_detail: Problem Detail
 problem_edit: Problem Edit
 problem_files: Problem Files
+problem_hack: Hack
 problem_import: Import Problem
 problem_main: Problem Set
 problem_solution: Problem Solution
@@ -109,5 +110,6 @@ user_login: Login
 user_logout: Logout
 user_lostpass: Lost Password
 user_register: Register
+user_sudo: Entering Sudo Mode
 wiki_about: About
 wiki_help: Help
