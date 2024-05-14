@@ -598,9 +598,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
             if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');
             await storage.put(`submission/${id}`, file.filepath, this.user._id);
         } else if (input) {
-            if (autoOrganizeInput) {
-                input = input.split('\n').map((line) => line.replace(/\s+$/, '')).join('\n').replace(/\n*$/, '\n');
-            }
+            if (autoOrganizeInput) input = input.replace(/\s+\n/g, '\n').replace(/\s+ /g, ' ');
             await storage.put(`submission/${id}`, Buffer.from(input), this.user._id);
         }
         const rid = await record.add(

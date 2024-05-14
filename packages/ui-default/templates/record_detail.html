@@ -66,10 +66,8 @@
         <dl class="large horizontal">
           <dt>{{ _('Submit By') }}</dt>
           <dd>{{ user.render_inline(udoc, modbadge=false) }}</dd>
-          {% if hackudoc %}
+          {% if rdoc.hackTarget %}
             <dt>{{ _('Hacked') }}</dt>
-            <dd>{{ user.render_inline(hackudoc, modbadge=false) }}</dd>
-            <dt>{{ _('Submission') }}</dt>
             <dd><a href="{{ url('record_detail', rid=rdoc.hackTarget) }}">{{ rdoc.hackTarget }}</a></dd>
           {% endif %}
           {% if pdoc %}
