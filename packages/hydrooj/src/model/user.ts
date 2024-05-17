@@ -176,13 +176,8 @@ export class User {
 }
 
 function handleMailLower(mail: string) {
-    let data = mail.trim().toLowerCase();
-    if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
-    if (data.endsWith('@gmail.com')) {
-        const [prev] = data.split('@');
-        data = `${prev.replace(/[.+]/g, '')}@gmail.com`;
-    }
-    return data;
+    const [n, d] = mail.trim().toLowerCase().split('@');
+    return `${n.replace(/\./g, '').replace(/\+.$/, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
 }
 
 async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
