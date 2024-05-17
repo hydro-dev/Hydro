@@ -86,6 +86,10 @@
             <dt>{{ _('Language') }}</dt>
             <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
           {% endif %}
+          {% if rdoc.code %}
+            <dt>{{ _('Code Length') }}</dt>
+            <dd>{{ size(rdoc.code|length) }}</dt>
+          {% endif %}
           <dt>{{ _('Submit At') }}</dt>
           <dd>{{ datetimeSpan(rdoc._id, false)|safe }}</dd>
           {% if rdoc.judgeAt %}
