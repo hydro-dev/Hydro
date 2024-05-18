@@ -177,7 +177,7 @@ export class User {
 
 function handleMailLower(mail: string) {
     const [n, d] = mail.trim().toLowerCase().split('@');
-    return `${n.replace(/\./g, '').replace(/\+.$/, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
+    return `${n.replace(/\./g, '').replace(/\+.*$/, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
 }
 
 async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
