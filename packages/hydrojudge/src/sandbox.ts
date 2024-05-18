@@ -230,7 +230,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
     } catch (e) {
-        if (e?.code === 'ECONNREFUSED') reportError('Your sandbox is not running. Please check status via `pm2 ls` or `pm2 log hydro-sandbox`.');
+        if (e?.code === 'ECONNREFUSED') reportError('Connecting to sandbox failed, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
         return false;
     }
