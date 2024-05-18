@@ -226,11 +226,12 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     let sandboxCgroup: number;
     try {
         const version = await client.version();
+        if (!version.copyOutOptional) reportError('Your sandbox version is tooooooo low! Please upgrade!');
         sandboxVersion = version.buildVersion.split('v')[1];
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
     } catch (e) {
-        reportError('Your sandbox version is tooooooo low! Please upgrade!');
+        reportError('Your sandbox is not running. Please check status via `pm2 ls` or log via `pm2 log hydro-sandbox`.');
         return false;
     }
     const { osinfo } = await sysinfo.get();
