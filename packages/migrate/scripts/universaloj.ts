@@ -37,7 +37,8 @@ const langMap = {
 };
 function handleMailLower(mail: string) {
     const [n, d] = mail.trim().toLowerCase().split('@');
-    return `${n.replace(/\./g, '').replace(/\+.*$/, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
+    const [name] = n.split('+');
+    return `${name.replace(/\./g, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
 }
 
 export async function run({
