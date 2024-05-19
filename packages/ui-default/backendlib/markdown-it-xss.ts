@@ -1,3 +1,4 @@
+import { FilterCSS } from 'cssfilter';
 import { escapeAttrValue, FilterXSS, safeAttrValue } from 'xss';
 
 const stack = [];
@@ -33,15 +34,29 @@ const tagCheck = new FilterXSS({
   },
 });
 
-export const xss = new FilterXSS({
+const cssFilterOptions = {
+  whiteList: {
+    'font-size': true,
+    'font-family': true,
+    'text-align': true,
+    'text-indent': true,
+    'margin-left': true,
+    position: /relative/,
+    padding: true,
+    height: true,
+    width: true,
+    color: true,
+  },
+};
+
+const CssFilter = new FilterXSS(cssFilterOptions);
+
+const commonRules = {
   whiteList: {
     a: ['target', 'href', 'title'],
     abbr: ['title'],
     address: [],
-    area: ['shape', 'coords', 'href', 'alt'],
-    article: [],
     aside: [],
-    audio: ['autoplay', 'controls', 'loop', 'preload', 'src'],
     b: [],
     bdi: ['dir'],
     bdo: ['dir'],
@@ -52,40 +67,57 @@ export const xss = new FilterXSS({
     center: [],
     cite: [],
     code: ['class'],
+    del: ['datetime'],
+    div: ['id', 'class'],
+    dl: [],
+    em: [],
+    font: ['color', 'size', 'face'],
+    header: [],
+    i: [],
+    ins: ['datetime'],
+    mark: [],
+    ol: [],
+    p: ['align', 'style'],
+    pre: [],
+    s: [],
+    small: [],
+    span: ['class', 'style'],
+    sub: [],
+    sup: [],
+    strong: ['id'],
+    tt: [],
+    u: [],
+    var: [],
+  },
+  css: false,
+  allowCommentTag: false,
+  stripIgnoreTag: true,
+  stripIgnoreTagBody: ['script', 'semantics'],
+};
+
+export const xss = new FilterXSS({
+  ...commonRules,
+  whiteList: {
+    ...commonRules.whiteList,
+    area: ['shape', 'coords', 'href', 'alt'],
+    article: [],
+    audio: ['autoplay', 'controls', 'loop', 'preload', 'src'],
     col: ['align', 'valign', 'span', 'width'],
     colgroup: ['align', 'valign', 'span', 'width'],
     dd: [],
-    del: ['datetime'],
     details: ['open'],
-    div: ['id', 'class'],
-    dl: [],
     dt: [],
-    em: [],
-    font: ['color', 'size', 'face'],
     h1: ['id'],
     h2: ['id', 'class'],
     h3: ['id'],
     h4: ['id'],
     h5: ['id'],
     h6: ['id'],
-    header: [],
     hr: [],
-    i: [],
     img: ['src', 'alt', 'title', 'width', 'height'],
-    ins: ['datetime'],
     li: [],
-    mark: [],
-    ol: [],
-    p: ['align', 'style'],
-    pre: [],
-    s: [],
     section: [],
-    small: [],
-    span: ['class', 'style'],
-    sub: [],
     summary: [],
-    sup: [],
-    strong: ['id'],
     table: ['width', 'border', 'align', 'valign'],
     tbody: ['align', 'valign'],
     td: ['width', 'rowspan', 'colspan', 'align', 'valign', 'bgcolor'],
@@ -93,84 +125,29 @@ export const xss = new FilterXSS({
     th: ['width', 'rowspan', 'colspan', 'align', 'valign'],
     thead: ['align', 'valign'],
     tr: ['rowspan', 'align', 'valign'],
-    tt: [],
-    u: [],
     ul: [],
-    var: [],
     video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
   },
-  css: {
-    whiteList: {
-      'font-size': true,
-      'font-family': true,
-      'text-align': true,
-      'text-indent': true,
-      'margin-left': true,
-      color: true,
-    },
-  },
-  allowCommentTag: false,
-  stripIgnoreTagBody: ['script'],
+  css: cssFilterOptions,
   safeAttrValue(tag, name, value) {
     if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
     if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
-    return safeAttrValue(tag, name, value, this.cssFilter);
+    return safeAttrValue(tag, name, value, CssFilter);
+  },
+});
+
+const inlineCssFilter = new FilterCSS({
+  whiteList: {
+    color: true,
   },
 });
 
 export const xssInline = new FilterXSS({
-  whiteList: {
-    a: ['target', 'href', 'title'],
-    abbr: ['title'],
-    address: [],
-    aside: [],
-    b: [],
-    bdi: ['dir'],
-    bdo: ['dir'],
-    big: [],
-    blockquote: ['cite', 'class'],
-    br: [],
-    caption: [],
-    center: [],
-    cite: [],
-    code: ['class'],
-    del: ['datetime'],
-    div: ['id', 'class'],
-    dl: [],
-    em: [],
-    font: ['color', 'size', 'face'],
-    header: [],
-    i: [],
-    ins: ['datetime'],
-    mark: [],
-    ol: [],
-    p: ['align', 'style'],
-    pre: [],
-    s: [],
-    small: [],
-    span: ['class', 'style'],
-    sub: [],
-    sup: [],
-    strong: ['id'],
-    tt: [],
-    u: [],
-    var: [],
-  },
-  css: {
-    whiteList: {
-      'font-size': true,
-      'font-family': true,
-      'text-indent': true,
-      color: true,
-    },
-  },
-  allowCommentTag: false,
-  stripIgnoreTag: true,
-  stripIgnoreTagBody: ['script'],
+  ...commonRules,
   safeAttrValue(tag, name, value) {
     if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
     if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
-    return safeAttrValue(tag, name, value, this.cssFilter);
+    return safeAttrValue(tag, name, value, inlineCssFilter);
   },
 });
 
