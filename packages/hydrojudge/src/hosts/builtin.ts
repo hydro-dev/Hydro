@@ -3,10 +3,9 @@
 import path from 'path';
 import { fs } from '@hydrooj/utils';
 import {
-    JudgeResultBody, ObjectId, RecordModel, SettingModel,
+    JudgeHandler, JudgeResultBody, ObjectId, RecordModel, SettingModel,
     StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
-import { end, next, processJudgeFileCallback } from 'hydrooj/src/handler/judge';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
@@ -23,21 +22,21 @@ const session = {
         return target;
     },
     getNext(t: Context) {
-        return async (data: Partial<JudgeResultBody>) => {
+        t._callbackAwait ||= Promise.resolve();
+        return (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
             data.rid = new ObjectId(t.rid);
-            const rdoc = await RecordModel.get(data.rid);
             if (data.case) data.case.message ||= '';
-            next({ ...data, domainId: rdoc.domainId });
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, domainId: t.request.domainId }));
         };
     },
     getEnd(t: Context) {
-        return async (data: Partial<JudgeResultBody>) => {
+        t._callbackAwait ||= Promise.resolve();
+        return (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
             data.rid = new ObjectId(t.rid);
-            const rdoc = await RecordModel.get(data.rid);
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end({ ...data, domainId: rdoc.domainId });
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, domainId: t.request.domainId }));
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -47,7 +46,7 @@ const session = {
         return null;
     },
     async postFile(target: string, filename: string, filepath: string) {
-        return await processJudgeFileCallback(new ObjectId(target), filename, filepath);
+        return await JudgeHandler.processJudgeFileCallback(new ObjectId(target), filename, filepath);
     },
     async cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
