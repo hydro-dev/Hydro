@@ -2,6 +2,7 @@ import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
@@ -246,6 +247,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       localStorage.setItem(`${cacheKey}#objective`, JSON.stringify(ans));
       setUpdate?.((i) => i + 1);
     }
+    function clearAns() {
+      localStorage.removeItem(`${cacheKey}#objective`);
+      window.location.reload();
+    }
     function loadAns() {
       const saved = localStorage.getItem(`${cacheKey}#objective`);
       if (saved) {
@@ -296,9 +301,20 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             Notification.error(err.message);
           });
       });
+      $('.section--problem-sidebar ol.menu').prepend(tpl(<li className="menu__item" id="clearAnswers">
+        <a className="menu__link" href="javascript:;">
+          <span className="icon icon-erase" /> {i18n('Clear answers')}
+        </a>
+      </li>));
+      $(document).on('click', '#clearAnswers', async () => {
+        const result = await new ConfirmDialog({
+          $body: tpl.typoMsg('All changes will be lost. Are you sure to clear all answers?'),
+        }).open();
+        if (result === 'yes') clearAns();
+      });
     }
     const ele = document.createElement('div');
-    $(ele).insertBefore($('.scratchpad--hide').get(0));
+    $('.section--problem-sidebar ol.menu').prepend(ele);
     createRoot(ele).render(<ProblemNavigation />);
     $('.non-scratchpad--hide').hide();
     $('.scratchpad--hide').hide();
