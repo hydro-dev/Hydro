@@ -118,18 +118,40 @@ const defaultSearch = async (domainId: string, q: string, options?: ProblemSearc
     const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
     const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
-    if (!Number.isNaN(+q)) {
-        const pdoc = await problem.get(domainId, +q, ['domainId', 'docId', 'pid', 'title']);
+    if (!options.skip) {
+        const pdoc = await problem.get(domainId, +q || q, ['domainId', 'docId', 'pid', 'title']);
         if (pdoc) pdocs.unshift(pdoc);
     }
     return {
         hits: pdocs.map((i) => `${i.domainId}/${i.docId}`),
-        total: await problem.count(domainId, filter),
+        total: Math.max(pdocs.length, await problem.count(domainId, filter)),
         countRelation: 'eq',
     };
 };
 
+export interface QueryContext {
+    query: Filter<ProblemDoc>;
+    sort: string[];
+    pcountRelation: string;
+    parsed: ReturnType<typeof parser.parse>;
+    category: string[];
+    text: string;
+    total: number;
+    fail: boolean;
+}
+
 export class ProblemMainHandler extends Handler {
+    queryContext: QueryContext = {
+        query: {},
+        sort: [],
+        pcountRelation: 'eq',
+        parsed: null,
+        category: [],
+        text: '',
+        total: 0,
+        fail: false,
+    };
+
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
     @param('limit', Types.PositiveInt, true)
@@ -137,13 +159,11 @@ export class ProblemMainHandler extends Handler {
     async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
         this.response.template = 'problem_main.html';
         if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
+        this.queryContext.query = buildQuery(this.user);
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const query = buildQuery(this.user);
+        const query = this.queryContext.query;
         const psdict = {};
         const search = global.Hydro.lib.problemSearch || defaultSearch;
-        let sort: string[] = [];
-        let fail = false;
-        let pcountRelation = 'eq';
         const parsed = parser.parse(q, {
             keywords: ['category', 'difficulty'],
             offsets: false,
@@ -162,8 +182,8 @@ export class ProblemMainHandler extends Handler {
         if (text) {
             const result = await search(domainId, q, { skip: (page - 1) * limit, limit });
             total = result.total;
-            pcountRelation = result.countRelation;
-            if (!result.hits.length) fail = true;
+            this.queryContext.pcountRelation = result.countRelation;
+            if (!result.hits.length) this.queryContext.fail = true;
             query.$and ||= [];
             query.$and.push({
                 $or: result.hits.map((i) => {
@@ -171,27 +191,19 @@ export class ProblemMainHandler extends Handler {
                     return { domainId: did, docId: +docId };
                 }),
             });
-            sort = result.hits;
+            this.queryContext.sort = result.hits;
         }
+        const sort = this.queryContext.sort;
         await this.ctx.parallel('problem/list', query, this, sort);
         // eslint-disable-next-line prefer-const
-        let [pdocs, ppcount, pcount] = fail
+        let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
-            : await problem.list(domainId, query, sort?.length ? 1 : page, limit, undefined, this.user._id);
+            : await problem.list(domainId, query, sort.length ? 1 : page, limit, undefined, this.user._id);
         if (total) {
             pcount = total;
             ppcount = Math.ceil(total / limit);
         }
         if (sort.length) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
-        if (q && page === 1) {
-            const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
-            if (pdoc && problem.canViewBy(pdoc, this.user)) {
-                const count = pdocs.length;
-                pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
-                pdocs.unshift(pdoc);
-                pcount = pcount - count + pdocs.length;
-            }
-        }
         if (text && pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
@@ -210,7 +222,7 @@ export class ProblemMainHandler extends Handler {
                     this.renderHTML('partials/problem_list.html', {
                         page, ppcount, pcount, pdocs, psdict, qs: q,
                     }),
-                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
+                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation: this.queryContext.pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { qs: q }),
                 ])).map((i) => ({ html: i })),
             };
@@ -219,7 +231,7 @@ export class ProblemMainHandler extends Handler {
                 page,
                 pcount,
                 ppcount,
-                pcountRelation,
+                pcountRelation: this.queryContext.pcountRelation,
                 pdocs,
                 psdict,
                 qs: q,
@@ -595,7 +607,7 @@ export class ProblemHackHandler extends ProblemDetailHandler {
         const id = `${this.user._id}/${nanoid()}`;
         if (this.request.files?.file?.size > 0) {
             const file = this.request.files.file;
-            if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');
+            if (!file || file.size > 2 * 1024 * 1024) throw new ValidationError('input');
             await storage.put(`submission/${id}`, file.filepath, this.user._id);
         } else if (input) {
             if (autoOrganizeInput) input = input.replace(/\s+\n/g, '\n').replace(/\s+ /g, ' ');
@@ -611,7 +623,6 @@ export class ProblemHackHandler extends ProblemDetailHandler {
                 files: { hack: `${id}#input.txt` },
             },
         );
-        // TODO contest: update status;
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
