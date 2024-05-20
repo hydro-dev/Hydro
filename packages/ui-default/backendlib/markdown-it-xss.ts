@@ -49,7 +49,7 @@ const cssFilterOptions = {
   },
 };
 
-const CssFilter = new FilterXSS(cssFilterOptions);
+const CssFilter = new FilterCSS(cssFilterOptions);
 
 const commonRules = {
   whiteList: {
