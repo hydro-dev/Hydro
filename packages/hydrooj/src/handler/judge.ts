@@ -5,6 +5,7 @@ import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
+import { Context } from '../context';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
@@ -109,6 +110,7 @@ export async function postJudge(rdoc: RecordDoc) {
 
 bus.on('record/judge', async (rdoc, updated, pdoc) => {
     if (!pdoc || rdoc.status !== STATUS.STATUS_HACK_SUCCESSFUL) return;
+    if (rdoc.contest) return;
     try {
         const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
         assert(config.subtasks instanceof Array);
@@ -323,7 +325,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
