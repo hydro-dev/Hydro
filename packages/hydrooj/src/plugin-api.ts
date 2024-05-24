@@ -30,7 +30,7 @@ export { default as StorageModel } from './model/storage';
 export { default as TaskModel } from './model/task';
 export * from './model/builtin';
 export * as JudgeHandler from './handler/judge';
-export { registerResolver, registerValue, registerUnion } from './handler/api';
+export { registerResolver, registerValue, registerUnion } from './service/api';
 export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
 export { Service, Context } from './context';
