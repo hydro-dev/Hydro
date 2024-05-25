@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb';
 import avatar from '../../lib/avatar';
 import serializer from '../../lib/serializer';
-import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import type { KoaContext } from '../server';
 
@@ -16,9 +15,7 @@ export default (router, logger) => async (ctx: KoaContext, next) => {
         };
         const type = templateName.split('.')[1];
         const engine = global.Hydro.module.render[type]
-            || (() => JSON.stringify(args, serializer({
-                showDisplayName: user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
-            })));
+            || (() => JSON.stringify(args, serializer(false, ctx.handler)));
         return engine(templateName, {
             handler: ctx.handler,
             UserContext,

@@ -1,15 +1,11 @@
 import http from 'http';
 import { tmpdir } from 'os';
-import { join, resolve } from 'path';
-import cac from 'cac';
+import { join } from 'path';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
-import proxy from 'koa-proxies';
-import cache from 'koa-static-cache';
-import type { FindCursor } from 'mongodb';
 import { Shorty } from 'shorty.js';
 import WebSocket from 'ws';
 import { Counter, isClass, parseMemoryMB } from '@hydrooj/utils/lib/utils';
@@ -20,26 +16,27 @@ import {
     PrivilegeError, UserFacingError,
 } from '../error';
 import { DomainDoc } from '../interface';
-import paginate from '../lib/paginate';
 import serializer from '../lib/serializer';
 import { Types } from '../lib/validator';
 import { Logger } from '../logger';
-import { PERM, PRIV } from '../model/builtin';
-import * as opcount from '../model/opcount';
-import * as OplogModel from '../model/oplog';
-import * as system from '../model/system';
 import { User } from '../model/user';
-import { builtinConfig } from '../settings';
 import { errorMessage } from '../utils';
-import * as bus from './bus';
 import * as decorators from './decorators';
-import baseLayer from './layers/base';
-import domainLayer from './layers/domain';
-import rendererLayer from './layers/renderer';
-import responseLayer from './layers/response';
-import userLayer from './layers/user';
 import { Router } from './router';
-import { encodeRFC5987ValueChars } from './storage';
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
+export function encodeRFC5987ValueChars(str: string) {
+    return (
+        encodeURIComponent(str)
+            // Note that although RFC3986 reserves "!", RFC5987 does not,
+            // so we do not need to escape it
+            .replace(/['()]/g, escape) // i.e., %27 %28 %29
+            .replace(/\*/g, '%2A')
+            // The following are not required for percent-encoding per RFC5987,
+            // so we can allow for a little better readability over the wire: |`^
+            .replace(/%(?:7C|60|5E)/g, unescape)
+    );
+}
 
 export * from './decorators';
 export * from '../lib/validator';
@@ -96,17 +93,15 @@ export interface KoaContext extends Koa.Context {
     translate: (key: string) => string;
 }
 
-const argv = cac().parse();
 const logger = new Logger('server');
-export const app = new Koa<Koa.DefaultState, KoaContext>({
-    keys: system.get('server.keys'),
+/** @deprecated */
+export const koa = new Koa<Koa.DefaultState, KoaContext>({
+    keys: [Math.random().toString(16).substring(2)],
 });
 export const router = new Router();
-export const httpServer = http.createServer(app.callback());
+export const httpServer = http.createServer(koa.callback());
 export const wsServer = new WebSocket.Server({ server: httpServer });
-export const captureAllRoutes = {};
-app.proxy = !!system.get('server.xproxy') || !!system.get('server.xff');
-app.on('error', (error) => {
+koa.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
     }
@@ -114,8 +109,6 @@ app.on('error', (error) => {
 wsServer.on('error', (error) => {
     console.log('Websocket server error:', error);
 });
-
-const ignoredLimit = `,${argv.options.ignoredLimit},`;
 
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
@@ -143,35 +136,18 @@ export class HandlerCommon {
         });
     }
 
-    async limitRate(op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user')) {
-        if (ignoredLimit.includes(op)) return;
-        if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
-        const overrideLimit = system.get(`limit.${op}`);
-        if (overrideLimit) maxOperations = overrideLimit;
-        let id = this.request.ip;
-        if (withUserId) id += `@${this.user._id}`;
-        await opcount.inc(op, id, periodSecs, maxOperations);
-    }
-
-    paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
-        return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
-    }
-
     renderTitle(str: string) {
         const name = this.ctx.setting.get('server.name');
         if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
         return `${this.translate(str)} - ${name}`;
     }
 
-    checkPerm(...args: bigint[]) {
-        if (!this.user.hasPerm(...args)) {
-            if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new PermissionError(...args);
-            throw new PrivilegeError(PRIV.PRIV_USER_PROFILE);
-        }
+    checkPerm(..._: bigint[]) {
+        throw new Error('checkPerm was not implemented');
     }
 
-    checkPriv(...args: number[]) {
-        if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
+    checkPriv(..._: number[]) {
+        throw new Error('checkPriv was not implemented');
     }
 }
 
@@ -194,29 +170,15 @@ export class Handler extends HandlerCommon {
         if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
     }
 
-    // This is beta API, may be changed in the future.
-    progress(message: string, params: any[]) {
-        Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
-    }
-
     async init() {
         if (this.request.method === 'post' && this.request.headers.referer && !this.context.cors && !this.allowCors) {
             try {
                 const host = new URL(this.request.headers.referer).host;
-                if (host !== this.request.host) this.context.pendingError = new CsrfTokenError(host);
+                if (host !== this.request.host) throw new CsrfTokenError(host);
             } catch (e) {
-                this.context.pendingError = new CsrfTokenError();
+                throw e instanceof CsrfTokenError ? e : new CsrfTokenError();
             }
         }
-        if (!argv.options.benchmark && !this.notUsage) await this.limitRate('global', 5, 100);
-        if (!this.noCheckPermView && !this.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) this.checkPerm(PERM.PERM_VIEW);
-        this.loginMethods = Object.keys(global.Hydro.module.oauth)
-            .map((key) => ({
-                id: key,
-                icon: global.Hydro.module.oauth[key].icon,
-                text: global.Hydro.module.oauth[key].text,
-            }));
-        if (this.context.pendingError) throw this.context.pendingError;
     }
 
     async onerror(error: HydroError) {
@@ -250,89 +212,6 @@ async function serial(name: string, ...args: any[]) {
     return r;
 }
 
-async function handle(ctx: KoaContext, HandlerClass, checker) {
-    const {
-        args, request, response, user, domain, UiContext,
-    } = ctx.HydroContext;
-    Object.assign(args, ctx.params);
-    const init = Date.now();
-    const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
-    ctx.handler = h;
-    const method = ctx.method.toLowerCase();
-    try {
-        const operation = (method === 'post' && ctx.request.body?.operation)
-            ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
-            : '';
-
-        await bus.parallel('handler/create', h);
-
-        if (checker) checker.call(h);
-        if (method === 'post') {
-            if (operation) {
-                if (typeof h[`post${operation}`] !== 'function') {
-                    throw new InvalidOperationError(operation);
-                }
-            } else if (typeof h.post !== 'function') {
-                throw new MethodNotAllowedError(method);
-            }
-        } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
-            throw new MethodNotAllowedError(method);
-        }
-
-        const name = HandlerClass.name.replace(/Handler$/, '');
-        const steps = [
-            'init', 'handler/init',
-            `handler/before-prepare/${name}#${method}`, `handler/before-prepare/${name}`, 'handler/before-prepare',
-            'log/__prepare', '__prepare', '_prepare', 'prepare', 'log/__prepareDone',
-            `handler/before/${name}#${method}`, `handler/before/${name}`, 'handler/before',
-            'log/__method', 'all', method, 'log/__methodDone',
-            ...operation ? [
-                `handler/before-operation/${name}`, 'handler/before-operation',
-                `post${operation}`, 'log/__operationDone',
-            ] : [], 'after',
-            `handler/after/${name}#${method}`, `handler/after/${name}`, 'handler/after',
-            'cleanup',
-            `handler/finish/${name}#${method}`, `handler/finish/${name}`, 'handler/finish',
-        ];
-
-        let current = 0;
-        while (current < steps.length) {
-            const step = steps[current];
-            let control;
-            if (step.startsWith('log/')) h.args[step.slice(4)] = Date.now();
-            // eslint-disable-next-line no-await-in-loop
-            else if (step.startsWith('handler/')) control = await serial(step, h);
-            // eslint-disable-next-line no-await-in-loop
-            else if (typeof h[step] === 'function') control = await h[step](args);
-            if (control) {
-                const index = steps.findIndex((i) => control === i);
-                if (index === -1) throw new Error(`Invalid control: ${control}`);
-                if (index <= current) {
-                    logger.warn('Returning to previous step is not recommended:', step, '->', control);
-                }
-                current = index;
-            } else current++;
-        }
-    } catch (e) {
-        try {
-            await serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
-            await serial('handler/error', h, e);
-            await h.onerror(e);
-        } catch (err) {
-            h.response.code = 500;
-            h.response.type = 'text/plain';
-            h.response.body = `${err.message}\n${err.stack}`;
-        }
-    } finally {
-        const finish = Date.now();
-        if (finish - init > 5000) {
-            const id = await OplogModel.log(h, 'slow_request', { method, processtime: finish - init });
-            logger.warn(`Slow handler: ID=${id}, `, method, ctx.path, `${finish - init}ms`);
-        }
-        // TODO metrics: calc avg response time
-    }
-}
-
 const Checker = (permPrivChecker) => {
     let perm: bigint;
     let priv: number;
@@ -359,11 +238,6 @@ const Checker = (permPrivChecker) => {
     };
 };
 
-export function Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
-    router.all(name, path, (ctx) => handle(ctx as any, RouteHandler, Checker(permPrivChecker)));
-    return router.disposeLastOp;
-}
-
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
     compression: Shorty;
@@ -376,9 +250,7 @@ export class ConnectionHandler extends HandlerCommon {
     }
 
     send(data: any) {
-        let payload = JSON.stringify(data, serializer({
-            showDisplayName: this.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
-        }));
+        let payload = JSON.stringify(data, serializer(false, this));
         if (this.compression) {
             if (this.counter > 1000) this.resetCompression();
             payload = this.compression.deflate(payload);
@@ -408,18 +280,220 @@ export class ConnectionHandler extends HandlerCommon {
     }
 }
 
-export function Connection(
-    name: string, prefix: string,
-    RouteConnHandler: any,
-    ...permPrivChecker: Array<number | bigint | Function>
-) {
-    const checker = Checker(permPrivChecker);
-    const layer = router.ws(prefix, async (conn, _, ctx) => {
+class NotFoundHandler extends Handler {
+    prepare() { throw new NotFoundError(this.request.path); }
+    all() { }
+}
+
+async function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+    const first = middlewares[0];
+    context.__timers ||= {};
+    context.__timers[`${first.name}.start`] = Date.now();
+    const next = () => executeMiddlewareStack(context, middlewares.slice(1));
+    try {
+        return await first.func(context, next);
+    } finally {
+        context.__timers[`${first.name}.end`] = Date.now();
+    }
+}
+
+interface RouteServiceConfig {
+    keys: string[];
+    proxy: boolean;
+    cors: string;
+    upload: string;
+    port: number;
+}
+
+export class RouteService extends Service {
+    private registry = {};
+    private registrationCount = Counter();
+    private serverLayers = [];
+    private wsLayers = [];
+    private captureAllRoutes = {};
+
+    server = koa;
+    router = router;
+    HandlerCommon = HandlerCommon;
+    Handler = Handler;
+    ConnectionHandler = ConnectionHandler;
+
+    constructor(ctx: Context, public config: RouteServiceConfig) {
+        super(ctx, 'server', true);
+        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
+    }
+
+    async start() {
+        this.server.keys = this.config.keys;
+        this.server.proxy = this.config.proxy;
+        const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
+        this.server.use(Compress());
+        this.server.use(async (ctx, next) => {
+            if (ctx.request.headers.origin) {
+                const host = new URL(ctx.request.headers.origin).host;
+                if (host !== ctx.request.headers.host && `,${this.config.cors || ''},`.includes(`,${host},`)) {
+                    ctx.set('Access-Control-Allow-Credentials', 'true');
+                    ctx.set('Access-Control-Allow-Origin', ctx.request.headers.origin);
+                    ctx.set('Access-Control-Allow-Headers', corsAllowHeaders);
+                    ctx.set('Vary', 'Origin');
+                    ctx.cors = true;
+                }
+            }
+            if (ctx.request.method.toLowerCase() === 'options') {
+                ctx.body = 'ok';
+                return null;
+            }
+            for (const key in this.captureAllRoutes) {
+                if (ctx.path.startsWith(key)) return this.captureAllRoutes[key](ctx, next);
+            }
+            return await next();
+        });
+        if (process.env.DEV) {
+            this.server.use(async (ctx: Koa.Context, next: Function) => {
+                const startTime = Date.now();
+                try {
+                    await next();
+                } finally {
+                    const endTime = Date.now();
+                    if (!(ctx.nolog || ctx.response.headers.nolog)) {
+                        logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
+    ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+                    }
+                }
+            });
+        }
+        const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
+        fs.ensureDirSync(uploadDir);
+        logger.debug('Using upload dir: %s', uploadDir);
+        this.server.use(Body({
+            multipart: true,
+            jsonLimit: '8mb',
+            formLimit: '8mb',
+            formidable: {
+                uploadDir,
+                maxFileSize: parseMemoryMB(this.config.upload) * 1024 * 1024,
+                keepExtensions: true,
+            },
+        }));
+        this.ctx.on('app/exit', () => {
+            fs.emptyDirSync(uploadDir);
+        });
+
+        this.server.use((ctx) => executeMiddlewareStack(ctx, [
+            ...this.serverLayers,
+            { name: 'route', func: router.routes() },
+            { name: '404', func: (c) => this.handleHttp(c, NotFoundHandler, () => true) },
+        ]).catch(console.error));
+        wsServer.on('connection', async (socket, request) => {
+            socket.on('error', (err) => {
+                logger.warn('Websocket Error: %s', err.message);
+                try {
+                    socket.close(1003, 'Websocket Error');
+                } catch (e) { }
+            });
+            socket.pause();
+            const ctx: any = koa.createContext(request, {} as any);
+            await executeMiddlewareStack(ctx, this.wsLayers);
+            for (const manager of router.wsStack) {
+                if (manager.accept(socket, request, ctx)) return;
+            }
+            socket.close();
+        });
+        this.ctx.on('app/listen', async () => {
+            this.ctx.on('dispose', () => {
+                httpServer.close();
+                wsServer.close();
+            });
+            await new Promise((r) => {
+                httpServer.listen(this.config.port, () => {
+                    logger.success('Server listening at: %d', this.config.port);
+                    r(true);
+                });
+            });
+        });
+    }
+
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
         const {
             args, request, response, user, domain, UiContext,
         } = ctx.HydroContext;
-        const h = new RouteConnHandler(ctx, args, request, response, user, domain, UiContext);
-        await bus.parallel('connection/create', h);
+        Object.assign(args, ctx.params);
+        const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
+        ctx.handler = h;
+        const method = ctx.method.toLowerCase();
+        try {
+            const operation = (method === 'post' && ctx.request.body?.operation)
+                ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
+                : '';
+
+            await this.ctx.parallel('handler/create', h);
+
+            if (checker) checker.call(h);
+            if (method === 'post') {
+                if (operation) {
+                    if (typeof h[`post${operation}`] !== 'function') {
+                        throw new InvalidOperationError(operation);
+                    }
+                } else if (typeof h.post !== 'function') {
+                    throw new MethodNotAllowedError(method);
+                }
+            } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
+                throw new MethodNotAllowedError(method);
+            }
+
+            const name = HandlerClass.name.replace(/Handler$/, '');
+            const steps = [
+                'init', 'handler/init',
+                `handler/before-prepare/${name}#${method}`, `handler/before-prepare/${name}`, 'handler/before-prepare',
+                'log/__prepare', '__prepare', '_prepare', 'prepare', 'log/__prepareDone',
+                `handler/before/${name}#${method}`, `handler/before/${name}`, 'handler/before',
+                'log/__method', 'all', method, 'log/__methodDone',
+                ...operation ? [
+                    `handler/before-operation/${name}`, 'handler/before-operation',
+                    `post${operation}`, 'log/__operationDone',
+                ] : [], 'after',
+                `handler/after/${name}#${method}`, `handler/after/${name}`, 'handler/after',
+                'cleanup',
+                `handler/finish/${name}#${method}`, `handler/finish/${name}`, 'handler/finish',
+            ];
+
+            let current = 0;
+            while (current < steps.length) {
+                const step = steps[current];
+                let control;
+                if (step.startsWith('log/')) h.args[step.slice(4)] = Date.now();
+                // eslint-disable-next-line no-await-in-loop
+                else if (step.startsWith('handler/')) control = await serial(step, h);
+                // eslint-disable-next-line no-await-in-loop
+                else if (typeof h[step] === 'function') control = await h[step](args);
+                if (control) {
+                    const index = steps.findIndex((i) => control === i);
+                    if (index === -1) throw new Error(`Invalid control: ${control}`);
+                    if (index <= current) {
+                        logger.warn('Returning to previous step is not recommended:', step, '->', control);
+                    }
+                    current = index;
+                } else current++;
+            }
+        } catch (e) {
+            try {
+                await serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
+                await serial('handler/error', h, e);
+                await h.onerror(e);
+            } catch (err) {
+                h.response.code = 500;
+                h.response.type = 'text/plain';
+                h.response.body = `${err.message}\n${err.stack}`;
+            }
+        }
+    }
+
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer) {
+        const {
+            args, request, response, user, domain, UiContext,
+        } = ctx.HydroContext;
+        const h = new HandlerClass(ctx, args, request, response, user, domain, UiContext);
+        await this.ctx.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
         const disposables = [];
@@ -429,14 +503,14 @@ export function Connection(
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
-            for (const { name, target } of h.__subscribe || []) disposables.push(bus.on(name, target.bind(h)));
+            for (const { name, target } of h.__subscribe || []) disposables.push(this.ctx.on(name, target.bind(h)));
             let lastHeartbeat = Date.now();
             let closed = false;
             let interval: NodeJS.Timeout;
             const clean = () => {
                 if (closed) return;
                 closed = true;
-                bus.emit('connection/close', h);
+                this.ctx.emit('connection/close', h);
                 layer.clients.delete(conn);
                 if (interval) clearInterval(interval);
                 for (const d of disposables) d();
@@ -471,7 +545,7 @@ export function Connection(
                     logger.error(e);
                 }
             };
-            await bus.parallel('connection/active', h);
+            await this.ctx.parallel('connection/active', h);
             if (conn.readyState === conn.OPEN) {
                 conn.on('close', clean);
                 conn.resume();
@@ -479,26 +553,9 @@ export function Connection(
         } catch (e) {
             await h.onerror(e);
         }
-    });
-    return router.disposeLastOp;
-}
-
-class NotFoundHandler extends Handler {
-    prepare() { throw new NotFoundError(this.request.path); }
-    all() { }
-}
-
-export class RouteService extends Service {
-    private registry = {};
-    private registrationCount = Counter();
-
-    constructor(ctx: Context) {
-        super(ctx, 'server', true);
-        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
     }
 
-    private register(func: typeof Route | typeof Connection, ...args: Parameters<typeof Route>) {
-        const HandlerClass = args[2];
+    private register(type: 'route' | 'conn', _: string, path: string, HandlerClass: any, ...permPrivChecker) {
         const name = HandlerClass.name;
         if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
@@ -506,12 +563,20 @@ export class RouteService extends Service {
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
-        const res = func(...args);
+        if (type === 'route') {
+            router.all(name, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
+        } else {
+            const checker = Checker(permPrivChecker);
+            const layer = router.ws(path, async (conn, _req, ctx) => {
+                await this.handleWS(ctx as any, HandlerClass, checker, conn, layer);
+            });
+        }
+        const dispose = router.disposeLastOp;
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
         this[Context.current]?.on('dispose', () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
-            res();
+            dispose();
         });
     }
 
@@ -524,13 +589,30 @@ export class RouteService extends Service {
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Route(...args: Parameters<typeof Route>) {
-        this.register(Route, ...args);
+    public Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
+        return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Connection(...args: Parameters<typeof Connection>) {
-        this.register(Connection, ...args);
+    public Connection(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
+        return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
+    }
+
+    public addHttpLayer(name: string, func: any) {
+        this.serverLayers.push({ name, func });
+    }
+
+    public addWSLayer(name: string, func: any) {
+        this.wsLayers.push({ name, func });
+    }
+
+    public addLayer(name: string, layer: any) {
+        this.addHttpLayer(name, layer);
+        this.addWSLayer(name, layer);
+    }
+
+    public addCaptureRoute(prefix: string, cb: any) {
+        this.captureAllRoutes[prefix] = cb;
     }
 }
 
@@ -540,129 +622,23 @@ declare module '../context' {
     }
 }
 
-export async function apply(pluginContext: Context) {
-    pluginContext.provide('server', undefined, true);
-    pluginContext.server = new RouteService(pluginContext);
-    app.keys = system.get('session.keys') as unknown as string[];
-    if (process.env.HYDRO_CLI) return;
-    const proxyMiddleware = proxy('/fs', {
-        target: builtinConfig.file.endPoint,
-        changeOrigin: true,
-        rewrite: (p) => p.replace('/fs', ''),
-    });
-    const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
-    app.use(async (ctx, next) => {
-        if (ctx.request.headers.origin) {
-            const host = new URL(ctx.request.headers.origin).host;
-            if (host !== ctx.request.headers.host && `,${system.get('server.cors')},`.includes(`,${host},`)) {
-                ctx.set('Access-Control-Allow-Credentials', 'true');
-                ctx.set('Access-Control-Allow-Origin', ctx.request.headers.origin);
-                ctx.set('Access-Control-Allow-Headers', corsAllowHeaders);
-                ctx.set('Vary', 'Origin');
-                ctx.cors = true;
-            }
-        }
-        if (ctx.request.method.toLowerCase() === 'options') {
-            ctx.body = 'ok';
-            return null;
-        }
-        for (const key in captureAllRoutes) {
-            if (ctx.path.startsWith(key)) return captureAllRoutes[key](ctx, next);
-        }
-        if (!ctx.path.startsWith('/fs/')) return await next();
-        if (ctx.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(ctx, next);
-        ctx.request.path = ctx.path = ctx.path.split('/fs')[1];
-        return await next();
-    });
-    app.use(Compress());
-    for (const addon of [...global.addons].reverse()) {
-        const dir = resolve(addon, 'public');
-        if (!fs.existsSync(dir)) continue;
-        app.use(cache(dir, {
-            maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
-        }));
-    }
-    if (process.env.DEV) {
-        app.use(async (ctx: Koa.Context, next: Function) => {
-            const startTime = Date.now();
-            try {
-                await next();
-            } finally {
-                const endTime = Date.now();
-                if (!(ctx.nolog || ctx.response.headers.nolog)) {
-                    logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
-${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
-                }
-            }
-        });
-    }
-    const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
-    fs.ensureDirSync(uploadDir);
-    logger.debug('Using upload dir: %s', uploadDir);
-    app.use(Body({
-        multipart: true,
-        jsonLimit: '8mb',
-        formLimit: '8mb',
-        formidable: {
-            uploadDir,
-            maxFileSize: parseMemoryMB(system.get('server.upload') || '256m') * 1024 * 1024,
-            keepExtensions: true,
-        },
-    }));
-    pluginContext.on('app/exit', () => {
-        fs.emptyDirSync(uploadDir);
-    });
-    const layers = [baseLayer, rendererLayer(router, logger), responseLayer(logger), userLayer];
-    app.use(async (ctx, next) => await next().catch(console.error)).use(domainLayer);
-    app.use(router.routes()).use(router.allowedMethods());
-    for (const layer of layers) {
-        router.use(layer as any);
-        app.use(layer);
-    }
-    app.use((ctx) => handle(ctx, NotFoundHandler, () => true));
-    wsServer.on('connection', async (socket, request) => {
-        socket.on('error', (err) => {
-            logger.warn('Websocket Error: %s', err.message);
-            try {
-                socket.close(1003, 'Websocket Error');
-            } catch (e) { }
-        });
-        socket.pause();
-        const ctx: any = app.createContext(request, {} as any);
-        await domainLayer(ctx, () => baseLayer(ctx, () => layers[1](ctx, () => userLayer(ctx, () => { }))));
-        for (const manager of router.wsStack) {
-            if (manager.accept(socket, request, ctx)) return;
-        }
-        socket.close();
-    });
-    const port = system.get('server.port');
-    pluginContext.on('app/listen', async () => {
-        await new Promise((r) => {
-            httpServer.listen(argv.options.port || port, () => {
-                logger.success('Server listening at: %d', argv.options.port || port);
-                r(true);
-            });
-        });
-        pluginContext.on('dispose', () => {
-            httpServer.close();
-            wsServer.close();
-        });
-    });
+// export const using = ['setting'];
+export async function apply(ctx: Context, config) {
+    ctx.provide('server', undefined, true);
+    ctx.server = new RouteService(ctx, config);
 }
 
 global.Hydro.service.server = {
     ...decorators,
     Types,
-    app,
+    // @ts-ignore
+    app: koa,
     httpServer,
     wsServer,
     router,
-    captureAllRoutes,
     RouteService,
     HandlerCommon,
     Handler,
     ConnectionHandler,
-    Route,
-    Connection,
     apply,
 };

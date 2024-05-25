@@ -43,7 +43,7 @@ export async function apply(ctx: Context) {
     await ctx.root.start();
     await ctx.lifecycle.flush();
     await require('../service/worker').apply(ctx);
-    await require('../service/server').apply(ctx);
+    await require('../service/server-loader').apply(ctx);
     await require('../service/api').apply(ctx);
     await ctx.lifecycle.flush();
     require('../lib/index');

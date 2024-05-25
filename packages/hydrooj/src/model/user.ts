@@ -8,7 +8,6 @@ import {
 } from '../interface';
 import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
-import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
@@ -165,13 +164,13 @@ export class User {
         return user;
     }
 
-    serialize(options) {
+    serialize(_, h) {
         if (!this._isPrivate) {
             const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
-            if (options.showDisplayName) fields.push('displayName');
+            if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName');
             return pick(this, fields);
         }
-        return JSON.stringify(this, serializer({ showDisplayName: options.showDisplayName }, true));
+        return JSON.stringify(this);
     }
 }
 
