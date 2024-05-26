@@ -18,7 +18,7 @@ import domainLayer from './layers/domain';
 import rendererLayer from './layers/renderer';
 import responseLayer from './layers/response';
 import userLayer from './layers/user';
-import { HandlerCommon } from './server';
+import type { HandlerCommon } from './server';
 
 const argv = cac().parse();
 const ignoredLimit = `,${argv.options.ignoredLimit},`;
@@ -26,15 +26,11 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 const logger = new Logger('server');
 
 declare module './server' {
-    interface HandlerCommon {
-        paginate: typeof pag;
+    export interface HandlerCommon {
+        paginate: <T>(cursor: FindCursor<T>, page: number, key: string) => Promise<[docs: T[], numPages: number, count: number]>;
         progress: (message: string, params: any[]) => void;
         limitRate: (op: string, periodSecs: number, maxOperations: number, withUserId?: boolean) => Promise<void>;
     }
-}
-
-function pag<T>(this: HandlerCommon, cursor: FindCursor<T>, page: number, key: string) {
-    return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
 }
 
 export async function apply(ctx: Context) {
@@ -85,7 +81,9 @@ export async function apply(ctx: Context) {
                 maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
             }));
         }
-        server.HandlerCommon.prototype.paginate = pag;
+        server.HandlerCommon.prototype.paginate = function <T>(this: HandlerCommon, cursor: FindCursor<T>, page: number, key: string) {
+            return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+        };
         server.HandlerCommon.prototype.checkPerm = function (this: HandlerCommon, ...args: bigint[]) {
             if (!this.user.hasPerm(...args)) {
                 if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new PermissionError(...args);

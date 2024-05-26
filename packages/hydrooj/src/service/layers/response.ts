@@ -1,7 +1,6 @@
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from '../../error';
 import serializer from '../../lib/serializer';
-import { PERM } from '../../model/builtin';
 import type { KoaContext } from '../server';
 
 export default (logger) => async (ctx: KoaContext, next) => {
@@ -27,7 +26,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                         response.body.UiContext = UiContext;
                         response.body.UserContext = user;
                     }
-                    response.body = JSON.stringify(response.body, serializer({ showDisplayName: user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) }));
+                    response.body = JSON.stringify(response.body, serializer(false, ctx.handler));
                 } catch (e) {
                     response.body = new SystemError('Serialize failure', e.message);
                 }

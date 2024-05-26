@@ -43,8 +43,7 @@ export { default as paginate } from './lib/paginate';
 export * from './lib/validator';
 export * from './service/decorators';
 export {
-    Handler, ConnectionHandler, captureAllRoutes,
-    httpServer, wsServer, router,
+    Handler, ConnectionHandler, httpServer, wsServer, router,
 } from './service/server';
 export { UiContextBase } from './service/layers/base';
 export * as StorageService from './service/storage';

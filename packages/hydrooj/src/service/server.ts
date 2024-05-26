@@ -23,6 +23,7 @@ import { User } from '../model/user';
 import { errorMessage } from '../utils';
 import * as decorators from './decorators';
 import { Router } from './router';
+import type { } from './server-loader';
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
 export function encodeRFC5987ValueChars(str: string) {
@@ -110,6 +111,7 @@ wsServer.on('error', (error) => {
     console.log('Websocket server error:', error);
 });
 
+export interface HandlerCommon { }
 export class HandlerCommon {
     render: (name: string, args?: any) => Promise<void>;
     renderHTML: (name: string, args?: any) => string | Promise<string>;
@@ -151,6 +153,7 @@ export class HandlerCommon {
     }
 }
 
+export interface Handler { }
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
@@ -238,6 +241,7 @@ const Checker = (permPrivChecker) => {
     };
 };
 
+export interface ConnectionHandler { }
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
     compression: Shorty;

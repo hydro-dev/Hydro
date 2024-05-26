@@ -3,8 +3,9 @@ import Schema from 'schemastery';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
-import { EventMap } from './service/bus';
+import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
+import type { RouteService } from './service/server';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
 
@@ -26,12 +27,9 @@ export type MainScope = cordis.MainScope<Context>;
 
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
-export interface Context extends cordis.Context {
+export interface Context extends cordis.Context, Pick<RouteService, 'Route' | 'Connection' | 'withHandlerClass'> {
     [Context.events]: Events<Context>;
     loader: Loader;
-    Route: typeof import('./service/server').Route;
-    Connection: typeof import('./service/server').Connection;
-    withHandlerClass: import('./service/server').RouteService['withHandlerClass'];
     check: CheckService;
     setImmediate: typeof setImmediate;
     addScript: typeof addScript;
