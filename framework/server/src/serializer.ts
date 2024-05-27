@@ -1,4 +1,4 @@
-import type { HandlerCommon } from '../service/server';
+import type { HandlerCommon } from './server';
 
 export default function serializer(ignoreSerializeFunction = false, h?: HandlerCommon) {
     return (k: string, v: any) => {

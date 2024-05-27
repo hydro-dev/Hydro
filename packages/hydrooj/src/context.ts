@@ -1,13 +1,13 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
+import type { RouteService, ServerEvents } from '@hydrooj/server';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
-import type { RouteService } from './service/server';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
+export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap, ServerEvents { }
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
@@ -28,7 +28,7 @@ export type MainScope = cordis.MainScope<Context>;
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
 export interface Context extends cordis.Context, Pick<RouteService, 'Route' | 'Connection' | 'withHandlerClass'> {
-    [Context.events]: Events<Context>;
+    [Context.events]: Events<this>;
     loader: Loader;
     check: CheckService;
     setImmediate: typeof setImmediate;
@@ -70,15 +70,6 @@ export class Context extends cordis.Context {
         super(config);
         this.plugin(ApiMixin);
     }
-
-    /** @deprecated use `ctx.root` instead */
-    get app() {
-        return this.root;
-    }
-}
-
-export namespace Context {
-    export type Associate<P extends string, C extends Context = Context> = cordis.Context.Associate<P, C>;
 }
 
 const old = cordis.Registry.prototype.inject;

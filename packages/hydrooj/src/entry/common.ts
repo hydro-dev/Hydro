@@ -55,7 +55,6 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
             }
         }
     }
-    await bus.parallel(`app/load/${type}`);
 };
 
 export const handler = getLoader('handler', 'handler');
@@ -95,7 +94,6 @@ export async function locale(pending: string[], fail: string[]) {
             }
         }
     }
-    await bus.parallel('app/load/locale');
 }
 
 export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
@@ -137,7 +135,6 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             }
         }
     }
-    await bus.parallel('app/load/setting');
 }
 
 export async function template(pending: string[], fail: string[]) {
@@ -161,5 +158,4 @@ export async function template(pending: string[], fail: string[]) {
             }
         }
     }
-    await bus.parallel('app/load/template');
 }

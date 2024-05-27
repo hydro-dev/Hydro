@@ -1,7 +1,7 @@
+import type { KoaContext } from '@hydrooj/server';
 import { NotFoundError } from '../../error';
 import { PERM } from '../../model/builtin';
 import UserModel from '../../model/user';
-import type { KoaContext } from '../server';
 
 export default async (ctx: KoaContext, next) => {
     // User Layer

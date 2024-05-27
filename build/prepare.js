@@ -74,7 +74,7 @@ for (const name of ['plugins', 'modules']) {
 
 const modules = [
     'packages/hydrooj',
-    ...['packages', 'plugins', 'modules'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
+    ...['packages', 'framework', 'plugins', 'modules'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
 ].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
 
 const UIConfig = {

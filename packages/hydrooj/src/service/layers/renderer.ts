@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb';
+import type { KoaContext } from '@hydrooj/server';
+import serializer from '@hydrooj/server/src/serializer';
 import avatar from '../../lib/avatar';
-import serializer from '../../lib/serializer';
 import * as system from '../../model/system';
-import type { KoaContext } from '../server';
 
 export default (router, logger) => async (ctx: KoaContext, next) => {
     const { request, response } = ctx.HydroContext;

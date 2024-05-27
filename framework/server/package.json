@@ -1,0 +1,26 @@
+{
+    "name": "@hydrooj/server",
+    "version": "0.0.1",
+    "main": "src/index",
+    "peerDependencies": {
+        "cordis": "*"
+    },
+    "dependencies": {
+        "emoji-regex": "^10.3.0",
+        "koa": "^2.15.3",
+        "koa-body": "^6.0.1",
+        "koa-compress": "^5.1.1",
+        "moment-timezone": "^0.5.45",
+        "path-to-regexp": "^6.2.2",
+        "sanitize-filename": "^1.6.3",
+        "saslprep": "^1.0.3",
+        "shorty.js": "^1.0.1",
+        "ws": "^8.17.0"
+    },
+    "devDependencies": {
+        "@types/koa": "^2.15.0",
+        "@types/koa-compress": "^4.0.6",
+        "@types/saslprep": "^1.0.3",
+        "@types/ws": "^8.5.10"
+    }
+}

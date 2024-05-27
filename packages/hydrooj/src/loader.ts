@@ -15,7 +15,7 @@ import './ui';
 import './lib/i18n';
 
 import { Logger } from './logger';
-import { Context } from './context';
+import { ApiMixin, Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
@@ -166,6 +166,7 @@ export function addScript(name: string, description: string) {
     };
 }
 
+app.plugin(ApiMixin);
 const loader = new Loader();
 app.provide('loader');
 app.loader = loader;

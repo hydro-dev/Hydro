@@ -2,7 +2,9 @@
 import {
     BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
+import type { Handler, ServerEvents } from '@hydrooj/server';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
+import { Context } from '../context';
 import type { ProblemSolutionHandler } from '../handler/problem';
 import type { UserRegisterHandler } from '../handler/user';
 import type {
@@ -11,28 +13,18 @@ import type {
     ScoreboardRow, Tdoc, TrainingDoc, User,
 } from '../interface';
 import type { DocType } from '../model/document';
-import type { ConnectionHandler, Handler } from './server';
 
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
-type ModuleCategories = 'lib' | 'locale' | 'template' | 'script' | 'model' | 'setting' | 'handler' | 'service' | 'addon';
-type LifecycleEvents = Record<`app/load/${ModuleCategories}`, () => VoidReturn>;
 type MapHandlerEvents<N extends string, H extends Handler> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;
 type KnownHandlerEvents =
     MapHandlerEvents<'UserRegister', UserRegisterHandler>
     & MapHandlerEvents<'ProblemSolution', ProblemSolutionHandler>;
-type HandlerEvents =
-    KnownHandlerEvents
-    & Record<`handler/${HookType}/${string}`, (thisArg: Handler & Record<string, any>) => VoidReturn>
-    & Record<`handler/${HookType}`, (thisArg: Handler) => VoidReturn>
-    & Record<`handler/register/${string}`, (HandlerClass: typeof Handler) => VoidReturn>
-    & Record<`connection/${'create' | 'active' | 'close'}`, (thisArg: ConnectionHandler) => VoidReturn>;
 
 /* eslint-disable @typescript-eslint/naming-convention */
-export interface EventMap extends LifecycleEvents, HandlerEvents {
+export interface EventMap extends KnownHandlerEvents {
     'app/started': () => void
-    'app/listen': () => void
     'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn
     'app/before-reload': (entries: Set<string>) => VoidReturn
@@ -45,7 +37,7 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
     'database/config': () => VoidReturn
 
     'system/setting': (args: Record<string, any>) => VoidReturn
-    'bus/broadcast': (event: keyof EventMap, ...args: any[]) => VoidReturn
+    'bus/broadcast': (event: keyof EventMap | keyof ServerEvents, payload: any) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
     'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
@@ -68,10 +60,6 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
         domainId: string, docType: T, docId: DocType[T],
         $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
     ) => VoidReturn
-
-    'handler/create': (thisArg: Handler) => VoidReturn
-    'handler/init': (thisArg: Handler) => VoidReturn
-    'handler/error': (thisArg: Handler, e: Error) => VoidReturn
 
     'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn
     'discussion/add': (payload: Partial<DiscussionDoc>) => VoidReturn
@@ -108,21 +96,27 @@ export interface EventMap extends LifecycleEvents, HandlerEvents {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-try {
-    if (!process.send || !pm2 || process.env.exec_mode !== 'cluster_mode') throw new Error();
-    pm2.launchBus((err, bus) => {
-        if (err) throw new Error();
-        bus.on('hydro:broadcast', (packet) => {
-            (app.parallel as any)(packet.data.event, ...BSON.EJSON.parse(packet.data.payload));
+declare module 'cordis' {
+    interface Events extends ServerEvents, EventMap { }
+}
+
+export function apply(ctx: Context) {
+    try {
+        if (!process.send || !pm2 || process.env.exec_mode !== 'cluster_mode') throw new Error();
+        pm2.launchBus((err, bus) => {
+            if (err) throw new Error();
+            bus.on('hydro:broadcast', (packet) => {
+                (app.parallel as any)(packet.data.event, ...BSON.EJSON.parse(packet.data.payload));
+            });
+            ctx.on('bus/broadcast', (event, payload) => {
+                process.send({ type: 'hydro:broadcast', data: { event, payload: BSON.EJSON.stringify(payload) } });
+            });
+            console.debug('Using pm2 event bus');
         });
-        app.on('bus/broadcast', (event, payload) => {
-            process.send({ type: 'hydro:broadcast', data: { event, payload: BSON.EJSON.stringify(payload) } });
-        });
-        console.debug('Using pm2 event bus');
-    });
-} catch (e) {
-    app.on('bus/broadcast', (event, payload) => app.parallel(event, ...payload));
-    console.debug('Using mongodb external event bus');
+    } catch (e) {
+        ctx.on('bus/broadcast', (event, payload) => app.parallel(event, ...payload));
+        console.debug('Using mongodb external event bus');
+    }
 }
 
 export default app;

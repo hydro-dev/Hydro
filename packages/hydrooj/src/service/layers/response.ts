@@ -1,7 +1,6 @@
+import { KoaContext, serializer } from '@hydrooj/server';
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from '../../error';
-import serializer from '../../lib/serializer';
-import type { KoaContext } from '../server';
 
 export default (logger) => async (ctx: KoaContext, next) => {
     const { request, response } = ctx.HydroContext;

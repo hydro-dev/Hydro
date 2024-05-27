@@ -1,8 +1,7 @@
 import { Time } from '@hydrooj/utils';
-import { ValidationError } from '../error';
-import { Converter, Type, Validator } from '../lib/validator';
-import { EventMap } from './bus';
+import { ValidationError } from './error';
 import type { Handler } from './server';
+import { Converter, Type, Validator } from './validator';
 
 type MethodDecorator = (target: any, funcName: string, obj: any) => any;
 type ClassDecorator = <T extends new (...args: any[]) => any>(Class: T) => T extends new (...args: infer R) => infer S
@@ -90,7 +89,7 @@ export const post: DescriptorBuilder = (name, ...args) => _descriptor(_buildPara
 export const route: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'route', ...args));
 export const param: DescriptorBuilder = (name, ...args) => _descriptor(_buildParam(name, 'all', ...args));
 
-export const subscribe: (name: keyof EventMap) => MethodDecorator & ClassDecorator = (name) => (target, funcName?, obj?) => {
+export const subscribe: (name: string) => MethodDecorator & ClassDecorator = (name) => (target, funcName?, obj?) => {
     if (funcName) {
         target.__subscribe ||= [];
         target.__subscribe.push({ name, target: obj.value });

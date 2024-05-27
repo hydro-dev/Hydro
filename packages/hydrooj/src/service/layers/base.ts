@@ -1,11 +1,11 @@
 import { PassThrough } from 'stream';
 import type { Next } from 'koa';
 import { cloneDeep, omit, pick } from 'lodash';
+import type { HydroRequest, HydroResponse, KoaContext } from '@hydrooj/server';
 import { randomPick } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import token from '../../model/token';
-import type { HydroRequest, HydroResponse, KoaContext } from '../server';
 
 export interface UiContextBase {
     cdn_prefix: string;
