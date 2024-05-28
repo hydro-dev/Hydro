@@ -290,7 +290,7 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export const langs: Record<string, LangConfig> = {};
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         setting: SettingService;
     }

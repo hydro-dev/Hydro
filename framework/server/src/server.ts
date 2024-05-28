@@ -101,10 +101,6 @@ wsServer.on('error', (error) => {
 
 export interface HandlerCommon { }
 export class HandlerCommon {
-    render: (name: string, args?: any) => Promise<void>;
-    renderHTML: (name: string, args?: any) => string | Promise<string>;
-    url: (name: string, args?: any) => string;
-    translate: (key: string) => string;
     session: Record<string, any>;
     ctx: Context;
     args: Record<string, any>;
@@ -112,17 +108,15 @@ export class HandlerCommon {
     response: HydroResponse;
     UiContext: Record<string, any>;
 
-    constructor(public context: KoaContext) {
-        this.render = context.render.bind(context);
-        this.renderHTML = context.renderHTML.bind(context);
-        this.url = context.getUrl.bind(context);
-        this.translate = context.translate.bind(context);
+    constructor(public context: KoaContext, ctx: Context) {
+        this.renderHTML = this.renderHTML.bind(this);
+        this.url = this.url.bind(context);
         this.session = context.session;
         this.args = context.HydroContext.args;
         this.request = context.HydroContext.request;
         this.response = context.HydroContext.response;
         this.UiContext = context.HydroContext.UiContext;
-        this.ctx = this.ctx.extend({});
+        this.ctx = ctx.extend({});
     }
 
     checkPerm(..._: bigint[]) {
@@ -132,9 +126,46 @@ export class HandlerCommon {
     checkPriv(..._: number[]) {
         throw new Error('checkPriv was not implemented');
     }
+
+    url(name: string, ...kwargsList: Record<string, any>[]) {
+        if (name === '#') return '#';
+        let res = '#';
+        const args: any = {};
+        const query: any = {};
+        for (const kwargs of kwargsList) {
+            for (const key in kwargs) {
+                args[key] = kwargs[key].toString().replace(/\//g, '%2F');
+            }
+            for (const key in kwargs.query || {}) {
+                query[key] = kwargs.query[key].toString();
+            }
+        }
+        try {
+            const { anchor } = args;
+            res = router.url(name, args, { query }).toString();
+            if (anchor) res = `${res}#${anchor}`;
+        } catch (e) {
+            logger.warn(e.message);
+            logger.info('%s %o', name, args);
+            if (!e.message.includes('Expected') || !e.message.includes('to match')) logger.info('%s', e.stack);
+        }
+        return res;
+    }
+
+    renderHTML(templateName: string, args: Record<string, any>) {
+        const type = templateName.split('.')[1];
+        const engine = global.Hydro.module.render[type]
+            || (() => JSON.stringify(args, serializer(false, this)));
+        return engine(templateName, {
+            handler: this,
+            UserContext: this.user,
+            url: this.url,
+            _: this.translate,
+            ...args,
+        });
+    }
 }
 
-export interface Handler { }
 export class Handler extends HandlerCommon {
     loginMethods: any;
     noCheckPermView = false;
@@ -203,7 +234,6 @@ const Checker = (permPrivChecker) => {
     };
 };
 
-export interface ConnectionHandler { }
 export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
     compression: Shorty;
@@ -248,6 +278,7 @@ class NotFoundHandler extends Handler {
 
 async function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
     const first = middlewares[0];
+    if (!first) return Promise.resolve();
     context.__timers ||= {};
     context.__timers[`${first.name}.start`] = Date.now();
     const next = () => executeMiddlewareStack(context, middlewares.slice(1));
@@ -338,8 +369,16 @@ export class RouteService extends Service {
 
         this.server.use((c) => executeMiddlewareStack(c, [
             ...this.serverLayers,
+            {
+                name: '404',
+                func: async (_, next) => {
+                    await next();
+                    if (c.response.body) return;
+                    await this.handleHttp(c, NotFoundHandler, () => true);
+                },
+            },
             { name: 'route', func: router.routes() },
-            { name: '404', func: () => this.handleHttp(c, NotFoundHandler, () => true) },
+            { name: 'methods', func: router.allowedMethods() },
         ]).catch(console.error));
         wsServer.on('connection', async (socket, request) => {
             socket.on('error', (err) => {
@@ -374,7 +413,7 @@ export class RouteService extends Service {
     private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx);
+        const h = new HandlerClass(ctx, this.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
         try {
@@ -570,6 +609,12 @@ export class RouteService extends Service {
 
     public addCaptureRoute(prefix: string, cb: any) {
         this.captureAllRoutes[prefix] = cb;
+    }
+
+    public handlerMixin(MixinClass: Partial<HandlerCommon>) {
+        for (const val of Object.getOwnPropertyNames(MixinClass)) {
+            HandlerCommon.prototype[val] = MixinClass[val];
+        }
     }
 }
 

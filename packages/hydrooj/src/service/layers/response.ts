@@ -34,7 +34,8 @@ export default (logger) => async (ctx: KoaContext, next) => {
                 const s = response.template.split('.');
                 let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
                 if (!global.Hydro.ui.template[templateName]) templateName = response.template;
-                await ctx.render(templateName, response.body || {});
+                response.body = await ctx.handler.renderHTML(templateName, response.body || {});
+                response.type = 'text/html';
             }
         }
         if (response.disposition) ctx.set('Content-Disposition', response.disposition);
@@ -43,12 +44,17 @@ export default (logger) => async (ctx: KoaContext, next) => {
             ctx.set('Cache-Control', 'public');
         }
     } catch (err) {
+        console.log(err);
         const error = errorMessage(err);
         response.status = error instanceof UserFacingError ? error.code : 500;
         if (request.json) response.body = { error };
         else {
             try {
-                await ctx.render(error instanceof UserFacingError ? 'error.html' : 'bsod.html', { UserFacingError, error });
+                response.body = await ctx.handler.renderHTML(
+                    error instanceof UserFacingError ? 'error.html' : 'bsod.html',
+                    { UserFacingError, error },
+                );
+                response.type = 'text/html';
             } catch (e) {
                 logger.error(e);
                 // this.response.body.error = {};

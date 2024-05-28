@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import cac from 'cac';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
-import type { FindCursor } from 'mongodb';
+import { type FindCursor, ObjectId } from 'mongodb';
 import {
     ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HandlerCommon, HydroError, NotFoundError, UserFacingError,
 } from '@hydrooj/server';
@@ -21,7 +21,6 @@ import type { User } from '../model/user';
 import { builtinConfig } from '../settings';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
-import rendererLayer from './layers/renderer';
 import responseLayer from './layers/response';
 import userLayer from './layers/user';
 
@@ -34,10 +33,12 @@ declare module '@hydrooj/server' {
     export interface HandlerCommon {
         user: User;
         domain: DomainDoc;
+
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
         progress(message: string, params: any[]): void;
         limitRate(op: string, periodSecs: number, maxOperations: number, withUserId?: boolean): Promise<void>;
         renderTitle(str: string): string;
+        translate(str: string): string;
     }
 }
 
@@ -77,6 +78,7 @@ export class Handler extends HandlerOriginal {
 export class ConnectionHandler extends ConnectionHandlerOriginal {
     user: User;
     domain: DomainDoc;
+    ctx: Context;
 
     onerror(err: HydroError) {
         if (!(err instanceof NotFoundError)
@@ -125,7 +127,6 @@ export async function apply(ctx: Context) {
 
         server.addLayer('domain', domainLayer);
         server.addLayer('base', baseLayer);
-        server.addLayer('renderer', rendererLayer(server.router, logger));
         server.addHttpLayer('response', responseLayer(logger));
         server.addLayer('user', userLayer);
 
@@ -136,40 +137,89 @@ export async function apply(ctx: Context) {
                 maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
             }));
         }
-        server.HandlerCommon.prototype.paginate = function <T>(this: HandlerCommon, cursor: FindCursor<T>, page: number, key: string) {
-            return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
-        };
-        server.HandlerCommon.prototype.checkPerm = function (this: HandlerCommon, ...args: bigint[]) {
-            if (!this.user.hasPerm(...args)) {
-                if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new PermissionError(...args);
-                throw new PrivilegeError(PRIV.PRIV_USER_PROFILE);
-            }
-        };
-        server.HandlerCommon.prototype.checkPriv = function (this: HandlerCommon, ...args: number[]) {
-            if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
-        };
-        server.HandlerCommon.prototype.progress = function (this: HandlerCommon, message: string, params: any[]) {
-            Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
-        };
-        server.HandlerCommon.prototype.limitRate = async function limitRate(
-            op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user'),
-        ) {
-            if (ignoredLimit.includes(op)) return;
-            if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
-            const overrideLimit = system.get(`limit.${op}`);
-            if (overrideLimit) maxOperations = overrideLimit;
-            let id = this.request.ip;
-            if (withUserId) id += `@${this.user._id}`;
-            await opcount.inc(op, id, periodSecs, maxOperations);
-        };
-        server.HandlerCommon.prototype.renderTitle = function (str: string) {
-            const name = this.ctx.setting.get('server.name');
-            if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
-            return `${this.translate(str)} - ${name}`;
-        };
+
+        server.handlerMixin({
+            url(name: string, ...kwargsList: Record<string, any>[]) {
+                if (name === '#') return '#';
+                let res = '#';
+                const args: any = {};
+                const query: any = {};
+                for (const kwargs of kwargsList) {
+                    for (const key in kwargs) {
+                        if (kwargs[key] instanceof ObjectId) args[key] = kwargs[key].toHexString();
+                        else args[key] = kwargs[key].toString().replace(/\//g, '%2F');
+                    }
+                    for (const key in kwargs.query || {}) {
+                        if (query[key] instanceof ObjectId) query[key] = kwargs.query[key].toHexString();
+                        else query[key] = kwargs.query[key].toString();
+                    }
+                }
+                try {
+                    const { anchor } = args;
+                    let withDomainId = args.domainId || false;
+                    const domainId = this.args.domainId;
+                    const host = this.domain?.host;
+                    if (domainId !== 'system' && (
+                        !this.request.host
+                        || (host instanceof Array
+                            ? (!host.includes(this.request.host))
+                            : this.request.host !== host)
+                    )) withDomainId ||= domainId;
+                    res = this.ctx.router.url(name, args, { query }).toString();
+                    if (anchor) res = `${res}#${anchor}`;
+                    if (withDomainId) res = `/d/${withDomainId}${res}`;
+                } catch (e) {
+                    logger.warn(e.message);
+                    logger.info('%s %o', name, args);
+                    if (!e.message.includes('Expected') || !e.message.includes('to match')) logger.info('%s', e.stack);
+                }
+                return res;
+            },
+            translate(str: string) {
+                if (!str) return '';
+                const lang = this.user?.viewLang || this.session?.viewLang;
+                const res = lang
+                    ? str.toString().translate(lang, ...this.context.acceptsLanguages())
+                    : str.toString().translate(...this.context.acceptsLanguages(), system.get('server.language'));
+                return res;
+            },
+            paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
+                return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+            },
+            checkPerm(...args: bigint[]) {
+                if (!this.user.hasPerm(...args)) {
+                    if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new PermissionError(...args);
+                    throw new PrivilegeError(PRIV.PRIV_USER_PROFILE);
+                }
+            },
+            checkPriv(...args: number[]) {
+                if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
+            },
+            progress(message: string, params: any[]) {
+                Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
+            },
+            async limitRate(
+                op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user'),
+            ) {
+                if (ignoredLimit.includes(op)) return;
+                if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
+                const overrideLimit = system.get(`limit.${op}`);
+                if (overrideLimit) maxOperations = overrideLimit;
+                let id = this.request.ip;
+                if (withUserId) id += `@${this.user._id}`;
+                await opcount.inc(op, id, periodSecs, maxOperations);
+            },
+            renderTitle(str: string) {
+                const name = this.ctx.setting.get('server.name');
+                if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
+                return `${this.translate(str)} - ${name}`;
+            },
+        });
+
         on('handler/create', async (h) => {
-            h.user = h.context.user;
-            h.domain = h.context.domain;
+            h.user = h.context.HydroContext.user as any;
+            h.domain = h.context.HydroContext.domain as any;
+            h.translate = h.translate.bind(h);
             h.ctx = h.ctx.extend({
                 domain: h.domain,
             });
@@ -181,6 +231,10 @@ export async function apply(ctx: Context) {
                     text: global.Hydro.module.oauth[key].text,
                 }));
             if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
+        });
+
+        on('app/listen', () => {
+            server.listen();
         });
     });
 }
