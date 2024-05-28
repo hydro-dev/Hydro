@@ -5,7 +5,7 @@ import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
-    ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HandlerCommon, HydroError, NotFoundError, UserFacingError,
+    ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
 } from '@hydrooj/server';
 import { errorMessage } from '@hydrooj/utils';
 import { Context } from '../context';

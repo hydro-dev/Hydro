@@ -10,7 +10,6 @@ import yaml from 'js-yaml';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import { PRIV } from '../model/builtin';
-import * as bus from '../service/bus';
 import { unwrapExports } from '../utils';
 
 const logger = new Logger('common');

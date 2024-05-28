@@ -24,6 +24,7 @@ type KnownHandlerEvents =
 
 /* eslint-disable @typescript-eslint/naming-convention */
 export interface EventMap extends KnownHandlerEvents {
+    'app/listen': () => void
     'app/started': () => void
     'app/ready': () => VoidReturn
     'app/exit': () => VoidReturn

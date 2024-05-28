@@ -21,6 +21,7 @@ export async function apply(ctx: Context) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
+    require('../service/bus').apply(ctx);
     const config = require('../options')();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
