@@ -44,7 +44,7 @@
         "chai": "^5.1.1",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
-        "esbuild": "0.18.20",
+        "esbuild": "0.21.4",
         "eslint": "^8.57.0",
         "eslint-import-resolver-typescript": "^3.6.1",
         "eslint-import-resolver-webpack": "^0.13.8",
@@ -58,7 +58,7 @@
         "semver": "^7.6.2",
         "simple-git": "^3.24.0",
         "supertest": "^7.0.0",
-        "typescript": "^5.4.5",
+        "typescript": "5.3.3",
         "wtfnode": "^0.9.2"
     }
 }

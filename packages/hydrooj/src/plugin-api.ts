@@ -4,7 +4,7 @@ import db from './service/db';
 export { nanoid } from 'nanoid';
 
 export {
-    RouteService, Router, HandlerCommon,
+    WebService, Router, HandlerCommon, httpServer,
 } from '@hydrooj/server';
 
 export * from './pipelineUtils';

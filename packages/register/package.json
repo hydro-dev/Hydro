@@ -7,7 +7,7 @@
         "node": ">=16"
     },
     "dependencies": {
-        "esbuild": "0.18.20",
+        "esbuild": "0.21.4",
         "source-map-support": "^0.5.21"
     },
     "devDependencies": {

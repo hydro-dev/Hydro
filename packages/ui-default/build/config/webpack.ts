@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
-import { ESBuildMinifyPlugin } from 'esbuild-loader';
+import { EsbuildPlugin } from 'esbuild-loader';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
@@ -214,7 +214,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         },
       },
       usedExports: true,
-      minimizer: [new ESBuildMinifyPlugin({
+      minimizer: [new EsbuildPlugin({
         css: true,
         minify: true,
         minifySyntax: true,

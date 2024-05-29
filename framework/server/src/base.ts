@@ -1,19 +1,69 @@
-import { KoaContext, serializer } from '@hydrooj/server';
+import { PassThrough } from 'stream';
+import type { Next } from 'koa';
+import { pick } from 'lodash';
+import {
+    HydroRequest, HydroResponse, KoaContext, serializer,
+} from '@hydrooj/server';
 import { errorMessage } from '@hydrooj/utils/lib/utils';
-import { SystemError, UserFacingError } from '../../error';
+import { SystemError, UserFacingError } from './error';
 
-export default (logger) => async (ctx: KoaContext, next) => {
-    const { request, response } = ctx.HydroContext;
+export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
+    // Base Layer
+    const { domainId } = ctx;
+    const request: HydroRequest = {
+        method: ctx.request.method.toLowerCase(),
+        host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
+        hostname: ctx.request.hostname,
+        ip: ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip,
+        headers: ctx.request.headers,
+        cookies: ctx.cookies,
+        ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring']),
+        body: ctx.request.body,
+        files: ctx.request.files as any,
+        referer: ctx.request.headers.referer || '',
+        json: (ctx.request.headers.accept || '').includes('application/json'),
+        websocket: ctx.request.headers.upgrade === 'websocket',
+    };
+    request.ip = request.ip.split(',')[0].trim();
+    const response: HydroResponse = {
+        body: {},
+        type: '',
+        status: null,
+        template: null,
+        redirect: null,
+        attachment: (name, streamOrBuffer) => {
+            ctx.attachment(name);
+            if (streamOrBuffer instanceof Buffer) {
+                response.body = null;
+                ctx.body = streamOrBuffer;
+            } else {
+                response.body = null;
+                ctx.body = streamOrBuffer.pipe(new PassThrough());
+            }
+        },
+        addHeader: (name: string, value: string) => ctx.set(name, value),
+        disposition: null,
+    };
+    const args = {
+        domainId, ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
+    };
+    ctx.HydroContext = { request, response, args };
     try {
         await next();
-        const { UiContext, user, args } = ctx.HydroContext;
+        const handler = ctx.handler;
+        if (!handler) {
+            logger.error('No handler found on request', request);
+            ctx.response.status = 500;
+            return;
+        }
+        const { UiContext, user } = ctx.HydroContext;
         if (response.redirect) {
             response.body ||= {};
             response.body.url = response.redirect;
         }
         if (!response.type) {
             if (response.pjax && args.pjax) {
-                const html = await ctx.renderHTML(response.pjax, response.body);
+                const html = await handler.renderHTML(response.pjax, response.body);
                 response.body = { fragments: [{ html }] };
                 response.type = 'application/json';
             } else if (
@@ -25,7 +75,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                         response.body.UiContext = UiContext;
                         response.body.UserContext = user;
                     }
-                    response.body = JSON.stringify(response.body, serializer(false, ctx.handler));
+                    response.body = JSON.stringify(response.body, serializer(false, handler));
                 } catch (e) {
                     response.body = new SystemError('Serialize failure', e.message);
                 }
@@ -34,7 +84,7 @@ export default (logger) => async (ctx: KoaContext, next) => {
                 const s = response.template.split('.');
                 let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
                 if (!global.Hydro.ui.template[templateName]) templateName = response.template;
-                response.body = await ctx.handler.renderHTML(templateName, response.body || {});
+                response.body = await handler.renderHTML(templateName, response.body || {});
                 response.type = 'text/html';
             }
         }

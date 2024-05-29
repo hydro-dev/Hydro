@@ -12,6 +12,7 @@ import WebSocket from 'ws';
 import {
     Counter, errorMessage, isClass, Logger, parseMemoryMB,
 } from '@hydrooj/utils/lib/utils';
+import base from './base';
 import * as decorators from './decorators';
 import {
     CsrfTokenError, HydroError, InvalidOperationError,
@@ -99,18 +100,22 @@ wsServer.on('error', (error) => {
     console.log('Websocket server error:', error);
 });
 
+export interface UserModel {
+    _id: number;
+}
+
 export interface HandlerCommon { }
 export class HandlerCommon {
     session: Record<string, any>;
-    ctx: Context;
     args: Record<string, any>;
     request: HydroRequest;
     response: HydroResponse;
     UiContext: Record<string, any>;
+    user: UserModel;
 
-    constructor(public context: KoaContext, ctx: Context) {
+    constructor(public context: KoaContext, public ctx: Context) {
         this.renderHTML = this.renderHTML.bind(this);
-        this.url = this.url.bind(context);
+        this.url = this.url.bind(this);
         this.session = context.session;
         this.args = context.HydroContext.args;
         this.request = context.HydroContext.request;
@@ -289,15 +294,17 @@ async function executeMiddlewareStack(context: any, middlewares: { name: string,
     }
 }
 
-interface RouteServiceConfig {
+interface WebServiceConfig {
     keys: string[];
     proxy: boolean;
     cors: string;
     upload: string;
     port: number;
+    xff?: string;
+    xhost?: string;
 }
 
-export class RouteService extends Service {
+export class WebService extends Service {
     private registry = {};
     private registrationCount = Counter();
     private serverLayers = [];
@@ -310,9 +317,10 @@ export class RouteService extends Service {
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: Context, public config: RouteServiceConfig) {
+    constructor(ctx: Context, public config: WebServiceConfig) {
         super(ctx, 'server', true);
-        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']); this.server.keys = this.config.keys;
+        ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
+        this.server.keys = this.config.keys;
         this.server.proxy = this.config.proxy;
         const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
@@ -366,20 +374,19 @@ export class RouteService extends Service {
         this.ctx.on('dispose', () => {
             fs.emptyDirSync(uploadDir);
         });
-
-        this.server.use((c) => executeMiddlewareStack(c, [
+        this.router.use((c, next) => executeMiddlewareStack(c, [
             ...this.serverLayers,
             {
                 name: '404',
-                func: async (_, next) => {
-                    await next();
-                    if (c.response.body) return;
-                    await this.handleHttp(c, NotFoundHandler, () => true);
+                func: async (t: any, n) => {
+                    await n();
+                    if (!t.handler) this.handleHttp(t, NotFoundHandler, () => true);
                 },
             },
-            { name: 'route', func: router.routes() },
-            { name: 'methods', func: router.allowedMethods() },
+            { name: 'logic', func: next },
         ]).catch(console.error));
+        this.server.use(router.routes()).use(router.allowedMethods());
+        this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
         wsServer.on('connection', async (socket, request) => {
             socket.on('error', (err) => {
                 logger.warn('Websocket Error: %s', err.message);
@@ -476,7 +483,8 @@ export class RouteService extends Service {
                 await this.ctx.serial('handler/error', h, e);
                 await h.onerror(e);
             } catch (err) {
-                h.response.code = 500;
+                logger.error(err);
+                h.response.status = 500;
                 h.response.type = 'text/plain';
                 h.response.body = `${err.message}\n${err.stack}`;
             }
@@ -485,7 +493,7 @@ export class RouteService extends Service {
 
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx);
+        const h = new HandlerClass(ctx, this.ctx);
         await this.ctx.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
@@ -548,7 +556,7 @@ export class RouteService extends Service {
         }
     }
 
-    private register(type: 'route' | 'conn', _: string, path: string, HandlerClass: any, ...permPrivChecker) {
+    private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
         const name = HandlerClass.name;
         if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
@@ -557,7 +565,7 @@ export class RouteService extends Service {
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
         if (type === 'route') {
-            router.all(name, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
+            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
         } else {
             const checker = Checker(permPrivChecker);
             const layer = router.ws(path, async (conn, _req, ctx) => {
@@ -620,14 +628,14 @@ export class RouteService extends Service {
 
 declare module 'cordis' {
     interface Context {
-        server: RouteService;
-        Route: RouteService['Route'];
-        Connection: RouteService['Connection'];
-        withHandlerClass: RouteService['withHandlerClass'];
+        server: WebService;
+        Route: WebService['Route'];
+        Connection: WebService['Connection'];
+        withHandlerClass: WebService['withHandlerClass'];
     }
 }
 
 export async function apply(ctx: Context, config) {
     ctx.provide('server', undefined, true);
-    ctx.server = new RouteService(ctx, config);
+    ctx.server = new WebService(ctx, config);
 }

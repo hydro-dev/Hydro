@@ -21,7 +21,6 @@ import type { User } from '../model/user';
 import { builtinConfig } from '../settings';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
-import responseLayer from './layers/response';
 import userLayer from './layers/user';
 
 const argv = cac().parse();
@@ -31,7 +30,6 @@ const logger = new Logger('server');
 
 declare module '@hydrooj/server' {
     export interface HandlerCommon {
-        user: User;
         domain: DomainDoc;
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
@@ -45,10 +43,15 @@ declare module '@hydrooj/server' {
 export * from '@hydrooj/server/src/decorators';
 export * from '@hydrooj/server/src/validator';
 
-export class Handler extends HandlerOriginal {
-    user: User;
+export interface Handler {
     domain: DomainDoc;
     ctx: Context;
+}
+export class Handler extends HandlerOriginal {
+    constructor(_, ctx: Context) {
+        super(_, ctx);
+        this.ctx = ctx.extend({ domain: this.domain });
+    }
 
     async onerror(error: HydroError) {
         error.msg ||= () => error.message;
@@ -66,6 +69,7 @@ export class Handler extends HandlerOriginal {
             });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
+            logger.error(error);
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
             this.response.body = {
                 UserFacingError,
@@ -75,10 +79,15 @@ export class Handler extends HandlerOriginal {
     }
 }
 
-export class ConnectionHandler extends ConnectionHandlerOriginal {
-    user: User;
+export interface ConnectionHandler {
     domain: DomainDoc;
     ctx: Context;
+}
+export class ConnectionHandler extends ConnectionHandlerOriginal {
+    constructor(_, ctx: Context) {
+        super(_, ctx);
+        this.ctx = ctx.extend({ domain: this.domain });
+    }
 
     onerror(err: HydroError) {
         if (!(err instanceof NotFoundError)
@@ -98,6 +107,8 @@ export async function apply(ctx: Context) {
         cors: system.get('server.cors') || '',
         upload: system.get('server.upload') || '256m',
         port: argv.options.port || system.get('server.port'),
+        xff: system.get('server.xff'),
+        xhost: system.get('server.xhost'),
     });
     ctx.inject(['server'], ({ server, on }) => {
         const proxyMiddleware = proxy('/fs', {
@@ -127,7 +138,6 @@ export async function apply(ctx: Context) {
 
         server.addLayer('domain', domainLayer);
         server.addLayer('base', baseLayer);
-        server.addHttpLayer('response', responseLayer(logger));
         server.addLayer('user', userLayer);
 
         for (const addon of [...global.addons].reverse()) {
@@ -165,7 +175,7 @@ export async function apply(ctx: Context) {
                             ? (!host.includes(this.request.host))
                             : this.request.host !== host)
                     )) withDomainId ||= domainId;
-                    res = this.ctx.router.url(name, args, { query }).toString();
+                    res = this.context.router.url.call(this.context.router, name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
                     if (withDomainId) res = `/d/${withDomainId}${res}`;
                 } catch (e) {
@@ -220,6 +230,7 @@ export async function apply(ctx: Context) {
             h.user = h.context.HydroContext.user as any;
             h.domain = h.context.HydroContext.domain as any;
             h.translate = h.translate.bind(h);
+            h.url = h.url.bind(h);
             h.ctx = h.ctx.extend({
                 domain: h.domain,
             });

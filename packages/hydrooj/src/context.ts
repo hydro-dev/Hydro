@@ -1,6 +1,6 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
-import type { RouteService, ServerEvents } from '@hydrooj/server';
+import type { ServerEvents, WebService } from '@hydrooj/server';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
@@ -27,7 +27,8 @@ export type MainScope = cordis.MainScope<Context>;
 
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
-export interface Context extends cordis.Context, Pick<RouteService, 'Route' | 'Connection' | 'withHandlerClass'> {
+export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Connection' | 'withHandlerClass'> {
+    // @ts-ignore
     [Context.events]: Events<this>;
     loader: Loader;
     check: CheckService;

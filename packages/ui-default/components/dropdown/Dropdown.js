@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import Drop from 'tether-drop';
 import responsiveCutoff from 'vj/breakpoints.json';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -49,5 +48,3 @@ export default class Dropdown extends DOMAttachedObject {
     this.$dom.trigger('vjDropdownHide');
   }
 }
-
-_.assign(Dropdown, DOMAttachedObject);

@@ -1,6 +1,7 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
+import { serializer } from '@hydrooj/server';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -170,8 +171,12 @@ export class User {
             if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName');
             return pick(this, fields);
         }
-        return JSON.stringify(this);
+        return JSON.stringify(this, serializer(true, h));
     }
+}
+
+declare module '@hydrooj/server' {
+    interface UserModel extends User { }
 }
 
 function handleMailLower(mail: string) {

@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import Notification from 'vj/components/notification';
@@ -281,5 +280,3 @@ export default class Editor extends DOMAttachedObject {
     this.editor.setPosition({ lineNumber: range.endLineNumber, column: range.endColumn });
   }
 }
-
-_.assign(Editor, DOMAttachedObject);
