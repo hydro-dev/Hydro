@@ -157,6 +157,10 @@ export class HandlerCommon {
         return res;
     }
 
+    translate(str: string) {
+        return str;
+    }
+
     renderHTML(templateName: string, args: Record<string, any>) {
         const type = templateName.split('.')[1];
         const engine = global.Hydro.module.render[type]
