@@ -342,7 +342,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
-  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
+  if (UiContext.pdoc.config?.type === 'objective') {
+    loadObjective();
+    $(document).on('vjContentNew', loadObjective);
+  }
 });
 
 export default page;
