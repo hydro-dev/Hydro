@@ -264,7 +264,7 @@ export function apply(ctx: Context) {
     ]));
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
     ctx.on('record/judge', async (rdoc, updated) => {
-        if (rdoc.status === STATUS.STATUS_ACCEPTED && updated && !rdoc.contest) {
+        if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
             await RecordModel.collStat.updateOne({
                 _id: rdoc._id,
             }, {

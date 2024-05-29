@@ -636,6 +636,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
         this.tdoc.score ||= {};
         this.tdoc.score[pid] = score;
         await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score });
+        await contest.recalcStatus(domainId, this.tdoc.docId);
         this.back();
     }
 }

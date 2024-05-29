@@ -177,7 +177,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         // eslint-disable-next-line prefer-const
         let [pdoc, self, udoc] = await Promise.all([
-            problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST),
+            problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST.concat('config')),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
             user.getById(domainId, rdoc.uid),
         ]);

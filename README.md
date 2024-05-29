@@ -111,6 +111,20 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.12.3 / UI 4.50.2
+- core: 将 API 模块移入 service
+- core: 比赛时提交被 hack 不触发整体重测
+- core: 将添加 pid match 的逻辑移入搜索中 
+- ui: 修正 cssFilter
+- judge: builtin: 维护 callback 顺序
+- core: 优化邮件地址处理
+- ui: 显示提交记录长度
+- migrate: 支持仅为冲突用户设置随机邮件地址
+- core&ui: 支持自动整理 hack 输入
+- elastic: 优化模糊搜索
+- ui: 修复客观题中多选题载入答案出错的问题
+- core: 修复 hack 按钮
+
 ### Hydro 4.12.0 / UI 4.50.0
 - core: 添加题目统计页
 - core: 在记录详情页显示测评进度

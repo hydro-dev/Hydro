@@ -200,6 +200,16 @@ class ApiService extends Service {
         unions[typeName] = unionTypes.join(' | ');
         this.rebuild();
     }
+
+    query(query: string, args: Record<string, any>) {
+        return graphql({
+            schema,
+            source: query,
+            rootValue: root,
+            contextValue: this,
+            variableValues: args,
+        });
+    }
 }
 
 export const sideEffect = true;
