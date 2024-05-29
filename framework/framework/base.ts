@@ -106,19 +106,21 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
             }
         }
     } finally {
-        if (response.etag && request.headers['if-none-match'] === response.etag) {
-            ctx.response.status = 304;
-        } else if (response.redirect && !request.json) {
-            ctx.response.type = 'application/octet-stream';
-            ctx.response.status = 302;
-            ctx.redirect(response.redirect);
-        } else if (response.body) {
-            ctx.body = response.body;
-            ctx.response.status = response.status || 200;
-            ctx.response.type = response.type
-                || (request.json
-                    ? 'application/json'
-                    : ctx.response.type);
+        if (!request.websocket) {
+            if (response.etag && request.headers['if-none-match'] === response.etag) {
+                ctx.response.status = 304;
+            } else if (response.redirect && !request.json) {
+                ctx.response.type = 'application/octet-stream';
+                ctx.response.status = 302;
+                ctx.redirect(response.redirect);
+            } else if (response.body) {
+                ctx.body = response.body;
+                ctx.response.status = response.status || 200;
+                ctx.response.type = response.type
+                    || (request.json
+                        ? 'application/json'
+                        : ctx.response.type);
+            }
         }
     }
 };

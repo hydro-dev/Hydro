@@ -437,7 +437,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
                 : '';
 
-            await this.ctx.parallel('handler/create', h);
+            await this.ctx.parallel('handler/create', h, 'http');
 
             if (checker) checker.call(h);
             if (method === 'post') {
@@ -508,6 +508,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         h.conn = conn;
         const disposables = [];
         try {
+            await this.ctx.parallel('handler/create', h, 'ws');
             checker.call(h);
             if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);

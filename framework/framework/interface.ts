@@ -10,7 +10,7 @@ export type VoidReturn = Promise<any> | any;
 export type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
 
 export interface ServerEvents extends HandlerEvents {
-    'handler/create': (thisArg: Handler) => VoidReturn
+    'handler/create': (thisArg: Handler, type: 'ws' | 'http') => VoidReturn
     'handler/init': (thisArg: Handler) => VoidReturn
     'handler/error': (thisArg: Handler, e: Error) => VoidReturn
 }
