@@ -17,7 +17,6 @@ import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
-import type { User } from '../model/user';
 import { builtinConfig } from '../settings';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';

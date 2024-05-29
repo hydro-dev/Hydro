@@ -9,12 +9,11 @@ import { SystemError, UserFacingError } from './error';
 
 export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
     // Base Layer
-    const { domainId } = ctx;
     const request: HydroRequest = {
         method: ctx.request.method.toLowerCase(),
         host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
         hostname: ctx.request.hostname,
-        ip: ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip,
+        ip: (ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip).split(',')[0].trim(),
         headers: ctx.request.headers,
         cookies: ctx.cookies,
         ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring']),
@@ -24,7 +23,6 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         json: (ctx.request.headers.accept || '').includes('application/json'),
         websocket: ctx.request.headers.upgrade === 'websocket',
     };
-    request.ip = request.ip.split(',')[0].trim();
     const response: HydroResponse = {
         body: {},
         type: '',
@@ -45,9 +43,9 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         disposition: null,
     };
     const args = {
-        domainId, ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
+        ...ctx.params, ...ctx.query, ...ctx.request.body, __start: Date.now(),
     };
-    ctx.HydroContext = { request, response, args };
+    ctx.HydroContext = { request, response, args } as any;
     try {
         await next();
         const handler = ctx.handler;
@@ -94,7 +92,6 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
             ctx.set('Cache-Control', 'public');
         }
     } catch (err) {
-        console.log(err);
         const error = errorMessage(err);
         response.status = error instanceof UserFacingError ? error.code : 500;
         if (request.json) response.body = { error };
