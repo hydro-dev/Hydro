@@ -4,9 +4,9 @@ import {
     CreateError as Err,
     HydroError, UserFacingError,
     BadRequestError, ForbiddenError, NotFoundError,
-} from '@hydrooj/server';
+} from '@hydrooj/framework';
 
-export * from '@hydrooj/server/src/error';
+export * from '@hydrooj/framework/error';
 export const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 'RemoteOnlineJudgeError', 500);
 export const SendMailError = Err('SendMailError', UserFacingError, 'Failed to send mail to {0}. (1)', 500);
 

@@ -3,7 +3,7 @@ import type { Next } from 'koa';
 import { pick } from 'lodash';
 import {
     HydroRequest, HydroResponse, KoaContext, serializer,
-} from '@hydrooj/server';
+} from '@hydrooj/framework';
 import { errorMessage } from '@hydrooj/utils/lib/utils';
 import { SystemError, UserFacingError } from './error';
 
@@ -12,12 +12,9 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
     const request: HydroRequest = {
         method: ctx.request.method.toLowerCase(),
         host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
-        hostname: ctx.request.hostname,
         ip: (ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip).split(',')[0].trim(),
-        headers: ctx.request.headers,
-        cookies: ctx.cookies,
-        ...pick(ctx, ['query', 'path', 'params', 'originalPath', 'querystring']),
-        body: ctx.request.body,
+        ...pick(ctx, ['cookies', 'query', 'path', 'params', 'originalPath', 'querystring']),
+        ...pick(ctx.request, ['headers', 'body', 'hostname']),
         files: ctx.request.files as any,
         referer: ctx.request.headers.referer || '',
         json: (ctx.request.headers.accept || '').includes('application/json'),
@@ -48,6 +45,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
     ctx.HydroContext = { request, response, args } as any;
     try {
         await next();
+        if (request.websocket) return;
         const handler = ctx.handler;
         if (!handler) {
             logger.error('No handler found on request', request);

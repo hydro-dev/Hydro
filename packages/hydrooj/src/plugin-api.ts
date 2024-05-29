@@ -5,7 +5,7 @@ export { nanoid } from 'nanoid';
 
 export {
     WebService, Router, HandlerCommon, httpServer,
-} from '@hydrooj/server';
+} from '@hydrooj/framework';
 
 export * from './pipelineUtils';
 export * from './error';
@@ -46,8 +46,8 @@ export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
 export { default as paginate } from './lib/paginate';
 export { UiContextBase } from './service/layers/base';
-export * from '@hydrooj/server/src/decorators';
-export * from '@hydrooj/server/src/validator';
+export * from '@hydrooj/framework/decorators';
+export * from '@hydrooj/framework/validator';
 export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export { db, pwsh };

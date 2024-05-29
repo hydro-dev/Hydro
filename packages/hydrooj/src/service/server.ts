@@ -6,8 +6,8 @@ import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
     ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
-} from '@hydrooj/server';
-import { errorMessage } from '@hydrooj/utils';
+} from '@hydrooj/framework';
+import { errorMessage, Time } from '@hydrooj/utils';
 import { Context } from '../context';
 import { PermissionError, PrivilegeError } from '../error';
 import type { DomainDoc } from '../interface';
@@ -27,7 +27,7 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 
 const logger = new Logger('server');
 
-declare module '@hydrooj/server' {
+declare module '@hydrooj/framework' {
     export interface HandlerCommon {
         domain: DomainDoc;
 
@@ -35,12 +35,40 @@ declare module '@hydrooj/server' {
         progress(message: string, params: any[]): void;
         limitRate(op: string, periodSecs: number, maxOperations: number, withUserId?: boolean): Promise<void>;
         renderTitle(str: string): string;
-        translate(str: string): string;
     }
 }
 
-export * from '@hydrooj/server/src/decorators';
-export * from '@hydrooj/server/src/validator';
+export * from '@hydrooj/framework/decorators';
+export * from '@hydrooj/framework/validator';
+
+/*
+ * For security concern, some API requires sudo privilege to access.
+ * And for some superadmin operations,
+ * we do not allow them using a password to perform the sudo operation,
+ * as most user choose to use "remember password" option.
+ * When teachers are using a superuser account, accessing from classrooms,
+ * it may lead to serious security issues.
+ * !!! Please make sure that all superuser accounts have two factor authentication enabled. !!!
+ */
+export function requireSudo(target: any, funcName: string, obj: any) {
+    const originalMethod = obj.value;
+    obj.value = function sudo(this: Handler, ...args: any[]) {
+        if (this.session.sudo && Date.now() - this.session.sudo < Time.hour) {
+            if (this.session.sudoArgs?.referer) this.request.headers.referer = this.session.sudoArgs.referer;
+            this.session.sudoArgs = null;
+            return originalMethod.call(this, ...args);
+        }
+        this.session.sudoArgs = {
+            method: this.request.method,
+            referer: this.request.headers.referer,
+            args: this.args,
+            redirect: this.request.originalPath,
+        };
+        this.response.redirect = this.url('user_sudo');
+        return 'cleanup';
+    };
+    return obj;
+}
 
 export interface Handler {
     domain: DomainDoc;
@@ -100,7 +128,7 @@ export class ConnectionHandler extends ConnectionHandlerOriginal {
 
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
-    ctx.plugin(require('@hydrooj/server/src/server'), {
+    ctx.plugin(require('@hydrooj/framework/src/server'), {
         keys: system.get('session.keys'),
         proxy: !!system.get('server.xproxy') || !!system.get('server.xff'),
         cors: system.get('server.cors') || '',
@@ -120,7 +148,7 @@ export async function apply(ctx: Context) {
             c.request.path = c.path = c.path.split('/fs')[1];
             return await next();
         });
-        server.addHttpLayer('init', async (c, next) => {
+        server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {
                 await next();
@@ -142,7 +170,7 @@ export async function apply(ctx: Context) {
         for (const addon of [...global.addons].reverse()) {
             const dir = resolve(addon, 'public');
             if (!fs.existsSync(dir)) continue;
-            server.addLayer(`${addon}_public`, cache(dir, {
+            server.addServerLayer(`${addon}_public`, cache(dir, {
                 maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
             }));
         }

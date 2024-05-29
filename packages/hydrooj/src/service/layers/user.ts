@@ -1,4 +1,4 @@
-import type { KoaContext } from '@hydrooj/server';
+import type { KoaContext } from '@hydrooj/framework';
 import { NotFoundError } from '../../error';
 import { PERM } from '../../model/builtin';
 import UserModel from '../../model/user';

@@ -1,6 +1,6 @@
 import type { Next } from 'koa';
 import { cloneDeep, omit } from 'lodash';
-import type { KoaContext } from '@hydrooj/server';
+import type { KoaContext } from '@hydrooj/framework';
 import { randomPick } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';

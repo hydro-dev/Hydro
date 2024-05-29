@@ -1,4 +1,4 @@
-import { Types } from '@hydrooj/server/src/validator';
+import { Types } from '@hydrooj/framework/validator';
 import { md5 } from '../utils';
 
 type AvatarProvider = (src: string, size: number) => string;

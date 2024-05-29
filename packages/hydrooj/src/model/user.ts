@@ -1,7 +1,7 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
-import { serializer } from '@hydrooj/server';
+import { serializer } from '@hydrooj/framework';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -175,7 +175,7 @@ export class User {
     }
 }
 
-declare module '@hydrooj/server' {
+declare module '@hydrooj/framework' {
     interface UserModel extends User { }
 }
 

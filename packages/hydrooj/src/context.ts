@@ -1,6 +1,6 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
-import type { ServerEvents, WebService } from '@hydrooj/server';
+import type { ServerEvents, WebService } from '@hydrooj/framework';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';

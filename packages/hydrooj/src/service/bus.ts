@@ -2,7 +2,7 @@
 import {
     BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
-import type { Handler, ServerEvents } from '@hydrooj/server';
+import type { Handler, ServerEvents } from '@hydrooj/framework';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import { Context } from '../context';
 import type { ProblemSolutionHandler } from '../handler/problem';

@@ -312,6 +312,7 @@ export class WebService extends Service {
     private registry = {};
     private registrationCount = Counter();
     private serverLayers = [];
+    private handlerLayers = [];
     private wsLayers = [];
     private captureAllRoutes = {};
 
@@ -328,36 +329,36 @@ export class WebService extends Service {
         this.server.proxy = this.config.proxy;
         const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
-        this.server.use(async (ctx, next) => {
-            if (ctx.request.headers.origin) {
-                const host = new URL(ctx.request.headers.origin).host;
-                if (host !== ctx.request.headers.host && `,${this.config.cors || ''},`.includes(`,${host},`)) {
-                    ctx.set('Access-Control-Allow-Credentials', 'true');
-                    ctx.set('Access-Control-Allow-Origin', ctx.request.headers.origin);
-                    ctx.set('Access-Control-Allow-Headers', corsAllowHeaders);
-                    ctx.set('Vary', 'Origin');
-                    ctx.cors = true;
+        this.server.use(async (c, next) => {
+            if (c.request.headers.origin) {
+                const host = new URL(c.request.headers.origin).host;
+                if (host !== c.request.headers.host && `,${this.config.cors || ''},`.includes(`,${host},`)) {
+                    c.set('Access-Control-Allow-Credentials', 'true');
+                    c.set('Access-Control-Allow-Origin', c.request.headers.origin);
+                    c.set('Access-Control-Allow-Headers', corsAllowHeaders);
+                    c.set('Vary', 'Origin');
+                    c.cors = true;
                 }
             }
-            if (ctx.request.method.toLowerCase() === 'options') {
-                ctx.body = 'ok';
+            if (c.request.method.toLowerCase() === 'options') {
+                c.body = 'ok';
                 return null;
             }
             for (const key in this.captureAllRoutes) {
-                if (ctx.path.startsWith(key)) return this.captureAllRoutes[key](ctx, next);
+                if (c.path.startsWith(key)) return this.captureAllRoutes[key](c, next);
             }
             return await next();
         });
         if (process.env.DEV) {
-            this.server.use(async (ctx: Koa.Context, next: Function) => {
+            this.server.use(async (c: Koa.Context, next: Function) => {
                 const startTime = Date.now();
                 try {
                     await next();
                 } finally {
                     const endTime = Date.now();
-                    if (!(ctx.nolog || ctx.response.headers.nolog)) {
-                        logger.debug(`${ctx.request.method} /${ctx.domainId || 'system'}${ctx.request.path} \
-    ${ctx.response.status} ${endTime - startTime}ms ${ctx.response.length}`);
+                    if (!(c.nolog || c.response.headers.nolog)) {
+                        logger.debug(`${c.request.method} /${c.domainId || 'system'}${c.request.path} \
+${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     }
                 }
             });
@@ -379,7 +380,7 @@ export class WebService extends Service {
             fs.emptyDirSync(uploadDir);
         });
         this.router.use((c, next) => executeMiddlewareStack(c, [
-            ...this.serverLayers,
+            ...this.handlerLayers,
             {
                 name: '404',
                 func: async (t: any, n) => {
@@ -389,7 +390,11 @@ export class WebService extends Service {
             },
             { name: 'logic', func: next },
         ]).catch(console.error));
-        this.server.use(router.routes()).use(router.allowedMethods());
+        this.server.use((c) => executeMiddlewareStack(c, [
+            ...this.serverLayers,
+            { name: 'routes', func: router.routes() },
+            { name: 'methods', func: router.allowedMethods() },
+        ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
         wsServer.on('connection', async (socket, request) => {
             socket.on('error', (err) => {
@@ -606,8 +611,12 @@ export class WebService extends Service {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
-    public addHttpLayer(name: string, func: any) {
+    public addServerLayer(name: string, func: any) {
         this.serverLayers.push({ name, func });
+    }
+
+    public addHandlerLayer(name: string, func: any) {
+        this.handlerLayers.push({ name, func });
     }
 
     public addWSLayer(name: string, func: any) {
@@ -615,7 +624,7 @@ export class WebService extends Service {
     }
 
     public addLayer(name: string, layer: any) {
-        this.addHttpLayer(name, layer);
+        this.addHandlerLayer(name, layer);
         this.addWSLayer(name, layer);
     }
 
