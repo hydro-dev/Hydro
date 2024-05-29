@@ -128,7 +128,7 @@ export class ConnectionHandler extends ConnectionHandlerOriginal {
 
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
-    ctx.plugin(require('@hydrooj/framework/server'), {
+    ctx.plugin(require('@hydrooj/framework'), {
         keys: system.get('session.keys'),
         proxy: !!system.get('server.xproxy') || !!system.get('server.xff'),
         cors: system.get('server.cors') || '',

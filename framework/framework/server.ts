@@ -301,8 +301,8 @@ async function executeMiddlewareStack(context: any, middlewares: { name: string,
 interface WebServiceConfig {
     keys: string[];
     proxy: boolean;
-    cors: string;
-    upload: string;
+    cors?: string;
+    upload?: string;
     port: number;
     xff?: string;
     xhost?: string;
@@ -330,7 +330,7 @@ export class WebService extends Service {
         const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
         this.server.use(async (c, next) => {
-            if (c.request.headers.origin) {
+            if (c.request.headers.origin && this.config.cors) {
                 const host = new URL(c.request.headers.origin).host;
                 if (host !== c.request.headers.host && `,${this.config.cors || ''},`.includes(`,${host},`)) {
                     c.set('Access-Control-Allow-Credentials', 'true');
@@ -363,22 +363,30 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 }
             });
         }
-        const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
-        fs.ensureDirSync(uploadDir);
-        logger.debug('Using upload dir: %s', uploadDir);
-        this.server.use(Body({
-            multipart: true,
-            jsonLimit: '8mb',
-            formLimit: '8mb',
-            formidable: {
-                uploadDir,
-                maxFileSize: parseMemoryMB(this.config.upload) * 1024 * 1024,
-                keepExtensions: true,
-            },
-        }));
-        this.ctx.on('dispose', () => {
-            fs.emptyDirSync(uploadDir);
-        });
+        if (this.config.upload) {
+            const uploadDir = join(tmpdir(), 'hydro', 'upload', process.env.NODE_APP_INSTANCE || '0');
+            fs.ensureDirSync(uploadDir);
+            logger.debug('Using upload dir: %s', uploadDir);
+            this.server.use(Body({
+                multipart: true,
+                jsonLimit: '8mb',
+                formLimit: '8mb',
+                formidable: {
+                    uploadDir,
+                    maxFileSize: parseMemoryMB(this.config.upload) * 1024 * 1024,
+                    keepExtensions: true,
+                },
+            }));
+            this.ctx.on('dispose', () => {
+                fs.emptyDirSync(uploadDir);
+            });
+        } else {
+            this.server.use(Body({
+                multipart: true,
+                jsonLimit: '8mb',
+                formLimit: '8mb',
+            }));
+        }
         this.router.use((c, next) => executeMiddlewareStack(c, [
             ...this.handlerLayers,
             {
@@ -612,16 +620,25 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
+    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
+        this[name].push(layer);
+        const dispose = () => {
+            this[name] = this[name].filter((i) => i !== layer);
+        };
+        this[Context.current]?.on('dispose', dispose);
+        return dispose;
+    }
+
     public addServerLayer(name: string, func: any) {
-        this.serverLayers.push({ name, func });
+        return this.registerLayer('serverLayers', { name, func });
     }
 
     public addHandlerLayer(name: string, func: any) {
-        this.handlerLayers.push({ name, func });
+        return this.registerLayer('handlerLayers', { name, func });
     }
 
     public addWSLayer(name: string, func: any) {
-        this.wsLayers.push({ name, func });
+        return this.registerLayer('wsLayers', { name, func });
     }
 
     public addLayer(name: string, layer: any) {

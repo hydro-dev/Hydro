@@ -1,15 +1,12 @@
-import http from 'http';
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
-import Koa, { Context } from 'koa';
-import Body from 'koa-body';
+import type { Context } from 'koa';
 import { MongoClient, WriteConcern } from 'mongodb';
 import mongoUri from 'mongodb-uri';
-import { Logger } from '../logger';
+import { Context as PluginContext } from '../context';
 
-const logger = new Logger('setup');
 const listenPort = cac().parse().options.port || 8888;
 let resolve;
 
@@ -82,19 +79,24 @@ async function post(ctx: Context) {
     }
 }
 
-export function load() {
-    const app = new Koa();
-    const server = http.createServer(app.callback());
-    app.keys = ['Hydro'];
-    app
-        .use(Body())
-        .use((ctx) => {
-            if (ctx.request.method.toLowerCase() === 'post') return post(ctx);
-            return get(ctx);
+export function load(ctx: PluginContext) {
+    let dispose;
+    ctx.plugin(require('@hydrooj/framework'), {
+        keys: [Math.random()],
+        proxy: false,
+        upload: false,
+        port: listenPort,
+    });
+    ctx.inject(['server'], ({ server }) => {
+        dispose = server.addServerLayer('setup', (c) => {
+            if (c.request.method.toLowerCase() === 'post') return post(c);
+            return get(c);
         });
-    server.listen(listenPort);
-    logger.success('Server listening at: %d', listenPort);
+    });
     return new Promise((r) => {
-        resolve = r;
+        resolve = () => {
+            dispose?.();
+            r(null);
+        };
     });
 }
