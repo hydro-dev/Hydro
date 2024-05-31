@@ -309,7 +309,7 @@ interface WebServiceConfig {
 }
 
 export class WebService extends Service {
-    private registry = {};
+    private registry: Record<string, any> = {};
     private registrationCount = Counter();
     private serverLayers = [];
     private handlerLayers = [];
@@ -600,7 +600,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public withHandlerClass<T extends string>(name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any) {
+    public withHandlerClass<T extends string>(
+        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any,
+    ) {
         if (this.registry[name]) callback(this.registry[name]);
         // @ts-ignore
         this.ctx.on(`handler/register/${name}`, callback);
