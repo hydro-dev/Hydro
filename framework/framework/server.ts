@@ -332,7 +332,7 @@ export class WebService extends Service {
         this.server.use(async (c, next) => {
             if (c.request.headers.origin && this.config.cors) {
                 const host = new URL(c.request.headers.origin).host;
-                if (host !== c.request.headers.host && `,${this.config.cors || ''},`.includes(`,${host},`)) {
+                if (host !== c.request.headers.host && `,${this.config.cors},`.includes(`,${host},`)) {
                     c.set('Access-Control-Allow-Credentials', 'true');
                     c.set('Access-Control-Allow-Origin', c.request.headers.origin);
                     c.set('Access-Control-Allow-Headers', corsAllowHeaders);
@@ -600,7 +600,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public withHandlerClass(name: string, callback: (HandlerClass: typeof HandlerCommon) => any) {
+    public withHandlerClass<T extends string>(name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any) {
         if (this.registry[name]) callback(this.registry[name]);
         // @ts-ignore
         this.ctx.on(`handler/register/${name}`, callback);

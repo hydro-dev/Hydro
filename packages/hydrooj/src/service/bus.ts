@@ -98,7 +98,7 @@ export interface EventMap extends KnownHandlerEvents {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 declare module 'cordis' {
-    interface Events extends ServerEvents, EventMap { }
+    interface Events extends EventMap { }
 }
 
 export function apply(ctx: Context) {

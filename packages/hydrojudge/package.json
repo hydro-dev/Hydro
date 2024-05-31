@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
-        "@hydrooj/utils": "workspace:*",
+        "@hydrooj/utils": "workspace:^",
         "adm-zip": "0.5.5",
         "cac": "^6.7.14",
         "p-queue": "^8.0.1",

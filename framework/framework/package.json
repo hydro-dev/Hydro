@@ -1,12 +1,12 @@
 {
     "name": "@hydrooj/framework",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "main": "index.ts",
     "peerDependencies": {
         "cordis": "*"
     },
     "dependencies": {
-        "@hydrooj/utils": "workspace:*",
+        "@hydrooj/utils": "workspace:^",
         "emoji-regex": "^10.3.0",
         "fs-extra": "^11.2.0",
         "koa": "^2.15.3",

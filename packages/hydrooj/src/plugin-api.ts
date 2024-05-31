@@ -37,7 +37,7 @@ export * as JudgeHandler from './handler/judge';
 export { registerResolver, registerValue, registerUnion } from './service/api';
 export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
-export { Handler, ConnectionHandler } from './service/server';
+export { Handler, ConnectionHandler, requireSudo } from './service/server';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
 export { default as mime } from './lib/mime';
