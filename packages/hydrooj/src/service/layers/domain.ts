@@ -1,7 +1,7 @@
+import { KoaContext } from '@hydrooj/framework';
 import BlackListModel from '../../model/blacklist';
 import DomainModel from '../../model/domain';
 import * as system from '../../model/system';
-import { KoaContext } from '../server';
 
 export default async (ctx: KoaContext, next) => {
     const forceDomain = /^\/d\/([^/]+)\//.exec(ctx.request.path);

@@ -10,22 +10,7 @@ export interface Context {
   broadcast: Context['emit'];
 }
 
-export class Context extends cordis.Context {
-  /** @deprecated use `ctx.root` instead */
-  get app() {
-    return this.root;
-  }
-
-  /** @deprecated use `root.config` instead */
-  get options() {
-    return this.root.config;
-  }
-}
-
-export namespace Context {
-  export type Associate<P extends string, C extends Context = Context> = cordis.Context.Associate<P, C>;
-}
-
+export class Context extends cordis.Context { }
 export type MainScope = cordis.MainScope<Context>;
 export type EffectScope = cordis.EffectScope<Context>;
 export type ForkScope = cordis.ForkScope<Context>;

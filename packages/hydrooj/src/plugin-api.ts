@@ -3,6 +3,10 @@ import db from './service/db';
 
 export { nanoid } from 'nanoid';
 
+export {
+    WebService, Router, HandlerCommon, httpServer,
+} from '@hydrooj/framework';
+
 export * from './pipelineUtils';
 export * from './error';
 export * from './libs';
@@ -33,6 +37,7 @@ export * as JudgeHandler from './handler/judge';
 export { registerResolver, registerValue, registerUnion } from './service/api';
 export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
+export { Handler, ConnectionHandler, requireSudo } from './service/server';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
 export { default as mime } from './lib/mime';
@@ -40,13 +45,9 @@ export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { default as rank } from './lib/rank';
 export { default as paginate } from './lib/paginate';
-export * from './lib/validator';
-export * from './service/decorators';
-export {
-    Handler, ConnectionHandler, captureAllRoutes,
-    httpServer, wsServer, router,
-} from './service/server';
 export { UiContextBase } from './service/layers/base';
+export * from '@hydrooj/framework/decorators';
+export * from '@hydrooj/framework/validator';
 export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export { db, pwsh };
