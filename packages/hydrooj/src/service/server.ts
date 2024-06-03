@@ -163,10 +163,6 @@ export async function apply(ctx: Context) {
             }
         });
 
-        server.addLayer('domain', domainLayer);
-        server.addLayer('base', baseLayer);
-        server.addLayer('user', userLayer);
-
         for (const addon of [...global.addons].reverse()) {
             const dir = resolve(addon, 'public');
             if (!fs.existsSync(dir)) continue;
@@ -174,6 +170,11 @@ export async function apply(ctx: Context) {
                 maxAge: argv.options.public ? 0 : 24 * 3600 * 1000,
             }));
         }
+
+        server.addServerLayer('domain', domainLayer);
+        server.addWSLayer('domain', domainLayer);
+        server.addLayer('base', baseLayer);
+        server.addLayer('user', userLayer);
 
         server.handlerMixin({
             url(name: string, ...kwargsList: Record<string, any>[]) {
