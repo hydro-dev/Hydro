@@ -1,19 +1,21 @@
 import $ from 'jquery';
 import * as timeago from 'timeago.js';
+import en_US from 'timeago.js/lib/lang/en_US';
+import ko from 'timeago.js/lib/lang/ko';
+import zh_CN from 'timeago.js/lib/lang/zh_CN';
+import zh_TW from 'timeago.js/lib/lang/zh_TW';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n } from 'vj/utils';
 
 try {
-  const locales = require.context('timeago.js/lib/lang', false, /\.js$/);
-  let locale;
-  try {
-    locale = locales(`./${i18n('timeago_locale')}.js`).default;
-  } catch (e) {
-    locale = locales('./en_US.js').default;
-  }
+  const locales = {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    zh_CN, zh_TW, ko, en_US,
+  };
+  const locale = locales[i18n('timeago_locale')] || locales.en_US;
   timeago.register(i18n('timeago_locale'), locale);
 } catch (e) {
-  console.error(`Cannot register timeago locale: ${i18n('timeago_locale')}`);
+  console.error(`Cannot register timeago locale: ${i18n('timeago_locale')}`, e);
 }
 function runRelativeTime($container) {
   $container.find('span.time.relative[data-timestamp]').get().forEach((element) => {

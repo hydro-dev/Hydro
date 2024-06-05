@@ -7,6 +7,7 @@ window.Hydro = {
   node_modules: {},
   version: process.env.VERSION,
 };
+window.jQuery = $; // sticky-kit require this
 window.externalModules = {};
 window.lazyModuleResolver = {};
 
@@ -30,7 +31,11 @@ window.UserContext = JSON.parse(window.UserContext);
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
   const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
-  navigator.serviceWorker.register(`/service-worker.js?config=${encodedConfig}`).then((registration) => {
+  const dev = process.env.NODE_ENV === 'development';
+  navigator.serviceWorker.register(
+    dev ? '/dev-sw.js?dev-sw' : `/sw.js?config=${encodedConfig}`,
+    { scope: '/', type: dev ? 'module' : 'classic' },
+  ).then((registration) => {
     console.log('SW registered: ', registration);
   }).catch((registrationError) => {
     console.log('SW registration failed: ', registrationError);

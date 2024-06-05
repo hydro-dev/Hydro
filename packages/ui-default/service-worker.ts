@@ -4,6 +4,16 @@
 export { }; // make it a module so that declare self works
 declare const self: ServiceWorkerGlobalScope;
 
+let dev = false;
+let version = 'dev';
+try {
+  dev = process.env.NODE_ENV !== 'production';
+  version = process.env.VERSION;
+} catch (e) {
+  // process doesnt exist
+  dev = location.search.includes('dev-sw');
+}
+
 const map = new Map();
 
 function createStream(port) {
@@ -88,13 +98,13 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = `precache-${process.env.VERSION}`;
+const PRECACHE = `precache-${version}`;
 const DO_NOT_PRECACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
 
 function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;
   if (!path.split('?')[0].split('/').pop().includes('.')) return false;
-  if (process.env.NODE_ENV !== 'production' && (path.includes('.hot-update.') || path.includes('?version='))) return false;
+  if (dev && (path.includes('.hot-update.') || path.includes('?version='))) return false;
   return true;
 }
 function shouldCache(request: Request) {
@@ -119,7 +129,7 @@ interface ServiceWorkerConfig {
 let config: ServiceWorkerConfig = null;
 
 function initConfig() {
-  config = JSON.parse(new URLSearchParams(location.search).get('config'));
+  config = JSON.parse(new URLSearchParams(location.search).get('config')) || {};
   config.hosts ||= [];
   if (!config.domains?.length) config.domains = [location.host];
   console.log('Config:', config);
@@ -127,7 +137,7 @@ function initConfig() {
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
   initConfig();
-  if (process.env.NODE_ENV === 'production' && config?.preload) {
+  if (!dev && config?.preload) {
     const [cache, manifest] = await Promise.all([
       caches.open(PRECACHE),
       fetch('/manifest.json').then((res) => res.json()),
@@ -193,6 +203,7 @@ async function cachedRespond(request: Request) {
     caches.open(PRECACHE),
     get(request),
   ]);
+  if (response.headers.get('Cache-Control') === 'no-cache') return response;
   if (response.ok) {
     cache.put(url, response.clone());
     return response;

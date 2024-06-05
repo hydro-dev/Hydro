@@ -37,8 +37,7 @@
     {% endif %}
   </style>
   {% if process.env.DEV %}
-    <script src="/default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-    <link rel="stylesheet" media="all" href="/theme.css?version={{ global.Hydro.version['ui-default'] }}">
+    <script src="/theme/default.js?version={{ global.Hydro.version['ui-default'] }}" type="module"></script>
   {% else %}
     <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}theme-{{ global.Hydro.version['ui-default'] }}.css">
   {% endif %}
@@ -67,7 +66,7 @@
     {% set UserContext = Object.create(UserContext) %}
     {% if process.env.DEV %}
       <script type="text/javascript" src="/resource/hash/lang-{{ _('__id') }}.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-      <script type="text/javascript" src="/hydro.js?version={{ global.Hydro.version['ui-default'] }}"></script>
+      <script type="module" src="/entry.jsx?version={{ global.Hydro.version['ui-default'] }}"></script>
     {% else %}
       <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
       <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>

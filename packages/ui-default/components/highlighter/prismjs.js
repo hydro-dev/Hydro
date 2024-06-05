@@ -13,14 +13,14 @@ import getLoader from 'prismjs/dependencies';
 import Notification from 'vj/components/notification/index';
 import { i18n } from 'vj/utils';
 import languageMeta from './meta';
+import langs from 'prismjs/components/index';
 
-const files = require.context('prismjs/components/', true, /prism-[a-z0-9-]+\.js/);
 const loadedLanguages = new Set();
 function loadLanguages() {
   const languages = Object.keys(components.languages).filter((l) => l !== 'meta');
   const loaded = [...loadedLanguages, ...Object.keys(Prism.languages)];
   getLoader(components, languages, loaded).load((lang) => {
-    files(`./prism-${lang}.js`);
+    langs[lang]?.();
     loadedLanguages.add(lang);
   });
 }
