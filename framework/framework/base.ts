@@ -77,10 +77,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 }
                 response.type = 'application/json';
             } else if (response.template) {
-                const s = response.template.split('.');
-                let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
-                if (!global.Hydro.ui.template[templateName]) templateName = response.template;
-                response.body = await handler.renderHTML(templateName, response.body || {});
+                response.body = await handler.renderHTML(response.template, response.body || {});
                 response.type = 'text/html';
             }
         }

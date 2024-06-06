@@ -68,6 +68,7 @@ export interface HydroResponse {
     attachment: (name: string, stream?: any) => void;
     addHeader: (name: string, value: string) => void;
 }
+export type RendererFunction = (name: string, context: Record<string, any>) => string | Promise<string>;
 type HydroContext = {
     request: HydroRequest;
     response: HydroResponse;
@@ -163,8 +164,7 @@ export class HandlerCommon {
 
     renderHTML(templateName: string, args: Record<string, any>) {
         const type = templateName.split('.')[1];
-        const engine = global.Hydro.module.render[type]
-            || (() => JSON.stringify(args, serializer(false, this)));
+        const engine = this.ctx.server.renderers[type] || (() => JSON.stringify(args, serializer(false, this)));
         return engine(templateName, {
             handler: this,
             UserContext: this.user,
@@ -316,6 +316,7 @@ export class WebService extends Service {
     private wsLayers = [];
     private captureAllRoutes = {};
 
+    renderers: Record<string, RendererFunction> = {};
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
@@ -656,6 +657,14 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         for (const val of Object.getOwnPropertyNames(MixinClass)) {
             HandlerCommon.prototype[val] = MixinClass[val];
         }
+    }
+
+    public registerRenderer(name: string, func: RendererFunction) {
+        if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
+        this.renderers[name] = func;
+        this[Context.current]?.on('dispose', () => {
+            delete this.renderers[name];
+        });
     }
 }
 

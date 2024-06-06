@@ -3,3 +3,4 @@
 移除了 ctx.options (请使用 ctx.root.config)
 serializer: 移除 showDisplayName 参数
 移除了 loader.addScript, loader.addon 函数
+移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)

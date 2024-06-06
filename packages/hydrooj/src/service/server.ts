@@ -78,6 +78,12 @@ export class Handler extends HandlerOriginal {
     constructor(_, ctx: Context) {
         super(_, ctx);
         this.ctx = ctx.extend({ domain: this.domain });
+        this.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
+            const s = name.split('.');
+            let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
+            if (!global.Hydro.ui.template[templateName]) templateName = name;
+            return orig(templateName, args);
+        })(this.renderHTML).bind(this);
     }
 
     async onerror(error: HydroError) {
