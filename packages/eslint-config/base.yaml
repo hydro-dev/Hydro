@@ -33,6 +33,7 @@ rules:
   no-extra-boolean-cast:
     - warn
     - enforceForLogicalOperands: true
+  no-empty-pattern: 0
   no-multi-str: 0
   '@typescript-eslint/no-invalid-this': 0
   '@typescript-eslint/type-annotation-spacing': 1

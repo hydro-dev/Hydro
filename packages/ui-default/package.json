@@ -39,7 +39,7 @@
     "@types/redux-logger": "^3.0.13",
     "@types/webpack-env": "^1.18.5",
     "@vscode/codicons": "^0.0.36",
-    "ajv": "^8.14.0",
+    "ajv": "^8.16.0",
     "allotment": "^1.20.2",
     "autoprefixer": "^10.4.19",
     "browser-update": "^3.3.51",
