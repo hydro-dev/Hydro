@@ -8,6 +8,7 @@
       <div class="section__body no-padding">
         <div data-fragment-id="ranking">
           {% if not udocs.length %}
+          <blockquote class="note">{{ _('The ranking page is not updated realtime.') }}</blockquote>
           {{ nothing.render('Sorry, there are no users in this domain.') }}
           {% else %}
           <table class="data-table">
