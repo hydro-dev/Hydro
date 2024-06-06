@@ -348,7 +348,17 @@ const page = new NamedPage('problem_files', () => {
             </div>`,
           width: `${window.innerWidth - 200}px`,
           height: `${window.innerHeight - 100}px`,
-        }).open();
+        });
+        const callback = (data: MessageEvent<any>) => {
+          if (data.data.status === STATUS.STATUS_ACCEPTED) {
+            dialog.close();
+            Notification.success('Testdata generated successfully.');
+          }
+        };
+        window.addEventListener('message', callback, false);
+        await dialog.open();
+        window.removeEventListener('message', callback, false);
+        await pjax.request({ push: false });
       }
     } catch (error) {
       Notification.error([error.message, ...error.params].join(' '));
