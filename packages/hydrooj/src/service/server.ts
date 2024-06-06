@@ -127,7 +127,6 @@ export class ConnectionHandler extends ConnectionHandlerOriginal {
 }
 
 export async function apply(ctx: Context) {
-    if (process.env.HYDRO_CLI) return;
     ctx.plugin(require('@hydrooj/framework'), {
         keys: system.get('session.keys'),
         proxy: !!system.get('server.xproxy') || !!system.get('server.xff'),
@@ -137,6 +136,7 @@ export async function apply(ctx: Context) {
         xff: system.get('server.xff'),
         xhost: system.get('server.xhost'),
     });
+    if (process.env.HYDRO_CLI) return;
     ctx.inject(['server'], ({ server, on }) => {
         const proxyMiddleware = proxy('/fs', {
             target: builtinConfig.file.endPoint,

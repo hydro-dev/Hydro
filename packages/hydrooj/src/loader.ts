@@ -5,7 +5,6 @@
 /* eslint-disable no-eval */
 import './init';
 import './interface';
-import Schema from 'schemastery';
 import path from 'path';
 import child from 'child_process';
 // eslint-disable-next-line import/no-duplicates
@@ -19,6 +18,7 @@ import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
+import { getAddons } from './options';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -135,45 +135,33 @@ export class Loader {
     }
 }
 
-export function addon(addonPath: string, prepend = false) {
-    try {
-        // Is a npm package
-        const packagejson = require.resolve(`${addonPath}/package.json`);
-        // eslint-disable-next-line import/no-dynamic-require
-        const payload = require(packagejson);
-        const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
-        global.Hydro.version[name] = payload.version;
-        const modulePath = path.dirname(packagejson);
-        global.addons[prepend ? 'unshift' : 'push'](modulePath);
-    } catch (e) {
-        logger.error(`Addon not found: ${addonPath}`);
-        logger.error(e);
-        app.injectUI('Notification', 'Addon not found: {0}', { args: [addonPath], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
-    }
-}
-
-/** @deprecated */
-export function addScript(name: string, description: string) {
-    if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
-    return {
-        args: <K extends Schema>(validate: K) => ({
-            action: (run: (args: ReturnType<K>, report: any) => boolean | Promise<boolean>) => {
-                global.Hydro.script[name] = {
-                    description, validate, run,
-                };
-            },
-        }),
-    };
-}
-
 const loader = new Loader();
 app.provide('loader');
 app.loader = loader;
 loader.app = app;
 app.state[Loader.Record] = Object.create(null);
 
+function preload() {
+    for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
+        try {
+            // Is a npm package
+            const packagejson = require.resolve(`${a}/package.json`);
+            // eslint-disable-next-line import/no-dynamic-require
+            const payload = require(packagejson);
+            const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
+            global.Hydro.version[name] = payload.version;
+            const modulePath = path.dirname(packagejson);
+            global.addons.push(modulePath);
+        } catch (e) {
+            logger.error(`Addon not found: ${a}`);
+            logger.error(e);
+            app.injectUI('Notification', 'Addon not found: {0}', { args: [a], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
+        }
+    }
+}
+
 export async function load() {
-    addon(path.resolve(__dirname, '..'), true);
+    preload();
     Error.stackTraceLimit = 50;
     try {
         const { simpleGit } = require('simple-git') as typeof import('simple-git');
@@ -212,6 +200,7 @@ export async function load() {
 
 export async function loadCli() {
     process.env.HYDRO_CLI = 'true';
+    preload();
     await require('./entry/cli').load(app);
     setTimeout(() => process.exit(0), 300);
 }

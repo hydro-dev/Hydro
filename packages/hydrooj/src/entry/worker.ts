@@ -6,6 +6,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
+import { load } from '../options';
 import db from '../service/db';
 import {
     addon, builtinModel, handler, lib, locale, model,
@@ -22,7 +23,7 @@ export async function apply(ctx: Context) {
     require('../utils');
     require('../error');
     require('../service/bus').apply(ctx);
-    const config = require('../options')();
+    const config = load();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
         await require('./setup').load();

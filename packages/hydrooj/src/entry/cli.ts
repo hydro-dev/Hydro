@@ -1,5 +1,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
+import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
@@ -11,6 +12,7 @@ import {
 } from './common';
 
 const argv = cac().parse();
+const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
 const ARR = /=>.*$/mg;
 function parseParameters(fn: Function) {
@@ -92,16 +94,19 @@ async function cli() {
 }
 
 export async function load(ctx: Context) {
-    const pending = global.addons;
-    const fail = [];
+    fs.ensureDirSync(tmpdir);
     require('../lib/i18n');
     require('../utils');
     require('../error');
+    require('../service/bus').apply(ctx);
+    const pending = global.addons;
+    const fail = [];
     await db.start();
     await require('../settings').loadConfig();
     await require('../model/system').runConfig();
     await require('../service/storage').loadStorageService();
     await ctx.root.start();
+    await ctx.lifecycle.flush();
     require('../lib/index');
     await Promise.all([
         lib(pending, fail, ctx),
