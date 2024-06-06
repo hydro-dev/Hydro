@@ -261,9 +261,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           for (const v of val) {
             if (isValidOption(v)) $(`.objective_${id} input[value="${v}"]`).prop('checked', true);
           }
+        } else {
+          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
+          if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
-        $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
-        if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
       }
     }
 
