@@ -1,3 +1,4 @@
+import { STATUS } from '@hydrooj/utils/lib/common';
 import $ from 'jquery';
 import { map } from 'lodash';
 import React from 'react';
@@ -340,7 +341,7 @@ const page = new NamedPage('problem_files', () => {
       if (res.error) Notification.error(res.error);
       else {
         Notification.success(i18n('Generating...'));
-        await new InfoDialog({
+        const dialog = new InfoDialog({
           $body: tpl`
             <div class="typo">
               <iframe src="${res.url}"
