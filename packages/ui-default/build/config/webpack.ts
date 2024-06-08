@@ -5,7 +5,6 @@ import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { EsbuildPlugin } from 'esbuild-loader';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
-import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import { dirname } from 'path';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
@@ -14,17 +13,6 @@ import WebpackBar from 'webpackbar';
 import root from '../utils/root';
 
 export default function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
-  function esbuildLoader() {
-    return {
-      loader: 'esbuild-loader',
-      options: {
-        loader: 'tsx',
-        target: 'es2015',
-        sourcemap: true,
-      },
-    };
-  }
-
   function cssLoader() {
     return {
       loader: 'css-loader',
@@ -97,9 +85,13 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       chunkFilename: '[name].[chunkhash:6].chunk.js',
     },
     resolve: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
       alias: {
         vj: root(),
+      },
+      fallback: {
+        url: require.resolve('url/'),
+        util: require.resolve('util/'),
       },
     },
     module: {
@@ -153,14 +145,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           },
         },
         {
-          test: /\.[mc]?[jt]sx?$/,
-          exclude: [/@types\//, /components\/message\//, /entry\.js/],
-          type: 'javascript/auto',
-          use: [esbuildLoader()],
-        },
-        {
-          test: /\.[mc]?[jt]sx?$/,
-          include: [/components\/message\//, /entry\.js/],
+          test: /\.m?(jsx|tsx|ts)?$/,
           type: 'javascript/auto',
           use: [{
             loader: 'ts-loader',
@@ -185,6 +170,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     },
     optimization: {
       splitChunks: {
+        chunks: 'async',
         minSize: 256000,
         maxAsyncRequests: 5,
         maxInitialRequests: 3,
@@ -198,12 +184,15 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
             enforce: true,
           },
           vendors: {
-            test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
+            test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml|txt|mp3|md)$/,
             priority: -10,
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
-              if (packageName === 'monaco-editor-nls') {
-                return `i.monaco.${module.userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
+              if (packageName.startsWith('@codingame')) {
+                const subName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[1];
+                if (subName.startsWith('monaco-vscode-language-pack-')) {
+                  return `i.${subName.split('pack-').pop()}`;
+                }
               }
               return `n.${packageName.replace('@', '')}`;
             },
@@ -239,7 +228,6 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         jQuery: 'jquery',
         'window.jQuery': 'jquery',
         React: 'react',
-        monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
         filename: '[name].css?[fullhash:6]',
@@ -257,31 +245,26 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
       }),
-      sentryWebpackPlugin({
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-        org: 'hydro-dev',
-        project: 'hydro-web',
-        url: 'https://sentry.hydro.ac',
-      }),
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
       }),
       new webpack.optimize.MinChunkSizePlugin({
         minChunkSize: 128000,
       }),
-      new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
+      new webpack.NormalModuleReplacementPlugin(/^node:/, (r) => { r.request = r.request.replace(/^node:/, ''); }),
       new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
-      new MonacoWebpackPlugin({
-        filename: '[name].[hash:6].worker.js',
-        customLanguages: [{
-          label: 'yaml',
-          entry: require.resolve('monaco-yaml/index.js'),
-          worker: {
-            id: 'vs/language/yaml/yamlWorker',
-            entry: require.resolve('monaco-yaml/yaml.worker.js'),
-          },
-        }],
-      }),
+      new webpack.NormalModuleReplacementPlugin(
+        /@codingame\/monaco-vscode-(css|fsharp|html|groovy|scss|xml)-default-extension/,
+        root('../../modules/nop.ts'),
+      ),
+      ...(env.production ? [
+        sentryWebpackPlugin({
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+          org: 'hydro-dev',
+          project: 'hydro-web',
+          url: 'https://sentry.hydro.ac',
+        }),
+      ] : []),
       ...env.measure ? [
         new BundleAnalyzerPlugin({ analyzerPort: 'auto' }),
         new DuplicatesPlugin(),

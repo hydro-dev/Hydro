@@ -1,10 +1,25 @@
 import { getFeatures, load as loadModule } from '../../lazyload';
 
+/* eslint-disable no-await-in-loop */
+
 let loaded;
+
+const localeLoader: Partial<Record<string, () => Promise<void>>> = {
+  ko: async () => {
+    await import('@codingame/monaco-vscode-language-pack-ko');
+  },
+  zh: async () => {
+    await import('@codingame/monaco-vscode-language-pack-zh-hans');
+  },
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  'zh_TW': async () => {
+    await import('@codingame/monaco-vscode-language-pack-zh-hant');
+  },
+};
 
 const val: Record<string, any> = {};
 /** @deprecated */
-export async function legacyLoadExternalModule(target: string) {
+async function legacyLoadExternalModule(target: string) {
   if (val[target]) return val[target];
   const ele = document.createElement('script');
   ele.src = target;
@@ -18,22 +33,26 @@ export async function legacyLoadExternalModule(target: string) {
 }
 
 const loaders = {
-  i18n: async () => {
-    const { setLocaleData } = await import('./nls');
-    let resource;
-    const lang = UserContext.viewLang;
-    if (lang === 'zh') {
-      resource = await import('monaco-editor-nls/locale/zh-hans.json');
-    } else if (lang === 'zh_TW') {
-      resource = await import('monaco-editor-nls/locale/zh-hant.json');
-    } else if (lang === 'ko') {
-      resource = await import('monaco-editor-nls/locale/ko.json');
-    }
-    if (resource) setLocaleData(resource);
+  workbench: async () => {
+    await Promise.all([
+      import('@codingame/monaco-vscode-theme-seti-default-extension'),
+      import('@codingame/monaco-vscode-media-preview-default-extension'),
+      import('@codingame/monaco-vscode-markdown-language-features-default-extension'),
+      import('@codingame/monaco-vscode-markdown-math-default-extension'),
+      import('@codingame/monaco-vscode-configuration-editing-default-extension'),
+      import('@codingame/monaco-editor-wrapper/features/viewPanels'),
+      import('@codingame/monaco-editor-wrapper/features/search'),
+    ]);
   },
-  markdown: () => import('./languages/markdown'),
-  typescript: () => import('./languages/typescript').then((m) => m.loadTypes()),
-  yaml: () => import('./languages/yaml'),
+  markdown: async () => await Promise.all([
+    import('./languages/markdown'),
+    import('@codingame/monaco-vscode-markdown-basics-default-extension'),
+    import('@codingame/monaco-vscode-markdown-language-features-default-extension'),
+    import('@codingame/monaco-vscode-markdown-math-default-extension'),
+  ]),
+  typescript: async () => await import('@codingame/monaco-vscode-typescript-language-features-default-extension'),
+  cpp: async () => await import('@codingame/monaco-vscode-cpp-default-extension'),
+  yaml: async () => await import('@codingame/monaco-vscode-yaml-default-extension'),
   external: async (monaco, feat) => {
     for (const item of await getFeatures(`monaco-${feat}`)) {
       let apply = typeof item === 'function'
@@ -47,19 +66,28 @@ const loaders = {
   },
 };
 
-let loadPromise = Promise.resolve();
+let loadPromise = localeLoader['zh-hans']();
+let config = false;
+
+async function initConfigManager(t: typeof import('./monaco.ts')) {
+  t.registerFile(new t.RegisteredMemoryFile(t.default.Uri.parse('/.vscode/settings.json'), localStorage.getItem('monaco.settings') || '{}'));
+  const model = await t.default.editor.createModelReference(t.default.Uri.parse('/.vscode/settings.json'));
+  model.object.textEditorModel?.onDidChangeContent(() => {
+    const value = model.object.textEditorModel?.getValue() || '{}';
+    localStorage.setItem('monaco.settings', value);
+    t.updateUserConfiguration(value);
+  });
+}
 
 export async function load(features = ['markdown']) {
   let s = Date.now();
   await loadPromise;
   let resolve;
   loadPromise = new Promise((r) => { resolve = r; });
+  if (!loaded) console.log('Loading monaco editor');
+  const res = await import('./monaco');
   if (!loaded) {
-    await loaders.i18n();
-    console.log('Loading monaco editor');
-  }
-  const res = await import('./index');
-  if (!loaded) {
+    await res.init(features.includes('workbench'));
     console.log('Loaded monaco editor in', Date.now() - s, 'ms');
     loaded = [];
   }
@@ -83,9 +111,12 @@ export async function load(features = ['markdown']) {
       console.log('Monaco feat', feat, 'failed to load:', e);
     }
   }
-  await res.loadThemePromise;
+  if (!config) {
+    config = true;
+    await initConfigManager(res);
+  }
   resolve();
-  return { monaco: res.default, registerAction: res.registerAction, customOptions: res.customOptions };
+  return { ...res, monaco: res.default };
 }
 
 export default load;

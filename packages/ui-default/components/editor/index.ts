@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import type { editor } from 'monaco-editor';
 import { nanoid } from 'nanoid';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import Notification from 'vj/components/notification';
@@ -49,8 +50,8 @@ type Options = MonacoOptions & VditorOptions;
 
 export default class Editor extends DOMAttachedObject {
   static DOMAttachKey = 'vjEditorInstance';
-  model: import('../monaco').default.editor.IModel;
-  editor: import('../monaco').default.editor.IStandaloneCodeEditor;
+  model: editor.IModel;
+  editor: editor.IStandaloneCodeEditor;
   vditor: import('vditor').default;
   isValid: boolean;
 
@@ -70,7 +71,7 @@ export default class Editor extends DOMAttachedObject {
       autoResize = true, autoLayout = true,
       hide = [], lineNumbers = 'on',
     } = this.options;
-    const { monaco, registerAction } = await load([language]);
+    const { monaco } = await load([language]);
     const { $dom } = this;
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
@@ -85,7 +86,7 @@ export default class Editor extends DOMAttachedObject {
       || monaco.editor.createModel(value, language === 'auto' ? undefined : language, monaco.Uri.parse(model))
       : model;
     if (!this.options.model) this.model.setValue(value);
-    const cfg: import('../monaco').default.editor.IStandaloneEditorConstructionOptions = {
+    const cfg: editor.IStandaloneEditorConstructionOptions = {
       theme,
       lineNumbers,
       glyphMargin: true,
@@ -146,7 +147,7 @@ export default class Editor extends DOMAttachedObject {
       }
       this.editor.deltaDecorations([], ranges.map((range) => ({ range, options: { inlineClassName: 'decoration-hide' } })));
     }
-    registerAction(this.editor, this.model, this.$dom);
+    // registerAction(this.editor, this.model, this.$dom);
     if (autoResize) {
       this.editor.onDidChangeModelDecorations(() => {
         updateEditorHeight(); // typing
