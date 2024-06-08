@@ -24,6 +24,8 @@
     "@fontsource/source-code-pro": "^5.0.18",
     "@fontsource/ubuntu-mono": "^5.0.20",
     "@hydrooj/utils": "workspace:^",
+    "@sentry/browser": "^8.8.0",
+    "@sentry/webpack-plugin": "^2.18.0",
     "@simplewebauthn/browser": "7.4.0",
     "@svgr/webpack": "^8.1.0",
     "@types/gulp-if": "^0.0.34",

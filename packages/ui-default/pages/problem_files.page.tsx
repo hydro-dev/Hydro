@@ -1,4 +1,4 @@
-import { STATUS } from '@hydrooj/utils/lib/common';
+import { STATUS } from '@hydrooj/utils/lib/status';
 import $ from 'jquery';
 import { map } from 'lodash';
 import React from 'react';

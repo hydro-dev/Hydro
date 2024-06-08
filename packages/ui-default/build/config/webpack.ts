@@ -1,4 +1,5 @@
 /* eslint-disable global-require */
+import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { EsbuildPlugin } from 'esbuild-loader';
@@ -69,7 +70,8 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     stats: {
       preset: 'errors-warnings',
     },
-    devtool: false,
+    // sentry requires source-map while keep it simple in dev mode
+    devtool: env.production ? 'source-map' : false,
     entry: {
       hydro: './entry.js',
       polyfill: './polyfill.ts',
@@ -254,6 +256,12 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
+      }),
+      sentryWebpackPlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: 'hydro-dev',
+        project: 'hydro-web',
+        url: 'https://sentry.hydro.ac',
       }),
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),

@@ -4,6 +4,7 @@ import cac from 'cac';
 import chalk from 'chalk';
 import log from 'fancy-log';
 import fs from 'fs-extra';
+import { globbySync } from 'globby';
 import gulp from 'gulp';
 import { sum } from 'lodash';
 import path from 'path';
@@ -133,6 +134,7 @@ async function main() {
       const files = fs.readdirSync('public');
       files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }
+    await Promise.all(globbySync('public/**/*.map').map((i) => fs.remove(i)));
   }
   process.chdir(dir);
 }
