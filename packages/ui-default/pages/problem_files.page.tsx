@@ -85,7 +85,7 @@ const page = new NamedPage('problem_files', () => {
   async function handleClickRenameSelected(type) {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (!selectedFiles?.length) return;
-    let onActionButton = (_: string) => false; // eslint-disable-line @typescript-eslint/no-unused-vars
+    let onActionButton = (_: string) => false;
 
     function Rename(props) {
       const [original, setOriginal] = React.useState('');

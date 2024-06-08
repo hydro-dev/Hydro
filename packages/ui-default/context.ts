@@ -1,9 +1,9 @@
-import * as cordis from 'cordis';
+import * as cordis from '@cordisjs/core';
 import type { EventMap } from './api';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
 
-export type { Disposable, ScopeStatus, Plugin } from 'cordis';
+export type { Disposable, ScopeStatus, Plugin } from '@cordisjs/core';
 
 export interface Context {
   [Context.events]: Events<this>;

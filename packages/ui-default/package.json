@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "^5.10.3",
+    "@cordisjs/core": "^3.16.2",
     "@fontsource/dm-mono": "^5.0.20",
     "@fontsource/fira-code": "^5.0.18",
     "@fontsource/inconsolata": "^5.0.18",
@@ -50,7 +51,6 @@
     "clean-webpack-plugin": "^4.0.0",
     "clipboard": "^2.0.11",
     "copy-webpack-plugin": "^12.0.2",
-    "cordis": "3.16.0",
     "css-loader": "^6.11.0",
     "diff": "^5.2.0",
     "diff-dom": "^5.1.3",

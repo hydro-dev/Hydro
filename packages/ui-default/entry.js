@@ -28,7 +28,7 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
-if (!UiContext.sentry_disable) {
+if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
   window.captureException = (e) => Sentry.captureException(e);
   Sentry.init({
     dsn: UiContext.sentry_dsn || 'https://04d1d77b095231d55e1202bdc912ff16@sentry.hydro.ac/3',
