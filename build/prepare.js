@@ -89,7 +89,7 @@ const UIConfig = {
         esModuleInterop: true,
         resolveJsonModule: true,
         jsx: 'react',
-        module: 'commonjs',
+        module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
         target: 'es2020',
