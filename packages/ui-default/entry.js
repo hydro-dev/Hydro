@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
 window.Hydro = {
@@ -27,6 +28,21 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
+if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
+  window.captureException = (e) => Sentry.captureException(e);
+  Sentry.init({
+    dsn: UiContext.sentry_dsn || 'https://04d1d77b095231d55e1202bdc912ff16@sentry.hydro.ac/3',
+    release: process.env.VERSION,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 0.1,
+    tracePropagationTargets: ['localhost', /^\//, window.location.host],
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
   const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));

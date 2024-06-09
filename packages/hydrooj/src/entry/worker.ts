@@ -6,6 +6,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
+import { load } from '../options';
 import db from '../service/db';
 import {
     addon, builtinModel, handler, lib, locale, model,
@@ -21,7 +22,8 @@ export async function apply(ctx: Context) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    const config = require('../options')();
+    require('../service/bus').apply(ctx);
+    const config = load();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
         await require('./setup').load();
@@ -38,11 +40,14 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
-    await require('../service/worker').apply(ctx);
-    await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
     if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
     await ctx.root.start();
+    await ctx.lifecycle.flush();
+    await require('../service/worker').apply(ctx);
+    await require('../service/server').apply(ctx);
+    await require('../service/api').apply(ctx);
+    await ctx.lifecycle.flush();
     require('../lib/index');
     await lib(pending, fail, ctx);
     await ctx.lifecycle.flush();

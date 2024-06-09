@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import { zIndexManager } from 'vj/utils';
 
@@ -145,5 +144,3 @@ export default class DomDialog extends DOMAttachedObject {
     }
   }
 }
-
-_.assign(DomDialog, DOMAttachedObject);

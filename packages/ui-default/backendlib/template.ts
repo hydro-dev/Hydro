@@ -181,8 +181,9 @@ const render = (name: string, state: any) => new Promise<string>((resolve, rejec
   });
 });
 
+export const inject = ['server'];
 export async function apply(ctx: Context) {
-  ctx.provideModule('render', 'html', render);
-  ctx.provideModule('render', 'yaml', render);
-  ctx.provideModule('render', 'md', render);
+  ctx.server.registerRenderer('html', render);
+  ctx.server.registerRenderer('yaml', render);
+  ctx.server.registerRenderer('md', render);
 }

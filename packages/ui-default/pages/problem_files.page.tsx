@@ -1,3 +1,4 @@
+import { STATUS } from '@hydrooj/utils/lib/status';
 import $ from 'jquery';
 import { map } from 'lodash';
 import React from 'react';
@@ -84,7 +85,7 @@ const page = new NamedPage('problem_files', () => {
   async function handleClickRenameSelected(type) {
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (!selectedFiles?.length) return;
-    let onActionButton = (_: string) => false; // eslint-disable-line @typescript-eslint/no-unused-vars
+    let onActionButton = (_: string) => false;
 
     function Rename(props) {
       const [original, setOriginal] = React.useState('');
@@ -340,7 +341,7 @@ const page = new NamedPage('problem_files', () => {
       if (res.error) Notification.error(res.error);
       else {
         Notification.success(i18n('Generating...'));
-        await new InfoDialog({
+        const dialog = new InfoDialog({
           $body: tpl`
             <div class="typo">
               <iframe src="${res.url}"
@@ -348,7 +349,17 @@ const page = new NamedPage('problem_files', () => {
             </div>`,
           width: `${window.innerWidth - 200}px`,
           height: `${window.innerHeight - 100}px`,
-        }).open();
+        });
+        const callback = (data: MessageEvent<any>) => {
+          if (data.data.status === STATUS.STATUS_ACCEPTED) {
+            dialog.close();
+            Notification.success('Testdata generated successfully.');
+          }
+        };
+        window.addEventListener('message', callback, false);
+        await dialog.open();
+        window.removeEventListener('message', callback, false);
+        await pjax.request({ push: false });
       }
     } catch (error) {
       Notification.error([error.message, ...error.params].join(' '));

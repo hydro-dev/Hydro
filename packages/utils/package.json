@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.4.23",
+    "version": "1.4.24",
     "description": "hydrooj utils",
     "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -16,7 +16,7 @@
         "mongodb": "^5.9.2",
         "reggol": "^1.6.3",
         "search-query-parser": "^1.6.0",
-        "systeminformation": "^5.22.8"
+        "systeminformation": "^5.22.10"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4"

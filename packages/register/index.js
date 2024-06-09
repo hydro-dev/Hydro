@@ -89,8 +89,8 @@ require.extensions['.jsc'] = function loader(module, filename) {
     return compiledWrapper.apply(module.exports, args);
 };
 
-const argv = require('cac')().parse();
-if (argv.options.debug) {
+const debug = process.argv.find((i) => i.startsWith('--debug'));
+if (debug && !['0', 'false', 'off', 'disabled', 'no'].includes(debug.split('=')[1]?.toLowerCase())) {
     console.log('Debug mode enabled');
     process.env.NODE_ENV = 'development';
     process.env.DEV = 'on';

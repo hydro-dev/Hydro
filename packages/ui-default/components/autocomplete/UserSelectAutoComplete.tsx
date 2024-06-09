@@ -1,7 +1,5 @@
-import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete, { AutoCompleteOptions } from '.';
 import UserSelectAutoCompleteFC from './components/UserSelectAutoComplete';
 
@@ -49,5 +47,4 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
   }
 }
 
-assign(UserSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.UserSelectAutoComplete = UserSelectAutoComplete;

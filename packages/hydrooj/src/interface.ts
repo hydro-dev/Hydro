@@ -802,7 +802,6 @@ export interface ModuleInterfaces {
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
-    render: (name: string, state: any) => string | Promise<string>;
 }
 
 export interface HydroGlobal {

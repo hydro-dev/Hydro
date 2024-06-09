@@ -33,6 +33,20 @@ class I18nService extends Service {
         }
         return null;
     }
+
+    translate(str: string, languages: string[]) {
+        if (languages[0]?.startsWith('en')) {
+            // For most use cases, source text equals to translated text in English.
+            // So if it doesn't exist, we should use the original text instead of fallback.
+            return app.i18n.get(str, languages[0]) || app.i18n.get(str, 'en') || this.toString();
+        }
+        for (const language of languages.filter(Boolean)) {
+            const curr = app.i18n.get(str, language) || app.i18n.get(str, language.split('_')[0])
+                || app.i18n.get(str, language.split('-')[0]);
+            if (curr) return curr;
+        }
+        return this.toString();
+    }
 }
 
 app.provide('i18n', undefined, true);

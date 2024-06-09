@@ -5,7 +5,7 @@ import {
 import mongoUri from 'mongodb-uri';
 import { Time } from '@hydrooj/utils';
 import { Logger } from '../logger';
-import options from '../options';
+import { load } from '../options';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');
@@ -37,7 +37,7 @@ class MongoService {
     }
 
     async start() {
-        const opts = options() || {};
+        const opts = load() || {};
         let mongourl = MongoService.buildUrl(opts);
         const url = mongoUri.parse(mongourl);
         if (process.env.CI) {

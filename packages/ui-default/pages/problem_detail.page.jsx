@@ -253,18 +253,17 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     }
     function loadAns() {
       const saved = localStorage.getItem(`${cacheKey}#objective`);
-      if (saved) {
-        Object.assign(ans, JSON.parse(saved));
-        for (const [id, val] of Object.entries(ans)) {
-          if (Array.isArray(val)) {
-            for (const v of val) {
-              if (val.length === 1
-                && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id} input[value=${v}]`).prop('checked', true);
-            }
+      if (!saved) return;
+      const isValidOption = (v) => v.length === 1 && v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90;
+      Object.assign(ans, JSON.parse(saved));
+      for (const [id, val] of Object.entries(ans)) {
+        if (Array.isArray(val)) {
+          for (const v of val) {
+            if (isValidOption(v)) $(`.objective_${id} input[value="${v}"]`).prop('checked', true);
           }
+        } else {
           $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
-          if (val.length === 1
-            && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
+          if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
     }
@@ -280,8 +279,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       });
       $('input.objective-input[type=checkbox]').on('input', (e) => {
         if (e.target.checked) {
-          if (ans[e.target.name] === undefined) ans[e.target.name] = [];
+          ans[e.target.name] ||= [];
           ans[e.target.name].push(e.target.value);
+          ans[e.target.name] = [...new Set(ans[e.target.name])].sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0));
         } else {
           ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
         }
@@ -343,7 +343,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
-  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
+  if (UiContext.pdoc.config?.type === 'objective') {
+    loadObjective();
+    $(document).on('vjContentNew', loadObjective);
+  }
 });
 
 export default page;

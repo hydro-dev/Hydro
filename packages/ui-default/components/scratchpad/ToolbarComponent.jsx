@@ -20,8 +20,8 @@ ToolbarComponent.propTypes = {
 
 export function ToolbarButtonComponent(props) {
   const {
-    activated,
-    disabled,
+    activated = false,
+    disabled = false,
     onClick,
     className,
     children,
@@ -50,11 +50,6 @@ ToolbarButtonComponent.propTypes = {
   onClick: PropTypes.func,
   className: PropTypes.string,
   children: PropTypes.node,
-};
-
-ToolbarButtonComponent.defaultProps = {
-  activated: false,
-  disabled: false,
 };
 
 export function ToolbarSplitComponent(props) {
