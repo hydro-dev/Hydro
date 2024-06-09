@@ -77,7 +77,6 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       polyfill: './polyfill.ts',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
-      'messages-shared-worker': './components/message/worker.ts',
     },
     cache: {
       type: 'filesystem',
