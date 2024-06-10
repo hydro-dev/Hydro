@@ -8,7 +8,7 @@ import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import { Shorty } from 'shorty.js';
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import {
     Counter, errorMessage, isClass, Logger, parseMemoryMB,
 } from '@hydrooj/utils/lib/utils';
@@ -91,7 +91,7 @@ export const koa = new Koa<Koa.DefaultState, KoaContext>({
 });
 export const router = new Router();
 export const httpServer = http.createServer(koa.callback());
-export const wsServer = new WebSocket.Server({ server: httpServer });
+export const wsServer = new WebSocketServer({ server: httpServer });
 koa.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
