@@ -209,7 +209,7 @@ export async function apply(ctx: Context) {
                             ? (!host.includes(this.request.host))
                             : this.request.host !== host)
                     )) withDomainId ||= domainId;
-                    res = this.context.router.url.call(this.context.router, name, args, { query }).toString();
+                    res = ctx.server.router.url.call(ctx.server.router, name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
                     if (withDomainId) res = `/d/${withDomainId}${res}`;
                 } catch (e) {
