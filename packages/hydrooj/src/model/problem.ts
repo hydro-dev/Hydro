@@ -363,7 +363,7 @@ export class ProblemModel {
         domainId: string, pids: number[], canViewHidden: number | boolean = false,
         doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC, indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
-        if (!pids?.length) return [];
+        if (!pids?.length) return {};
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
         const q: any = { docId: { $in: pids } };
