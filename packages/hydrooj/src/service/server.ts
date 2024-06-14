@@ -11,13 +11,13 @@ import { errorMessage, Time } from '@hydrooj/utils';
 import { Context } from '../context';
 import { PermissionError, PrivilegeError } from '../error';
 import type { DomainDoc } from '../interface';
-import paginate from '../lib/paginate';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
 import { builtinConfig } from '../settings';
+import db from './db';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
 import userLayer from './layers/user';
@@ -228,7 +228,7 @@ export async function apply(ctx: Context) {
                 return res;
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
-                return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+                return db.paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
             },
             checkPerm(...args: bigint[]) {
                 if (!this.user.hasPerm(...args)) {

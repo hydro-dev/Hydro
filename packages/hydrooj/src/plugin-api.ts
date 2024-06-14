@@ -43,8 +43,10 @@ export { buildContent } from './lib/content';
 export { default as mime } from './lib/mime';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
-export { default as rank } from './lib/rank';
-export { default as paginate } from './lib/paginate';
+/** @deprecated use Handler.paginate instead */
+export const paginate = db.paginate.bind(db);
+/** @deprecated use db.ranked instead */
+export const rank = db.ranked.bind(db);
 export { UiContextBase } from './service/layers/base';
 export * from '@hydrooj/framework/decorators';
 export * from '@hydrooj/framework/validator';
