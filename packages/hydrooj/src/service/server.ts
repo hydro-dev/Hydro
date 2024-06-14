@@ -11,13 +11,13 @@ import { errorMessage, Time } from '@hydrooj/utils';
 import { Context } from '../context';
 import { PermissionError, PrivilegeError } from '../error';
 import type { DomainDoc } from '../interface';
-import paginate from '../lib/paginate';
 import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
 import { builtinConfig } from '../settings';
+import db from './db';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
 import userLayer from './layers/user';
@@ -209,7 +209,7 @@ export async function apply(ctx: Context) {
                             ? (!host.includes(this.request.host))
                             : this.request.host !== host)
                     )) withDomainId ||= domainId;
-                    res = this.context.router.url.call(this.context.router, name, args, { query }).toString();
+                    res = ctx.server.router.url.call(ctx.server.router, name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
                     if (withDomainId) res = `/d/${withDomainId}${res}`;
                 } catch (e) {
@@ -228,7 +228,7 @@ export async function apply(ctx: Context) {
                 return res;
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
-                return paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+                return db.paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
             },
             checkPerm(...args: bigint[]) {
                 if (!this.user.hasPerm(...args)) {
@@ -255,7 +255,7 @@ export async function apply(ctx: Context) {
             },
             renderTitle(str: string) {
                 const name = this.ctx.setting.get('server.name');
-                if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
+                if (this.UiContext.extraTitleContent) return `${this.UiContext.extraTitleContent} - ${this.translate(str)} - ${name}`;
                 return `${this.translate(str)} - ${name}`;
             },
         });

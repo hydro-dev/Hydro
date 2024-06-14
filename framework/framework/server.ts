@@ -8,7 +8,7 @@ import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import { Shorty } from 'shorty.js';
-import WebSocket from 'ws';
+import { WebSocketServer } from 'ws';
 import {
     Counter, errorMessage, isClass, Logger, parseMemoryMB,
 } from '@hydrooj/utils/lib/utils';
@@ -91,7 +91,7 @@ export const koa = new Koa<Koa.DefaultState, KoaContext>({
 });
 export const router = new Router();
 export const httpServer = http.createServer(koa.callback());
-export const wsServer = new WebSocket.Server({ server: httpServer });
+export const wsServer = new WebSocketServer({ server: httpServer });
 koa.on('error', (error) => {
     if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
@@ -322,6 +322,7 @@ export class WebService extends Service {
     HandlerCommon = HandlerCommon;
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
+    handlerCtxBase = this.ctx;
 
     constructor(ctx: Context, public config: WebServiceConfig) {
         super(ctx, 'server', true);
@@ -420,6 +421,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
             socket.close();
         });
+        this.ctx.inject(['server'], (c) => {
+            this.handlerCtxBase = c;
+        });
     }
 
     async listen() {
@@ -438,7 +442,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, this.ctx);
+        const h = new HandlerClass(ctx, this.handlerCtxBase);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
         try {
@@ -511,7 +515,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, this.ctx);
+        const h = new HandlerClass(ctx, this.handlerCtxBase);
         await this.ctx.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;

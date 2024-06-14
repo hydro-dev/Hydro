@@ -50,6 +50,12 @@ require.extensions['.js'] = function loader(module, filename) {
     }
     try {
         const content = fs.readFileSync(filename, 'utf-8');
+        const lastLine = content.trim().split('\n').pop();
+        if (lastLine.startsWith('//# sourceMappingURL=data:application/json;base64,')) {
+            const info = lastLine.split('//# sourceMappingURL=data:application/json;base64,')[1];
+            const payload = JSON.parse(Buffer.from(info, 'base64').toString());
+            map[filename] = payload;
+        }
         return module._compile(content, filename);
     } catch (e) { // ESM
         return module._compile(transform(filename), filename);

@@ -8,7 +8,6 @@ import {
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
-import paginate from '../lib/paginate';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
@@ -24,10 +23,10 @@ import { log2 } from '../utils';
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
-        const [dudocs, upcount, ucount] = await paginate(
+        const [dudocs, upcount, ucount] = await this.paginate(
             domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } }).sort({ rp: -1 }),
             page,
-            100,
+            'ranking',
         );
         const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
         const udocs = dudocs.map((i) => udict[i.uid]);
