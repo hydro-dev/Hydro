@@ -255,7 +255,7 @@ export async function apply(ctx: Context) {
             },
             renderTitle(str: string) {
                 const name = this.ctx.setting.get('server.name');
-                if (this.UiContext.extraTitleContent) return `${this.translate(str)} - ${this.UiContext.extraTitleContent} - ${name}`;
+                if (this.UiContext.extraTitleContent) return `${this.UiContext.extraTitleContent} - ${this.translate(str)} - ${name}`;
                 return `${this.translate(str)} - ${name}`;
             },
         });
