@@ -7,6 +7,7 @@ import { fs, pipeRequest } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
+import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Session } from '../interface';
@@ -173,13 +174,19 @@ export default class Hydro implements Session {
         const content = Object.keys(config).length
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
+        let compilers = {};
         this.ws.on('message', (data) => {
             if (data.toString() === 'ping') {
                 this.ws.send('pong');
                 return;
             }
             const request = JSON.parse(data.toString());
-            if (request.language) this.language = request.language;
+            if (request.language) {
+                this.language = request.language;
+                compilerVersions(this.language).then((res) => {
+                    compilers = res;
+                });
+            }
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
         });
         this.ws.on('close', (data, reason) => {
@@ -196,10 +203,10 @@ export default class Hydro implements Session {
                 this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
-                    this.ws.send(JSON.stringify({ key: 'status', info }));
+                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers } }));
                     setInterval(async () => {
                         const [mid, inf] = await sysinfo.update();
-                        this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf } }));
+                        this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf, compilers } }));
                     }, 1200000);
                 }
                 resolve(null);

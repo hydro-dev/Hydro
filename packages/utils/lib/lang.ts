@@ -24,6 +24,7 @@ export interface LangConfig {
     comment?: string | [string, string];
     compile_time_limit?: number;
     compile_memory_limit?: number;
+    version?: string;
 }
 
 export function parseLang(config: string): Record<string, LangConfig> {

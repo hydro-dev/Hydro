@@ -2,10 +2,13 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import { fs } from '@hydrooj/utils';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
-    JudgeHandler, JudgeResultBody, ObjectId, RecordModel, SettingModel,
-    StorageModel, SystemModel, TaskModel,
+    db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
+    SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
+import { langs } from 'hydrooj/src/model/setting';
+import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
@@ -82,6 +85,7 @@ export async function postInit(ctx) {
         c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
     });
     await fs.ensureDir(getConfig('tmp_dir'));
+    const info = await sysinfo.get();
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
         if (!rdoc) {
@@ -92,9 +96,19 @@ export async function postInit(ctx) {
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
     const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    function collectCompilerInfo() {
+        const coll = db.collection('status');
+        compilerVersions(langs).then((compilers) => coll.updateOne(
+            { mid: info.mid, type: 'judge' },
+            { $set: { compilers } },
+            { upsert: true },
+        )).catch((e) => logger.error(e));
+    }
     ctx.on('system/setting', () => {
         taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
+        collectCompilerInfo();
     });
+    collectCompilerInfo();
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
     TaskModel.consume({ type: 'generate' }, handle);
 }
