@@ -3,22 +3,16 @@ import {
     ProblemModel, RecordModel, sleep, STATUS, yaml,
 } from 'hydrooj';
 
+// These tests are from https://loj.ac/d/425
+const head = '#include<cstdio>\nusing namespace std;\n';
 const TESTS = {
-    'test1': `//Test 1
-#include<cstdio>
-
-using namespace std;
-
+    ' 1 ': `
 int main(){
     int a=1000000000,b=1;
     while(a)b<<=1,a--;
-    printf("%d\\n",b);
-    return 0;
-}`,
-    'test2': `//Test 2
-#include<cstdio>
+    printf("%d\\n",b);`,
 
-using namespace std;
+    ' 2 ': `
 const int MX=50000000;
 int p[MX],m[MX],pc;
 int main(){
@@ -29,14 +23,9 @@ int main(){
     }
     int ans=0;
     for(int i=1;i<=pc;i++)ans^=p[i];
-    printf("%d\\n",ans);
-    return 0;
-}`,
-    'test3': `
-//Test 3
-#include<cstdio>
+    printf("%d\\n",ans);`,
 
-using namespace std;
+    ' 3 ': `
 const int MX=1000;
 int G[MX][MX];
 int sed=0;
@@ -53,16 +42,11 @@ int main(){
     for(int i=0;i<MX;i++)
         for(int j=0;j<MX;j++)
             ans^=G[i][j];
-    printf("%d\\n",ans);
-    return 0;
-}`,
-    'test4': `//Test 4
-#include<cstdio>
+    printf("%d\\n",ans);`,
+
+    ' 4 ': `
 #include<algorithm>
 #include<set>
-
-using namespace std;
-
 const int MX=1000000;
 int sed=0;
 inline int rand(){return sed=(sed*sed*73+sed*233+19260817);}
@@ -71,102 +55,70 @@ int main(){
     for(int i=0;i<MX;i++)S.insert(rand());
     int ans=0;
     for(set<int>::iterator it=S.begin();it!=S.end();it++)ans^=*it;
-    printf("%d\\n",ans);
-    return 0;
-}`,
-    'test6-1': `//Test 6-1
-#include<cstdio>
+    printf("%d\\n",ans);`,
 
-using namespace std;
+    // skipping test 5 by default as it contains a lot of ram
+    ' 5 ': `
+const int MX=20000000;
+int *it[MX];
+int main(){
+    for(int i=0;i<MX;i++)it[i]=new int;
+    for(int i=0;i<MX;i++)*it[i]=i;
+    int ans=0;
+    for(int i=0;i<MX;i++)ans^=*it[i];
+    printf("%d\\n",ans);`,
+
+    '6-1': `
 const int MX=1<<25;
 int a[MX];
-
 inline unsigned int rand(){static unsigned int sed=0;return (sed=(sed*233+19260421))&(MX-1);}
-
 int main(){
-    for(int i=0;i<MX;i++)a[rand()]=i;
-    return 0;
-}`,
-    'test6-2': `//Test 6-2
-#include<cstdio>
+    for(int i=0;i<MX;i++)a[rand()]=i;`,
 
-using namespace std;
+    '6-2': `
 const int MX=1<<25;
 int a[MX];
-
 inline unsigned int rand(){static unsigned int sed=0;return (sed=(sed*(MX+1)+1025))&(MX-1);}
-
 int main(){
-    for(int i=0;i<MX;i++)a[rand()]=i;
-    return 0;
-}`,
-    'test6-3': `//Test 6-3
-#include<cstdio>
+    for(int i=0;i<MX;i++)a[rand()]=i;`,
 
-using namespace std;
+    '6-3': `
 const int MX=1<<25;
 int a[MX];
-
 inline unsigned int rand(){static unsigned int sed=0;return (sed=(sed*(MX+1)+1))&(MX-1);}
-
 int main(){
-    for(int i=0;i<MX;i++)a[rand()]=i;
-    return 0;
-}`,
-    'test7-1': `//Test 7-1
-#include<cstdio>
+    for(int i=0;i<MX;i++)a[rand()]=i;`,
 
-using namespace std;
+    '7-1': `
 typedef unsigned long long ull;
-
 #define P 1000000007
 const int MX=100000000;
-
 int main(){
     ull ans=1;
     for(int i=1;i<MX;i++)ans=ans*i%P;
-    printf("%llu\\n",ans);
-    return 0;
-}`,
-    'test7-2': `//Test 7-2
-#include<cstdio>
+    printf("%llu\\n",ans);`,
 
-using namespace std;
+    '7-2': `
 typedef unsigned long long ull;
-
 int P=1000000007;
 const int MX=100000000;
-
 int main(){
     ull ans=1;
     for(int i=1;i<MX;i++)ans=ans*i%P;
-    printf("%llu\\n",ans);
-    return 0;
-}`,
-    'test8': `//Test 8
-#include<cstdio>
+    printf("%llu\\n",ans);`,
 
-using namespace std;
-
+    ' 8 ': `
 const int MX=20000000;
-
 int main(){
     double ans=0.61234567898765,t=1,s=0;
     for(int i=1;i<MX;i++)s+=(t*=ans);
-    printf("%f\\n",s);
-    return 0;
-}`,
-    'test9-1': `//Test 9-1
-#include<cstdio>
+    printf("%f\\n",s);`,
 
-using namespace std;
+    '9-1': `
 typedef unsigned int uint;
-
 const int MX=1<<10;
 uint a[MX][MX],b[MX][MX];
-
 inline uint rand(){static unsigned int sed=0;return (sed=(sed*233+19260421))&(MX-1);}
-
 int main(){
     register int i,j,k;
     for(i=0;i<MX;i++)
@@ -182,20 +134,13 @@ int main(){
     for(i=0;i<MX;i++)
         for(j=0;j<MX;j++)
             s+=a[i][j];
-    printf("%u\\n",s);
-    return 0;
-}`,
-    'test9-2': `//Test 9-2
-#include<cstdio>
+    printf("%u\\n",s);`,
 
-using namespace std;
+    '9-2': `
 typedef unsigned int uint;
-
 const int MX=1<<10;
 uint a[MX][MX],b[MX][MX];
-
 inline uint rand(){static unsigned int sed=0;return (sed=(sed*233+19260421))&(MX-1);}
-
 int main(){
     register int i,j,k;
     for(i=0;i<MX;i++)
@@ -211,26 +156,27 @@ int main(){
     for(i=0;i<MX;i++)
         for(j=0;j<MX;j++)
             s+=a[i][j];
-    printf("%u\\n",s);
-    return 0;
-}`,
+    printf("%u\\n",s);`,
 };
 
-export async function startPerformanceTest(args, report) {
+export async function startPerformanceTest(args: { enable5: boolean }, report) {
     const docId = (await ProblemModel.get('system', 'PTEST'))?.docId
         || await ProblemModel.add('system', 'PTEST', 'Performance Test', 'test only', 1, [], { hidden: true });
     await ProblemModel.addTestdata('system', docId, '1.in', Buffer.from('1'));
     await ProblemModel.addTestdata('system', docId, '1.out', Buffer.from(''));
     await ProblemModel.addTestdata('system', docId, 'config.yaml', Buffer.from(yaml.dump({
         time: '3s',
-        memory: '256m',
+        memory: args.enable5 ? '2g' : '512m',
         cases: new Array(20).fill({
             input: '1.in',
             output: '1.out',
         }),
     })));
+    report({ message: 'Running tests...' });
+    const results = {};
     await Promise.all(Object.keys(TESTS).map(async (key) => {
-        const id = await RecordModel.add('system', docId, 1, 'cc.cc14o2', TESTS[key], true);
+        if (key === ' 5 ' && !args.enable5) return;
+        const id = await RecordModel.add('system', docId, 1, 'cc.cc14o2', `// TEST ${key}\n${head}${TESTS[key]}\nreturn 0;}`, true);
         while ([
             STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_FETCHED, STATUS.STATUS_COMPILING,
         ].includes((await RecordModel.get('system', id))?.status)) {
@@ -239,14 +185,19 @@ export async function startPerformanceTest(args, report) {
         const result = await RecordModel.get('system', id);
         if (result.status !== STATUS.STATUS_ACCEPTED && result.status !== STATUS.STATUS_WRONG_ANSWER) {
             report({ message: `Test ${key} failed (${id}) ${result.status}` });
+        } else {
+            results[key] = result.testCases.map((i) => i.time);
         }
-        const timeArr = result.testCases.map((i) => i.time);
-        const avgTime = Math.sum(...timeArr) / 20;
-        report({ message: '' });
-        report({ message: `Test ${key} Avg: ${Math.floor(avgTime)}` });
-        report({ message: `Max: ${Math.floor(Math.max(...timeArr))} / Min: ${Math.floor(Math.min(...timeArr))}` });
-        report({ message: `Variance: ${Math.floor(Math.sum(...timeArr.map((i) => (i - avgTime) ** 2)) / 20)}` });
-        report({ message: '' });
     }));
+    const formatL = (t: number, width = 4) => Math.floor(t).toString().padEnd(width);
+    const formatR = (t: number, width = 4) => Math.floor(t).toString().padStart(width);
+    for (const key of Object.keys(TESTS)) {
+        const timeArr = results[key];
+        if (!timeArr) continue;
+        const avgTime = Math.sum(...timeArr) / 20;
+        report({ message: `-------Test ${key}-------` });
+        report({ message: ` Avg: ${formatL(avgTime)}  D:  ${formatR(Math.sum(...timeArr.map((i) => (i - avgTime) ** 2)) / 20, 5)} ` });
+        report({ message: ` Max: ${formatL(Math.max(...timeArr))}  Min: ${formatR(Math.min(...timeArr))} ` });
+    }
     return true;
 }

@@ -6,5 +6,5 @@ export async function apply(ctx: Context) {
     ctx.on('handler/after/UserRegisterWithCode#post', async (that) => {
         if (that.session.uid === 2) await UserModel.setSuperAdmin(2);
     });
-    ctx.addScript('performance-test', 'test', Schema.object({}), startPerformanceTest);
+    ctx.addScript('performance-test', 'test', Schema.object({ enable5: Schema.boolean().default(false) }), startPerformanceTest);
 }
