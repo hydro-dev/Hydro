@@ -57,7 +57,7 @@ export class StorageModel {
         const processedIds = [];
         for (const i of linked || []) {
             if (processedIds.includes(i.link)) continue;
-            const current = affected.find((i) => i._id === i.link); // to be deleted
+            const current = affected.find((t) => t._id === t.link); // to be deleted
             // eslint-disable-next-line no-await-in-loop
             await Promise.all([
                 StorageModel.coll.updateOne({ _id: current._id }, { $set: omit(i, ['_id']) }),
