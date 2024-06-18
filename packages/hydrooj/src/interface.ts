@@ -644,6 +644,8 @@ export interface FileNode {
     size?: number;
     /** AutoDelete */
     autoDelete?: Date;
+    /** fileId if linked to an existing file */
+    link?: string;
     owner?: number;
     operator?: number[];
     meta?: Record<string, string | number>;

@@ -1,5 +1,5 @@
 import { extname } from 'path';
-import { escapeRegExp } from 'lodash';
+import { escapeRegExp, omit } from 'lodash';
 import moment from 'moment-timezone';
 import { nanoid } from 'nanoid';
 import type { Readable } from 'stream';
@@ -39,7 +39,7 @@ export class StorageModel {
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
         );
-        return await storage.get(value?._id || path, savePath);
+        return await storage.get(value?.link || value?._id || path, savePath);
     }
 
     static async rename(path: string, newPath: string, operator = 1) {
@@ -51,6 +51,20 @@ export class StorageModel {
 
     static async del(path: string[], operator = 1) {
         if (!path.length) return;
+        const affected = await StorageModel.coll.find({ path: { $in: path } }).toArray();
+        if (!affected.length) return;
+        const linked = await StorageModel.coll.find({ link: { $in: affected.map((i) => i._id) } }).toArray();
+        const processedIds = [];
+        for (const i of linked || []) {
+            if (processedIds.includes(i.link)) continue;
+            const current = affected.find((i) => i._id === i.link); // to be deleted
+            // eslint-disable-next-line no-await-in-loop
+            await Promise.all([
+                StorageModel.coll.updateOne({ _id: current._id }, { $set: omit(i, ['_id']) }),
+                StorageModel.coll.updateOne({ _id: i._id }, { $set: omit(current, ['_id']), $unset: { link: '' } }),
+            ]);
+            processedIds.push(i.link);
+        }
         const autoDelete = moment().add(7, 'day').toDate();
         await StorageModel.coll.updateMany(
             { path: { $in: path }, autoDelete: null },
@@ -66,7 +80,7 @@ export class StorageModel {
             autoDelete: null,
         }).toArray();
         return results.map((i) => ({
-            ...i, name: i.path.split(target)[1], prefix: target,
+            ...i, name: i.path.split(target)[1],
         }));
     }
 
@@ -106,12 +120,10 @@ export class StorageModel {
         // Make sure id is not used
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(dst));
-        const result = await storage.copy(value._id, _id);
-        const { metaData, size, etag } = await storage.getMeta(_id);
         await StorageModel.coll.insertOne({
-            _id, meta: metaData, path: dst, size, etag, lastModified: new Date(), owner: value.owner || 1,
+            ...value, _id, path: dst, link: value._id, lastModified: new Date(), owner: value.owner || 1,
         });
-        return result;
+        return _id;
     }
 }
 
