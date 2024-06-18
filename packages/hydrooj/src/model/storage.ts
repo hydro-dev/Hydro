@@ -53,7 +53,7 @@ export class StorageModel {
         if (!path.length) return;
         const affected = await StorageModel.coll.find({ path: { $in: path } }).toArray();
         if (!affected.length) return;
-        const linked = await StorageModel.coll.find({ link: { $in: affected.map((i) => i._id) } }).toArray();
+        const linked = await StorageModel.coll.find({ link: { $in: affected.map((i) => i._id) }, path: { $nin: path } }).toArray();
         const processedIds = [];
         for (const i of linked || []) {
             if (processedIds.includes(i.link)) continue;
