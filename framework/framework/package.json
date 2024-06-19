@@ -2,6 +2,7 @@
     "name": "@hydrooj/framework",
     "version": "0.0.3",
     "main": "index.ts",
+    "license": "MIT",
     "peerDependencies": {
         "cordis": "*"
     },
@@ -19,7 +20,7 @@
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
         "shorty.js": "^1.0.1",
-        "ws": "^8.17.0"
+        "ws": "^8.17.1"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",

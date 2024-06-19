@@ -634,7 +634,8 @@ Hydro 用户群：1085853538
 
 ## 开源许可
 
-本项目中的 examples/ install/ packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。
+本项目中 framework/ examples/ install/ 下的内容采用 MIT 协议授权，您可自由使用。  
+本项目中 packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。  
 项目其余部分使用双重许可：
 
 1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  
