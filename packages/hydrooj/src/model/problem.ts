@@ -262,7 +262,8 @@ export class ProblemModel {
         const res = await Promise.all([
             document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
             document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
-            storage.list(`problem/${domainId}/${docId}/`).then((items) => storage.del(items.map((item) => item.prefix + item.name))),
+            storage.list(`problem/${domainId}/${docId}/`)
+                .then((items) => storage.del(items.map((item) => `problem/${domainId}/${docId}/${item.name}`))),
             bus.parallel('problem/delete', domainId, docId),
         ]);
         await bus.emit('problem/del', domainId, docId);
