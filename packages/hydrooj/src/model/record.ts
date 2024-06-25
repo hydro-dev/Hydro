@@ -280,22 +280,23 @@ export function apply(ctx: Context) {
             }, { upsert: true });
         }
     });
-    ctx.on('ready', async () => {
-        await db.ensureIndexes(
+    ctx.on('ready', () => Promise.all([
+        db.ensureIndexes(
             RecordModel.coll,
+            { key: { domainId: 1, pid: 1 }, name: 'delete' },
             { key: { domainId: 1, contest: 1, _id: -1 }, name: 'basic' },
             { key: { domainId: 1, contest: 1, uid: 1, _id: -1 }, name: 'withUser' },
             { key: { domainId: 1, contest: 1, pid: 1, _id: -1 }, name: 'withProblem' },
             { key: { domainId: 1, contest: 1, pid: 1, uid: 1, _id: -1 }, name: 'withUserAndProblem' },
             { key: { domainId: 1, contest: 1, status: 1, _id: -1 }, name: 'withStatus' },
-        );
-        await db.ensureIndexes(
+        ),
+        db.ensureIndexes(
             RecordModel.collStat,
             { key: { domainId: 1, pid: 1, uid: 1, _id: -1 }, name: 'basic' },
             { key: { domainId: 1, pid: 1, uid: 1, time: 1 }, name: 'time' },
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
             { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
-        );
-    });
+        ),
+    ]) as any);
 }
 global.Hydro.model.record = RecordModel;
