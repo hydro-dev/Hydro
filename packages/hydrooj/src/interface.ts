@@ -1,5 +1,5 @@
-import { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
-import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
+import type { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
+import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
 import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';

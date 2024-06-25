@@ -80,7 +80,7 @@ const UIConfig = {
         'packages/ui-default/public',
         '**/node_modules',
     ],
-    include: ['ts', 'tsx', 'vue']
+    include: ['ts', 'tsx', 'vue', 'json']
         .flatMap((ext) => ['plugins']
             .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
             .concat(`packages/ui-default/**/*.${ext}`)),
@@ -91,7 +91,6 @@ const UIConfig = {
         allowSyntheticDefaultImports: true,
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
-        moduleResolution: 'bundler',
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
