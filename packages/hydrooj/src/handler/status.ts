@@ -3,6 +3,7 @@ import { PRIV } from '../model/builtin';
 import * as DocumentModel from '../model/document';
 import DomainModel from '../model/domain';
 import RecordModel from '../model/record';
+import * as SettingModel from '../model/setting';
 import UserModel from '../model/user';
 import db from '../service/db';
 import { Handler } from '../service/server';
@@ -59,7 +60,13 @@ class StatusHandler extends Handler {
             if (t) t.key.push(key);
             else result.push({ key: [key], message });
         }
-        this.response.body = { stats, compilers: result };
+        const LANGS = SettingModel.langs;
+        const languages = {};
+        for (const key in LANGS) {
+            if (LANGS[key].hidden) continue;
+            languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;
+        }
+        this.response.body = { stats, languages, compilers: result };
         this.response.template = 'status.html';
     }
 }

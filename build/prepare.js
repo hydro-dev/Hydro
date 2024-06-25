@@ -72,7 +72,7 @@ for (const name of ['plugins', 'modules']) {
 
 const modules = [
     'packages/hydrooj',
-    ...['packages', 'framework', 'modules'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
+    ...['packages', 'framework'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
 ].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
 
 const UIConfig = {
@@ -80,22 +80,18 @@ const UIConfig = {
         'packages/ui-default/public',
         '**/node_modules',
     ],
-    include: ['ts', 'tsx']
-        .flatMap((ext) => ['plugins', 'modules']
+    include: ['ts', 'tsx', 'vue']
+        .flatMap((ext) => ['plugins']
             .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
             .concat(`packages/ui-default/**/*.${ext}`)),
     compilerOptions: {
-        experimentalDecorators: true,
-        esModuleInterop: true,
-        resolveJsonModule: true,
-        jsx: 'react',
+        ...compilerOptionsBase,
         module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        target: 'es2020',
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
-        moduleResolution: 'node',
+        moduleResolution: 'bundler',
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
@@ -120,17 +116,7 @@ const pluginsConfig = {
     ],
     exclude,
     compilerOptions: {
-        target: 'es2020',
-        module: 'commonjs',
-        esModuleInterop: true,
-        moduleResolution: 'node',
-        jsx: 'react',
-        sourceMap: false,
-        composite: true,
-        strictBindCallApply: true,
-        resolveJsonModule: true,
-        experimentalDecorators: true,
-        incremental: true,
+        ...compilerOptionsBase,
         rootDir: '.',
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'plugins'),

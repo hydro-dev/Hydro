@@ -144,5 +144,3 @@ export default class Tab extends DOMAttachedObject {
     return true;
   }
 }
-
-_.assign(Tab, DOMAttachedObject);
