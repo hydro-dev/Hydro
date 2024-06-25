@@ -26,7 +26,7 @@ export async function apply(ctx: Context) {
     const config = load();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
-        await require('./setup').load();
+        await require('./setup').load(ctx);
     }
     const pending = global.addons;
     const fail = [];
