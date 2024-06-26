@@ -111,6 +111,33 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.13.0 / UI 4.51.0
+- ui: 添加 sentry
+- core&ui: 支持显示当前编译器版本
+- core: 数据库索引优化
+- core: 文件复制使用软链接
+- a11y: 添加性能测试工具
+- utils: 支持识别大写文件扩展名
+- ui: 优化下拉菜单样式
+- core: 优化页面标题
+- register: 支持从文件读取原 sourcemap
+- ui: 修复站内消息推送
+- ui: ranking 页面添加说明
+- ui: 添加生成测试数据提示
+- framework: 从 core 解离
+- core: loader: 支持多 profile 切换
+- ui: 修复比赛计分板选手组显示
+- core: 重设比赛分数时自动重算分数
+
+本版本同时引入下述插件 API 修改：
+
+- 移除了 app/load/${category} 钩子
+- 移除了 ctx.app (请使用 ctx.root)
+- 移除了 ctx.options (请使用 ctx.root.config)
+- serializer: 移除 showDisplayName 参数
+- 移除了 loader.addScript, loader.addon 函数
+- 移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)
+
 ### Hydro 4.12.3 / UI 4.50.2
 - core: 将 API 模块移入 service
 - core: 比赛时提交被 hack 不触发整体重测

@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/eslint-config",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "license": "MIT",
     "main": "react.yaml",
     "dependencies": {
