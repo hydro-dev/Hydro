@@ -34,7 +34,7 @@ export function secureRandomString(digit = 32, dict = defaultDict) {
 
 type Substitution = string | number | { templateRaw: true, html: string };
 
-export function tpl<T extends boolean>(node: React.ReactNode, reactive?: T): T extends true ? React.ReactElement : string;
+export function tpl<T extends boolean>(node: React.ReactNode, reactive?: T): T extends true ? HTMLDivElement : string;
 export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]): string;
 export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitutions: Substitution[] | boolean[]) {
   if (React.isValidElement(pieces)) {
