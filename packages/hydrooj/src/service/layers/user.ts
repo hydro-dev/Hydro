@@ -1,5 +1,4 @@
 import type { KoaContext } from '@hydrooj/framework';
-import { NotFoundError } from '../../error';
 import { PERM } from '../../model/builtin';
 import UserModel from '../../model/user';
 
@@ -15,9 +14,5 @@ export default async (ctx: KoaContext, next) => {
     }
     if (user._id === 0) delete user.viewLang;
     ctx.HydroContext.user = await user.private();
-    if (!domain) {
-        ctx.pendingError = new NotFoundError(args.domainId);
-        args.domainId = 'system';
-    }
     await next();
 };

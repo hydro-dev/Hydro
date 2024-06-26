@@ -1,9 +1,8 @@
 import 'matchmedia-polyfill';
+import 'core-js/stable';
 
 import browserUpdate from 'browser-update';
-import queueMicrotask from 'queue-microtask';
 
-window.queueMicrotask = queueMicrotask;
 browserUpdate({
   required: {
     e: -10, f: -10, o: -3, s: -1, c: -10,

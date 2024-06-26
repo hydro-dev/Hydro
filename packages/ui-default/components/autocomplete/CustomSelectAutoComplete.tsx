@@ -24,9 +24,8 @@ const Component = React.forwardRef<any, any>((props, ref) => {
   );
 });
 
-export default class CustomSelectAutoComplete<Multi extends boolean> extends AutoComplete {
+export default class CustomSelectAutoComplete<Multi extends boolean> extends AutoComplete<CustomSelectOptions> {
   static DOMAttachKey = 'ucwCustomSelectAutoCompleteInstance';
-  options: CustomSelectOptions & AutoCompleteOptions;
 
   constructor($dom, options: CustomSelectOptions & AutoCompleteOptions<Multi>) {
     super($dom, {

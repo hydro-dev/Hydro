@@ -1,5 +1,4 @@
 import { nanoid } from 'nanoid';
-import ReconnectingWebsocket from 'reconnecting-websocket';
 import { InfoDialog } from 'vj/components/dialog';
 import VjNotification from 'vj/components/notification/index';
 import {
@@ -7,6 +6,7 @@ import {
 } from 'vj/constant/message';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
+import Sock from '../socket';
 
 let previous: VjNotification;
 const onmessage = (msg) => {
@@ -128,12 +128,8 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     isMaster = true;
     localStorage.setItem('page.master', selfId);
     const masterChannel = new BroadcastChannel('hydro-messages');
-    const sock = new ReconnectingWebsocket(endpoint);
-    sock.onopen = () => console.log('Connected');
-    sock.onerror = console.error;
-    sock.onclose = (...args) => console.log('Closed', ...args);
+    const sock = new Sock(endpoint);
     sock.onmessage = async (message) => {
-      if (process.env.NODE_ENV !== 'production') console.log('onmessage: ', message);
       const payload = JSON.parse(message.data);
       masterChannel.postMessage({ type: 'message', payload });
     };

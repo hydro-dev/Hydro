@@ -99,7 +99,7 @@ export async function postInit(ctx) {
     function collectCompilerInfo() {
         const coll = db.collection('status');
         compilerVersions(langs).then((compilers) => coll.updateOne(
-            { mid: info.mid, type: 'judge' },
+            { mid: info.mid, type: 'server' },
             { $set: { compilers } },
             { upsert: true },
         )).catch((e) => logger.error(e));

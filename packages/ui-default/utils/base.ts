@@ -34,8 +34,8 @@ export function secureRandomString(digit = 32, dict = defaultDict) {
 
 type Substitution = string | number | { templateRaw: true, html: string };
 
-export function tpl(node: React.ReactNode, reactive?: boolean);
-export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]);
+export function tpl<T extends boolean>(node: React.ReactNode, reactive?: T): T extends true ? React.ReactElement : string;
+export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]): string;
 export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitutions: Substitution[] | boolean[]) {
   if (React.isValidElement(pieces)) {
     if (substitutions[0]) {
@@ -49,7 +49,7 @@ export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitut
   for (let i = 0; i < substitutions.length; ++i) {
     const subst = substitutions[i];
     let substHtml: string;
-    if (typeof subst === 'object' && subst.templateRaw) {
+    if (subst && typeof subst === 'object' && subst.templateRaw) {
       substHtml = subst.html;
     } else substHtml = _.escape(String(subst));
     result += substHtml + pieces[i + 1];

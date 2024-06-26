@@ -49,7 +49,10 @@ async function runWebpack({
         return;
       }
       if (argv.options.detail) console.log(stats.toString());
-      if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
+      if (!watch && (!stats || stats.hasErrors())) {
+        if (!argv.options.detail) console.log(stats.toString());
+        process.exitCode = 1;
+      }
       resolve(stats);
     }
     if (watch) compiler.watch({}, compilerCallback);

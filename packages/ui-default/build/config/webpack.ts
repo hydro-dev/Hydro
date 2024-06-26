@@ -89,6 +89,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     output: {
       path: root('public'),
       publicPath: '/', // overwrite in entry.js
+      workerPublicPath: '/',
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,

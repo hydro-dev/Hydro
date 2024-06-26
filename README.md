@@ -137,11 +137,12 @@ Hydro 用户群：1085853538
 - serializer: 移除 showDisplayName 参数
 - 移除了 loader.addScript, loader.addon 函数
 - 移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)
+- 移除了 lib/paginate 和 lib/rank (请使用 db.paginate 和 db.ranked)
 
 ### Hydro 4.12.3 / UI 4.50.2
 - core: 将 API 模块移入 service
 - core: 比赛时提交被 hack 不触发整体重测
-- core: 将添加 pid match 的逻辑移入搜索中 
+- core: 将添加 pid match 的逻辑移入搜索中
 - ui: 修正 cssFilter
 - judge: builtin: 维护 callback 顺序
 - core: 优化邮件地址处理

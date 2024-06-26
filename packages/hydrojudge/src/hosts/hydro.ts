@@ -175,6 +175,7 @@ export default class Hydro implements Session {
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
         let compilers = {};
+        let compilerVersionCallback = () => { };
         this.ws.on('message', (data) => {
             if (data.toString() === 'ping') {
                 this.ws.send('pong');
@@ -185,6 +186,7 @@ export default class Hydro implements Session {
                 this.language = request.language;
                 compilerVersions(this.language).then((res) => {
                     compilers = res;
+                    compilerVersionCallback();
                 });
             }
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
@@ -203,7 +205,10 @@ export default class Hydro implements Session {
                 this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
-                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers } }));
+                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info } }));
+                    compilerVersionCallback = () => {
+                        this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers } }));
+                    };
                     setInterval(async () => {
                         const [mid, inf] = await sysinfo.update();
                         this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf, compilers } }));
