@@ -31,7 +31,7 @@ const {
   version: coreJsVersion,
   inverse: false,
 });
-fs.writeFileSync(root('__core-js.js'), list.map((i) => `import 'core-js/modules/${i}';`).join('\n'));
+fs.writeFileSync(root('__core-js.js'), `${list.map((i) => `import 'core-js/modules/${i}';`).join('\n')}\n`);
 
 export default async function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
   if (env.production) console.log(targets);
@@ -290,6 +290,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
         },
         release: {
+          name: (process.env.CI && isNew) ? version : undefined,
           uploadLegacySourcemaps: (process.env.CI && isNew) ? root('public') : undefined,
         },
       }),
