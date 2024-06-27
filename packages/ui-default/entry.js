@@ -1,3 +1,5 @@
+import './polyfill';
+
 import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
@@ -57,16 +59,10 @@ const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><d
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
 
-const prefetch = Promise.all([
-  fetch(`/constant/${UiContext.constantVersion}.js`).then((r) => r.text()),
-  import('./api'),
-]);
-
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));
   Object.assign(window.UserContext, JSON.parse(window.UserContextNew));
-  const [data, HydroExports] = await prefetch;
-  Object.assign(window, { HydroExports });
-  eval(data); // eslint-disable-line no-eval
-  await HydroExports.initPageLoader();
+  window.HydroExports = await import('./api');
+  await window._hydroLoad();
+  await window.HydroExports.initPageLoader();
 }, false);

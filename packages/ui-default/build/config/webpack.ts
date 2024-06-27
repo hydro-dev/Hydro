@@ -2,18 +2,43 @@
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { version as coreJsVersion } from 'core-js/package.json';
+import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
+import fs from 'fs';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
+import packageJson from 'package-json';
 import { dirname } from 'path';
+import { gt } from 'semver';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WebpackBar from 'webpackbar';
+import { version } from '../../package.json';
 import root from '../utils/root';
 
-export default function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
+const {
+  list,
+  targets,
+} = compat({
+  targets: '> 0.5%, chrome 80',
+  modules: [
+    'core-js/stable',
+  ],
+  exclude: [],
+  version: coreJsVersion,
+  inverse: false,
+});
+fs.writeFileSync(root('__core-js.js'), list.map((i) => `import 'core-js/modules/${i}';`).join('\n'));
+
+export default async function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
+  if (env.production) console.log(targets);
+  let isNew = false;
+  const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
+  if (typeof version === 'string' && gt(version, latest)) isNew = true;
+
   function esbuildLoader() {
     return {
       loader: 'esbuild-loader',
@@ -73,8 +98,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     // sentry requires source-map while keep it simple in dev mode
     devtool: env.production ? 'source-map' : false,
     entry: {
-      hydro: './entry.js',
-      polyfill: './polyfill.ts',
+      [`hydro-${version}`]: './entry.js',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
     },
@@ -262,6 +286,12 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         org: 'hydro-dev',
         project: 'hydro-web',
         url: 'https://sentry.hydro.ac',
+        sourcemaps: {
+          rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
+        },
+        release: {
+          uploadLegacySourcemaps: (process.env.CI && isNew) ? root('public') : undefined,
+        },
       }),
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
@@ -271,6 +301,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
+      new webpack.NormalModuleReplacementPlugin(/core-js\/stable/, root('__core-js.js')),
       new MonacoWebpackPlugin({
         filename: '[name].[hash:6].worker.js',
         customLanguages: [{

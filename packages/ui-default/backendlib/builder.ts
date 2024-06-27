@@ -1,7 +1,7 @@
 import esbuild from 'esbuild';
 import {
   Context, fs, Handler, Logger, NotFoundError, param, SettingModel, sha1,
-  size, Types, UiContextBase,
+  size, SystemModel, Types, UiContextBase,
 } from 'hydrooj';
 import { debounce } from 'lodash';
 import { tmpdir } from 'os';
@@ -46,6 +46,7 @@ const build = async (contents: string) => {
     format: 'iife' as 'iife',
     bundle: true,
     outdir: tmp,
+    sourcemap: SystemModel.get('ui-default.nosourcemap') ? false : 'external',
     splitting: false,
     write: false,
     target: ['chrome65'],
@@ -106,7 +107,7 @@ export async function buildUI() {
     ...entryPoints.map((i) => `import '${relative(tmp, i).replace(/\\/g, '\\\\')}';`),
   ].join('\n'));
   const pages = entry.outputFiles.map((i) => i.text);
-  const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};${pages.join('\n')}`;
+  const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};window._hydroLoad=()=>{ ${pages.join('\n')} };`;
   addFile('entry.js', str);
   UiContextBase.constantVersion = hashes['entry.js'];
   for (const key in vfs) {

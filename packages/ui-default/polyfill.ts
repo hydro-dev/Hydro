@@ -1,5 +1,5 @@
-import 'matchmedia-polyfill';
 import 'core-js/stable';
+import 'matchmedia-polyfill';
 
 import browserUpdate from 'browser-update';
 
