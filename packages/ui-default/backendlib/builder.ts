@@ -104,11 +104,11 @@ export async function buildUI() {
   }
   const entry = await build([
     `window.lazyloadMetadata = ${JSON.stringify(hashes)};`,
+    `window.LANGS=${JSON.stringify(SettingModel.langs)};`,
     ...entryPoints.map((i) => `import '${relative(tmp, i).replace(/\\/g, '\\\\')}';`),
   ].join('\n'));
-  const pages = entry.outputFiles.map((i) => i.text);
-  const str = `window.LANGS=${JSON.stringify(SettingModel.langs)};window._hydroLoad=()=>{ ${pages.join('\n')} };`;
-  addFile('entry.js', str);
+  const pages = entry.outputFiles.filter((i) => i.path.endsWith('.js')).map((i) => i.text);
+  addFile('entry.js', `window._hydroLoad=()=>{ ${pages.join('\n')} };`);
   UiContextBase.constantVersion = hashes['entry.js'];
   for (const key in vfs) {
     if (newFiles.includes(key)) continue;
