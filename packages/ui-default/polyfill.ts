@@ -12,7 +12,7 @@ browserUpdate({
 });
 
 // monaco-editor requires this polyfill
-if (window.MediaQueryList) {
+if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener) {
   MediaQueryList.prototype.addEventListener = (k, listener) => {
     MediaQueryList.prototype.addListener(listener);
   };
