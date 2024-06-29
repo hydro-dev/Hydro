@@ -43,8 +43,6 @@ nav_logo_dark:
   default: /components/navigation/nav-logo-small_dark.png
 preferredEditorType:
   type:
-    wysiwyg: WYSIWYG
-    ir: Instant Rendering
     sv: Split View
     monaco: Monaco Editor
   family: markdown

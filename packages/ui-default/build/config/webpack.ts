@@ -269,14 +269,13 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         filename: '[name].css?[fullhash:6]',
       }),
       new WebpackManifestPlugin({}),
-      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
+      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$)/ }),
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
           { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/mitm.html`), to: 'streamsaver/mitm.html' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/sw.js`), to: 'streamsaver/sw.js' },
-          { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],

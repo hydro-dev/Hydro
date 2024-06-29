@@ -13,6 +13,7 @@ interface UploadOptions {
   pjax?: boolean;
   sidebar?: boolean;
   singleFileUploadCallback?: (file: File) => any;
+  filenameCallback?: (file: File) => string;
 }
 export default async function uploadFiles(endpoint = '', files: File[] | FileList = [], options: UploadOptions = {}) {
   const dialog = new Dialog({
@@ -38,7 +39,7 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
       if (Number.isNaN(+i)) continue;
       const file = files[i];
       const data = new FormData();
-      data.append('filename', file.name);
+      data.append('filename', options.filenameCallback?.(file) || file.name);
       data.append('file', file);
       if (options.type) data.append('type', options.type);
       data.append('operation', 'upload_file');

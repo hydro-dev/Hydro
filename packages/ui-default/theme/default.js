@@ -1,5 +1,4 @@
 import 'normalize.css/normalize.css';
-import 'vditor/dist/index.css';
 import 'allotment/dist/style.css';
 import 'pickadate/lib/themes/classic.css';
 import 'pickadate/lib/themes/classic.date.css';
