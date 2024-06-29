@@ -69,13 +69,13 @@ export class ProblemModel {
     static PROJECTION_CONTEST_DETAIL: Field[] = [
         ...ProblemModel.PROJECTION_CONTEST_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
-        'reference',
+        'reference', 'maintainer',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
         ...ProblemModel.PROJECTION_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
-        'reference',
+        'reference', 'maintainer',
     ];
 
     static default = {
