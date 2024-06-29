@@ -31,6 +31,12 @@ class AccountService {
         });
     }
 
+    async waitRatelimit() {
+        const waitTime = this.api.getWaitTime?.();
+        if (!waitTime) return;
+        await sleep(waitTime);
+    }
+
     async addProblemList(name: string) {
         if (this.problemLists.has(name)) return;
         this.problemLists.add(name);
@@ -44,6 +50,7 @@ class AccountService {
         task = Object.assign(rdoc, task);
         const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid, domainId: task.domainId });
         const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid, domainId: task.domainId });
+        await this.waitRatelimit();
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
