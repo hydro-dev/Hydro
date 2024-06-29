@@ -17,6 +17,18 @@ if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener) {
     MediaQueryList.prototype.addListener(listener);
   };
 }
+if (typeof window['WeakRef'] === 'undefined') {
+  // @ts-ignore
+  window.WeakRef = (function (wm) {
+    function WeakRef(target) {
+      wm.set(this, target);
+    }
+    WeakRef.prototype.deref = function () {
+      return wm.get(this);
+    };
+    return WeakRef;
+  }(new WeakMap()));
+}
 if (!(window.matchMedia('all').addListener || window.matchMedia('all').addEventListener)) {
   const localMatchMedia = window.matchMedia;
   const hasMediaQueries = localMatchMedia('only all').matches;

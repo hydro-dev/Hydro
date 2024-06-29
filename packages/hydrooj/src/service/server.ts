@@ -144,8 +144,18 @@ export async function apply(ctx: Context) {
     });
     if (process.env.HYDRO_CLI) return;
     ctx.inject(['server'], ({ server, on }) => {
+        let endpoint = builtinConfig.file.endPoint;
+        if (builtinConfig.file.type === 's3' && !builtinConfig.file.pathStyle) {
+            try {
+                const parsed = new URL(builtinConfig.file.endPoint);
+                parsed.hostname = `${builtinConfig.file.bucket}.${parsed.hostname}`;
+                endpoint = parsed.toString();
+            } catch (e) {
+                logger.warn('Failed to parse file endpoint');
+            }
+        }
         const proxyMiddleware = proxy('/fs', {
-            target: builtinConfig.file.endPoint,
+            target: endpoint,
             changeOrigin: true,
             rewrite: (p) => p.replace('/fs', ''),
         });

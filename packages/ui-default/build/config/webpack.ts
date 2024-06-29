@@ -23,7 +23,7 @@ const {
   list,
   targets,
 } = compat({
-  targets: '> 0.5%, chrome 80',
+  targets: '> 1%, chrome 70, firefox 60, safari 16, ios_saf 16, not ie 11, not op_mini all',
   modules: [
     'core-js/stable',
   ],
@@ -290,7 +290,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
         },
         release: (process.env.CI && isNew) ? {
-          name: version,
+          name: `hydro-web@${version}`,
           uploadLegacySourcemaps: root('public'),
         } : {},
       }),

@@ -82,7 +82,8 @@ export const zIndexManager = {
 };
 
 export const request = {
-  async ajax(options: Record<string, any>) {
+  ajax(options: Record<string, any>) {
+    const stack = new Error().stack;
     return new Promise<any>((resolve, reject) => {
       $
         .ajax({
@@ -96,9 +97,12 @@ export const request = {
           if (textStatus === 'abort') {
             const err = new Error(i18n('Aborted')) as any;
             err.aborted = true;
+            err.isUserFacingError = true;
             reject(err);
           } else if (jqXHR.readyState === 0) {
-            reject(new Error(i18n('Network error')));
+            const err = new Error(i18n('Network error')) as any;
+            err.isUserFacingError = true;
+            reject(err);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
             const { error } = jqXHR.responseJSON;
             if (error.params) {
@@ -117,6 +121,9 @@ export const request = {
           }
         })
         .done(resolve);
+    }).catch((e: Error) => {
+      e.stack = stack;
+      throw e;
     });
   },
 

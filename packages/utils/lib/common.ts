@@ -22,11 +22,14 @@ declare global {
 
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
-String.random = function random(digit = 32, dict = defaultDict) {
+export function randomstring(digit = 32, dict = defaultDict) {
     let str = '';
     for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
     return str;
-};
+}
+try {
+    String.random = randomstring;
+} catch (e) { } // Cannot add property random, object is not extensible
 
 String.prototype.format ||= function formatStr(...args) {
     let result = this;
