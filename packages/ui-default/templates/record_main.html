@@ -118,6 +118,24 @@
       {% endif %}
       </div>
     </div>
+    {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) %}
+    <form method="post" action="{{ url('manage_bulk_rejudge') }}">
+      <div class="section">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('Bulk Rejudge') }}</h1>
+          <div class="section__tools">
+            <input type="hidden" name="pid" value="{{ filterPid }}">
+            <input type="hidden" name="tid" value="{{ filterTid }}">
+            <input type="hidden" name="uidOrName" value="{{ filterUidOrName }}">
+            <input type="hidden" name="lang" value="{{ filterLang }}">
+            <input type="hidden" name="status" value="{{ filterStatus }}">
+            <input type="hidden" name="draft" value="true">
+            <button type="submit" class="rounded primary button">{{ _('Bulk Rejudge') }}</button>
+          </div>
+        </div>
+      </div>
+    </form>
+    {% endif %}
     {% if statistics %}
     <div class="section">
       <div class="section__header">
