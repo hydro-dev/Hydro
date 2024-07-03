@@ -254,7 +254,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         // WHY you allow contest with end time BEFORE start time? WHY???
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
         const tid = await ContestModel.add(
-            domainId, tdoc.title, tdoc.description || 'Description',
+            domainId, tdoc.title, description || 'Description',
             adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             { _code: password },
         );

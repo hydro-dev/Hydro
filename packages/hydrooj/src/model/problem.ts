@@ -69,13 +69,13 @@ export class ProblemModel {
     static PROJECTION_CONTEST_DETAIL: Field[] = [
         ...ProblemModel.PROJECTION_CONTEST_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
-        'reference',
+        'reference', 'maintainer',
     ];
 
     static PROJECTION_PUBLIC: Field[] = [
         ...ProblemModel.PROJECTION_LIST,
         'content', 'html', 'data', 'config', 'additional_file',
-        'reference',
+        'reference', 'maintainer',
     ];
 
     static default = {
@@ -262,7 +262,8 @@ export class ProblemModel {
         const res = await Promise.all([
             document.deleteOne(domainId, document.TYPE_PROBLEM, docId),
             document.deleteMultiStatus(domainId, document.TYPE_PROBLEM, { docId }),
-            storage.list(`problem/${domainId}/${docId}/`).then((items) => storage.del(items.map((item) => item.prefix + item.name))),
+            storage.list(`problem/${domainId}/${docId}/`)
+                .then((items) => storage.del(items.map((item) => `problem/${domainId}/${docId}/${item.name}`))),
             bus.parallel('problem/delete', domainId, docId),
         ]);
         await bus.emit('problem/del', domainId, docId);
@@ -363,7 +364,7 @@ export class ProblemModel {
         domainId: string, pids: number[], canViewHidden: number | boolean = false,
         doThrow = true, projection = ProblemModel.PROJECTION_PUBLIC, indexByDocIdOnly = false,
     ): Promise<ProblemDict> {
-        if (!pids?.length) return [];
+        if (!pids?.length) return {};
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
         const q: any = { docId: { $in: pids } };

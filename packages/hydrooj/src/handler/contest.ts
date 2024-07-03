@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import {
     Counter, sortFiles, streamToBuffer, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
-import { Context } from '../context';
+import type { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
@@ -28,34 +28,6 @@ import user from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
-import { registerResolver, registerValue } from './api';
-
-registerValue('Contest', [
-    ['_id', 'ObjectID!'],
-    ['domainId', 'String!'],
-    ['docId', 'ObjectID!'],
-    ['owner', 'Int!'],
-    ['beginAt', 'Date!'],
-    ['title', 'String!'],
-    ['content', 'String!'],
-    ['beginAt', 'Date!'],
-    ['endAt', 'Date!'],
-    ['attend', 'Int!'],
-    ['pids', '[Int]!'],
-    ['rated', 'Boolean!'],
-]);
-
-registerResolver(
-    'Query', 'contest(id: ObjectID!)', 'Contest',
-    async (arg, ctx) => {
-        ctx.checkPerm(PERM.PERM_VIEW);
-        arg.id = new ObjectId(arg.id);
-        ctx.tdoc = await contest.get(ctx.args.domainId, new ObjectId(arg.id));
-        if (!ctx.tdoc) throw new ContestNotFoundError(ctx.args.domainId, arg.id);
-        return ctx.tdoc;
-    },
-    'Get a contest by ID',
-);
 
 export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
@@ -318,7 +290,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         if (!realtime && this.tdoc.lockAt && !this.tdoc.unlocked) {
             config.lockAt = this.tdoc.lockAt;
         }
-        const allGroups = this.user.hasPerm(PERM.PERM_EDIT_CONTEST_SELF) || (this.user.own(this.tdoc) && this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+        const allGroups = (this.user.hasPerm(PERM.PERM_EDIT_CONTEST_SELF) && this.user.own(this.tdoc)) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST);
         const [[, rows, udict, pdict], groups] = await Promise.all([
             contest.getScoreboard.call(this, domainId, tid, config),
             user.listGroup(domainId, allGroups ? undefined : this.user._id),
@@ -664,6 +636,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
         this.tdoc.score ||= {};
         this.tdoc.score[pid] = score;
         await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score });
+        await contest.recalcStatus(domainId, this.tdoc.docId);
         this.back();
     }
 }
@@ -792,5 +765,32 @@ export async function apply(ctx: Context) {
             }
         }
         await Promise.all(tasks);
+    });
+    ctx.inject(['api'], ({ api }) => {
+        api.value('Contest', [
+            ['_id', 'ObjectID!'],
+            ['domainId', 'String!'],
+            ['docId', 'ObjectID!'],
+            ['owner', 'Int!'],
+            ['beginAt', 'Date!'],
+            ['title', 'String!'],
+            ['content', 'String!'],
+            ['beginAt', 'Date!'],
+            ['endAt', 'Date!'],
+            ['attend', 'Int!'],
+            ['pids', '[Int]!'],
+            ['rated', 'Boolean!'],
+        ]);
+        api.resolver(
+            'Query', 'contest(id: ObjectID!)', 'Contest',
+            async (arg, c) => {
+                c.checkPerm(PERM.PERM_VIEW);
+                arg.id = new ObjectId(arg.id);
+                c.tdoc = await contest.get(c.args.domainId, new ObjectId(arg.id));
+                if (!c.tdoc) throw new ContestNotFoundError(c.args.domainId, arg.id);
+                return c.tdoc;
+            },
+            'Get a contest by ID',
+        );
     });
 }

@@ -1,7 +1,8 @@
 // https://github.com/waylonflinn/markdown-it-katex/blob/master/index.js
-const katex = require('katex');
+import { Logger } from 'hydrooj';
+import katex from 'katex';
 
-const logger = new global.Hydro.Logger('katex');
+const logger = new Logger('katex');
 
 function isValidDelim(state, pos) {
   const max = state.posMax;
@@ -109,8 +110,8 @@ function block(state, start, end, silent) {
   return true;
 }
 
-module.exports = function plugin(md) {
-  const options = { throwOnError: false, strict: 'ignore' };
+export default function plugin(md) {
+  const options = { throwOnError: false, strict: 'ignore', displayMode: false };
   const render = (latex: string, displayMode = false) => {
     options.displayMode = displayMode;
     try {
@@ -136,4 +137,4 @@ module.exports = function plugin(md) {
   });
   md.renderer.rules.math_inline = inlineRenderer;
   md.renderer.rules.math_block = blockRenderer;
-};
+}

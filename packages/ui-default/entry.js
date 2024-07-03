@@ -1,3 +1,6 @@
+import './polyfill';
+
+import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
 window.Hydro = {
@@ -27,6 +30,23 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
+if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
+  window.captureException = (e) => {
+    if (!e.isUserFacingError) Sentry.captureException(e);
+  };
+  Sentry.init({
+    dsn: UiContext.sentry_dsn || 'https://2f95d53751e08c74c1af1c4b93ccaff7@sentry.hydro.ac/2',
+    release: `hydro-web@${process.env.VERSION}`,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 0.1,
+    tracePropagationTargets: ['localhost', /^\//, window.location.host],
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  });
+}
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
   const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
@@ -41,16 +61,10 @@ const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><d
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
 
-const prefetch = Promise.all([
-  fetch(`/constant/${UiContext.constantVersion}.js`).then((r) => r.text()),
-  import('./api'),
-]);
-
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));
   Object.assign(window.UserContext, JSON.parse(window.UserContextNew));
-  const [data, HydroExports] = await prefetch;
-  Object.assign(window, { HydroExports });
-  eval(data); // eslint-disable-line no-eval
-  await HydroExports.initPageLoader();
+  window.HydroExports = await import('./api');
+  await window._hydroLoad();
+  await window.HydroExports.initPageLoader();
 }, false);

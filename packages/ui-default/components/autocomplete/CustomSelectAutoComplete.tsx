@@ -1,7 +1,5 @@
-import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete, { AutoCompleteOptions } from '.';
 import CustomSelectAutoCompleteFC from './components/CustomSelectAutoComplete';
 
@@ -26,9 +24,8 @@ const Component = React.forwardRef<any, any>((props, ref) => {
   );
 });
 
-export default class CustomSelectAutoComplete<Multi extends boolean> extends AutoComplete {
+export default class CustomSelectAutoComplete<Multi extends boolean> extends AutoComplete<CustomSelectOptions> {
   static DOMAttachKey = 'ucwCustomSelectAutoCompleteInstance';
-  options: CustomSelectOptions & AutoCompleteOptions;
 
   constructor($dom, options: CustomSelectOptions & AutoCompleteOptions<Multi>) {
     super($dom, {
@@ -56,5 +53,4 @@ export default class CustomSelectAutoComplete<Multi extends boolean> extends Aut
   }
 }
 
-assign(CustomSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.CustomSelectAutoComplete = CustomSelectAutoComplete;

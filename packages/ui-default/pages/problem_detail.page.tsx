@@ -1,23 +1,22 @@
-import { getScoreColor } from '@hydrooj/utils/lib/status';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
   delay, i18n, loadReactRedux, pjax, request, tpl,
 } from 'vj/utils';
+import { openDB } from 'vj/utils/db';
 
 class ProblemPageExtender {
-  constructor() {
-    this.isExtended = false;
-    this.inProgress = false;
-    this.$content = $('.problem-content-container');
-    this.$contentBound = this.$content.closest('.section');
-    this.$scratchpadContainer = $('.scratchpad-container');
-  }
+  isExtended = false;
+  inProgress = false;
+  $content = $('.problem-content-container');
+  $contentBound = this.$content.closest('.section');
+  $scratchpadContainer = $('.scratchpad-container');
 
   async extend() {
     if (this.inProgress) return;
@@ -28,6 +27,7 @@ class ProblemPageExtender {
       .get(0)
       .getBoundingClientRect();
 
+    // @ts-ignore
     this.$content.transition({ opacity: 0 }, { duration: 100 });
     await delay(100);
 
@@ -41,6 +41,7 @@ class ProblemPageExtender {
       })
       .show()
       .transition({
+        // @ts-ignore
         left: 0,
         top: 0,
         width: '100%',
@@ -77,6 +78,7 @@ class ProblemPageExtender {
 
     await this.$scratchpadContainer
       .transition({
+        // @ts-ignore
         left: bound.left,
         top: bound.top,
         width: bound.width,
@@ -88,6 +90,7 @@ class ProblemPageExtender {
       .promise();
 
     this.$scratchpadContainer.hide();
+    // @ts-ignore
     this.$content.transition({ opacity: 1 }, { duration: 100 });
     window.document.body.style.overflow = 'scroll';
 
@@ -101,7 +104,7 @@ class ProblemPageExtender {
   }
 }
 
-const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], async (pagename) => {
+const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homework_detail_problem'], async () => {
   let reactLoaded = false;
   let renderReact = null;
   let unmountReact = null;
@@ -112,6 +115,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeIn() {
+    // @ts-ignore
     await $('#scratchpad')
       .transition(
         { opacity: 1 },
@@ -121,6 +125,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeOut() {
+    // @ts-ignore
     await $('#scratchpad')
       .transition(
         { opacity: 0 },
@@ -138,6 +143,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const { Provider, store } = await loadReactRedux(ScratchpadReducer);
 
+    // @ts-ignore
     window.store = store;
     const sock = new WebSocket(UiContext.ws_prefix + UiContext.pretestConnUrl);
     sock.onmessage = (message) => {
@@ -237,47 +243,55 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       [, setUpdate] = React.useState(0);
       return <div className="contest-problems" style={{ margin: '1em' }}>
         {pids.map((i) => <a href={`#p${i}`} className={ans[i] ? 'pass ' : ''}>
-          <span class="id">{i}</span>
-          {ans[i] && <span class="icon icon-check"></span>}
+          <span className="id">{i}</span>
+          {ans[i] && <span className="icon icon-check"></span>}
         </a>)}
       </div>;
     }
 
-    function saveAns() {
-      localStorage.setItem(`${cacheKey}#objective`, JSON.stringify(ans));
-      setUpdate?.((i) => i + 1);
+    const db = await openDB;
+    async function saveAns() {
+      await db.put('solutions', {
+        id: `${cacheKey}#objective`,
+        value: JSON.stringify(ans),
+      });
     }
-    function loadAns() {
-      const saved = localStorage.getItem(`${cacheKey}#objective`);
-      if (saved) {
-        Object.assign(ans, JSON.parse(saved));
-        for (const [id, val] of Object.entries(ans)) {
-          if (Array.isArray(val)) {
-            for (const v of val) {
-              if (val.length === 1
-                && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id} input[value=${v}]`).prop('checked', true);
-            }
+    async function clearAns() {
+      await db.delete('solutions', `${cacheKey}#objective`);
+      window.location.reload();
+    }
+    async function loadAns() {
+      const saved = await db.get('solutions', `${cacheKey}#objective`);
+      if (!saved) return;
+      const isValidOption = (v) => v.length === 1 && v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90;
+      Object.assign(ans, JSON.parse(saved));
+      for (const [id, val] of Object.entries(ans)) {
+        if (Array.isArray(val)) {
+          for (const v of val) {
+            if (isValidOption(v)) $(`.objective_${id} input[value="${v}"]`).prop('checked', true);
           }
-          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
-          if (val.length === 1
-            && val.charCodeAt(0) >= 65 && val.charCodeAt(0) <= 90) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
+        } else if (val) {
+          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val.toString());
+          if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
+      setUpdate((v) => v + 1);
     }
 
     if (cnt) {
-      loadAns();
+      await loadAns();
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
         : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
-      $('.objective-input[type!=checkbox]').on('input', (e) => {
+      $('.objective-input[type!=checkbox]').on('input', (e: JQuery.TriggeredEvent<HTMLInputElement>) => {
         ans[e.target.name] = e.target.value;
         saveAns();
       });
-      $('input.objective-input[type=checkbox]').on('input', (e) => {
+      $('input.objective-input[type=checkbox]').on('input', (e: JQuery.TriggeredEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-          if (ans[e.target.name] === undefined) ans[e.target.name] = [];
+          ans[e.target.name] ||= [];
           ans[e.target.name].push(e.target.value);
+          ans[e.target.name] = [...new Set(ans[e.target.name])].sort((a: string, b: string) => a.charCodeAt(0) - b.charCodeAt(0));
         } else {
           ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
         }
@@ -297,64 +311,24 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             Notification.error(err.message);
           });
       });
+      $('.section--problem-sidebar ol.menu').prepend(tpl(<li className="menu__item" id="clearAnswers">
+        <a className="menu__link" href="javascript:;">
+          <span className="icon icon-erase" /> {i18n('Clear answers')}
+        </a>
+      </li>));
+      $(document).on('click', '#clearAnswers', async () => {
+        const result = await new ConfirmDialog({
+          $body: tpl.typoMsg('All changes will be lost. Are you sure to clear all answers?'),
+        }).open();
+        if (result === 'yes') await clearAns();
+      });
     }
     const ele = document.createElement('div');
-    $(ele).insertBefore($('.scratchpad--hide').get(0));
+    $('.section--problem-sidebar ol.menu').prepend(ele);
     createRoot(ele).render(<ProblemNavigation />);
     $('.non-scratchpad--hide').hide();
     $('.scratchpad--hide').hide();
     $('.outer-loader-container').hide();
-  }
-
-  async function initChart() {
-    if (!Object.keys(UiContext.pdoc.stats || {}).length) {
-      $('#submission-status-placeholder').parent().hide();
-      return;
-    }
-    const echarts = await import('echarts');
-    const $status = document.getElementById('submission-status-placeholder');
-    const statusChart = echarts.init($status);
-    statusChart.setOption({
-      tooltip: { trigger: 'item' },
-      series: [
-        {
-          name: 'Submissions',
-          type: 'pie',
-          radius: '70%',
-          label: { show: false },
-          labelLine: { show: false },
-          data: [
-            { value: UiContext.pdoc.stats.TLE, name: 'TLE' },
-            { value: UiContext.pdoc.stats.AC, name: 'AC' },
-            { value: UiContext.pdoc.stats.MLE, name: 'MLE' },
-            { value: UiContext.pdoc.stats.WA, name: 'WA' },
-            { value: UiContext.pdoc.stats.RE, name: 'RE' },
-            { value: UiContext.pdoc.stats.CE, name: 'CE' },
-          ],
-        },
-      ],
-    });
-    const $score = document.getElementById('submission-score-placeholder');
-    const x = Array.from({ length: 101 }, (v, i) => i).filter((i) => UiContext.pdoc.stats[`s${i}`]);
-    const scoreChart = echarts.init($score);
-    scoreChart.setOption({
-      tooltip: { trigger: 'item' },
-      xAxis: { data: x },
-      yAxis: {},
-      series: [{
-        data: x.map((i) => ({
-          value: UiContext.pdoc.stats[`s${i}`],
-          itemStyle: { color: getScoreColor(i) },
-        })),
-        type: 'bar',
-      }],
-    });
-
-    window.onresize = function () {
-      statusChart.resize();
-      scoreChart.resize();
-    };
-    if (UiContext.pdoc.config?.type === 'objective') $($status).hide();
   }
 
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
@@ -379,8 +353,10 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     $('span.tags').css('display', 'inline-block');
   });
   $('[name="problem-sidebar__download"]').on('click', handleClickDownloadProblem);
-  if (UiContext.pdoc.config?.type === 'objective') loadObjective();
-  if (pagename !== 'contest_detail_problem') initChart();
+  if (UiContext.pdoc.config?.type === 'objective') {
+    loadObjective();
+    $(document).on('vjContentNew', loadObjective);
+  }
 });
 
 export default page;

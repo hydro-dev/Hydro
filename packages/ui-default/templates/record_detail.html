@@ -14,7 +14,10 @@
       <div class="section__header">
         <h1 class="section__title">{{ _('Code') }}</h1>
         <div class="section__tools">
-          <a class="primary rounded button" href="?download=true"><span class="icon icon-download"></span> {{ _('Download') }}</a>
+          <a class="primary rounded button" href="?download=true">
+            <span class="icon icon-download"></span>
+            {% if rdoc.files.hack %}{{ _('Download Hack Input') }}{% else %}{{ _('Download') }}{% endif %}
+          </a>
         </div>
       </div>
       <div class="section__body">
@@ -63,6 +66,10 @@
         <dl class="large horizontal">
           <dt>{{ _('Submit By') }}</dt>
           <dd>{{ user.render_inline(udoc, modbadge=false) }}</dd>
+          {% if rdoc.hackTarget %}
+            <dt>{{ _('Hacked') }}</dt>
+            <dd><a href="{{ url('record_detail', rid=rdoc.hackTarget) }}">{{ rdoc.hackTarget }}</a></dd>
+          {% endif %}
           {% if pdoc %}
             <dt>{{ _('Problem') }}</dt>
             <dd>
@@ -79,11 +86,15 @@
             <dt>{{ _('Language') }}</dt>
             <dd>{{ model.setting.langs[rdoc.lang].display }}</dd>
           {% endif %}
+          {% if rdoc.code %}
+            <dt>{{ _('Code Length') }}</dt>
+            <dd>{{ size(rdoc.code|length) }}</dt>
+          {% endif %}
           <dt>{{ _('Submit At') }}</dt>
-          <dd>{{ datetimeSpan(rdoc._id)|safe }}</dd>
+          <dd>{{ datetimeSpan(rdoc._id, false)|safe }}</dd>
           {% if rdoc.judgeAt %}
             <dt>{{ _('Judged At') }}</dt>
-            <dd>{{ datetimeSpan(rdoc.judgeAt)|safe }}</dd>
+            <dd>{{ datetimeSpan(rdoc.judgeAt, false)|safe }}</dd>
           {% endif %}
           {% if judge_udoc %}
             <dt>{{ _('Judged By') }}</dt>

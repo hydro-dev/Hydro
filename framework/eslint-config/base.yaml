@@ -33,6 +33,7 @@ rules:
   no-extra-boolean-cast:
     - warn
     - enforceForLogicalOperands: true
+  no-empty-pattern: 0
   no-multi-str: 0
   '@typescript-eslint/no-invalid-this': 0
   '@typescript-eslint/type-annotation-spacing': 1
@@ -137,7 +138,10 @@ rules:
   no-use-before-define: 0
   '@typescript-eslint/no-use-before-define': 1
   no-unused-vars: 0
-  '@typescript-eslint/no-unused-vars': 1
+  '@typescript-eslint/no-unused-vars':
+    - error
+    - caughtErrorsIgnorePattern: "^_"
+      argsIgnorePattern: "^_"
 
   no-restricted-syntax:
     - error

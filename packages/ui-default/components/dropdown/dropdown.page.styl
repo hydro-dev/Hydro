@@ -6,8 +6,12 @@
 
 .drop.nav__dropdown
   max-height: calc(100% - 60px)
+  overflow-x: hidden
   overflow-y: auto
   box-shadow: 0rem 0.125rem 0.4375rem rgba(0 0 0 , 30%);
+
+.drop.nav__dropdown.drop-open
+  overflow-x: auto
 
 .dropdown
   .menu

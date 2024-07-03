@@ -84,6 +84,7 @@ Add User: 添加用户
 Add: 添加
 additional_file: 附加文件
 All {0} Contests: 所有 {0} 比赛
+All changes will be lost. Are you sure to clear all answers?: 所有更改将会丢失。您确定要清除所有答案吗？
 All Contests: 所有比赛
 All Homeworks: 所有作业
 All Languages: 所有语言
@@ -161,6 +162,7 @@ Choose the background image in your profile page.: 选择您资料页面的背�
 Claim homework: 认领作业
 Claim Homework: 认领作业
 Claimed: 已认领
+Clear answers: 清除答案
 Clear Marks: 清除标记
 Click here to chat with me: 点击这里与我聊天
 click to add: 点击添加
@@ -168,6 +170,7 @@ Clone: 复制
 CLOSE: 关闭
 Code blocks: 代码区块
 Code language: 代码语言
+Code Length: 代码长度
 Code: 代码
 codeFontFamily: 代码字体
 collapse: 收缩
@@ -708,6 +711,10 @@ problem.import.input_format: '## 输入格式'
 problem.import.limit_and_hint: '## 限制'
 problem.import.output_format: '## 输出格式'
 problem.import.problem_description: '## 题目描述'
+problem.stats.sort.date: 提交时间
+problem.stats.sort.length: 代码长度
+problem.stats.sort.memory: 内存占用
+problem.stats.sort.time: 运行时间
 Problems Sets: 题库
 Problems: 题目
 Processing...: 处理中...

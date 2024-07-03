@@ -1,0 +1,96 @@
+{% import "components/user.html" as user with context %}
+{% import "components/problem.html" as problem with context %}
+{% import "components/nothing.html" as nothing with context %}
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'pdoc', pdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section nojs--hide">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Statistics') }}</h1>
+      </div>
+      <div class="row">
+        <div class="medium-6 columns" id="submission-status-placeholder" style="height:230px"></div>
+        <div class="medium-6 columns" id="submission-score-placeholder" style="height:230px"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Submission Statistics') }}</h1>
+        <div class="section__tools">
+          <form method="get" class="filter-form" name="filter-form">
+            {{ _('Show') }}:
+            <select class="inline compact select" name="sort">
+              {%- for g in types -%}
+                <option value="{{ g }}"{% if sort == g %} selected{% endif %}>{{ _('problem.stats.sort.'+g) }}</option>
+              {%- endfor -%}
+            </select>
+            <select class="inline compact select" name="direction">
+              <option value="1"{% if direction == 1 %} selected{% endif %}>ASC</option>
+              <option value="-1"{% if direction == -1 %} selected{% endif %}>DESC</option>
+            </select>
+            <select class="inline compact select" name="lang">
+                <option value="">{{ _('All Languages') }}</option>
+              </select>
+            <button type="submit" class="compact button">
+              {{ _('Search') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      <div class="section__body no-padding">
+        {% if not rsdocs|length %}
+        {{ nothing.render('Oh, there is no submission!') }}
+        {% else %}
+        <table class="data-table record_main__table">
+          <colgroup>
+            <col class="col--status">
+            <col class="col--submit-by">
+            <col class="col--time">
+            <col class="col--memory">
+            <col class="col--lang">
+            <col class="col--code">
+            <col class="col--submit-at">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--status record-status--border">{{ _('Status') }}</th>
+              <th class="col--submit-by">{{ _('Submit By') }}</th>
+              <th class="col--time">{{ _('Time') }}</th>
+              <th class="col--memory">{{ _('Memory') }}</th>
+              <th class="col--lang">{{ _('Language') }}</th>
+              <th class="col--code">{{ _('Code') }}</th>
+              <th class="col--submit-at">{{ _('Submit At') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {%- for rsdoc in rsdocs -%}
+            <tr data-rid="{{ rsdoc['_id'] }}">
+              <td class="col--status record-status--border pass">
+                <div class="col--status__text">
+                  <span class="icon record-status--icon pass"></span>
+                  <a href="{{ url('record_detail', rid=rsdoc._id) }}" class="record-status--text pass">AC</a>
+                </div>
+              </td>
+              <td class="col--submit-by">{{ user.render_inline(udict[rsdoc['uid']], badge=false) }}</td>
+              <td class="col--time">{% if rsdoc['time'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rsdoc['status']) %}&ge;{% endif %}{{ rsdoc.time|round|int }}ms{% else %}-{% endif %}</td>
+              <td class="col--memory">{% if rsdoc['memory'] %}{% if [STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED, STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED].includes(rsdoc['status']) %}&ge;{% endif %}{{ size(rsdoc.memory, 1024) }}{% else %}-{% endif %}</td>
+              <td class="col--lang">{{ model.setting.langs[rsdoc['lang']].display }}</td>
+              <td class="col--code">{{ size(rsdoc.length) }}</td>
+              <td class="col--submit-at">{{ datetimeSpan(rsdoc['_id'], false)|safe }}</td>
+            </tr>
+          {%- endfor -%}
+          </tbody>
+        </table>
+        {{ paginator.render(page, pcount, add_qs=('direction=' + direction + ('&sort=' + sort if sort else ''))) }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/problem_sidebar.html" %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,11 +1,12 @@
 /* eslint-disable no-await-in-loop */
 import {
-    Collection, Db, IndexDescription, MongoClient,
+    Collection, Db, FindCursor, IndexDescription, MongoClient,
 } from 'mongodb';
 import mongoUri from 'mongodb-uri';
 import { Time } from '@hydrooj/utils';
+import { ValidationError } from '../error';
 import { Logger } from '../logger';
-import options from '../options';
+import { load } from '../options';
 import * as bus from './bus';
 
 const logger = new Logger('mongo');
@@ -37,7 +38,7 @@ class MongoService {
     }
 
     async start() {
-        const opts = options() || {};
+        const opts = load() || {};
         let mongourl = MongoService.buildUrl(opts);
         const url = mongoUri.parse(mongourl);
         if (process.env.CI) {
@@ -100,6 +101,44 @@ class MongoService {
                 await coll.createIndexes([index]);
             }
         }
+    }
+
+    async paginate<T>(
+        cursor: FindCursor<T>, page: number, pageSize: number,
+    ): Promise<[docs: T[], numPages: number, count: number]> {
+        if (page <= 0) throw new ValidationError('page');
+        let filter = {};
+        for (const key of Object.getOwnPropertySymbols(cursor)) {
+            if (key.toString() !== 'Symbol(filter)') continue;
+            filter = cursor[key];
+            break;
+        }
+        const coll = this.db.collection(cursor.namespace.collection as any);
+        const [count, pageDocs] = await Promise.all([
+            Object.keys(filter).length ? coll.count(filter) : coll.countDocuments(filter),
+            cursor.skip((page - 1) * pageSize).limit(pageSize).toArray(),
+        ]);
+        const numPages = Math.floor((count + pageSize - 1) / pageSize);
+        return [pageDocs, numPages, count];
+    }
+
+    async ranked<T extends Record<string, any>>(cursor: FindCursor<T>, equ: (a: T, b: T) => boolean): Promise<[number, T][]> {
+        let last = null;
+        let r = 0;
+        let count = 0;
+        const results = [];
+        const docs = await cursor.toArray();
+        for (const doc of docs) {
+            if ((doc as any).unrank) {
+                results.push([0, doc]);
+                continue;
+            }
+            count++;
+            if (!last || !equ(last, doc)) r = count;
+            last = doc;
+            results.push([r, doc]);
+        }
+        return results;
     }
 
     public async apply(ctx) {

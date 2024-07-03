@@ -4,8 +4,8 @@ import cac from 'cac';
 import chalk from 'chalk';
 import log from 'fancy-log';
 import fs from 'fs-extra';
+import { globbySync } from 'globby';
 import gulp from 'gulp';
-import { sum } from 'lodash';
 import path from 'path';
 import webpack, { Stats } from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
@@ -19,7 +19,7 @@ const argv = cac().parse();
 async function runWebpack({
   watch, production, measure, dev, https,
 }) {
-  const compiler = webpack(webpackConfig({ watch, production, measure }));
+  const compiler = webpack(await webpackConfig({ watch, production, measure }));
   if (dev) {
     const server = new WebpackDevServer({
       port: https ? 8001 : 8000,
@@ -49,7 +49,10 @@ async function runWebpack({
         return;
       }
       if (argv.options.detail) console.log(stats.toString());
-      if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
+      if (!watch && (!stats || stats.hasErrors())) {
+        if (!argv.options.detail) console.log(stats.toString());
+        process.exitCode = 1;
+      }
       resolve(stats);
     }
     if (watch) compiler.watch({}, compilerCallback);
@@ -67,16 +70,20 @@ async function runWebpack({
       stats[key] = data.size;
     }
     const statsPath = root('__bundleInfo');
+    let oldTotal = 0;
+    let newTotal = 0;
     if (fs.existsSync(statsPath)) {
       log('Compare to last production bundle:');
       const oldStats = JSON.parse(await fs.readFile(statsPath, 'utf-8')) as Record<string, number>;
       for (const key in stats) oldStats[key] ||= 0;
       const entries: [filename: string, orig: number, curr: number][] = [];
       for (const [key, value] of Object.entries(oldStats)) {
+        oldTotal += value;
+        newTotal += stats[key] || 0;
         if (Math.abs((stats[key] || 0) - value) > 25) entries.push([key, value, stats[key] || 0]);
       }
       const sorted = entries.sort((i) => i[1] - i[2]);
-      sorted.push(['Total', sum(sorted.map((i) => i[1])), sum(sorted.map((i) => i[2]))]);
+      sorted.push(['Total', oldTotal, newTotal]);
       for (const entry of sorted) {
         const [name, orig, curr] = entry;
         const diff = 100 * (curr - orig) / orig;
@@ -117,22 +124,10 @@ async function main() {
   if (argv.options.gulp) await runGulp();
   else {
     await runWebpack(argv.options as any);
-    if (fs.existsSync('public/hydro.js')) {
-      fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
-    }
-    if (fs.existsSync('public/polyfill.js')) {
-      fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
-    }
     if (fs.existsSync('public/theme.css')) {
       fs.copyFileSync('public/theme.css', `public/theme-${pkg.version}.css`);
     }
-    if (argv.options.production) {
-      for (const f of ['echarts', 'graphviz', 'mermaid', 'mathjax']) {
-        fs.removeSync(`public/vditor/dist/js/${f}`);
-      }
-      const files = fs.readdirSync('public');
-      files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
-    }
+    await Promise.all(globbySync('public/**/*.map').map((i) => fs.remove(i)));
   }
   process.chdir(dir);
 }

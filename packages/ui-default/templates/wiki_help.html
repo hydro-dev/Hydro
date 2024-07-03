@@ -17,14 +17,7 @@
     <h1 class="section__title" id="compiler" data-heading>{{ _("Compilers' Version and Parameters") }}</h1>
   </div>
   <div class="section__body typo">
-    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数如下：</p>
-    {% if languages %}
-      <blockquote><ul>
-        {%- for k, v in languages -%}
-          <li>{{ k }} <pre>{{ v }}</pre></li>
-        {%- endfor -%}
-      </ul></blockquote>
-    {% endif %}
+    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数和当前所用编译器版本见状态页。</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">

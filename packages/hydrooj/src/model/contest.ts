@@ -9,7 +9,6 @@ import {
     BaseUserDict, ContestRule, ContestRules, ProblemDict, RecordDoc,
     ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
-import ranked from '../lib/rank';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import type { Handler } from '../service/server';
@@ -224,7 +223,7 @@ const acm = buildContestRule({
         return row;
     },
     async scoreboard(config, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
+        const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
         // Find first accept
@@ -257,7 +256,7 @@ const acm = buildContestRule({
         return [rows, udict];
     },
     async ranked(tdoc, cursor) {
-        return await ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
+        return await db.ranked(cursor, (a, b) => a.accept === b.accept && a.time === b.time);
     },
     applyProjection(tdoc, rdoc) {
         if (isDone(tdoc)) return rdoc;
@@ -394,7 +393,7 @@ const oi = buildContestRule({
         return row;
     },
     async scoreboard(config, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
+        const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
         const psdict = {};
@@ -431,7 +430,7 @@ const oi = buildContestRule({
         return [rows, udict];
     },
     async ranked(tdoc, cursor) {
-        return await ranked(cursor, (a, b) => a.score === b.score);
+        return await db.ranked(cursor, (a, b) => a.score === b.score);
     },
     applyProjection(tdoc, rdoc) {
         if (isDone(tdoc)) return rdoc;
@@ -744,7 +743,7 @@ const homework = buildContestRule({
         return row;
     },
     async scoreboard(config, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await ranked(cursor, (a, b) => a.score === b.score);
+        const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
         const columns = await this.scoreboardHeader(config, _, tdoc, pdict);
@@ -757,7 +756,7 @@ const homework = buildContestRule({
         return [rows, udict];
     },
     async ranked(tdoc, cursor) {
-        return await ranked(cursor, (a, b) => a.score === b.score);
+        return await db.ranked(cursor, (a, b) => a.score === b.score);
     },
 });
 

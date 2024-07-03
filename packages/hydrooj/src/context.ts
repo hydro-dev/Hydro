@@ -1,12 +1,14 @@
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
+import type { ServerEvents, WebService } from '@hydrooj/framework';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
-import { EventMap } from './service/bus';
+import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
+import type { ConnectionHandler, Handler } from './service/server';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
+export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap, ServerEvents<Handler, ConnectionHandler> { }
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
@@ -26,12 +28,10 @@ export type MainScope = cordis.MainScope<Context>;
 
 export type { Disposable, ScopeStatus, Plugin } from 'cordis';
 
-export interface Context {
-    [Context.events]: Events<Context>;
+export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Connection' | 'withHandlerClass'> {
+    // @ts-ignore
+    [Context.events]: Events<this>;
     loader: Loader;
-    Route: typeof import('./service/server').Route;
-    Connection: typeof import('./service/server').Connection;
-    withHandlerClass: import('./service/server').RouteService['withHandlerClass'];
     check: CheckService;
     setImmediate: typeof setImmediate;
     addScript: typeof addScript;
@@ -72,15 +72,6 @@ export class Context extends cordis.Context {
         super(config);
         this.plugin(ApiMixin);
     }
-
-    /** @deprecated use `ctx.root` instead */
-    get app() {
-        return this.root;
-    }
-}
-
-export namespace Context {
-    export type Associate<P extends string, C extends Context = Context> = cordis.Context.Associate<P, C>;
 }
 
 const old = cordis.Registry.prototype.inject;

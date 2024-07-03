@@ -3,41 +3,71 @@
 <div class="row">
   <div class="medium-12 columns">
     <div class="section">
-      <div class="section__body no-padding">
-        <div data-fragment-id="status">
-          <table class="data-table">
-            <colgroup>
-              <col class="col--id">
-              <col class="col--status">
-              <col class="col--os">
-              <col class="col--cpu">
-              <col class="col--memory">
-              <col class="col--request">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="col--id">{{ _('ID') }}</th>
-                <th class="col--status">{{ _('Current Status') }}</th>
-                <th class="col--os">{{ _('OS Info') }}</th>
-                <th class="col--cpu">{{ _('CPU Info') }}</th>
-                <th class="col--memory">{{ _('Memory Info') }}</th>
-                <th class="col--request">{{ _('Handled requests') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {%- for doc in stats -%}
-              <tr>
-                <td class="col--id">{{ doc._id.toHexString()|truncate(8,True,'') }}</td>
-                <td class="col--status">{% if doc.isOnline %}{{ doc.status }}{% else %}{{ datetimeSpan(doc.updateAt)|safe }}{% endif %}</td>
-                <td class="col--os" data-tooltip="{{ doc.osinfo.kernel }}">{{ doc.osinfo.distro }} {{ doc.osinfo.release }} {{ doc.osinfo.codename }} {{ doc.osinfo.arch }}</td>
-                <td class="col--cpu" data-tooltip="{{ doc.cpu.flags }}">{{ doc.cpu.manufacturer }} {{ doc.cpu.brand }}@{{ doc.cpu.speed }}GHz</td>
-                <td class="col--memory"{% if doc.stack %} data-tooltip="Stack size: {{ doc.stack }}MB"{% endif %}>{{ size(doc.memory.used) }}/{{ size(doc.memory.total) }}</td>
-                <td class="col--request">{{ doc.reqCount }}</td>
-              </tr>
-              {%- endfor -%}
-            </tbody>
-          </table>
-        </div>
+      <div class="section__tab-container">
+        <ul class="section__tabs">
+          <li class="section__tab-item">
+            <h1 class="section__tab-title">{{ _('Servers') }}</h1>
+            <div class="section__tab-main">
+              <table class="data-table">
+                <colgroup>
+                  <col class="col--id">
+                  <col class="col--status">
+                  <col class="col--os">
+                  <col class="col--cpu">
+                  <col class="col--memory">
+                  <col class="col--request">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="col--id">{{ _('ID') }}</th>
+                    <th class="col--status">{{ _('Current Status') }}</th>
+                    <th class="col--os">{{ _('OS Info') }}</th>
+                    <th class="col--cpu">{{ _('CPU Info') }}</th>
+                    <th class="col--memory">{{ _('Memory Info') }}</th>
+                    <th class="col--request">{{ _('Handled requests') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {%- for doc in stats -%}
+                  <tr>
+                    <td class="col--id">{{ doc._id.toHexString()|truncate(8,True,'') }}</td>
+                    <td class="col--status">{% if doc.isOnline %}{{ doc.status }}{% else %}{{ datetimeSpan(doc.updateAt)|safe }}{% endif %}</td>
+                    <td class="col--os" data-tooltip="{{ doc.osinfo.kernel }}">{{ doc.osinfo.distro }} {{ doc.osinfo.release }} {{ doc.osinfo.codename }} {{ doc.osinfo.arch }}</td>
+                    <td class="col--cpu" data-tooltip="{{ doc.cpu.flags }}">{{ doc.cpu.manufacturer }} {{ doc.cpu.brand }}@{{ doc.cpu.speed }}GHz</td>
+                    <td class="col--memory"{% if doc.stack %} data-tooltip="Stack size: {{ doc.stack }}MB"{% endif %}>{{ size(doc.memory.used) }}/{{ size(doc.memory.total) }}</td>
+                    <td class="col--request">{{ doc.reqCount }}</td>
+                  </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
+            </div>
+          </li>
+          {% if compilers|length %}
+            <li class="section__tab-item">
+              <h1 class="section__tab-title">{{ _('Compiler Versions') }}</h1>
+              <div class="section__tab-main">
+                <div class="section__body typo">
+                  {% for line in compilers %}
+                    <p>{{ line.key|join(', ') }}</p>
+                    <pre><code>{{ line.message }}</code></pre>
+                  {% endfor %}
+                </div>
+              </div>
+            </li>
+          {% endif %}
+          <li class="section__tab-item">
+            <h1 class="section__tab-title">{{ _('Compile Commands') }}</h1>
+            <div class="section__tab-main">
+              <div class="section__body typo">
+                <ul>
+                  {%- for k, v in languages -%}
+                    <li>{{ k }} <pre>{{ v }}</pre></li>
+                  {%- endfor -%}
+                </ul>
+              </div>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
   </div>

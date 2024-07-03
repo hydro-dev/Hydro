@@ -111,6 +111,68 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.13.0 / UI 4.51.0
+- ui: 添加 sentry
+- core&ui: 支持显示当前编译器版本
+- core: 数据库索引优化
+- core: 文件复制使用软链接
+- a11y: 添加性能测试工具
+- utils: 支持识别大写文件扩展名
+- ui: 优化下拉菜单样式
+- core: 优化页面标题
+- register: 支持从文件读取原 sourcemap
+- ui: 修复站内消息推送
+- ui: ranking 页面添加说明
+- ui: 添加生成测试数据提示
+- framework: 从 core 解离
+- core: loader: 支持多 profile 切换
+- ui: 修复比赛计分板选手组显示
+- core: 重设比赛分数时自动重算分数
+
+本版本同时引入下述插件 API 修改：
+
+- 移除了 app/load/${category} 钩子
+- 移除了 ctx.app (请使用 ctx.root)
+- 移除了 ctx.options (请使用 ctx.root.config)
+- serializer: 移除 showDisplayName 参数
+- 移除了 loader.addScript, loader.addon 函数
+- 移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)
+- 移除了 lib/paginate 和 lib/rank (请使用 db.paginate 和 db.ranked)
+
+### Hydro 4.12.3 / UI 4.50.2
+- core: 将 API 模块移入 service
+- core: 比赛时提交被 hack 不触发整体重测
+- core: 将添加 pid match 的逻辑移入搜索中
+- ui: 修正 cssFilter
+- judge: builtin: 维护 callback 顺序
+- core: 优化邮件地址处理
+- ui: 显示提交记录长度
+- migrate: 支持仅为冲突用户设置随机邮件地址
+- core&ui: 支持自动整理 hack 输入
+- elastic: 优化模糊搜索
+- ui: 修复客观题中多选题载入答案出错的问题
+- core: 修复 hack 按钮
+
+### Hydro 4.12.0 / UI 4.50.0
+- core: 添加题目统计页
+- core: 在记录详情页显示测评进度
+- core: problem_list: 允许 hook 修改排序逻辑
+- migrate: 添加 poj 支持
+- core: api: 支持查询 rpInfo 与 avatarUrl
+- ui: 允许禁用 timeago
+- core: 修复 IOI(strict) 下取消成绩
+- ui: 比赛计分板中高亮自己与关注的用户
+- core: 修正比赛榜单 AC 量计算
+- core: 禁止重测自测提交
+- ui: 优化讨论编辑历史显示
+- core: 登录/注册后返回当前的 UserContext
+- core: 修复比赛计分板导出的 PERM_VIEW_DISPLAYNAME 检查
+- ui: 修复 domain_user 选择框的默认值
+- ui: 修复客观题加载上次答案
+- core: 重置密码时自动禁用 2FA
+- core: import: 题目包导入时支持导入题解和标程
+- core: 性能优化和漏洞修复
+
 ### Hydro 4.11.2 / UI 4.49.8
 - core: 支持给比赛题目设置分数倍率 (#765)
 - workspace: 升级 ts 版本至 5.4.3
@@ -600,7 +662,8 @@ Hydro 用户群：1085853538
 
 ## 开源许可
 
-本项目中的 examples/ install/ packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。
+本项目中 framework/ examples/ install/ 下的内容采用 MIT 协议授权，您可自由使用。  
+本项目中 packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。  
 项目其余部分使用双重许可：
 
 1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  

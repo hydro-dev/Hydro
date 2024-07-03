@@ -1,9 +1,8 @@
+import 'core-js/stable';
 import 'matchmedia-polyfill';
 
 import browserUpdate from 'browser-update';
-import queueMicrotask from 'queue-microtask';
 
-window.queueMicrotask = queueMicrotask;
 browserUpdate({
   required: {
     e: -10, f: -10, o: -3, s: -1, c: -10,
@@ -13,10 +12,22 @@ browserUpdate({
 });
 
 // monaco-editor requires this polyfill
-if (window.MediaQueryList) {
+if (window.MediaQueryList && !MediaQueryList.prototype.addEventListener) {
   MediaQueryList.prototype.addEventListener = (k, listener) => {
     MediaQueryList.prototype.addListener(listener);
   };
+}
+if (typeof window['WeakRef'] === 'undefined') {
+  // @ts-ignore
+  window.WeakRef = (function (wm) {
+    function WeakRef(target) {
+      wm.set(this, target);
+    }
+    WeakRef.prototype.deref = function () {
+      return wm.get(this);
+    };
+    return WeakRef;
+  }(new WeakMap()));
 }
 if (!(window.matchMedia('all').addListener || window.matchMedia('all').addEventListener)) {
   const localMatchMedia = window.matchMedia;

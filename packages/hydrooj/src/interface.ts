@@ -1,5 +1,5 @@
-import { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
-import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
+import type { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
+import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
 import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
@@ -329,8 +329,10 @@ export interface RecordDoc {
     judgeAt: Date;
     status: number;
     progress?: number;
-    /** pretest & hack */
+    /** pretest */
     input?: string;
+    /** hack target rid */
+    hackTarget?: ObjectId;
     /** 0 if pretest&script */
     contest?: ObjectId;
 
@@ -338,6 +340,16 @@ export interface RecordDoc {
     subtasks?: Record<number, SubtaskResult>;
 }
 
+export interface RecordStatDoc {
+    _id: ObjectId;
+    domainId: string;
+    pid: number;
+    uid: number;
+    time: number;
+    memory: number;
+    length: number;
+    lang: string;
+}
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
@@ -632,6 +644,8 @@ export interface FileNode {
     size?: number;
     /** AutoDelete */
     autoDelete?: Date;
+    /** fileId if linked to an existing file */
+    link?: string;
     owner?: number;
     operator?: number[];
     meta?: Record<string, string | number>;
@@ -688,6 +702,7 @@ declare module './service/db' {
         'domain': DomainDoc;
         'domain.user': any;
         'record': RecordDoc;
+        'record.stat': RecordStatDoc;
         'document': any;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
@@ -764,11 +779,10 @@ export interface ProblemSearchOptions {
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty');
+    difficulty: typeof import('./lib/difficulty').default;
     buildContent: typeof import('./lib/content').buildContent;
     mail: typeof import('./lib/mail');
-    rank: typeof import('./lib/rank');
-    rating: typeof import('./lib/rating');
+    rating: typeof import('./lib/rating').default;
     testdataConfig: typeof import('./lib/testdataConfig');
     problemSearch: ProblemSearch;
 }
@@ -789,14 +803,11 @@ export interface ModuleInterfaces {
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
     };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
-    render: (name: string, state: any) => string | Promise<string>;
 }
 
 export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
-    /** @deprecated */
-    handler: Record<string, Function>;
     script: Record<string, Script>;
     service: HydroService;
     lib: Lib;

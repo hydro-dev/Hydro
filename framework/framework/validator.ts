@@ -2,7 +2,6 @@ import assert from 'assert';
 import emojiRegex from 'emoji-regex';
 import { isSafeInteger } from 'lodash';
 import moment from 'moment-timezone';
-import { ObjectId } from 'mongodb';
 import sanitize from 'sanitize-filename';
 import saslprep from 'saslprep';
 
@@ -36,7 +35,7 @@ export interface Types {
     Float: Type<number>;
 
     // Other
-    ObjectId: Type<ObjectId>;
+    ObjectId: Type<typeof import('mongodb').ObjectId>;
     Boolean: Type<boolean>;
     Date: Type<string>;
     Time: Type<string>;
@@ -95,7 +94,7 @@ export const Types: Types = {
     PositiveInt: [(v) => +v, (v) => /^\+?[1-9][0-9]*$/.test(v.toString().trim()) && isSafeInteger(+v)],
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
 
-    ObjectId: [(v) => new ObjectId(v), ObjectId.isValid],
+    ObjectId: [() => { throw new Error('mongodb package not found'); }, () => true],
     Boolean: [(v) => !!(v && !['false', 'off'].includes(v)), null, true],
     Date: [
         (v) => {
@@ -187,6 +186,13 @@ export const Types: Types = {
         (v) => types.some((type) => type[1](v)),
     ] as any,
 };
+
+try {
+    const { ObjectId } = require('mongodb');
+    Types.ObjectId = [(v) => new ObjectId(v), ObjectId.isValid];
+} catch (e) {
+
+}
 
 // @ts-ignore
 Types.ObjectID = Types.ObjectId;

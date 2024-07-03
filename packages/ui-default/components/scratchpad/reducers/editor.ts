@@ -1,6 +1,7 @@
 let cacheKey = `${UserContext._id}/${UiContext.pdoc.domainId}/${UiContext.pdoc.docId}`;
 if (UiContext.tdoc?._id && UiContext.tdoc.rule !== 'homework') cacheKey += `@${UiContext.tdoc._id}`;
 
+// TODO switch to indexeddb
 export default function reducer(state = {
   lang: localStorage.getItem(`${cacheKey}#lang`) || UiContext.codeLang,
   code: localStorage.getItem(cacheKey) || UiContext.codeTemplate,

@@ -2,6 +2,7 @@ import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@si
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
 import { Time } from '@hydrooj/utils';
+import type { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
@@ -26,52 +27,6 @@ import user, { deleteUserCache } from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
-import { registerResolver, registerValue } from './api';
-
-registerValue('User', [
-    ['_id', 'Int!'],
-    ['uname', 'String!'],
-    ['mail', 'String!'],
-    ['perm', 'String'],
-    ['role', 'String'],
-    ['loginat', 'Date'],
-    ['regat', 'Date!'],
-    ['priv', 'Int!', 'User Privilege'],
-    ['avatarUrl', 'String'],
-    ['tfa', 'Boolean!'],
-    ['authn', 'Boolean!'],
-    ['displayName', 'String'],
-]);
-
-registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
-    if (arg.id) return user.getById(ctx.args.domainId, arg.id);
-    if (arg.mail) return user.getByEmail(ctx.args.domainId, arg.mail);
-    if (arg.uname) return user.getByUname(ctx.args.domainId, arg.uname);
-    return ctx.user;
-}, `Get a user by id, uname, or mail.
-Returns current user if no argument is provided.`);
-
-registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, ctx) => {
-    if (arg.ids?.length) {
-        const res = await user.getList(ctx.args.domainId, arg.ids);
-        return Object.keys(res).map((id) => res[+id]);
-    }
-    if (!arg.search) return [];
-    const udoc = await user.getById(ctx.args.domainId, +arg.search)
-        || await user.getByUname(ctx.args.domainId, arg.search)
-        || await user.getByEmail(ctx.args.domainId, arg.search);
-    const udocs: User[] = arg.exact
-        ? []
-        : await user.getPrefixList(ctx.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
-    if (udoc && !udocs.find((i) => i._id === udoc._id)) {
-        udocs.pop();
-        udocs.unshift(udoc);
-    }
-    for (const i in udocs) {
-        udocs[i].avatarUrl = avatar(udocs[i].avatar);
-    }
-    return udocs;
-}, 'Get a list of user by ids, or search users with the prefix.');
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
@@ -225,7 +180,7 @@ class UserLogoutHandler extends Handler {
         this.response.template = 'user_logout.html';
     }
 
-    async post(domainId: string) {
+    async post({ domainId }) {
         this.context.HydroContext.user = await user.getById(domainId, 0);
         this.session.uid = 0;
         this.session.sudo = null;
@@ -546,7 +501,7 @@ class ContestModeHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
@@ -562,4 +517,50 @@ export async function apply(ctx) {
     if (system.get('server.contestmode')) {
         ctx.Route('contest_mode', '/contestmode', ContestModeHandler, PRIV.PRIV_EDIT_SYSTEM);
     }
+    ctx.inject(['api'], ({ api }) => {
+        api.value('User', [
+            ['_id', 'Int!'],
+            ['uname', 'String!'],
+            ['mail', 'String!'],
+            ['perm', 'String'],
+            ['role', 'String'],
+            ['loginat', 'Date'],
+            ['regat', 'Date!'],
+            ['priv', 'Int!', 'User Privilege'],
+            ['avatarUrl', 'String'],
+            ['tfa', 'Boolean!'],
+            ['authn', 'Boolean!'],
+            ['displayName', 'String @if(perm: "PERM_VIEW_DISPLAYNAME")'],
+            ['rpInfo', 'JSONObject'],
+        ]);
+        api.resolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, c) => {
+            if (arg.id) return user.getById(c.args.domainId, arg.id);
+            if (arg.mail) return user.getByEmail(c.args.domainId, arg.mail);
+            if (arg.uname) return user.getByUname(c.args.domainId, arg.uname);
+            return c.user;
+        }, `Get a user by id, uname, or mail.
+Returns current user if no argument is provided.`);
+        api.resolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
+            if (arg.ids?.length) {
+                const res = await user.getList(c.args.domainId, arg.ids);
+                for (const i in res) res[i].avatarUrl = avatar(res[i].avatar);
+                return Object.keys(res).map((id) => res[+id]);
+            }
+            if (!arg.search) return [];
+            const udoc = await user.getById(c.args.domainId, +arg.search)
+                || await user.getByUname(c.args.domainId, arg.search)
+                || await user.getByEmail(c.args.domainId, arg.search);
+            const udocs: User[] = arg.exact
+                ? []
+                : await user.getPrefixList(c.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
+            if (udoc && !udocs.find((i) => i._id === udoc._id)) {
+                udocs.pop();
+                udocs.unshift(udoc);
+            }
+            for (const i in udocs) {
+                udocs[i].avatarUrl = avatar(udocs[i].avatar);
+            }
+            return udocs;
+        }, 'Get a list of user by ids, or search users with the prefix.');
+    });
 }

@@ -73,6 +73,26 @@
           background: $secondary-color
           content: ''
 
+.section__tab-container:not(.immersive)
+  .section__tab-header
+    padding-top: 0 !important
+
+  .section__tab-header-item
+    border-top: 3px solid transparent;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    transition-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    margin-right: 0
+
+    &:hover
+      border-color: #5f9fd6;
+      background: #f8f8f8;
+    
+    &.tab--active
+      border-color: #ed5f82;
+
+    &.selected
+      border-color: #ed5f82;
+
 .section__tab-content
   position: relative
 

@@ -1,4 +1,3 @@
-import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
@@ -9,6 +8,7 @@ export interface AutoCompleteOptions<Multi extends boolean = boolean> {
   defaultItems?: string;
   width?: string;
   height?: string;
+  classes?: string;
   listStyle?: any;
   allowEmptyQuery?: boolean;
   freeSolo?: boolean;
@@ -19,17 +19,17 @@ export interface AutoCompleteOptions<Multi extends boolean = boolean> {
   text?: () => string;
 }
 
-export default class AutoComplete extends DOMAttachedObject {
+export default class AutoComplete<Options extends Record<string, any> = {}> extends DOMAttachedObject {
   static DOMAttachKey = 'ucwAutoCompleteInstance';
   ref = null;
   container = document.createElement('div');
-  options: AutoCompleteOptions;
+  options: AutoCompleteOptions & Options;
   component = ReactDOM.createRoot(this.container);
   changeListener = [
     (val) => this.$dom.val(val),
   ];
 
-  constructor($dom, options = {}) {
+  constructor($dom, options = {} as Options) {
     super($dom);
     this.options = {
       items: async () => [],
@@ -108,5 +108,4 @@ export default class AutoComplete extends DOMAttachedObject {
   }
 }
 
-assign(AutoComplete, DOMAttachedObject);
 window.Hydro.components.autocomplete = AutoComplete;

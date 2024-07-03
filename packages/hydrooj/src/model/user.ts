@@ -1,6 +1,7 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
+import { serializer } from '@hydrooj/framework';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -8,7 +9,6 @@ import {
 } from '../interface';
 import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
-import serializer from '../lib/serializer';
 import * as bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
@@ -165,24 +165,24 @@ export class User {
         return user;
     }
 
-    serialize(options) {
+    serialize(_, h) {
         if (!this._isPrivate) {
             const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
-            if (options.showDisplayName) fields.push('displayName');
+            if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName');
             return pick(this, fields);
         }
-        return JSON.stringify(this, serializer({ showDisplayName: options.showDisplayName }, true));
+        return JSON.stringify(this, serializer(true, h));
     }
 }
 
-function handleMailLower(mail: string) {
-    let data = mail.trim().toLowerCase();
-    if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
-    if (data.endsWith('@gmail.com')) {
-        const [prev] = data.split('@');
-        data = `${prev.replace(/[.+]/g, '')}@gmail.com`;
-    }
-    return data;
+declare module '@hydrooj/framework' {
+    interface UserModel extends User { }
+}
+
+export function handleMailLower(mail: string) {
+    const [n, d] = mail.trim().toLowerCase().split('@');
+    const [name] = n.split('+');
+    return `${name.replace(/\./g, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
 }
 
 async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
@@ -388,7 +388,7 @@ class UserModel {
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: true, displayName: showDisplayName }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project({ uid: 1, ...(showDisplayName ? { displayName: 1 } : {}) }).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;

@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid';
 import sanitize from 'sanitize-filename';
 import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import type { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
     FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
@@ -34,71 +35,9 @@ import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
 import { buildProjection } from '../utils';
-import { registerResolver, registerValue } from './api';
 import { ContestDetailBaseHandler } from './contest';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
-
-registerValue('FileInfo', [
-    ['_id', 'String!'],
-    ['name', 'String!'],
-    ['size', 'Int'],
-    ['lastModified', 'Date'],
-]);
-registerValue('Problem', [
-    ['_id', 'ObjectID!'],
-    ['owner', 'Int!'],
-    ['domainId', 'String!'],
-    ['docId', 'Int!'],
-    ['docType', 'Int!'],
-    ['pid', 'String'],
-    ['title', 'String!'],
-    ['content', 'String!'],
-    ['data', '[FileInfo]'],
-    ['additional_file', '[FileInfo]'],
-    ['nSubmit', 'Int'],
-    ['nAccept', 'Int'],
-    ['difficulty', 'Int'],
-    ['tag', '[String]'],
-    ['hidden', 'Boolean'],
-]);
-
-registerResolver(
-    'Query', 'problem(id: Int, pid: String)', 'Problem',
-    async (arg, ctx) => {
-        ctx.checkPerm(PERM.PERM_VIEW);
-        const pdoc = await problem.get(ctx.args.domainId, arg.pid || arg.id);
-        if (!pdoc) return null;
-        if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        ctx.pdoc = pdoc;
-        return pdoc;
-    },
-);
-registerResolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, ctx) => {
-    ctx.checkPerm(PERM.PERM_VIEW);
-    const res = await problem.getList(ctx.args.domainId, arg.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
-        undefined, undefined, true);
-    return Object.keys(res).map((id) => res[+id]);
-}, 'Get a list of problem by ids');
-registerResolver(
-    'Problem', 'manage', 'ProblemManage',
-    (arg, ctx) => {
-        if (!ctx.user.own(ctx.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) ctx.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        return {};
-    },
-);
-registerResolver(
-    'ProblemManage', 'delete', 'Boolean!',
-    async (arg, ctx) => {
-        const tdocs = await contest.getRelated(ctx.args.domainId, ctx.pdoc.docId);
-        if (tdocs.length) throw new ProblemAlreadyUsedByContestError(ctx.pdoc.docId, tdocs[0]._id);
-        return problem.del(ctx.pdoc.domainId, ctx.pdoc.docId);
-    },
-);
-registerResolver(
-    'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
-    (arg, ctx) => problem.edit(ctx.args.domainId, ctx.pdoc.docId, arg),
-);
 
 function buildQuery(udoc: User) {
     const q: Filter<ProblemDoc> = {};
@@ -118,18 +57,40 @@ const defaultSearch = async (domainId: string, q: string, options?: ProblemSearc
     const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
     const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
-    if (!Number.isNaN(+q)) {
-        const pdoc = await problem.get(domainId, +q, ['domainId', 'docId', 'pid', 'title']);
+    if (!options.skip) {
+        const pdoc = await problem.get(domainId, +q || q, ['domainId', 'docId', 'pid', 'title']);
         if (pdoc) pdocs.unshift(pdoc);
     }
     return {
         hits: pdocs.map((i) => `${i.domainId}/${i.docId}`),
-        total: await problem.count(domainId, filter),
+        total: Math.max(pdocs.length, await problem.count(domainId, filter)),
         countRelation: 'eq',
     };
 };
 
+export interface QueryContext {
+    query: Filter<ProblemDoc>;
+    sort: string[];
+    pcountRelation: string;
+    parsed: ReturnType<typeof parser.parse>;
+    category: string[];
+    text: string;
+    total: number;
+    fail: boolean;
+}
+
 export class ProblemMainHandler extends Handler {
+    queryContext: QueryContext = {
+        query: {},
+        sort: [],
+        pcountRelation: 'eq',
+        parsed: null,
+        category: [],
+        text: '',
+        total: 0,
+        fail: false,
+    };
+
     @param('page', Types.PositiveInt, true)
     @param('q', Types.Content, true)
     @param('limit', Types.PositiveInt, true)
@@ -137,13 +98,11 @@ export class ProblemMainHandler extends Handler {
     async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
         this.response.template = 'problem_main.html';
         if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
+        this.queryContext.query = buildQuery(this.user);
         // eslint-disable-next-line @typescript-eslint/no-shadow
-        const query = buildQuery(this.user);
+        const query = this.queryContext.query;
         const psdict = {};
         const search = global.Hydro.lib.problemSearch || defaultSearch;
-        let sort: string[];
-        let fail = false;
-        let pcountRelation = 'eq';
         const parsed = parser.parse(q, {
             keywords: ['category', 'difficulty'],
             offsets: false,
@@ -162,8 +121,8 @@ export class ProblemMainHandler extends Handler {
         if (text) {
             const result = await search(domainId, q, { skip: (page - 1) * limit, limit });
             total = result.total;
-            pcountRelation = result.countRelation;
-            if (!result.hits.length) fail = true;
+            this.queryContext.pcountRelation = result.countRelation;
+            if (!result.hits.length) this.queryContext.fail = true;
             query.$and ||= [];
             query.$and.push({
                 $or: result.hits.map((i) => {
@@ -171,27 +130,19 @@ export class ProblemMainHandler extends Handler {
                     return { domainId: did, docId: +docId };
                 }),
             });
-            sort = result.hits;
+            this.queryContext.sort = result.hits;
         }
-        await this.ctx.parallel('problem/list', query, this);
+        const sort = this.queryContext.sort;
+        await this.ctx.parallel('problem/list', query, this, sort);
         // eslint-disable-next-line prefer-const
-        let [pdocs, ppcount, pcount] = fail
+        let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
-            : await problem.list(domainId, query, sort?.length ? 1 : page, limit, undefined, this.user._id);
+            : await problem.list(domainId, query, sort.length ? 1 : page, limit, undefined, this.user._id);
         if (total) {
             pcount = total;
             ppcount = Math.ceil(total / limit);
         }
-        if (sort) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
-        if (q && page === 1) {
-            const pdoc = await problem.get(domainId, +q || q, problem.PROJECTION_LIST);
-            if (pdoc && problem.canViewBy(pdoc, this.user)) {
-                const count = pdocs.length;
-                pdocs = pdocs.filter((doc) => doc.docId !== pdoc.docId);
-                pdocs.unshift(pdoc);
-                pcount = pcount - count + pdocs.length;
-            }
-        }
+        if (sort.length) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (text && pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
             const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
@@ -210,7 +161,7 @@ export class ProblemMainHandler extends Handler {
                     this.renderHTML('partials/problem_list.html', {
                         page, ppcount, pcount, pdocs, psdict, qs: q,
                     }),
-                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation }),
+                    this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation: this.queryContext.pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { qs: q }),
                 ])).map((i) => ({ html: i })),
             };
@@ -219,7 +170,7 @@ export class ProblemMainHandler extends Handler {
                 page,
                 pcount,
                 ppcount,
-                pcountRelation,
+                pcountRelation: this.queryContext.pcountRelation,
                 pdocs,
                 psdict,
                 qs: q,
@@ -587,24 +538,30 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     }
 
     @param('input', Types.String, true)
+    @param('autoOrganizeInput', Types.Boolean, true)
     @param('tid', Types.ObjectId, true)
-    async post(domainId: string, input = '', tid?: ObjectId) {
+    async post(domainId: string, input = '', autoOrganizeInput = false, tid?: ObjectId) {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
         await this.limitRate('add_record', 60, system.get('limit.submission'), false);
         const id = `${this.user._id}/${nanoid()}`;
         if (this.request.files?.file?.size > 0) {
             const file = this.request.files.file;
-            if (!file || file.size > 128 * 1024 * 1024) throw new ValidationError('input');
+            if (!file || file.size > 2 * 1024 * 1024) throw new ValidationError('input');
             await storage.put(`submission/${id}`, file.filepath, this.user._id);
         } else if (input) {
+            if (autoOrganizeInput) input = input.replace(/\s+\n/g, '\n').replace(/\s+ /g, ' ');
             await storage.put(`submission/${id}`, Buffer.from(input), this.user._id);
         }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id,
             this.rdoc.lang, this.rdoc.code, true,
-            { contest: tid, type: 'hack', files: { hack: `${id}#input.txt` } },
+            {
+                contest: tid,
+                type: 'hack',
+                hackTarget: this.rdoc._id,
+                files: { hack: `${id}#input.txt` },
+            },
         );
-        // TODO contest: update status;
         this.response.body = { rid };
         this.response.redirect = this.url('record_detail', { rid });
     }
@@ -667,6 +624,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
     async get(domainId: string, d = ['testdata', 'additional_file'], pjax = false, sidebar = false) {
+        if (this.tdoc) throw new ContestNotEndedError();
         this.response.body.testdata = d.includes('testdata') ? sortFiles(this.pdoc.data || []) : [];
         this.response.body.reference = this.pdoc.reference;
         this.response.body.additional_file = d.includes('additional_file') ? sortFiles(this.pdoc.additional_file || []) : [];
@@ -972,6 +930,32 @@ export class ProblemSolutionRawHandler extends ProblemDetailHandler {
     }
 }
 
+export class ProblemStatisticsHandler extends ProblemDetailHandler {
+    @param('sort', Types.Range(Object.keys(record.STAT_QUERY)), true)
+    @param('direction', Types.Range([-1, 1]), true)
+    @param('lang', Types.String, true)
+    @param('page', Types.PositiveInt, true)
+    async get(domainId: string, sort = 'time', direction: 1 | -1 = 1, lang?: string, page = 1) {
+        if (this.tdoc) throw new ContestNotEndedError();
+        const [rsdocs, pcount, rscount] = await this.paginate(
+            record.getMultiStat(domainId, {
+                pid: this.pdoc.docId,
+                ...lang ? { lang } : {},
+            }, record.STAT_QUERY[sort][Math.max(direction, 0)]),
+            page,
+            'record',
+        );
+        const [udict, udoc] = await Promise.all([
+            user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
+            user.getById(domainId, this.pdoc.owner),
+        ]);
+        this.response.template = 'problem_statistics.html';
+        this.response.body = {
+            rsdocs, page, pcount, rscount, sort, direction, pdoc: this.pdoc, udict, types: Object.keys(record.STAT_QUERY), udoc,
+        };
+    }
+}
+
 export class ProblemCreateHandler extends Handler {
     async get() {
         this.response.template = 'problem_edit.html';
@@ -1014,7 +998,7 @@ export class ProblemCreateHandler extends Handler {
 export class ProblemPrefixListHandler extends Handler {
     @param('prefix', Types.Name)
     async get(domainId: string, prefix: string) {
-        const projection = ['domainId', 'docId', 'pid', 'title'] as const;
+        const projection = ['domainId', 'docId', 'pid', 'title', 'hidden'] as const;
         const [pdocs, pdoc, apdoc] = await Promise.all([
             problem.getPrefixList(domainId, prefix),
             problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
@@ -1033,7 +1017,7 @@ export class ProblemPrefixListHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_detail', '/p/:pid', ProblemDetailHandler);
@@ -1047,6 +1031,68 @@ export async function apply(ctx) {
     ctx.Route('problem_solution_detail', '/p/:pid/solution/:sid', ProblemSolutionHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_raw', '/p/:pid/solution/:psid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.inject(['api'], ({ api }) => {
+        api.value('FileInfo', [
+            ['_id', 'String!'],
+            ['name', 'String!'],
+            ['size', 'Int'],
+            ['lastModified', 'Date'],
+        ]);
+        api.value('Problem', [
+            ['_id', 'ObjectID!'],
+            ['owner', 'Int!'],
+            ['domainId', 'String!'],
+            ['docId', 'Int!'],
+            ['docType', 'Int!'],
+            ['pid', 'String'],
+            ['title', 'String!'],
+            ['content', 'String!'],
+            ['data', '[FileInfo]'],
+            ['additional_file', '[FileInfo]'],
+            ['nSubmit', 'Int'],
+            ['nAccept', 'Int'],
+            ['difficulty', 'Int'],
+            ['tag', '[String]'],
+            ['hidden', 'Boolean'],
+        ]);
+        api.resolver(
+            'Query', 'problem(id: Int, pid: String)', 'Problem',
+            async (arg, c) => {
+                c.checkPerm(PERM.PERM_VIEW);
+                const pdoc = await problem.get(c.args.domainId, arg.pid || arg.id);
+                if (!pdoc) return null;
+                if (pdoc.hidden) c.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+                c.pdoc = pdoc;
+                return pdoc;
+            },
+        );
+        api.resolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, c) => {
+            c.checkPerm(PERM.PERM_VIEW);
+            const res = await problem.getList(c.args.domainId, arg.ids, c.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || c.user._id,
+                undefined, undefined, true);
+            return Object.keys(res).map((id) => res[+id]);
+        }, 'Get a list of problem by ids');
+        api.resolver(
+            'Problem', 'manage', 'ProblemManage',
+            (arg, c) => {
+                if (!c.user.own(c.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) c.checkPerm(PERM.PERM_EDIT_PROBLEM);
+                return {};
+            },
+        );
+        api.resolver(
+            'ProblemManage', 'delete', 'Boolean!',
+            async (arg, c) => {
+                const tdocs = await contest.getRelated(c.args.domainId, c.pdoc.docId);
+                if (tdocs.length) throw new ProblemAlreadyUsedByContestError(c.pdoc.docId, tdocs[0]._id);
+                return problem.del(c.pdoc.domainId, c.pdoc.docId);
+            },
+        );
+        api.resolver(
+            'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
+            (arg, c) => problem.edit(c.args.domainId, c.pdoc.docId, arg),
+        );
+    });
 }

@@ -67,6 +67,8 @@ jobs:
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node -r @hydrooj/register build/publish.ts

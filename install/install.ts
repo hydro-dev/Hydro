@@ -558,7 +558,7 @@ ${nixConfBase}`);
                 };
                 console.log(config);
                 // TODO mail config
-                exec(`hydrooj cli script migrateUoj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
+                exec(`hydrooj cli script migrateUniversaloj '${JSON.stringify(config)}'`, { stdio: 'inherit' });
             },
         ],
     },

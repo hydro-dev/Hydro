@@ -6,6 +6,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
+import { load } from '../options';
 import db from '../service/db';
 import {
     addon, builtinModel, handler, lib, locale, model,
@@ -21,10 +22,11 @@ export async function apply(ctx: Context) {
     require('../lib/i18n');
     require('../utils');
     require('../error');
-    const config = require('../options')();
+    require('../service/bus').apply(ctx);
+    const config = load();
     if (!process.env.CI && !config) {
         logger.info('Starting setup');
-        await require('./setup').load();
+        await require('./setup').load(ctx);
     }
     const pending = global.addons;
     const fail = [];
@@ -38,11 +40,14 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
-    await require('../service/worker').apply(ctx);
-    await require('../service/server').apply(ctx);
     // Make sure everything is ready and then start main entry
     if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
     await ctx.root.start();
+    await ctx.lifecycle.flush();
+    await require('../service/worker').apply(ctx);
+    await require('../service/server').apply(ctx);
+    await require('../service/api').apply(ctx);
+    await ctx.lifecycle.flush();
     require('../lib/index');
     await lib(pending, fail, ctx);
     await ctx.lifecycle.flush();
@@ -60,10 +65,10 @@ export async function apply(ctx: Context) {
     for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
         ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
+    ctx.plugin(require('../service/migration').default);
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
     await ctx.lifecycle.flush();
-    for (const i in global.Hydro.handler) await global.Hydro.handler[i]();
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
@@ -73,27 +78,18 @@ export async function apply(ctx: Context) {
     await ctx.lifecycle.flush();
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
-        const { default: scripts, init } = require('../upgrade');
-        let dbVer = (await modelSystem.get('db.ver')) ?? 0;
-        const isFresh = !dbVer;
-        const expected = scripts.length;
-        if (isFresh) {
-            await init();
-            await modelSystem.set('db.ver', expected);
-        } else {
-            while (dbVer < expected) {
-                const func = scripts[dbVer];
-                if (typeof func !== 'function') {
-                    dbVer++;
-                    continue;
+        await new Promise((resolve, reject) => {
+            ctx.inject(['migration'], async (c) => {
+                c.migration.registerChannel('hydrooj', require('../upgrade').coreScripts);
+                try {
+                    await c.migration.doUpgrade();
+                    resolve(null);
+                } catch (e) {
+                    logger.error('Upgrade failed: %O', e);
+                    reject(e);
                 }
-                logger.info('Upgrading database: from %d to %d', dbVer, expected);
-                const result = await func();
-                if (!result) break;
-                dbVer++;
-                await modelSystem.set('db.ver', dbVer);
-            }
-        }
+            });
+        });
     }
     for (const f of global.addons) {
         const dir = path.join(f, 'public');
