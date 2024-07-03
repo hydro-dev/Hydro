@@ -9,15 +9,14 @@ import { NamedPage } from 'vj/misc/Page';
 import {
   delay, i18n, loadReactRedux, pjax, request, tpl,
 } from 'vj/utils';
+import { openDB } from 'vj/utils/db';
 
 class ProblemPageExtender {
-  constructor() {
-    this.isExtended = false;
-    this.inProgress = false;
-    this.$content = $('.problem-content-container');
-    this.$contentBound = this.$content.closest('.section');
-    this.$scratchpadContainer = $('.scratchpad-container');
-  }
+  isExtended = false;
+  inProgress = false;
+  $content = $('.problem-content-container');
+  $contentBound = this.$content.closest('.section');
+  $scratchpadContainer = $('.scratchpad-container');
 
   async extend() {
     if (this.inProgress) return;
@@ -28,6 +27,7 @@ class ProblemPageExtender {
       .get(0)
       .getBoundingClientRect();
 
+    // @ts-ignore
     this.$content.transition({ opacity: 0 }, { duration: 100 });
     await delay(100);
 
@@ -41,6 +41,7 @@ class ProblemPageExtender {
       })
       .show()
       .transition({
+        // @ts-ignore
         left: 0,
         top: 0,
         width: '100%',
@@ -77,6 +78,7 @@ class ProblemPageExtender {
 
     await this.$scratchpadContainer
       .transition({
+        // @ts-ignore
         left: bound.left,
         top: bound.top,
         width: bound.width,
@@ -88,6 +90,7 @@ class ProblemPageExtender {
       .promise();
 
     this.$scratchpadContainer.hide();
+    // @ts-ignore
     this.$content.transition({ opacity: 1 }, { duration: 100 });
     window.document.body.style.overflow = 'scroll';
 
@@ -112,6 +115,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeIn() {
+    // @ts-ignore
     await $('#scratchpad')
       .transition(
         { opacity: 1 },
@@ -121,6 +125,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeOut() {
+    // @ts-ignore
     await $('#scratchpad')
       .transition(
         { opacity: 0 },
@@ -138,6 +143,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const { default: ScratchpadReducer } = await import('../components/scratchpad/reducers');
     const { Provider, store } = await loadReactRedux(ScratchpadReducer);
 
+    // @ts-ignore
     window.store = store;
     const sock = new WebSocket(UiContext.ws_prefix + UiContext.pretestConnUrl);
     sock.onmessage = (message) => {
@@ -237,22 +243,25 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       [, setUpdate] = React.useState(0);
       return <div className="contest-problems" style={{ margin: '1em' }}>
         {pids.map((i) => <a href={`#p${i}`} className={ans[i] ? 'pass ' : ''}>
-          <span class="id">{i}</span>
-          {ans[i] && <span class="icon icon-check"></span>}
+          <span className="id">{i}</span>
+          {ans[i] && <span className="icon icon-check"></span>}
         </a>)}
       </div>;
     }
 
-    function saveAns() {
-      localStorage.setItem(`${cacheKey}#objective`, JSON.stringify(ans));
-      setUpdate?.((i) => i + 1);
+    const db = await openDB;
+    async function saveAns() {
+      await db.put('solutions', {
+        id: `${cacheKey}#objective`,
+        value: JSON.stringify(ans),
+      });
     }
-    function clearAns() {
-      localStorage.removeItem(`${cacheKey}#objective`);
+    async function clearAns() {
+      await db.delete('solutions', `${cacheKey}#objective`);
       window.location.reload();
     }
-    function loadAns() {
-      const saved = localStorage.getItem(`${cacheKey}#objective`);
+    async function loadAns() {
+      const saved = await db.get('solutions', `${cacheKey}#objective`);
       if (!saved) return;
       const isValidOption = (v) => v.length === 1 && v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90;
       Object.assign(ans, JSON.parse(saved));
@@ -261,27 +270,28 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           for (const v of val) {
             if (isValidOption(v)) $(`.objective_${id} input[value="${v}"]`).prop('checked', true);
           }
-        } else {
-          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val);
+        } else if (val) {
+          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val.toString());
           if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
+      setUpdate((v) => v + 1);
     }
 
     if (cnt) {
-      loadAns();
+      await loadAns();
       $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
         ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
         : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
-      $('.objective-input[type!=checkbox]').on('input', (e) => {
+      $('.objective-input[type!=checkbox]').on('input', (e: JQuery.TriggeredEvent<HTMLInputElement>) => {
         ans[e.target.name] = e.target.value;
         saveAns();
       });
-      $('input.objective-input[type=checkbox]').on('input', (e) => {
+      $('input.objective-input[type=checkbox]').on('input', (e: JQuery.TriggeredEvent<HTMLInputElement>) => {
         if (e.target.checked) {
           ans[e.target.name] ||= [];
           ans[e.target.name].push(e.target.value);
-          ans[e.target.name] = [...new Set(ans[e.target.name])].sort((a, b) => a.charCodeAt(0) - b.charCodeAt(0));
+          ans[e.target.name] = [...new Set(ans[e.target.name])].sort((a: string, b: string) => a.charCodeAt(0) - b.charCodeAt(0));
         } else {
           ans[e.target.name] = ans[e.target.name].filter((v) => v !== e.target.value);
         }
@@ -310,7 +320,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         const result = await new ConfirmDialog({
           $body: tpl.typoMsg('All changes will be lost. Are you sure to clear all answers?'),
         }).open();
-        if (result === 'yes') clearAns();
+        if (result === 'yes') await clearAns();
       });
     }
     const ele = document.createElement('div');
