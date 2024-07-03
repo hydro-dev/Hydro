@@ -808,8 +808,6 @@ export interface ModuleInterfaces {
 export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
-    /** @deprecated */
-    handler: Record<string, Function>;
     script: Record<string, Script>;
     service: HydroService;
     lib: Lib;
