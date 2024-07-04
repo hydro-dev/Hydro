@@ -1,8 +1,10 @@
+/* eslint-disable no-await-in-loop */
 import { animated, easings, useSprings } from '@react-spring/web';
 import useKey from 'react-use/lib/useKey';
 import {
-  addPage, NamedPage, React, ReactDOM, request,
+  addPage, NamedPage, React, ReactDOM, request, sleep,
 } from '@hydrooj/ui-default';
+import { ResolverInput } from '../interface';
 
 function convertPayload(ghost: string, lock: number) {
   const lines = ghost.split('\n');
@@ -17,6 +19,7 @@ function convertPayload(ghost: string, lock: number) {
   };
   for (let i = 5 + data.problem_count; i < 5 + data.problem_count + data.teams; i++) {
     const team = lines[i].match(/@t (\d+),\d+,\d+,(.*)/);
+    if (!team) continue;
     data.users[team[1]] = {
       name: team[2].split('-')[1],
       college: team[2].split('-')[0],
@@ -60,55 +63,74 @@ async function scrollTo(offset) {
     });
   });
 }
+interface DisplaySettings {
+  showAvatar: boolean;
+  showSchool: boolean;
+}
 
-type Verdict = 'RJ' | 'AC' | 'NA';
+interface Props extends DisplaySettings {
+  data: ResolverInput;
+}
 
-addPage(new NamedPage(['resolver'], () => {
-  function processData({
-    contest_name, solutions, users, problem_count, frozen_seconds,
-  }) {
-    $('title').text(contest_name);
-    $('#title').text(contest_name);
-    $('.footer').css('display', 'none');
+function status(problem) {
+  if (!problem) return 'untouched';
+  if (problem.pass) return 'ac';
+  if (!problem.old && !problem.frozen) return 'untouched';
+  if (problem.frozen) return 'frozen';
+  return 'failed';
+}
 
-    // const resolver = new Resolver(data.solutions, data.users, data.problem_count, data.frozen_seconds);
-    // resolver.calcOperations();
+function submissions(problem) {
+  const st = status(problem);
+  if (st === 'ac') { return `${problem.old}`; }
+  if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
+  if (st === 'failed') { return problem.old; }
+  return String.fromCharCode('A'.charCodeAt(0) + problem.problem_index);
+}
 
-    const teams = Object.keys(users).map((key) => ({
-      id: key,
-      rank: 0,
-      score: 0,
-      penalty: 0,
-      ranked: !users[key].is_exclude,
-      total: 0,
-      problems: Array.from({ length: problem_count }, (v, i) => i + 1).map(() => ({
-        old: 0,
-        frozen: 0,
-        pass: false,
-      })),
-    }));
-    const allSubmissions: Array<{
-      user_id: string, problem_index: string, verdict: Verdict, submitted_seconds: number
-    }> = Object.values(solutions).sort((a: any, b: any) => a.submitted_seconds - b.submitted_seconds) as any;
-    const allAc = allSubmissions.filter((i) => i.verdict === 'AC');
-    for (const submission of allSubmissions) {
-      const team = teams.find((v) => v.id === submission.user_id);
-      if (!team) continue;
-      const isFrozen = submission.submitted_seconds > frozen_seconds;
-      const problem = team.problems[+submission.problem_index - 1];
-      if (problem.pass) continue;
-      team.total++;
-      if (isFrozen) {
-        problem.frozen += 1;
-      } else {
-        if (submission.verdict === 'AC') {
-          problem.pass = true;
-          team.score += 1;
-          team.penalty += submission.submitted_seconds + problem.old * 20 * 60;
-        }
-        problem.old += 1;
+function start(data: ResolverInput, options: DisplaySettings) {
+  $('title').text(data.name);
+  $('#title').text(data.name);
+  $('.footer').css('display', 'none');
+  const teams = data.teams.map((v) => ({
+    id: v.id,
+    rank: 0,
+    score: 0,
+    penalty: 0,
+    ranked: !v.exclude,
+    total: 0,
+    problems: data.problems.map((v) => ({
+      old: 0,
+      frozen: 0,
+      pass: false,
+      id: v.id,
+    })),
+  }));
+  const allSubmissions = data.submissions.sort((a, b) => a.time - b.time);
+  const allAc = allSubmissions.filter((i) => i.verdict === 'AC');
+  for (const submission of allSubmissions) {
+    const team = teams.find((v) => v.id === submission.team);
+    if (!team) continue;
+    const isFrozen = submission.time > data.frozen;
+    const problem = team.problems.find((i) => i.id === submission.problem);
+    if (!problem || problem.pass) continue;
+    team.total++;
+    if (isFrozen) problem.frozen += 1;
+    else {
+      if (submission.verdict === 'AC') {
+        problem.pass = true;
+        team.score += 1;
+        team.penalty += submission.time + problem.old * 20 * 60;
       }
+      problem.old += 1;
     }
+  }
+
+  function MainList(props: Props) {
+    const [selectedTeam, setTeam] = React.useState('');
+    const [selectedProblem, setP] = React.useState<string | null>(null);
+    const [ready, setReady] = React.useState(true);
+
     function processRank() {
       const clone = [...teams];
       clone.sort((a, b) => b.score - a.score || a.penalty - b.penalty || b.total - a.total);
@@ -123,162 +145,154 @@ addPage(new NamedPage(['resolver'], () => {
       }
       return clone.map((i) => teams.indexOf(i));
     }
-    const initial = processRank();
 
-    function status(problem) {
-      if (!problem) return 'untouched';
-      if (problem.pass) return 'ac';
-      if (!problem.old && !problem.frozen) return 'untouched';
-      if (problem.frozen) return 'frozen';
-      return 'failed';
-    }
+    const order = React.useRef(processRank());
 
-    function submissions(problem) {
-      const st = status(problem);
-      if (st === 'ac') { return `${problem.old}`; }
-      if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
-      if (st === 'failed') { return problem.old; }
-      return String.fromCharCode('A'.charCodeAt(0) + problem.problem_index);
-    }
+    const [springs, api] = useSprings(teams.length, (index) => ({
+      y: order.current.indexOf(index) * 103 - index * 103,
+      scale: 1,
+      zIndex: 0,
+      shadow: 1,
+      immediate: (key: string) => key === 'y' || key === 'zIndex',
+    }));
 
-    function MainList(props) {
-      const [selectedTeam, setTeam] = React.useState('');
-      const [selectedProblem, setP] = React.useState<number | null>(null);
-      const [ready, setReady] = React.useState(true);
-      const order = React.useRef(initial);
+    React.useEffect(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    }, []);
 
-      const [springs, api] = useSprings(teams.length, (index) => ({
-        y: order.current.indexOf(index) * 103 - index * 103,
-        scale: 1,
-        zIndex: 0,
-        shadow: 1,
-        immediate: (key: string) => key === 'y' || key === 'zIndex',
-      }));
+    useKey('ArrowRight', async () => {
+      console.log('click', ready);
+      if (!ready) return;
+      for (let i = teams.length - 1; i > 0; i--) {
+        const team = teams[order.current[i]];
+        for (const pinfo of data.problems) {
+          const problem = team.problems.find((i) => i.id === pinfo.id);
+          if (!problem || !problem.frozen || problem.pass) continue;
+          setReady(false);
+          setTeam(team.id);
+          setP(pinfo.id);
+          // scroll to selected line
+          console.log(i, team.id, order.current.indexOf(i));
 
-      React.useEffect(() => {
-        window.scrollTo(0, document.body.scrollHeight);
-      }, []);
-
-      useKey('ArrowRight', () => {
-        console.log('click');
-        if (!ready) return;
-        for (let i = teams.length - 1; i > 0; i--) {
-          const team = teams[order.current[i]];
-          for (let j = 0; j < problem_count; j++) {
-            const problem = team.problems[j];
-            if (problem.frozen && !problem.pass) {
-              setReady(false);
-              setTeam(team);
-              setP(j);
-              // scroll to selected line
-              console.log(i, team.id, order.current.indexOf(i));
-              scrollTo(i * 103 - window.innerHeight + 261).then(() => {
-                setTimeout(() => {
-                  if (allAc.find((s) => s.user_id === team.id && +s.problem_index === j + 1)) {
-                    const sub = allSubmissions.filter((s) => s.user_id === team.id && +s.problem_index === j + 1);
-                    let penalty = 0;
-                    for (const s of sub) {
-                      if (s.verdict !== 'AC') {
-                        penalty += 20 * 60;
-                        problem.old++;
-                      } else {
-                        penalty += s.submitted_seconds;
-                        break;
-                      }
-                    }
-                    team.penalty += penalty;
-                    team.score += 1;
-                    problem.pass = true;
-                    problem.frozen = 0;
-                    setP(null);
-                    setTimeout(() => {
-                      order.current = processRank();
-                      api.start((index) => ({
-                        y: order.current.indexOf(index) * 103 - index * 103,
-                        scale: 1,
-                        zIndex: 0,
-                        shadow: 1,
-                        config: {
-                          easing: easings.steps(5),
-                        },
-                      }));
-                      setReady(true);
-                    }, 1000);
-                  } else {
-                    problem.old += problem.frozen;
-                    problem.frozen = 0;
-                    setReady(true);
-                    setP(null);
-                  }
-                }, 1000);
-              });
-              return;
+          await scrollTo(i * 103 - window.innerHeight + 261);
+          await sleep(1000);
+          if (allAc.find((s) => s.team === team.id && s.problem === pinfo.id)) {
+            const sub = allSubmissions.filter((s) => s.team === team.id && s.problem === pinfo.id);
+            let penalty = 0;
+            for (const s of sub) {
+              if (s.verdict !== 'AC') {
+                penalty += 20 * 60;
+                problem.old++;
+              } else {
+                penalty += s.time;
+                break;
+              }
             }
+            team.penalty += penalty;
+            team.score += 1;
+            problem.pass = true;
+            problem.frozen = 0;
+            setP(null);
+            await sleep(1000);
+            order.current = processRank();
+            api.start((index) => ({
+              y: order.current.indexOf(index) * 103 - index * 103,
+              scale: 1,
+              zIndex: 0,
+              shadow: 1,
+              config: {
+                easing: easings.steps(5),
+              },
+            }));
+          } else {
+            problem.old += problem.frozen;
+            problem.frozen = 0;
+            setP(null);
           }
+          setReady(true);
+          return;
         }
-      }, {}, [ready]);
+      }
+    }, {}, [ready]);
 
-      return (<>
-        {springs.map(({
-          zIndex, y,
-        }, i) => {
-          const team = teams[i];
-          return <animated.div
-            key={i}
-            className="rank-list-item clearfix"
-            style={{
-              background: 'transparent',
-              zIndex,
-              // boxShadow: shadow.to((s) => `rgba(0, 0, 0, 0.15) 0px ${s}px ${2 * s}px 0px`),
-              y,
-              ...(selectedTeam === team.id ? {
-                backgroundColor: '#406b82',
-              } : {}),
-            }}
-            children={<>
-              <div className="rank">{team.rank === -1 ? '*' : team.rank}</div>
-              <div className="content">
-                <div className="name" style={{ color: 'white' }}>{users[team.id].college}--{users[team.id].name}</div>
-                <ul className="problems">
-                  {Array.from({ length: problem_count }, (v, i) => i).map((v, n) => {
-                    const uncover = team?.id === selectedTeam && selectedProblem === n;
-                    return <li className={`${status(team.problems[n])} prob-${n + 1} ${uncover ? 'uncover' : ''} item`}>
-                      <div className={`${status(team.problems[n])} ${uncover ? 'uncover' : ''} p-content`}>{submissions(team.problems[n])}</div>
-                    </li>;
-                  })}
-                </ul>
+    return (<>
+      {springs.map(({
+        zIndex, y,
+      }, i) => {
+        const team = teams[i];
+        const teamInfo = data.teams.find((i) => i.id === team.id);
+        if (!teamInfo) return <animated.dev key={i}>Team info for id {team.id} not found</animated.dev>;
+        return <animated.div
+          key={i}
+          className="rank-list-item clearfix"
+          style={{
+            background: 'transparent',
+            zIndex,
+            // boxShadow: shadow.to((s) => `rgba(0, 0, 0, 0.15) 0px ${s}px ${2 * s}px 0px`),
+            y,
+            ...(selectedTeam === team.id ? {
+              backgroundColor: '#406b82',
+            } : {}),
+          }}
+          children={<>
+            <div className="rank">{team.rank === -1 ? '*' : team.rank}</div>
+            {props.showAvatar && <img className="avatar" style={{ height: 32 }} src={`${teamInfo?.avatar}`} />}
+            <div className="content">
+              <div className="name" style={{ color: 'white', fontSize: 24 }}>
+                {props.showSchool ? `${teamInfo.institution}--` : ''}{teamInfo.name}
               </div>
-              <div className="penalty" style={{ color: 'white' }}>{Math.floor(team.penalty / 60)}</div>
-              <div className="solved" style={{ color: 'white' }}>{team.score}</div>
-            </>}
-          />;
-        })}
-      </>);
-    }
-    ReactDOM.createRoot(document.getElementById('rank-list')!).render(<MainList />);
+              <ul className="problems">
+                {data.problems.map((v) => {
+                  const uncover = team?.id === selectedTeam && selectedProblem === v.id;
+                  const problemStatus = team.problems.find((i) => i.id === v.id);
+                  return <li className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
+                    <div className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} p-content`}>{submissions(problemStatus)}</div>
+                  </li>;
+                })}
+              </ul>
+            </div>
+            <div className="penalty" style={{ color: 'white' }}>{Math.floor(team.penalty / 60)}</div>
+            <div className="solved" style={{ color: 'white' }}>{team.score}</div>
+          </>}
+        />;
+      })}
+    </>);
   }
+  ReactDOM.createRoot(document.getElementById('rank-list')!).render(<MainList {...options} data={data} />);
+}
 
+async function loadAndStart(input: string, lock = 0, options: DisplaySettings) {
+  let data;
+  try {
+    if (input.startsWith('@')) data = convertPayload(input, lock);
+    else data = JSON.parse(input);
+  } catch (e) {
+    console.log(`load data from url. [url=${input}]`);
+    const res = await request.get(input, {}, {
+      dataType: 'text',
+    });
+    if (res.startsWith('@')) data = convertPayload(res, lock);
+    else data = JSON.parse(res);
+  }
+  start(data, options);
+}
+
+addPage(new NamedPage(['resolver'], () => {
   const current = new URL(window.location.href);
-
-  async function loadAndStart(input: string) {
-    let data;
-    try {
-      data = JSON.parse(input);
-    } catch (e) {
-      console.log(`load data from url. [url=${input}]`);
-      const res = await request.get(input, {}, {
-        dataType: 'text',
-      });
-      if (res.startsWith('@')) data = convertPayload(res, +(current.searchParams.get('lock') || 0));
-      else data = JSON.parse(res);
-    }
-    processData(data);
-  }
-
   const input = current.searchParams.get('input');
-  if (input) loadAndStart(input);
+  if (input) {
+    loadAndStart(input, +(current.searchParams.get('lock') || 0), {
+      showAvatar: true,
+      showSchool: true,
+    });
+  }
   $('#load').on('click', () => {
     const src = $('#input-data').val()?.toString()?.trim();
-    if (src) loadAndStart(src);
+    if (src) {
+      loadAndStart(src, +($('[name="lock"]').val() || 0), {
+        showAvatar: $('#show-avatar').prop('checked') || false,
+        showSchool: $('#show-school').prop('checked') || false,
+      });
+    }
   });
 }));
