@@ -678,7 +678,7 @@ export const coreScripts: MigrationScript[] = [
             const wanted = handleMailLower(udoc.mail);
             if (wanted !== udoc.mailLower) {
                 if (await user.getByEmail('system', wanted)) {
-                    console.warn('Email conflict: %s', wanted);
+                    console.warn('Email conflict when trying to rename %s to %s', udoc.mailLower, wanted);
                     return;
                 }
                 await user.coll.updateOne({ _id: udoc._id }, { $set: { mailLower: wanted } });
