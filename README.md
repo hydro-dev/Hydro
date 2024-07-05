@@ -139,6 +139,8 @@ Hydro 用户群：1085853538
 - 移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)
 - 移除了 lib/paginate 和 lib/rank (请使用 db.paginate 和 db.ranked)
 
+**特别的 更新此版本后 如果先前修改过前端html5.html文件 请参照新版本重新修改 否则将出现首页一直加载的情况**
+
 ### Hydro 4.12.3 / UI 4.50.2
 - core: 将 API 模块移入 service
 - core: 比赛时提交被 hack 不触发整体重测
