@@ -21,6 +21,8 @@ import {
 import { Router } from './router';
 import serializer from './serializer';
 
+export { WebSocket, WebSocketServer } from 'ws';
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
 export function encodeRFC5987ValueChars(str: string) {
     return (

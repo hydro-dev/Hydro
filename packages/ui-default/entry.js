@@ -39,11 +39,15 @@ if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
     release: `hydro-web@${process.env.VERSION}`,
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
+      Sentry.browserApiErrorsIntegration(),
+      Sentry.replayIntegration({
+        networkRequestHeaders: ['Content-Type'],
+        networkResponseHeaders: ['Content-Type', 'Location'],
+      }),
     ],
     tracesSampleRate: 0.1,
     tracePropagationTargets: ['localhost', /^\//, window.location.host],
-    replaysSessionSampleRate: 0.1,
+    replaysSessionSampleRate: 0.03,
     replaysOnErrorSampleRate: 1.0,
   });
 }
