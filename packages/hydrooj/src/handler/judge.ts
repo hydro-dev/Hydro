@@ -118,8 +118,9 @@ bus.on('record/judge', async (rdoc, updated, pdoc) => {
         assert(file);
         const hackSubtask = config.subtasks[config.subtasks.length - 1];
         hackSubtask.cases ||= [];
-        const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
-        hackSubtask.cases.push({ input, output: '/dev/null' });
+        const input = `hack-${rdoc._id}.in`;
+        const output = `hack-${rdoc._id}.out`;
+        hackSubtask.cases.push({ input, output: config.std ? output : '/dev/null' });
         await Promise.all([
             problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
             problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),

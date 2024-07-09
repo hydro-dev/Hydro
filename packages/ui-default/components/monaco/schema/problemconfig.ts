@@ -65,6 +65,7 @@ const problemConfigSchema: JSONSchema7 = {
     },
     interactor: { type: 'string', pattern: '\\.' },
     validator: { type: 'string', pattern: '\\.' },
+    std: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },
     cases: { $ref: '#/definitions/cases' },

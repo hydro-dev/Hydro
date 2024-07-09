@@ -1,17 +1,21 @@
 /* eslint-disable no-sequences */
+import { tmpdir } from 'os';
+import path from 'path';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import { del, runQueued } from '../sandbox';
+import client from '../sandbox/client';
 import signals from '../signals';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
 export async function judge(ctx: Context) {
     ctx.next({ status: STATUS.STATUS_COMPILING, progress: 0 });
-    const [execute, checker, validator, input] = await Promise.all([
+    const [execute, checker, std, validator, input] = await Promise.all([
         ctx.compile(ctx.lang, ctx.code),
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
+        ctx.config.std ? ctx.compileLocalFile('std', ctx.config.std) : null,
         ctx.compileLocalFile('validator', ctx.config.validator),
         ctx.session.fetchFile(ctx.files.hack),
     ]);
@@ -54,17 +58,39 @@ export async function judge(ctx: Context) {
         } else if (memory > ctx.config.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
         } else {
-            ({ status, message } = await checkers[ctx.config.checker_type]({
-                execute: checker.execute,
-                copyIn: checker.copyIn || {},
-                input: { src: input },
-                output: { content: '' },
-                user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
-                user_stderr: { fileId: res.fileIds.stderr },
-                score: 100,
-                detail: ctx.config.detail ?? true,
-                env: { ...ctx.env, HYDRO_TESTCASE: '0' },
-            }));
+            const stdResult = ctx.config.std ? await runQueued(
+                std.execute,
+                {
+                    stdin: { src: input },
+                    copyIn: std.copyIn,
+                    time: parseTimeMS(ctx.config.time || '1s'),
+                    memory: parseMemoryMB(ctx.config.memory || '256m'),
+                    cacheStdoutAndStderr: true,
+                },
+            ) : { status: STATUS.STATUS_ACCEPTED, fileIds: { stdout: null } };
+            const tmp = path.join(tmpdir(), `${ctx.request.rid}.out`);
+            ctx.clean.push(() => {
+                if (fs.existsSync(tmp)) fs.removeSync(tmp);
+                return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
+            });
+            if (stdResult.status === STATUS.STATUS_ACCEPTED) {
+                ({ status, message } = await checkers[ctx.config.checker_type]({
+                    execute: checker.execute,
+                    copyIn: checker.copyIn || {},
+                    input: { src: input },
+                    output: stdResult.fileIds.stdout ? { fileId: stdResult.fileIds.stdout } : { content: '' },
+                    user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
+                    user_stderr: { fileId: res.fileIds.stderr },
+                    score: 100,
+                    detail: ctx.config.detail ?? true,
+                    env: { ...ctx.env, HYDRO_TESTCASE: '0' },
+                }));
+                if (status !== STATUS.STATUS_ACCEPTED && ctx.config.std) {
+                    await client.getFile(stdResult.fileIds['stdout'], tmp);
+                    const filename = `hack-${ctx.request.rid.toString()}.out`;
+                    await ctx.session.postFile(ctx.request.rid.toString(), filename, tmp);
+                }
+            } else status = STATUS.STATUS_ACCEPTED;
         }
     } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
         if (code < 32 && signalled) message = signals[code];
