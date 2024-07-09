@@ -90,7 +90,7 @@ export async function judge(ctx: Context) {
                     const filename = `hack-${ctx.request.rid.toString()}.out`;
                     await ctx.session.postFile(ctx.request.rid.toString(), filename, tmp);
                 }
-            } else status = STATUS.STATUS_ACCEPTED;
+            }
         }
     } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
         if (code < 32 && signalled) message = signals[code];
