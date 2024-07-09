@@ -6,42 +6,38 @@ import {
 } from '@hydrooj/ui-default';
 import { ResolverInput } from '../interface';
 
-function convertPayload(ghost: string, lock: number) {
+function convertPayload(ghost: string, lock: number): ResolverInput {
   const lines = ghost.split('\n');
-  const data = {
-    contest_name: lines[0].split('"')[1].split('"')[0],
-    problem_count: +(lines[2].split(' ')[1]),
-    frozen_seconds: +lock || 1800,
-    teams: +(lines[3].split(' ')[1]),
-    submissions: +(lines[4].split(' ')[1]),
-    users: {},
-    solutions: {},
+
+  const problemCount = +(lines[2].split(' ')[1]);
+  const teamCount = +(lines[3].split(' ')[1]);
+  const submissionCount = +(lines[4].split(' ')[1]);
+  const data: ResolverInput = {
+    name: lines[0].split('"')[1].split('"')[0],
+    frozen: +lock || 1800,
+    teams: [],
+    submissions: [],
   };
-  for (let i = 5 + data.problem_count; i < 5 + data.problem_count + data.teams; i++) {
+  for (let i = 5 + problemCount; i < 5 + problemCount + teamCount; i++) {
     const team = lines[i].match(/@t (\d+),\d+,\d+,(.*)/);
     if (!team) continue;
-    data.users[team[1]] = {
+    data.teams.push({
+      id: team[2].split('-')[1],
       name: team[2].split('-')[1],
-      college: team[2].split('-')[0],
-      is_exclude: false,
-    };
+      institution: team[2].split('-')[0],
+      exclude: false,
+    });
   }
-  for (let i = 5 + data.problem_count + data.teams; i < 5 + data.problem_count + data.teams + data.submissions; i++) {
+  for (let i = 5 + problemCount + teamCount; i < 5 + problemCount + teamCount + submissionCount; i++) {
     // @s 3,C,1,10066,AC
     const line = lines[i].split(' ')[1].split(',');
-    data.solutions[i] = {
-      user_id: line[0],
-      problem_index: +(line[1].charCodeAt(0) - 'A'.charCodeAt(0)) + 1,
-      verdict: line[4],
-      submitted_seconds: +(line[3]),
-    };
+    data.submissions.push({
+      team: line[0],
+      problem: line[1],
+      verdict: line[4] as 'AC' | 'RJ',
+      time: +(line[3]),
+    });
   }
-  const s = Object.keys(data.solutions).map((key) => data.solutions[key]);
-  s.sort((a, b) => a.submitted_seconds - b.submitted_seconds);
-  data.solutions = {};
-  s.forEach((solution, index) => {
-    data.solutions[index] = solution;
-  });
   return data;
 }
 
@@ -129,10 +125,11 @@ function start(data: ResolverInput, options: DisplaySettings) {
   function MainList(props: Props) {
     const [selectedTeam, setTeam] = React.useState('');
     const [selectedProblem, setP] = React.useState<string | null>(null);
-    const [ready, setReady] = React.useState(true);
+    const [executeIdx, setExecuteIdx] = React.useState(0);
+    const [, setRenderC] = React.useState(0);
 
-    function processRank() {
-      const clone = [...teams];
+    function processRank(source = teams) {
+      const clone = [...source];
       clone.sort((a, b) => b.score - a.score || a.penalty - b.penalty || b.total - a.total);
       let rank = 1;
       for (const team of clone) {
@@ -143,7 +140,7 @@ function start(data: ResolverInput, options: DisplaySettings) {
           team.rank = -1;
         }
       }
-      return clone.map((i) => teams.indexOf(i));
+      return clone.map((i) => source.indexOf(i));
     }
 
     const order = React.useRef(processRank());
@@ -156,28 +153,74 @@ function start(data: ResolverInput, options: DisplaySettings) {
       immediate: (key: string) => key === 'y' || key === 'zIndex',
     }));
 
-    React.useEffect(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    }, []);
+    const operations = {
+      async highlightTeam(teamId: string, scrollIdx: number) {
+        setP(null);
+        setTeam(teamId);
+        await scrollTo(scrollIdx * 103 - window.innerHeight + 261);
+      },
+      async highlightProblem(problemId: string) {
+        setP(problemId);
+      },
+      async revealProblem(teamId: string, problemId: string) {
+        const team = teams.find((i) => i.id === teamId);
+        const problem = team?.problems.find((i) => i.id === problemId);
+        if (!team || !problem) return;
+        if (allAc.find((s) => s.team === teamId && s.problem === problemId)) {
+          const sub = allSubmissions.filter((s) => s.team === teamId && s.problem === problemId);
+          let penalty = 0;
+          for (const s of sub) {
+            if (s.verdict !== 'AC') {
+              penalty += 20 * 60;
+              problem.old++;
+            } else {
+              penalty += s.time;
+              break;
+            }
+          }
+          team.penalty += penalty;
+          team.score += 1;
+          problem.pass = true;
+          problem.frozen = 0;
+        } else {
+          problem.old += problem.frozen;
+          problem.frozen = 0;
+        }
+        setP(null);
+      },
+      async updateRank() {
+        order.current = processRank();
+        api.start((index) => ({
+          y: order.current.indexOf(index) * 103 - index * 103,
+          scale: 1,
+          zIndex: 0,
+          shadow: 1,
+          config: {
+            easing: easings.steps(5),
+          },
+        }));
+      },
+    };
 
-    useKey('ArrowRight', async () => {
-      console.log('click', ready);
-      if (!ready) return;
-      for (let i = teams.length - 1; i > 0; i--) {
-        const team = teams[order.current[i]];
+    const calculated = React.useMemo(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+      const clone = JSON.parse(JSON.stringify(teams));
+      const ops: { name: string, args: any[] }[] = [];
+      function queueOperations(name: string, ...args: any[]) {
+        ops.push({ name, args });
+      }
+      let order = processRank(clone);
+      for (let i = clone.length - 1; i > 0; i--) {
+        const team = clone[order[i]];
+        queueOperations('highlightTeam', team.id, i);
         for (const pinfo of data.problems) {
           const problem = team.problems.find((i) => i.id === pinfo.id);
           if (!problem || !problem.frozen || problem.pass) continue;
-          setReady(false);
-          setTeam(team.id);
-          setP(pinfo.id);
+          queueOperations('highlightProblem', pinfo.id);
+          queueOperations('revealProblem', team.id, pinfo.id);
           // scroll to selected line
-          console.log(i, team.id, order.current.indexOf(i));
-
-          await scrollTo(i * 103 - window.innerHeight + 261);
-          await sleep(1000);
-          if (allAc.find((s) => s.team === team.id && s.problem === pinfo.id)) {
-            const sub = allSubmissions.filter((s) => s.team === team.id && s.problem === pinfo.id);
+          if (allAc.find((s) => s.team === team.id && s.problem === problem.id)) {
+            const sub = allSubmissions.filter((s) => s.team === team.id && s.problem === problem.id);
             let penalty = 0;
             for (const s of sub) {
               if (s.verdict !== 'AC') {
@@ -192,28 +235,31 @@ function start(data: ResolverInput, options: DisplaySettings) {
             team.score += 1;
             problem.pass = true;
             problem.frozen = 0;
-            setP(null);
-            await sleep(1000);
-            order.current = processRank();
-            api.start((index) => ({
-              y: order.current.indexOf(index) * 103 - index * 103,
-              scale: 1,
-              zIndex: 0,
-              shadow: 1,
-              config: {
-                easing: easings.steps(5),
-              },
-            }));
+            queueOperations('updateRank');
+            const oldOrder = JSON.stringify(order);
+            order = processRank(clone);
+            if (oldOrder !== JSON.stringify(order)) {
+              i++;
+              break;
+            }
           } else {
             problem.old += problem.frozen;
             problem.frozen = 0;
-            setP(null);
           }
-          setReady(true);
-          return;
         }
       }
-    }, {}, [ready]);
+      console.log(ops);
+      return ops;
+    }, [data]);
+
+    useKey('ArrowRight', async () => {
+      const op = calculated[executeIdx];
+      if (!op) return;
+      setExecuteIdx(executeIdx + 1);
+      console.log(op.name, op.args);
+      await operations[op.name](...op.args);
+      setRenderC((i) => i + 1);
+    }, {}, [executeIdx, calculated]);
 
     return (<>
       {springs.map(({
@@ -221,18 +267,19 @@ function start(data: ResolverInput, options: DisplaySettings) {
       }, i) => {
         const team = teams[i];
         const teamInfo = data.teams.find((i) => i.id === team.id);
-        if (!teamInfo) return <animated.dev key={i}>Team info for id {team.id} not found</animated.dev>;
+        if (!teamInfo) return <animated.div key={i}>Team info for id {team.id} not found</animated.div>;
         return <animated.div
           key={i}
           className="rank-list-item clearfix"
           style={{
-            background: 'transparent',
             zIndex,
             // boxShadow: shadow.to((s) => `rgba(0, 0, 0, 0.15) 0px ${s}px ${2 * s}px 0px`),
             y,
             ...(selectedTeam === team.id ? {
               backgroundColor: '#406b82',
-            } : {}),
+            } : {
+              background: 'transparent',
+            }),
           }}
           children={<>
             <div className="rank">{team.rank === -1 ? '*' : team.rank}</div>
