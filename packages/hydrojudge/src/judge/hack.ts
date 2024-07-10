@@ -2,7 +2,7 @@
 import { tmpdir } from 'os';
 import path from 'path';
 import { fs } from '@hydrooj/utils';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS, STATUS_TEXTS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import { del, runQueued } from '../sandbox';
 import client from '../sandbox/client';
@@ -68,11 +68,6 @@ export async function judge(ctx: Context) {
                     cacheStdoutAndStderr: true,
                 },
             ) : { status: STATUS.STATUS_ACCEPTED, fileIds: { stdout: null } };
-            const tmp = path.join(tmpdir(), `${ctx.request.rid}.out`);
-            ctx.clean.push(() => {
-                if (fs.existsSync(tmp)) fs.removeSync(tmp);
-                return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
-            });
             if (stdResult.status === STATUS.STATUS_ACCEPTED) {
                 ({ status, message } = await checkers[ctx.config.checker_type]({
                     execute: checker.execute,
@@ -86,10 +81,14 @@ export async function judge(ctx: Context) {
                     env: { ...ctx.env, HYDRO_TESTCASE: '0' },
                 }));
                 if (status !== STATUS.STATUS_ACCEPTED && ctx.config.std) {
+                    const tmp = path.join(tmpdir(), `${ctx.request.rid}.out`);
                     await client.getFile(stdResult.fileIds['stdout'], tmp);
                     const filename = `hack-${ctx.request.rid.toString()}.out`;
                     await ctx.session.postFile(ctx.request.rid.toString(), filename, tmp);
                 }
+            } else {
+                message = { message: 'Standard solution got {0}.', params: [STATUS_TEXTS[stdResult.status]] };
+                status = STATUS.STATUS_SYSTEM_ERROR;
             }
         }
     } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
@@ -101,7 +100,9 @@ export async function judge(ctx: Context) {
     if (message) ctx.next({ message });
 
     return ctx.end({
-        status: status === STATUS.STATUS_ACCEPTED ? STATUS.STATUS_HACK_UNSUCCESSFUL : STATUS.STATUS_HACK_SUCCESSFUL,
+        status: status === STATUS.STATUS_SYSTEM_ERROR
+            ? STATUS.STATUS_SYSTEM_ERROR
+            : status === STATUS.STATUS_ACCEPTED ? STATUS.STATUS_HACK_UNSUCCESSFUL : STATUS.STATUS_HACK_SUCCESSFUL,
         score: 0,
         time,
         memory,
