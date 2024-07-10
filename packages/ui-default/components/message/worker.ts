@@ -31,12 +31,17 @@ function broadcastMsg(message: any) {
 function initConn(path: string, port: MessagePort, cookie: any) {
   if (cookie !== lcookie) conn?.close();
   else if (conn && conn.readyState === conn.OPEN) return;
+  const url = new URL(path, location.origin);
+  if (cookie) url.searchParams.set('sid', cookie.split('sid=')[1].split(';')[0]);
   lcookie = cookie;
   console.log('Init connection for', path);
   conn?.close();
-  conn = new ReconnectingWebsocket(path);
+  conn = new ReconnectingWebsocket(url.toString());
   ports.push(port);
-  conn.onopen = () => conn.send(cookie);
+  conn.onopen = () => {
+    console.log('Connected to', path);
+    broadcastMsg({ type: 'open' });
+  };
   conn.onerror = () => broadcastMsg({ type: 'error' });
   conn.onclose = (ev) => broadcastMsg({ type: 'close', error: ev.reason });
   conn.onmessage = (message) => {
@@ -46,14 +51,9 @@ function initConn(path: string, port: MessagePort, cookie: any) {
       return;
     }
     const payload = JSON.parse(message.data);
-    if (payload.event === 'auth') {
-      if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
-        broadcastMsg({ type: 'close', error: payload.error });
-        conn.close();
-      } else {
-        console.log('Connected to', path);
-        broadcastMsg({ type: 'open' });
-      }
+    if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
+      broadcastMsg({ type: 'close', error: payload.error });
+      conn.close();
     } else {
       broadcastMsg({ type: 'message', payload });
       let acked = false;

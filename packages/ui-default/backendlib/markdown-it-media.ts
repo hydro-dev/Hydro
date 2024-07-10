@@ -1,8 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable prefer-destructuring */
 
-import { randomUUID } from 'crypto';
-import MarkdownIt from 'markdown-it';
+import type MarkdownIt from 'markdown-it';
+import { v4 as uuid } from 'uuid';
 
 const allowFullScreen = ' webkitallowfullscreen mozallowfullscreen allowfullscreen';
 
@@ -110,7 +110,7 @@ export function Media(md: MarkdownIt) {
     if (service === 'pdf') {
       if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
       return `\
-        <object classid="clsid:${randomUUID().toUpperCase()}">
+        <object classid="clsid:${uuid().toUpperCase()}">
           <param name="SRC" value="${src}" >
           <embed width="100%" style="min-height: 100vh;border: none;" fullscreen="yes" src="${src}">
             <noembed></noembed>

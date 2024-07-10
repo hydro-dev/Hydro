@@ -19,7 +19,7 @@ const argv = cac().parse();
 async function runWebpack({
   watch, production, measure, dev, https,
 }) {
-  const compiler = webpack(webpackConfig({ watch, production, measure }));
+  const compiler = webpack(await webpackConfig({ watch, production, measure }));
   if (dev) {
     const server = new WebpackDevServer({
       port: https ? 8001 : 8000,
@@ -49,7 +49,10 @@ async function runWebpack({
         return;
       }
       if (argv.options.detail) console.log(stats.toString());
-      if (!watch && (!stats || stats.hasErrors())) process.exitCode = 1;
+      if (!watch && (!stats || stats.hasErrors())) {
+        if (!argv.options.detail) console.log(stats.toString());
+        process.exitCode = 1;
+      }
       resolve(stats);
     }
     if (watch) compiler.watch({}, compilerCallback);
@@ -121,21 +124,8 @@ async function main() {
   if (argv.options.gulp) await runGulp();
   else {
     await runWebpack(argv.options as any);
-    if (fs.existsSync('public/hydro.js')) {
-      fs.copyFileSync('public/hydro.js', `public/hydro-${pkg.version}.js`);
-    }
-    if (fs.existsSync('public/polyfill.js')) {
-      fs.copyFileSync('public/polyfill.js', `public/polyfill-${pkg.version}.js`);
-    }
     if (fs.existsSync('public/theme.css')) {
       fs.copyFileSync('public/theme.css', `public/theme-${pkg.version}.css`);
-    }
-    if (argv.options.production) {
-      for (const f of ['echarts', 'graphviz', 'mermaid', 'mathjax']) {
-        fs.removeSync(`public/vditor/dist/js/${f}`);
-      }
-      const files = fs.readdirSync('public');
-      files.filter((i) => /(^[in]\..+|worker)\.js\.map$/.test(i)).forEach((i) => fs.removeSync(`public/${i}`));
     }
     await Promise.all(globbySync('public/**/*.map').map((i) => fs.remove(i)));
   }

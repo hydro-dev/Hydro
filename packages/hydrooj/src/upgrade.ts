@@ -21,37 +21,35 @@ import StorageModel from './model/storage';
 import * as system from './model/system';
 import TaskModel from './model/task';
 import * as training from './model/training';
-import user from './model/user';
+import user, { handleMailLower } from './model/user';
 import {
     iterateAllContest, iterateAllDomain, iterateAllProblem, iterateAllUser,
 } from './pipelineUtils';
 import db from './service/db';
+import { MigrationScript } from './service/migration';
 import { setBuiltinConfig } from './settings';
 import welcome from './welcome';
 
 const logger = new Logger('upgrade');
-type UpgradeScript = void | (() => Promise<boolean | void>);
 const unsupportedUpgrade = async function _26_27() {
     throw new Error('This upgrade was no longer supported in hydrooj@4. \
 Please use hydrooj@3 to perform these upgrades before upgrading to v4');
 };
 
-export async function init() {
-    if (!await user.getById('system', 0)) {
-        await user.create('Guest@hydro.local', 'Guest', String.random(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
-    }
-    if (!await user.getById('system', 1)) {
-        await user.create('Hydro@hydro.local', 'Hydro', String.random(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
-    }
-    const ddoc = await domain.get('system');
-    if (!ddoc) await domain.add('system', 1, 'Hydro', 'Welcome to Hydro!');
-    await welcome();
-    return true;
-}
-
-const scripts: UpgradeScript[] = [
+export const coreScripts: MigrationScript[] = [
     // Mark as used
-    null,
+    async function init() {
+        if (!await user.getById('system', 0)) {
+            await user.create('Guest@hydro.local', 'Guest', String.random(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
+        }
+        if (!await user.getById('system', 1)) {
+            await user.create('Hydro@hydro.local', 'Hydro', String.random(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
+        }
+        const ddoc = await domain.get('system');
+        if (!ddoc) await domain.add('system', 1, 'Hydro', 'Welcome to Hydro!');
+        await welcome();
+        return true;
+    },
     // Init
     ...new Array(26).fill(unsupportedUpgrade),
     null,
@@ -675,6 +673,16 @@ const scripts: UpgradeScript[] = [
         if (bulk.batches.length) await bulk.execute();
         return true;
     },
+    async function _89_90() {
+        return await iterateAllUser(async (udoc) => {
+            const wanted = handleMailLower(udoc.mail);
+            if (wanted !== udoc.mailLower) {
+                if (await user.getByEmail('system', wanted)) {
+                    console.warn('Email conflict when trying to rename %s to %s', udoc.mailLower, wanted);
+                    return;
+                }
+                await user.coll.updateOne({ _id: udoc._id }, { $set: { mailLower: wanted } });
+            }
+        });
+    },
 ];
-
-export default scripts;

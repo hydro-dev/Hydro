@@ -5,7 +5,7 @@ import Schema from 'schemastery';
 import superagent from 'superagent';
 import { Context } from './context';
 export { ObjectId, Filter } from 'mongodb';
-export { WebSocket, WebSocketServer } from 'ws';
+export { WebSocket, WebSocketServer } from '@hydrooj/framework';
 export * from './utils';
 export * from './interface';
 export * from './typeutils';

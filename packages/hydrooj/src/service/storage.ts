@@ -2,8 +2,8 @@ import { dirname, resolve } from 'path';
 import { PassThrough, Readable } from 'stream';
 import { URL } from 'url';
 import {
-    CopyObjectCommand, DeleteObjectCommand, DeleteObjectsCommand,
-    GetObjectCommand, HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client,
+    DeleteObjectCommand, DeleteObjectsCommand, GetObjectCommand,
+    HeadObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client,
 } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
@@ -243,16 +243,6 @@ class RemoteStorageService {
         return { url, fields };
     }
 
-    async copy(src: string, target: string) {
-        src = convertPath(src);
-        target = convertPath(target);
-        return await this.client.send(new CopyObjectCommand({
-            Bucket: this.bucket,
-            Key: target,
-            CopySource: src,
-        }));
-    }
-
     async status() {
         return {
             type: 'S3',
@@ -330,14 +320,6 @@ class LocalStorageService {
 
     async signUpload() {
         throw new Error('Not implemented');
-    }
-
-    async copy(src: string, target: string) {
-        src = resolve(this.dir, convertPath(src));
-        target = resolve(this.dir, convertPath(target));
-        await ensureDir(dirname(target));
-        await copyFile(src, target);
-        return { etag: target, lastModified: new Date() };
     }
 
     async status() {

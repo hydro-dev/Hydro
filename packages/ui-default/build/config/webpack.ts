@@ -2,17 +2,42 @@
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { version as coreJsVersion } from 'core-js/package.json';
+import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
+import fs from 'fs';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
+import packageJson from 'package-json';
 import { dirname } from 'path';
+import { gt } from 'semver';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WebpackBar from 'webpackbar';
+import { version } from '../../package.json';
 import root from '../utils/root';
 
-export default function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
+const {
+  list,
+  targets,
+} = compat({
+  targets: '> 1%, chrome 70, firefox 60, safari 16, ios_saf 16, not ie 11, not op_mini all',
+  modules: [
+    'core-js/stable',
+  ],
+  exclude: [],
+  version: coreJsVersion,
+  inverse: false,
+});
+fs.writeFileSync(root('__core-js.js'), `${list.map((i) => `import 'core-js/modules/${i}';`).join('\n')}\n`);
+
+export default async function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
+  if (env.production) console.log(targets);
+  let isNew = false;
+  const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
+  if (typeof version === 'string' && gt(version, latest)) isNew = true;
+
   function cssLoader() {
     return {
       loader: 'css-loader',
@@ -61,11 +86,9 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     // sentry requires source-map while keep it simple in dev mode
     devtool: env.production ? 'source-map' : false,
     entry: {
-      hydro: './entry.js',
-      polyfill: './polyfill.ts',
+      [`hydro-${version}`]: './entry.js',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
-      'messages-shared-worker': './components/message/worker.ts',
     },
     cache: {
       type: 'filesystem',
@@ -78,6 +101,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
     output: {
       path: root('public'),
       publicPath: '/', // overwrite in entry.js
+      workerPublicPath: '/',
       hashFunction: 'sha1',
       hashDigest: 'hex',
       hashDigestLength: 10,
@@ -233,17 +257,29 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
         filename: '[name].css?[fullhash:6]',
       }),
       new WebpackManifestPlugin({}),
-      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$|mathjax|abcjs|vditor.+\.d\.ts)/ }),
+      new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$)/ }),
       new CopyWebpackPlugin({
         patterns: [
           { from: root('static') },
           { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/mitm.html`), to: 'streamsaver/mitm.html' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/sw.js`), to: 'streamsaver/sw.js' },
-          { from: root(`${dirname(require.resolve('vditor/package.json'))}/dist`), to: 'vditor/dist' },
           { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
+      }),
+      sentryWebpackPlugin({
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+        org: 'hydro-dev',
+        project: 'hydro-web',
+        url: 'https://sentry.hydro.ac',
+        sourcemaps: {
+          rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
+        },
+        release: (process.env.CI && isNew) ? {
+          name: `hydro-web@${version}`,
+          uploadLegacySourcemaps: root('public'),
+        } : {},
       }),
       new webpack.DefinePlugin({
         'process.env.VERSION': JSON.stringify(require('@hydrooj/ui-default/package.json').version),
@@ -265,6 +301,7 @@ export default function (env: { watch?: boolean, production?: boolean, measure?:
           url: 'https://sentry.hydro.ac',
         }),
       ] : []),
+      new webpack.NormalModuleReplacementPlugin(/core-js\/stable/, root('__core-js.js')),
       ...env.measure ? [
         new BundleAnalyzerPlugin({ analyzerPort: 'auto' }),
         new DuplicatesPlugin(),

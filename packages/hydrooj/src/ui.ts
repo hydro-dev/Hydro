@@ -22,7 +22,6 @@ process.on('SIGTERM', terminate);
 
 const shell = new Logger('shell');
 async function executeCommand(input: string) {
-    input = input.trim();
     // Clear the stack
     setImmediate(async () => {
         if (input === 'exit' || input === 'quit' || input === 'shutdown') {
@@ -39,9 +38,20 @@ async function executeCommand(input: string) {
     });
 }
 
+let readlineCallback;
+
 process.stdin.setEncoding('utf-8');
 process.stdin.setRawMode?.(false);
 process.stdin.on('data', (buf) => {
-    const input = buf.toString();
-    executeCommand(input);
+    const input = buf.toString().trim();
+    if (readlineCallback) {
+        readlineCallback(input);
+        readlineCallback = null;
+    } else executeCommand(input);
 });
+
+export const useReadline = (callback: (string) => any) => {
+    if (readlineCallback) throw new Error('Already waiting for input.');
+    readlineCallback = callback;
+};
+export const readline = () => new Promise<string>((resolve) => { useReadline(resolve); });

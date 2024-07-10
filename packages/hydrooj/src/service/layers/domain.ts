@@ -1,4 +1,4 @@
-import { KoaContext } from '@hydrooj/framework';
+import { KoaContext, NotFoundError } from '@hydrooj/framework';
 import BlackListModel from '../../model/blacklist';
 import DomainModel from '../../model/domain';
 import * as system from '../../model/system';
@@ -24,5 +24,12 @@ export default async (ctx: KoaContext, next) => {
     ctx.domainId = inferDomain?._id || domainId;
     ctx.domainInfo = inferDomain || absoluteDomain;
     if (ctx.domainInfo && ctx.domainId !== ctx.domainInfo._id) ctx.redirect(ctx.originalPath.replace(/^\/d\/[^/]+\//, `/d/${ctx.domainInfo._id}/`));
-    else await next();
+    else {
+        if (!ctx.domainInfo) {
+            ctx.pendingError = new NotFoundError(ctx.domainId);
+            ctx.domainId = 'system';
+            ctx.domainInfo = await DomainModel.get('system');
+        }
+        await next();
+    }
 };

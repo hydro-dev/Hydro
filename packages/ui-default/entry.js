@@ -1,3 +1,5 @@
+import './polyfill';
+
 import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
@@ -29,17 +31,23 @@ console.log(
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
 if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
-  window.captureException = (e) => Sentry.captureException(e);
+  window.captureException = (e) => {
+    if (!e.isUserFacingError) Sentry.captureException(e);
+  };
   Sentry.init({
-    dsn: UiContext.sentry_dsn || 'https://04d1d77b095231d55e1202bdc912ff16@sentry.hydro.ac/3',
-    release: process.env.VERSION,
+    dsn: UiContext.sentry_dsn || 'https://2f95d53751e08c74c1af1c4b93ccaff7@sentry.hydro.ac/2',
+    release: `hydro-web@${process.env.VERSION}`,
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
+      Sentry.browserApiErrorsIntegration(),
+      Sentry.replayIntegration({
+        networkRequestHeaders: ['Content-Type'],
+        networkResponseHeaders: ['Content-Type', 'Location'],
+      }),
     ],
     tracesSampleRate: 0.1,
     tracePropagationTargets: ['localhost', /^\//, window.location.host],
-    replaysSessionSampleRate: 0.1,
+    replaysSessionSampleRate: 0.03,
     replaysOnErrorSampleRate: 1.0,
   });
 }
@@ -57,16 +65,10 @@ const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><d
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
 
-const prefetch = Promise.all([
-  fetch(`/constant/${UiContext.constantVersion}.js`).then((r) => r.text()),
-  import('./api'),
-]);
-
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));
   Object.assign(window.UserContext, JSON.parse(window.UserContextNew));
-  const [data, HydroExports] = await prefetch;
-  Object.assign(window, { HydroExports });
-  eval(data); // eslint-disable-line no-eval
-  await HydroExports.initPageLoader();
+  window.HydroExports = await import('./api');
+  await window._hydroLoad();
+  await window.HydroExports.initPageLoader();
 }, false);

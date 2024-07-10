@@ -179,7 +179,7 @@ declare module '@hydrooj/framework' {
     interface UserModel extends User { }
 }
 
-function handleMailLower(mail: string) {
+export function handleMailLower(mail: string) {
     const [n, d] = mail.trim().toLowerCase().split('@');
     const [name] = n.split('+');
     return `${name.replace(/\./g, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;

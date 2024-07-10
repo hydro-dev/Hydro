@@ -1,5 +1,5 @@
-import { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
-import { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
+import type { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
+import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
 import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
@@ -644,6 +644,8 @@ export interface FileNode {
     size?: number;
     /** AutoDelete */
     autoDelete?: Date;
+    /** fileId if linked to an existing file */
+    link?: string;
     owner?: number;
     operator?: number[];
     meta?: Record<string, string | number>;
@@ -777,11 +779,10 @@ export interface ProblemSearchOptions {
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
 export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty');
+    difficulty: typeof import('./lib/difficulty').default;
     buildContent: typeof import('./lib/content').buildContent;
     mail: typeof import('./lib/mail');
-    rank: typeof import('./lib/rank');
-    rating: typeof import('./lib/rating');
+    rating: typeof import('./lib/rating').default;
     testdataConfig: typeof import('./lib/testdataConfig');
     problemSearch: ProblemSearch;
 }
@@ -807,8 +808,6 @@ export interface ModuleInterfaces {
 export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
-    /** @deprecated */
-    handler: Record<string, Function>;
     script: Record<string, Script>;
     service: HydroService;
     lib: Lib;

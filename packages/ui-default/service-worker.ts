@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 const PRECACHE = `precache-${process.env.VERSION}`;
-const DO_NOT_PRECACHE = ['vditor', '.worker.js', 'fonts', 'i.monaco'];
+const DO_NOT_PRECACHE = ['.worker.js', 'fonts', 'i.monaco'];
 
 function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;

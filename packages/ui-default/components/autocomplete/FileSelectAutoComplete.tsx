@@ -27,9 +27,8 @@ const Component = React.forwardRef<any, any>((props, ref) => {
   );
 });
 
-export default class FileSelectAutoComplete<Multi extends boolean> extends AutoComplete {
+export default class FileSelectAutoComplete<Multi extends boolean> extends AutoComplete<FileSelectOptions> {
   static DOMAttachKey = 'ucwFileSelectAutoCompleteInstance';
-  options: FileSelectOptions & AutoCompleteOptions;
 
   constructor($dom, options: FileSelectOptions & AutoCompleteOptions<Multi>) {
     super($dom, {

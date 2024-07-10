@@ -46,32 +46,18 @@
     <script>
       var _htmlNode = document.documentElement;
       _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
-      try {
-        import('data:text/javascript,');Object.fromEntries([]);window.matchMedia('all').addEventListener('change',()=>{});
-      } catch(e) {
-        const s = document.createElement('script');
-        s.async = false;
-        s.src = "{{ '/polyfill.js' if process.env.DEV else (UiContext.cdn_prefix + 'polyfill-' + global.Hydro.version['ui-default'] + '.js') }}";
-        document.head.appendChild(s);
-      }
-    </script>
-  {% endif %}
-</head>
-<body>
-  {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
-    <script>
       var UiContext = '{{ UiContext|json|jsesc|safe }}';
       var UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
-    {% set UiContext = Object.create(UiContext) %}
-    {% set UserContext = Object.create(UserContext) %}
-    {% if process.env.DEV %}
-      <script type="text/javascript" src="/resource/hash/lang-{{ _('__id') }}.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-      <script type="text/javascript" src="/hydro.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-    {% else %}
-      <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
-      <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
-    {% endif %}
+  {% endif %}
+  {% set UiContext = Object.create(UiContext) %}
+  {% set UserContext = Object.create(UserContext) %}
+</head>
+<body>
+  {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
+    <script type="text/javascript" src="/constant/{{ UiContext.constantVersion }}.js"></script>
+    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
+    <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js"></script>
   {% endif %}
   {% block body %}{% endblock %}
   {% block script %}{% endblock %}

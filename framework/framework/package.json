@@ -1,7 +1,8 @@
 {
     "name": "@hydrooj/framework",
-    "version": "0.0.2",
+    "version": "0.0.4",
     "main": "index.ts",
+    "license": "MIT",
     "peerDependencies": {
         "cordis": "*"
     },
@@ -15,18 +16,18 @@
         "koa-router": "^12.0.1",
         "lodash": "^4.17.21",
         "moment-timezone": "^0.5.45",
-        "path-to-regexp": "^6.2.2",
+        "path-to-regexp": "^7.0.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
         "shorty.js": "^1.0.1",
-        "ws": "^8.17.0"
+        "ws": "^8.18.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
         "@types/koa": "^2.15.0",
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
-        "@types/lodash": "^4.17.4",
+        "@types/lodash": "^4.17.6",
         "@types/saslprep": "^1.0.3",
         "@types/ws": "^8.5.10"
     }
