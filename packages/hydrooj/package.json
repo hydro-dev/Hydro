@@ -34,7 +34,7 @@
         "koa-proxies": "^0.12.4",
         "koa-static-cache": "^5.1.4",
         "lodash": "^4.17.21",
-        "lru-cache": "^10.3.0",
+        "lru-cache": "^10.3.1",
         "mime-types": "^2.1.35",
         "moment-timezone": "^0.5.45",
         "mongodb": "^5.9.2",
@@ -43,7 +43,6 @@
         "nodemailer": "^6.9.14",
         "notp": "^2.0.3",
         "p-queue": "^8.0.1",
-        "path-to-regexp": "^7.0.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
         "schemastery": "^3.14.6",
@@ -51,8 +50,7 @@
         "shorty.js": "^1.0.1",
         "superagent": "^9.0.2",
         "tar": "6.2.1",
-        "thirty-two": "^1.0.2",
-        "ws": "^8.17.1"
+        "thirty-two": "^1.0.2"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
