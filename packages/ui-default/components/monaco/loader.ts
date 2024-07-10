@@ -33,17 +33,17 @@ async function legacyLoadExternalModule(target: string) {
 }
 
 const loaders = {
-  workbench: async () => {
-    await Promise.all([
-      import('@codingame/monaco-vscode-theme-seti-default-extension'),
-      import('@codingame/monaco-vscode-media-preview-default-extension'),
-      import('@codingame/monaco-vscode-markdown-language-features-default-extension'),
-      import('@codingame/monaco-vscode-markdown-math-default-extension'),
-      import('@codingame/monaco-vscode-configuration-editing-default-extension'),
-      import('@codingame/monaco-editor-wrapper/features/viewPanels'),
-      import('@codingame/monaco-editor-wrapper/features/search'),
-    ]);
-  },
+  // workbench: async () => {
+  //   await Promise.all([
+  //     import('@codingame/monaco-vscode-theme-seti-default-extension'),
+  //     import('@codingame/monaco-vscode-media-preview-default-extension'),
+  //     import('@codingame/monaco-vscode-markdown-language-features-default-extension'),
+  //     import('@codingame/monaco-vscode-markdown-math-default-extension'),
+  //     import('@codingame/monaco-vscode-configuration-editing-default-extension'),
+  //     import('@codingame/monaco-editor-wrapper/features/viewPanels'),
+  //     import('@codingame/monaco-editor-wrapper/features/search'),
+  //   ]);
+  // },
   markdown: async () => await Promise.all([
     import('./languages/markdown'),
     import('@codingame/monaco-vscode-markdown-basics-default-extension'),
@@ -66,7 +66,7 @@ const loaders = {
   },
 };
 
-let loadPromise = localeLoader['zh-hans']();
+let loadPromise = localeLoader.zh();
 let config = false;
 
 async function initConfigManager(t: typeof import('./monaco.ts')) {

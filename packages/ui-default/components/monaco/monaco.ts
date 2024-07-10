@@ -20,27 +20,27 @@ export {
 
 export const init = async (workbench = false) => {
   if (workbench) {
-    const [
-      { default: getWorkbenchServiceOverride },
-      { default: getMultiDiffEditorServiceOverride },
-      { default: getQuickAccessServiceOverride },
-    ] = await Promise.all([
-      import('@codingame/monaco-vscode-workbench-service-override'),
-      import('@codingame/monaco-vscode-multi-diff-editor-service-override'),
-      import('@codingame/monaco-vscode-quickaccess-service-override'),
-    ]);
-    registerServices({
-      ...getWorkbenchServiceOverride(),
-      ...getMultiDiffEditorServiceOverride(),
-      ...getQuickAccessServiceOverride({
-        shouldUseGlobalPicker() {
-          return true;
-        },
-        isKeybindingConfigurationVisible() {
-          return true;
-        },
-      }),
-    });
+    // const [
+    //   { default: getWorkbenchServiceOverride },
+    //   { default: getMultiDiffEditorServiceOverride },
+    //   { default: getQuickAccessServiceOverride },
+    // ] = await Promise.all([
+    //   import('@codingame/monaco-vscode-workbench-service-override'),
+    //   import('@codingame/monaco-vscode-multi-diff-editor-service-override'),
+    //   import('@codingame/monaco-vscode-quickaccess-service-override'),
+    // ]);
+    // registerServices({
+    //   ...getWorkbenchServiceOverride(),
+    //   ...getMultiDiffEditorServiceOverride(),
+    //   ...getQuickAccessServiceOverride({
+    //     shouldUseGlobalPicker() {
+    //       return true;
+    //     },
+    //     isKeybindingConfigurationVisible() {
+    //       return true;
+    //     },
+    //   }),
+    // });
   }
   return initialize({
     workspaceProvider: {
