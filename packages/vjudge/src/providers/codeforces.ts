@@ -283,7 +283,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
-        const latestSubmission = await this.readLatestSubmission(contestId);
+        const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
         const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
@@ -306,7 +306,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
             return null;
         }
-        const submission = await this.readLatestSubmission(contestId);
+        const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
         if (submission === latestSubmission || redirects.length === 0 || !redirects.toString().includes('my')) {
             // Submit failed so the request is not redirected
             // eslint-disable-next-line max-len
