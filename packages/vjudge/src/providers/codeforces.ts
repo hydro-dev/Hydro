@@ -270,12 +270,20 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
+    async readLatestSubmission(contestId = '') {
+        const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
+        this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
+        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
+        return submission;
+    }
+
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
         const [type, contestId, problemId] = parseProblemId(id);
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
+        const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
         const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
@@ -298,16 +306,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
             return null;
         }
-        if (redirects.length === 0 || !redirects.toString().includes('my')) {
+        const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
+        if (submission === latestSubmission || redirects.length === 0 || !redirects.toString().includes('my')) {
             // Submit failed so the request is not redirected
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit failed' });
+            // eslint-disable-next-line max-len
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit failed. Check service status or use better network to avoid rejection by server protection.' });
             return null;
         }
-        const { document } = await this.html(type !== 'GYM'
-            ? '/problemset/status?my=on'
-            : `/gym/${contestId}/my`);
-        this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
         return type !== 'GYM' ? submission : `${contestId}#${submission}`;
     }
 
