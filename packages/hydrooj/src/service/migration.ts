@@ -14,16 +14,19 @@ declare module '../context' {
 
 export default class MigrationService extends Service {
     private channels: Record<string, MigrationScript[]> = {};
+    private called = false;
 
     constructor(ctx: Context) {
         super(ctx, 'migration', true);
     }
 
     async registerChannel(name: string, s: MigrationScript[]) {
+        if (this.called) logger.warn('MigrationService.registerChannel: called after doUpgrade');
         this.channels[name] = s;
     }
 
     async doUpgrade() {
+        this.called = true;
         for (const channel in this.channels) {
             const name = `db.ver${channel === 'hydrooj' ? '' : `-${channel}`}`;
             let dbVer = system.get(name) ?? 0;

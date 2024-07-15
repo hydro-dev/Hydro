@@ -161,7 +161,7 @@ const page = new NamedPage('problem_files', () => {
 
       const style = { fontFamily: 'var(--code-font-family)' };
 
-      return <div className="typo">
+      return <div className="typo" style={{ maxHeight: '60vh', overflow: 'scroll' }}>
         {!preview ? <>
           <div className="row">
             <div className="medium-6 small-6 columns">
@@ -229,7 +229,7 @@ const page = new NamedPage('problem_files', () => {
                 <th className="col--new">{i18n('New filename(s)')}</th>
               </tr>
             </thead>
-            <tbody style={{ maxHeight: '60vh', overflow: 'scroll' }}>
+            <tbody>
               {selectedFiles.map((file, index) => <tr key={file}>
                 <td className="col--origin">{file}</td>
                 <td className="col--new">{newNames[index]}</td>
