@@ -111,6 +111,17 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.13.2 / UI 4.52.0
+- a11y: 优化网页测性能测试输出顺序
+- ui: 使用新 markdown 编辑器
+- core: 优化计分板逻辑
+- ui: 将缓存移至 IndexedDB
+- core: 转写 migration 为服务
+- ui: 优化 safari 浏览器兼容
+- core: 修复题目 maintainer 字段
+- judge: 支持 pretest 中使用文件 IO
+- vjudge: codeforces: 添加检查是否提交成功
+
 ### Hydro 4.13.0 / UI 4.51.0
 - ui: 添加 sentry
 - core&ui: 支持显示当前编译器版本

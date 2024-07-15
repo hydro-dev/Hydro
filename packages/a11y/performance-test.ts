@@ -195,9 +195,13 @@ export async function startPerformanceTest(args: { enable5: boolean }, report) {
         const timeArr = results[key];
         if (!timeArr) continue;
         const avgTime = Math.sum(...timeArr) / 20;
-        report({ message: `-------Test ${key}-------` });
-        report({ message: ` Avg: ${formatL(avgTime)}  D:  ${formatR(Math.sum(...timeArr.map((i) => (i - avgTime) ** 2)) / 20, 5)} ` });
-        report({ message: ` Max: ${formatL(Math.max(...timeArr))}  Min: ${formatR(Math.min(...timeArr))} ` });
+        await report({
+            message: [
+                `-------Test ${key}-------`,
+                ` Avg: ${formatL(avgTime)}  D:  ${formatR(Math.sum(...timeArr.map((i) => (i - avgTime) ** 2)) / 20, 5)} `,
+                ` Max: ${formatL(Math.max(...timeArr))}  Min: ${formatR(Math.min(...timeArr))} `,
+            ].join('\n'),
+        });
     }
     return true;
 }
