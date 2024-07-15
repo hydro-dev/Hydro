@@ -1,18 +1,18 @@
 {
     "name": "@hydrooj/eslint-config",
-    "version": "1.0.11",
+    "version": "1.0.12",
     "license": "MIT",
     "main": "react.yaml",
     "dependencies": {
         "@stylistic/eslint-plugin": "^2.3.0",
-        "@typescript-eslint/eslint-plugin": "^7.15.0",
-        "@typescript-eslint/parser": "^7.15.0",
+        "@typescript-eslint/eslint-plugin": "^7.16.0",
+        "@typescript-eslint/parser": "^7.16.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-airbnb-typescript": "^18.0.0",
         "eslint-plugin-github": "^5.0.1",
         "eslint-plugin-import": "2.29.1",
         "eslint-plugin-jsx-a11y": "^6.9.0",
-        "eslint-plugin-react": "^7.34.3",
+        "eslint-plugin-react": "^7.34.4",
         "eslint-plugin-react-hooks": "^4.6.2",
         "eslint-plugin-simple-import-sort": "^12.1.1"
     },

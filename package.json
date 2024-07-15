@@ -51,14 +51,14 @@
         "fs-extra": "^11.2.0",
         "globby": "^14.0.2",
         "inspectpack": "^4.7.1",
-        "mongodb-memory-server": "^9.4.0",
+        "mongodb-memory-server": "^9.4.1",
         "nyc": "^17.0.0",
         "ora": "^8.0.1",
-        "package-json": "^10.0.0",
+        "package-json": "^10.0.1",
         "semver": "^7.6.2",
         "simple-git": "^3.25.0",
         "supertest": "^7.0.0",
         "typescript": "5.3.3",
-        "wtfnode": "^0.9.2"
+        "wtfnode": "^0.9.3"
     }
 }

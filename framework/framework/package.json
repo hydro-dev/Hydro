@@ -16,7 +16,7 @@
         "koa-router": "^12.0.1",
         "lodash": "^4.17.21",
         "moment-timezone": "^0.5.45",
-        "path-to-regexp": "^7.0.0",
+        "path-to-regexp": "^7.1.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
         "shorty.js": "^1.0.1",
