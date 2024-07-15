@@ -30,6 +30,7 @@ class CodelensProvider implements vscode.CodeLensProvider {
     const text = document.getText();
     let matches;
     const users = [];
+    // eslint-disable-next-line no-cond-assign
     while ((matches = regex.exec(text)) !== null) {
       const line = document.lineAt(document.positionAt(matches.index).line);
       const indexOf = line.text.indexOf(matches[0]);
@@ -43,6 +44,7 @@ class CodelensProvider implements vscode.CodeLensProvider {
     //       uname
     //     }
     //   `);
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     for (const { matches, range } of users) {
       codeLenses.push(new vscode.CodeLens(range, {
         command: 'hydro.openUserPage',

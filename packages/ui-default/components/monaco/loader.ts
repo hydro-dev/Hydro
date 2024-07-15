@@ -50,7 +50,7 @@ const loaders = {
     import('@codingame/monaco-vscode-markdown-language-features-default-extension'),
     import('@codingame/monaco-vscode-markdown-math-default-extension'),
   ]),
-  typescript: async () => await import('@codingame/monaco-vscode-typescript-language-features-default-extension'),
+  // typescript: async () => await import('@codingame/monaco-vscode-typescript-language-features-default-extension'), // 15.3 MiB Compressed
   cpp: async () => await import('@codingame/monaco-vscode-cpp-default-extension'),
   yaml: async () => await import('@codingame/monaco-vscode-yaml-default-extension'),
   external: async (monaco, feat) => {
