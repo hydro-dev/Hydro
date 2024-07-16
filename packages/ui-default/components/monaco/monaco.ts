@@ -8,10 +8,12 @@ import {
 } from '@codingame/monaco-editor-wrapper';
 import { RegisteredMemoryFile } from '@codingame/monaco-vscode-files-service-override';
 import * as monaco from 'monaco-editor';
-import { Uri } from 'vscode';
+import * as vscode from 'vscode';
 
 export default monaco;
-export { createEditor, registerFile, RegisteredMemoryFile };
+export {
+  createEditor, registerFile, RegisteredMemoryFile, vscode,
+};
 export {
   getUserConfiguration, getConfiguration,
   onUserConfigurationChange, onConfigurationChanged,
@@ -46,7 +48,7 @@ export const init = async (workbench = false) => {
     workspaceProvider: {
       trusted: true,
       workspace: {
-        workspaceUri: Uri.file('/'),
+        workspaceUri: vscode.Uri.file('/'),
       },
       async open() {
         return false;

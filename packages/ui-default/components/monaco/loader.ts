@@ -91,6 +91,7 @@ export async function load(features = ['markdown']) {
     console.log('Loaded monaco editor in', Date.now() - s, 'ms');
     loaded = [];
   }
+  Object.assign((window as any).HydroExports, { vscode: res.vscode, monaco: res.default });
   for (const feat of features) {
     if (loaded.includes(feat)) continue;
     if (!loaders[feat]) {
@@ -104,7 +105,7 @@ export async function load(features = ['markdown']) {
     console.log('Loading monaco feature:', feat);
     try {
       if (loaders[feat]) await loaders[feat]();
-      else await loaders.external(res.default, feat);
+      await loaders.external(res.default, feat);
       console.log('Loaded monaco feature:', feat, 'in', Date.now() - s, 'ms');
       loaded.push(feat);
     } catch (e) {
