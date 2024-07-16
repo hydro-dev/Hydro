@@ -275,7 +275,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
-      setUpdate((v) => v + 1);
+      setUpdate?.((v) => v + 1);
     }
 
     if (cnt) {
