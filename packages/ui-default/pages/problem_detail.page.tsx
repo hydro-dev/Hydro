@@ -262,9 +262,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     }
     async function loadAns() {
       const saved = await db.get('solutions', `${cacheKey}#objective`);
-      if (!saved) return;
+      if (typeof saved?.value !== 'string') return;
       const isValidOption = (v) => v.length === 1 && v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90;
-      Object.assign(ans, JSON.parse(saved));
+      Object.assign(ans, JSON.parse(saved?.value || '{}'));
       for (const [id, val] of Object.entries(ans)) {
         if (Array.isArray(val)) {
           for (const v of val) {
