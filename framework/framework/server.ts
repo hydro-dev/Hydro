@@ -393,19 +393,17 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.router.use((c, next) => executeMiddlewareStack(c, [
             ...this.handlerLayers,
-            {
-                name: '404',
-                func: async (t: any, n) => {
-                    await n();
-                    if (!t.handler) this.handleHttp(t, NotFoundHandler, () => true);
-                },
-            },
             { name: 'logic', func: next },
         ]).catch(console.error));
         this.server.use((c) => executeMiddlewareStack(c, [
             ...this.serverLayers,
             { name: 'routes', func: router.routes() },
             { name: 'methods', func: router.allowedMethods() },
+            ...this.handlerLayers,
+            {
+                name: '404',
+                func: (t) => this.handleHttp(t, NotFoundHandler, () => true),
+            },
         ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
         wsServer.on('connection', async (socket, request) => {
