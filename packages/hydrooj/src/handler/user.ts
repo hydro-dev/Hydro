@@ -1,14 +1,13 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
-import { Time } from '@hydrooj/utils';
 import type { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { Udoc, User } from '../interface';
+import { TokenDoc, Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { verifyTFA } from '../lib/verifyTFA';
@@ -197,65 +196,53 @@ export class UserRegisterHandler extends Handler {
         this.response.template = 'user_register.html';
     }
 
-    @post('mail', Types.Email, true)
-    @post('phone', Types.String, true, (s) => /^\d{11}$/.test(s))
-    async post(domainId: string, mail: string, phoneNumber: string) {
-        if (mail) {
-            if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
-            const mailDomain = mail.split('@')[1];
-            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-            await Promise.all([
-                this.limitRate(`send_mail_${mail}`, 60, 3, false),
-                this.limitRate('send_mail', 3600, 30, false),
-                oplog.log(this, 'user.register', {}),
-            ]);
-            const t = await token.add(
-                token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
-                { mail, redirect: this.domain.registerRedirect },
-            );
-            const prefix = this.domain.host
-                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
-                : system.get('server.url');
-            if (system.get('smtp.verify') && system.get('smtp.user')) {
-                const m = await this.renderHTML('user_register_mail.html', {
-                    path: `/register/${t[0]}`,
-                    url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
-                });
-                await sendMail(mail, 'Sign Up', 'user_register_mail', m);
-                this.response.template = 'user_register_mail_sent.html';
-                this.response.body = { mail };
-            } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
-        } else if (phoneNumber) {
-            if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
-            await Promise.all([
-                this.limitRate(`send_sms_${phoneNumber}`, 60, 1, false),
-                this.limitRate('send_sms', 3600, 15, false),
-                oplog.log(this, 'user.register', {}),
-            ]);
-            const id = String.random(6, '0123456789');
-            await token.add(
-                token.TYPE_REGISTRATION,
-                10 * Time.minute,
-                { phone: phoneNumber },
-                id,
-            );
-            await global.Hydro.lib.sendSms(phoneNumber, 'register', id);
-            this.response.body = { phone: phoneNumber };
-            this.response.template = 'user_register_sms.html';
-        } else throw new ValidationError('mail');
+    @post('mail', Types.Email)
+    async post({ }, mail: string) {
+        if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
+        const mailDomain = mail.split('@')[1];
+        if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
+        await Promise.all([
+            this.limitRate(`send_mail_${mail}`, 60, 3, false),
+            this.limitRate('send_mail', 3600, 30, false),
+            oplog.log(this, 'user.register', {}),
+        ]);
+        const t = await token.add(
+            token.TYPE_REGISTRATION,
+            system.get('session.unsaved_expire_seconds'),
+            { mail, redirect: this.domain.registerRedirect },
+        );
+        const prefix = this.domain.host
+            ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
+            : system.get('server.url');
+        if (system.get('smtp.verify') && system.get('smtp.user')) {
+            const m = await this.renderHTML('user_register_mail.html', {
+                path: `/register/${t[0]}`,
+                url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
+            });
+            await sendMail(mail, 'Sign Up', 'user_register_mail', m);
+            this.response.template = 'user_register_mail_sent.html';
+            this.response.body = { mail };
+        } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
     }
 }
 
 class UserRegisterWithCodeHandler extends Handler {
     noCheckPermView = true;
+    tdoc: TokenDoc;
 
     @param('code', Types.String)
-    async get(domainId: string, code: string) {
+    async prepare({ }, code: string) {
+        this.tdoc = await token.get(code, token.TYPE_REGISTRATION);
+        if (!this.tdoc || (!this.tdoc.mail && !this.tdoc.phone)) {
+            // prevent brute forcing tokens
+            await this.limitRate('user_register_with_code', 60, 5, false);
+            throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
+        }
+    }
+
+    async get() {
         this.response.template = 'user_register_with_code.html';
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
-        this.response.body = tdoc;
+        this.response.body = this.tdoc;
     }
 
     @param('password', Types.Password)
@@ -266,26 +253,24 @@ class UserRegisterWithCodeHandler extends Handler {
         domainId: string, password: string, verify: string,
         uname: string, code: string,
     ) {
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
         if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
-        const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
+        if (this.tdoc.phone) this.tdoc.mail = `${String.random(12)}@hydro.local`;
+        const uid = await user.create(this.tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
-        const [id, mailDomain] = tdoc.mail.split('@');
-        const $set: any = tdoc.set || {};
-        if (tdoc.phone) $set.phone = tdoc.phone;
+        const [id, mailDomain] = this.tdoc.mail.split('@');
+        const $set: any = this.tdoc.set || {};
+        if (this.tdoc.phone) $set.phone = this.tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
-        if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
+        if (this.tdoc.oauth) await oauth.set(this.tdoc.oauth[1], uid);
         this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.recreate = true;
-        this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
+        this.response.redirect = this.tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
 
