@@ -1,37 +1,37 @@
-                    GNU AFFERO GENERAL PUBLIC LICENSE
+                    普通公共许可证
                        Version 3, 19 November 2007
 
- Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
+2007年自由软件基金会&l;https://Fsf.org/&t;
+允许每个人复印和分发逐字副本
+但是不允许修改它。
 
-                            Preamble
+                            序言
 
-  The GNU Affero General Public License is a free, copyleft license for
-software and other kinds of works, specifically designed to ensure
-cooperation with the community in the case of network server software.
+  通用公共许可证是一个免费的,版权保留的许可证
+软件和其他类型的工作,特别设计以确保
+在网络服务器软件方面与社区合作.
 
-  The licenses for most software and other practical works are designed
-to take away your freedom to share and change the works.  By contrast,
-our General Public Licenses are intended to guarantee your freedom to
-share and change all versions of a program--to make sure it remains free
-software for all its users.
+  大多数软件和其他实用工程的许可证都是设计的
+去剥夺你分享和改变作品的自由。相反,
+我们的普通公共许可证旨在保证你的自由
+分享和修改一个程序的所有版本--以确保它保持免费
+所有用户的软件。
 
-  When we speak of free software, we are referring to freedom, not
-price.  Our General Public Licenses are designed to make sure that you
-have the freedom to distribute copies of free software (and charge for
-them if you wish), that you receive source code or can get it if you
-want it, that you can change the software or use pieces of it in new
-free programs, and that you know you can do these things.
+  当我们谈到自由软件时,我们指的是自由,而不是自由。
+价格。我们的普通公共许可证旨在确保
+有自由分发免费软件副本(及收费
+(如果你愿意,你可以收到源代码,如果你愿意,你可以得到它。
+想要它,你可以改变软件或者使用它的一部分在新的
+免费的程序,你知道你可以做这些事情。
 
-  Developers that use our General Public Licenses protect your rights
-with two steps: (1) assert copyright on the software, and (2) offer
-you this License which gives you legal permission to copy, distribute
-and/or modify the software.
+  使用我们普通公共许可证的开发商保护你的权利
+分两个步骤:(1)维护软件的版权,和(2)提供
+你这个许可证允许你复制,分发
+和/或修改软件。
 
-  A secondary benefit of defending all users' freedom is that
-improvements made in alternate versions of the program, if they
-receive widespread use, become available for other developers to
+  维护所有用户自由的第二个好处是
+对方案的不同版本进行改进,如果它们
+可供其他开发商使用
 incorporate.  Many developers of free software are heartened and
 encouraged by the resulting cooperation.  However, in the case of
 software used on network servers, this result may fail to come about.
@@ -69,17 +69,17 @@ works, such as semiconductor masks.
 License.  Each licensee is addressed as "you".  "Licensees" and
 "recipients" may be individuals or organizations.
 
-  To "modify" a work means to copy from or adapt all or part of the work
-in a fashion requiring copyright permission, other than the making of an
-exact copy.  The resulting work is called a "modified version" of the
-earlier work or a work "based on" the earlier work.
+  "修改"作品的意思是从作品中复制或改编全部或部分作品
+以一种需要版权许可的方式,而不是
+准确的副本。所产生的工作被称为
+早期作品或基于早期作品的作品。
 
-  A "covered work" means either the unmodified Program or a work based
-on the Program.
+  "覆盖工作"是指未经修改的程序或基于工作的
+在节目上。
 
-  To "propagate" a work means to do anything with it that, without
-permission, would make you directly or secondarily liable for
-infringement under applicable copyright law, except executing it on a
+  "传播"一个作品意味着用它做任何事情,没有
+会使你直接或间接承担责任
+违反适用版权法的行为,但在
 computer or modifying a private copy.  Propagation includes copying,
 distribution (with or without modification), making available to the
 public, and in some countries other activities as well.
