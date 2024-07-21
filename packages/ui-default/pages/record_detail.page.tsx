@@ -1,7 +1,10 @@
 import $ from 'jquery';
+import React from 'react';
+import { InfoDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
+import { tpl } from 'vj/utils';
 
-const page = new NamedPage('record_detail', async () => {
+export default new NamedPage('record_detail', async () => {
   if (!UiContext.socketUrl) return;
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
     import('../components/socket'),
@@ -20,6 +23,11 @@ const page = new NamedPage('record_detail', async () => {
     dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
     if (typeof msg.status === 'number' && window.parent) window.parent.postMessage({ status: msg.status });
   };
+  $(document).on('click', '.subtask-case', function () {
+    const data = $(this).find('.message').text();
+    if (!data?.trim()) return;
+    new InfoDialog({
+      $body: tpl(<pre>{data}</pre>),
+    }).open();
+  });
 });
-
-export default page;
