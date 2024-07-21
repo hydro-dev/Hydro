@@ -283,14 +283,15 @@ const oi = buildContestRule({
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            if (lockAt && j.rid.getTimestamp() > lockAt) {
+                npending[j.pid]++;
+                display[j.pid] ||= {};
+                display[j.pid].npending = npending[j.pid];
+                continue;
+            }
             if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) {
                 detail[j.pid] = j;
                 display[j.pid] ||= {};
-                if (lockAt && j.rid.getTimestamp() > lockAt) {
-                    npending[j.pid]++;
-                    display[j.pid].npending = npending[j.pid];
-                    continue;
-                }
                 display[j.pid] = j;
             }
         }
