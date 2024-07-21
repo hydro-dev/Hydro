@@ -47,9 +47,11 @@ if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
     ],
     tracesSampleRate: 0.1,
     tracePropagationTargets: ['localhost', /^\//, window.location.host],
-    replaysSessionSampleRate: 0.03,
-    replaysOnErrorSampleRate: 1.0,
+    replaysSessionSampleRate: 0.01,
+    replaysOnErrorSampleRate: 0.2,
   });
+  Sentry.setTag('host', window.location.host);
+  Sentry.setTag('page_name', document.documentElement.getAttribute('data-page'));
 }
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
