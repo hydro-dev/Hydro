@@ -5,14 +5,14 @@
     "main": "react.yaml",
     "dependencies": {
         "@stylistic/eslint-plugin": "^2.3.0",
-        "@typescript-eslint/eslint-plugin": "^7.16.0",
-        "@typescript-eslint/parser": "^7.16.0",
+        "@typescript-eslint/eslint-plugin": "^7.16.1",
+        "@typescript-eslint/parser": "^7.16.1",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-config-airbnb-typescript": "^18.0.0",
         "eslint-plugin-github": "^5.0.1",
         "eslint-plugin-import": "2.29.1",
         "eslint-plugin-jsx-a11y": "^6.9.0",
-        "eslint-plugin-react": "^7.34.4",
+        "eslint-plugin-react": "^7.35.0",
         "eslint-plugin-react-hooks": "^4.6.2",
         "eslint-plugin-simple-import-sort": "^12.1.1"
     },

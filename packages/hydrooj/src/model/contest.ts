@@ -795,11 +795,14 @@ export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>)
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
     RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
-    return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
+    const res = await document.set(domainId, document.TYPE_CONTEST, tid, $set);
+    await bus.parallel('contest/edit', res);
+    return res;
 }
 
 export async function del(domainId: string, tid: ObjectId) {
     await Promise.all([
+        bus.parallel('contest/del', domainId, tid),
         document.deleteOne(domainId, document.TYPE_CONTEST, tid),
         document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
     ]);
