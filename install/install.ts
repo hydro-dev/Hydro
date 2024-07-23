@@ -323,6 +323,7 @@ ${nixConfBase}`);
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
             'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.patch',
+            'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
                 try {
@@ -614,7 +615,9 @@ async function main() {
                     let res = exec(op[0], { stdio: 'inherit' });
                     while (res.code && op[1].ignore !== true) {
                         if (op[1].retry && retry < 30) {
-                            log.warn('Retry... (%s)', op[0]);
+                            log.warn('Retry in 3 secs... (%s)', op[0]);
+                            // eslint-disable-next-line no-await-in-loop
+                            await sleep(3000);
                             res = exec(op[0], { stdio: 'inherit' });
                             retry++;
                         } else log.fatal('Error when running %s', op[0]);
@@ -624,7 +627,9 @@ async function main() {
                     let res = await op[0](op[1]);
                     while (res === 'retry') {
                         if (retry < 30) {
-                            log.warn('Retry...');
+                            log.warn('Retry in 3 secs...');
+                            // eslint-disable-next-line no-await-in-loop
+                            await sleep(3000);
                             // eslint-disable-next-line no-await-in-loop
                             res = await op[0](op[1]);
                             retry++;
