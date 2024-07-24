@@ -1,4 +1,21 @@
 {% import "components/user.html" as user with context %}
+
+{% macro show_priv(upriv) %}
+{%- if upriv == 0 -%}
+  PRIV_NONE
+{%- elif upriv == -1 -%}
+  PRIV_ALL
+{%- else -%}
+  {%- for name, priv in Priv -%}
+    {%- if priv|bitand(upriv) and not priv|bitand(defaultPriv) -%}
+      <p class="priv_plus">+{{ name }}</p>
+    {%- elif priv|bitand(defaultPriv) and not priv|bitand(upriv) -%}
+      <p class="priv_minus">-{{ name }}</p>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{% endmacro %}
+
 <tbody data-fragment-id="user_priv-tbody">
   <tr data-uid="{{ udoc._id }}">
     <td class="col--uid">
@@ -21,35 +38,41 @@
       <a name="set_priv" data-uid="default" data-priv="{{ defaultPriv }}">{{ _('Edit') }}</a>
     </td>
   </tr>
-  {%- for udoc in udocs -%}
-  <tr data-uid="{{ udoc._id }}">
-    <td class="col--uid">
-      {{ udoc._id }}
-    </td>
-    <td class="col--user">
-      {{ user.render_inline(udoc, badge=false) }}
-    </td>
-    <td class="col--priv_info">
-      {%- if udoc.priv == 0 -%}
-        PRIV_NONE
-      {%- elif udoc.priv == -1 -%}
-        PRIV_ALL
-      {%- else -%}
-        {%- for name, priv in Priv -%}
-          {%- if priv|bitand(udoc.priv) and not priv|bitand(defaultPriv) -%}
-            <p class="priv_plus">+{{ name }}</p>
-          {%- elif priv|bitand(defaultPriv) and not priv|bitand(udoc.priv) -%}
-            <p class="priv_minus">-{{ name }}</p>
-          {%- endif -%}
-        {%- endfor -%}
-      {%- endif -%}
-    </td>
-    <td class="col--priv" title="{{ udoc.priv }}">
-      {{ udoc.priv }}
-    </td>
-    <td class="col--actions">
-      <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>
-    </td>
-  </tr>
+  {%- for priv, gudocs in udocs|groupby('priv') -%}
+    {%- if gudocs|length > 50 -%}
+      <tr>
+        <td colspan="3" style="text-wrap: wrap;">
+          <div style="max-height: 300px; overflow-y: auto">
+            {%- for udoc in gudocs -%}
+              [{{udoc._id}}]{{ user.render_inline(udoc, avatar=false, badge=false) }}
+              <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>&nbsp;&nbsp;&nbsp;
+            {%- endfor -%}
+        </td>
+        <td colspan="2">
+          {{ priv }}<br/>
+          {{ show_priv(priv) }}
+        </td>
+      </tr>
+    {%- else -%}
+      {%- for udoc in gudocs -%}
+      <tr data-uid="{{ udoc._id }}">
+        <td class="col--uid">
+          {{ udoc._id }}
+        </td>
+        <td class="col--user">
+          {{ user.render_inline(udoc, badge=false) }}
+        </td>
+        <td class="col--priv_info">
+          {{ show_priv(udoc.priv) }}
+        </td>
+        <td class="col--priv" title="{{ udoc.priv }}">
+          {{ udoc.priv }}
+        </td>
+        <td class="col--actions">
+          <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>
+        </td>
+      </tr>
+      {%- endfor -%}
+    {%- endif -%}
   {%- endfor -%}
 </tbody>
