@@ -92,7 +92,6 @@
     "plugin-error": "^2.0.1",
     "postcss-loader": "7.3.4",
     "prism-themes": "^1.9.0",
-    "prismjs": "^1.29.0",
     "prop-types": "^15.8.1",
     "qface": "^1.4.1",
     "qrcode": "^1.5.3",
@@ -131,6 +130,7 @@
     "webpackbar": "^6.0.1"
   },
   "dependencies": {
+    "@shikijs/transformers": "^1.11.1",
     "ansi_up": "^6.0.2",
     "cssfilter": "^0.0.10",
     "esbuild": "0.23.0",
@@ -149,6 +149,7 @@
     "markdown-it-table-of-contents": "^0.6.0",
     "nunjucks": "^3.2.4",
     "schemastery-jsonschema": "^1.1.0",
+    "shiki": "^1.11.1",
     "streamsaver": "^2.0.6",
     "uuid": "^10.0.0",
     "xss": "^1.0.15"

@@ -2,18 +2,10 @@ import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
 
-const highlighterPage = new AutoloadPage('highlighterPage', () => {
-  import('./prismjs').then(({ default: prismjs }) => {
+export default new AutoloadPage('highlighterPage', () => {
+  import('./shiki').then(({ highlightBlocks }) => {
     function runHighlight($container) {
-      $container.find('pre code').get().forEach((code) => {
-        const language = ($(code).attr('class') || '').trim();
-        const m = language.match(/language-([a-z0-9]+)(\|[\d,-]+)/);
-        if (m?.[2]) {
-          $(code).parent().attr('data-line', m[2].substring(1));
-          $(code).attr('class', `language-${m[1]}`);
-        }
-      });
-      prismjs.highlightBlocks($container);
+      highlightBlocks($container);
       $container.find('pre code').get().forEach((code) => {
         const $code = $(code);
         const $root = $code.parent().parent();
@@ -41,5 +33,3 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
     $(document).on('vjContentNew', (e) => runHighlight($(e.target)));
   });
 });
-
-export default highlighterPage;

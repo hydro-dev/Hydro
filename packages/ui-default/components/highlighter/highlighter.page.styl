@@ -1,11 +1,9 @@
-@import 'prism-themes/themes/prism-vs.css'
-
 pre, code
   background: $syntax-hl-bg-color
 
 pre > code
   background: none
-  line-height: 1.5
+  line-height: 1.2
   color: black
   text-align: left
   white-space: pre-wrap
@@ -19,11 +17,16 @@ pre
   padding: rem(5px)
   margin-bottom: rem(20px)
 
+pre.shiki
+  padding: 1em
+  margin: .5em 0
+  border: 1px solid #dddddd
+
 code
   color: $code-color
   font-size: rem($font-size-secondary)
 
-.line-highlight 
+.shiki .line.highlighted 
   position: absolute
   left: 0
   right: 0
@@ -34,6 +37,33 @@ code
   pointer-events: none
   line-height: inherit
   white-space: pre
+
+.line-numbers code
+  counter-reset: step;
+  counter-increment: step 0;
+
+  .line::before
+    content: counter(step);
+    counter-increment: step;
+    width: 1rem;
+    margin-right: 1.5rem;
+    display: inline-block;
+    text-align: right;
+    color: rgba(115,138,148,.6)
+
+.shiki
+  .tab, .space
+    position: relative
+  
+  .tab::before
+    content: '⇥';
+    position: absolute;
+    opacity: 0.3;
+
+  .space::before
+    content: '·';
+    position: absolute;
+    opacity: 0.3;
 
 .sample > .toolbar
   right: 0.9375em !important
@@ -50,12 +80,17 @@ code
   font-family: $primary-font-family
   pointer-events: all
   user-select: none
+  transition: opacity .3s ease-in-out
+  z-index: 10
 
 .toolbar-item
   a
     font-size: large !important
     border-radius: 0px !important
     background: none !important
+    box-shadow: 0 2px #0003
+    padding: 0 .5em
+    color: #bbb
 
 .token.tab:not(:empty),
 .token.cr,
@@ -87,7 +122,7 @@ code
 	content: '\00B7'
 
 @media print {
-  .code-toolbar>.toolbar {
+  pre .toolbar {
     display: none !important;
   }
 }

@@ -76,13 +76,16 @@ const page = new NamedPage('problem_files', () => {
     }
   }
 
-  let prism = null;
-  const load = import('../components/highlighter/prismjs');
-  load.then(({ default: p }) => {
-    prism = p.Prism;
-  }).catch(() => { });
-
+  let shiki = null;
+  let shikiPromise = null;
   async function handleClickRenameSelected(type) {
+    shikiPromise ||= import('../components/highlighter/shiki')
+      .then(({ createHighlighter }) => createHighlighter({ langs: ['regexp'], themes: ['light-plus'] }))
+      .then((s) => {
+        shiki = s;
+        console.log('shiki loaded');
+      }).catch(console.error);
+
     const selectedFiles = ensureAndGetSelectedFiles(type);
     if (!selectedFiles?.length) return;
     let onActionButton = (_: string) => false;
@@ -113,7 +116,13 @@ const page = new NamedPage('problem_files', () => {
           if (copy.endsWith('/')) {
             copy = copy.substring(0, copy.length - 1);
             flags.reverse();
-            if (prism) setHighlight(`/${prism.highlight(copy, prism.languages.regex, 'RegExp')}/${flags.join('')}`);
+            if (shiki) {
+              const html = shiki.codeToHtml(copy, {
+                lang: 'regex',
+                theme: 'light-plus',
+              });
+              setHighlight(`/${$(html).html()}/${flags.join('')}`);
+            }
             try {
               s = new RegExp(copy, flags.join(''));
               setRegexValid(true);
@@ -161,7 +170,7 @@ const page = new NamedPage('problem_files', () => {
 
       const style = { fontFamily: 'var(--code-font-family)' };
 
-      return <div className="typo" style={{ maxHeight: '60vh', overflow: 'scroll' }}>
+      return <div className="typo" style={{ maxHeight: '60vh', overflow: 'auto' }}>
         {!preview ? <>
           <div className="row">
             <div className="medium-6 small-6 columns">
