@@ -3,13 +3,10 @@ import {
   transformerNotationWordHighlight, transformerRenderWhitespace,
 } from '@shikijs/transformers';
 import $ from 'jquery';
-import {
-  bundledLanguages,
-  bundledLanguagesAlias,
-  createHighlighter,
-} from 'shiki/bundle/web';
 import Notification from 'vj/components/notification/index';
+import { getFeatures, load as loadModule } from 'vj/lazyload';
 import { i18n } from 'vj/utils';
+import { addLanguage, bundledLanguages, createHighlighter } from './bundle';
 
 $(document).on('click', '[data-clipboard-text]', function (ev) {
   const content = $(this).attr('data-clipboard-text');
@@ -34,24 +31,33 @@ if (UserContext.showInvisibleChar) {
 }
 
 async function highlightBlocks($dom) {
-  const eles = $dom.find('pre code').get();
-  const langs = Array.from(new Set(eles.map((code) => {
-    const language = ($(code).attr('class') || '').trim();
-    const m = language.match(/language-([a-z0-9]+)/);
-    return m ? m[1] : null;
-  }))).filter((i: string) => i && (bundledLanguages[i] || bundledLanguagesAlias[i])) as string[];
-  const shiki = await createHighlighter({ langs, themes: ['github-dark', 'light-plus'] });
-  for (const code of eles) {
+  for (const code of $dom.find('pre code').get()) {
     const $code = $(code);
     const $pre = $code.parent();
     if ($pre.hasClass('syntax-hl')) continue;
     const language = ($(code).attr('class') || '').trim();
-    console.log(language);
     // try to map the language name
     const m = language.match(/language-([a-z0-9]+)(?=\.line-numbers)?(?=\|([\d,-]+))?/);
     if (!m) continue;
+    if (!bundledLanguages[m[1]]) {
+      const features = await getFeatures(`shiki-${m[1]}`);
+      for (const item of features) {
+        let apply = typeof item === 'function'
+          ? item
+          : (item.startsWith('http') || item.startsWith('/'))
+            ? await loadModule(item)
+            : (await loadModule(item)).apply;
+        if (typeof apply !== 'function') apply = apply.default || apply.apply;
+        if (typeof apply === 'function') await apply(addLanguage);
+      }
+    }
+    const highlightLang = bundledLanguages[m[1]] ? m[1] : 'none';
+    const shiki = await createHighlighter({
+      langs: [highlightLang],
+      themes: ['github-dark', 'light-plus'],
+    });
     $pre.replaceWith($(shiki.codeToHtml($code.text(), {
-      lang: m[1],
+      lang: highlightLang,
       theme: 'light-plus',
       meta: {
         __raw: m[2] ? `{${m[2]}}` : null,
