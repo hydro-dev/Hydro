@@ -123,5 +123,6 @@ export async function load(ctx: Context) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
+    await ctx.lifecycle.flush();
     await cli();
 }
