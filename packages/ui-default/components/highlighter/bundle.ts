@@ -7,37 +7,38 @@ export { createCssVariablesTheme } from 'shiki/theme-css-variables';
 
 const bundledLanguagesInfo = [
   {
-    'id': 'c',
-    'name': 'C',
-    'import': () => import('shiki/langs/c.mjs'),
+    id: 'c',
+    name: 'C',
+    import: () => import('shiki/langs/c.mjs'),
   },
   {
-    'id': 'cpp',
-    'name': 'C++',
-    'aliases': [
+    id: 'cpp',
+    name: 'C++',
+    aliases: [
       'c++',
+      'cc',
     ],
-    'import': () => import('shiki/langs/cpp.mjs'),
+    import: () => import('shiki/langs/cpp.mjs'),
   },
   {
-    'id': 'css',
-    'name': 'CSS',
-    'import': () => import('shiki/langs/css.mjs'),
+    id: 'css',
+    name: 'CSS',
+    import: () => import('shiki/langs/css.mjs'),
   },
   {
-    'id': 'html',
-    'name': 'HTML',
-    'import': () => import('shiki/langs/html.mjs'),
+    id: 'html',
+    name: 'HTML',
+    import: () => import('shiki/langs/html.mjs'),
   },
   {
-    'id': 'html-derivative',
-    'name': 'HTML (Derivative)',
-    'import': () => import('shiki/langs/html-derivative.mjs'),
+    id: 'html-derivative',
+    name: 'HTML (Derivative)',
+    import: () => import('shiki/langs/html-derivative.mjs'),
   },
   {
-    'id': 'java',
-    'name': 'Java',
-    'import': () => import('shiki/langs/java.mjs'),
+    id: 'java',
+    name: 'Java',
+    import: () => import('shiki/langs/java.mjs'),
   },
   {
     id: 'kotlin',
@@ -46,99 +47,81 @@ const bundledLanguagesInfo = [
     aliases: ['kt'],
   },
   {
-    'id': 'javascript',
-    'name': 'JavaScript',
-    'aliases': [
+    id: 'javascript',
+    name: 'JavaScript',
+    aliases: [
       'js',
     ],
-    'import': () => import('shiki/langs/javascript.mjs'),
+    import: () => import('shiki/langs/javascript.mjs'),
   },
   {
-    'id': 'jinja',
-    'name': 'Jinja',
-    'aliases': [
+    id: 'jinja',
+    name: 'Jinja',
+    aliases: [
       'nunjucks',
       'njk',
     ],
-    'import': () => import('shiki/langs/jinja.mjs'),
+    import: () => import('shiki/langs/jinja.mjs'),
   },
   {
-    'id': 'json',
-    'name': 'JSON',
-    'import': () => import('shiki/langs/json.mjs'),
+    id: 'json',
+    name: 'JSON',
+    import: () => import('shiki/langs/json.mjs'),
   },
   {
-    'id': 'json5',
-    'name': 'JSON5',
-    'import': () => import('shiki/langs/json5.mjs'),
+    id: 'json5',
+    name: 'JSON5',
+    import: () => import('shiki/langs/json5.mjs'),
   },
   {
-    'id': 'jsonc',
-    'name': 'JSON with Comments',
-    'import': () => import('shiki/langs/jsonc.mjs'),
+    id: 'jsonc',
+    name: 'JSON with Comments',
+    import: () => import('shiki/langs/jsonc.mjs'),
   },
   {
-    'id': 'jsonl',
-    'name': 'JSON Lines',
-    'import': () => import('shiki/langs/jsonl.mjs'),
+    id: 'jsonl',
+    name: 'JSON Lines',
+    import: () => import('shiki/langs/jsonl.mjs'),
   },
   {
-    'id': 'jsx',
-    'name': 'JSX',
-    'import': () => import('shiki/langs/jsx.mjs'),
+    id: 'jsx',
+    name: 'JSX',
+    import: () => import('shiki/langs/jsx.mjs'),
   },
   {
-    'id': 'julia',
-    'name': 'Julia',
-    'aliases': [
-      'jl',
-    ],
-    'import': () => import('shiki/langs/julia.mjs'),
+    id: 'lua',
+    name: 'Lua',
+    import: () => import('shiki/langs/lua.mjs'),
   },
   {
-    'id': 'lua',
-    'name': 'Lua',
-    'import': () => import('shiki/langs/lua.mjs'),
-  },
-  {
-    'id': 'markdown',
-    'name': 'Markdown',
-    'aliases': [
+    id: 'markdown',
+    name: 'Markdown',
+    aliases: [
       'md',
     ],
-    'import': () => import('shiki/langs/markdown.mjs'),
+    import: () => import('shiki/langs/markdown.mjs'),
   },
   {
-    'id': 'mdc',
-    'name': 'MDC',
-    'import': () => import('shiki/langs/mdc.mjs'),
+    id: 'php',
+    name: 'PHP',
+    import: () => import('shiki/langs/php.mjs'),
   },
   {
-    'id': 'mdx',
-    'name': 'MDX',
-    'import': () => import('shiki/langs/mdx.mjs'),
-  },
-  {
-    'id': 'php',
-    'name': 'PHP',
-    'import': () => import('shiki/langs/php.mjs'),
-  },
-  {
-    'id': 'python',
-    'name': 'Python',
-    'aliases': [
+    id: 'python',
+    name: 'Python',
+    aliases: [
       'py',
     ],
-    'import': () => import('shiki/langs/python.mjs'),
+    import: () => import('shiki/langs/python.mjs'),
   },
   {
-    'id': 'r',
-    'name': 'R',
-    'import': () => import('shiki/langs/r.mjs'),
+    id: 'r',
+    name: 'R',
+    import: () => import('shiki/langs/r.mjs'),
   },
   {
-    'id': 'go',
-    'name': 'Go',
+    id: 'go',
+    name: 'Go',
     import: () => import('shiki/langs/go.mjs'),
   },
   {
@@ -154,20 +137,20 @@ const bundledLanguagesInfo = [
     aliases: ['pas'],
   },
   {
-    'id': 'regexp',
-    'name': 'RegExp',
-    'aliases': [
+    id: 'regexp',
+    name: 'RegExp',
+    aliases: [
       'regex',
     ],
-    'import': () => import('shiki/langs/regexp.mjs'),
+    import: () => import('shiki/langs/regexp.mjs'),
   },
   {
-    'id': 'ruby',
-    'name': 'Ruby',
-    'aliases': [
+    id: 'ruby',
+    name: 'Ruby',
+    aliases: [
       'rb',
     ],
-    'import': () => import('shiki/langs/ruby.mjs'),
+    import: () => import('shiki/langs/ruby.mjs'),
   },
   {
     id: 'csharp',
@@ -176,25 +159,25 @@ const bundledLanguagesInfo = [
     aliases: ['cs'],
   },
   {
-    'id': 'shellscript',
-    'name': 'Shell',
-    'aliases': [
+    id: 'shellscript',
+    name: 'Shell',
+    aliases: [
       'bash',
       'sh',
       'shell',
       'zsh',
     ],
-    'import': () => import('shiki/langs/shellscript.mjs'),
+    import: () => import('shiki/langs/shellscript.mjs'),
   },
   {
-    'id': 'sql',
-    'name': 'SQL',
-    'import': () => import('shiki/langs/sql.mjs'),
+    id: 'sql',
+    name: 'SQL',
+    import: () => import('shiki/langs/sql.mjs'),
   },
   {
-    'id': 'toml',
-    'name': 'TOML',
-    'import': () => import('shiki/langs/toml.mjs'),
+    id: 'toml',
+    name: 'TOML',
+    import: () => import('shiki/langs/toml.mjs'),
   },
   {
     id: 'haskell',
@@ -203,35 +186,35 @@ const bundledLanguagesInfo = [
     aliases: ['hs'],
   },
   {
-    'id': 'tsx',
-    'name': 'TSX',
-    'import': () => import('shiki/langs/tsx.mjs'),
+    id: 'tsx',
+    name: 'TSX',
+    import: () => import('shiki/langs/tsx.mjs'),
   },
   {
-    'id': 'typescript',
-    'name': 'TypeScript',
-    'aliases': [
+    id: 'typescript',
+    name: 'TypeScript',
+    aliases: [
       'ts',
     ],
-    'import': () => import('shiki/langs/typescript.mjs'),
+    import: () => import('shiki/langs/typescript.mjs'),
   },
   {
-    'id': 'wasm',
-    'name': 'WebAssembly',
-    'import': () => import('shiki/langs/wasm.mjs'),
+    id: 'wasm',
+    name: 'WebAssembly',
+    import: () => import('shiki/langs/wasm.mjs'),
   },
   {
-    'id': 'xml',
-    'name': 'XML',
-    'import': () => import('shiki/langs/xml.mjs'),
+    id: 'xml',
+    name: 'XML',
+    import: () => import('shiki/langs/xml.mjs'),
   },
   {
-    'id': 'yaml',
-    'name': 'YAML',
-    'aliases': [
+    id: 'yaml',
+    name: 'YAML',
+    aliases: [
       'yml',
     ],
-    'import': () => import('shiki/langs/yaml.mjs'),
+    import: () => import('shiki/langs/yaml.mjs'),
   },
 ];
 const bundledLanguagesBase = Object.fromEntries(bundledLanguagesInfo.map((i) => [i.id, i.import]));
