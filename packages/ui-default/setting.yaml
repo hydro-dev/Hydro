@@ -67,6 +67,16 @@ showInvisibleChar:
   family: highlight
   desc: show invisible characters when formatting code
   category: preference
+codeFontLigatures:
+  type: boolean
+  family: highlight
+  desc: fontLigatures
+  category: preference
+highlightTheme:
+  type: text
+  family: highlight
+  desc: Highlight Theme
+  category: preference
 formatCode:
   type: boolean
   family: highlight

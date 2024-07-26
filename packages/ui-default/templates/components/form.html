@@ -209,5 +209,8 @@
 {% macro form_checkbox(args) %}
 {{ form_begin({columns:5}|assign(args)) }}
 {{ checkbox(args) }}
+{% if args.boolean_placeholder %}
+<input type="checkbox" name="booleanKeys.{{ setting.key }}" checked style="display: none" />
+{% endif %}
 {{ form_end(args) }}
 {% endmacro %}

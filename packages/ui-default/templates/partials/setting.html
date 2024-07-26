@@ -72,14 +72,8 @@
           placeholder:setting.desc,
           name:setting.key,
           value:setting.value if (_val === undefined or _val === null) else _val,
-          disabled:setting.flag|bitand(2)
-    })}}
-    {{ form.form_checkbox({
-          label:setting.name,
-          name:'booleanKeys.' + setting.key,
-          value:true,
-          extra_class:'display-hidden',
-          no_label:true
+          disabled:setting.flag|bitand(2),
+          boolean_placeholder: true
     })}}
   {% endif %}
   {% endif %}

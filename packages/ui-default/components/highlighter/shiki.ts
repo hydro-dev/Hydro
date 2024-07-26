@@ -8,7 +8,7 @@ import Notification from 'vj/components/notification/index';
 import { getFeatures, load as loadModule } from 'vj/lazyload';
 import { i18n } from 'vj/utils';
 import {
-  addLanguage, bundledLanguages, bundledLanguagesInfo, createHighlighter,
+  addLanguage, bundledLanguages, bundledLanguagesInfo, bundledThemes, createHighlighter,
 } from './bundle';
 
 $(document).on('click', '[data-clipboard-text]', function (ev) {
@@ -22,21 +22,26 @@ $(document).on('click', '[data-clipboard-text]', function (ev) {
   ev.preventDefault();
 });
 
-const baseTransformers = [
-  transformerNotationDiff(),
-  transformerNotationHighlight(),
-  transformerNotationWordHighlight(),
-  transformerMetaHighlight(),
-];
+function getTransformers() {
+  const baseTransformers = [
+    transformerNotationDiff(),
+    transformerNotationHighlight(),
+    transformerNotationWordHighlight(),
+    transformerMetaHighlight(),
+  ];
 
-if (UserContext.showInvisibleChar) {
-  baseTransformers.push(transformerRenderWhitespace());
+  if (UserContext.showInvisibleChar) {
+    baseTransformers.push(transformerRenderWhitespace());
+  }
+  return baseTransformers;
 }
 
+let theme = UiContext.highlightTheme;
+if (!bundledThemes[theme]) theme = 'vitesse-light';
 async function highlightBlocks($dom) {
   const nodes = $dom.find('pre code').get();
   if (!nodes.length) return;
-  const shikiPlain = await createHighlighter({ langs: ['text'], themes: ['github-dark', 'light-plus'] });
+  const shikiPlain = await createHighlighter({ langs: ['text'], themes: [theme] });
   const requestedLanguages = new Set<string>([]);
   const tasks = [];
   for (const code of nodes) {
@@ -91,7 +96,7 @@ async function highlightBlocks($dom) {
         },
       ],
     };
-    const transformers = baseTransformers.concat({
+    const transformers = getTransformers().concat({
       pre(node) {
         this.addClassToHast(node, 'syntax-hl');
         if (language.includes('line-numbers')) {
@@ -102,7 +107,7 @@ async function highlightBlocks($dom) {
     });
     const $plain = $(shikiPlain.codeToHtml($code.text(), {
       lang: 'text',
-      theme: 'light-plus',
+      theme,
       meta: {
         __raw: m[2] ? `{${m[2]}}` : null,
       },
@@ -114,7 +119,7 @@ async function highlightBlocks($dom) {
       if (!bundledLanguages[name]) return;
       $plain.replaceWith($(shiki.codeToHtml($code.text(), {
         lang: name,
-        theme: 'light-plus',
+        theme,
         meta: {
           __raw: m[2] ? `{${m[2]}}` : null,
         },
@@ -137,17 +142,19 @@ async function highlightBlocks($dom) {
     }
     if (!bundledLanguages[name]) requestedLanguages.delete(name);
   }
-  const shiki = await createHighlighter({ langs: Array.from(requestedLanguages), themes: ['github-dark', 'light-plus'] });
+  const shiki = await createHighlighter({ langs: Array.from(requestedLanguages), themes: [theme] });
   for (const task of tasks) task(shiki);
 }
 
 async function highlight(text: string, grammar, language) {
-  const shiki = await createHighlighter({ langs: [language], themes: ['github-dark', 'light-plus'] });
-  return shiki.codeToHtml(text, { lang: language, theme: 'light-plus' });
+  const shiki = await createHighlighter({ langs: [language], themes: [theme] });
+  return shiki.codeToHtml(text, { lang: language, theme, transformers: getTransformers() });
 }
 
 export {
+  bundledThemes,
   highlightBlocks,
   highlight,
   createHighlighter,
+  getTransformers,
 };
