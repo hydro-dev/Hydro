@@ -83,8 +83,9 @@ class AccountService {
                     continue;
                 }
                 if (id.search('\\\\#') !== -1) continue;
-                const [pid, metastr = '{}'] = id.split('#');
+                const [original_pid, metastr = '{}'] = id.split('#');
                 const meta = JSON.parse(metastr);
+                const pid = original_pid.replace(/_/g, ''); // remove underlines
                 if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
