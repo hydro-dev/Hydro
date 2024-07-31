@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, RecordModel, Service, SettingModel, sleep, STATUS, TaskModel, Time,
+    Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
+    sleep, STATUS, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
@@ -171,9 +171,23 @@ class VJudgeService extends Service {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
             this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
         }
+        // FIXME: potential race condition
+        if (provider.Langs) this.updateLangs(type, provider.Langs);
         this[Context.current]?.on('dispose', () => {
             // TODO dispose session
         });
+    }
+
+    async updateLangs(provider: string, mapping: Record<string, string>) {
+        const config = yaml.load(SystemModel.get('hydrooj.langs'));
+        const old = yaml.dump(config);
+        for (const key in mapping) {
+            if (!config[key]) continue;
+            config[key].validAs ||= {};
+            config[key].validAs[provider] = mapping[key];
+        }
+        const newConfig = yaml.dump(config);
+        if (old !== newConfig) await SystemModel.set('hydrooj.langs', newConfig);
     }
 
     async checkStatus(onCheckFunc = false) {
@@ -198,6 +212,11 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (process.env.HYDRO_CLI) return;
     ctx.plugin(VJudgeService);
+    ctx.inject(['migration'], async (c) => {
+        c.migration.registerChannel('vjudge', [
+            async function init() { }, // eslint-disable-line
+        ]);
+    });
     ctx.inject(['vjudge'], async (c) => {
         await c.vjudge.start();
         for (const [k, v] of Object.entries(providers)) {

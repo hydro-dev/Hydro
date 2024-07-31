@@ -42,5 +42,6 @@ export interface IBasicProvider {
 }
 
 export interface BasicProvider {
-    new(account: RemoteAccount, save: (data: any) => Promise<void>): IBasicProvider
+    new(account: RemoteAccount, save: (data: any) => Promise<void>): IBasicProvider;
+    Langs?: Record<string, string>;
 }

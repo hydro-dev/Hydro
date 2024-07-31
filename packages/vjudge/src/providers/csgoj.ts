@@ -21,40 +21,18 @@ const statusDict = {
     11: STATUS.STATUS_COMPILE_ERROR,
 };
 
-/* langs
-csgoj:
-  display: CsgOJ
-  execute: /bin/echo Invalid
-  hidden: true
-  remote: csgoj
-csgoj.0:
-  display: C
-  monaco: c
-  highlight: c astyle-c
-  comment: //
-csgoj.1:
-  display: C++
-  monaco: cpp
-  highlight: cpp astyle-c
-  comment: //
-csgoj.3:
-  display: Java
-  monaco: java
-  highlight: java astyle-java
-  comment: //
-csgoj.6:
-  display: Python3
-  highlight: python
-  comment: '#'
-csgoj.17:
-  display: Go
-  highlight: go
-  comment: //
-*/
-
 const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0';
 
 export default class CSGOJProvider extends BasicFetcher implements IBasicProvider {
+    // TODO: rewrite old ones in record collection
+    static Langs = {
+        c: 'csgoj.0',
+        cpp: 'csgoj.1',
+        java: 'csgoj.3',
+        'py.py3': 'csgoj.6',
+        go: 'csgoj.17',
+    };
+
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
         super(account, 'https://cpc.csgrandeur.cn', 'form', logger, {
             headers: { 'User-Agent': userAgent },
@@ -141,7 +119,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
 
     async submitProblem(id: string, lang: string, source: string, info, next, end) {
         await this.ensureLogin();
-        if (!lang.includes('csgoj')) {
+        if (!Object.values(CSGOJProvider.Langs).includes(lang)) {
             end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
             return null;
         }
@@ -149,7 +127,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
             .set('referer', `https://cpc.csgrandeur.cn/csgoj/problemset/submit?pid=${id.split('P')[1]}`)
             .send({
                 pid: id.split('P')[1],
-                language: lang.split('csgoj.')[1],
+                language: lang,
                 source,
             });
         return result.body.data.solution_id;
