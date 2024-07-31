@@ -360,7 +360,7 @@ export default class AtCoderProvider extends BasicFetcher implements IBasicProvi
                 'config.yaml': Buffer.from(`time: ${time}\nmemory: ${memory}\ntype: remote_judge\nsubType: atcoder\ntarget: ${id}`),
             },
             tag: [],
-            content: result,
+            content: result.replace(/CDN_BASE_URL/g, '//vj.csgrandeur.cn'),
         };
     }
 
