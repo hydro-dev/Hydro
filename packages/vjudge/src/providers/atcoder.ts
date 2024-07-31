@@ -1,8 +1,7 @@
 /* eslint-disable no-await-in-loop */
-import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-	Logger, parseMemoryMB, sleep, STATUS,
+	Logger, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -307,11 +306,7 @@ export default class AtCoderProvider extends BasicFetcher implements IBasicProvi
 	}
 
 	get loggedIn() {
-		return this.get('/').then(({ text: html }) => {
-			const $dom = new JSDOM(html);
-//			if ($dom.window.document.querySelectorAll('a.nav-link.logout')) return true;
-			return false;
-		});
+		return false;
 	}
 
 	async ensureLogin() {
@@ -325,7 +320,6 @@ export default class AtCoderProvider extends BasicFetcher implements IBasicProvi
 			captcha: '',
 		});
 		if (res.header['set-cookie']) await this.setCookie(res.header['set-cookie'], true);
-		if (await this.loggedIn) return true;
 		return true;
 	}
 
