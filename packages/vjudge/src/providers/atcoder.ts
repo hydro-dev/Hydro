@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-import { JSDOM } from 'jsdom';
 import {
     Logger, sleep, STATUS,
 } from 'hydrooj';
