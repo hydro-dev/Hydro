@@ -12,6 +12,7 @@ import poj from './poj';
 import spoj from './spoj';
 import uoj from './uoj';
 import yacs from './yacs';
+import atcoder from './atcoder';
 
 const vjudge: Record<string, any> = {
     codeforces,
@@ -26,5 +27,6 @@ const vjudge: Record<string, any> = {
     ybtbas,
     hduoj,
     yacs,
+    atcoder,
 };
 export default vjudge;
