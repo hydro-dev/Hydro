@@ -89,7 +89,7 @@ class AccountService {
                 if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
-                    const res = await this.api.getProblem(pid, meta);
+                    const res = await this.api.getProblem(original_pid, meta);
                     if (!res) continue;
                     const docId = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag);
                     if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
