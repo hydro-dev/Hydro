@@ -325,15 +325,15 @@ export default class AtCoderProvider extends BasicFetcher implements IBasicProvi
     async getProblem(id: string) {
         const { document } = await this.html(`https://vjudge.d0j1a1701.cc/problem/AtCoder-${id}`);
         logger.info(id);
-        let time = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('ms')).content.replace(/\s+/g, '');
-        let memory = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('kB')).content.replace(/\s+/g, '').toLowerCase();
+        const time = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('ms')).content.replace(/\s+/g, '');
+        const memory = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('kB')).content.replace(/\s+/g, '').toLowerCase();
 
         const iframe = document.querySelector('iframe#frame-description');
         const iframeSrc = iframe?.getAttribute('src');
         if (!iframeSrc) {
             throw new Error('Iframe not found');
         }
-        const iframeWindow = await this.html("https://vjudge.d0j1a1701.cc" + iframeSrc);
+        const iframeWindow = await this.html('https://vjudge.d0j1a1701.cc' + iframeSrc);
         const idocument = iframeWindow.document;
         const textarea = idocument.querySelector('textarea.data-json-container');
         const data = JSON.parse(textarea.textContent);
