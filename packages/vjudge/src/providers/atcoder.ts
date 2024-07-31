@@ -1,7 +1,7 @@
 /* eslint-disable no-await-in-loop */
 import { JSDOM } from 'jsdom';
 import {
-	Logger, sleep, STATUS,
+    Logger, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -9,106 +9,106 @@ import { IBasicProvider, RemoteAccount } from '../interface';
 const logger = new Logger('atcoder');
 
 const VERDICT = {
-	'C': STATUS.STATUS_COMPILE_ERROR,
-	'R': STATUS.STATUS_RUNTIME_ERROR,
-	'T': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-	'M': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-	'O': STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
-	'W': STATUS.STATUS_WRONG_ANSWER,
-	'A': STATUS.STATUS_ACCEPTED,
+    'C': STATUS.STATUS_COMPILE_ERROR,
+    'R': STATUS.STATUS_RUNTIME_ERROR,
+    'T': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+    'M': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    'O': STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
+    'W': STATUS.STATUS_WRONG_ANSWER,
+    'A': STATUS.STATUS_ACCEPTED,
 };
 
 const langId = {
-	'atcoder.fishr': '5080',
-	'atcoder.ada': '5068',
-	'atcoder.asm64': '5040',
-	'atcoder.awk': '5038',
-	'atcoder.bash': '5023',
-	'atcoder.bc': '5035',
-	'atcoder.brainfuck': '5020',
-	'atcoder.csharpcsharp': '5003',
-	'atcoder.csharpaot': '5042',
-	'atcoder.cpp17clang': '5072',
-	'atcoder.cpp17gcc': '5053',
-	'atcoder.cpp20clang': '5073',
-	'atcoder.cpp20gcc': '5001',
-	'atcoder.cpp23clang': '5031',
-	'atcoder.cpp23gcc': '5028',
-	'atcoder.c': '5017',
-	'atcoder.carp': '5071',
-	'atcoder.clojurebabashka': '5050',
-	'atcoder.clojureclojure': '5064',
-	'atcoder.cobolfree': '5030',
-	'atcoder.cobolfixed': '5090',
-	'atcoder.commonlisp': '5029',
-	'atcoder.crystal': '5019',
-	'atcoder.cyber': '5070',
-	'atcoder.ddmd': '5012',
-	'atcoder.dgdc': '5077',
-	'atcoder.dldc': '5013',
-	'atcoder.dart': '5015',
-	'atcoder.dc': '5036',
-	'atcoder.eclipse': '5066',
-	'atcoder.elixir': '5085',
-	'atcoder.elispbyte': '5075',
-	'atcoder.elispnative': '5062',
-	'atcoder.elispno': '5088',
-	'atcoder.erlang': '5051',
-	'atcoder.fsharp': '5021',
-	'atcoder.factor': '5076',
-	'atcoder.forth': '5049',
-	'atcoder.fortran': '5026',
-	'atcoder.go': '5002',
-	'atcoder.haskell': '5025',
-	'atcoder.haxejvm': '5084',
-	'atcoder.java': '5005',
-	'atcoder.jsdeno': '5010',
-	'atcoder.jsnode': '5009',
-	'atcoder.jq': '5069',
-	'atcoder.julia': '5022',
-	'atcoder.koka': '5057',
-	'atcoder.kotlinjvm': '5004',
-	'atcoder.llvmir': '5074',
-	'atcoder.lua': '5043',
-	'atcoder.luajit': '5027',
-	'atcoder.mercury': '5086',
-	'atcoder.nibbles': '5067',
-	'atcoder.nim': '5006',
-	'atcoder.ocaml': '5059',
-	'atcoder.octave': '5083',
-	'atcoder.pascal': '5041',
-	'atcoder.perl': '5037',
-	'atcoder.php': '5016',
-	'atcoder.powershell': '5045',
-	'atcoder.prolog': '5044',
-	'atcoder.pythoncpython': '5055',
-	'atcoder.pythoncython': '5082',
-	'atcoder.pythonmambaforge': '5063',
-	'atcoder.pythonpypy': '5078',
-	'atcoder.r': '5011',
-	'atcoder.raku': '5060',
-	'atcoder.reasonml': '5081',
-	'atcoder.ruby': '5018',
-	'atcoder.rust': '5054',
-	'atcoder.sagemath': '5033',
-	'atcoder.scaladotty': '5056',
-	'atcoder.scalanative': '5047',
-	'atcoder.scheme': '5046',
-	'atcoder.sed': '5034',
-	'atcoder.seed7': '5087',
-	'atcoder.swift': '5014',
-	'atcoder.text': '5024',
-	'atcoder.typescriptdeno': '5052',
-	'atcoder.typescriptnode': '5058',
-	'atcoder.unison': '5089',
-	'atcoder.v': '5007',
-	'atcoder.vim': '5061',
-	'atcoder.vb': '5048',
-	'atcoder.whitespace': '5079',
-	'atcoder.zig': '5008',
-	'atcoder.zsh': '5032',
-	'atcoder.nadesiko': '5039',
-	'atcoder.prodel': '5065',
+    'atcoder.fishr': '5080',
+    'atcoder.ada': '5068',
+    'atcoder.asm64': '5040',
+    'atcoder.awk': '5038',
+    'atcoder.bash': '5023',
+    'atcoder.bc': '5035',
+    'atcoder.brainfuck': '5020',
+    'atcoder.csharpcsharp': '5003',
+    'atcoder.csharpaot': '5042',
+    'atcoder.cpp17clang': '5072',
+    'atcoder.cpp17gcc': '5053',
+    'atcoder.cpp20clang': '5073',
+    'atcoder.cpp20gcc': '5001',
+    'atcoder.cpp23clang': '5031',
+    'atcoder.cpp23gcc': '5028',
+    'atcoder.c': '5017',
+    'atcoder.carp': '5071',
+    'atcoder.clojurebabashka': '5050',
+    'atcoder.clojureclojure': '5064',
+    'atcoder.cobolfree': '5030',
+    'atcoder.cobolfixed': '5090',
+    'atcoder.commonlisp': '5029',
+    'atcoder.crystal': '5019',
+    'atcoder.cyber': '5070',
+    'atcoder.ddmd': '5012',
+    'atcoder.dgdc': '5077',
+    'atcoder.dldc': '5013',
+    'atcoder.dart': '5015',
+    'atcoder.dc': '5036',
+    'atcoder.eclipse': '5066',
+    'atcoder.elixir': '5085',
+    'atcoder.elispbyte': '5075',
+    'atcoder.elispnative': '5062',
+    'atcoder.elispno': '5088',
+    'atcoder.erlang': '5051',
+    'atcoder.fsharp': '5021',
+    'atcoder.factor': '5076',
+    'atcoder.forth': '5049',
+    'atcoder.fortran': '5026',
+    'atcoder.go': '5002',
+    'atcoder.haskell': '5025',
+    'atcoder.haxejvm': '5084',
+    'atcoder.java': '5005',
+    'atcoder.jsdeno': '5010',
+    'atcoder.jsnode': '5009',
+    'atcoder.jq': '5069',
+    'atcoder.julia': '5022',
+    'atcoder.koka': '5057',
+    'atcoder.kotlinjvm': '5004',
+    'atcoder.llvmir': '5074',
+    'atcoder.lua': '5043',
+    'atcoder.luajit': '5027',
+    'atcoder.mercury': '5086',
+    'atcoder.nibbles': '5067',
+    'atcoder.nim': '5006',
+    'atcoder.ocaml': '5059',
+    'atcoder.octave': '5083',
+    'atcoder.pascal': '5041',
+    'atcoder.perl': '5037',
+    'atcoder.php': '5016',
+    'atcoder.powershell': '5045',
+    'atcoder.prolog': '5044',
+    'atcoder.pythoncpython': '5055',
+    'atcoder.pythoncython': '5082',
+    'atcoder.pythonmambaforge': '5063',
+    'atcoder.pythonpypy': '5078',
+    'atcoder.r': '5011',
+    'atcoder.raku': '5060',
+    'atcoder.reasonml': '5081',
+    'atcoder.ruby': '5018',
+    'atcoder.rust': '5054',
+    'atcoder.sagemath': '5033',
+    'atcoder.scaladotty': '5056',
+    'atcoder.scalanative': '5047',
+    'atcoder.scheme': '5046',
+    'atcoder.sed': '5034',
+    'atcoder.seed7': '5087',
+    'atcoder.swift': '5014',
+    'atcoder.text': '5024',
+    'atcoder.typescriptdeno': '5052',
+    'atcoder.typescriptnode': '5058',
+    'atcoder.unison': '5089',
+    'atcoder.v': '5007',
+    'atcoder.vim': '5061',
+    'atcoder.vb': '5048',
+    'atcoder.whitespace': '5079',
+    'atcoder.zig': '5008',
+    'atcoder.zsh': '5032',
+    'atcoder.nadesiko': '5039',
+    'atcoder.prodel': '5065',
 };
 
 /*
@@ -301,122 +301,122 @@ atcoder.prodel:
 
 // 似乎用 vjudge.d0j1a1701.cc 就会报 ETIMEOUT，但是用镜像站就不会
 export default class AtCoderProvider extends BasicFetcher implements IBasicProvider {
-	constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-		super(account, 'https://vjudge.d0j1a1701.cc', 'form', logger);
-	}
+    constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
+        super(account, 'https://vjudge.d0j1a1701.cc', 'form', logger);
+    }
 
-	get loggedIn() {
-		return false;
-	}
+    get loggedIn() {
+        return false;
+    }
 
-	async ensureLogin() {
-		if (await this.loggedIn) {
-			return true;
-		}
-		logger.info('retry login');
-		const res = await this.post('/user/login').send({
-			username: this.account.handle,
-			password: this.account.password,
-			captcha: '',
-		});
-		if (res.header['set-cookie']) await this.setCookie(res.header['set-cookie'], true);
-		return true;
-	}
+    async ensureLogin() {
+        if (await this.loggedIn) {
+            return true;
+        }
+        logger.info('retry login');
+        const res = await this.post('/user/login').send({
+            username: this.account.handle,
+            password: this.account.password,
+            captcha: '',
+        });
+        if (res.header['set-cookie']) await this.setCookie(res.header['set-cookie'], true);
+        return true;
+    }
 
-	async getProblem(id: string) {
-		const { document } = await this.html(`https://vjudge.d0j1a1701.cc/problem/AtCoder-${id}`);
-		logger.info(id);
-		let time = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('ms')).content.replace(/\s+/g, '');
-		let memory = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('kB')).content.replace(/\s+/g, '').toLowerCase();
+    async getProblem(id: string) {
+        const { document } = await this.html(`https://vjudge.d0j1a1701.cc/problem/AtCoder-${id}`);
+        logger.info(id);
+        let time = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('ms')).content.replace(/\s+/g, '');
+        let memory = JSON.parse(document.querySelector('textarea[name="dataJson"]').textContent).properties.find(property => property.content.includes('kB')).content.replace(/\s+/g, '').toLowerCase();
 
-		const iframe = document.querySelector('iframe#frame-description');
-		const iframeSrc = iframe?.getAttribute('src');
-		if (!iframeSrc) {
-			throw new Error('Iframe not found');
-		}
-		const iframeWindow = await this.html("https://vjudge.d0j1a1701.cc" + iframeSrc);
-		const idocument = iframeWindow.document;
-		const textarea = idocument.querySelector('textarea.data-json-container');
-		const data = JSON.parse(textarea.textContent);
-		const sections = data.sections;
-		const container = document.createElement('div');
-		sections.forEach(section => {
-			const h2 = document.createElement('h2');
-			h2.textContent = section.title || '';
-			const contentDiv = document.createElement('div');
-			contentDiv.innerHTML = section.value.content;
-			container.appendChild(h2);
-			container.appendChild(contentDiv);
-		});
+        const iframe = document.querySelector('iframe#frame-description');
+        const iframeSrc = iframe?.getAttribute('src');
+        if (!iframeSrc) {
+            throw new Error('Iframe not found');
+        }
+        const iframeWindow = await this.html("https://vjudge.d0j1a1701.cc" + iframeSrc);
+        const idocument = iframeWindow.document;
+        const textarea = idocument.querySelector('textarea.data-json-container');
+        const data = JSON.parse(textarea.textContent);
+        const sections = data.sections;
+        const container = document.createElement('div');
+        sections.forEach(section => {
+            const h2 = document.createElement('h2');
+            h2.textContent = section.title || '';
+            const contentDiv = document.createElement('div');
+            contentDiv.innerHTML = section.value.content;
+            container.appendChild(h2);
+            container.appendChild(contentDiv);
+        });
 
-		const result = container.innerHTML.replace(/<pre>[\s\S]*?<\/pre>/g, (preMatch) => {
-			return preMatch.replace(/<var>(.*?)<\/var>/g, (varMatch, varContent) => {
-				return `<var>${varContent.split('\\(').join('').split('\\)').join('')}</var>`;
-			});
-		});
+        const result = container.innerHTML.replace(/<pre>[\s\S]*?<\/pre>/g, (preMatch) => {
+            return preMatch.replace(/<var>(.*?)<\/var>/g, (varMatch, varContent) => {
+                return `<var>${varContent.split('\\(').join('').split('\\)').join('')}</var>`;
+            });
+        });
 
-		return {
-			title: document.querySelector('meta[property="og:title"]').getAttribute('content').split('- Virtual Judge')[0].trim(),
-			data: {
-				'config.yaml': Buffer.from(`time: ${time}\nmemory: ${memory}\ntype: remote_judge\nsubType: atcoder\ntarget: ${id}`),
-			},
-			tag: [],
-			content: result,
-		};
-	}
+        return {
+            title: document.querySelector('meta[property="og:title"]').getAttribute('content').split('- Virtual Judge')[0].trim(),
+            data: {
+                'config.yaml': Buffer.from(`time: ${time}\nmemory: ${memory}\ntype: remote_judge\nsubType: atcoder\ntarget: ${id}`),
+            },
+            tag: [],
+            content: result,
+        };
+    }
 
-	async listProblem(page: number, resync = false) {
-		if (page > 1) return [];
-		// 镜像站的题目列表似乎只能显示前 100 个，所以我从 vjudge.d0j1a1701.cc 把题目列表爬下来了
-		// 也可以防止爬取 vjudge 上因为 bug 爬到的一些题
-		const response = await fetch(`https://cdn.llong.tech/vj-atcoder.json`);
-		const content = await response.text();
-		const jsres = JSON.parse(content);
-		const result: string[] = jsres.data.map((item: { originProb: string }) => item.originProb.toUpperCase());
-		return result;
-	}
+    async listProblem(page: number, resync = false) {
+        if (page > 1) return [];
+        // 镜像站的题目列表似乎只能显示前 100 个，所以我从 vjudge.d0j1a1701.cc 把题目列表爬下来了
+        // 也可以防止爬取 vjudge 上因为 bug 爬到的一些题
+        const response = await fetch(`https://cdn.llong.tech/vj-atcoder.json`);
+        const content = await response.text();
+        const jsres = JSON.parse(content);
+        const result: string[] = jsres.data.map((item: { originProb: string }) => item.originProb.toUpperCase());
+        return result;
+    }
 
-	async submitProblem(problemcode: string, lang: string, code: string, info, next, end) {
-		// TODO check submit time to ensure submission
-		logger.info(`submit ${problemcode.toLowerCase()}, language=${lang}(${langId[lang]})`);
-		const response = await this.post('/problem/submit').send({
-			method: '0',
-			language: langId[lang],
-			open: '0',
-			captcha: '',
-			oj: 'AtCoder',
-			probNum: problemcode.toLowerCase(),
-			source: btoa(encodeURIComponent(code)),
-		});
-		logger.info(response.text);
-		const runId = JSON.parse(response.text).runId;
-		if(!runId) {
-			end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Duplicated source code, rejected by Vjudge.'});
-			return null;
-		}
-		return runId;
-	}
+    async submitProblem(problemcode: string, lang: string, code: string, info, next, end) {
+        // TODO check submit time to ensure submission
+        logger.info(`submit ${problemcode.toLowerCase()}, language=${lang}(${langId[lang]})`);
+        const response = await this.post('/problem/submit').send({
+            method: '0',
+            language: langId[lang],
+            open: '0',
+            captcha: '',
+            oj: 'AtCoder',
+            probNum: problemcode.toLowerCase(),
+            source: btoa(encodeURIComponent(code)),
+        });
+        logger.info(response.text);
+        const runId = JSON.parse(response.text).runId;
+        if(!runId) {
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Duplicated source code, rejected by Vjudge.'});
+            return null;
+        }
+        return runId;
+    }
 
-	async waitForSubmission(id: string, next, end) {
-		logger.debug('Waiting for %s', id);
-		// eslint-disable-next-line no-constant-condition
-		while (true) {
-			await sleep(3000);
-			const response = await fetch(`https://vjudge.d0j1a1701.cc/solution/data/${id}`);
-			const content = await response.text();
-			const jsres = JSON.parse(content);
-			if(jsres.processing == true) continue;
-			const status = VERDICT[jsres.statusCanonical[0]] || STATUS.STATUS_WRONG_ANSWER;
-			const timestr = jsres.runtime;
-			const time = timestr === '-' ? 0 : (+timestr);
-			const memorystr = jsres.memory;
-			const memory = memorystr === '-' ? 0 : (+memorystr);
-			return await end({
-				status,
-				score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-				time,
-				memory,
-			});
-		}
-	}
+    async waitForSubmission(id: string, next, end) {
+        logger.debug('Waiting for %s', id);
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            await sleep(3000);
+            const response = await fetch(`https://vjudge.d0j1a1701.cc/solution/data/${id}`);
+            const content = await response.text();
+            const jsres = JSON.parse(content);
+            if(jsres.processing == true) continue;
+            const status = VERDICT[jsres.statusCanonical[0]] || STATUS.STATUS_WRONG_ANSWER;
+            const timestr = jsres.runtime;
+            const time = timestr === '-' ? 0 : (+timestr);
+            const memorystr = jsres.memory;
+            const memory = memorystr === '-' ? 0 : (+memorystr);
+            return await end({
+                status,
+                score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
+                time,
+                memory,
+            });
+        }
+    }
 }
