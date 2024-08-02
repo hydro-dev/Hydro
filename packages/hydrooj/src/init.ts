@@ -33,3 +33,6 @@ if (!global.Hydro) {
     global.addons = [];
 }
 global.app = new (require('./context').Context)();
+process.on('exit', () => {
+    app.stop();
+});

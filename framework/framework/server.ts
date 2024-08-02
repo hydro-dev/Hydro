@@ -384,6 +384,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             this.ctx.on('dispose', () => {
                 fs.emptyDirSync(uploadDir);
             });
+            // if killed by ctrl-c, on('dispose') will not be called
+            process.on('exit', () => {
+                fs.emptyDirSync(uploadDir);
+            });
         } else {
             this.server.use(Body({
                 multipart: true,
