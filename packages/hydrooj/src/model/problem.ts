@@ -445,7 +445,7 @@ export class ProblemModel {
         return true;
     }
 
-    static async import(domainId: string, filepath: string, operator = 1, preferredPrefix?: string) {
+    static async import(domainId: string, filepath: string, operator = 1, preferredPrefix?: string, progress = null) {
         let tmpdir = '';
         let del = false;
         try {
@@ -527,7 +527,11 @@ export class ProblemModel {
                     if (count > 5) continue;
                     await RecordModel.add(domainId, docId, operator, f.name.split('.')[1], await fs.readFile(loc, 'utf-8'), true);
                 }
-                if (process.env.HYDRO_CLI) logger.info(`Imported problem ${pdoc.pid} (${pdoc.title})`);
+                if (process.env.HYDRO_CLI) {
+                    logger.info(`Imported problem ${pdoc.pid} (${pdoc.title})`);
+                } else {
+                    progress?.(`Imported problem ${pdoc.pid} (${pdoc.title})`);
+                }
             }
         } finally {
             if (del) await fs.remove(tmpdir);

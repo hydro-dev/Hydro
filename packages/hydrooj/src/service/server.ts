@@ -249,7 +249,7 @@ export async function apply(ctx: Context) {
             checkPriv(...args: number[]) {
                 if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
             },
-            progress(message: string, params: any[]) {
+            progress(message: string, params: any[] = []) {
                 Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
             },
             async limitRate(
