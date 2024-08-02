@@ -14,6 +14,7 @@ const syncing = {};
 class AccountService {
     api: IBasicProvider;
     problemLists: Set<string>;
+    syncing = false;
     listUpdated = false;
     working = false;
     error = '';
@@ -120,29 +121,42 @@ class AccountService {
         return false;
     }
 
+    async handleSync() {
+        if (this.syncing) return;
+        this.syncing = true;
+        try {
+            const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
+            do {
+                this.listUpdated = false;
+                for (const listName of this.problemLists) {
+                    for (const ddoc of ddocs) {
+                        if (ddoc.syncDone === true) {
+                            await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
+                            ddoc.syncDone = { main: true };
+                        }
+                        if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
+                        else await this.sync(ddoc._id, true, listName);
+                        await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
+                        ddoc.syncDone ||= {};
+                        ddoc.syncDone[listName] = true;
+                    }
+                }
+            } while (this.listUpdated);
+        } catch (e) {
+            this.error = e;
+            logger.error('%s sync failed', this.account.handle);
+            logger.error(e);
+        }
+        this.syncing = false;
+    }
+
     async main() {
         const res = await this.login();
         if (!res) return;
         setInterval(() => this.login(), Time.hour);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
-        const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
         this.working = true;
-        do {
-            this.listUpdated = false;
-            for (const listName of this.problemLists) {
-                for (const ddoc of ddocs) {
-                    if (ddoc.syncDone === true) {
-                        await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
-                        ddoc.syncDone = { main: true };
-                    }
-                    if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
-                    else await this.sync(ddoc._id, true, listName);
-                    await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
-                    ddoc.syncDone ||= {};
-                    ddoc.syncDone[listName] = true;
-                }
-            }
-        } while (this.listUpdated);
+        this.handleSync();
     }
 }
 
@@ -159,9 +173,10 @@ class VJudgeService extends Service {
 
     accounts: RemoteAccount[];
     private providers: Record<string, any> = {};
-    private pool: Record<string, any> = {};
+    private pool: Record<string, AccountService> = {};
     async start() {
         this.accounts = await coll.find().toArray();
+        this.ctx.setInterval(this.sync.bind(this), Time.week);
     }
 
     addProvider(type: string, provider: BasicProvider, override = false) {
@@ -177,13 +192,21 @@ class VJudgeService extends Service {
         });
     }
 
+    async sync() {
+        for (const key in this.pool) {
+            const account = this.pool[key];
+            if (!account.working) continue;
+            await account.handleSync();
+        }
+    }
+
     async checkStatus(onCheckFunc = false) {
         const res: Record<string, { working: boolean, error?: string, status?: any }> = {};
         for (const [k, v] of Object.entries(this.pool)) {
             res[k] = {
                 working: v.working,
                 error: v.error,
-                status: v.api.checkStatus ? await v.api.checkStatus(onCheckFunc) : null,
+                status: 'checkStatus' in v.api ? await v.api.checkStatus(onCheckFunc) : null,
             };
         }
         return res;
