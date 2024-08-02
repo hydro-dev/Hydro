@@ -19,7 +19,7 @@
         "@graphql-tools/schema": "^10.0.4",
         "@hydrooj/framework": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@simplewebauthn/server": "7.4.0",
+        "@simplewebauthn/server": "9.0.3",
         "@undefined-moe/require-resolve-hook": "^1.1.0",
         "adm-zip": "0.5.14",
         "cac": "^6.7.14",

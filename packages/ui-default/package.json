@@ -27,7 +27,7 @@
     "@hydrooj/utils": "workspace:^",
     "@sentry/browser": "^8.19.0",
     "@sentry/webpack-plugin": "^2.21.1",
-    "@simplewebauthn/browser": "7.4.0",
+    "@simplewebauthn/browser": "9.0.1",
     "@svgr/webpack": "^8.1.0",
     "@types/gulp-if": "^0.0.34",
     "@types/jquery": "^3.5.30",
