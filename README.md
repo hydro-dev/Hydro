@@ -12,8 +12,8 @@ Hydro 是一个高效信息学在线测评系统。易安装，跨平台，多�
 对于不熟悉 Linux 或是懒得运维的老师，我们也提供了免费开通即用的在线版本，  
 详情前往 [https://hydro.ac](https://hydro.ac) 查看 [操作指引](https://hydro.ac/discuss/6172ceeed850d38c79ae18f9)  
 
-将安装命令粘贴到控制台一键安装，安装后注册首个用户自动获得超级管理员权限。
-兼容主流 Linux 发行版，推荐使用 Ubuntu 22.04，支持 arm64 设备（树莓派等）
+将安装命令粘贴到控制台一键安装，安装后注册首个用户自动获得超级管理员权限。  
+兼容主流 Linux 发行版，推荐使用 Debian 12，支持 arm64 设备（树莓派等）
 
 ```sh
 LANG=zh . <(curl https://hydro.ac/setup.sh)
@@ -110,6 +110,19 @@ Hydro 用户群：1085853538
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+### Hydro 4.13.4 / UI 4.52.3
+- framework: 修复 404 返回页
+- ui: 优化用户权限页布局
+- vjudge: codeforces: 优化 katex 显示
+- core: cli: 修复 script 加载顺序
+- install: 默认禁用 yarn 更新检查
+- core: 添加 contest/edit 和 contest/del 钩子
+- ui: 支持展开测试点详情
+- core: 修复 IOI 赛制封榜
+- core: 修复缓存文件不会删除的问题
+- core: 导入题目时显示进度
+- ui: 修复含空格标签的筛选
 
 ### Hydro 4.13.2 / UI 4.52.0
 - a11y: 优化网页测性能测试输出顺序
