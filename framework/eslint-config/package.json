@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/eslint-config",
-    "version": "1.0.13",
+    "version": "1.1.0",
     "license": "MIT",
     "main": "react.yaml",
     "dependencies": {
@@ -8,7 +8,6 @@
         "@typescript-eslint/eslint-plugin": "^8.0.0",
         "@typescript-eslint/parser": "^8.0.0",
         "eslint-config-airbnb": "^19.0.4",
-        "eslint-config-airbnb-typescript": "^18.0.0",
         "eslint-plugin-github": "^5.0.1",
         "eslint-plugin-import": "2.29.1",
         "eslint-plugin-jsx-a11y": "^6.9.0",
