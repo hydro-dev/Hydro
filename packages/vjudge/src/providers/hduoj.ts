@@ -65,10 +65,16 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
 
     async getProblem(id: string) {
         logger.info(id);
-        const res = await this.get('/showproblem.php')
-            .query({ pid: id.split('P')[1] })
-            .buffer(true)
-            .charset('gbk');
+        let res: any;
+        try {
+            res = await this.get('/showproblem.php')
+                .query({ pid: id.split('P')[1] })
+                .buffer(true)
+                .charset('gbk');
+        } catch (e) {
+            logger.error(`${id} sync failed`);
+            return;
+        }
         const { window: { document } } = new JSDOM(res.text);
         const images = {};
         const files = {};
@@ -133,6 +139,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             }
         }
         const tagList = (tag.length === 0) ? [] : [tag];
+        // eslint-disable-next-line consistent-return
         return {
             title,
             data: {
