@@ -128,7 +128,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
                 if (lastMark === 'Sample Input' || lastMark === 'Sample Output') {
                     html += `\n<pre><code class="language-${markNext}${preId}">${node.innerHTML}</code></pre>\n`;
                 } else {
-                    html += `<p>${node.innerHTML.replace('<br>', '')}</p>`;
+                    html += `<p>${node.innerHTML}</p>`;
                 }
             }
         }
