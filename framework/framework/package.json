@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/framework",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "main": "index.ts",
     "license": "MIT",
     "peerDependencies": {
@@ -29,6 +29,6 @@
         "@types/koa-router": "^7.4.8",
         "@types/lodash": "^4.17.7",
         "@types/saslprep": "^1.0.3",
-        "@types/ws": "^8.5.11"
+        "@types/ws": "^8.5.12"
     }
 }

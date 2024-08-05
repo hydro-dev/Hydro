@@ -288,7 +288,7 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
     async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
-        const options = generateRegistrationOptions({
+        const options = await generateRegistrationOptions({
             rpName: system.get('server.name'),
             rpID: this.getAuthnHost(),
             userID: this.user._id.toString(),

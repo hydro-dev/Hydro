@@ -1,6 +1,6 @@
-import type { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
-import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
-import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
+import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/esm/helpers/decodeAuthenticatorExtensions';
+import type { AttestationFormat } from '@simplewebauthn/server/helpers';
+import { CredentialDeviceType } from '@simplewebauthn/types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';

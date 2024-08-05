@@ -10,7 +10,7 @@ overrides:
       - '**/plugins/**/*.page.{ts,js,tsx,jsx}'
     rules:
       github/array-foreach: 0
-      '@typescript-eslint/indent':
+      '@stylistic/indent':
         - warn
         - 2
       '@typescript-eslint/no-invalid-this': 0

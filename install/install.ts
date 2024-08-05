@@ -322,7 +322,7 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.patch',
+            `nix-env -iA ${['pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen'].map((i) => `nixpkgs.${i}`).join(' ')}`,
             'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
@@ -573,8 +573,8 @@ ${nixConfBase}`);
         operations: [
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
-            ['pm2 install pm2-logrotate', { retry: true }],
-            'pm2 set pm2-logrotate:max_size 64M',
+            // dont retry this as it usually fails
+            'screen -d -m "pm2 install pm2-logrotate && pm2 set pm2-logrotate:max_size 64M"',
         ],
     },
     {

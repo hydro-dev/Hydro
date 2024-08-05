@@ -30,12 +30,12 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
-if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
+if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
   window.captureException = (e) => {
     if (!e.isUserFacingError) Sentry.captureException(e);
   };
   Sentry.init({
-    dsn: UiContext.sentry_dsn || 'https://2f95d53751e08c74c1af1c4b93ccaff7@sentry.hydro.ac/2',
+    dsn: UiContext.sentry_dsn,
     release: `hydro-web@${process.env.VERSION}`,
     integrations: [
       Sentry.browserTracingIntegration(),

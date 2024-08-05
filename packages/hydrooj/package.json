@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.13.3",
+    "version": "4.13.4",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -12,15 +12,16 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "3.616.0",
-        "@aws-sdk/lib-storage": "3.616.0",
-        "@aws-sdk/s3-presigned-post": "3.616.0",
-        "@aws-sdk/s3-request-presigner": "3.616.0",
+        "@aws-sdk/client-s3": "3.622.0",
+        "@aws-sdk/lib-storage": "3.622.0",
+        "@aws-sdk/s3-presigned-post": "3.622.0",
+        "@aws-sdk/s3-request-presigner": "3.622.0",
         "@graphql-tools/schema": "^10.0.4",
         "@hydrooj/framework": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@simplewebauthn/server": "7.4.0",
+        "@simplewebauthn/server": "9.0.3",
         "@undefined-moe/require-resolve-hook": "^1.1.0",
+        "@yarnpkg/libzip": "^3.1.0",
         "adm-zip": "0.5.14",
         "cac": "^6.7.14",
         "cordis": "3.16.0",
@@ -64,7 +65,7 @@
         "@types/notp": "^2.0.5",
         "@types/saslprep": "^1.0.3",
         "@types/semver": "^7.5.8",
-        "@types/superagent": "^8.1.7",
+        "@types/superagent": "^8.1.8",
         "chokidar": "^3.6.0",
         "moment": "^2.30.1"
     }
