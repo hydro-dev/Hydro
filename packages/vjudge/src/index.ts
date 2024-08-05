@@ -239,6 +239,13 @@ export async function apply(ctx: Context) {
     ctx.inject(['migration'], async (c) => {
         c.migration.registerChannel('vjudge', [
             async function init() { }, // eslint-disable-line
+            c.migration.dontWait(async () => {
+                await RecordModel.coll.updateMany({ lang: 'csgoj.0' }, { $set: { lang: 'c' } });
+                await RecordModel.coll.updateMany({ lang: 'csgoj.1' }, { $set: { lang: 'cpp' } });
+                await RecordModel.coll.updateMany({ lang: 'csgoj.3' }, { $set: { lang: 'java' } });
+                await RecordModel.coll.updateMany({ lang: 'csgoj.6' }, { $set: { lang: 'py.py3' } });
+                await RecordModel.coll.updateMany({ lang: 'csgoj.17' }, { $set: { lang: 'go' } });
+            }, 'update csgoj langs in record collection'),
         ]);
     });
     ctx.inject(['vjudge'], async (c) => {
