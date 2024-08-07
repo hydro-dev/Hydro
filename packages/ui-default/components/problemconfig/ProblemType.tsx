@@ -130,6 +130,9 @@ export default function ProblemType() {
                 <FormItem columns={6} label="Interactor">
                   <SingleFileSelect formKey="interactor" />
                 </FormItem>
+                <FormItem columns={6} label="Interactor Type">
+                  <ManagedSelect options={['testlib', 'cplib']} formKey="interactor_type" />
+                </FormItem>
               </div>
             )}
           />

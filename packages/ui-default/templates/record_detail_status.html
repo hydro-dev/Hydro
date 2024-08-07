@@ -79,7 +79,7 @@
                 {{ _('Checker Message') }}
               </h3>
               <div>
-                <pre>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else 'No checker message' }}</pre>
+                <pre>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else _('No message') }}</pre>
               </div>
               {% if rcdoc.traceStack %}
               <h3 class="section__title">

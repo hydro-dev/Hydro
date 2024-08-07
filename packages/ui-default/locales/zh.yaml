@@ -40,6 +40,7 @@ Col: 列
 'Hello! You can click following link to sign up your {0} account:': 您好！您可以点击以下链接来注册您的 {0} 账户：
 'Join {0}': '加入 {0}'
 'No': 否
+'No message': 无消息
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
 'Packages have new version: {0}': '以下组件有新版本： {0}'
 'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'

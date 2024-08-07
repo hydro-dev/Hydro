@@ -64,6 +64,7 @@ const problemConfigSchema: JSONSchema7 = {
       ],
     },
     interactor: { type: 'string', pattern: '\\.' },
+    interactor_type: { enum: ['testlib', 'cplib'] },
     validator: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },

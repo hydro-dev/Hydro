@@ -1,9 +1,11 @@
+import { readFile } from 'fs/promises';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import { TraceStack } from 'hydrooj';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { del, runQueued } from '../sandbox';
-import { NormalizedCase } from '../utils';
+import { del, get, runQueued } from '../sandbox';
+import { fileKeepAround, NormalizedCase } from '../utils';
 import { Context } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -17,6 +19,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         let scaledScore = 0;
+        let traceStack: TraceStack | undefined;
         const fileIds = [];
         if (ctx.config.subType === 'multi') {
             const res = await runQueued(
@@ -42,7 +45,7 @@ function judgeCase(c: NormalizedCase) {
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({
-                status, score, scaledScore, message,
+                status, score, scaledScore, message, traceStack,
             } = await checkers[ctx.config.checker_type]({
                 execute: ctx.checker.execute,
                 copyIn: ctx.checker.copyIn || {},
@@ -55,6 +58,20 @@ function judgeCase(c: NormalizedCase) {
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             }));
         }
+
+        const [infContent, ansContent] = await Promise.all([
+            readFile(c.input),
+            readFile(c.output),
+        ]);
+        const oufContent = fileIds[name] ? await get(fileIds[name]) : Buffer.alloc(0);
+
+        const inf = fileKeepAround(infContent,
+            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+        const ouf = fileKeepAround(oufContent,
+            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+        const ans = fileKeepAround(ansContent,
+            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+
         await Promise.allSettled(fileIds.map(del));
         return {
             id: c.id,
@@ -64,6 +81,10 @@ function judgeCase(c: NormalizedCase) {
             time: 0,
             memory: 0,
             message,
+            traceStack,
+            inf,
+            ouf,
+            ans,
         };
     };
 }

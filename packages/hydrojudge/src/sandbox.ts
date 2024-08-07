@@ -145,7 +145,8 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     return ret;
 }
 
-export async function runPiped(execute0: Parameter, execute1: Parameter): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
+export async function runPiped(execute0: Parameter, execute1: Parameter)
+    : Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
@@ -158,13 +159,13 @@ export async function runPiped(execute0: Parameter, execute1: Parameter): Promis
                 in: { index: 0, fd: 1 },
                 out: { index: 1, fd: 0 },
                 proxy: true,
-                name: 'stdout',
+                name: 'fromUser',
                 max: 1024 * 1024 * size,
             }, {
                 in: { index: 1, fd: 1 },
                 out: { index: 0, fd: 0 },
                 proxy: true,
-                name: 'stdout',
+                name: 'toUser',
                 max: 1024 * 1024 * size,
             }],
         };

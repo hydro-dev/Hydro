@@ -51,6 +51,7 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
     const ymlConfig = path.resolve(folder, 'config.yml');
     const config: Record<string, any> = {
         checker_type: 'default',
+        interactor_type: 'testlib',
         count: 0,
         subtasks: [],
         judge_extra_files: [],

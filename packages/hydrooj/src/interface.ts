@@ -191,6 +191,7 @@ export interface ProblemConfigFile {
     memory?: string;
     filename?: string;
     checker_type?: string;
+    interactor_type?: string;
     checker?: string;
     interactor?: string;
     user_extra_files?: string[];
