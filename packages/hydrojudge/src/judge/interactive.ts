@@ -36,6 +36,7 @@ function judgeCase(c: NormalizedCase) {
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;
+        let scaledScore = 0;
         let message: any = '';
         const detail = ctx.config.detail ?? true;
         if (time > c.time) {
@@ -50,6 +51,7 @@ function judgeCase(c: NormalizedCase) {
             const result = parse(resInteractor.stderr, c.score);
             status = result.status;
             score = result.score;
+            scaledScore = result.scaledScore;
             message = result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
         }
@@ -58,6 +60,7 @@ function judgeCase(c: NormalizedCase) {
             subtaskId: ctxSubtask.subtask.id,
             status,
             score,
+            scaledScore,
             time,
             memory,
             message,

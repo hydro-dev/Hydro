@@ -23,71 +23,130 @@
 {% endif %}
 {% if rdoc.testCases.length %} 
   <div class="section__body no-padding">
-    <table class="data-table record_detail__table">
-      <colgroup>
-        <col class="col--case">
-        <col class="col--status">
-        <col class="col--time">
-        <col class="col--memory">
-      </colgroup>
-      <thead>
-        <tr>
-          <th class="col--case record-status--border">#</th>
-          <th class="col--status">
-            {{ _('Status') }}
-            {% if rdoc.subtasks and (rdoc.subtasks|length > 1 or rdoc.subtasks[Object.keys(rdoc.subtasks)[0]].type == 'sum') %}
-            <span class="float-right">{{ _('Score') }}</span>
+    <div>
+      {% set singleSubtask = rdoc.testCases|groupby('subtaskId')|length === 1 %}
+      {%- for subtaskId, rcdocs in rdoc.testCases|sort(false,false,_key)|groupby('subtaskId') -%}
+        <div class="subtask" data-subtask-id="{{subtaskId}}">
+          {% if not singleSubtask %}
+          <div class="subtask-line">
+            <div class="cell">
+              {{ _('Subtask {0}').format(subtaskId|int|default(1))}}
+            </div>
+            {% if rdoc.subtasks %}
+            <div class="cell">
+              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}"></span>
+              <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
+                {{ model.builtin.STATUS_TEXTS[rdoc.subtasks[subtaskId]['status']] }}
+              </span>
+            </div>
+            <div class="cell record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
+              {{ rdoc.subtasks[subtaskId]['score']|default(0)|round(3) }} pt
+            </div>
             {% endif %}
-          </th>
-          <th class="col--time">{{ _('Time Cost') }}</th>
-          <th class="col--memory">{{ _('Memory Cost') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-      {% set _key = 'id' if rdoc.testCases|groupby('subtaskId')|length == 1 else 'subtaskId' %}
-      {%- for subtaskId, rcdocs in rdoc.testCases|sort(false,false,_key)|groupby(_key) -%}
-        {% if rcdocs.length > 1 %}
-        <tr class="subtask">
-          <td class="col--case">
-            #{{ subtaskId|int|default(1) }}
-          </td>
-          {% if rdoc.subtasks %}
-          <td class="col--status">
-            <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}"></span>
-            <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">
-              {{ model.builtin.STATUS_TEXTS[rdoc.subtasks[subtaskId]['status']] }}
-            </span>
-            <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[rdoc.subtasks[subtaskId]['status']] }}">{{ rdoc.subtasks[subtaskId]['score']|default(0) }}</span>
-          </td>
-          <td class="col--time"></td>
-          <td class="col--memory"></td>
+          </div>
           {% endif %}
-        </tr>
-        {% endif %}
         {%- for rcdoc in rcdocs|sort(false,false,'id') -%}
-          <tr class="{{ 'subtask-case' if rcdocs.length == 1 else 'case' }}">
-            <td class="col--case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-              #{{ subtaskId|int|default(1) }}{% if rcdocs.length > 1 %}-{{ rcdoc.id|default(loop.index) }}{% endif %}
-            </td>
-            <td class="col--status">
-              <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
-              <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
-                {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
-              </span>
-              {% if (rdoc.subtasks and _key != 'id' and rcdocs.length == 1) or (_key == 'id' and rdoc.subtasks[rcdoc.subtaskId].type == 'sum') %}
-              <span class="float-right record-status--text {{ model.builtin.STATUS_CODES[(rdoc.subtasks[subtaskId]['status'] if _key != 'id' else rcdoc.status)] }}">
-                {{ (rdoc.subtasks[subtaskId]['score'] if _key != 'id' else rcdoc.score)|default(0) }}
-              </span>
+          <div class="case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}" data-case-id="{{rcdoc.id|default(loop.index)}}">
+            <div class="case-line">
+              <div class="cell">
+                <span class="expand-icon">
+                  <span class="icon icon-expand_more"></span>
+                </span>
+                <span>{{ _('Test {0}').format(rcdoc.id|default(loop.index)) }}</span>
+              </div>
+              <div class="cell">
+                <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rcdoc['status']] }}"></span>
+                <span class="record-status--text {{ model.builtin.STATUS_CODES[rcdoc['status']] }}">
+                  {{ model.builtin.STATUS_TEXTS[rcdoc['status']] }}
+                </span>
+              </div>
+              <div class="cell record-status--text {{ model.builtin.STATUS_CODES[(rdoc.subtasks[subtaskId]['status'] if _key != 'id' else rcdoc.status)] }}">
+                {% if typeof(rcdoc.scaledScore) !== "undefined" %}
+                  {{ (rcdoc.scaledScore*100)|round(3) }}% pt
+                {% else %}
+                  {{ (rcdoc.score)|default(0)}} pt
+                {% endif %}
+              </div>
+              <div class="cell">
+                {% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }} ms
+              </div>
+              <div class="cell">
+                {% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}
+              </div>
+            </div>
+            <div class="details">
+              <h3 class="section__title">
+                {{ _('Checker Message') }}
+              </h3>
+              <div>
+                <pre>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else 'No checker message' }}</pre>
+              </div>
+              {% if rcdoc.traceStack %}
+              <h3 class="section__title">
+                {{ _('Trace Stack') }}
+              </h3>
+              <p>
+                {{ _('A read error occurred on stream `{0}`.').format(rcdoc.traceStack.streamName) }}
+              </p>
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{{ _('Var name') }}</th>
+                    <th>{{ _('Line') }}</th>
+                    <th>{{ _('Col') }}</th>
+                    <th>{{ _('Byte') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {%- for trace in rcdoc.traceStack.stack|reverse -%}
+                  <tr>
+                    <td>{{ loop.index0 }}</td>
+                    <td>{{ trace.varName }}</td>
+                    <td>{{ trace.lineNum+1 }}</td>
+                    <td>{{ trace.colNum+1 }}</td>
+                    <td>{{ trace.byteNum+1 }}</td>
+                  </tr>
+                  {%- endfor -%}
+                </tbody>
+              </table>
               {% endif %}
-              <span class="message">{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
-            </td>
-            <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
-            <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
-          </tr>
+              {% for stream, titleStr in [
+                  ['inf', 'Input File'],
+                  ['ouf', 'Output File'],
+                  ['ans', 'Answer File'],
+                  ['fromUser', 'User Output'],
+                  ['toUser', 'Interactor Output']] %}
+                {% if rcdoc[stream] %}
+                <h3 class="section__title">
+                  {{ _(titleStr) }}
+                </h3>
+                <div>
+                  <textarea readonly data-editor
+                    data-stream-name="{{ stream }}"
+                    data-ignored-lines-begin={{ rcdoc[stream].ignoredLinesBegin }}
+                    data-ignored-lines-end={{ rcdoc[stream].ignoredLinesEnd }}
+                    data-ignored-bytes-begin={{ rcdoc[stream].ignoredBytesBegin }}
+                    data-ignored-bytes-end={{ rcdoc[stream].ignoredBytesEnd }}
+                    data-first-line-ignored-bytes-begin={{ rcdoc[stream].firstLineIgnoredBytesBegin }}
+                    data-last-line-ignored-bytes-end={{ rcdoc[stream].lastLineIgnoredBytesEnd }}
+                    {% if rcdoc.traceStack.streamName === stream and rcdoc.traceStack.stack|length %}
+                      {% set _trace = rcdoc.traceStack.stack|last %}
+                      data-error-line={{ _trace.lineNum }}
+                      data-error-col={{ _trace.colNum }}
+                      data-error-msg="{{ _('Error reading variable `{0}` at byte {1}: {2}').format(_trace.varName, _trace.byteNum+1, formatJudgeTexts([rcdoc.message|default('')])) | escape }}"
+                    {% endif %}
+                    >{{ rcdoc[stream].content }}</textarea>
+                  <div class="monaco-target"></div>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
         {%- endfor -%}
+        </div>
       {%- endfor -%}
-      </tbody>
-    </table>
+    </div>
   </div>
 {% endif %}
 </div>

@@ -22,6 +22,9 @@ __langname: 简体中文
 '↓ Create Time': '↓ 创建时间'
 '↓ Update Time': '↓ 更新时间'
 'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
+'A read error occurred on stream `{0}`.': 流 `{0}` 发生读取错误。
+Byte: 字节
+Col: 列
 'Copy "{data}" failed :(': '复制“{data}”失败 :('
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
@@ -97,6 +100,7 @@ Allow user view others code after contest: 允许用户赛后查看其他人的�
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
+Answer File: 答案文件
 Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
 Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
@@ -155,6 +159,7 @@ Change Password: 修改密码
 Change Theme: 切换主题
 Check In: 签到
 Checker: 比较器
+Checker Message: 比较器消息
 CheckerType: 比较器类型
 Chinese: 中文
 Choose Authenticator Type: 选择认证器类型
@@ -369,6 +374,7 @@ Enrolled: 已参加
 Enrollees: 参加人数
 error: 错误
 Errors detected in the config. Confirm save?: 配置中存在错误。确认保存？
+'Error reading variable `{0}` at byte {1}: {2}': '读取变量 `{0}` 时，在第 {1} 字节出现错误：{2}'
 Evaluated difficulty: 估计的难度
 Exit: 退出
 expand: 展开
@@ -460,6 +466,7 @@ Images: 图片
 Import from: 导入自
 Import Problem: 导入题目
 Import: 导入
+Interactor Output: 交互库输出
 In 1 day: 一天后
 In 1 month: 一个月后
 In 1 week: 一周后
@@ -474,6 +481,7 @@ Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
 Input: 输入
+Input File: 输入文件
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -514,6 +522,7 @@ Legacy mode: 兼容模式
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
 Limitations: 限制
+Line: 行
 Links: 链接
 List View: 列表视图
 Live: 正在进行
@@ -630,6 +639,7 @@ Original filename(s): 原始文件名
 Original Score: 原始分数
 OS Info: 系统信息
 Output: 输出
+Output File: 输出文件
 Over {0} problems: 超过 {0} 道题目
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
@@ -893,6 +903,7 @@ tasks_list: 任务列表
 Technical Information: 技术信息
 Temporary session: 临时会话
 Terms of Service: 服务条款
+Test {0}: 测试点 {0}
 Test data comes from: 测试数据来自
 Testdata Config: 测试数据配置
 testdata: 测试数据
@@ -941,6 +952,7 @@ Total Score: 总分数
 Total Time (Seconds): 总耗时 (秒)
 Total Time: 总耗时
 Total: 总计
+Trace Stack: 追踪栈
 Training requirement is not satisfied.: 不满足训练条件。
 training_create: 创建训练
 training_edit: 编辑训练
@@ -986,6 +998,7 @@ User {0} already exists.: 用户 {0} 已存在。
 User {0} not found.: 用户 {0} 不存在。
 User can join this domain by visiting the following URL: 用户可以访问此链接来加入此域
 User ID: 用户 ID
+User Output: 用户输出
 User Privilege: 用户权限
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户
@@ -1002,6 +1015,7 @@ Username: 用户名
 Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此域中移除。
 Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户
+Var name: 变量名
 Valid for registered users who are not members of the domain: 对域外注册用户有效
 Valid for visitors: 对未登录的游客有效
 Version: 版本

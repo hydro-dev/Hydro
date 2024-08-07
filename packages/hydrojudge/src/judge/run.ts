@@ -48,6 +48,7 @@ export const judge = async (ctx: JudgeTask) => {
             subtaskId: 0,
             status,
             score: 100,
+            scaledScore: 1,
             time,
             memory,
             message: message.join('\n').substring(0, 102400),

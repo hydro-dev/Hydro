@@ -1,13 +1,17 @@
+import { readFile } from 'fs/promises';
 import { STATUS } from '@hydrooj/utils/lib/status';
+import {
+    TestCase, TraceStack,
+} from 'hydrooj';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { del, runQueued } from '../sandbox';
+import { del, get, runQueued } from '../sandbox';
 import signals from '../signals';
-import { NormalizedCase } from '../utils';
+import { fileKeepAround, NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
-    return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
+    return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function): Promise<TestCase> => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const res = await runQueued(
             ctx.execute.execute,
@@ -28,6 +32,8 @@ function judgeCase(c: NormalizedCase) {
         let { status } = res;
         let message: any = '';
         let score = 0;
+        let scaledScore = 0;
+        let traceStack: TraceStack;
         const detail = ctx.config.detail ?? true;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
@@ -35,7 +41,9 @@ function judgeCase(c: NormalizedCase) {
             } else if (memory > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
-                ({ status, score, message } = await checkers[ctx.config.checker_type]({
+                ({
+                    status, score, scaledScore, message, traceStack,
+                } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
                     input: { src: c.input },
@@ -51,6 +59,19 @@ function judgeCase(c: NormalizedCase) {
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
+        const [infContent, ansContent] = await Promise.all([
+            readFile(c.input),
+            readFile(c.output),
+        ]);
+        const oufContent = fileIds.stdout ? await get(fileIds.stdout) : Buffer.alloc(0);
+
+        const inf = fileKeepAround(infContent,
+            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+        const ouf = fileKeepAround(oufContent,
+            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+        const ans = fileKeepAround(ansContent,
+            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+
         await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
@@ -60,14 +81,20 @@ function judgeCase(c: NormalizedCase) {
             ctx.analysis = true;
             await ctx.runAnalysis(ctx.execute, { src: c.input });
         }
+
         return {
             id: c.id,
             subtaskId: ctxSubtask.subtask.id,
             status,
             score,
+            scaledScore,
             time,
             memory,
             message,
+            traceStack,
+            inf,
+            ouf,
+            ans,
         };
     };
 }

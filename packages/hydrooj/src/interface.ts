@@ -299,14 +299,43 @@ export interface ProblemStatusDoc extends StatusDocBase {
     star?: boolean;
 }
 
+export interface IncompleteTrace {
+    varName: string;
+    lineNum: number;
+    colNum: number;
+    byteNum: number;
+}
+
+export interface TraceStack {
+    streamName: string;
+    stack: IncompleteTrace[];
+}
+
+export interface FileFragment {
+    ignoredLinesBegin: number;
+    ignoredLinesEnd: number;
+    ignoredBytesBegin: number;
+    ignoredBytesEnd: number;
+    firstLineIgnoredBytesBegin: number;
+    lastLineIgnoredBytesEnd: number;
+    content: string;
+}
+
 export interface TestCase {
     id?: number;
     subtaskId?: number;
     score?: number;
+    scaledScore?: number;
     time: number;
     memory: number;
     status: number;
     message: string;
+    traceStack?: TraceStack;
+    inf?: FileFragment;
+    ouf?: FileFragment;
+    ans?: FileFragment;
+    fromUser?: FileFragment;
+    toUser?: FileFragment;
 }
 
 export interface RecordDoc {
@@ -592,6 +621,7 @@ export interface JudgeMessage {
 export interface SubtaskResult {
     type: SubtaskType;
     score: number;
+    fullScore: number;
     status: number;
 }
 
