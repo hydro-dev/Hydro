@@ -24,13 +24,12 @@ const statusDict = {
 const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0';
 
 export default class CSGOJProvider extends BasicFetcher implements IBasicProvider {
-    // TODO: rewrite old ones in record collection
     static Langs = {
-        c: 'csgoj.0',
-        cpp: 'csgoj.1',
-        java: 'csgoj.3',
-        'py.py3': 'csgoj.6',
-        go: 'csgoj.17',
+        c: '0',
+        cpp: '1',
+        java: '3',
+        'py.py3': '6',
+        go: '17',
     };
 
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
