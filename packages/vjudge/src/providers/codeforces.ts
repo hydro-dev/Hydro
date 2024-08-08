@@ -275,13 +275,10 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     }
 
     async readLatestSubmission(contestId = '', allowEmpty = false) {
-        // avoid too fast request to avoid rejection by server protection
         for (let i = 1; i <= 3; i++) {
             await sleep(1000);
             const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
-            this.csrf = this.getCsrfTokenOnDocument(document);
-            const submission = document.querySelector('[data-submission-id]');
-            const id = submission?.getAttribute('data-submission-id');
+            const id = document.querySelector('[data-submission-id]')?.getAttribute('data-submission-id');
             if (id || allowEmpty) return id;
         }
         return null;
