@@ -243,7 +243,7 @@ export async function apply(ctx: Context) {
                 const rewrite = (from: string[], to: string) => RecordModel.coll.updateMany({ lang: { $in: from } }, { $set: { lang: to } });
                 await Promise.all([
                     rewrite(['csgoj.0', 'poj.1', 'poj.5'], 'c'),
-                    rewrite(['csgoj.1'], 'cc.cc11o2'),
+                    rewrite(['csgoj.1'], 'cc.cc17o2'),
                     rewrite(['csgoj.3', 'poj.2'], 'java'),
                     rewrite(['csgoj.6'], 'py.py3'),
                     rewrite(['csgoj.17'], 'go'),
