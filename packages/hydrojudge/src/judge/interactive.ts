@@ -51,12 +51,13 @@ async function judgeTestlib(c: NormalizedCase, ctx: Context, ctxSubtask: Context
         if (code < 32 && signalled) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     } else {
+        resInteractor.stderr ||= '';
         const result = parseTestlib(resInteractor.stderr, c.score);
         status = result.status;
         score = result.score;
         scaledScore = result.scaledScore;
         message = result.message;
-        if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
+        if (resInteractor.code && !resInteractor.stderr.trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
     }
     return {
         id: c.id,
@@ -113,13 +114,14 @@ async function judgeCplib(c: NormalizedCase, ctx: Context, ctxSubtask: ContextSu
         if (code < 32 && signalled) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     } else {
+        resInteractor.stderr ||= '';
         const result = parseCplib(resInteractor.stderr, c.score);
         status = result.status;
         score = result.score;
         scaledScore = result.scaledScore;
         message = result.message;
         traceStack = result.traceStack;
-        if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
+        if (resInteractor.code && !resInteractor.stderr.trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
     }
 
     const [infContent, fromUserContent, toUserContent] = await Promise.all([

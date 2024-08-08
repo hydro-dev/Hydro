@@ -50,7 +50,7 @@ function SubtaskLine({ subtaskId, result }: { subtaskId: number, result: Subtask
   </div>);
 }
 
-function TraceStack({ traceStack }: { traceStack: TraceStack }) {
+function TraceStackView({ traceStack }: { traceStack: TraceStack }) {
   return (<div>
     <h3 className="section__title">
       {i18n('Trace Stack')}
@@ -71,7 +71,7 @@ function TraceStack({ traceStack }: { traceStack: TraceStack }) {
       <tbody>
         {
           traceStack.stack.toReversed().map((trace, index) => (
-            <tr>
+            <tr key={null}>
               <td>{index}</td>
               <td>{trace.varName}</td>
               <td>{trace.lineNum + 1}</td>
@@ -218,7 +218,7 @@ function CaseDetails({ testCase, subtaskId }: { testCase: TestCase, subtaskId: n
           <pre>{testCase.message}</pre>
         </div>
       </div> : null}
-      {testCase.traceStack ? <TraceStack traceStack={testCase.traceStack} /> : null}
+      {testCase.traceStack ? <TraceStackView traceStack={testCase.traceStack} /> : null}
       {[
         ['inf', 'Input File'],
         ['ouf', 'Output File'],

@@ -71,7 +71,7 @@ export function parse(output: string, fullScore: number)
     : { status: STATUS, score: number, scaledScore: number, message: string, traceStack?: TraceStackHydro } {
     const report = JSON.parse(output) as CheckerReport;
 
-    let status = STATUS.STATUS_SYSTEM_ERROR;
+    let status: STATUS;
     const scaledScore = report.score ?? 0;
     const message = report.message ?? '';
 
