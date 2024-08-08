@@ -82,15 +82,14 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         return _tta;
     }
 
-    async getCsrfTokenOnDocument(document: Document) {
+    getCsrfTokenOnDocument(document: Document) {
         const meta = document.querySelector("meta[name='X-Csrf-Token']")?.getAttribute('content');
         if (meta?.length === 32) return meta;
-
         const span = document.querySelector('span.csrf-token')?.getAttribute('data-csrf');
         if (span?.length === 32) return span;
-
         const input = document.querySelector('input[name="csrf_token"]')?.getAttribute('value');
         if (input?.length === 32) return input;
+        return '';
     }
 
     async getCsrfToken(url: string) {
@@ -100,10 +99,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         }
         const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
         const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
-        this.csrf = await this.getCsrfTokenOnDocument(document);
-        return [
-            this.csrf, ftaa, bfaa, headers,
-        ];
+        return [this.getCsrfTokenOnDocument(document), ftaa, bfaa, headers];
     }
 
     get loggedIn() {
@@ -278,23 +274,17 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
-    async readLatestSubmission(contestId = '', retry = false) {
+    async readLatestSubmission(contestId = '', allowEmpty = false) {
         // avoid too fast request to avoid rejection by server protection
-        await sleep(1000);
-        const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
-        this.csrf = await this.getCsrfTokenOnDocument(document);
-        const querySelector = document.querySelector('[data-submission-id]');
-        if (!querySelector) {
-            if (retry) return '';
-            let r = 0;
-            while (r < 3) {
-                const sub = await this.readLatestSubmission(contestId, true);
-                if (sub) return sub;
-                r++;
-            }
-            return '';
+        for (let i = 1; i <= 3; i++) {
+            await sleep(1000);
+            const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
+            this.csrf = this.getCsrfTokenOnDocument(document);
+            const submission = document.querySelector('[data-submission-id]');
+            const id = submission?.getAttribute('data-submission-id');
+            if (id || allowEmpty) return id;
         }
-        return querySelector.getAttribute('data-submission-id');
+        return null;
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
@@ -303,7 +293,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
-        const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
+        const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '', true);
         const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
         // TODO check submit time to ensure submission
         const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
