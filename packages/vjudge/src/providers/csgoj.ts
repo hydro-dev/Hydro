@@ -26,7 +26,7 @@ const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/201
 export default class CSGOJProvider extends BasicFetcher implements IBasicProvider {
     static Langs = {
         c: '0',
-        cpp: '1',
+        'cc.cc17o2': '1',
         java: '3',
         'py.py3': '6',
         go: '17',
