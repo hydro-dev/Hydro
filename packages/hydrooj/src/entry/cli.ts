@@ -33,6 +33,15 @@ async function runScript(name: string, arg: any) {
 
 async function cli() {
     const [, modelName, func, ...args] = argv.args as [string, string, string, ...any[]];
+    if (modelName === 'execute') {
+        try {
+            // eslint-disable-next-line no-eval
+            const res = eval(`(async () => { with (require('${require.resolve('../plugin-api')}')) { ${func} } })`);
+            return console.log(await res());
+        } catch (e) {
+            console.error(`Execution fail: ${e.message}`);
+        }
+    }
     if (modelName === 'script') {
         let arg: any;
         console.log(args.join(' '));
