@@ -240,11 +240,15 @@ export async function apply(ctx: Context) {
         c.migration.registerChannel('vjudge', [
             async function init() { }, // eslint-disable-line
             c.migration.dontWait(async () => {
-                await RecordModel.coll.updateMany({ lang: 'csgoj.0' }, { $set: { lang: 'c' } });
-                await RecordModel.coll.updateMany({ lang: 'csgoj.1' }, { $set: { lang: 'cpp' } });
-                await RecordModel.coll.updateMany({ lang: 'csgoj.3' }, { $set: { lang: 'java' } });
-                await RecordModel.coll.updateMany({ lang: 'csgoj.6' }, { $set: { lang: 'py.py3' } });
-                await RecordModel.coll.updateMany({ lang: 'csgoj.17' }, { $set: { lang: 'go' } });
+                const rewrite = (from: string[], to: string) => RecordModel.coll.updateMany({ lang: { $in: from } }, { $set: { lang: to } });
+                await Promise.all([
+                    rewrite(['csgoj.0', 'poj.1', 'poj.5'], 'c'),
+                    rewrite(['csgoj.1'], 'cc.cc11o2'),
+                    rewrite(['csgoj.3', 'poj.2'], 'java'),
+                    rewrite(['csgoj.6'], 'py.py3'),
+                    rewrite(['csgoj.17'], 'go'),
+                    rewrite(['poj.0', 'poj.4'], 'cc.cc98'),
+                ]);
             }, 'update csgoj langs in record collection'),
         ]);
     });
