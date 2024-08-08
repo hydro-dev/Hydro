@@ -313,12 +313,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
                 .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
             if (message) throw new Error(message);
             const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
-            if (!submission) throw new Error('Failed to get submission id.' );
+            if (!submission) throw new Error('Failed to get submission id.');
             if (submission === latestSubmission) throw new Error('Submission page is not updated.');
             if (redirects.length === 0 || !redirects.toString().includes('my')) throw new Error('No redirect to submission page.');
             return type !== 'GYM' ? submission : `${contestId}#${submission}`;
         } catch (e) {
             next({ message: e.message });
+            // eslint-disable-next-line max-len
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit to remote failed. Check service status or use better network to avoid rejection by server protection.' });
             return null;
         }
