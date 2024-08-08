@@ -23,7 +23,7 @@ const {
   list,
   targets,
 } = compat({
-  targets: '> 1%, chrome 70, firefox 60, safari 16, ios_saf 16, not ie 11, not op_mini all',
+  targets: '> 1%, chrome 70, firefox 90, safari 16, ios_saf 16, not ie 11, not op_mini all',
   modules: [
     'core-js/stable',
   ],
@@ -99,6 +99,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     devtool: env.production ? 'source-map' : false,
     entry: {
       [`hydro-${version}`]: './entry.js',
+      'sentry': './sentry.ts',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
     },
@@ -209,9 +210,9 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     },
     optimization: {
       splitChunks: {
-        minSize: 256000,
-        maxAsyncRequests: 5,
-        maxInitialRequests: 3,
+        minSize: 64000,
+        maxAsyncRequests: 10,
+        maxInitialRequests: 7,
         automaticNameDelimiter: '-',
         cacheGroups: {
           style: {
@@ -222,7 +223,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
             enforce: true,
           },
           vendors: {
-            test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
+            test: /[\\/]node_modules[\\/].+\.(m?[jt]sx?|json|yaml)$/,
             priority: -10,
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
