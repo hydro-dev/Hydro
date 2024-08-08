@@ -429,7 +429,12 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     async sendUpdate(rdoc: RecordDoc) {
         this.send({
             status: rdoc.status,
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc, pdoc: this.pdoc }),
+            score: rdoc.score,
+            progress: rdoc.progress,
+            compilerTexts: rdoc.compilerTexts,
+            judgeTexts: rdoc.judgeTexts,
+            testCases: rdoc.testCases,
+            subtasks: rdoc.subtasks,
             summary_html: await this.renderHTML('record_detail_summary.html', { rdoc, pdoc: this.pdoc }),
         });
     }

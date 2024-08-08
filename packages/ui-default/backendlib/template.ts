@@ -73,7 +73,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('assign', (self, data) => Object.assign(self, data));
     this.addFilter('markdown', (self) => ensureTag(markdown.render(self)));
     this.addFilter('markdownInline', (self) => ensureTag(markdown.renderInline(self)));
-    this.addFilter('ansi', (self) => misc.ansiToHtml(self));
     this.addFilter('base64_encode', (s) => Buffer.from(s).toString('base64'));
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
     this.addFilter('jsesc', (self) => jsesc(self, { isScriptContext: true }));
