@@ -249,7 +249,7 @@ export async function apply(ctx: Context) {
                     rewrite(['csgoj.17'], 'go'),
                     rewrite(['poj.0', 'poj.4'], 'cc.cc98'),
                 ]);
-            }, 'update csgoj langs in record collection'),
+            }, 'update csgoj and poj langs in record collection'),
         ]);
     });
     ctx.inject(['vjudge'], async (c) => {

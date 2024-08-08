@@ -157,9 +157,8 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
             .map((i) => `P${+i.children[0].innerHTML ? i.children[0].innerHTML : i.children[1].innerHTML}`);
     }
 
-    async submitProblem(id: string, lang: string, code: string) {
+    async submitProblem(id: string, language: string, code: string) {
         await this.ensureLogin();
-        const language = lang.includes('poj.') ? lang.split('poj.')[1] : '0';
         code = Buffer.from(code).toString('base64');
         const { text } = await this.post('/submit').send({
             problem_id: id.split('P')[1],
