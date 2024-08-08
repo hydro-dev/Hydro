@@ -84,13 +84,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
 
     async getCsrfTokenOnDocument(document: Document) {
         const meta = document.querySelector("meta[name='X-Csrf-Token']")?.getAttribute('content');
-        if (meta && meta.length === 32) { this.csrf = meta; return; }
+        if (meta?.length === 32) return meta;
 
         const span = document.querySelector('span.csrf-token')?.getAttribute('data-csrf');
-        if (span && span.length === 32) { this.csrf = span; return; }
+        if (span?.length === 32) return span;
 
         const input = document.querySelector('input[name="csrf_token"]')?.getAttribute('value');
-        if (input && input.length === 32) { this.csrf = input; }
+        if (input?.length === 32) return input;
     }
 
     async getCsrfToken(url: string) {
@@ -100,7 +100,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         }
         const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
         const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
-        await this.getCsrfTokenOnDocument(document);
+        this.csrf = await this.getCsrfTokenOnDocument(document);
         return [
             this.csrf, ftaa, bfaa, headers,
         ];
@@ -282,7 +282,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         // avoid too fast request to avoid rejection by server protection
         await sleep(1000);
         const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
-        await this.getCsrfTokenOnDocument(document);
+        this.csrf = await this.getCsrfTokenOnDocument(document);
         const querySelector = document.querySelector('[data-submission-id]');
         if (!querySelector) {
             if (retry) return '';
