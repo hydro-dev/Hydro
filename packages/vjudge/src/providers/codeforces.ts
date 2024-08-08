@@ -82,6 +82,17 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         return _tta;
     }
 
+    async getCsrfTokenOnDocument(document: Document) {
+        const meta = document.querySelector("meta[name='X-Csrf-Token']")?.getAttribute('content');
+        if (meta && meta.length === 32) { this.csrf = meta; return; }
+
+        const span = document.querySelector('span.csrf-token')?.getAttribute('data-csrf');
+        if (span && span.length === 32) { this.csrf = span; return; }
+
+        const input = document.querySelector('input[name="csrf_token"]')?.getAttribute('value');
+        if (input && input.length === 32) { this.csrf = input; }
+    }
+
     async getCsrfToken(url: string) {
         const { document, html, headers } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
@@ -89,12 +100,9 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         }
         const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
         const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
+        await this.getCsrfTokenOnDocument(document);
         return [
-            (
-                document.querySelector('meta[name="X-Csrf-Token"]')
-                || document.querySelector('input[name="csrf_token"]')
-            )?.getAttribute('content'),
-            ftaa, bfaa, headers,
+            this.csrf, ftaa, bfaa, headers,
         ];
     }
 
@@ -270,11 +278,23 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
-    async readLatestSubmission(contestId = '') {
+    async readLatestSubmission(contestId = '', retry = false) {
+        // avoid too fast request to avoid rejection by server protection
+        await sleep(1000);
         const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
-        this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
-        return submission;
+        await this.getCsrfTokenOnDocument(document);
+        const querySelector = document.querySelector('[data-submission-id]');
+        if (!querySelector) {
+            if (retry) return null;
+            let r = 0;
+            while (r < 3) {
+                const sub = this.readLatestSubmission(contestId, true);
+                if (sub) return sub;
+                r++;
+            }
+            return null;
+        }
+        return querySelector.getAttribute('data-submission-id');
     }
 
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
@@ -307,10 +327,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             return null;
         }
         const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
-        if (submission === latestSubmission || redirects.length === 0 || !redirects.toString().includes('my')) {
+        if (!submission || submission === latestSubmission || redirects.length === 0 || !redirects.toString().includes('my')) {
+            if (!submission) next({ message: 'Can not read latest submission.' });
+            if (submission === latestSubmission) next({ message: 'Submission page is not updated.' });
+            if (redirects.length === 0 || !redirects.toString().includes('my')) next({ message: 'No redirect to submission page.' });
             // Submit failed so the request is not redirected
             // eslint-disable-next-line max-len
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit failed. Check service status or use better network to avoid rejection by server protection.' });
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit to remote failed. Check service status or use better network to avoid rejection by server protection.' });
             return null;
         }
         return type !== 'GYM' ? submission : `${contestId}#${submission}`;
