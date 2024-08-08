@@ -285,14 +285,14 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         await this.getCsrfTokenOnDocument(document);
         const querySelector = document.querySelector('[data-submission-id]');
         if (!querySelector) {
-            if (retry) return null;
+            if (retry) return '';
             let r = 0;
             while (r < 3) {
-                const sub = this.readLatestSubmission(contestId, true);
+                const sub = await this.readLatestSubmission(contestId, true);
                 if (sub) return sub;
                 r++;
             }
-            return null;
+            return '';
         }
         return querySelector.getAttribute('data-submission-id');
     }
