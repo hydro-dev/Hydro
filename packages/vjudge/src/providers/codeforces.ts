@@ -278,6 +278,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         for (let i = 1; i <= 3; i++) {
             await sleep(1000);
             const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
+            this.csrf = this.getCsrfTokenOnDocument(document);
             const id = document.querySelector('[data-submission-id]')?.getAttribute('data-submission-id');
             if (id || allowEmpty) return id;
         }
@@ -290,40 +291,37 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
-        const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '', true);
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
-        // TODO check submit time to ensure submission
-        const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
-            csrf_token: csrf,
-            action: 'submitSolutionFormSubmitted',
-            programTypeId,
-            source: code,
-            tabSize: 4,
-            sourceFile: '',
-            ftaa,
-            bfaa,
-            _tta: this.tta(this.getCookie('39ce7')),
-            contestId,
-            submittedProblemIndex: problemId,
-        });
-        const { window: { document: statusDocument } } = new JSDOM(submit);
-        const message = Array.from(statusDocument.querySelectorAll('.error'))
-            .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
-        if (message) {
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
-            return null;
-        }
-        const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
-        if (!submission || submission === latestSubmission || redirects.length === 0 || !redirects.toString().includes('my')) {
-            if (!submission) next({ message: 'Can not read latest submission.' });
-            if (submission === latestSubmission) next({ message: 'Submission page is not updated.' });
-            if (redirects.length === 0 || !redirects.toString().includes('my')) next({ message: 'No redirect to submission page.' });
-            // Submit failed so the request is not redirected
-            // eslint-disable-next-line max-len
+        try {
+            const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '', true);
+            const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
+            // TODO check submit time to ensure submission
+            const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
+                csrf_token: csrf,
+                action: 'submitSolutionFormSubmitted',
+                programTypeId,
+                source: code,
+                tabSize: 4,
+                sourceFile: '',
+                ftaa,
+                bfaa,
+                _tta: this.tta(this.getCookie('39ce7')),
+                contestId,
+                submittedProblemIndex: problemId,
+            });
+            const { window: { document: statusDocument } } = new JSDOM(submit);
+            const message = Array.from(statusDocument.querySelectorAll('.error'))
+                .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
+            if (message) throw new Error(message);
+            const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
+            if (!submission) throw new Error('Failed to get submission id.' );
+            if (submission === latestSubmission) throw new Error('Submission page is not updated.');
+            if (redirects.length === 0 || !redirects.toString().includes('my')) throw new Error('No redirect to submission page.');
+            return type !== 'GYM' ? submission : `${contestId}#${submission}`;
+        } catch (e) {
+            next({ message: e.message });
             end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit to remote failed. Check service status or use better network to avoid rejection by server protection.' });
             return null;
         }
-        return type !== 'GYM' ? submission : `${contestId}#${submission}`;
     }
 
     async waitForSubmission(id: string, next, end) {
