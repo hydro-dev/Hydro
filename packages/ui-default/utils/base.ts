@@ -2,7 +2,6 @@ import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DOMServer from 'react-dom/server';
 
 export function substitute(str: string, obj: any) {
   return str.replace(/\{([^{}]+)\}/g, (match, key) => {
@@ -38,12 +37,13 @@ export function tpl<T extends boolean = false>(node: React.ReactNode, reactive?:
 export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]): string;
 export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitutions: Substitution[] | boolean[]) {
   if (React.isValidElement(pieces)) {
-    if (substitutions[0]) {
-      const div = document.createElement('div');
-      ReactDOM.createRoot(div).render(pieces);
-      return div;
-    }
-    return DOMServer.renderToStaticMarkup(pieces);
+    const div = document.createElement('div');
+    const root = ReactDOM.createRoot(div);
+    root.render(pieces);
+    if (substitutions[0]) return div;
+    const html = div.innerHTML;
+    root.unmount();
+    return html;
   }
   let result = pieces[0];
   for (let i = 0; i < substitutions.length; ++i) {
@@ -80,6 +80,15 @@ export const zIndexManager = {
     return ++zIndexCurrent;
   },
 };
+
+export function addSpeculationRules(rules) {
+  if (HTMLScriptElement.supports?.('speculationrules')) {
+    const specScript = document.createElement('script');
+    specScript.type = 'speculationrules';
+    specScript.textContent = JSON.stringify(rules);
+    document.body.append(specScript);
+  }
+}
 
 export const request = {
   ajax(options: Record<string, any>) {
