@@ -400,10 +400,17 @@ export async function run({
                                     subtaskId: subtask.$.num,
                                     id: 1,
                                     score: 0,
+                                    scaledScore: undefined,
                                     time: 0,
                                     memory: 0,
                                     message: 'Skipped',
                                     status: STATUS.STATUS_CANCELED,
+                                    traceStack: undefined,
+                                    inf: undefined,
+                                    ouf: undefined,
+                                    ans: undefined,
+                                    fromUser: undefined,
+                                    toUser: undefined,
                                 });
                                 continue;
                             }

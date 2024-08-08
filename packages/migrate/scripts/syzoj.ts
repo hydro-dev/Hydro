@@ -343,10 +343,17 @@ export async function run({
                                 subtaskId: i + 1,
                                 id: j + 1,
                                 score: Math.trunc((curCase.result?.scoringRate || 0) * 100),
+                                scaledScore: curCase.result?.scoringRate || 0,
                                 time: curCase.result?.time || 0,
                                 memory: curCase.result?.memory || 0,
                                 message: curCase.result?.spjMessage || curCase.result?.systemMessage || curCase.result?.userError || '',
                                 status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
+                                traceStack: undefined,
+                                inf: undefined,
+                                ouf: undefined,
+                                ans: undefined,
+                                fromUser: undefined,
+                                toUser: undefined,
                             });
                         }
                     }
