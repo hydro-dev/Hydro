@@ -671,6 +671,8 @@ export interface OauthMap {
     _id: string;
     /** target uid */
     uid: number;
+    /** platform name */
+    platform?: string;
 }
 
 export interface DiscussionHistoryDoc {
