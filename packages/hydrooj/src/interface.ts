@@ -300,11 +300,15 @@ export interface ProblemStatusDoc extends StatusDocBase {
     star?: boolean;
 }
 
+export interface Position {
+    line: number,
+    col: number,
+    byte: number,
+}
+
 export interface IncompleteTrace {
     varName: string;
-    lineNum: number;
-    colNum: number;
-    byteNum: number;
+    pos: Position,
 }
 
 export interface TraceStack {
@@ -313,13 +317,10 @@ export interface TraceStack {
 }
 
 export interface FileFragment {
-    ignoredLinesBegin: number;
-    ignoredLinesEnd: number;
-    ignoredBytesBegin: number;
-    ignoredBytesEnd: number;
-    firstLineIgnoredBytesBegin: number;
-    lastLineIgnoredBytesEnd: number;
+    // Left closed and right open interval
+    pos: { begin: Position, end: Position },
     content: string;
+    length: number,
 }
 
 export interface TestCase {
@@ -332,11 +333,7 @@ export interface TestCase {
     status: number;
     message: string;
     traceStack?: TraceStack;
-    inf?: FileFragment;
-    ouf?: FileFragment;
-    ans?: FileFragment;
-    fromUser?: FileFragment;
-    toUser?: FileFragment;
+    streams?: Record<string, FileFragment>;
 }
 
 export interface RecordDoc {

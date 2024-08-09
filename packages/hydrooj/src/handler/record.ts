@@ -240,11 +240,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
                 memory: 0,
                 message: 'score canceled',
                 traceStack: undefined,
-                inf: undefined,
-                ouf: undefined,
-                ans: undefined,
-                fromUser: undefined,
-                toUser: undefined,
+                streams: {},
             }],
             subtasks: {},
         };

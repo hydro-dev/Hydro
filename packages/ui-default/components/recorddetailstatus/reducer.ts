@@ -1,4 +1,6 @@
-import { JudgeMessage, SubtaskResult, TestCase } from 'hydrooj';
+import {
+  JudgeMessage, SubtaskResult, TestCase,
+} from 'hydrooj';
 
 interface State {
   status: number;

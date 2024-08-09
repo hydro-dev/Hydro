@@ -66,11 +66,11 @@ function judgeCase(c: NormalizedCase) {
         const oufContent = fileIds[name] ? await get(fileIds[name]) : Buffer.alloc(0);
 
         const inf = fileKeepAround(infContent,
-            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
         const ouf = fileKeepAround(oufContent,
-            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
         const ans = fileKeepAround(ansContent,
-            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
 
         await Promise.allSettled(fileIds.map(del));
         return {
@@ -82,9 +82,11 @@ function judgeCase(c: NormalizedCase) {
             memory: 0,
             message,
             traceStack,
-            inf,
-            ouf,
-            ans,
+            streams: {
+                inf,
+                ouf,
+                ans,
+            },
         };
     };
 }

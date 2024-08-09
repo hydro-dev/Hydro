@@ -5,13 +5,13 @@ import {
   FileFragment, IncompleteTrace, SubtaskResult, TestCase, TraceStack,
 } from 'hydrooj';
 import _ from 'lodash';
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useSelector } from 'react-redux';
 import { STATUS_CODES } from 'vj/constant/record';
 import { i18n } from 'vj/utils';
+import prism from '../highlighter/prismjs';
 import { RootState } from './reducer';
 
 const AU = new AnsiUp();
@@ -71,12 +71,12 @@ function TraceStackView({ traceStack }: { traceStack: TraceStack }) {
       <tbody>
         {
           traceStack.stack.toReversed().map((trace, index) => (
-            <tr key={null}>
+            <tr key={index}>
               <td>{index}</td>
               <td>{trace.varName}</td>
-              <td>{trace.lineNum + 1}</td>
-              <td>{trace.colNum + 1}</td>
-              <td>{trace.byteNum + 1}</td>
+              <td>{trace.pos.line + 1}</td>
+              <td>{trace.pos.col + 1}</td>
+              <td>{trace.pos.byte + 1}</td>
             </tr>
           ))
         }
@@ -86,128 +86,44 @@ function TraceStackView({ traceStack }: { traceStack: TraceStack }) {
 }
 
 function StreamFilePreview({
-  stream, streamName, title, subtaskId, caseId, error,
+  stream, title, errorTrace,
 }: {
   stream: FileFragment,
-  streamName: string,
   title: string,
-  subtaskId: number,
-  caseId: number,
-  error?: { trace: IncompleteTrace, message: string },
+  errorTrace?: IncompleteTrace
 }) {
-  const monacoRef = useRef(null);
+  const elRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (monacoRef === null) return () => { };
+    if (!elRef.current) return;
 
-    let lineDelta = 0;
+    const $dom = $(elRef.current);
+    prism.highlightBlocks($dom);
+  }, [stream, elRef]);
 
-    let textLineBegin = '';
-    if (stream.ignoredLinesBegin) {
-      textLineBegin = `[${stream.ignoredBytesBegin - stream.firstLineIgnoredBytesBegin} bytes ...]\n`;
-      if (stream.ignoredLinesBegin > 1) lineDelta = stream.ignoredLinesBegin - 1;
-    }
-
-    let textColBegin = '';
-    if (stream.firstLineIgnoredBytesBegin) {
-      textColBegin = `[${stream.firstLineIgnoredBytesBegin} bytes ...]`;
-    }
-
-    let textColEnd = '';
-    if (stream.lastLineIgnoredBytesEnd) {
-      textColEnd = `[... ${stream.lastLineIgnoredBytesEnd} bytes]`;
-    }
-
-    let textLineEnd = '';
-    if (stream.ignoredLinesEnd) {
-      textLineEnd = `\n[... ${stream.ignoredBytesEnd - stream.lastLineIgnoredBytesEnd} bytes]`;
-    }
-
-    const model = monaco.editor.createModel(textLineBegin + textColBegin + stream.content + textColEnd + textLineEnd,
-      'plaintext', monaco.Uri.parse(`hydro-record://${subtaskId}/${caseId}/${streamName}`));
-
-    const lineCount = model.getLineCount();
-
-    const lineNumbers = (x: number): string => {
-      if (stream.ignoredLinesBegin > 1 && x === 1) {
-        return '...';
-      }
-      if (stream.ignoredLinesBegin > 1 && x === lineCount) {
-        return '...';
-      }
-      return (x + lineDelta).toString();
-    };
-
-    if (error) {
-      monaco.editor.setModelMarkers(model, 'owner', [{
-        message: i18n('Error reading variable `{0}` at byte {1}: {2}').format(error.trace.varName, error.trace.byteNum + 1, error.message),
-        severity: monaco.MarkerSeverity.Error,
-        startLineNumber: error.trace.lineNum - lineDelta + 1,
-        startColumn: error.trace.colNum - stream.firstLineIgnoredBytesBegin + textColBegin.length + 1,
-        endLineNumber: error.trace.lineNum - stream.firstLineIgnoredBytesBegin - lineDelta + 1,
-        endColumn: error.trace.colNum - stream.firstLineIgnoredBytesBegin + textColBegin.length + 2,
-      }]);
-    }
-
-    const editor = monaco.editor.create(monacoRef.current, {
-      model,
-      readOnly: true,
-      minimap: { enabled: false },
-      lineNumbers,
-      renderValidationDecorations: 'on',
-      automaticLayout: true,
-    });
-
-    if (error) {
-      editor.createDecorationsCollection([
-        {
-          range: new monaco.Range(error.trace.lineNum - lineDelta + 1, 1, error.trace.lineNum - lineDelta + 1, 1),
-          options: {
-            isWholeLine: true,
-            className: 'custom-error-line',
-          },
-        },
-      ]);
-    }
-
-    const lastLineWithContent = stream.ignoredLinesEnd ? lineCount - 1 : lineCount;
-    console.debug(stream.ignoredLinesBegin ? 2 : 1, textColBegin.length + 1);
-    editor.createDecorationsCollection([
-      {
-        range: new monaco.Range(1, 1, stream.ignoredLinesBegin ? 2 : 1, textColBegin.length + 1),
-        options: {
-          isWholeLine: false,
-          inlineClassName: 'custom-ignore-bytes',
-        },
-      },
-      {
-        range: new monaco.Range(
-          lastLineWithContent,
-          model.getLineContent(lastLineWithContent).length - textColEnd.length + 1,
-          lineCount,
-          model.getLineContent(lineCount).length + 1),
-        options: {
-          isWholeLine: false,
-          inlineClassName: 'custom-ignore-bytes',
-        },
-      }],
-    );
-
-    return () => {
-      editor.dispose();
-      model.dispose();
-    };
-  }, [monacoRef]);
+  const omitBytesLeft = stream.pos.begin.byte;
+  const omitBytesRight = stream.length - stream.pos.end.byte;
 
   return (<div>
     <h3 className="section__title">
       {i18n(title)}
     </h3>
-    <div ref={monacoRef} className="monaco-target"></div>
+    <div className="stream-wrap" ref={elRef}>
+      <pre
+        className="line-numbers"
+        data-start={stream.pos.begin.line + 1}
+        {...(errorTrace ? { 'data-line-offset': stream.pos.begin.line, 'data-line': errorTrace.pos.line } : {})}
+        data-line-offset={stream.pos.begin.line}
+      >
+        {omitBytesLeft ? <><div>{i18n('{0} bytes omitted').format(omitBytesLeft)}</div><hr /></> : null}
+        <code>{stream.content}</code>
+        {omitBytesRight ? <><hr /><div>{i18n('{0} bytes omitted').format(omitBytesRight)}</div></> : null}
+      </pre>
+    </div>
   </div>);
 }
 
-function CaseDetails({ testCase, subtaskId }: { testCase: TestCase, subtaskId: number }) {
+function CaseDetails({ testCase }: { testCase: TestCase }) {
   return (
     <div className='details'>
       {testCase.message ? <div>
@@ -225,23 +141,20 @@ function CaseDetails({ testCase, subtaskId }: { testCase: TestCase, subtaskId: n
         ['ans', 'Answer File'],
         ['fromUser', 'User Output'],
         ['toUser', 'Interactor Output']].map(([stream, title]) =>
-        (testCase[stream]
+        (testCase.streams && testCase.streams[stream]
           ? <StreamFilePreview
             key={stream}
-            stream={testCase[stream]}
-            streamName={stream}
+            stream={testCase.streams[stream]}
             title={title}
-            subtaskId={subtaskId}
-            caseId={testCase.id}
-            error={
+            errorTrace={
               testCase.traceStack && testCase.traceStack.streamName === stream && testCase.traceStack.stack.length
-                ? { trace: testCase.traceStack.stack.at(-1), message: testCase.message } : null} />
+                ? testCase.traceStack.stack.at(-1) : null} />
           : null))}
     </div>
   );
 }
 
-function Case({ testCase, subtaskId }: { testCase: TestCase, subtaskId: number }) {
+function Case({ testCase }: { testCase: TestCase }) {
   const statusCode = STATUS_CODES[testCase.status];
   const statusText = STATUS_TEXTS[testCase.status];
   const statusIsLimitExceeded = [
@@ -281,7 +194,7 @@ function Case({ testCase, subtaskId }: { testCase: TestCase, subtaskId: number }
           {statusIsLimitExceeded ? '>' : ''}{size(testCase.memory, 1024)}
         </div>
       </div>
-      {expanded ? <CaseDetails testCase={testCase} subtaskId={subtaskId} /> : null}
+      {expanded ? <CaseDetails testCase={testCase} /> : null}
     </div>
   );
 }
@@ -296,7 +209,7 @@ function Subtask({
   return (<div className="subtask">
     {singleSubtask ? null : <SubtaskLine subtaskId={subtaskId} result={result} />}
     {
-      sortedTestCases.map((testCase) => <Case key={testCase.id} testCase={testCase} subtaskId={subtaskId} />)
+      sortedTestCases.map((testCase) => <Case key={testCase.id} testCase={testCase} />)
     }
   </div>);
 }

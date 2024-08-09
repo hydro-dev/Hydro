@@ -211,11 +211,7 @@ const tasks = {
                 memory: c.memory_kb || c.memory,
                 message: (c.judge_text || '') + (c.message || ''),
                 traceStack: undefined,
-                inf: undefined,
-                ouf: undefined,
-                ans: undefined,
-                fromUser: undefined,
-                toUser: undefined,
+                streams: {},
             });
         }
         const rdoc: RecordDoc = {

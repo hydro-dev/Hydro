@@ -54,9 +54,11 @@ export interface ValidatorReport {
 function convertIncompleteTrace(trace: IncompleteTrace): IncompleteTraceHydro {
     return {
         varName: trace.var_name,
-        lineNum: trace.line_num,
-        colNum: trace.col_num,
-        byteNum: trace.byte_num,
+        pos: {
+            line: trace.line_num,
+            col: trace.col_num,
+            byte: trace.byte_num,
+        },
     };
 }
 

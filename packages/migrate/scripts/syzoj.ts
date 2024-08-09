@@ -349,11 +349,7 @@ export async function run({
                                 message: curCase.result?.spjMessage || curCase.result?.systemMessage || curCase.result?.userError || '',
                                 status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
                                 traceStack: undefined,
-                                inf: undefined,
-                                ouf: undefined,
-                                ans: undefined,
-                                fromUser: undefined,
-                                toUser: undefined,
+                                streams: {},
                             });
                         }
                     }

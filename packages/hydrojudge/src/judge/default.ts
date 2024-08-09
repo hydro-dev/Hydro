@@ -66,11 +66,11 @@ function judgeCase(c: NormalizedCase) {
         const oufContent = fileIds.stdout ? await get(fileIds.stdout) : Buffer.alloc(0);
 
         const inf = fileKeepAround(infContent,
-            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
         const ouf = fileKeepAround(oufContent,
-            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
         const ans = fileKeepAround(ansContent,
-            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).byteNum);
+            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
 
         await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
@@ -92,9 +92,11 @@ function judgeCase(c: NormalizedCase) {
             memory,
             message,
             traceStack,
-            inf,
-            ouf,
-            ans,
+            streams: {
+                inf,
+                ouf,
+                ans,
+            },
         };
     };
 }

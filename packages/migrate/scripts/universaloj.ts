@@ -406,11 +406,7 @@ export async function run({
                                     message: 'Skipped',
                                     status: STATUS.STATUS_CANCELED,
                                     traceStack: undefined,
-                                    inf: undefined,
-                                    ouf: undefined,
-                                    ans: undefined,
-                                    fromUser: undefined,
-                                    toUser: undefined,
+                                    streams: {},
                                 });
                                 continue;
                             }

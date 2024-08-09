@@ -67,17 +67,28 @@ export function fileKeepAround(file: Buffer, index: number): FileFragment {
 
     const left = file.subarray(0, keepBegin);
     const keep = file.subarray(keepBegin, keepEnd);
-    const right = file.subarray(keepEnd);
 
     const lfByte = '\n'.charCodeAt(0);
 
+    const leftLines = left.filter((byte) => byte === lfByte).byteLength;
+    const keepLines = keep.filter((byte) => byte === lfByte).byteLength;
+
+    const lastCol = (bytes: Buffer) => bytes.byteLength - bytes.lastIndexOf(lfByte) - 1;
+
     return {
-        ignoredLinesBegin: left.filter((byte) => byte === lfByte).byteLength,
-        ignoredLinesEnd: right.filter((byte) => byte === lfByte).byteLength,
-        ignoredBytesBegin: left.byteLength,
-        ignoredBytesEnd: right.byteLength,
-        firstLineIgnoredBytesBegin: left.byteLength - left.lastIndexOf(lfByte) - 1,
-        lastLineIgnoredBytesEnd: right.indexOf(lfByte) === -1 ? right.byteLength : right.indexOf(lfByte),
+        pos: {
+            begin: {
+                line: leftLines,
+                col: lastCol(left),
+                byte: left.byteLength,
+            },
+            end: {
+                line: leftLines + keepLines,
+                col: keepLines === 0 ? lastCol(left) + keep.byteLength : lastCol(keep),
+                byte: left.byteLength + keep.byteLength,
+            },
+        },
+        length: file.byteLength,
         content: keep.toString('utf8'),
     };
 }

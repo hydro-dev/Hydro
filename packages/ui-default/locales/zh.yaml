@@ -1,6 +1,7 @@
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
 '[Richtext message]': '[富文本消息]'
+'{0} bytes omitted': '已省略 {0} 字节'
 '{0} comments': '{0} 条评论'
 '{0} discussions': '{0} 条讨论'
 '{0} is a moderator of this domain.': '{}是这个域的管理者之一。'
