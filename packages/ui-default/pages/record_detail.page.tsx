@@ -24,10 +24,11 @@ export default new NamedPage('record_detail', async () => {
     if (typeof msg.status === 'number' && window.parent) window.parent.postMessage({ status: msg.status });
   };
   $(document).on('click', '.subtask-case', function () {
-    const data = $(this).find('.message').text();
-    if (!data?.trim()) return;
+    const text = $(this).find('.message').text();
+    const data = $(this).find('.message').html();
+    if (!text?.trim()) return;
     new InfoDialog({
-      $body: tpl(<pre>{data}</pre>),
+      $body: tpl(<pre dangerouslySetInnerHTML={{ __html: data }} />),
     }).open();
   });
 });
