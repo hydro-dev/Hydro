@@ -14,7 +14,7 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
         timeMin: Number.MAX_SAFE_INTEGER,
         timeMax: 0,
         type: cfg.type || 'default',
-        hackable: cfg.validator && cfg.checker && !['default', 'strict'].includes(cfg.checker_type),
+        hackable: cfg.validator && (cfg.std ? true : (cfg.checker && !['default', 'strict'].includes(cfg.checker_type))),
     };
     if (cfg.subType) result.subType = cfg.subType;
     if (cfg.target) result.target = cfg.target;
