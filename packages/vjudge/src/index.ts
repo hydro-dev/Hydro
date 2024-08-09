@@ -49,6 +49,10 @@ class AccountService {
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
+            if (this.Provider.Langs && !langConfig?.validAs?.[this.account.type]) {
+                end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${task.lang}` });
+                return;
+            }
             if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
             const comment = langConfig.comment;
             if (comment) {

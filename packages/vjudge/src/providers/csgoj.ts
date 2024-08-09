@@ -30,7 +30,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
             key: '0',
         },
         'cc.cc17o2': {
-            display: "C++",
+            display: 'C++',
             key: '1',
         },
         java: {
@@ -131,12 +131,8 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         return result.body.rows.map((i) => `P${+i.problem_id}`);
     }
 
-    async submitProblem(id: string, lang: string, source: string, info, next, end) {
+    async submitProblem(id: string, lang: string, source: string) {
         await this.ensureLogin();
-        if (!Object.values(CSGOJProvider.Langs).includes(lang)) {
-            end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${lang}` });
-            return null;
-        }
         const result = await this.post('/csgoj/Problemset/submit_ajax')
             .set('referer', `https://cpc.csgrandeur.cn/csgoj/problemset/submit?pid=${id.split('P')[1]}`)
             .send({
