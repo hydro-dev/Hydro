@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import { useSelector } from 'react-redux';
 import { STATUS_CODES } from 'vj/constant/record';
-import { i18n } from 'vj/utils';
+import { i18n, request } from 'vj/utils';
 import prism from '../highlighter/prismjs';
 import { RootState } from './reducer';
 
@@ -123,7 +123,7 @@ function StreamFilePreview({
   </div>);
 }
 
-function CaseDetails({ testCase }: { testCase: TestCase }) {
+function CaseDetailsView({ testCase }: { testCase: TestCase }) {
   return (
     <div className='details'>
       {testCase.message ? <div>
@@ -152,6 +152,25 @@ function CaseDetails({ testCase }: { testCase: TestCase }) {
           : null))}
     </div>
   );
+}
+
+function CaseDetails({ subtaskId, caseId }: { subtaskId: number, caseId: number }) {
+  const [testCase, setTestCase] = useState(null as TestCase | null);
+
+  useEffect(() => {
+    request.get(`${window.location.pathname}/subtask/${subtaskId}/case/${caseId}`).then((data) => {
+      if (!data.testCase) {
+        return;
+      }
+      setTestCase(data.testCase);
+    }).catch((err) => {
+      console.debug('error!', err);
+    });
+  }, [subtaskId, caseId]);
+
+  return (<>
+    {testCase ? <CaseDetailsView testCase={testCase} /> : i18n('Fetching testcase data...')}
+  </>);
 }
 
 function Case({ testCase }: { testCase: TestCase }) {
@@ -194,7 +213,7 @@ function Case({ testCase }: { testCase: TestCase }) {
           {statusIsLimitExceeded ? '>' : ''}{size(testCase.memory, 1024)}
         </div>
       </div>
-      {expanded ? <CaseDetails testCase={testCase} /> : null}
+      {expanded ? <CaseDetails subtaskId={testCase.subtaskId} caseId={testCase.id} /> : null}
     </div>
   );
 }

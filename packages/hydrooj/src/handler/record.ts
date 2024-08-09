@@ -7,7 +7,7 @@ import {
     PermissionError, PretestRejudgeFailedError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
-import { RecordDoc, Tdoc } from '../interface';
+import { RecordDoc, Tdoc, User } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import problem, { ProblemDoc } from '../model/problem';
@@ -129,6 +129,85 @@ class RecordListHandler extends ContestDetailBaseHandler {
     }
 }
 
+async function filterByPermission<T extends ContestDetailBaseHandler & { rdoc: RecordDoc }>(
+    domainId: string, rid: ObjectId, handler: T, rdoc: RecordDoc):
+    Promise<{ udoc: User; rdoc: Pick<RecordDoc, '_id' | 'lang' | 'code'> | RecordDoc; pdoc: ProblemDoc; tdoc: Tdoc; canViewCode: boolean; }> {
+    let canViewDetail = true;
+    if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
+        if (rdoc.uid !== handler.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
+    } else if (rdoc.contest) {
+        handler.tdoc = await contest.get(domainId, rdoc.contest);
+        let canView = handler.user.own(handler.tdoc);
+        canView ||= contest.canShowRecord.call(handler, handler.tdoc);
+        canView ||= contest.canShowSelfRecord.call(handler, handler.tdoc, true) && rdoc.uid === handler.user._id;
+        if (!canView && rdoc.uid !== handler.user._id) throw new PermissionError(rid);
+        canViewDetail = canView;
+        handler.args.tid = handler.tdoc.docId;
+        if (!handler.user.own(handler.tdoc) && !handler.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+            handler.rdoc = contest.applyProjection(handler.tdoc, handler.rdoc, handler.user);
+        }
+    }
+
+    // eslint-disable-next-line prefer-const
+    let [pdoc, self, udoc] = await Promise.all([
+        problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST.concat('config')),
+        problem.getStatus(domainId, rdoc.pid, handler.user._id),
+        user.getById(domainId, rdoc.uid),
+    ]);
+
+    let canViewCode = rdoc.uid === handler.user._id;
+    canViewCode ||= handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
+    canViewCode ||= handler.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
+    canViewCode ||= handler.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
+    if (handler.tdoc) {
+        const tsdoc = await contest.getStatus(domainId, handler.tdoc.docId, handler.user._id);
+        canViewCode ||= handler.user.own(handler.tdoc);
+        if (handler.tdoc.allowViewCode && contest.isDone(handler.tdoc)) {
+            canViewCode ||= tsdoc?.attend;
+        }
+        if (!tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, handler.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+    } else if (pdoc && !problem.canViewBy(pdoc, handler.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+    if (!canViewCode) {
+        rdoc.code = '';
+        rdoc.files = {};
+        rdoc.compilerTexts = [];
+    }
+
+    return {
+        udoc,
+        rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']),
+        pdoc,
+        tdoc: handler.tdoc,
+        canViewCode,
+    };
+}
+
+function omitLargeFields(rdoc: RecordDoc) {
+    return { ...rdoc, testCases: rdoc.testCases.map((t) => omit(t, ['message', 'traceStack', 'streams'])) };
+}
+
+class RecordTestcaseDetailHandler extends ContestDetailBaseHandler {
+    rdoc: RecordDoc;
+    tdoc?: Tdoc;
+
+    @param('rid', Types.ObjectId)
+    async prepare(domainId: string, rid: ObjectId) {
+        this.rdoc = await record.get(domainId, rid);
+        if (!this.rdoc) throw new RecordNotFoundError(rid);
+        if (this.rdoc.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
+    }
+
+    @param('rid', Types.ObjectId)
+    @param('subtaskId', Types.Int)
+    @param('caseId', Types.Int)
+    async get(domainId: string, rid: ObjectId, subtaskId: number, caseId: number) {
+        const { rdoc } = await filterByPermission(domainId, rid, this, this.rdoc);
+        const testCase = (rdoc as RecordDoc).testCases.filter((t) => t.subtaskId === subtaskId && t.id === caseId)[0];
+
+        this.response.body = { testCase };
+    }
+}
+
 class RecordDetailHandler extends ContestDetailBaseHandler {
     rdoc: RecordDoc;
     tdoc?: Tdoc;
@@ -158,50 +237,19 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     @param('download', Types.Boolean)
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectId, download = false) {
-        const rdoc = this.rdoc;
-        let canViewDetail = true;
-        if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
-            if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
-        } else if (rdoc.contest) {
-            this.tdoc = await contest.get(domainId, rdoc.contest);
-            let canView = this.user.own(this.tdoc);
-            canView ||= contest.canShowRecord.call(this, this.tdoc);
-            canView ||= contest.canShowSelfRecord.call(this, this.tdoc, true) && rdoc.uid === this.user._id;
-            if (!canView && rdoc.uid !== this.user._id) throw new PermissionError(rid);
-            canViewDetail = canView;
-            this.args.tid = this.tdoc.docId;
-            if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
-                this.rdoc = contest.applyProjection(this.tdoc, this.rdoc, this.user);
-            }
+        const {
+            udoc, rdoc, pdoc, tdoc, canViewCode,
+        } = await filterByPermission(domainId, rid, this, this.rdoc);
+
+        if (download) {
+            if (!canViewCode) return;
+            await this.download();
+            return;
         }
 
-        // eslint-disable-next-line prefer-const
-        let [pdoc, self, udoc] = await Promise.all([
-            problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST.concat('config')),
-            problem.getStatus(domainId, rdoc.pid, this.user._id),
-            user.getById(domainId, rdoc.uid),
-        ]);
-
-        let canViewCode = rdoc.uid === this.user._id;
-        canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (this.tdoc) {
-            const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
-            canViewCode ||= this.user.own(this.tdoc);
-            if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
-                canViewCode ||= tsdoc?.attend;
-            }
-            if (!tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-        if (!canViewCode) {
-            rdoc.code = '';
-            rdoc.files = {};
-            rdoc.compilerTexts = [];
-        } else if (download) return await this.download();
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
+            udoc, rdoc: omitLargeFields(rdoc as RecordDoc), pdoc, tdoc,
         };
     }
 
@@ -419,7 +467,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         this.pdoc = pdoc;
         this.throttleSend = throttle(this.sendUpdate, 1000, { trailing: true });
         this.rid = rid.toString();
-        this.onRecordChange(rdoc);
+        this.onRecordChange(omitLargeFields(rdoc) as RecordDoc);
     }
 
     async sendUpdate(rdoc: RecordDoc) {
@@ -456,6 +504,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
 export async function apply(ctx) {
     ctx.Route('record_main', '/record', RecordListHandler);
     ctx.Route('record_detail', '/record/:rid', RecordDetailHandler);
+    ctx.Route('record_detail', '/record/:rid/subtask/:subtaskId/case/:caseId', RecordTestcaseDetailHandler);
     ctx.Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
     ctx.Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }

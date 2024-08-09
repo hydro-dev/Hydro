@@ -390,6 +390,7 @@ Failed to join the domain. You are already a member.: 加入域失败，您已�
 Failed to parse subtask.: 无法解析子任务信息。
 Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
+Fetching test data...: 获取测试数据中...
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
 File have been deleted.: 文件已被删除。
