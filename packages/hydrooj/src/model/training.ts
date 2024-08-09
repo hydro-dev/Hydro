@@ -23,7 +23,7 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
 
 export async function enroll(domainId: string, tid: ObjectId, uid: number) {
     try {
-        await document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, { enroll: 1 });
+        await document.setIfNotStatus(domainId, document.TYPE_TRAINING, tid, uid, 'enroll', 1, 1, {});
     } catch (e) {
         throw new TrainingAlreadyEnrollError(tid, uid);
     }

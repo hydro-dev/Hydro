@@ -1,6 +1,5 @@
 import './polyfill';
 
-import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
 window.Hydro = {
@@ -30,29 +29,6 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
-if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
-  window.captureException = (e) => {
-    if (!e.isUserFacingError) Sentry.captureException(e);
-  };
-  Sentry.init({
-    dsn: UiContext.sentry_dsn,
-    release: `hydro-web@${process.env.VERSION}`,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.browserApiErrorsIntegration(),
-      Sentry.replayIntegration({
-        networkRequestHeaders: ['Content-Type'],
-        networkResponseHeaders: ['Content-Type', 'Location'],
-      }),
-    ],
-    tracesSampleRate: 0.1,
-    tracePropagationTargets: ['localhost', /^\//, window.location.host],
-    replaysSessionSampleRate: 0.01,
-    replaysOnErrorSampleRate: 0.2,
-  });
-  Sentry.setTag('host', window.location.host);
-  Sentry.setTag('page_name', document.documentElement.getAttribute('data-page'));
-}
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
   const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
@@ -66,6 +42,15 @@ if ('serviceWorker' in navigator) {
 const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
+if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
+  window._sentryEvents = [];
+  window.captureException = (e) => {
+    if (!e.isUserFacingError) window._sentryEvents.push(e);
+  };
+  const script = document.createElement('script');
+  script.src = new URL('sentry.js', __webpack_public_path__).href;
+  document.body.appendChild(script);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));

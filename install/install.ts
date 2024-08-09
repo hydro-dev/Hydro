@@ -463,7 +463,8 @@ ${nixConfBase}`);
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml -http-addr=localhost:5050"`,
             ...installAsJudge ? [] : [
                 () => console.log(`WiredTiger cache size: ${wtsize}GB`),
-                `pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
+                // The only thing mongod writes to stderr is 'libcurl no version information available'
+                `pm2 start mongod --name mongodb -e /dev/null -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
                 'pm2 start hydrooj',
                 async () => {
@@ -571,6 +572,7 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
+            'echo "layout=1" >/etc/HYDRO_INSTALLER',
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             // dont retry this as it usually fails

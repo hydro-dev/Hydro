@@ -9,7 +9,7 @@ import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  delay, i18n, pjax, request, tpl,
+  addSpeculationRules, delay, i18n, pjax, request, tpl,
 } from 'vj/utils';
 
 const list = [];
@@ -343,6 +343,17 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $(document).on('vjContentNew', (e) => processElement(e.target));
   processElement(document);
+
+  addSpeculationRules({
+    prerender: [{
+      'where': {
+        'or': [
+          { 'href_matches': '/p/*' },
+          { 'href_matches': '/d/*/p/*' },
+        ],
+      },
+    }],
+  });
 });
 
 export default page;
