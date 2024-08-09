@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 const PRECACHE = `precache-${process.env.VERSION}`;
-const DO_NOT_PRECACHE = ['.worker.js', 'fonts', 'i.monaco'];
+const DO_NOT_PRECACHE = ['.worker.js', 'fonts'];
 
 function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;
@@ -121,7 +121,7 @@ let config: ServiceWorkerConfig = null;
 function initConfig() {
   config = JSON.parse(new URLSearchParams(location.search).get('config'));
   config.hosts ||= [];
-  if (!config.domains?.length) config.domains = [location.host];
+  config.domains = Array.from(new Set([location.host, ...(config.domains || [])]));
   console.log('Config:', config);
 }
 
@@ -180,7 +180,8 @@ async function get(request: Request) {
 
 function transformUrl(url: string) {
   const urlObject = new URL(url);
-  if (urlObject.pathname.startsWith('/fs/')) urlObject.search = '';
+  const path = urlObject.pathname;
+  if (path.startsWith('/fs/') || path.includes('X-Amz')) urlObject.search = '';
   return urlObject.toString();
 }
 
