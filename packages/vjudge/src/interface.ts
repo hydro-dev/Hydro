@@ -1,3 +1,4 @@
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { JudgeResultBody } from 'hydrooj';
 
 export interface RemoteAccount {
@@ -44,5 +45,5 @@ export interface IBasicProvider {
 
 export interface BasicProvider {
     new(account: RemoteAccount, save: (data: any) => Promise<void>): IBasicProvider;
-    Langs?: Record<string, string>;
+    Langs?: Record<string, Partial<LangConfig>>;
 }

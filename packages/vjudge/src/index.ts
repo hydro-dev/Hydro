@@ -1,5 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import {
     Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
     sleep, STATUS, SystemModel, TaskModel, Time, yaml,
@@ -194,13 +195,17 @@ class VJudgeService extends Service {
         });
     }
 
-    async updateLangs(provider: string, mapping: Record<string, string>) {
+    async updateLangs(provider: string, mapping: Record<string, Partial<LangConfig>>) {
         const config = yaml.load(SystemModel.get('hydrooj.langs'));
         const old = yaml.dump(config);
         for (const key in mapping) {
-            if (!config[key]) continue;
+            config[key] ||= {
+                execute: '/bin/echo For remote judge only',
+                hidden: true,
+                ...mapping[key],
+            };
             config[key].validAs ||= {};
-            config[key].validAs[provider] = mapping[key];
+            config[key].validAs[provider] = mapping[key].key;
         }
         const newConfig = yaml.dump(config);
         if (old !== newConfig) await SystemModel.set('hydrooj.langs', newConfig);

@@ -25,11 +25,26 @@ const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/201
 
 export default class CSGOJProvider extends BasicFetcher implements IBasicProvider {
     static Langs = {
-        c: '0',
-        'cc.cc17o2': '1',
-        java: '3',
-        'py.py3': '6',
-        go: '17',
+        c: {
+            display: 'C',
+            key: '0',
+        },
+        'cc.cc17o2': {
+            display: "C++",
+            key: '1',
+        },
+        java: {
+            display: 'Java',
+            key: '3',
+        },
+        'py.py3': {
+            display: 'Python3',
+            key: '6',
+        },
+        go: {
+            display: 'Go',
+            key: '17',
+        },
     };
 
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {

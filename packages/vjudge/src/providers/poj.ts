@@ -17,10 +17,22 @@ const langs = {
 
 export default class POJProvider extends BasicFetcher implements IBasicProvider {
     static Langs = {
-        cc: '0',
-        c: '1',
-        java: '2',
-        pas: '3',
+        cc: {
+            display: 'C++',
+            key: '0',
+        },
+        c: {
+            display: 'C',
+            key: '1',
+        },
+        java: {
+            display: 'Java',
+            key: '2',
+        },
+        pas: {
+            display: 'Pascal',
+            key: '3',
+        },
     };
 
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
