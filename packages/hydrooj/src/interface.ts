@@ -191,6 +191,7 @@ export interface ProblemConfigFile {
     memory?: string;
     filename?: string;
     checker_type?: string;
+    interactor_type?: string;
     checker?: string;
     interactor?: string;
     user_extra_files?: string[];
@@ -299,14 +300,40 @@ export interface ProblemStatusDoc extends StatusDocBase {
     star?: boolean;
 }
 
+export interface Position {
+    line: number,
+    col: number,
+    byte: number,
+}
+
+export interface IncompleteTrace {
+    varName: string;
+    pos: Position,
+}
+
+export interface TraceStack {
+    streamName: string;
+    stack: IncompleteTrace[];
+}
+
+export interface FileFragment {
+    // Left closed and right open interval
+    pos: { begin: Position, end: Position },
+    content: string;
+    length: number,
+}
+
 export interface TestCase {
     id?: number;
     subtaskId?: number;
     score?: number;
+    scaledScore?: number;
     time: number;
     memory: number;
     status: number;
     message: string;
+    traceStack?: TraceStack;
+    streams?: Record<string, FileFragment>;
 }
 
 export interface RecordDoc {
@@ -592,6 +619,7 @@ export interface JudgeMessage {
 export interface SubtaskResult {
     type: SubtaskType;
     score: number;
+    fullScore: number;
     status: number;
 }
 

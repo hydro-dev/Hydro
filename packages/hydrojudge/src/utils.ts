@@ -1,6 +1,7 @@
 import path from 'path';
 import { parse } from 'shell-quote';
 import { fs } from '@hydrooj/utils';
+import { FileFragment } from 'hydrooj';
 import { FormatError } from './error';
 
 const EMPTY_STR = /^[ \r\n\t]*$/i;
@@ -55,6 +56,40 @@ export function ensureFile(folder: string) {
         const stat = fs.statSync(f);
         if (!stat.isFile()) throw new FormatError(message, [file]);
         return f;
+    };
+}
+
+export function fileKeepAround(file: Buffer, index: number): FileFragment {
+    const keepChars = 256;
+    let keepBegin = Math.max(0, index - (keepChars >> 1));
+    const keepEnd = Math.min(file.byteLength, index + keepChars - (index - keepBegin));
+    keepBegin = Math.max(0, index - (keepChars - (keepEnd - index)));
+
+    const left = file.subarray(0, keepBegin);
+    const keep = file.subarray(keepBegin, keepEnd);
+
+    const lfByte = '\n'.charCodeAt(0);
+
+    const leftLines = left.filter((byte) => byte === lfByte).byteLength;
+    const keepLines = keep.filter((byte) => byte === lfByte).byteLength;
+
+    const lastCol = (bytes: Buffer) => bytes.byteLength - bytes.lastIndexOf(lfByte) - 1;
+
+    return {
+        pos: {
+            begin: {
+                line: leftLines,
+                col: lastCol(left),
+                byte: left.byteLength,
+            },
+            end: {
+                line: leftLines + keepLines,
+                col: keepLines === 0 ? lastCol(left) + keep.byteLength : lastCol(keep),
+                byte: left.byteLength + keep.byteLength,
+            },
+        },
+        length: file.byteLength,
+        content: keep.toString('utf8'),
     };
 }
 

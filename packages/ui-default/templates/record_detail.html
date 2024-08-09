@@ -7,7 +7,9 @@
 <div class="row">
   <div class="medium-9 columns">
     {% if typeof(rdoc['status']) === 'number' %}
-      {% include 'record_detail_status.html' %}
+      <div id="RecordDetailStatus">
+        {% include 'record_detail_status.html' %}
+      </div>
     {% endif %}
     {% if rdoc['code'] or rdoc.files.code %}
     <div class="section">

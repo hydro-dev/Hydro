@@ -205,10 +205,13 @@ const tasks = {
                 id: i++,
                 subtaskId: 0,
                 score: 0,
+                scaledScore: 0,
                 status: c.status,
                 time: c.time_ms || c.time,
                 memory: c.memory_kb || c.memory,
                 message: (c.judge_text || '') + (c.message || ''),
+                traceStack: undefined,
+                streams: {},
             });
         }
         const rdoc: RecordDoc = {

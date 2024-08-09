@@ -56,7 +56,7 @@ const problemConfigSchema: JSONSchema7 = {
     subType: { type: 'string' },
     langs: { type: 'array', items: { type: 'string' } },
     target: { type: 'string' },
-    checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj'] },
+    checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj', 'cplib'] },
     checker: {
       oneOf: [
         { type: 'string', pattern: '\\.' },
@@ -64,6 +64,7 @@ const problemConfigSchema: JSONSchema7 = {
       ],
     },
     interactor: { type: 'string', pattern: '\\.' },
+    interactor_type: { enum: ['testlib', 'cplib'] },
     validator: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },

@@ -111,7 +111,7 @@ export default function ProblemType() {
                   panel={(
                     <div className="row">
                       <FormItem columns={6} label="Interface">
-                        <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon']} formKey="checker_type" />
+                        <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon', 'cplib']} formKey="checker_type" />
                       </FormItem>
                       <FormItem columns={6} label="Checker">
                         <SingleFileSelect formKey="checker" />
@@ -129,6 +129,9 @@ export default function ProblemType() {
               <div className="row">
                 <FormItem columns={6} label="Interactor">
                   <SingleFileSelect formKey="interactor" />
+                </FormItem>
+                <FormItem columns={6} label="Interactor Type">
+                  <ManagedSelect options={['testlib', 'cplib']} formKey="interactor_type" />
                 </FormItem>
               </div>
             )}

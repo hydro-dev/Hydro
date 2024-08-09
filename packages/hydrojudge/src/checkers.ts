@@ -1,8 +1,10 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
+import { TraceStack } from 'hydrooj';
+import { parse as parseCplib } from './cplib';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
-import { parse } from './testlib';
+import { parse as parseTestlib } from './testlib';
 
 export interface CheckConfig {
     execute: string;
@@ -19,7 +21,9 @@ export interface CheckConfig {
 type Checker = (config: CheckConfig) => Promise<{
     status: number,
     score: number,
+    scaledScore: number,
     message: string,
+    traceStack?: TraceStack;
 }>;
 
 function parseDiffMsg(msg: string) {
@@ -70,6 +74,7 @@ const checkers: Record<string, Checker> = new Proxy({
         if (message.length > 1024000) message = '';
         return {
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
+            scaledScore: status === STATUS.STATUS_ACCEPTED ? 1 : 0,
             status,
             message,
         };
@@ -86,6 +91,7 @@ const checkers: Record<string, Checker> = new Proxy({
         const status = stdout ? STATUS.STATUS_WRONG_ANSWER : STATUS.STATUS_ACCEPTED;
         return {
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
+            scaledScore: status === STATUS.STATUS_ACCEPTED ? 1 : 0,
             status,
             message: '',
         };
@@ -110,6 +116,7 @@ const checkers: Record<string, Checker> = new Proxy({
         return {
             status,
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
+            scaledScore: status === STATUS.STATUS_ACCEPTED ? 1 : 0,
             message: stdout,
         };
     },
@@ -136,6 +143,7 @@ const checkers: Record<string, Checker> = new Proxy({
         if (code) {
             return {
                 score: 0,
+                scaledScore: 0,
                 message: `Checker returned with status ${code}`,
                 status: STATUS.STATUS_SYSTEM_ERROR,
             };
@@ -143,6 +151,7 @@ const checkers: Record<string, Checker> = new Proxy({
         const score = Math.floor(+files.score) || 0;
         return {
             score,
+            scaledScore: score / config.score,
             message: files.message,
             status: score === config.score
                 ? STATUS.STATUS_ACCEPTED
@@ -168,6 +177,7 @@ const checkers: Record<string, Checker> = new Proxy({
         return {
             status: st,
             score: (status === STATUS.STATUS_ACCEPTED) ? config.score : 0,
+            scaledScore: (status === STATUS.STATUS_ACCEPTED) ? 1 : 0,
             message: stdout,
         };
     },
@@ -192,9 +202,11 @@ const checkers: Record<string, Checker> = new Proxy({
             },
         });
         if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned {0}.', [status]);
-        const score = +stdout;
-        status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
-        return { status, score: Math.floor((score * config.score) / 100), message: stderr };
+        const scaledScore = +stdout;
+        status = scaledScore === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
+        return {
+            status, score: Math.floor((scaledScore * config.score) / 100), scaledScore, message: stderr,
+        };
     },
 
     async testlib(config) {
@@ -216,6 +228,7 @@ const checkers: Record<string, Checker> = new Proxy({
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
+                scaledScore: 0,
                 message,
             };
         }
@@ -223,10 +236,45 @@ const checkers: Record<string, Checker> = new Proxy({
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
+                scaledScore: 0,
                 message: `Checker exited with code ${code}`,
             };
         }
-        return parse(stderr, config.score);
+        return parseTestlib(stderr, config.score);
+    },
+
+    async cplib(config) {
+        const { stderr, status, code } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer --report-format=json`, {
+            copyIn: {
+                in: config.input,
+                user_out: config.user_stdout,
+                answer: config.output,
+                ...config.copyIn,
+            },
+            env: { ...config.env, NO_COLOR: '1' },
+        });
+        if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
+            const message = {
+                [STATUS.STATUS_SYSTEM_ERROR]: stderr,
+                [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'Checker Time Limit Exceeded',
+                [STATUS.STATUS_MEMORY_LIMIT_EXCEEDED]: 'Checker Memory Limit Exceeded',
+            }[status];
+            return {
+                status: STATUS.STATUS_SYSTEM_ERROR,
+                score: 0,
+                scaledScore: 0,
+                message,
+            };
+        }
+        if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
+            return {
+                status: STATUS.STATUS_SYSTEM_ERROR,
+                score: 0,
+                scaledScore: 0,
+                message: `Checker exited with code ${code}`,
+            };
+        }
+        return parseCplib(stderr, config.score);
     },
 }, {
     get(self, key) {

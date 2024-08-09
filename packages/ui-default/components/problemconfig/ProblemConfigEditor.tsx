@@ -28,7 +28,7 @@ interface Props {
 
 const configKey = [
   'type', 'subType', 'target', 'score', 'time',
-  'memory', 'filename', 'checker_type', 'checker', 'interactor',
+  'memory', 'filename', 'checker_type', 'checker', 'interactor', 'interactor_type',
   'validator', 'user_extra_files', 'judge_extra_files', 'detail', 'outputs',
   'redirect', 'cases', 'subtasks', 'langs', 'key',
   'time_limit_rate', 'memory_limit_rate',
@@ -50,6 +50,7 @@ export function configYamlFormat(config: ProblemConfigFile) {
       if (key === 'checker'
         && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
+      if (key === 'interactor_type' && config.type !== 'interactive') return;
       if (key === 'subtasks') {
         formatConfig[key] = [];
         config[key].forEach((subtask) => {
