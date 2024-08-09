@@ -16,7 +16,7 @@ import './lib/i18n';
 import { Logger } from './logger';
 import { Context } from './context';
 // eslint-disable-next-line import/no-duplicates
-import { unwrapExports } from './utils';
+import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
 
@@ -190,6 +190,7 @@ export async function load() {
                 console.log('');
                 console.log('Hydro will start in 5s.');
                 console.log('Hydro 将在五秒后继续启动。');
+                await sleep(5000);
             }
         }
     } catch (e) { }
