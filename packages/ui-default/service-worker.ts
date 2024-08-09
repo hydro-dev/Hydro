@@ -180,7 +180,8 @@ async function get(request: Request) {
 
 function transformUrl(url: string) {
   const urlObject = new URL(url);
-  if (urlObject.pathname.startsWith('/fs/')) urlObject.search = '';
+  const path = urlObject.pathname;
+  if (path.startsWith('/fs/') || path.includes('X-Amz')) urlObject.search = '';
   return urlObject.toString();
 }
 
