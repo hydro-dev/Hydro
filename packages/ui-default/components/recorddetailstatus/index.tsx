@@ -252,7 +252,7 @@ function RecordDetailStatusLoaded() {
   const compilerTexts = useSelector((state: RootState) => state.rdoc.compilerTexts);
   const judgeTexts = useSelector((state: RootState) => state.rdoc.judgeTexts);
 
-  return (<>
+  return (<div className="section visible">
     <div className="section__header">
       <h1 className="section__title">
         <span className={`icon record-status--icon ${statusCode}`}></span>
@@ -267,7 +267,7 @@ function RecordDetailStatusLoaded() {
       return i18n(text.message).format(...text.params || []) + ((process.env.DEV && text.stack) ? `\n${text.stack}` : '');
     })} innerClass='judge-text' />
     <TestCasesWrapper />
-  </>);
+  </div>);
 }
 
 export default function RecordDetailStatus() {
