@@ -2,7 +2,7 @@ import { size } from '@hydrooj/utils/lib/common';
 import { getScoreColor, STATUS, STATUS_TEXTS } from '@hydrooj/utils/lib/status';
 import { AnsiUp } from 'ansi_up';
 import {
-  FileFragment, IncompleteTrace, SubtaskResult, TestCase, TraceStack,
+  FileFragment, SubtaskResult, TestCase,
 } from 'hydrooj';
 import _ from 'lodash';
 import React, {
@@ -50,47 +50,11 @@ function SubtaskLine({ subtaskId, result }: { subtaskId: number, result: Subtask
   </div>);
 }
 
-function TraceStackView({ traceStack }: { traceStack: TraceStack }) {
-  return (<div>
-    <h3 className="section__title">
-      {i18n('Trace Stack')}
-    </h3>
-    <p>
-      {i18n('A read error occurred on stream `{0}`.').format(traceStack.streamName)}
-    </p>
-    <table className="data-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>{i18n('Var name')}</th>
-          <th>{i18n('Line')}</th>
-          <th>{i18n('Col')}</th>
-          <th>{i18n('Byte')}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {
-          traceStack.stack.toReversed().map((trace, index) => (
-            <tr key={index}>
-              <td>{index}</td>
-              <td>{trace.varName}</td>
-              <td>{trace.pos.line + 1}</td>
-              <td>{trace.pos.col + 1}</td>
-              <td>{trace.pos.byte + 1}</td>
-            </tr>
-          ))
-        }
-      </tbody>
-    </table>
-  </div>);
-}
-
 function StreamFilePreview({
-  stream, title, errorTrace,
+  stream, streamName,
 }: {
   stream: FileFragment,
-  title: string,
-  errorTrace?: IncompleteTrace
+  streamName: string,
 }) {
   const elRef = useRef<HTMLDivElement>(null);
 
@@ -106,14 +70,15 @@ function StreamFilePreview({
 
   return (<div>
     <h3 className="section__title">
-      {i18n(title)}
+      {i18n(`Stream ${streamName}`)}
     </h3>
     <div className="stream-wrap" ref={elRef}>
       <pre
         className="line-numbers"
         data-start={stream.pos.begin.line + 1}
-        {...(errorTrace ? { 'data-line-offset': stream.pos.begin.line, 'data-line': errorTrace.pos.line } : {})}
+        data-line={stream.highlightLines.map((line) => line.toString()).join(',')}
         data-line-offset={stream.pos.begin.line}
+        data-toolbar-order=""
       >
         {omitBytesLeft ? <><div>{i18n('{0} bytes omitted').format(omitBytesLeft)}</div><hr /></> : null}
         <code>{stream.content}</code>
@@ -131,25 +96,16 @@ function CaseDetailsView({ testCase }: { testCase: TestCase }) {
           {i18n('Checker Message')}
         </h3>
         <div>
-          <pre>{testCase.message}</pre>
+          <pre dangerouslySetInnerHTML={{ __html: ansiToHtml(testCase.message) }}></pre>
         </div>
       </div> : null}
-      {testCase.traceStack ? <TraceStackView traceStack={testCase.traceStack} /> : null}
-      {[
-        ['inf', 'Input File'],
-        ['ouf', 'Output File'],
-        ['ans', 'Answer File'],
-        ['fromUser', 'User Output'],
-        ['toUser', 'Interactor Output']].map(([stream, title]) =>
-        (testCase.streams && testCase.streams[stream]
-          ? <StreamFilePreview
-            key={stream}
-            stream={testCase.streams[stream]}
-            title={title}
-            errorTrace={
-              testCase.traceStack && testCase.traceStack.streamName === stream && testCase.traceStack.stack.length
-                ? testCase.traceStack.stack.at(-1) : null} />
-          : null))}
+      {
+        Object.entries(testCase.streams).map(([streamName, stream]) => (
+          <StreamFilePreview
+            key={streamName}
+            streamName={streamName}
+            stream={stream} />))
+      }
     </div>
   );
 }
@@ -158,7 +114,7 @@ function CaseDetails({ subtaskId, caseId }: { subtaskId: number, caseId: number 
   const [testCase, setTestCase] = useState(null as TestCase | null);
 
   useEffect(() => {
-    request.get(`${window.location.pathname}/subtask/${subtaskId}/case/${caseId}`).then((data) => {
+    request.get(`${window.location.pathname}?subtaskId=${subtaskId}&caseId=${caseId}`).then((data) => {
       if (!data.testCase) {
         return;
       }
@@ -190,7 +146,7 @@ function Case({ testCase }: { testCase: TestCase }) {
 
   return (
     <div className={`case record-status--border ${statusCode}`}>
-      <div className="case-line" onClick={handleClick}>
+      <div className="case-line" onClick={handleClick} title={testCase.message}>
         <div className="cell">
           <span className="expand-icon">
             <span className={`icon ${expanded ? 'icon-expand_less' : 'icon-expand_more'}`}></span>

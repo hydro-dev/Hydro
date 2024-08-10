@@ -48,6 +48,7 @@ export interface Types {
     Any: Type<any>;
     ArrayOf: <T extends Type<any>>(type: T) => (T extends Type<infer R> ? Type<R[]> : never);
     AnyOf: <T extends Type<any>>(...type: T[]) => (T extends Type<infer R> ? Type<R> : never);
+    Nullable: <T extends Type<any>>(type: T) => (T extends Type<infer R> ? Type<R | null> : never);
 }
 
 const basicString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean, convert?: (i: string) => T) => [
@@ -184,6 +185,11 @@ export const Types: Types = {
     AnyOf: (...types) => [
         (v) => types.find((type) => type[1](v))[0](v),
         (v) => types.some((type) => type[1](v)),
+    ] as any,
+    Nullable: (type) => [
+        (v) => (v === null || v === undefined || v.toString().trim() === '' ? null : type[0](v)),
+        (v) => (v === null || v === undefined || v.toString().trim() === '' || type[1](v)),
+        true,
     ] as any,
 };
 

@@ -18,7 +18,7 @@ import * as system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
 import {
-    ConnectionHandler, param, subscribe, Types,
+    ConnectionHandler, param, query, subscribe, Types,
 } from '../service/server';
 import { buildProjection, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
@@ -183,29 +183,7 @@ async function filterByPermission<T extends ContestDetailBaseHandler & { rdoc: R
 }
 
 function omitLargeFields(rdoc: RecordDoc) {
-    return { ...rdoc, testCases: rdoc.testCases.map((t) => omit(t, ['message', 'traceStack', 'streams'])) };
-}
-
-class RecordTestcaseDetailHandler extends ContestDetailBaseHandler {
-    rdoc: RecordDoc;
-    tdoc?: Tdoc;
-
-    @param('rid', Types.ObjectId)
-    async prepare(domainId: string, rid: ObjectId) {
-        this.rdoc = await record.get(domainId, rid);
-        if (!this.rdoc) throw new RecordNotFoundError(rid);
-        if (this.rdoc.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
-    }
-
-    @param('rid', Types.ObjectId)
-    @param('subtaskId', Types.Int)
-    @param('caseId', Types.Int)
-    async get(domainId: string, rid: ObjectId, subtaskId: number, caseId: number) {
-        const { rdoc } = await filterByPermission(domainId, rid, this, this.rdoc);
-        const testCase = (rdoc as RecordDoc).testCases.filter((t) => t.subtaskId === subtaskId && t.id === caseId)[0];
-
-        this.response.body = { testCase };
-    }
+    return { ...rdoc, testCases: rdoc.testCases.map((t) => omit(t, ['streams'])) };
 }
 
 class RecordDetailHandler extends ContestDetailBaseHandler {
@@ -235,8 +213,10 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
     @param('rid', Types.ObjectId)
     @param('download', Types.Boolean)
+    @query('subtaskId', Types.Nullable(Types.Int))
+    @query('caseId', Types.Nullable(Types.Int))
     // eslint-disable-next-line consistent-return
-    async get(domainId: string, rid: ObjectId, download = false) {
+    async get(domainId: string, rid: ObjectId, download = false, subtaskId: number | null = null, caseId: number | null = null) {
         const {
             udoc, rdoc, pdoc, tdoc, canViewCode,
         } = await filterByPermission(domainId, rid, this, this.rdoc);
@@ -244,6 +224,12 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         if (download) {
             if (!canViewCode) return;
             await this.download();
+            return;
+        }
+
+        if (subtaskId !== null && caseId !== null) {
+            const testCase = (rdoc as RecordDoc).testCases.filter((t) => t.subtaskId === subtaskId && t.id === caseId)[0];
+            this.response.body = { testCase };
             return;
         }
 
@@ -287,7 +273,6 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
                 time: 0,
                 memory: 0,
                 message: 'score canceled',
-                traceStack: undefined,
                 streams: {},
             }],
             subtasks: {},
@@ -504,7 +489,6 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
 export async function apply(ctx) {
     ctx.Route('record_main', '/record', RecordListHandler);
     ctx.Route('record_detail', '/record/:rid', RecordDetailHandler);
-    ctx.Route('record_detail', '/record/:rid/subtask/:subtaskId/case/:caseId', RecordTestcaseDetailHandler);
     ctx.Connection('record_conn', '/record-conn', RecordMainConnectionHandler);
     ctx.Connection('record_detail_conn', '/record-detail-conn', RecordDetailConnectionHandler);
 }

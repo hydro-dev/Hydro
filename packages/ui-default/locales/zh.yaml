@@ -101,7 +101,6 @@ Allow user view others code after contest: 允许用户赛后查看其他人的�
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
-Answer File: 答案文件
 Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
 Any user is allowed to join this domain: 任意用户都可以加入此域
 API: API
@@ -390,7 +389,7 @@ Failed to join the domain. You are already a member.: 加入域失败，您已�
 Failed to parse subtask.: 无法解析子任务信息。
 Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
-Fetching test data...: 获取测试数据中...
+Fetching testcase data...: 获取测试数据中...
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
 File have been deleted.: 文件已被删除。
@@ -468,7 +467,6 @@ Images: 图片
 Import from: 导入自
 Import Problem: 导入题目
 Import: 导入
-Interactor Output: 交互库输出
 In 1 day: 一天后
 In 1 month: 一个月后
 In 1 week: 一周后
@@ -483,7 +481,6 @@ Initialize: 初始化
 Inline codes: 行内代码
 Inline formulas: 行内公式
 Input: 输入
-Input File: 输入文件
 Insert Code: 插入代码
 Insert Image: 插入图像
 Installed Modules: 已安装的模块
@@ -641,7 +638,6 @@ Original filename(s): 原始文件名
 Original Score: 原始分数
 OS Info: 系统信息
 Output: 输出
-Output File: 输出文件
 Over {0} problems: 超过 {0} 道题目
 Owner: 所有者
 page.problem_detail.sidebar.show_category: 点击显示
@@ -881,6 +877,11 @@ Start at: 开始于
 Statistics: 统计
 Status is hidden: 状态已隐藏
 Status: 状态
+Stream inf: 输入文件
+Stream ouf: 输出文件
+Stream ans: 答案文件
+Stream fromUser: 用户输出
+Stream toUser: 交互库输出
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
@@ -1000,7 +1001,6 @@ User {0} already exists.: 用户 {0} 已存在。
 User {0} not found.: 用户 {0} 不存在。
 User can join this domain by visiting the following URL: 用户可以访问此链接来加入此域
 User ID: 用户 ID
-User Output: 用户输出
 User Privilege: 用户权限
 User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
 user_detail: 用户

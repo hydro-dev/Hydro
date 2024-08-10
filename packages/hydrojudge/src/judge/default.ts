@@ -1,7 +1,8 @@
 import { readFile } from 'fs/promises';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import {
-    TestCase, TraceStack,
+    Position,
+    TestCase,
 } from 'hydrooj';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
@@ -33,7 +34,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         let scaledScore = 0;
-        let traceStack: TraceStack;
+        let error: { stream: string, pos: Position } | undefined;
         const detail = ctx.config.detail ?? true;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
@@ -42,7 +43,7 @@ function judgeCase(c: NormalizedCase) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 ({
-                    status, score, scaledScore, message, traceStack,
+                    status, score, scaledScore, message, error,
                 } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
@@ -65,12 +66,14 @@ function judgeCase(c: NormalizedCase) {
         ]);
         const oufContent = fileIds.stdout ? await get(fileIds.stdout) : Buffer.alloc(0);
 
-        const inf = fileKeepAround(infContent,
-            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-        const ouf = fileKeepAround(oufContent,
-            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-        const ans = fileKeepAround(ansContent,
-            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
+        const [inf, ouf, ans] = [['inf', infContent], ['ouf', oufContent], ['ans', ansContent]].map(([streamName, content]: [string, Buffer]) => {
+            if (!error || error.stream !== streamName) {
+                return fileKeepAround(content, 0);
+            }
+            const streamFile = fileKeepAround(content, error.pos.byte);
+            streamFile.highlightLines = [error.pos.line];
+            return streamFile;
+        });
 
         await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
@@ -91,7 +94,6 @@ function judgeCase(c: NormalizedCase) {
             time,
             memory,
             message,
-            traceStack,
             streams: {
                 inf,
                 ouf,

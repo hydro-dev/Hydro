@@ -90,6 +90,7 @@ export function fileKeepAround(file: Buffer, index: number): FileFragment {
         },
         length: file.byteLength,
         content: keep.toString('utf8'),
+        highlightLines: [],
     };
 }
 

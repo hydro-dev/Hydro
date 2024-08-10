@@ -1,7 +1,7 @@
 import { readFile } from 'fs/promises';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { TraceStack } from 'hydrooj';
+import { Position } from 'hydrooj';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
 import { del, get, runQueued } from '../sandbox';
@@ -19,7 +19,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         let scaledScore = 0;
-        let traceStack: TraceStack | undefined;
+        let error: { stream: string, pos: Position } | undefined;
         const fileIds = [];
         if (ctx.config.subType === 'multi') {
             const res = await runQueued(
@@ -45,7 +45,7 @@ function judgeCase(c: NormalizedCase) {
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({
-                status, score, scaledScore, message, traceStack,
+                status, score, scaledScore, message, error,
             } = await checkers[ctx.config.checker_type]({
                 execute: ctx.checker.execute,
                 copyIn: ctx.checker.copyIn || {},
@@ -65,12 +65,14 @@ function judgeCase(c: NormalizedCase) {
         ]);
         const oufContent = fileIds[name] ? await get(fileIds[name]) : Buffer.alloc(0);
 
-        const inf = fileKeepAround(infContent,
-            (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-        const ouf = fileKeepAround(oufContent,
-            (!traceStack || traceStack.streamName !== 'ouf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-        const ans = fileKeepAround(ansContent,
-            (!traceStack || traceStack.streamName !== 'ans' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
+        const [inf, ouf, ans] = [['inf', infContent], ['ouf', oufContent], ['ans', ansContent]].map(([streamName, content]: [string, Buffer]) => {
+            if (!error || error.stream !== streamName) {
+                return fileKeepAround(content, 0);
+            }
+            const streamFile = fileKeepAround(content, error.pos.byte);
+            streamFile.highlightLines = [error.pos.line];
+            return streamFile;
+        });
 
         await Promise.allSettled(fileIds.map(del));
         return {
@@ -81,7 +83,6 @@ function judgeCase(c: NormalizedCase) {
             time: 0,
             memory: 0,
             message,
-            traceStack,
             streams: {
                 inf,
                 ouf,

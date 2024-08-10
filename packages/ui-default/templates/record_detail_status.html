@@ -46,7 +46,7 @@
         {% endif %}
       {%- for rcdoc in rcdocs|sort(false,false,'id') -%}
         <div class="case record-status--border {{ model.builtin.STATUS_CODES[rcdoc['status']] }}" data-case-id="{{rcdoc.id|default(loop.index)}}">
-          <div class="case-line">
+          <div class="case-line" title="{{ rcdoc.message }}">
             <div class="cell">
               <span>{{ _('Test {0}').format(rcdoc.id|default(loop.index)) }}</span>
             </div>

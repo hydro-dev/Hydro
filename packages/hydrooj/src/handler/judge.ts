@@ -40,7 +40,6 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
         score: body.score || 0,
         scaledScore: body.scaledScore || 0,
         message: body.message || '',
-        traceStack: body.traceStack,
         streams: body.streams,
     };
 }

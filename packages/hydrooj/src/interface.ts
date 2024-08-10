@@ -306,21 +306,12 @@ export interface Position {
     byte: number,
 }
 
-export interface IncompleteTrace {
-    varName: string;
-    pos: Position,
-}
-
-export interface TraceStack {
-    streamName: string;
-    stack: IncompleteTrace[];
-}
-
 export interface FileFragment {
     // Left closed and right open interval
     pos: { begin: Position, end: Position },
     content: string;
     length: number,
+    highlightLines: number[];
 }
 
 export interface TestCase {
@@ -332,7 +323,6 @@ export interface TestCase {
     memory: number;
     status: number;
     message: string;
-    traceStack?: TraceStack;
     streams?: Record<string, FileFragment>;
 }
 

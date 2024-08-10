@@ -53,6 +53,11 @@ setting_info: Personal Info
 setting_preference: Preference
 setting_privacy: Privacy
 setting_usage: Usage Preference
+Stream inf: Input file
+Stream ouf: Output file
+Stream ans: Answer file
+Stream fromUser: User output
+Stream toUser: Interactor output
 tasks_list: Task list
 timeago_locale: en_US
 training_create: Training Create

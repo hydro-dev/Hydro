@@ -210,7 +210,6 @@ const tasks = {
                 time: c.time_ms || c.time,
                 memory: c.memory_kb || c.memory,
                 message: (c.judge_text || '') + (c.message || ''),
-                traceStack: undefined,
                 streams: {},
             });
         }

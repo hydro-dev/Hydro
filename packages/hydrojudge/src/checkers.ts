@@ -1,6 +1,6 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { TraceStack } from 'hydrooj';
+import { Position } from 'hydrooj';
 import { parse as parseCplib } from './cplib';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
@@ -23,7 +23,7 @@ type Checker = (config: CheckConfig) => Promise<{
     score: number,
     scaledScore: number,
     message: string,
-    traceStack?: TraceStack;
+    error?: { stream: string, pos: Position },
 }>;
 
 function parseDiffMsg(msg: string) {
@@ -251,7 +251,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 answer: config.output,
                 ...config.copyIn,
             },
-            env: { ...config.env, NO_COLOR: '1' },
+            env: { ...config.env },
         });
         if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
             const message = {

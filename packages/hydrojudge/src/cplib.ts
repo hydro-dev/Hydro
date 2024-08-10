@@ -1,6 +1,6 @@
 import { camelCase } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { IncompleteTrace as IncompleteTraceHydro, TraceStack as TraceStackHydro } from 'hydrooj';
+import { Position } from 'hydrooj';
 
 export interface IncompleteTrace {
     var_name: string;
@@ -9,33 +9,12 @@ export interface IncompleteTrace {
     byte_num: number;
 }
 
-export interface CompleteTrace {
-    n: string;
-    b: number;
-    l: number;
-}
-
 export interface TraceStack {
     stream_name: string;
     stack: IncompleteTrace[];
 }
 
-export type Tag =
-    | string
-    | number
-    | boolean
-    | { [property: string]: Tag }
-    | Tag[];
-
-export interface TraceTreeNode {
-    trace: CompleteTrace;
-    tag?: Record<string, Tag>;
-    children?: TraceTreeNode[];
-}
-
 export type CheckerStatus = 'internal_error' | 'accepted' | 'wrong_answer' | 'partially_correct';
-
-export type ValidatorStatus = 'internal_error' | 'valid' | 'invalid';
 
 export interface CheckerReport {
     status: CheckerStatus;
@@ -44,38 +23,13 @@ export interface CheckerReport {
     reader_trace_stack?: TraceStack;
 }
 
-export interface ValidatorReport {
-    status: ValidatorStatus;
-    message?: string;
-    reader_trace_stack?: TraceStack;
-    reader_trace_tree?: TraceTreeNode[];
-}
-
-function convertIncompleteTrace(trace: IncompleteTrace): IncompleteTraceHydro {
-    return {
-        varName: trace.var_name,
-        pos: {
-            line: trace.line_num,
-            col: trace.col_num,
-            byte: trace.byte_num,
-        },
-    };
-}
-
-function convertTraceStack(traceStack: TraceStack): TraceStackHydro {
-    return {
-        streamName: camelCase(traceStack.stream_name),
-        stack: traceStack.stack.map(convertIncompleteTrace),
-    };
-}
-
 export function parse(output: string, fullScore: number)
-    : { status: STATUS, score: number, scaledScore: number, message: string, traceStack?: TraceStackHydro } {
+    : { status: STATUS, score: number, scaledScore: number, message: string, error?: { stream: string, pos: Position } } {
     const report = JSON.parse(output) as CheckerReport;
 
     let status: STATUS;
     const scaledScore = report.score ?? 0;
-    const message = report.message ?? '';
+    let message = report.message ?? '';
 
     switch (report.status) {
         case 'internal_error':
@@ -96,11 +50,32 @@ export function parse(output: string, fullScore: number)
             };
     }
 
+    let error: { stream: string, pos: Position } | undefined;
+
+    if (report.reader_trace_stack && report.reader_trace_stack.stack.length) {
+        const lastTrace = report.reader_trace_stack.stack.at(-1);
+        error = {
+            stream: camelCase(report.reader_trace_stack.stream_name),
+            pos: {
+                line: lastTrace.line_num,
+                col: lastTrace.col_num,
+                byte: lastTrace.byte_num,
+            },
+        };
+        message
+            += `\n\nReader trace stack (most recent variable last):\n  Stream: ${report.reader_trace_stack.stream_name}\n`;
+
+        message = report.reader_trace_stack.stack.reduce((str: string, {
+            var_name: v, line_num: l, col_num: c, byte_num: b,
+        }, idx) =>
+            `${str}  ${idx}: \x1b[0;33m${v}\x1b[0m @ line \x1b[0;33m${l}\x1b[0m, col \x1b[0;33m${c}\x1b[0m, byte \x1b[0;33m${b}\x1b[0m\n`, message);
+    }
+
     return {
         status,
         score: scaledScore * fullScore,
         scaledScore,
         message,
-        traceStack: report.reader_trace_stack ? convertTraceStack(report.reader_trace_stack) : undefined,
+        error,
     };
 }

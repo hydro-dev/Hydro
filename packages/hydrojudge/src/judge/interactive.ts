@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { TraceStack } from 'hydrooj';
+import { Position } from 'hydrooj';
 import { parse as parseCplib } from '../cplib';
 import { FormatError } from '../error';
 import { runFlow } from '../flow';
@@ -35,7 +35,7 @@ function judgeCase(c: NormalizedCase) {
                     },
                     time: c.time * 2,
                     memory: c.memory * 2,
-                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString(), NO_COLOR: '1' },
+                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
                     copyOutCached: ['toUser?'],
                 },
             );
@@ -44,7 +44,7 @@ function judgeCase(c: NormalizedCase) {
             let score = 0;
             let scaledScore = 0;
             let message: any = '';
-            let traceStack: TraceStack | undefined;
+            let error: { stream: string, pos: Position } | undefined;
             const detail = ctx.config.detail ?? true;
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -61,7 +61,7 @@ function judgeCase(c: NormalizedCase) {
                 score = result.score;
                 scaledScore = result.scaledScore;
                 message = result.message;
-                traceStack = result.traceStack;
+                error = result.error;
                 if (resInteractor.code && !resInteractor.stderr.trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
             }
 
@@ -71,12 +71,15 @@ function judgeCase(c: NormalizedCase) {
                 fileIds.toUser ? get(fileIds.toUser) : Promise.resolve(Buffer.alloc(0)),
             ]);
 
-            const inf = fileKeepAround(infContent,
-                (!traceStack || traceStack.streamName !== 'inf' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-            const fromUser = fileKeepAround(fromUserContent,
-                (!traceStack || traceStack.streamName !== 'from_user' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
-            const toUser = fileKeepAround(toUserContent,
-                (!traceStack || traceStack.streamName !== 'to_user' || traceStack.stack.length === 0) ? 0 : traceStack.stack.at(-1).pos.byte);
+            const [inf, fromUser, toUser] = [['inf', infContent], ['fromUser', fromUserContent], ['toUser', toUserContent]]
+                .map(([streamName, content]: [string, Buffer]) => {
+                    if (!error || error.stream !== streamName) {
+                        return fileKeepAround(content, 0);
+                    }
+                    const streamFile = fileKeepAround(content, error.pos.byte);
+                    streamFile.highlightLines = [error.pos.line];
+                    return streamFile;
+                });
 
             await Promise.allSettled(Object.values(fileIds).map((id) => del(id)));
 
@@ -89,7 +92,6 @@ function judgeCase(c: NormalizedCase) {
                 time,
                 memory,
                 message,
-                traceStack,
                 streams: {
                     inf,
                     fromUser,
