@@ -8,7 +8,10 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
   <AutoComplete<ProblemDoc>
     ref={ref as any}
     cacheKey={`problem-${UiContext.domainId}`}
-    queryItems={(query) => request.get(`/d/${UiContext.domainId}/problem/list`, { prefix: query })}
+    queryItems={async (query) => {
+      const { pdocs } = await request.get(`/d/${UiContext.domainId}/p`, { q: query, quick: true });
+      return pdocs;
+    }}
     fetchItems={(ids) => api(gql`
       problems(ids: ${ids.map((i) => +i)}) {
         docId

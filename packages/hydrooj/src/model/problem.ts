@@ -162,7 +162,8 @@ export class ProblemModel {
         if (Number.isSafeInteger(+pid)) pid = +pid;
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
-            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid }).toArray())[0];
+            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid })
+                .project(buildProjection(projection)).limit(1).toArray())[0];
         if (!res) return null;
         try {
             if (!rawConfig) res.config = await parseConfig(res.config);
