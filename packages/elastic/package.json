@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/elastic-search",
-    "version": "1.1.5",
+    "version": "1.1.6",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",

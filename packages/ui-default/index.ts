@@ -158,8 +158,8 @@ export function apply(ctx: Context) {
         `https://${that.request.host}`,
         SystemModel.get('server.url'),
         SystemModel.get('server.cdn'),
-        ...((SystemModel.get('server.assets') || '').split(',')).filter((i) => i),
       ],
+      assets: ((SystemModel.get('ui-default.assets') || '').split(',')).filter((i) => i) || [],
       domains: SystemModel.get('ui-default.domains') || [],
     };
   });
