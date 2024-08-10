@@ -111,7 +111,7 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-### Hydro 4.14.0 / UI 4.53.0
+### Hydro 4.14.0 / UI 4.53.1
 - core: 修复能够越权查看隐藏题目的问题 [security]
 - ui: 优化提交记录详情富文本展示
 - ui: 支持头像缓存

@@ -44,7 +44,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'es2015',
+        target: 'es6',
         sourcemap: true,
       },
     };

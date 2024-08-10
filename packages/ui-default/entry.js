@@ -52,7 +52,7 @@ if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
     if (!e.isUserFacingError) window._sentryEvents.push(e);
   };
   const script = document.createElement('script');
-  script.src = new URL('/sentry.js', __webpack_public_path__).href;
+  script.src = new URL('/sentry.js', UiContext.cdn_prefix).href;
   document.body.appendChild(script);
 }
 
