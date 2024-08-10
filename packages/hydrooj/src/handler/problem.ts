@@ -1,7 +1,7 @@
 import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import {
-    escapeRegExp, flattenDeep, intersection, pick, uniqBy,
+    escapeRegExp, flattenDeep, intersection, pick,
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
@@ -34,7 +34,6 @@ import user from '../model/user';
 import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
-import { buildProjection } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
@@ -995,28 +994,6 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
-export class ProblemPrefixListHandler extends Handler {
-    @param('prefix', Types.Name)
-    async get(domainId: string, prefix: string) {
-        const projection = ['domainId', 'docId', 'pid', 'title', 'hidden'] as const;
-        const [pdocs, pdoc, apdoc] = await Promise.all([
-            problem.getPrefixList(domainId, prefix),
-            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
-            /^P\d+$/.test(prefix) ? problem.get(domainId, +prefix.substring(1), projection) : Promise.resolve(null),
-        ]);
-        if (apdoc) pdocs.unshift(apdoc);
-        if (pdoc) pdocs.unshift(pdoc);
-        if (pdocs.length < 20) {
-            const search = global.Hydro.lib.problemSearch || defaultSearch;
-            const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
-            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } })
-                .project<ProblemDoc>(buildProjection(projection)).toArray();
-            pdocs.push(...docs);
-        }
-        this.response.body = uniqBy(pdocs, 'docId');
-    }
-}
-
 export async function apply(ctx: Context) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
@@ -1033,7 +1010,6 @@ export async function apply(ctx: Context) {
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.inject(['api'], ({ api }) => {
         api.value('FileInfo', [
             ['_id', 'String!'],
