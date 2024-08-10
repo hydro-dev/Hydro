@@ -6,6 +6,7 @@ import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
+import type { } from './service/migration';
 import type { ConnectionHandler, Handler } from './service/server';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap, ServerEvents<Handler, ConnectionHandler> { }

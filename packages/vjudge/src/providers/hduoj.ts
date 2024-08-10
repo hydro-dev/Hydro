@@ -9,6 +9,7 @@ import {
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
+import { VERDICT } from '../verdict';
 
 declare module 'superagent' {
     interface Request {
@@ -19,20 +20,6 @@ declare module 'superagent' {
 charset(superagent);
 proxy(superagent as any);
 const logger = new Logger('remote/hduoj');
-
-const StatusMapping = {
-    Queuing: STATUS.STATUS_WAITING,
-    Running: STATUS.STATUS_JUDGING,
-    Compiling: STATUS.STATUS_COMPILING,
-    Accepted: STATUS.STATUS_ACCEPTED,
-    'Presentation Error': STATUS.STATUS_WRONG_ANSWER,
-    'Runtime Error': STATUS.STATUS_RUNTIME_ERROR,
-    'Output Limit Exceeded': STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
-    'Wrong Answer': STATUS.STATUS_WRONG_ANSWER,
-    'Compilation Error': STATUS.STATUS_COMPILE_ERROR,
-    'Memory Limit Exceeded': STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
-    'Time Limit Exceeded': STATUS.STATUS_TIME_LIMIT_EXCEEDED,
-};
 
 export default class HDUOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
@@ -189,7 +176,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
             const { text } = await this.get(`/status.php?first=${id}`);
             const { window: { document } } = new JSDOM(text);
             const submission = document.querySelector('#fixed_table>table>tbody').children[2];
-            const status = StatusMapping[submission.children[2].children[0].textContent.trim()]
+            const status = VERDICT[submission.children[2].children[0].textContent.trim()]
                 || STATUS.STATUS_SYSTEM_ERROR;
             if (status === STATUS.STATUS_JUDGING) continue;
             if (status === STATUS.STATUS_COMPILE_ERROR) {
