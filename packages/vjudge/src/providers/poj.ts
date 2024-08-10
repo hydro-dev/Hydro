@@ -17,7 +17,7 @@ const langs = {
 
 export default class POJProvider extends BasicFetcher implements IBasicProvider {
     static Langs = {
-        cc: {
+        'cc.cc98': {
             display: 'C++',
             key: '0',
         },
