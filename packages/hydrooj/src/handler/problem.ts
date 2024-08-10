@@ -208,6 +208,11 @@ export class ProblemMainHandler extends Handler {
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        // Check if user can access all those problems
+        await problem.getList(
+            domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id,
+            true, ['docId'], true,
+        );
         const ids = [];
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop

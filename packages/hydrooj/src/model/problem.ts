@@ -396,13 +396,6 @@ export class ProblemModel {
         return indexByDocIdOnly ? r : Object.assign(r, l);
     }
 
-    static async getPrefixList(domainId: string, prefix: string) {
-        const $regex = new RegExp(`^${escapeRegExp(prefix.toLowerCase())}`, 'i');
-        const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
-        return await document.getMulti(domainId, document.TYPE_PROBLEM, filter, ['domainId', 'docId', 'pid', 'title'])
-            .limit(20).toArray();
-    }
-
     static async getListStatus(domainId: string, uid: number, pids: number[]) {
         const psdocs = await ProblemModel.getMultiStatus(
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
