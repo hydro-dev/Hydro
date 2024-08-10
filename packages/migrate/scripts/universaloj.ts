@@ -400,7 +400,7 @@ export async function run({
                                     subtaskId: subtask.$.num,
                                     id: 1,
                                     score: 0,
-                                    scaledScore: undefined,
+                                    scaledScore: 0,
                                     time: 0,
                                     memory: 0,
                                     message: 'Skipped',

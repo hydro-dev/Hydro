@@ -8,7 +8,7 @@
       <span class="record-status--text {{ model.builtin.STATUS_CODES[rdoc['status']] }}">
         {{ model.builtin.STATUS_TEXTS[rdoc['status']] }}
       </span>
-      {% if rdoc.progress %}{{ rdoc.progress.toFixed(3) }}%{% endif %}
+      {% if rdoc.progress %}{{ rdoc.progress|int }}%{% endif %}
     </h1>
   </div>
 {% if rdoc.compilerTexts.length %}
