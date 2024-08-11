@@ -564,7 +564,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             files: sortFiles(this.tdoc.files || []),
             udict: await user.getListForRender(
                 domainId, tcdocs.map((i) => i.owner),
-                this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []
+                this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : [],
             ),
             tcdocs,
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
@@ -673,7 +673,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         }
         const udict = await user.getListForRender(
             domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)],
-            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []
+            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : [],
         );
         this.response.body = { tdoc: this.tdoc, tsdocs, udict };
         this.response.pjax = 'partials/contest_user.html';
