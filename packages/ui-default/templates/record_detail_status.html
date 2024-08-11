@@ -79,7 +79,7 @@
                 {{ (rdoc.subtasks[subtaskId]['score'] if _key != 'id' else rcdoc.score)|default(0) }}
               </span>
               {% endif %}
-              <span class="message">{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+              <span class="message">{{ formatJudgeTexts([rcdoc.message])|ansi|safe if rcdoc.message else '' }}</span>
             </td>
             <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
             <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>
