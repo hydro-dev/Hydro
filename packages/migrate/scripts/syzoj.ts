@@ -348,7 +348,7 @@ export async function run({
                                 memory: curCase.result?.memory || 0,
                                 message: curCase.result?.spjMessage || curCase.result?.systemMessage || curCase.result?.userError || '',
                                 status: curCase.status === 2 ? TestcaseJudgeStatusMap[curCase.result.type] : TestcaseStatusMap[curCase.status],
-                                streams: {},
+                                fragments: {},
                             });
                         }
                     }

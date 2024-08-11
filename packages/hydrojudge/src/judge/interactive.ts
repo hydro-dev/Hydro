@@ -1,13 +1,13 @@
 import { readFile } from 'fs/promises';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { Position } from 'hydrooj';
+import { PartialFragment } from '../checkers';
 import { parse as parseCplib } from '../cplib';
 import { FormatError } from '../error';
 import { runFlow } from '../flow';
 import { del, get, runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse as parseTestlib } from '../testlib';
-import { fileKeepAround, NormalizedCase } from '../utils';
+import { makeFragment, NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -44,7 +44,7 @@ function judgeCase(c: NormalizedCase) {
             let score = 0;
             let scaledScore = 0;
             let message: any = '';
-            let error: { stream: string, pos: Position } | undefined;
+            let partialFragments: Record<string, PartialFragment>;
             const detail = ctx.config.detail ?? true;
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -61,7 +61,7 @@ function judgeCase(c: NormalizedCase) {
                 score = result.score;
                 scaledScore = result.scaledScore;
                 message = result.message;
-                error = result.error;
+                partialFragments = result.fragments;
                 if (resInteractor.code && !resInteractor.stderr.trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
             }
 
@@ -71,15 +71,23 @@ function judgeCase(c: NormalizedCase) {
                 fileIds.toUser ? get(fileIds.toUser) : Promise.resolve(Buffer.alloc(0)),
             ]);
 
-            const [inf, fromUser, toUser] = [['inf', infContent], ['fromUser', fromUserContent], ['toUser', toUserContent]]
-                .map(([streamName, content]: [string, Buffer]) => {
-                    if (!error || error.stream !== streamName) {
-                        return fileKeepAround(content, 0);
-                    }
-                    const streamFile = fileKeepAround(content, error.pos.byte);
-                    streamFile.highlightLines = [error.pos.line];
-                    return streamFile;
-                });
+            // Fallback stream fragments
+            partialFragments = {
+                inf: { byteIdx: 0, dir: 'after', highlightLines: [] },
+                fromUser: { byteIdx: 0, dir: 'after', highlightLines: [] },
+                toUser: { byteIdx: 0, dir: 'after', highlightLines: [] },
+                ...(partialFragments || {}),
+            };
+
+            const streamContents = { inf: infContent, fromUser: fromUserContent, toUser: toUserContent };
+
+            const fragments = Object.entries(partialFragments).reduce((acc, [streamName, p]) => {
+                if (!streamContents[streamName]) {
+                    return acc;
+                }
+                acc[streamName] = makeFragment(streamContents[streamName], p.byteIdx, p.dir, p.highlightLines);
+                return acc;
+            }, {});
 
             await Promise.allSettled(Object.values(fileIds).map((id) => del(id)));
 
@@ -92,11 +100,7 @@ function judgeCase(c: NormalizedCase) {
                 time,
                 memory,
                 message,
-                streams: {
-                    inf,
-                    fromUser,
-                    toUser,
-                },
+                fragments,
             };
         }
 

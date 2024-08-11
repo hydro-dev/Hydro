@@ -1,7 +1,7 @@
 import path from 'path';
 import { parse } from 'shell-quote';
 import { fs } from '@hydrooj/utils';
-import { FileFragment } from 'hydrooj';
+import { Fragment } from 'hydrooj';
 import { FormatError } from './error';
 
 const EMPTY_STR = /^[ \r\n\t]*$/i;
@@ -59,11 +59,28 @@ export function ensureFile(folder: string) {
     };
 }
 
-export function fileKeepAround(file: Buffer, index: number): FileFragment {
+export function makeFragment(file: Buffer, index: number, dir: 'after' | 'around' | 'before', highlightLines: number[]): Fragment {
     const keepChars = 256;
-    let keepBegin = Math.max(0, index - (keepChars >> 1));
-    const keepEnd = Math.min(file.byteLength, index + keepChars - (index - keepBegin));
-    keepBegin = Math.max(0, index - (keepChars - (keepEnd - index)));
+    let keepBegin: number;
+    let keepEnd: number;
+
+    switch (dir) {
+        case 'after':
+            keepBegin = Math.min(file.byteLength, index);
+            keepEnd = Math.min(file.byteLength, keepBegin + keepChars);
+            break;
+        case 'around':
+            keepBegin = Math.max(0, index - (keepChars >> 1));
+            keepEnd = Math.min(file.byteLength, index + keepChars - (index - keepBegin));
+            keepBegin = Math.max(0, index - (keepChars - (keepEnd - index)));
+            break;
+        case 'before':
+            keepEnd = Math.min(file.byteLength, index);
+            keepBegin = Math.max(0, keepEnd - keepChars);
+            break;
+        default:
+            throw new FormatError('Unknown fragment direction: {0}', [dir]);
+    }
 
     const left = file.subarray(0, keepBegin);
     const keep = file.subarray(keepBegin, keepEnd);
@@ -90,7 +107,7 @@ export function fileKeepAround(file: Buffer, index: number): FileFragment {
         },
         length: file.byteLength,
         content: keep.toString('utf8'),
-        highlightLines: [],
+        highlightLines,
     };
 }
 

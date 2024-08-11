@@ -306,7 +306,7 @@ export interface Position {
     byte: number,
 }
 
-export interface FileFragment {
+export interface Fragment {
     // Left closed and right open interval
     pos: { begin: Position, end: Position },
     content: string;
@@ -323,7 +323,7 @@ export interface TestCase {
     memory: number;
     status: number;
     message: string;
-    streams?: Record<string, FileFragment>;
+    fragments?: Record<string, Fragment>;
 }
 
 export interface RecordDoc {

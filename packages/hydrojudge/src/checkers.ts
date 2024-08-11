@@ -1,6 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { Position } from 'hydrooj';
 import { parse as parseCplib } from './cplib';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
@@ -18,12 +17,18 @@ export interface CheckConfig {
     env?: Record<string, string>;
 }
 
+export interface PartialFragment {
+    byteIdx: number;
+    dir: 'after' | 'around' | 'before';
+    highlightLines: number[];
+}
+
 type Checker = (config: CheckConfig) => Promise<{
     status: number,
     score: number,
     scaledScore: number,
     message: string,
-    error?: { stream: string, pos: Position },
+    fragments?: Record<string, PartialFragment>,
 }>;
 
 function parseDiffMsg(msg: string) {

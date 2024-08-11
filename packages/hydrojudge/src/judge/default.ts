@@ -1,14 +1,11 @@
 import { readFile } from 'fs/promises';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import {
-    Position,
-    TestCase,
-} from 'hydrooj';
-import checkers from '../checkers';
+import { TestCase } from 'hydrooj';
+import checkers, { PartialFragment } from '../checkers';
 import { runFlow } from '../flow';
 import { del, get, runQueued } from '../sandbox';
 import signals from '../signals';
-import { fileKeepAround, NormalizedCase } from '../utils';
+import { makeFragment, NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -34,7 +31,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         let scaledScore = 0;
-        let error: { stream: string, pos: Position } | undefined;
+        let partialFragments: Record<string, PartialFragment>;
         const detail = ctx.config.detail ?? true;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
@@ -43,7 +40,7 @@ function judgeCase(c: NormalizedCase) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
                 ({
-                    status, score, scaledScore, message, error,
+                    status, score, scaledScore, message, fragments: partialFragments,
                 } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
@@ -66,14 +63,23 @@ function judgeCase(c: NormalizedCase) {
         ]);
         const oufContent = fileIds.stdout ? await get(fileIds.stdout) : Buffer.alloc(0);
 
-        const [inf, ouf, ans] = [['inf', infContent], ['ouf', oufContent], ['ans', ansContent]].map(([streamName, content]: [string, Buffer]) => {
-            if (!error || error.stream !== streamName) {
-                return fileKeepAround(content, 0);
+        // Fallback stream fragments
+        partialFragments = {
+            inf: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ouf: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ans: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ...(partialFragments || {}),
+        };
+
+        const streamContents = { inf: infContent, ouf: oufContent, ans: ansContent };
+
+        const fragments = Object.entries(partialFragments).reduce((acc, [streamName, p]) => {
+            if (!streamContents[streamName]) {
+                return acc;
             }
-            const streamFile = fileKeepAround(content, error.pos.byte);
-            streamFile.highlightLines = [error.pos.line];
-            return streamFile;
-        });
+            acc[streamName] = makeFragment(streamContents[streamName], p.byteIdx, p.dir, p.highlightLines);
+            return acc;
+        }, {});
 
         await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
@@ -94,11 +100,7 @@ function judgeCase(c: NormalizedCase) {
             time,
             memory,
             message,
-            streams: {
-                inf,
-                ouf,
-                ans,
-            },
+            fragments,
         };
     };
 }

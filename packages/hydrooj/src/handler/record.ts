@@ -273,7 +273,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
                 time: 0,
                 memory: 0,
                 message: 'score canceled',
-                streams: {},
+                fragments: {},
             }],
             subtasks: {},
         };

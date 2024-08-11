@@ -405,7 +405,7 @@ export async function run({
                                     memory: 0,
                                     message: 'Skipped',
                                     status: STATUS.STATUS_CANCELED,
-                                    streams: {},
+                                    fragments: {},
                                 });
                                 continue;
                             }

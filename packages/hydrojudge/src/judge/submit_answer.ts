@@ -1,11 +1,10 @@
 import { readFile } from 'fs/promises';
 import { fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { Position } from 'hydrooj';
-import checkers from '../checkers';
+import checkers, { PartialFragment } from '../checkers';
 import { runFlow } from '../flow';
 import { del, get, runQueued } from '../sandbox';
-import { fileKeepAround, NormalizedCase } from '../utils';
+import { makeFragment, NormalizedCase } from '../utils';
 import { Context } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -19,7 +18,7 @@ function judgeCase(c: NormalizedCase) {
         let message: any = '';
         let score = 0;
         let scaledScore = 0;
-        let error: { stream: string, pos: Position } | undefined;
+        let partialFragments: Record<string, PartialFragment>;
         const fileIds = [];
         if (ctx.config.subType === 'multi') {
             const res = await runQueued(
@@ -45,7 +44,7 @@ function judgeCase(c: NormalizedCase) {
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({
-                status, score, scaledScore, message, error,
+                status, score, scaledScore, message, fragments: partialFragments,
             } = await checkers[ctx.config.checker_type]({
                 execute: ctx.checker.execute,
                 copyIn: ctx.checker.copyIn || {},
@@ -65,14 +64,22 @@ function judgeCase(c: NormalizedCase) {
         ]);
         const oufContent = fileIds[name] ? await get(fileIds[name]) : Buffer.alloc(0);
 
-        const [inf, ouf, ans] = [['inf', infContent], ['ouf', oufContent], ['ans', ansContent]].map(([streamName, content]: [string, Buffer]) => {
-            if (!error || error.stream !== streamName) {
-                return fileKeepAround(content, 0);
+        partialFragments = {
+            inf: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ouf: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ans: { byteIdx: 0, dir: 'after', highlightLines: [] },
+            ...(partialFragments || {}),
+        };
+
+        const streamContents = { inf: infContent, ouf: oufContent, ans: ansContent };
+
+        const fragments = Object.entries(partialFragments).reduce((acc, [streamName, p]) => {
+            if (!streamContents[streamName]) {
+                return acc;
             }
-            const streamFile = fileKeepAround(content, error.pos.byte);
-            streamFile.highlightLines = [error.pos.line];
-            return streamFile;
-        });
+            acc[streamName] = makeFragment(streamContents[streamName], p.byteIdx, p.dir, p.highlightLines);
+            return acc;
+        }, {});
 
         await Promise.allSettled(fileIds.map(del));
         return {
@@ -83,11 +90,7 @@ function judgeCase(c: NormalizedCase) {
             time: 0,
             memory: 0,
             message,
-            streams: {
-                inf,
-                ouf,
-                ans,
-            },
+            fragments,
         };
     };
 }

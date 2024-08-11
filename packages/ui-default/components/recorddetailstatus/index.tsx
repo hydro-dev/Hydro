@@ -2,7 +2,7 @@ import { size } from '@hydrooj/utils/lib/common';
 import { getScoreColor, STATUS, STATUS_TEXTS } from '@hydrooj/utils/lib/status';
 import { AnsiUp } from 'ansi_up';
 import {
-  FileFragment, SubtaskResult, TestCase,
+  Fragment, SubtaskResult, TestCase,
 } from 'hydrooj';
 import _ from 'lodash';
 import React, {
@@ -51,9 +51,9 @@ function SubtaskLine({ subtaskId, result }: { subtaskId: number, result: Subtask
 }
 
 function StreamFilePreview({
-  stream, streamName,
+  fragment, streamName,
 }: {
-  stream: FileFragment,
+  fragment: Fragment,
   streamName: string,
 }) {
   const elRef = useRef<HTMLDivElement>(null);
@@ -63,25 +63,25 @@ function StreamFilePreview({
 
     const $dom = $(elRef.current);
     prism.highlightBlocks($dom);
-  }, [stream, elRef]);
+  }, [fragment, elRef]);
 
-  const omitBytesLeft = stream.pos.begin.byte;
-  const omitBytesRight = stream.length - stream.pos.end.byte;
+  const omitBytesLeft = fragment.pos.begin.byte;
+  const omitBytesRight = fragment.length - fragment.pos.end.byte;
 
   return (<div>
     <h3 className="section__title">
       {i18n(`Stream ${streamName}`)}
     </h3>
-    <div className="stream-wrap" ref={elRef}>
+    <div className="fragment-wrap" ref={elRef}>
       <pre
         className="line-numbers"
-        data-start={stream.pos.begin.line + 1}
-        data-line={stream.highlightLines.map((line) => line.toString()).join(',')}
-        data-line-offset={stream.pos.begin.line}
+        data-start={fragment.pos.begin.line + 1}
+        data-line={fragment.highlightLines.map((line) => line.toString()).join(',')}
+        data-line-offset={fragment.pos.begin.line}
         data-toolbar-order=""
       >
         {omitBytesLeft ? <><div>{i18n('{0} bytes omitted').format(omitBytesLeft)}</div><hr /></> : null}
-        <code>{stream.content}</code>
+        <code>{fragment.content}</code>
         {omitBytesRight ? <><hr /><div>{i18n('{0} bytes omitted').format(omitBytesRight)}</div></> : null}
       </pre>
     </div>
@@ -100,11 +100,11 @@ function CaseDetailsView({ testCase }: { testCase: TestCase }) {
         </div>
       </div> : null}
       {
-        Object.entries(testCase.streams).map(([streamName, stream]) => (
+        Object.entries(testCase.fragments).map(([streamName, fragment]) => (
           <StreamFilePreview
             key={streamName}
             streamName={streamName}
-            stream={stream} />))
+            fragment={fragment} />))
       }
     </div>
   );
