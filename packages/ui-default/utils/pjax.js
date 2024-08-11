@@ -5,7 +5,7 @@ import $ from 'jquery';
 import { nanoid } from 'nanoid';
 import NProgress from 'nprogress';
 import Notification from 'vj/components/notification';
-import { request } from './base';
+import { request, withTransistionCallback } from './base';
 
 const pjax = {};
 
@@ -115,7 +115,7 @@ pjax.request = async (opt) => {
         }
       }
       $target.trigger('vjContentRemove');
-      $target.replaceWith($el);
+      withTransistionCallback(() => $target.replaceWith($el));
       $el.trigger('vjContentNew');
     }
   } catch (err) {

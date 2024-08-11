@@ -9,7 +9,7 @@ import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  addSpeculationRules, delay, i18n, pjax, request, tpl,
+  addSpeculationRules, delay, i18n, pjax, request, setTemporaryViewTransitionNames, tpl,
 } from 'vj/utils';
 
 const list = [];

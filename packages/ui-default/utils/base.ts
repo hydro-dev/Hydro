@@ -183,6 +183,23 @@ export const request = {
   },
 };
 
+export function withTransistionCallback(callback: () => (Promise<void> | void)) {
+  // @ts-ignore
+  if (!document.startViewTransition) return callback?.();
+  // @ts-ignore
+  return document.startViewTransition(() => callback());
+}
+
+export async function setTemporaryViewTransitionNames(entries, vtPromise: Promise<void>) {
+  for (const [$el, name] of entries) {
+    $el.style.viewTransitionName = name;
+  }
+  await vtPromise;
+  for (const [$el] of entries) {
+    $el.style.viewTransitionName = '';
+  }
+}
+
 Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
@@ -192,4 +209,6 @@ Object.assign(window.Hydro.utils, {
   tpl,
   delay,
   zIndexManager,
+  withTransistionCallback,
+  setTemporaryViewTransitionNames,
 });

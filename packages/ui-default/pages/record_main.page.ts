@@ -3,7 +3,9 @@ import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectA
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import { getAvailableLangs, request, tpl } from 'vj/utils';
+import {
+  getAvailableLangs, request, tpl, withTransistionCallback,
+} from 'vj/utils';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
@@ -18,18 +20,20 @@ const page = new NamedPage('record_main', async () => {
   sock.onmessage = (_, data) => {
     const msg = JSON.parse(data);
     const $newTr = $(msg.html);
-    const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
-    if ($oldTr.length) {
-      $oldTr.trigger('vjContentRemove');
-      dd.apply($oldTr[0], dd.diff($oldTr[0], $newTr[0]));
-      $oldTr.trigger('vjContentNew');
-    } else {
-      if (+new URLSearchParams(window.location.search).get('page') > 1
-         || new URLSearchParams(window.location.search).get('nopush')) return;
-      $('.record_main__table tbody').prepend($newTr);
-      $('.record_main__table tbody tr:last').remove();
-      $newTr.trigger('vjContentNew');
-    }
+    withTransistionCallback(() => {
+      const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
+      if ($oldTr.length) {
+        $oldTr.trigger('vjContentRemove');
+        dd.apply($oldTr[0], dd.diff($oldTr[0], $newTr[0]));
+        $oldTr.trigger('vjContentNew');
+      } else {
+        if (+new URLSearchParams(window.location.search).get('page') > 1
+          || new URLSearchParams(window.location.search).get('nopush')) return;
+        $('.record_main__table tbody').prepend($newTr);
+        $('.record_main__table tbody tr:last').remove();
+        $newTr.trigger('vjContentNew');
+      }
+    });
   };
   UserSelectAutoComplete.getOrConstruct($('[name="uidOrName"]'), {
     clearDefaultValue: false,
