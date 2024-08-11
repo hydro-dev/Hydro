@@ -40,16 +40,19 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     });
     let hits = res.hits.hits.map((i) => i._id);
     if (!opts.skip) {
-        const pdoc = await ProblemModel.get(domainId, +q || q, ProblemModel.PROJECTION_LIST);
+        let pdoc = await ProblemModel.get(domainId, +q || q, ProblemModel.PROJECTION_LIST);
         if (pdoc) {
             hits = hits.filter((i) => i !== `${pdoc.domainId}/${pdoc.docId}`);
             hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
+        } else if (/^P\d+$/.test(q)) {
+            pdoc = await ProblemModel.get(domainId, +q.substring(1), ProblemModel.PROJECTION_LIST);
+            if (pdoc) hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
         }
     }
     return {
         countRelation: typeof res.hits.total === 'number' ? 'eq' : res.hits.total.relation,
         total: typeof res.hits.total === 'number' ? res.hits.total : res.hits.total.value,
-        hits,
+        hits: Array.from(new Set(hits)),
     };
 };
 

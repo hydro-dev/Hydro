@@ -111,6 +111,18 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.14.0 / UI 4.53.1
+- core: 修复能够越权查看隐藏题目的问题 [security]
+- ui: 优化提交记录详情富文本展示
+- ui: 支持头像缓存
+- ui: 禁止文本越界显示
+- vjudge: codeforces: 优化提交 ID 获取
+- ui: 默认禁用 sentry
+- core: 支持隐藏训练左侧用户栏
+- core: cli: 支持 eval
+- ui: 添加实验性 speculation rules 支持
+- core: 修复训练参加人数计数
+
 ### Hydro 4.13.4 / UI 4.52.3
 - framework: 修复 404 返回页
 - ui: 优化用户权限页布局

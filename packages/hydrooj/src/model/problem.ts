@@ -5,7 +5,7 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import { escapeRegExp, pick } from 'lodash';
+import { pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
 import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
@@ -162,7 +162,8 @@ export class ProblemModel {
         if (Number.isSafeInteger(+pid)) pid = +pid;
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
-            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid }).toArray())[0];
+            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid })
+                .project(buildProjection(projection)).limit(1).toArray())[0];
         if (!res) return null;
         try {
             if (!rawConfig) res.config = await parseConfig(res.config);
@@ -393,13 +394,6 @@ export class ProblemModel {
             }
         }
         return indexByDocIdOnly ? r : Object.assign(r, l);
-    }
-
-    static async getPrefixList(domainId: string, prefix: string) {
-        const $regex = new RegExp(`^${escapeRegExp(prefix.toLowerCase())}`, 'i');
-        const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }] };
-        return await document.getMulti(domainId, document.TYPE_PROBLEM, filter, ['domainId', 'docId', 'pid', 'title'])
-            .limit(20).toArray();
     }
 
     static async getListStatus(domainId: string, uid: number, pids: number[]) {

@@ -1,7 +1,7 @@
 import AdmZip from 'adm-zip';
 import { readFile, statSync } from 'fs-extra';
 import {
-    escapeRegExp, flattenDeep, intersection, pick, uniqBy,
+    escapeRegExp, flattenDeep, intersection, pick,
 } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
@@ -34,7 +34,6 @@ import user from '../model/user';
 import {
     Handler, param, post, query, route, Types,
 } from '../service/server';
-import { buildProjection } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 
 export const parseCategory = (value: string) => value.replace(/，/g, ',').split(',').map((e) => e.trim());
@@ -53,16 +52,21 @@ function buildQuery(udoc: User) {
 
 const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
     const escaped = escapeRegExp(q.toLowerCase());
+    const projection: (keyof ProblemDoc)[] = ['domainId', 'docId', 'pid'];
     const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
     const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
-    const pdocs = await problem.getMulti(domainId, filter, ['domainId', 'docId', 'pid'])
+    const pdocs = await problem.getMulti(domainId, filter, projection)
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
     if (!options.skip) {
-        const pdoc = await problem.get(domainId, +q || q, ['domainId', 'docId', 'pid', 'title']);
+        let pdoc = await problem.get(domainId, Number.isSafeInteger(+q) ? +q : q, projection);
         if (pdoc) pdocs.unshift(pdoc);
+        else if (/^P\d+$/.test(q)) {
+            pdoc = await problem.get(domainId, +q.substring(1), projection);
+            if (pdoc) pdocs.unshift(pdoc);
+        }
     }
     return {
-        hits: pdocs.map((i) => `${i.domainId}/${i.docId}`),
+        hits: Array.from(new Set(pdocs.map((i) => `${i.domainId}/${i.docId}`))),
         total: Math.max(pdocs.length, await problem.count(domainId, filter)),
         countRelation: 'eq',
     };
@@ -95,7 +99,8 @@ export class ProblemMainHandler extends Handler {
     @param('q', Types.Content, true)
     @param('limit', Types.PositiveInt, true)
     @param('pjax', Types.Boolean)
-    async get(domainId: string, page = 1, q = '', limit: number, pjax = false) {
+    @param('quick', Types.Boolean)
+    async get(domainId: string, page = 1, q = '', limit: number, pjax = false, quick = false) {
         this.response.template = 'problem_main.html';
         if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
         this.queryContext.query = buildQuery(this.user);
@@ -137,7 +142,11 @@ export class ProblemMainHandler extends Handler {
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
-            : await problem.list(domainId, query, sort.length ? 1 : page, limit, undefined, this.user._id);
+            : await problem.list(
+                domainId, query, sort.length ? 1 : page, limit,
+                quick ? ['title', 'pid', 'domainId', 'docId'] : undefined,
+                this.user._id,
+            );
         if (total) {
             pcount = total;
             ppcount = Math.ceil(total / limit);
@@ -199,6 +208,11 @@ export class ProblemMainHandler extends Handler {
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        // Check if user can access all those problems
+        await problem.getList(
+            domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id,
+            true, ['docId'], true,
+        );
         const ids = [];
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
@@ -995,28 +1009,6 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
-export class ProblemPrefixListHandler extends Handler {
-    @param('prefix', Types.Name)
-    async get(domainId: string, prefix: string) {
-        const projection = ['domainId', 'docId', 'pid', 'title', 'hidden'] as const;
-        const [pdocs, pdoc, apdoc] = await Promise.all([
-            problem.getPrefixList(domainId, prefix),
-            problem.get(domainId, Number.isSafeInteger(+prefix) ? +prefix : prefix, projection),
-            /^P\d+$/.test(prefix) ? problem.get(domainId, +prefix.substring(1), projection) : Promise.resolve(null),
-        ]);
-        if (apdoc) pdocs.unshift(apdoc);
-        if (pdoc) pdocs.unshift(pdoc);
-        if (pdocs.length < 20) {
-            const search = global.Hydro.lib.problemSearch || defaultSearch;
-            const result = await search(domainId, prefix, { limit: 20 - pdocs.length });
-            const docs = await problem.getMulti(domainId, { docId: { $in: result.hits.map((i) => +i.split('/')[1]) } })
-                .project<ProblemDoc>(buildProjection(projection)).toArray();
-            pdocs.push(...docs);
-        }
-        this.response.body = uniqBy(pdocs, 'docId');
-    }
-}
-
 export async function apply(ctx: Context) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
@@ -1033,7 +1025,6 @@ export async function apply(ctx: Context) {
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.Route('problem_prefix_list', '/problem/list', ProblemPrefixListHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.inject(['api'], ({ api }) => {
         api.value('FileInfo', [
             ['_id', 'String!'],

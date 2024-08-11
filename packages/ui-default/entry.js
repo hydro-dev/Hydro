@@ -31,9 +31,13 @@ window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
-  const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
-  navigator.serviceWorker.register(`/service-worker.js?config=${encodedConfig}`).then((registration) => {
+  navigator.serviceWorker.register('/service-worker.js').then((registration) => {
     console.log('SW registered: ', registration);
+    fetch('/service-worker-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(UiContext.SWConfig),
+    });
   }).catch((registrationError) => {
     console.log('SW registration failed: ', registrationError);
   });
@@ -48,7 +52,7 @@ if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
     if (!e.isUserFacingError) window._sentryEvents.push(e);
   };
   const script = document.createElement('script');
-  script.src = new URL('sentry.js', __webpack_public_path__).href;
+  script.src = new URL('/sentry.js', UiContext.cdn_prefix).href;
   document.body.appendChild(script);
 }
 

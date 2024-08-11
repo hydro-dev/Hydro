@@ -1,8 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, RecordModel, Service, SettingModel, sleep, STATUS, TaskModel, Time,
+    Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
+    sleep, STATUS, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
@@ -48,6 +49,10 @@ class AccountService {
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
+            if (this.Provider.Langs && !langConfig?.validAs?.[this.account.type]) {
+                end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${task.lang}` });
+                return;
+            }
             if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
             const comment = langConfig.comment;
             if (comment) {
@@ -187,9 +192,27 @@ class VJudgeService extends Service {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
             this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
         }
+        // FIXME: potential race condition
+        if (provider.Langs) this.updateLangs(type, provider.Langs);
         this[Context.current]?.on('dispose', () => {
             // TODO dispose session
         });
+    }
+
+    async updateLangs(provider: string, mapping: Record<string, Partial<LangConfig>>) {
+        const config = yaml.load(SystemModel.get('hydrooj.langs'));
+        const old = yaml.dump(config);
+        for (const key in mapping) {
+            config[key] ||= {
+                execute: '/bin/echo For remote judge only',
+                hidden: true,
+                ...mapping[key],
+            };
+            config[key].validAs ||= {};
+            config[key].validAs[provider] = mapping[key].key;
+        }
+        const newConfig = yaml.dump(config);
+        if (old !== newConfig) await SystemModel.set('hydrooj.langs', newConfig);
     }
 
     async sync() {
@@ -222,6 +245,22 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (process.env.HYDRO_CLI) return;
     ctx.plugin(VJudgeService);
+    ctx.inject(['migration'], async (c) => {
+        c.migration.registerChannel('vjudge', [
+            async function init() { }, // eslint-disable-line
+            c.migration.dontWait(async () => {
+                const rewrite = (from: string[], to: string) => RecordModel.coll.updateMany({ lang: { $in: from } }, { $set: { lang: to } });
+                await Promise.all([
+                    rewrite(['csgoj.0', 'poj.1', 'poj.5'], 'c'),
+                    rewrite(['csgoj.1'], 'cc.cc17o2'),
+                    rewrite(['csgoj.3', 'poj.2'], 'java'),
+                    rewrite(['csgoj.6'], 'py.py3'),
+                    rewrite(['csgoj.17'], 'go'),
+                    rewrite(['poj.0', 'poj.4'], 'cc.cc98'),
+                ]);
+            }, 'update csgoj and poj langs in record collection'),
+        ]);
+    });
     ctx.inject(['vjudge'], async (c) => {
         await c.vjudge.start();
         for (const [k, v] of Object.entries(providers)) {
