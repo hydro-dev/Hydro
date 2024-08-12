@@ -88,6 +88,11 @@ function StreamFilePreview({
   </div>);
 }
 
+function formatJudgeTexts(text: string | { message: string, params?: any[] }) {
+  if (typeof text === 'string') return text;
+  return i18n(text.message).format(...text.params || []);
+}
+
 function CaseDetailsView({ testCase }: { testCase: TestCase }) {
   return (
     <div className='details'>
@@ -96,7 +101,7 @@ function CaseDetailsView({ testCase }: { testCase: TestCase }) {
           {i18n('Checker Message')}
         </h3>
         <div>
-          <pre dangerouslySetInnerHTML={{ __html: ansiToHtml(testCase.message) }}></pre>
+          <pre dangerouslySetInnerHTML={{ __html: ansiToHtml(formatJudgeTexts(testCase.message)) }}></pre>
         </div>
       </div> : null}
       {
@@ -146,7 +151,7 @@ function Case({ testCase }: { testCase: TestCase }) {
 
   return (
     <div className={`case record-status--border ${statusCode}`}>
-      <div className="case-line" onClick={handleClick} title={testCase.message}>
+      <div className="case-line" onClick={handleClick} title={formatJudgeTexts(testCase.message)}>
         <div className="cell">
           <span className="expand-icon">
             <span className={`icon ${expanded ? 'icon-expand_less' : 'icon-expand_more'}`}></span>
