@@ -38,9 +38,9 @@ function parseCaseResult(body: TestCase): Required<TestCase> {
         id: body.id || 0,
         subtaskId: body.subtaskId || 0,
         score: body.score || 0,
-        scaledScore: body.scaledScore || 0,
+        scaledScore: typeof body.scaledScore !== 'number' ? null : body.scaledScore,
         message: body.message || '',
-        fragments: body.fragments,
+        fragments: body.fragments || {},
     };
 }
 

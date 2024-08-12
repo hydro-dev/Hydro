@@ -165,7 +165,7 @@ function Case({ testCase }: { testCase: TestCase }) {
           </span>
         </div>
         <div className={`cell record-status--text ${statusCode}`}>
-          {testCase.scaledScore !== undefined ? `${(testCase.scaledScore * 100).toFixed(3)}%` : testCase.score.toFixed(3)} pt
+          {typeof testCase.scaledScore === 'number' ? `${(testCase.scaledScore * 100).toFixed(3)}%` : testCase.score.toFixed(3)} pt
         </div>
         <div className="cell">
           {statusIsLimitExceeded ? '>' : ''}{testCase.time.toFixed(0)} ms

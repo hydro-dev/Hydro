@@ -57,7 +57,7 @@
               </span>
             </div>
             <div class="cell record-status--text {{ model.builtin.STATUS_CODES[(rdoc.subtasks[subtaskId]['status'])] }}">
-              {% if typeof(rcdoc.scaledScore) !== "undefined" %}
+              {% if typeof(rcdoc.scaledScore) === "number" %}
                 {{ (rcdoc.scaledScore*100).toFixed(3) }}% pt
               {% else %}
                 {{ (rcdoc.score|default(0)).toFixed(3)}} pt

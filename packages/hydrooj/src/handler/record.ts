@@ -131,7 +131,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
 
 async function filterByPermission<T extends ContestDetailBaseHandler & { rdoc: RecordDoc }>(
     domainId: string, rid: ObjectId, handler: T, rdoc: RecordDoc):
-    Promise<{ udoc: User; rdoc: Pick<RecordDoc, '_id' | 'lang' | 'code'> | RecordDoc; pdoc: ProblemDoc; tdoc: Tdoc; canViewCode: boolean; }> {
+    Promise<{ udoc: User; rdoc: RecordDoc; pdoc: ProblemDoc; tdoc: Tdoc; canViewCode: boolean; }> {
     let canViewDetail = true;
     if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
         if (rdoc.uid !== handler.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
@@ -228,14 +228,14 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         }
 
         if (subtaskId !== null && caseId !== null) {
-            const testCase = (rdoc as RecordDoc).testCases.filter((t) => t.subtaskId === subtaskId && t.id === caseId)[0];
+            const testCase = rdoc.testCases.filter((t) => t.subtaskId === subtaskId && t.id === caseId)[0];
             this.response.body = { testCase };
             return;
         }
 
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: omitLargeFields(rdoc as RecordDoc), pdoc, tdoc,
+            udoc, rdoc: omitLargeFields(rdoc), pdoc, tdoc,
         };
     }
 
