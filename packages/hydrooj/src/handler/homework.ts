@@ -11,7 +11,6 @@ import { PenaltyRules, Tdoc } from '../interface';
 import { PERM } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
-import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
 import storage from '../model/storage';
@@ -20,7 +19,7 @@ import user from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
-import { ContestCodeHandler, ContestScoreboardHandler } from './contest';
+import { ContestCodeHandler, ContestFileDownloadHandler, ContestScoreboardHandler } from './contest';
 
 const validatePenaltyRules = (input: string) => yaml.load(input);
 const convertPenaltyRules = validatePenaltyRules;
@@ -301,24 +300,6 @@ export class HomeworkFilesHandler extends Handler {
     }
 }
 
-export class HomeworkFileDownloadHandler extends Handler {
-    @param('tid', Types.ObjectId)
-    @param('filename', Types.Filename)
-    @param('noDisposition', Types.Boolean)
-    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false) {
-        this.response.addHeader('Cache-Control', 'public');
-        const target = `contest/${domainId}/${tid}/${filename}`;
-        const file = await storage.getMeta(target);
-        await oplog.log(this, 'download.file.contest', {
-            target,
-            size: file?.size || 0,
-        });
-        this.response.redirect = await storage.signDownloadLink(
-            target, noDisposition ? undefined : filename, false, 'user',
-        );
-    }
-}
-
 export async function apply(ctx) {
     ctx.Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
     ctx.Route('homework_create', '/homework/create', HomeworkEditHandler);
@@ -331,5 +312,5 @@ export async function apply(ctx) {
     ctx.Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     ctx.Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
     ctx.Route('homework_files', '/homework/:tid/file', HomeworkFilesHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_file_download', '/homework/:tid/file/:filename', HomeworkFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_file_download', '/homework/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
 }

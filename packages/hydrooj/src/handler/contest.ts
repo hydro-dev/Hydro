@@ -91,6 +91,11 @@ export class ContestDetailBaseHandler extends Handler {
         }
     }
 
+    tsdocAsPublic() {
+        if (!this.tsdoc) return null;
+        return pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
+    }
+
     @param('tid', Types.ObjectId, true)
     async after(domainId: string, tid: ObjectId) {
         if (!tid || this.tdoc.rule === 'homework') return;
@@ -129,37 +134,19 @@ export class ContestDetailBaseHandler extends Handler {
     }
 }
 
-export class ContestDetailHandler extends Handler {
-    tdoc?: Tdoc;
-    tsdoc?: any;
-
+export class ContestDetailHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     async prepare(domainId: string, tid: ObjectId) {
-        [this.tdoc, this.tsdoc] = await Promise.all([
-            contest.get(domainId, tid),
-            contest.getStatus(domainId, tid, this.user._id),
-        ]);
         if (contest.RULES[this.tdoc.rule].hidden) throw new ContestNotFoundError(domainId, tid);
-        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)) {
-            const groups = await user.listGroup(domainId, this.user._id);
-            if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
-                throw new NotAssignedError('contest', tid);
-            }
-        }
-        if (this.tdoc.duration && this.tsdoc?.startAt) {
-            this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
-        }
     }
 
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
         this.response.template = 'contest_detail.html';
         const udict = await user.getList(domainId, [this.tdoc.owner]);
-        const fields = ['attend', 'startAt'];
-        if (this.tdoc.duration) fields.push('endAt');
         this.response.body = {
             tdoc: this.tdoc,
-            tsdoc: pick(this.tsdoc, fields),
+            tsdoc: this.tsdocAsPublic(),
             udict,
             files: sortFiles(this.tdoc.files || []),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
@@ -168,36 +155,6 @@ export class ContestDetailHandler extends Handler {
         this.response.body.tdoc.content = this.response.body.tdoc.content
             .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
             .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
-        const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
-        this.response.body.overrideNav = [
-            {
-                name: 'contest_main',
-                args: {},
-                displayName: 'Back to contest list',
-                checker: () => true,
-            },
-            {
-                name: 'contest_detail',
-                displayName: this.tdoc.title,
-                args: { tid, prefix: 'contest_detail' },
-                checker: () => true,
-            },
-            {
-                name: 'contest_problemlist',
-                args: { tid },
-                checker: () => true,
-            },
-            {
-                name: 'contest_scoreboard',
-                args: { tid, prefix: 'contest_scoreboard' },
-                checker: () => contest.canShowScoreboard.call(this, this.tdoc, true),
-            },
-            {
-                displayName: `${String.fromCharCode(65 + this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
-                args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
-                checker: () => 'pdoc' in this,
-            },
-        ];
     }
 
     @param('tid', Types.ObjectId)
@@ -231,7 +188,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
             this.tsdoc.startAt = new Date();
         }
-        this.response.body.tsdoc = pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
+        this.response.body.tsdoc = this.tsdocAsPublic();
         this.response.body.psdict = this.tsdoc.detail || {};
         const psdocs: any[] = Object.values(this.response.body.psdict);
         const canViewRecord = contest.canShowSelfRecord.call(this, this.tdoc);
@@ -300,9 +257,8 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         const page_name = this.tdoc.rule === 'homework'
             ? 'homework_scoreboard'
             : 'contest_scoreboard';
-        const tsdoc = pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
         this.response.body = {
-            tdoc: this.tdoc, tsdoc, rows, udict, pdict, page_name, groups,
+            tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups,
         };
         this.response.pjax = 'partials/scoreboard.html';
         this.response.template = 'contest_scoreboard.html';
