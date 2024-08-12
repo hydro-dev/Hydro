@@ -66,6 +66,9 @@ export function parse(output: string, fullScore: number)
 
         for (const [stream, trace] of Object.entries(report.reader_trace_stacks)) {
             message += `\n  Stream: \x1b[0;33m${stream}\x1b[0m`;
+            if (trace.fatal) {
+                message += ' \x1b[0;31m[fatal]\x1b[0m';
+            }
             message = trace.stack.reduce((str: string, {
                 var_name: v, pos: { line: l, col: c, byte: b },
             }, idx) =>
