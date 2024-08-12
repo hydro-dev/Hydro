@@ -100,7 +100,7 @@ function CaseDetailsView({ testCase }: { testCase: TestCase }) {
         </div>
       </div> : null}
       {
-        Object.entries(testCase.fragments).map(([streamName, fragment]) => (
+        Object.entries(testCase.fragments || {}).map(([streamName, fragment]) => (
           <StreamFilePreview
             key={streamName}
             streamName={streamName}
@@ -233,7 +233,7 @@ function RecordDetailStatusLoaded() {
         <span className={`icon record-status--icon ${statusCode}`}></span>
         <span style={{ color: getScoreColor(score) }}>{score}</span>
         <span className={`record-status--text ${statusCode}`}> {statusText} </span>
-        {progress ? `${progress.toFixed(3)}%` : null}
+        {progress ? `${progress.toFixed(0)}%` : null}
       </h1>
     </div>
     <PreTextBox lines={compilerTexts} innerClass='compiler-text' />

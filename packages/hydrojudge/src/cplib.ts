@@ -30,7 +30,7 @@ export interface CheckerReport {
     status: CheckerStatus;
     message?: string;
     score: number;
-    reader_trace_stack?: Record<string, TraceStack>;
+    reader_trace_stacks?: Record<string, TraceStack>;
     reader_fragments?: Record<string, Fragment>;
 }
 
@@ -61,10 +61,10 @@ export function parse(output: string, fullScore: number)
             };
     }
 
-    if (report.reader_trace_stack && Object.keys(report.reader_trace_stack).length) {
+    if (report.reader_trace_stacks && Object.keys(report.reader_trace_stacks).length) {
         message += '\nReader trace stacks (most recent variable last):';
 
-        for (const [stream, trace] of Object.entries(report.reader_trace_stack)) {
+        for (const [stream, trace] of Object.entries(report.reader_trace_stacks)) {
             message += `\n  Stream: \x1b[0;33m${stream}\x1b[0m`;
             message = trace.stack.reduce((str: string, {
                 var_name: v, pos: { line: l, col: c, byte: b },
