@@ -1,5 +1,7 @@
 import { size } from '@hydrooj/utils/lib/common';
-import { getScoreColor, STATUS, STATUS_TEXTS } from '@hydrooj/utils/lib/status';
+import {
+  getScoreColor, STATUS, STATUS_CODES, STATUS_TEXTS,
+} from '@hydrooj/utils/lib/status';
 import { AnsiUp } from 'ansi_up';
 import {
   Fragment, SubtaskResult, TestCase,
@@ -9,7 +11,6 @@ import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useSelector } from 'react-redux';
-import { STATUS_CODES } from 'vj/constant/record';
 import { i18n, request } from 'vj/utils';
 import prism from '../highlighter/prismjs';
 import { RootState } from './reducer';
