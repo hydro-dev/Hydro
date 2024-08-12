@@ -75,7 +75,7 @@ export function parse(output: string, fullScore: number)
         }
     }
 
-    const fragments: Record<string, PartialFragment> = Object.entries(report.reader_fragments).reduce((obj, [stream, fragment]) => {
+    const fragments: Record<string, PartialFragment> = Object.entries(report.reader_fragments || {}).reduce((obj, [stream, fragment]) => {
         const value: PartialFragment = {
             byteIdx: fragment.pos.byte,
             dir: fragment.dir,
