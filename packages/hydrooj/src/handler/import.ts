@@ -18,8 +18,8 @@ class ProblemImportHydroHandler extends Handler {
         if (!this.request.files.file) throw new ValidationError('file');
         if (preferredPrefix && !/^[a-zA-Z]+$/.test(preferredPrefix)) throw new ValidationError('preferredPrefix');
         const promise = problem.import(
-            domainId, this.request.files.file.filepath, keepUser ? null : this.user._id,
-            preferredPrefix, this.progress.bind(this),
+            domainId, this.request.files.file.filepath,
+            { preferredPrefix, progress: this.progress.bind(this), operator: keepUser ? null : this.user._id },
         ).catch((e) => MessageModel.send(1, this.user._id, `Import failed: ${e.message}\n${e.stack}`));
         let resolved = false;
         await Promise.race([

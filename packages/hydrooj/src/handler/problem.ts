@@ -960,7 +960,7 @@ export class ProblemStatisticsHandler extends ProblemDetailHandler {
             'record',
         );
         const [udict, udoc] = await Promise.all([
-            user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
+            user.getListForRender(domainId, rsdocs.map((i) => i.uid), this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
             user.getById(domainId, this.pdoc.owner),
         ]);
         this.response.template = 'problem_statistics.html';

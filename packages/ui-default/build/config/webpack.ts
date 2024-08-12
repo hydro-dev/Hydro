@@ -125,6 +125,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
+        'graphql-ws': root('../../modules/nop.ts'),
       },
     },
     module: {

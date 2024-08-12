@@ -54,6 +54,13 @@ function findOverrideContent(dir: string, base: string) {
     return JSON.stringify(languages);
 }
 
+interface ProblemImportOptions {
+    preferredPrefix?: string;
+    progress?: any;
+    override?: boolean;
+    operator?: number;
+}
+
 export class ProblemModel {
     static PROJECTION_CONTEST_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
@@ -439,9 +446,16 @@ export class ProblemModel {
         return true;
     }
 
-    static async import(domainId: string, filepath: string, operator = 1, preferredPrefix?: string, progress = null) {
+    static async import(domainId: string, filepath: string, options: ProblemImportOptions = {}) {
         let tmpdir = '';
         let del = false;
+        if (typeof options !== 'object') {
+            logger.warn('ProblemModel.import: options should be an object');
+            options = {};
+        }
+        const {
+            preferredPrefix, progress, override = false, operator = 1,
+        } = options;
         try {
             if (filepath.endsWith('.zip')) {
                 tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
@@ -474,10 +488,16 @@ export class ProblemModel {
                 const pdoc: ProblemDoc = yaml.load(content) as any;
                 if (!pdoc) continue;
                 let pid = pdoc.pid;
+                let overridePid = null;
 
                 const isValidPid = async (id: string) => {
                     if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
-                    if (await ProblemModel.get(domainId, id)) return false;
+                    const doc = await ProblemModel.get(domainId, id);
+                    if (doc) {
+                        if (!override) return false;
+                        overridePid = doc.docId;
+                        return true;
+                    }
                     return true;
                 };
                 const getFiles = async (type: string) => {
@@ -496,10 +516,18 @@ export class ProblemModel {
                 const overrideContent = findOverrideContent(path.join(tmpdir, i), 'problem');
                 if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
                 if (typeof pdoc.title !== 'string') throw new ValidationError('title', null, 'Invalid title');
-                const docId = await ProblemModel.add(
-                    domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
-                    operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
-                );
+                const docId = overridePid
+                    ? (await ProblemModel.edit(domainId, overridePid, {
+                        title: pdoc.title.trim(),
+                        content: overrideContent || pdoc.content || 'No content',
+                        tag: pdoc.tag || [],
+                        difficulty: pdoc.difficulty,
+                    })).docId
+                    : await ProblemModel.add(
+                        domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
+                        operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
+                    );
+                // TODO delete unused file when updating pdoc
                 for (const [f, loc] of await getFiles('testdata')) {
                     if (f.isDirectory()) {
                         const sub = await fs.readdir(loc);
@@ -521,11 +549,8 @@ export class ProblemModel {
                     if (count > 5) continue;
                     await RecordModel.add(domainId, docId, operator, f.name.split('.')[1], await fs.readFile(loc, 'utf-8'), true);
                 }
-                if (process.env.HYDRO_CLI) {
-                    logger.info(`Imported problem ${pdoc.pid} (${pdoc.title})`);
-                } else {
-                    progress?.(`Imported problem ${pdoc.pid} (${pdoc.title})`);
-                }
+                const message = `${overridePid ? 'Updated' : 'Imported'} problem ${pdoc.pid} (${pdoc.title})`;
+                (process.env.HYDRO_CLI ? logger.info : progress)?.(message);
             }
         } finally {
             if (del) await fs.remove(tmpdir);

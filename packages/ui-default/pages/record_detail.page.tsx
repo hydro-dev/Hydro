@@ -2,7 +2,7 @@ import $ from 'jquery';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { NamedPage } from 'vj/misc/Page';
-import { loadReactRedux, request } from 'vj/utils';
+import { loadReactRedux, request, withTransistionCallback } from 'vj/utils';
 
 export default new NamedPage('record_detail', async () => {
   if (!UiContext.socketUrl) return;
@@ -49,10 +49,12 @@ export default new NamedPage('record_detail', async () => {
           status, score, progress, compilerTexts, judgeTexts, testCases, subtasks,
         },
       });
-      const newSummary = $(msg.summary_html);
-      const oldSummary = $('#summary');
-      dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
       if (typeof status === 'number' && window.parent) window.parent.postMessage({ status });
+      withTransistionCallback(() => {
+        const newSummary = $(msg.summary_html);
+        const oldSummary = $('#summary');
+        dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
+      });
     };
   }
 

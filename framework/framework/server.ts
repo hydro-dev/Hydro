@@ -287,17 +287,22 @@ class NotFoundHandler extends Handler {
     all() { }
 }
 
-async function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
-    const first = middlewares[0];
-    if (!first) return Promise.resolve();
+function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+    let index = -1;
     context.__timers ||= {};
-    context.__timers[`${first.name}.start`] = Date.now();
-    const next = () => executeMiddlewareStack(context, middlewares.slice(1));
-    try {
-        return await first.func(context, next);
-    } finally {
-        context.__timers[`${first.name}.end`] = Date.now();
+    async function dispatch(i) {
+        if (i <= index) throw new Error('next() called multiple times');
+        index = i;
+        if (!middlewares[i]) return null;
+        const name = middlewares[i].name;
+        context.__timers[`${name}.start`] = Date.now();
+        try {
+            return await middlewares[i].func(context, dispatch.bind(null, i + 1));
+        } finally {
+            context.__timers[`${name}.end`] = Date.now();
+        }
     }
+    return dispatch(0);
 }
 
 interface WebServiceConfig {
