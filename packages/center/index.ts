@@ -44,7 +44,7 @@ class DataReportHandler extends Handler {
             throw new ForbiddenError();
         }
         const old = await coll.findOne({ _id: installId });
-        const setPayload = {
+        const setPayload: any = {
             version: payload.version,
             name: payload.name,
             url: payload.url,
