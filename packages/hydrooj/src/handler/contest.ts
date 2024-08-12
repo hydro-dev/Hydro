@@ -222,7 +222,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             contest.getMultiClarification(domainId, tid, this.user._id),
         ]);
         this.response.body = {
-            pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tsdoc: {}, tcdocs,
+            pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tcdocs,
         };
         this.response.template = 'contest_problemlist.html';
         this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 100);
@@ -231,18 +231,18 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
             this.tsdoc.startAt = new Date();
         }
+        this.response.body.tsdoc = pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
         this.response.body.psdict = this.tsdoc.detail || {};
         const psdocs: any[] = Object.values(this.response.body.psdict);
         const canViewRecord = contest.canShowSelfRecord.call(this, this.tdoc);
         this.response.body.canViewRecord = canViewRecord;
-        [this.response.body.rdict, this.response.body.rdocs, this.response.body.tsdoc] = canViewRecord
+        [this.response.body.rdict, this.response.body.rdocs] = canViewRecord
             ? await Promise.all([
                 record.getList(domainId, psdocs.map((i: any) => i.rid)),
                 record.getMulti(domainId, { contest: tid, uid: this.user._id })
                     .sort({ _id: -1 }).toArray(),
-                this.tsdoc,
             ])
-            : [Object.fromEntries(psdocs.map((i) => [i.rid, { _id: i.rid }])), [], []];
+            : [Object.fromEntries(psdocs.map((i) => [i.rid, { _id: i.rid }])), []];
         if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             this.response.body.rdocs = this.response.body.rdocs.map((rdoc) => contest.applyProjection(this.tdoc, rdoc, this.user));
             for (const psdoc of psdocs) {
