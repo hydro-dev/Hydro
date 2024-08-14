@@ -5,6 +5,20 @@ import { NamedPage } from 'vj/misc/Page';
 import { tpl, withTransistionCallback } from 'vj/utils';
 
 export default new NamedPage('record_detail', async () => {
+  $(document).on('click', '.compiler-text', () => {
+    withTransistionCallback(() => {
+      $('.collapsed').removeClass('collapsed');
+    });
+  });
+  $(document).on('click', '.subtask-case', function () {
+    const text = $(this).find('.message').text();
+    const data = $(this).find('.message').html();
+    if (!text?.trim()) return;
+    new InfoDialog({
+      $body: tpl(<pre dangerouslySetInnerHTML={{ __html: data }} />),
+    }).open();
+  });
+
   if (!UiContext.socketUrl) return;
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
     import('../components/socket'),
@@ -25,12 +39,4 @@ export default new NamedPage('record_detail', async () => {
       dd.apply(oldSummary[0], dd.diff(oldSummary[0], newSummary[0]));
     });
   };
-  $(document).on('click', '.subtask-case', function () {
-    const text = $(this).find('.message').text();
-    const data = $(this).find('.message').html();
-    if (!text?.trim()) return;
-    new InfoDialog({
-      $body: tpl(<pre dangerouslySetInnerHTML={{ __html: data }} />),
-    }).open();
-  });
 });

@@ -5,7 +5,7 @@
   {{ set(UiContext, 'socketUrl', "record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
 {% endif %}
 <div class="row">
-  <div class="medium-9 columns">
+  <div class="medium-9 columns collapsed">
     {% if typeof(rdoc['status']) === 'number' %}
       {% include 'record_detail_status.html' %}
     {% endif %}
