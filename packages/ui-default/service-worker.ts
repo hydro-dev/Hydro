@@ -175,7 +175,7 @@ async function get(request: Request) {
       console.warn(source.toString(), ' Load fail ', error);
     }
   }
-  return fetch(request);
+  return null;
 }
 
 function transformUrl(url: string) {
@@ -185,7 +185,7 @@ function transformUrl(url: string) {
   return urlObject.toString();
 }
 
-async function cached(request: Request, cacheKey: string, fetchFunc: () => Promise<Response>) {
+async function cached(request: Request, cacheKey: string, fetchFunc: () => Promise<Response | null>) {
   const url = transformUrl(request.url);
   const urlObject = new URL(url);
   const isAsset = config.assets.some((i) => request.url.startsWith(i));
@@ -211,10 +211,10 @@ async function cached(request: Request, cacheKey: string, fetchFunc: () => Promi
   }
   const [cache, response] = await Promise.all([
     caches.open(cacheKey),
-    fetchFunc(),
+    fetchFunc().catch(() => null),
   ]);
-  if (response.status === 206) return response; // partial response cannot be cached
-  if (response.ok) {
+  if (response?.status === 206) return response; // partial response cannot be cached
+  if (response?.ok) {
     console.log(`Cached ${url}`);
     cache.put(url, response.clone());
     return response;
