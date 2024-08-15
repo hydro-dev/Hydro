@@ -79,7 +79,7 @@ class SolutionModel {
         return [
             inc
                 ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
-                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
+                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid),
             await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid),
         ];
     }
