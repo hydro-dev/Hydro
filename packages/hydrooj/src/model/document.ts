@@ -302,12 +302,18 @@ export function getMultiStatusWithoutDomain<K extends keyof DocStatusType>(
 }
 
 export async function setStatus<K extends keyof DocStatusType>(
-    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number, args: UpdateFilter<DocStatusType[K]>['$set'],
+    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
+    args: UpdateFilter<DocStatusType[K]>['$set'], returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[K]> {
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
-        { $set: args },
-        { upsert: true, returnDocument: 'after' },
+        { $set: args, $inc: { counter: 1 } },
+        {
+            upsert: true,
+            returnDocument,
+            // if fetching document before update we want to ensure data was read from primary
+            ...(returnDocument === 'before' ? { readConcern: { level: 'majority' }, readPreference: 'primary' } : {}),
+        },
     );
     return res.value;
 }
@@ -321,41 +327,32 @@ export async function setMultiStatus<K extends keyof DocStatusType>(
     );
 }
 
+export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
+    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
+    filter: Filter<DocStatusType[T]>, args: Partial<DocStatusType[T]> = {},
+    returnDocument: 'before' | 'after' = 'after',
+): Promise<DocStatusType[T]> {
+    try {
+        const res = await collStatus.findOneAndUpdate(
+            { domainId, docType, docId, uid, $nor: [filter] },
+            { $set: args },
+            { upsert: true, returnDocument },
+        );
+        return res.value;
+    } catch (e) {
+        return false;
+    }
+}
+
 export async function setIfNotStatus<T extends keyof DocStatusType, K extends keyof DocStatusType[T]>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
+    returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[T]> {
-    const current: Partial<DocStatusType[T]> = await collStatus.findOne({ domainId, docType, docId, uid }) || {};
-    if (typeof key === 'string' && key.includes('.')) {
-        const acc = key.split('.');
-        let c = current;
-        for (const i of acc) {
-            if (!(i in c)) break;
-            c = c[i];
-            if (c === null || c === undefined) break;
-        }
-        if (c === ifNot) return null;
-    } else if (current[key] === ifNot) return null;
-    const res = await collStatus.findOneAndUpdate(
-        { domainId, docType, docId, uid },
-        { $set: { [key]: value, ...args } },
-        { upsert: true, returnDocument: 'after' },
+    return await setStatusIfNotCondition(
+        domainId, docType, docId, uid, { [key]: ifNot } as any,
+        { [key]: value, ...args }, returnDocument,
     );
-    return res.value;
-}
-
-export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
-    domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
-    filter: Filter<DocStatusType[T]>, args: Partial<DocStatusType[T]>,
-): Promise<DocStatusType[T]> {
-    const match = await collStatus.findOne({ domainId, docType, docId, uid, ...filter });
-    if (match) return null;
-    const res = await collStatus.findOneAndUpdate(
-        { domainId, docType, docId, uid },
-        { $set: args },
-        { upsert: true, returnDocument: 'after' },
-    );
-    return res.value;
 }
 
 export async function cappedIncStatus<T extends keyof DocStatusType>(
