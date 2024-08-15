@@ -302,12 +302,18 @@ export function getMultiStatusWithoutDomain<K extends keyof DocStatusType>(
 }
 
 export async function setStatus<K extends keyof DocStatusType>(
-    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number, args: UpdateFilter<DocStatusType[K]>['$set'],
+    domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
+    args: UpdateFilter<DocStatusType[K]>['$set'], returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[K]> {
     const res = await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
-        { $set: args },
-        { upsert: true, returnDocument: 'after' },
+        { $set: args, $inc: { counter: 1 } },
+        {
+            upsert: true,
+            returnDocument,
+            // if fetching document before update we want to ensure data was read from primary
+            ...(returnDocument === 'before' ? { readConcern: { level: 'majority' }, readPreference: 'primary' } : {}),
+        },
     );
     return res.value;
 }

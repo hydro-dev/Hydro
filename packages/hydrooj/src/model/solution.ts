@@ -70,17 +70,16 @@ class SolutionModel {
     }
 
     static async vote(domainId: string, psid: ObjectId, uid: number, value: number) {
-        const before = await document.setIfNotStatus(
+        const before = await document.setStatus(
             domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid,
-            'vote', value, value, { vote: value }, 'before',
+            { vote: value }, 'before',
         );
         let inc = value;
-        if (before === false) inc -= value;
-        else if (before?.vote) inc -= before.vote;
+        if (before?.vote) inc -= before.vote;
         return [
             inc
                 ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
-                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid),
+                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
             await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid),
         ];
     }
