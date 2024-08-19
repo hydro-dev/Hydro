@@ -26,6 +26,7 @@ import DomainModel from './domain';
 import RecordModel from './record';
 import SolutionModel from './solution';
 import storage from './storage';
+import * as SystemModel from './system';
 import user from './user';
 
 export interface ProblemDoc extends Document { }
@@ -59,6 +60,7 @@ interface ProblemImportOptions {
     progress?: any;
     override?: boolean;
     operator?: number;
+    delSource?: boolean;
 }
 
 export class ProblemModel {
@@ -448,7 +450,6 @@ export class ProblemModel {
 
     static async import(domainId: string, filepath: string, options: ProblemImportOptions = {}) {
         let tmpdir = '';
-        let del = false;
         if (typeof options !== 'object') {
             logger.warn('ProblemModel.import: options should be an object');
             options = {};
@@ -456,6 +457,7 @@ export class ProblemModel {
         const {
             preferredPrefix, progress, override = false, operator = 1,
         } = options;
+        let problems: string[];
         try {
             if (filepath.endsWith('.zip')) {
                 tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
@@ -465,7 +467,6 @@ export class ProblemModel {
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
-                del = true;
                 await new Promise((resolve, reject) => {
                     zip.extractAllToAsync(tmpdir, true, (err) => {
                         if (err) reject(err);
@@ -477,11 +478,14 @@ export class ProblemModel {
             } else {
                 throw new ValidationError('file', null, 'Invalid file');
             }
-            const problems = await fs.readdir(tmpdir, { withFileTypes: true });
-            for (const p of problems) {
+            const files = await fs.readdir(tmpdir, { withFileTypes: true });
+            problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
+        } catch (e) {
+            if (options.delSource) await fs.remove(tmpdir);
+        }
+        for (const i of problems) {
+            try {
                 if (process.env.HYDRO_CLI) logger.info(`Importing problem ${p.name}`);
-                const i = p.name;
-                if (!p.isDirectory()) continue;
                 const files = await fs.readdir(path.join(tmpdir, i), { withFileTypes: true });
                 if (!files.find((f) => f.name === 'problem.yaml')) continue;
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
@@ -516,16 +520,21 @@ export class ProblemModel {
                 const overrideContent = findOverrideContent(path.join(tmpdir, i), 'problem');
                 if (pdoc.difficulty && !Number.isSafeInteger(pdoc.difficulty)) delete pdoc.difficulty;
                 if (typeof pdoc.title !== 'string') throw new ValidationError('title', null, 'Invalid title');
+                const allFiles = [...await getFiles('testdata'), ...await getFiles('additional_file')];
+                const totalSize = allFiles.map((f) => fs.statSync(f[1]).size).reduce((a, b) => a + b, 0);
+                if (allFiles.length > SystemModel.get('limit.problem_files')) throw new ValidationError('files', null, 'Too many files');
+                if (totalSize > SystemModel.get('limit.problem_files_size')) throw new ValidationError('files', null, 'Files too large');
+                const tag = (pdoc.tag || []).map((t) => t.toString());
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: pdoc.title.trim(),
                         content: overrideContent || pdoc.content || 'No content',
-                        tag: pdoc.tag || [],
+                        tag,
                         difficulty: pdoc.difficulty,
                     })).docId
                     : await ProblemModel.add(
                         domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
-                        operator || pdoc.owner, pdoc.tag || [], { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
+                        operator || pdoc.owner, tag, { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                     );
                 // TODO delete unused file when updating pdoc
                 for (const [f, loc] of await getFiles('testdata')) {
@@ -551,10 +560,11 @@ export class ProblemModel {
                 }
                 const message = `${overridePid ? 'Updated' : 'Imported'} problem ${pdoc.pid} (${pdoc.title})`;
                 (process.env.HYDRO_CLI ? logger.info : progress)?.(message);
+            } catch (e) {
+                (process.env.HYDRO_CLI ? logger.info : progress)?.(`Error importing problem ${p.name}: ${e.message}`);
             }
-        } finally {
-            if (del) await fs.remove(tmpdir);
         }
+        if (options.delSource) await fs.remove(tmpdir);
     }
 
     static async export(domainId: string) {

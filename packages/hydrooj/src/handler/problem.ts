@@ -729,7 +729,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             if ((this.pdoc.data?.length || 0)
                 + (this.pdoc.additional_file?.length || 0)
                 + files.length
-                >= system.get('limit.problem_files_max')) {
+                >= this.ctx.setting.get('limit.problem_files_max')) {
                 throw new FileLimitExceededError('count');
             }
             const size = Math.sum(
@@ -737,7 +737,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 (this.pdoc.additional_file || []).map((i) => i.size),
                 files.map((i) => i.size),
             );
-            if (size >= system.get('limit.problem_files_max_size')) {
+            if (size >= this.ctx.setting.get('limit.problem_files_max_size')) {
                 throw new FileLimitExceededError('size');
             }
         }
