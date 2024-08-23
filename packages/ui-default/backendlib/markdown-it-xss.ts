@@ -3,6 +3,23 @@ import { escapeAttrValue, FilterXSS, safeAttrValue } from 'xss';
 
 const stack = [];
 const voidTags = ['br', 'hr', 'input', 'img', 'link', 'source', 'col', 'area', 'base', 'meta', 'embed', 'param', 'track', 'wbr'];
+const depedentTags = {
+  li: ['ul', 'ol'],
+  tr: ['table'],
+  td: ['tr'],
+  th: ['tr'],
+  thead: ['table'],
+  tbody: ['table'],
+  tfoot: ['table'],
+  colgroup: ['table'],
+  col: ['colgroup'],
+  caption: ['table'],
+  option: ['select'],
+  optgroup: ['select'],
+  dt: ['dl'],
+  dd: ['dl'],
+};
+const whitelistClasses = ['row', 'columns', 'typo', 'note', 'warn'].concat(new Array(12).map((_, i) => `medium-${i + 1}`));
 
 const tagCheck = new FilterXSS({
   css: false,
@@ -10,6 +27,9 @@ const tagCheck = new FilterXSS({
   onIgnoreTag(tag, html, options) {
     if (html.endsWith('/>') || voidTags.includes(tag)) return html;
     if (!options.isClosing) {
+      if (depedentTags[tag] && !stack.find((i) => depedentTags[tag].includes(i))) {
+        return html.replace(/</g, '&lt;').replace(/>/g, '&gt;'); // 标签不可出现在该位置
+      }
       stack.push(tag);
       return html;
     }
@@ -131,7 +151,7 @@ export const xss = new FilterXSS({
   css: cssFilterOptions,
   safeAttrValue(tag, name, value) {
     if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
-    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
+    if (name === 'class') return value.split(' ').filter((i) => whitelistClasses.includes(i)).join(' ');
     return safeAttrValue(tag, name, value, CssFilter);
   },
 });
@@ -146,7 +166,7 @@ export const xssInline = new FilterXSS({
   ...commonRules,
   safeAttrValue(tag, name, value) {
     if (name === 'id') return escapeAttrValue(`xss-id-${value}`);
-    if (name === 'class') return escapeAttrValue(value.replace(/badge/g, 'xss-badge'));
+    if (name === 'class') return value.split(' ').filter((i) => whitelistClasses.includes(i)).join(' ');
     return safeAttrValue(tag, name, value, inlineCssFilter);
   },
 });
