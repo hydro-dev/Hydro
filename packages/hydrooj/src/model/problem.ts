@@ -485,7 +485,7 @@ export class ProblemModel {
         }
         for (const i of problems) {
             try {
-                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${p.name}`);
+                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${i}`);
                 const files = await fs.readdir(path.join(tmpdir, i), { withFileTypes: true });
                 if (!files.find((f) => f.name === 'problem.yaml')) continue;
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
@@ -561,7 +561,7 @@ export class ProblemModel {
                 const message = `${overridePid ? 'Updated' : 'Imported'} problem ${pdoc.pid} (${pdoc.title})`;
                 (process.env.HYDRO_CLI ? logger.info : progress)?.(message);
             } catch (e) {
-                (process.env.HYDRO_CLI ? logger.info : progress)?.(`Error importing problem ${p.name}: ${e.message}`);
+                (process.env.HYDRO_CLI ? logger.info : progress)?.(`Error importing problem ${i}: ${e.message}`);
             }
         }
         if (options.delSource) await fs.remove(tmpdir);
