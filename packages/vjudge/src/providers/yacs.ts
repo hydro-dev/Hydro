@@ -24,8 +24,9 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
 
     get loggedIn(): Promise<boolean> {
         return new Promise((resolve) => {
-            this.get('/user/fetchByToken').query({ token: this.token })
-                .end((err, { status }) => resolve(status === 200));
+            this.get('/user/fetchByToken').query({ token: this.token }).ok(() => true)
+                .then((res) => resolve(res.status === 200))
+                .catch(() => resolve(false));
         });
     }
 
