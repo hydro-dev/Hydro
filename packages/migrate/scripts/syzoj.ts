@@ -82,6 +82,7 @@ export async function run({
         user: username,
         password,
         database: name,
+        connectTimeout: 15000,
     });
     const query = (q: string) => new Promise<any[]>((res, rej) => {
         src.query(q).then((r) => res(r)).catch((e) => rej(e));
