@@ -1,6 +1,6 @@
 import {
     Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
-    Logger, Schema, SystemModel,
+    Logger, ProblemModel, Schema, SystemModel,
 } from 'hydrooj';
 import { SonicService } from './service';
 
@@ -11,12 +11,22 @@ export function apply(ctx: Context) {
 
     global.Hydro.lib.problemSearch = async (domainId, query, opts) => {
         const limit = opts?.limit || SystemModel.get('pagination.problem');
-        const ids = await ctx.sonic.query('problem', `${domainId}@title`, query, { limit });
-        if (limit - ids.length > 0) ids.push(...await ctx.sonic.query('problem', `${domainId}@content`, query, { limit: limit - ids.length }));
+        let hits = await ctx.sonic.query('problem', `${domainId}@title`, query, { limit });
+        if (!opts.skip) {
+            let pdoc = await ProblemModel.get(domainId, +query || query, ProblemModel.PROJECTION_LIST);
+            if (pdoc) {
+                hits = hits.filter((i) => i !== `${pdoc.domainId}/${pdoc.docId}`);
+                hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
+            } else if (/^P\d+$/.test(query)) {
+                pdoc = await ProblemModel.get(domainId, +query.substring(1), ProblemModel.PROJECTION_LIST);
+                if (pdoc) hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
+            }
+        }
+        if (limit - hits.length > 0) hits.push(...await ctx.sonic.query('problem', `${domainId}@content`, query, { limit: limit - hits.length }));
         return {
-            countRelation: ids.length >= limit ? 'gte' : 'eq',
-            total: ids.length,
-            hits: ids,
+            countRelation: hits.length >= limit ? 'gte' : 'eq',
+            total: hits.length,
+            hits,
         };
     };
 
