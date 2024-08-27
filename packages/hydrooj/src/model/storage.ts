@@ -104,7 +104,7 @@ export class StorageModel {
             { path: target, autoDelete: null },
             { $set: { lastUsage: new Date() } },
         );
-        return await storage.signDownloadLink(res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
+        return await storage.signDownloadLink(res.value?.link || res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 
     static async copy(src: string, dst: string) {
@@ -142,7 +142,7 @@ async function cleanFiles() {
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     while (res.value) {
         // eslint-disable-next-line no-await-in-loop
-        await storage.del(res.value._id);
+        if (!res.value.link) await storage.del(res.value._id);
         // eslint-disable-next-line no-await-in-loop
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
@@ -160,11 +160,14 @@ export function apply(ctx: Context) {
         ]);
         await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
     });
+
+    if (process.env.NODE_APP_INSTANCE !== '0') return;
     ctx.on('ready', async () => {
-        if (process.env.NODE_APP_INSTANCE !== '0') return;
         await db.ensureIndexes(
             StorageModel.coll,
+            { key: { path: 1 }, name: 'path' },
             { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+            { key: { link: 1 }, sparse: true, name: 'link' },
         );
         if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
             await ScheduleModel.add({
