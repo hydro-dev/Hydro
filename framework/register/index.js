@@ -21,9 +21,13 @@ process.env.NODE_APP_INSTANCE ||= '0';
 const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
 
-function transform(filename, tsx = true) {
-    const code = fs.readFileSync(filename, 'utf-8');
-    const result = esbuild.transformSync(code, {
+const remove = [
+    /(const|let|var)\s+__filename\s*=\s*fileURLToPath\s*\(\s*import\.meta\.url\s*\)\s*;?/g,
+    /(const|let|var)\s+__dirname\s*=\s*(path\.)?dirname\s*\(\s*__filename\s*\)\s*;?/g,
+];
+function tryTransform(filename, content, tsx = true) {
+    for (const regex of remove) content = content.replace(regex, '');
+    return esbuild.transformSync(content, {
         tsconfigRaw: '{"compilerOptions":{"experimentalDecorators":true}}',
         sourcefile: filename,
         sourcemap: 'both',
@@ -32,6 +36,18 @@ function transform(filename, tsx = true) {
         target: `node${major}.${minor}`,
         jsx: 'transform',
     });
+}
+
+function transform(filename, tsx = true) {
+    const code = fs.readFileSync(filename, 'utf-8');
+    let result;
+    try {
+        result = tryTransform(filename, code, tsx);
+    } catch (e) {
+        if (!e.message.includes('Top-level await')) throw e;
+        result = tryTransform(filename, code.replace(/await import *\(/g, 'require('), tsx);
+        console.warn('transforming top-level await to require for file ', filename);
+    }
     if (result.warnings.length) console.warn(result.warnings);
     map[filename] = result.map;
     if (process.env.LOADER_DUMP_CODE && filename.endsWith(`/${process.env.LOADER_DUMP_CODE}`)) {

@@ -1,15 +1,15 @@
 @font-face
   font-family: $icon-font-name
-  src: url('./{{ options.fontName }}.eot')
-  src: url('./{{ options.fontName }}.eot#iefix') format('embedded-opentype'),
-    url('./{{ options.fontName }}.woff2') format('woff2'),
-    url('./{{ options.fontName }}.woff') format('woff'),
-    url('./{{ options.fontName }}.ttf') format('truetype')
+  src: url('./hydro-icons.eot')
+  src: url('./hydro-icons.eot#iefix') format('embedded-opentype'),
+    url('./hydro-icons.woff2') format('woff2'),
+    url('./hydro-icons.woff') format('woff'),
+    url('./hydro-icons.ttf') format('truetype')
   font-weight: normal
   font-style: normal
 
 .icon
-  font-family: $icon-font-name !important
+  font-family: $icon-font-name !important;{{fontSize}}
   speak: none
   font-style: normal
   font-weight: normal
@@ -19,7 +19,4 @@
   -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
 
-{% for icon in glyphs %}
-.icon-{{ icon.name }}:before
-  content: $icon-{{ icon.name }}
-{% endfor %}
+{{cssString}}
