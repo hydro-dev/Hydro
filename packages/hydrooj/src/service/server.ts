@@ -102,7 +102,6 @@ export class Handler extends HandlerOriginal {
             });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
-            logger.error(error);
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
             this.response.body = {
                 UserFacingError,

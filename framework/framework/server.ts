@@ -290,14 +290,19 @@ class NotFoundHandler extends Handler {
 function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
     let index = -1;
     context.__timers ||= {};
-    async function dispatch(i) {
-        if (i <= index) throw new Error('next() called multiple times');
+    function dispatch(i) {
+        if (i <= index) return Promise.reject(new Error('next() called multiple times'));
         index = i;
-        if (!middlewares[i]) return null;
+        if (!middlewares[i]) return Promise.resolve();
         const name = middlewares[i].name;
+        const fn = middlewares[i].func;
         context.__timers[`${name}.start`] = Date.now();
         try {
-            return await middlewares[i].func(context, dispatch.bind(null, i + 1));
+            return Promise.resolve(fn(context, dispatch.bind(null, i + 1))).finally(() => {
+                context.__timers[`${name}.end`] = Date.now();
+            });
+        } catch (e) {
+            return Promise.reject(e);
         } finally {
             context.__timers[`${name}.end`] = Date.now();
         }
@@ -510,8 +515,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             try {
+                console.log(1, e);
                 await this.ctx.serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
+                console.log(2, e);
                 await this.ctx.serial('handler/error', h, e);
+                console.log(3, e);
                 await h.onerror(e);
             } catch (err) {
                 logger.error(err);
