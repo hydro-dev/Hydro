@@ -170,6 +170,7 @@ export default class Editor extends DOMAttachedObject {
         codeStyleReverse={false}
         ref={renderCallback}
         modelValue={val}
+        theme={['light', 'dark'].includes(UserContext.theme) ? UserContext.theme : 'light'}
         noMermaid
         noPrettier
         autoDetectCode
