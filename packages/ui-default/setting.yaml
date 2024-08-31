@@ -48,13 +48,6 @@ preferredEditorType:
   family: markdown
   category: preference
   value: sv
-monacoTheme:
-  type:
-    vs-dark: VS Dark
-    vs-light: VS Light
-  category: preference
-  value: vs-light
-  family: markdown
 theme:
   type:
     light: Light

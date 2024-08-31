@@ -200,6 +200,10 @@ export async function setTemporaryViewTransitionNames(entries, vtPromise: Promis
   }
 }
 
+export function getTheme(): 'dark' | 'light' {
+  return ['light', 'dark'].includes(UserContext.theme) ? UserContext.theme : 'light';
+}
+
 Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
