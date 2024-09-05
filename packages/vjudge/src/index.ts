@@ -264,7 +264,7 @@ export async function apply(ctx: Context) {
     ctx.inject(['vjudge'], async (c) => {
         await c.vjudge.start();
         for (const [k, v] of Object.entries(providers)) {
-            c.vjudge.addProvider(k, v);
+            if (!SystemModel.get(`vjudge.builtin-${k}-disable`)) c.vjudge.addProvider(k, v);
         }
         c.inject(['check'], ({ check }) => {
             check.addChecker('Vjudge', async (_ctx, log, warn, error) => {

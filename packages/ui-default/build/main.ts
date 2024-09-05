@@ -116,8 +116,6 @@ async function main() {
         normalize: true,
       },
     });
-    const file = fs.readFileSync(root('misc/.iconfont/webicon.inc.styl'), 'utf-8');
-    fs.writeFileSync(root('misc/.iconfont/webicon.inc.styl'), file.replace(/:/g, ' ='));
   } else {
     await runWebpack(argv.options as any);
     if (fs.existsSync('public/theme.css')) {

@@ -1,3 +1,5 @@
 $icon-font-name = 'hydro-icons'
 
-{{cssToVars}}
+{% for name, value in infoData %}
+${{prefix}}-{{ name }} = '{{ value.encodedCode }}'
+{%- endfor %}
