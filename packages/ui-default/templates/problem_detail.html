@@ -47,7 +47,7 @@
           {% endif %}
           #{{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) if tdoc else pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
         </h1>
-        {% if tdoc %}
+        {% if tdoc and tdoc.pids|length <= 26 %}
           <div class="section__tools contest-problems">
             {% for pid in tdoc.pids -%}
               {% set status = tsdoc.detail[pid].status %}
