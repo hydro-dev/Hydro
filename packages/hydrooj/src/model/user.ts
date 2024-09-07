@@ -277,7 +277,7 @@ class UserModel {
 
     @ArgMethod
     static setUname(uid: number, uname: string) {
-        return UserModel.setById(uid, { uname, unameLower: uname.trim().toLowerCase() });
+        return UserModel.setById(uid, { uname: String(uname), unameLower: String(uname).trim().toLowerCase() });
     }
 
     @ArgMethod
