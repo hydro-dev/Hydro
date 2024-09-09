@@ -801,6 +801,7 @@ export interface ModuleInterfaces {
         icon?: string;
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+        lockUsername?: boolean;
     };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
 }

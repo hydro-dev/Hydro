@@ -247,12 +247,16 @@ class UserRegisterWithCodeHandler extends Handler {
 
     @param('password', Types.Password)
     @param('verifyPassword', Types.Password)
-    @param('uname', Types.Username)
+    @param('uname', Types.Username, true)
     @param('code', Types.String)
     async post(
         domainId: string, password: string, verify: string,
-        uname: string, code: string,
+        uname = '', code: string,
     ) {
+        if (this.tdoc.oauth?.[0] && global.Hydro.module.oauth[this.tdoc.oauth[0]].lockUsername) {
+            uname = this.tdoc.username;
+        }
+        if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
         if (this.tdoc.phone) this.tdoc.mail = `${String.random(12)}@hydro.local`;
         const uid = await user.create(this.tdoc.mail, uname, password, undefined, this.request.ip);
