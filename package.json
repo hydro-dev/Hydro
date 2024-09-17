@@ -45,9 +45,9 @@
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.3",
         "esbuild": "0.23.0",
-        "eslint": "^8.57.0",
+        "eslint": "^8.57.1",
         "eslint-import-resolver-typescript": "^3.6.3",
-        "eslint-import-resolver-webpack": "^0.13.8",
+        "eslint-import-resolver-webpack": "^0.13.9",
         "fs-extra": "^11.2.0",
         "globby": "^14.0.2",
         "inspectpack": "^4.7.1",
@@ -56,9 +56,13 @@
         "ora": "^8.1.0",
         "package-json": "^10.0.1",
         "semver": "^7.6.3",
-        "simple-git": "^3.25.0",
+        "simple-git": "^3.26.0",
         "supertest": "^7.0.0",
         "typescript": "5.3.3",
         "wtfnode": "^0.9.3"
+    },
+    "resolutions": {
+        "@cordisjs/logger": "0.3.2",
+        "reggol": "1.6.3"
     }
 }

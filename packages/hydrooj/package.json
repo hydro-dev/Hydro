@@ -12,10 +12,10 @@
     },
     "preferUnplugged": true,
     "dependencies": {
-        "@aws-sdk/client-s3": "3.645.0",
-        "@aws-sdk/lib-storage": "3.645.0",
-        "@aws-sdk/s3-presigned-post": "3.645.0",
-        "@aws-sdk/s3-request-presigner": "3.645.0",
+        "@aws-sdk/client-s3": "3.651.1",
+        "@aws-sdk/lib-storage": "3.651.1",
+        "@aws-sdk/s3-presigned-post": "3.651.1",
+        "@aws-sdk/s3-request-presigner": "3.651.1",
         "@graphql-tools/schema": "^10.0.6",
         "@hydrooj/framework": "workspace:^",
         "@hydrooj/utils": "workspace:^",
@@ -49,7 +49,7 @@
         "schemastery": "^3.14.6",
         "semver": "^7.6.3",
         "shorty.js": "^1.0.1",
-        "superagent": "^9.0.2",
+        "superagent": "^10.1.0",
         "tar": "6.2.1",
         "thirty-two": "^1.0.2"
     },
