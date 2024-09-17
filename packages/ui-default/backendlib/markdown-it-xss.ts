@@ -19,7 +19,7 @@ const depedentTags = {
   dt: ['dl'],
   dd: ['dl'],
 };
-const whitelistClasses = ['row', 'columns', 'typo', 'note', 'warn'].concat(new Array(12).map((_, i) => `medium-${i + 1}`));
+const whitelistClasses = ['row', 'columns', 'typo', 'note', 'warn'].concat(new Array(12).fill(0).map((_, i) => `medium-${i + 1}`));
 
 const tagCheck = new FilterXSS({
   css: false,
