@@ -63,6 +63,12 @@ interface ProblemImportOptions {
     delSource?: boolean;
 }
 
+interface ProblemCreateOptions {
+    difficulty?: number;
+    hidden?: boolean;
+    reference?: { domainId: string, pid: number };
+}
+
 export class ProblemModel {
     static PROJECTION_CONTEST_LIST: Field[] = [
         '_id', 'domainId', 'docType', 'docId', 'pid',
@@ -131,7 +137,7 @@ export class ProblemModel {
 
     static async add(
         domainId: string, pid: string = '', title: string, content: string, owner: number,
-        tag: string[] = [], meta: { difficulty?: number, hidden?: boolean } = {},
+        tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
@@ -146,13 +152,14 @@ export class ProblemModel {
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
         content: string, owner: number, tag: string[] = [],
-        meta: { difficulty?: number, hidden?: boolean } = {},
+        meta: ProblemCreateOptions = {},
     ) {
         const args: Partial<ProblemDoc> = {
             title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
         };
         if (pid) args.pid = pid;
         if (meta.difficulty) args.difficulty = meta.difficulty;
+        if (meta.reference) args.reference = meta.reference;
         await bus.parallel('problem/before-add', domainId, content, owner, docId, args);
         const result = await document.add(domainId, content, owner, document.TYPE_PROBLEM, docId, null, null, args);
         args.content = content;
@@ -240,15 +247,13 @@ export class ProblemModel {
     static async copy(domainId: string, _id: number, target: string, pid?: string) {
         const original = await ProblemModel.get(domainId, _id);
         if (!original) throw new ProblemNotFoundError(domainId, _id);
-        // TODO: refuse to copy referenced problem
+        if (original.reference) throw new ValidationError('reference');
         if (pid && (/^[0-9]+$/.test(pid) || await ProblemModel.get(target, pid))) pid = '';
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
-        const docId = await ProblemModel.add(
+        return await ProblemModel.add(
             target, pid, original.title, original.content,
-            original.owner, original.tag, { hidden: original.hidden },
+            original.owner, original.tag, { hidden: original.hidden, reference: { domainId, pid: _id } },
         );
-        await ProblemModel.edit(target, docId, { reference: { domainId, pid: _id } });
-        return docId;
     }
 
     static push<T extends ArrayKeys<ProblemDoc>>(domainId: string, _id: number, key: ArrayKeys<ProblemDoc>, value: ProblemDoc[T][0]) {
