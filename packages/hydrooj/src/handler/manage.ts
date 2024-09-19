@@ -270,10 +270,12 @@ class SystemUserImportHandler extends SystemHandler {
                     messages.push(e.message);
                 }
             }
-        }
-        for (const name in groups) {
-            const uids = groups[name].map((i) => mapping[i]).filter((i) => i);
-            if (uids.length) await user.updateGroup(domainId, name, uids);
+            const existing = await user.listGroup(domainId);
+            for (const name in groups) {
+                const uids = groups[name].map((i) => mapping[i]).filter((i) => i);
+                const current = existing.find((i) => i.name === name)?.uids || [];
+                if (uids.length) await user.updateGroup(domainId, name, Array.from(new Set([...current, ...uids])));
+            }
         }
         this.response.body.users = udocs;
         this.response.body.messages = messages;
