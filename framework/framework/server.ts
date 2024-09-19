@@ -515,11 +515,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             try {
-                console.log(1, e);
                 await this.ctx.serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
-                console.log(2, e);
                 await this.ctx.serial('handler/error', h, e);
-                console.log(3, e);
                 await h.onerror(e);
             } catch (err) {
                 logger.error(err);

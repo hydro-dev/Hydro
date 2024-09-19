@@ -111,6 +111,34 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+### Hydro 4.15.0 / UI 4.54.0
+
+- core: 修复题解投票数量计算
+- ui: 优化暗色模式 404 页图片
+- ui: 点击展开编译信息
+- ui: 修复比赛计分板关注用户
+- core: ProblemModel.import: 支持 delSource 选项
+- ui: 修复生成测试数据实时推送
+- prom-client: 上报状态至控制台
+- core: oauth: 支持固定用户名
+- utils: 支持查找 nix 安装的 pm2
+- ui: 优化比赛页题目导航
+- ui: 弃用 monacoTheme 选项
+- ui: markdown 编辑器支持暗色模式
+- framework: 优化堆栈追踪
+- core: oplog: 记录访问路径
+- migrate: 加长超时时间
+- vjudge: 修复 yacs 导致系统崩溃的问题
+- sonic: 支持按题目 ID 搜索题目
+- core: 修复导入用户时若含小组会覆盖原有小组设置的问题
+
+### Hydro 4.14.1 / UI 4.53.2
+- core: 修复分数泄露
+- core: 优化错误堆栈
+- core: UserModel.getListForRender: 支持额外字段
+- core: ProblemModel.import: 合并参数为导入选项
+- ui: 启用 view-transistions
+
 ### Hydro 4.14.0 / UI 4.53.1
 - core: 修复能够越权查看隐藏题目的问题 [security]
 - ui: 优化提交记录详情富文本展示
