@@ -35,9 +35,11 @@ fs.writeFileSync(root('__core-js.js'), `${list.map((i) => `import 'core-js/modul
 
 export default async function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
   if (env.production) console.log(targets);
-  let isNew = false;
-  const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
-  if (typeof version === 'string' && gt(version, latest)) isNew = true;
+  let createSentryRelease = !!(process.env.CI && process.env.SENTRY_AUTH_TOKEN);
+  if (createSentryRelease) {
+    const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
+    createSentryRelease = typeof version === 'string' && gt(version, latest);
+  }
 
   function esbuildLoader() {
     return {
@@ -290,7 +292,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         sourcemaps: {
           rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
         },
-        release: (process.env.CI && isNew) ? {
+        release: createSentryRelease ? {
           name: `hydro-web@${version}`,
           uploadLegacySourcemaps: root('public'),
         } : {},
