@@ -76,6 +76,7 @@ export async function run({
     const query = (q: string) => new Promise<any[]>((res, rej) => {
         src.query(q).then((r) => res(r)).catch((e) => rej(e));
     });
+    report({ message: JSON.stringify(await query("show VARIABLES like 'char%';")) });
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
