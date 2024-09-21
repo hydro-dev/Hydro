@@ -485,7 +485,7 @@ export class ProblemModel {
             }
             const files = await fs.readdir(tmpdir, { withFileTypes: true });
             problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
-        } catch (e) {
+        } finally {
             if (options.delSource) await fs.remove(tmpdir);
         }
         for (const i of problems) {
