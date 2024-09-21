@@ -68,6 +68,7 @@ function resourceUrl(service: string, src: string, url: string) {
     src = src.split('?')[0];
     return `//player.bilibili.com/player.html?${src.startsWith('BV') ? 'bvid' : 'aid'}=${src}&autoplay=0`;
   }
+  if (service === 'msoffice') return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}`;
   if (service === 'youku') return `https://player.youku.com/embed/${src}`;
   if (service === 'vimeo') return `https://player.vimeo.com/video/${src}`;
   if (service === 'vine') return `https://vine.co/v/${src}/embed/simple`;
@@ -79,16 +80,22 @@ function resourceUrl(service: string, src: string, url: string) {
   return src;
 }
 
+declare module 'hydrooj' {
+  interface ModuleInterfaces {
+    richmedia: {
+      get: (src: string) => string | null;
+    }
+  }
+}
+
 export function Media(md: MarkdownIt) {
-  const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku'];
+  const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku', 'msoffice'];
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
     const service = md.utils.escapeHtml(tokens[idx].attrGet('service')).toLowerCase();
-    if (service === 'msoffice') {
-      return `\
-        <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}"
-          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
-      `;
+    if (Hydro.module.richmedia?.[service]) {
+      const result = Hydro.module.richmedia[service].get(src);
+      if (result) return result;
     }
     if (service === 'pdf') {
       if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
