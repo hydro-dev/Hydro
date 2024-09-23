@@ -116,7 +116,7 @@ pjax.request = async (opt) => {
       }
       $target.trigger('vjContentRemove');
       withTransistionCallback(() => $target.replaceWith($el));
-      $el.trigger('vjContentNew');
+      $target.trigger('vjContentNew');
     }
   } catch (err) {
     if (!err.aborted) {
