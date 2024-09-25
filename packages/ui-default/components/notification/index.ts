@@ -1,18 +1,18 @@
-import { Intent, Position, Toaster } from '@blueprintjs/core';
+import { Intent, OverlayToaster, Position } from '@blueprintjs/core';
 import $ from 'jquery';
 import { tpl, zIndexManager } from 'vj/utils/base';
 
 const ToasterContainer = document.createElement('div');
 ToasterContainer.style.position = 'fixed';
 ToasterContainer.style.bottom = '0px';
+ToasterContainer.style.width = '100%';
 ToasterContainer.style.zIndex = '9999';
 document.body.append(ToasterContainer);
 
-export const AppToaster = Toaster.create({
-  className: 'recipe-toaster',
-  position: Position.LEFT_BOTTOM,
-  usePortal: true,
-} as any, ToasterContainer);
+const AppToaster = OverlayToaster.createAsync(
+  { position: Position.BOTTOM_LEFT, usePortal: false },
+  { container: ToasterContainer },
+);
 
 interface NotificationOptions {
   avatar?: string;
@@ -65,20 +65,20 @@ export default class Notification {
     setTimeout(() => this.$n.remove(), 200);
   }
 
-  static success(message: string, duration?: number) {
-    return AppToaster.show({ message, timeout: duration, intent: Intent.SUCCESS });
+  static async success(message: string, duration?: number) {
+    return (await AppToaster).show({ message, timeout: duration, intent: Intent.SUCCESS });
   }
 
-  static info(message: string, duration?: number) {
-    return AppToaster.show({ message, timeout: duration, intent: Intent.PRIMARY });
+  static async info(message: string, duration?: number) {
+    return (await AppToaster).show({ message, timeout: duration, intent: Intent.PRIMARY });
   }
 
-  static warn(message: string, duration?: number) {
-    return AppToaster.show({ message, timeout: duration, intent: Intent.WARNING });
+  static async warn(message: string, duration?: number) {
+    return (await AppToaster).show({ message, timeout: duration, intent: Intent.WARNING });
   }
 
-  static error(message: string, duration?: number) {
-    return AppToaster.show({ message, timeout: duration, intent: Intent.DANGER });
+  static async error(message: string, duration?: number) {
+    return (await AppToaster).show({ message, timeout: duration, intent: Intent.DANGER });
   }
 }
 
