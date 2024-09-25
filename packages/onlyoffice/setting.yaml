@@ -13,3 +13,8 @@ pdf:
   name: pdf
   desc: Handle pdf documents
   default: false
+externalSign:
+  type: text
+  name: externalSign
+  desc: External Sign URL
+  default: ''

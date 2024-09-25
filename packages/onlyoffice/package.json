@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/onlyoffice",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "main": "index.ts",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
@@ -10,6 +10,6 @@
         "jsonwebtoken": "^9.0.2"
     },
     "devDependencies": {
-        "@types/jsonwebtoken": "^9"
+        "@types/jsonwebtoken": "^9.0.7"
     }
 }
