@@ -15,7 +15,7 @@ export class WebSocketLayer {
     regexp: RegExp;
 
     constructor(path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
-        this.regexp = pathToRegexp(path);
+        this.regexp = pathToRegexp(path).regexp;
     }
 
     accept(socket: WebSocket, request: IncomingMessage, ctx: KoaContext) {
