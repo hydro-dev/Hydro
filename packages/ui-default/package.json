@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.54.1",
+  "version": "4.54.2",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",

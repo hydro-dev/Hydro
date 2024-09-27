@@ -111,6 +111,11 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## UI 4.54.2
+
+- ui: 修复 markdown 预览
+- ui: 优化禁用内置登录时的登录框显示
+
 ## UI 4.54.1
 
 - ui: 修复 view-transitions

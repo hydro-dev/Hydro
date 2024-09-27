@@ -93,8 +93,8 @@ export function Media(md: MarkdownIt) {
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
     const service = md.utils.escapeHtml(tokens[idx].attrGet('service')).toLowerCase();
-    if (Hydro.module.richmedia?.[service]) {
-      const result = Hydro.module.richmedia[service].get(service, src, md);
+    if (Hydro?.module?.richmedia?.[service]) {
+      const result = Hydro?.module?.richmedia[service].get(service, src, md);
       if (result) return result;
     }
     if (service === 'pdf') {
