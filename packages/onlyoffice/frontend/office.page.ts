@@ -37,7 +37,8 @@ const getEles = (types: string[]) => types.flatMap((type) => $(`div[data-${type}
 addPage(new AutoloadPage('onlyoffice', async () => {
   const all = getEles(['doc', 'docx', 'cell', 'xls', 'xlsx', 'slide', 'ppt', 'pptx', 'pdf']);
   if (all.length) await load();
-  getEles(['doc', 'docx', 'pdf']).forEach(loader('word'));
+  getEles(['doc', 'docx']).forEach(loader('word'));
   getEles(['cell', 'xls', 'xlsx']).forEach(loader('cell'));
   getEles(['slide', 'ppt', 'pptx']).forEach(loader('slide'));
+  getEles(['pdf']).forEach(loader('pdf'));
 }));
