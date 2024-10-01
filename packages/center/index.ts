@@ -44,7 +44,7 @@ class DataReportHandler extends Handler {
             throw new ForbiddenError();
         }
         const old = await coll.findOne({ _id: installId });
-        const setPayload = {
+        const setPayload: any = {
             version: payload.version,
             name: payload.name,
             url: payload.url,
@@ -63,6 +63,7 @@ class DataReportHandler extends Handler {
             sandbox: payload.sandbox,
             dbVersion: payload.dbVersion,
         };
+        if (old?.notification) setPayload.notification = '';
         if (old && lt(payload.version, old.version)) {
             await coll.updateOne(
                 { _id: installId },
@@ -85,6 +86,7 @@ class DataReportHandler extends Handler {
         this.ctx.emit('center/report', this, installId, old, payload);
         // TODO deliver messages
         this.response.body = { code: 0 };
+        if (old?.notification) this.response.body.notification = old?.notification;
     }
 }
 

@@ -34,8 +34,8 @@ export function secureRandomString(digit = 32, dict = defaultDict) {
 
 type Substitution = string | number | { templateRaw: true, html: string };
 
-export function tpl(node: React.ReactNode, reactive?: boolean);
-export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]);
+export function tpl<T extends boolean = false>(node: React.ReactNode, reactive?: T): T extends true ? HTMLDivElement : string;
+export function tpl(pieces: TemplateStringsArray, ...substitutions: Substitution[]): string;
 export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitutions: Substitution[] | boolean[]) {
   if (React.isValidElement(pieces)) {
     if (substitutions[0]) {
@@ -49,7 +49,7 @@ export function tpl(pieces: TemplateStringsArray | React.ReactNode, ...substitut
   for (let i = 0; i < substitutions.length; ++i) {
     const subst = substitutions[i];
     let substHtml: string;
-    if (typeof subst === 'object' && subst.templateRaw) {
+    if (subst && typeof subst === 'object' && subst.templateRaw) {
       substHtml = subst.html;
     } else substHtml = _.escape(String(subst));
     result += substHtml + pieces[i + 1];
@@ -81,8 +81,18 @@ export const zIndexManager = {
   },
 };
 
+export function addSpeculationRules(rules) {
+  if (HTMLScriptElement.supports?.('speculationrules')) {
+    const specScript = document.createElement('script');
+    specScript.type = 'speculationrules';
+    specScript.textContent = JSON.stringify(rules);
+    document.body.append(specScript);
+  }
+}
+
 export const request = {
-  async ajax(options: Record<string, any>) {
+  ajax(options: Record<string, any>) {
+    const stack = new Error().stack;
     return new Promise<any>((resolve, reject) => {
       $
         .ajax({
@@ -96,9 +106,12 @@ export const request = {
           if (textStatus === 'abort') {
             const err = new Error(i18n('Aborted')) as any;
             err.aborted = true;
+            err.isUserFacingError = true;
             reject(err);
           } else if (jqXHR.readyState === 0) {
-            reject(new Error(i18n('Network error')));
+            const err = new Error(i18n('Network error')) as any;
+            err.isUserFacingError = true;
+            reject(err);
           } else if (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON.error) {
             const { error } = jqXHR.responseJSON;
             if (error.params) {
@@ -117,6 +130,9 @@ export const request = {
           }
         })
         .done(resolve);
+    }).catch((e: Error) => {
+      e.stack = stack;
+      throw e;
     });
   },
 
@@ -167,6 +183,28 @@ export const request = {
   },
 };
 
+export async function withTransitionCallback(callback: () => (Promise<void> | void)) {
+  // @ts-ignore
+  if (!document.startViewTransition) return callback?.();
+  // @ts-ignore
+  const transition = document.startViewTransition(callback);
+  return await transition.finished;
+}
+
+export async function setTemporaryViewTransitionNames(entries, vtPromise: Promise<void>) {
+  for (const [$el, name] of entries) {
+    $el.style.viewTransitionName = name;
+  }
+  await vtPromise;
+  for (const [$el] of entries) {
+    $el.style.viewTransitionName = '';
+  }
+}
+
+export function getTheme(): 'dark' | 'light' {
+  return ['light', 'dark'].includes(UserContext.theme) ? UserContext.theme : 'light';
+}
+
 Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
@@ -176,4 +214,6 @@ Object.assign(window.Hydro.utils, {
   tpl,
   delay,
   zIndexManager,
+  withTransitionCallback,
+  setTemporaryViewTransitionNames,
 });

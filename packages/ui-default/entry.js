@@ -1,3 +1,5 @@
+import './polyfill';
+
 import $ from 'jquery';
 
 window.Hydro = {
@@ -29,9 +31,13 @@ window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
-  const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
-  navigator.serviceWorker.register(`/service-worker.js?config=${encodedConfig}`).then((registration) => {
+  navigator.serviceWorker.register('/service-worker.js').then((registration) => {
     console.log('SW registered: ', registration);
+    fetch('/service-worker-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(UiContext.SWConfig),
+    });
   }).catch((registrationError) => {
     console.log('SW registration failed: ', registrationError);
   });
@@ -40,17 +46,20 @@ if ('serviceWorker' in navigator) {
 const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
-
-const prefetch = Promise.all([
-  fetch(`/constant/${UiContext.constantVersion}.js`).then((r) => r.text()),
-  import('./api'),
-]);
+if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
+  window._sentryEvents = [];
+  window.captureException = (e) => {
+    if (!e.isUserFacingError) window._sentryEvents.push(e);
+  };
+  const script = document.createElement('script');
+  script.src = '/sentry.js';
+  document.body.appendChild(script);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));
   Object.assign(window.UserContext, JSON.parse(window.UserContextNew));
-  const [data, HydroExports] = await prefetch;
-  Object.assign(window, { HydroExports });
-  eval(data); // eslint-disable-line no-eval
-  await HydroExports.initPageLoader();
+  window.HydroExports = await import('./api');
+  await window._hydroLoad();
+  await window.HydroExports.initPageLoader();
 }, false);

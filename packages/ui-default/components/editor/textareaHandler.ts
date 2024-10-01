@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import Editor from './index';
 
@@ -28,5 +27,3 @@ export default class TextareaHandler extends DOMAttachedObject {
     this.$dom.focus();
   }
 }
-
-_.assign(TextareaHandler, DOMAttachedObject);

@@ -1,13 +1,13 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
-import { Time } from '@hydrooj/utils';
+import type { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { Udoc, User } from '../interface';
+import { TokenDoc, Udoc, User } from '../interface';
 import avatar from '../lib/avatar';
 import { sendMail } from '../lib/mail';
 import { verifyTFA } from '../lib/verifyTFA';
@@ -26,58 +26,14 @@ import user, { deleteUserCache } from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
-import { registerResolver, registerValue } from './api';
-
-registerValue('User', [
-    ['_id', 'Int!'],
-    ['uname', 'String!'],
-    ['mail', 'String!'],
-    ['perm', 'String'],
-    ['role', 'String'],
-    ['loginat', 'Date'],
-    ['regat', 'Date!'],
-    ['priv', 'Int!', 'User Privilege'],
-    ['avatarUrl', 'String'],
-    ['tfa', 'Boolean!'],
-    ['authn', 'Boolean!'],
-    ['displayName', 'String'],
-]);
-
-registerResolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, ctx) => {
-    if (arg.id) return user.getById(ctx.args.domainId, arg.id);
-    if (arg.mail) return user.getByEmail(ctx.args.domainId, arg.mail);
-    if (arg.uname) return user.getByUname(ctx.args.domainId, arg.uname);
-    return ctx.user;
-}, `Get a user by id, uname, or mail.
-Returns current user if no argument is provided.`);
-
-registerResolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, ctx) => {
-    if (arg.ids?.length) {
-        const res = await user.getList(ctx.args.domainId, arg.ids);
-        return Object.keys(res).map((id) => res[+id]);
-    }
-    if (!arg.search) return [];
-    const udoc = await user.getById(ctx.args.domainId, +arg.search)
-        || await user.getByUname(ctx.args.domainId, arg.search)
-        || await user.getByEmail(ctx.args.domainId, arg.search);
-    const udocs: User[] = arg.exact
-        ? []
-        : await user.getPrefixList(ctx.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
-    if (udoc && !udocs.find((i) => i._id === udoc._id)) {
-        udocs.pop();
-        udocs.unshift(udoc);
-    }
-    for (const i in udocs) {
-        udocs[i].avatarUrl = avatar(udocs[i].avatar);
-    }
-    return udocs;
-}, 'Get a list of user by ids, or search users with the prefix.');
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
+    async prepare() {
+        if (!system.get('server.login')) throw new BuiltinLoginError();
+    }
 
     async get() {
-        if (!system.get('server.login')) throw new BuiltinLoginError();
         this.response.template = 'user_login.html';
     }
 
@@ -91,7 +47,6 @@ class UserLoginHandler extends Handler {
         domainId: string, uname: string, password: string, rememberme = false, redirect = '',
         tfa = '', authnChallenge = '',
     ) {
-        if (!system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
@@ -117,9 +72,10 @@ class UserLoginHandler extends Handler {
                 await token.del(authnChallenge, token.TYPE_WEBAUTHN);
             } else throw new ValidationError('2FA', 'Authn');
         }
-        udoc.checkPassword(password);
+        await udoc.checkPassword(password);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
+        this.context.HydroContext.user = udoc;
         this.session.viewLang = '';
         this.session.uid = udoc._id;
         this.session.sudo = null;
@@ -153,7 +109,7 @@ class UserSudoHandler extends Handler {
             await token.del(authnChallenge, token.TYPE_WEBAUTHN);
         } else if (this.user.tfa && tfa) {
             if (!verifyTFA(this.user._tfa, tfa)) throw new InvalidTokenError('2FA');
-        } else this.user.checkPassword(password);
+        } else await this.user.checkPassword(password);
         this.session.sudo = Date.now();
         if (this.session.sudoArgs.method.toLowerCase() !== 'get') {
             this.response.template = 'user_sudo_redirect.html';
@@ -176,7 +132,7 @@ class UserWebauthnHandler extends Handler {
         const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
         if (!udoc._id) throw new UserNotFoundError(uname || 'user');
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = generateAuthenticationOptions({
+        const options = await generateAuthenticationOptions({
             allowCredentials: udoc._authenticators.map((authenticator) => ({
                 id: authenticator.credentialID.buffer,
                 type: 'public-key',
@@ -224,7 +180,8 @@ class UserLogoutHandler extends Handler {
         this.response.template = 'user_logout.html';
     }
 
-    async post() {
+    async post({ domainId }) {
+        this.context.HydroContext.user = await user.getById(domainId, 0);
         this.session.uid = 0;
         this.session.sudo = null;
         this.session.sudoUid = null;
@@ -235,99 +192,93 @@ class UserLogoutHandler extends Handler {
 
 export class UserRegisterHandler extends Handler {
     noCheckPermView = true;
+    async prepare() {
+        if (!system.get('server.login')) throw new BuiltinLoginError();
+    }
 
     async get() {
         this.response.template = 'user_register.html';
     }
 
-    @post('mail', Types.Email, true)
-    @post('phone', Types.String, true, (s) => /^\d{11}$/.test(s))
-    async post(domainId: string, mail: string, phoneNumber: string) {
-        if (mail) {
-            if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
-            const mailDomain = mail.split('@')[1];
-            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-            await Promise.all([
-                this.limitRate(`send_mail_${mail}`, 60, 3, false),
-                this.limitRate('send_mail', 3600, 30, false),
-                oplog.log(this, 'user.register', {}),
-            ]);
-            const t = await token.add(
-                token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
-                { mail, redirect: this.domain.registerRedirect },
-            );
-            const prefix = this.domain.host
-                ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
-                : system.get('server.url');
-            if (system.get('smtp.verify') && system.get('smtp.user')) {
-                const m = await this.renderHTML('user_register_mail.html', {
-                    path: `/register/${t[0]}`,
-                    url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
-                });
-                await sendMail(mail, 'Sign Up', 'user_register_mail', m);
-                this.response.template = 'user_register_mail_sent.html';
-                this.response.body = { mail };
-            } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
-        } else if (phoneNumber) {
-            if (!global.Hydro.lib.sendSms) throw new SystemError('Cannot send sms');
-            await Promise.all([
-                this.limitRate(`send_sms_${phoneNumber}`, 60, 1, false),
-                this.limitRate('send_sms', 3600, 15, false),
-                oplog.log(this, 'user.register', {}),
-            ]);
-            const id = String.random(6, '0123456789');
-            await token.add(
-                token.TYPE_REGISTRATION,
-                10 * Time.minute,
-                { phone: phoneNumber },
-                id,
-            );
-            await global.Hydro.lib.sendSms(phoneNumber, 'register', id);
-            this.response.body = { phone: phoneNumber };
-            this.response.template = 'user_register_sms.html';
-        } else throw new ValidationError('mail');
+    @post('mail', Types.Email)
+    async post({ }, mail: string) {
+        if (await user.getByEmail('system', mail)) throw new UserAlreadyExistError(mail);
+        const mailDomain = mail.split('@')[1];
+        if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
+        await Promise.all([
+            this.limitRate(`send_mail_${mail}`, 60, 3, false),
+            this.limitRate('send_mail', 3600, 30, false),
+            oplog.log(this, 'user.register', {}),
+        ]);
+        const t = await token.add(
+            token.TYPE_REGISTRATION,
+            system.get('session.unsaved_expire_seconds'),
+            { mail, redirect: this.domain.registerRedirect },
+        );
+        const prefix = this.domain.host
+            ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
+            : system.get('server.url');
+        if (system.get('smtp.verify') && system.get('smtp.user')) {
+            const m = await this.renderHTML('user_register_mail.html', {
+                path: `/register/${t[0]}`,
+                url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
+            });
+            await sendMail(mail, 'Sign Up', 'user_register_mail', m);
+            this.response.template = 'user_register_mail_sent.html';
+            this.response.body = { mail };
+        } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
     }
 }
 
 class UserRegisterWithCodeHandler extends Handler {
     noCheckPermView = true;
+    tdoc: TokenDoc;
 
     @param('code', Types.String)
-    async get(domainId: string, code: string) {
+    async prepare({ }, code: string) {
+        this.tdoc = await token.get(code, token.TYPE_REGISTRATION);
+        if (!this.tdoc || (!this.tdoc.mail && !this.tdoc.phone)) {
+            // prevent brute forcing tokens
+            await this.limitRate('user_register_with_code', 60, 5, false);
+            throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
+        }
+    }
+
+    async get() {
         this.response.template = 'user_register_with_code.html';
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
-        this.response.body = tdoc;
+        this.response.body = this.tdoc;
     }
 
     @param('password', Types.Password)
     @param('verifyPassword', Types.Password)
-    @param('uname', Types.Username)
+    @param('uname', Types.Username, true)
     @param('code', Types.String)
     async post(
         domainId: string, password: string, verify: string,
-        uname: string, code: string,
+        uname = '', code: string,
     ) {
-        const tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!tdoc || (!tdoc.mail && !tdoc.phone)) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
+        if (this.tdoc.oauth?.[0] && global.Hydro.module.oauth[this.tdoc.oauth[0]].lockUsername) {
+            uname = this.tdoc.username;
+        }
+        if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
-        if (tdoc.phone) tdoc.mail = `${String.random(12)}@hydro.local`;
-        const uid = await user.create(tdoc.mail, uname, password, undefined, this.request.ip);
+        if (this.tdoc.phone) this.tdoc.mail = `${String.random(12)}@hydro.local`;
+        const uid = await user.create(this.tdoc.mail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
-        const [id, mailDomain] = tdoc.mail.split('@');
-        const $set: any = tdoc.set || {};
-        if (tdoc.phone) $set.phone = tdoc.phone;
+        const [id, mailDomain] = this.tdoc.mail.split('@');
+        const $set: any = this.tdoc.set || {};
+        if (this.tdoc.phone) $set.phone = this.tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
-        if (tdoc.oauth) await oauth.set(tdoc.oauth[1], uid);
+        if (this.tdoc.oauth) await oauth.set(this.tdoc.oauth[1], uid);
+        this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
         this.session.uid = uid;
         this.session.sudoUid = null;
         this.session.scope = PERM.PERM_ALL.toString();
         this.session.recreate = true;
-        this.response.redirect = tdoc.redirect || this.url('home_settings', { category: 'preference' });
+        this.response.redirect = this.tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
 
@@ -384,6 +335,7 @@ class UserLostPassWithCodeHandler extends Handler {
         const tdoc = await token.get(code, token.TYPE_LOSTPASS);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_LOSTPASS], code);
         if (password !== verifyPassword) throw new VerifyPasswordError();
+        await user.setById(tdoc.uid, { authenticators: [], tfa: false });
         await user.setPassword(tdoc.uid, password);
         await token.del(code, token.TYPE_LOSTPASS);
         this.response.redirect = this.url('homepage');
@@ -445,7 +397,7 @@ class UserDetailHandler extends Handler {
 
 class UserDeleteHandler extends Handler {
     async post({ password }) {
-        this.user.checkPassword(password);
+        await this.user.checkPassword(password);
         const tid = await ScheduleModel.add({
             executeAfter: moment().add(7, 'days').toDate(),
             type: 'script',
@@ -542,7 +494,7 @@ class ContestModeHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
@@ -558,4 +510,50 @@ export async function apply(ctx) {
     if (system.get('server.contestmode')) {
         ctx.Route('contest_mode', '/contestmode', ContestModeHandler, PRIV.PRIV_EDIT_SYSTEM);
     }
+    ctx.inject(['api'], ({ api }) => {
+        api.value('User', [
+            ['_id', 'Int!'],
+            ['uname', 'String!'],
+            ['mail', 'String!'],
+            ['perm', 'String'],
+            ['role', 'String'],
+            ['loginat', 'Date'],
+            ['regat', 'Date!'],
+            ['priv', 'Int!', 'User Privilege'],
+            ['avatarUrl', 'String'],
+            ['tfa', 'Boolean!'],
+            ['authn', 'Boolean!'],
+            ['displayName', 'String @if(perm: "PERM_VIEW_DISPLAYNAME")'],
+            ['rpInfo', 'JSONObject'],
+        ]);
+        api.resolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, c) => {
+            if (arg.id) return user.getById(c.args.domainId, arg.id);
+            if (arg.mail) return user.getByEmail(c.args.domainId, arg.mail);
+            if (arg.uname) return user.getByUname(c.args.domainId, arg.uname);
+            return c.user;
+        }, `Get a user by id, uname, or mail.
+Returns current user if no argument is provided.`);
+        api.resolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
+            if (arg.ids?.length) {
+                const res = await user.getList(c.args.domainId, arg.ids);
+                for (const i in res) res[i].avatarUrl = avatar(res[i].avatar);
+                return Object.keys(res).map((id) => res[+id]);
+            }
+            if (!arg.search) return [];
+            const udoc = await user.getById(c.args.domainId, +arg.search)
+                || await user.getByUname(c.args.domainId, arg.search)
+                || await user.getByEmail(c.args.domainId, arg.search);
+            const udocs: User[] = arg.exact
+                ? []
+                : await user.getPrefixList(c.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
+            if (udoc && !udocs.find((i) => i._id === udoc._id)) {
+                udocs.pop();
+                udocs.unshift(udoc);
+            }
+            for (const i in udocs) {
+                udocs[i].avatarUrl = avatar(udocs[i].avatar);
+            }
+            return udocs;
+        }, 'Get a list of user by ids, or search users with the prefix.');
+    });
 }

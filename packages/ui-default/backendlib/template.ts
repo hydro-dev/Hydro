@@ -13,8 +13,8 @@ import * as misc from './misc';
 const argv = require('cac')().parse();
 
 let { template } = argv.options;
-if (template && typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
-else template &&= findFileSync(template);
+if (!template || typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
+else template = findFileSync(template);
 
 class Loader extends nunjucks.Loader {
   getSource(name) {
@@ -181,8 +181,9 @@ const render = (name: string, state: any) => new Promise<string>((resolve, rejec
   });
 });
 
+export const inject = ['server'];
 export async function apply(ctx: Context) {
-  ctx.provideModule('render', 'html', render);
-  ctx.provideModule('render', 'yaml', render);
-  ctx.provideModule('render', 'md', render);
+  ctx.server.registerRenderer('html', render);
+  ctx.server.registerRenderer('yaml', render);
+  ctx.server.registerRenderer('md', render);
 }

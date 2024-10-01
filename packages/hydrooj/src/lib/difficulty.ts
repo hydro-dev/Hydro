@@ -42,5 +42,5 @@ function difficultyAlgorithm(nSubmit: number, nAccept: number) {
     return Math.max(ans, 1);
 }
 
-export = difficultyAlgorithm;
+export default difficultyAlgorithm;
 global.Hydro.lib.difficulty = difficultyAlgorithm;

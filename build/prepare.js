@@ -33,9 +33,11 @@ const config = {
     compilerOptions: compilerOptionsBase,
     references: [
         { path: 'tsconfig.ui.json' },
+        { path: 'plugins/tsconfig.json' },
     ],
     files: [],
 };
+const exclude = ['**/public', '**/frontend', '**/node_modules', '**/bin', '**/dist', '**/__mocks__'];
 const configSrc = (name) => ({
     compilerOptions: {
         ...compilerOptionsBase,
@@ -43,11 +45,7 @@ const configSrc = (name) => ({
         rootDir: 'src',
     },
     include: ['src'],
-    exclude: [
-        '**/__mocks__',
-        'bin',
-        'dist',
-    ],
+    exclude,
 });
 const configFlat = (name) => ({
     compilerOptions: {
@@ -61,7 +59,7 @@ const configFlat = (name) => ({
         },
     },
     include: ['**/*.ts'],
-    exclude: ['public', 'frontend'],
+    exclude,
 });
 
 for (const name of ['plugins', 'modules']) {
@@ -74,29 +72,25 @@ for (const name of ['plugins', 'modules']) {
 
 const modules = [
     'packages/hydrooj',
-    ...['packages', 'plugins', 'modules'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
+    ...['packages', 'framework'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
 ].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
 
 const UIConfig = {
     exclude: [
         'packages/ui-default/public',
+        '**/node_modules',
     ],
-    include: ['ts', 'tsx']
-        .flatMap((ext) => ['plugins', 'modules']
+    include: ['ts', 'tsx', 'vue', 'json']
+        .flatMap((ext) => ['plugins']
             .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
             .concat(`packages/ui-default/**/*.${ext}`)),
     compilerOptions: {
-        experimentalDecorators: true,
-        esModuleInterop: true,
-        resolveJsonModule: true,
-        jsx: 'react',
-        module: 'commonjs',
+        ...compilerOptionsBase,
+        module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        target: 'es2020',
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'ui'),
-        moduleResolution: 'node',
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
@@ -114,6 +108,26 @@ try {
         'dir',
     );
 } catch (e) { }
+
+const pluginsConfig = {
+    include: [
+        '**/*.ts',
+    ],
+    exclude,
+    compilerOptions: {
+        ...compilerOptionsBase,
+        rootDir: '.',
+        baseUrl: '.',
+        outDir: path.join(baseOutDir, 'plugins'),
+        paths: {
+            'vj/*': [
+                '../packages/ui-default/*',
+            ],
+        },
+    },
+};
+fs.writeFileSync(path.resolve(process.cwd(), 'plugins', 'tsconfig.json'), JSON.stringify(pluginsConfig));
+
 for (const package of modules) {
     const basedir = path.resolve(process.cwd(), package);
     const files = fs.readdirSync(basedir);

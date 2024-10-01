@@ -792,6 +792,7 @@ What's domain?: 그룹이 무엇인가요?
 What's script?: 스크립트가 무엇인가요?
 What's this?: 이것이 무엇인가요?
 Whether to show tags in the problem list.: 태그를 문제 목록에서 보일지 결정.
+wiki_about: 소개
 wiki_help: Wiki Help
 Will be used as the domain icon.: 그룹 아이콘으로 쓰일 것입니다.
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 이 기능을 사용하면 그룹에서 볼 수있는 문제를 다른 그룹으로 복사 할 수 있습니다. 제목, 콘텐츠, 태그 및 카테고리가 복사됩니다. 그러나 테스트 데이터는 직접 복사되지 않습니다.

@@ -36,6 +36,7 @@ __langname: 简体中文
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
+"Or upload a file:": 或者上传一个文件：
 "Split by ',' '.'": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
@@ -87,7 +88,9 @@ Attend Contest: 参加比赛
 Attend contests: 参加比赛
 Attended: 已参加
 author: 作者
+Auto adjust the format of line breaks and remove unnecessary whitespace characters.: 自动调整换行符格式，并移除不必要的空白字符。
 Auto format code: 自动格式化代码
+Auto organize input: 自动整理输入
 Avatar: 头像
 Back to contest list: 返回比赛列表
 Be Copied: 被复制
@@ -264,6 +267,7 @@ Domain {0} is bulit-in and cannot be modified.: 域 {0} 为内置，不可修改
 Domain {0} not found.: 域 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在创建后不能更改 ID。
 Domain ID: 域 ID
+domain_create: 创建域
 domain_dashboard: 管理域
 domain_discussion: 讨论节点
 domain_edit: 编辑域资料
@@ -280,6 +284,7 @@ Domain: 域
 Don't have an account?: 还没有账户？
 Done: 已结束
 Download Dataset: 下载数据集
+Download Hack Input: 下载 Hack 输入
 Download link copied to clipboard!: 下载链接已复制到剪贴板。
 Download: 下载
 Downvote: 差评
@@ -376,6 +381,7 @@ homework_detail_problem_submit: 递交作业题目
 homework_detail_problem: 题目详情
 homework_detail: 作业详情
 homework_edit: 编辑作业
+homework_files: 作业文件
 homework_main: 作业
 homework_scoreboard: 作业成绩表
 homework_status: 作业成绩表
@@ -479,7 +485,6 @@ Memory: 内存
 Message {0} not found.: 消息 {0} 不存在。
 Messages: 消息
 Method: 方法
-monacoTheme: 编辑器主题
 Month: 月
 Monthly Popular: 月度最受欢迎
 Most Upvoted Solutions: 最被赞同的题解
@@ -601,6 +606,7 @@ problem_create: 创建题目
 problem_detail: 题目详情
 problem_edit: 编辑题目
 problem_files: 题目文件
+problem_hack: Hack
 problem_import: 导入题目
 problem_main: 题库
 problem_solution: 题解
@@ -629,6 +635,7 @@ Quit Scratchpad: 退出在线编程模式
 Quote: 引用
 Rank: 排名
 ranking: 排名
+Ranking: 排名
 Read record codes after accept: 题目通过后读取记录的代码
 Recalculates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
 Recommended: 推荐
@@ -816,6 +823,7 @@ Training requirement is not satisfied.: 不满足训练条件。
 training_create: 创建训练
 training_detail: 训练详情
 training_edit: 编辑训练
+training_files: 训练文件
 training_main: 训练
 Training: 训练
 Trainings per page: 每页展示的训练数量
@@ -855,6 +863,7 @@ user_logout: 登出
 user_lostpass: 忘记密码
 user_register_mail_sent: 注册邮件已发送
 user_register: 注册
+user_sudo: 用户安全授权
 User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID
@@ -906,6 +915,7 @@ What's domain?: 什么是域？
 What's script?: 什么是脚本？
 What's this?: 这是什么？
 Whether to show tags in the problem list.: 是否在题目列表中显示题目的标签。
+wiki_about: 关于
 Will be used as the domain icon.: 将被用作系统图标。
 With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
 With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported. However, their test data are not copied directly.: 您可以通过这个功能将其他 OJ 的题目导入到本站。题目的标题、题面、标签和分类将会被直接导入，测试数据将会在后台自动导入。

@@ -104,7 +104,7 @@ class TrainingDetailHandler extends Handler {
         let enrollUsers: number[] = [];
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
-        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE) && this.ctx.setting.get('training.enrolled-users')) {
             enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 }, enroll: 1 })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             shouldCompare = uid !== this.user._id;
@@ -112,7 +112,7 @@ class TrainingDetailHandler extends Handler {
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            user.getListForRender(domainId, enrollUsers),
+            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
             problem.getList(domainId, pids, canViewHidden, true),
             problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
@@ -173,7 +173,10 @@ class TrainingDetailHandler extends Handler {
     async postDelete(domainId: string, tid: ObjectId) {
         const tdoc = await training.get(domainId, tid);
         if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_TRAINING);
-        await training.del(domainId, tid);
+        await Promise.all([
+            training.del(domainId, tid),
+            storage.del(tdoc.files?.map((i) => `training/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+        ]);
         this.response.redirect = this.url('training_main');
     }
 }
@@ -275,7 +278,7 @@ export class TrainingFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `training/${domainId}/${tid}/${t}`), this.user._id),
             training.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

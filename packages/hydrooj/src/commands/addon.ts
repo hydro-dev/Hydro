@@ -4,9 +4,9 @@ import path from 'path';
 import { CAC } from 'cac';
 import fs from 'fs-extra';
 import { Logger } from '@hydrooj/utils';
+import { getAddons, writeAddons } from '../options';
 
 const logger = new Logger('addon');
-const addonPath = path.resolve(os.homedir(), '.hydro', 'addon.json');
 const addonDir = path.resolve(os.homedir(), '.hydro', 'addons');
 
 export function register(cli: CAC) {
@@ -15,7 +15,7 @@ export function register(cli: CAC) {
             console.log('Unknown operation.');
             return;
         }
-        let addons = JSON.parse(fs.readFileSync(addonPath).toString());
+        let addons = getAddons();
         if (operation === 'create') {
             const dir = `${addonDir}/${name || 'addon'}`;
             fs.mkdirSync(dir, { recursive: true });
@@ -48,6 +48,6 @@ export function register(cli: CAC) {
         addons = Array.from(new Set(addons));
         logger.info('Current Addons: ');
         console.log(addons);
-        fs.writeFileSync(addonPath, JSON.stringify(addons, null, 2));
+        writeAddons(addons);
     });
 }

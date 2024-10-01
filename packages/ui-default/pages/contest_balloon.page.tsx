@@ -2,7 +2,6 @@ import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
-import { createRoot } from 'react-dom/client';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
@@ -72,17 +71,14 @@ async function handleSetColor(tdoc) {
     for (const pid of tdoc.pids) val[+pid] = { color: '#ffffff', name: '' };
   }
   Notification.info(i18n('Loading...'));
-  const promise = new ActionDialog({
-    $body: tpl`
+  const action = await new ActionDialog({
+    $body: tpl(<>
       <div className="row"><div className="columns">
-        <h1>${i18n('Set Color')}</h1>
+        <h1>{i18n('Set Color')}</h1>
       </div></div>
-      <div id="balloon"></div>`,
+      <Balloon tdoc={tdoc} val={val} />
+    </>, true),
   }).open();
-  createRoot($('#balloon').get(0)).render(
-    <Balloon tdoc={tdoc} val={val} />,
-  );
-  const action = await promise;
   if (action !== 'ok') return;
   Notification.info(i18n('Updating...'));
   try {

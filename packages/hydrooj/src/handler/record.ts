@@ -4,7 +4,7 @@ import {
 import { Filter, ObjectId } from 'mongodb';
 import {
     ContestNotFoundError, HackRejudgeFailedError,
-    PermissionError, ProblemConfigError,
+    PermissionError, PretestRejudgeFailedError, ProblemConfigError,
     ProblemNotFoundError, RecordNotFoundError, UserNotFoundError,
 } from '../error';
 import { RecordDoc, Tdoc } from '../interface';
@@ -54,6 +54,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             if (udoc) q.uid = udoc._id;
             else invalid = true;
         }
+        if (q.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (tid) {
             tdoc = await contest.get(domainId, tid);
             this.tdoc = tdoc;
@@ -136,6 +137,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async prepare(domainId: string, rid: ObjectId) {
         this.rdoc = await record.get(domainId, rid);
         if (!this.rdoc) throw new RecordNotFoundError(rid);
+        if (this.rdoc.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
     }
 
     async download() {
@@ -175,7 +177,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
         // eslint-disable-next-line prefer-const
         let [pdoc, self, udoc] = await Promise.all([
-            problem.get(rdoc.domainId, rdoc.pid),
+            problem.get(rdoc.domainId, rdoc.pid, problem.PROJECTION_LIST.concat('config')),
             problem.getStatus(domainId, rdoc.pid, this.user._id),
             user.getById(domainId, rdoc.uid),
         ]);
@@ -186,6 +188,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (this.tdoc) {
             const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
+            canViewCode ||= this.user.own(this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
                 canViewCode ||= tsdoc?.attend;
             }
@@ -206,6 +209,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     async post() {
         this.checkPerm(PERM.PERM_REJUDGE);
         if (this.rdoc.files?.hack) throw new HackRejudgeFailedError();
+        if (this.rdoc.contest?.toString().startsWith('0'.repeat(23))) throw new PretestRejudgeFailedError();
     }
 
     @param('rid', Types.ObjectId)
@@ -213,10 +217,9 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         const pdoc = await problem.get(domainId, this.rdoc.pid);
         if (!pdoc?.config || typeof pdoc.config === 'string') throw new ProblemConfigError();
         const priority = await record.submissionPriority(this.user._id, -20);
-        const isContest = this.rdoc.contest && this.rdoc.contest.toString() !== '000000000000000000000000';
         const rdoc = await record.reset(domainId, rid, true);
         this.ctx.broadcast('record/change', rdoc);
-        await record.judge(domainId, rid, priority, isContest ? { detail: false } : {});
+        await record.judge(domainId, rid, priority, this.rdoc.contest ? { detail: false } : {});
         this.back();
     }
 
@@ -230,6 +233,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
             testCases: [{
                 id: 0, subtaskId: 0, status: 9, score: 0, time: 0, memory: 0, message: 'score canceled',
             }],
+            subtasks: {},
         };
         const [latest] = await Promise.all([
             record.update(domainId, rid, $set),
@@ -288,6 +292,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
                 else throw new UserNotFoundError(uidOrName);
             }
         }
+        if (this.uid !== this.user._id) this.checkPerm(PERM.PERM_VIEW_RECORD);
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) this.pid = pdoc.docId;
@@ -374,7 +379,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     async prepare(domainId: string, rid: ObjectId) {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
-        if (rdoc.contest && rdoc.input === undefined) {
+        if (rdoc.contest && ![record.RECORD_GENERATE, record.RECORD_PRETEST].some((i) => i.toHexString() === rdoc.contest.toHexString())) {
             this.tdoc = await contest.get(domainId, rdoc.contest);
             let canView = this.user.own(this.tdoc);
             canView ||= contest.canShowRecord.call(this, this.tdoc);

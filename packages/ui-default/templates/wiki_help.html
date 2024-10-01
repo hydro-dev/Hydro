@@ -17,14 +17,7 @@
     <h1 class="section__title" id="compiler" data-heading>{{ _("Compilers' Version and Parameters") }}</h1>
   </div>
   <div class="section__body typo">
-    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数如下：</p>
-    {% if languages %}
-      <blockquote><ul>
-        {%- for k, v in languages -%}
-          <li>{{ k }} <pre>{{ v }}</pre></li>
-        {%- endfor -%}
-      </ul></blockquote>
-    {% endif %}
+    <p>{{ name }} 使用 <a href="https://github.com/hydro-dev/Hydro/tree/master/packages/hydrojudge">HydroJudge</a> 进行评测，编译参数和当前所用编译器版本见状态页。</p>
   </div>
 </div>
 <div class="section" data-heading-extract-to="#menu-item-wiki_help">
@@ -105,7 +98,7 @@
   <div class="section__header">
     <h1 class="section__title" id="contest" data-heading>{{ _('Contest') }}</h1>
   </div>
-  <div class="section__body typo">
+  <div class="section__body typo richmedia">
     <p>按照赛制不同，有不同的递交、排名规则。
     <p>OI 赛制所有题目均以最后一次递交为准，特别地，请避免编译错误。</p>
     <p>OI 赛制排名规则为：总分高的排在前面，总分相等则排名相同。</p>

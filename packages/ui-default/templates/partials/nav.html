@@ -19,7 +19,7 @@
     <ol class="nav__list nav__list--secondary clearfix">
     {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       <li class="nav__list-item"><a href="{{ url('user_login') }}" class="nav__item" name="nav_login">{{ _('Login') }}</a></li>
-      {% if handler.user.hasPriv(PRIV.PRIV_REGISTER_USER) %}
+      {% if handler.user.hasPriv(PRIV.PRIV_REGISTER_USER) and model.system.get('server.login') %}
       <li class="nav__list-item"><a href="{{ url('user_register') }}" class="nav__item--round">{{ _('Sign Up') }}</a></li>
       {% endif %}
       <li class="nav__list-item nojs--hide" data-dropdown-pos="bottom right" data-dropdown-custom-class="nav__dropdown" data-dropdown-target="#menu-nav-user" data-dropdown-disabledconstrainToWindow data-dropdown-trigger-desktop-only>

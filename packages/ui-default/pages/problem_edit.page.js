@@ -154,7 +154,7 @@ async function handleSection(ev, sidebar, type) {
   $section.removeClass('animating');
 }
 
-export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
+export default new NamedPage(['problem_create', 'problem_edit'], () => {
   let confirmed = false;
   $(document).on('click', '[name="operation"]', (ev) => {
     ev.preventDefault();
@@ -239,14 +239,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], (pagename) => {
     for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
     await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
   }
-
-  setInterval(() => {
-    $('img').each(function () {
-      if (this.src.startsWith('file://')) {
-        $(this).attr('src', $(this).attr('src').replace('file://', (pagename === 'problem_create' ? `/file/${UserContext._id}/` : './file/')));
-      }
-    });
-  }, 500);
 
   const $main = $('textarea[data-editor]');
   const $field = $('textarea[data-markdown-upload]');

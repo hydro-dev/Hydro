@@ -6,6 +6,9 @@
     &:empty
       display: none
 
+  .compiler-text-mask
+    display: none
+
   .col--case
     width: rem(70px)
 
@@ -28,3 +31,25 @@
 
     .col--memory
       width: rem(100px)
+
+// dont hide compiler text if compile error
+.hasjs .collapsed #status:not([data-status="7"])
+  .compiler-text
+    max-height: rem(250px)
+    overflow: hidden
+    position: relative
+
+  .compiler-text-mask, .compiler-text-mask p
+    display: block
+    position: absolute
+    cursor: pointer
+    bottom: 0
+    left: 0
+    right: 0
+    z-index: 1
+
+  .compiler-text-mask
+    height: rem(50px)
+    background-image: linear-gradient(to bottom, transparent, #ffffff 25px)
+    p
+      text-align: center

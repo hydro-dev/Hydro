@@ -19,7 +19,7 @@ const page = new NamedPage('domain_user', () => {
           addUserSelector.focus();
           return false;
         }
-        if ($role.val() === '') {
+        if (!$role.val()) {
           $role.focus();
           return false;
         }
@@ -27,9 +27,10 @@ const page = new NamedPage('domain_user', () => {
       return true;
     },
   });
+  const firstRoleForAddUser = addUserDialog.$dom.find('[name="role"] option').first().val();
   addUserDialog.clear = function () {
     addUserSelector.clear();
-    this.$dom.find('[name="role"]').val('');
+    this.$dom.find('[name="role"]').val(firstRoleForAddUser);
     return this;
   };
 
@@ -37,15 +38,16 @@ const page = new NamedPage('domain_user', () => {
     $body: $('.dialog__body--set-role > div'),
     onDispatch(action) {
       const $role = setRolesDialog.$dom.find('[name="role"]');
-      if (action === 'ok' && $role.val() === '') {
+      if (action === 'ok' && !$role.val()) {
         $role.focus();
         return false;
       }
       return true;
     },
   });
+  const firstRoleForSetRole = setRolesDialog.$dom.find('[name="role"] option').first().val();
   setRolesDialog.clear = function () {
-    this.$dom.find('[name="role"]').val('');
+    this.$dom.find('[name="role"]').val(firstRoleForSetRole);
     return this;
   };
 

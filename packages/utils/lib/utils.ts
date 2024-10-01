@@ -137,7 +137,7 @@ export namespace Time {
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
-        return new ObjectId(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectId().toHexString().substr(8)}`);
+        return new ObjectId(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectId().toHexString().substring(8)}`);
     }
 }
 

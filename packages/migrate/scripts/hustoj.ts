@@ -76,6 +76,7 @@ export async function run({
     const query = (q: string) => new Promise<any[]>((res, rej) => {
         src.query(q).then((r) => res(r)).catch((e) => rej(e));
     });
+    report({ message: JSON.stringify(await query("show VARIABLES like 'char%';")) });
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
@@ -174,7 +175,7 @@ export async function run({
                     samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }, 'html');
+                }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=');
                 const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     try {
@@ -254,7 +255,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         // WHY you allow contest with end time BEFORE start time? WHY???
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
         const tid = await ContestModel.add(
-            domainId, tdoc.title, tdoc.description || 'Description',
+            domainId, tdoc.title, description || 'Description',
             adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             { _code: password },
         );

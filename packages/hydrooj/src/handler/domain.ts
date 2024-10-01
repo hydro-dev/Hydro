@@ -1,14 +1,13 @@
 import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
-import { Context } from '../context';
+import type { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
     InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
-import paginate from '../lib/paginate';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
@@ -20,48 +19,14 @@ import {
     Handler, param, post, query, requireSudo, Types,
 } from '../service/server';
 import { log2 } from '../utils';
-import { registerResolver, registerValue } from './api';
-
-registerValue('GroupInfo', [
-    ['name', 'String!'],
-    ['uids', '[Int]!'],
-]);
-
-registerResolver('Query', 'domain(id: String)', 'Domain', async (args, ctx) => {
-    const ddoc = args.id ? await domain.get(args.id) : ctx.domain;
-    if (!ddoc) return null;
-    const udoc = await user.getById(ddoc._id, ctx.user._id);
-    if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
-    ctx.udoc = udoc;
-    return ddoc;
-});
-
-registerResolver('Domain', 'manage', 'DomainManage', async (args, ctx) => {
-    if (!ctx.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
-    return ctx.parent;
-});
-
-registerResolver('DomainManage', 'group', 'DomainGroup', (args, ctx) => ctx.parent);
-registerResolver(
-    'DomainGroup', 'list(uid: Int)', '[GroupInfo]',
-    (args, ctx) => user.listGroup(ctx.parent._id, args.uid),
-);
-registerResolver(
-    'DomainGroup', 'update(name: String!, uids: [Int]!)', 'Boolean',
-    async (args, ctx) => !!(await user.updateGroup(ctx.parent._id, args.name, args.uids)).upsertedCount,
-);
-registerResolver(
-    'DomainGroup', 'del(name: String!)', 'Boolean',
-    async (args, ctx) => !!(await user.delGroup(ctx.parent._id, args.name)).deletedCount,
-);
 
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
-        const [dudocs, upcount, ucount] = await paginate(
+        const [dudocs, upcount, ucount] = await this.paginate(
             domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } }).sort({ rp: -1 }),
             page,
-            100,
+            'ranking',
         );
         const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
         const udocs = dudocs.map((i) => udict[i.uid]);
@@ -146,8 +111,9 @@ class DomainUserHandler extends ManageHandler {
         const udict = await user.getList(domainId, uids);
         for (const role of roles) rudocs[role._id] = [];
         for (const dudoc of dudocs) {
-            const ud = udict[dudoc.uid];
-            rudocs[ud.role || 'default'].push(ud);
+            const udoc = udict[dudoc.uid];
+            if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) continue;
+            rudocs[udoc.role || 'default'].push(udoc);
         }
         this.response.template = 'domain_user.html';
         this.response.body = {
@@ -368,4 +334,35 @@ export async function apply(ctx: Context) {
     ctx.Route('domain_join_applications', '/domain/join_applications', DomainJoinApplicationsHandler);
     ctx.Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.inject(['api'], ({ api }) => {
+        api.value('GroupInfo', [
+            ['name', 'String!'],
+            ['uids', '[Int]!'],
+        ]);
+        api.resolver('Query', 'domain(id: String)', 'Domain', async (args, c) => {
+            const ddoc = args.id ? await domain.get(args.id) : c.domain;
+            if (!ddoc) return null;
+            const udoc = await user.getById(ddoc._id, c.user._id);
+            if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
+            c.udoc = udoc;
+            return ddoc;
+        });
+        api.resolver('Domain', 'manage', 'DomainManage', async (args, c) => {
+            if (!c.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
+            return c.parent;
+        });
+        api.resolver('DomainManage', 'group', 'DomainGroup', (args, c) => c.parent);
+        api.resolver(
+            'DomainGroup', 'list(uid: Int)', '[GroupInfo]',
+            (args, c) => user.listGroup(c.parent._id, args.uid),
+        );
+        api.resolver(
+            'DomainGroup', 'update(name: String!, uids: [Int]!)', 'Boolean',
+            async (args, c) => !!(await user.updateGroup(c.parent._id, args.name, args.uids)).upsertedCount,
+        );
+        api.resolver(
+            'DomainGroup', 'del(name: String!)', 'Boolean',
+            async (args, c) => !!(await user.delGroup(c.parent._id, args.name)).deletedCount,
+        );
+    });
 }

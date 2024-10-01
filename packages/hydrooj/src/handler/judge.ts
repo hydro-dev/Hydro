@@ -5,6 +5,7 @@ import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
+import { Context } from '../context';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
@@ -98,47 +99,48 @@ export async function postJudge(rdoc: RecordDoc) {
     const pdoc = (accept && updated)
         ? await problem.inc(rdoc.domainId, rdoc.pid, 'nAccept', 1)
         : await problem.get(rdoc.domainId, rdoc.pid, undefined, true);
-    if (pdoc) {
-        if (isNormalSubmission) {
-            await Promise.all([
-                problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
-                problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
-            ]);
-        }
-        if (rdoc.status === STATUS.STATUS_HACK_SUCCESSFUL) {
-            try {
-                const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
-                assert(config.subtasks instanceof Array);
-                const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
-                assert(file);
-                const hackSubtask = config.subtasks[config.subtasks.length - 1];
-                hackSubtask.cases ||= [];
-                const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
-                hackSubtask.cases.push({ input, output: '/dev/null' });
-                await Promise.all([
-                    problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
-                    problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-                ]);
-                // trigger rejudge
-                const rdocs = await record.getMulti(rdoc.domainId, {
-                    pid: rdoc.pid,
-                    status: STATUS.STATUS_ACCEPTED,
-                    contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
-                }).project({ _id: 1, contest: 1 }).toArray();
-                const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
-                await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
-            } catch (e) {
-                next({
-                    rid: rdoc._id,
-                    domainId: rdoc.domainId,
-                    key: 'next',
-                    message: { message: 'Unable to apply hack: {0}', params: [e.message] },
-                });
-            }
-        }
+    if (pdoc && isNormalSubmission) {
+        await Promise.all([
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.${builtin.STATUS_SHORT_TEXTS[rdoc.status]}`, 1),
+            problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
+        ]);
     }
-    await bus.parallel('record/judge', rdoc, updated);
+    await bus.parallel('record/judge', rdoc, updated, pdoc);
 }
+
+bus.on('record/judge', async (rdoc, updated, pdoc) => {
+    if (!pdoc || rdoc.status !== STATUS.STATUS_HACK_SUCCESSFUL) return;
+    if (rdoc.contest) return;
+    try {
+        const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
+        assert(config.subtasks instanceof Array);
+        const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
+        assert(file);
+        const hackSubtask = config.subtasks[config.subtasks.length - 1];
+        hackSubtask.cases ||= [];
+        const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
+        hackSubtask.cases.push({ input, output: '/dev/null' });
+        await Promise.all([
+            problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
+            problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+        ]);
+        // trigger rejudge
+        const rdocs = await record.getMulti(rdoc.domainId, {
+            pid: rdoc.pid,
+            status: STATUS.STATUS_ACCEPTED,
+            contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
+        }).project({ _id: 1, contest: 1 }).toArray();
+        const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
+        await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
+    } catch (e) {
+        next({
+            rid: rdoc._id,
+            domainId: rdoc.domainId,
+            key: 'next',
+            message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+        });
+    }
+});
 
 export async function end(body: Partial<JudgeResultBody>) {
     body.rid = new ObjectId(body.rid); // TODO remove this
@@ -323,7 +325,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);

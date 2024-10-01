@@ -178,7 +178,6 @@ const ServerLangSettingNode = {
 
 PreferenceSetting(
     Setting('setting_display', 'viewLang', null, langRange, 'UI Language'),
-    Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
     Setting('setting_display', 'timeZone', 'Asia/Shanghai', timezones, 'Timezone'),
     LangSettingNode,
     Setting('setting_usage', 'codeTemplate', '', 'textarea', 'Default Code Template',
@@ -271,10 +270,12 @@ SystemSetting(
     Setting('setting_basic', 'default.priv', builtin.PRIV.PRIV_DEFAULT, 'number', 'default.priv', 'Default Privilege', FLAG_HIDDEN),
     Setting('setting_basic', 'discussion.nodes', builtin.DEFAULT_NODES, 'yaml', 'discussion.nodes', 'Discussion Nodes'),
     Setting('setting_basic', 'problem.categories', builtin.CATEGORIES, 'yaml', 'problem.categories', 'Problem Categories'),
+    Setting('setting_basic', 'training.enrolled-users', true, 'boolean', 'training.enrolled-users', 'Show enrolled users for training'),
     Setting('setting_basic', 'pagination.problem', 100, 'number', 'pagination.problem', 'Problems per page'),
     Setting('setting_basic', 'pagination.contest', 20, 'number', 'pagination.contest', 'Contests per page'),
     Setting('setting_basic', 'pagination.discussion', 50, 'number', 'pagination.discussion', 'Discussions per page'),
     Setting('setting_basic', 'pagination.record', 100, 'number', 'pagination.record', 'Records per page'),
+    Setting('setting_basic', 'pagination.ranking', 100, 'number', 'pagination.ranking', 'Users per page'),
     Setting('setting_basic', 'pagination.solution', 20, 'number', 'pagination.solution', 'Solutions per page'),
     Setting('setting_basic', 'pagination.training', 10, 'number', 'pagination.training', 'Trainings per page'),
     Setting('setting_basic', 'pagination.reply', 50, 'number', 'pagination.reply', 'Replies per page'),
@@ -291,7 +292,7 @@ SystemSetting(
 // eslint-disable-next-line import/no-mutable-exports
 export const langs: Record<string, LangConfig> = {};
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         setting: SettingService;
     }
@@ -320,6 +321,7 @@ export class SettingService extends Service {
 }
 
 export async function apply(ctx: Context) {
+    ctx.provide('setting', undefined, true);
     ctx.plugin(SettingService);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;

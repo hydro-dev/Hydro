@@ -12,8 +12,8 @@ Hydro 是一个高效信息学在线测评系统。易安装，跨平台，多�
 对于不熟悉 Linux 或是懒得运维的老师，我们也提供了免费开通即用的在线版本，  
 详情前往 [https://hydro.ac](https://hydro.ac) 查看 [操作指引](https://hydro.ac/discuss/6172ceeed850d38c79ae18f9)  
 
-将安装命令粘贴到控制台一键安装，安装后注册首个用户自动获得超级管理员权限。
-兼容主流 Linux 发行版，推荐使用 Ubuntu 22.04，支持 arm64 设备（树莓派等）
+将安装命令粘贴到控制台一键安装，安装后注册首个用户自动获得超级管理员权限。  
+兼容主流 Linux 发行版，推荐使用 Debian 12，支持 arm64 设备（树莓派等）
 
 ```sh
 LANG=zh . <(curl https://hydro.ac/setup.sh)
@@ -37,7 +37,7 @@ Hydro 的所有历史版本均可平滑升级到最新版本。
 ### 跨平台兼容，数据一键备份/导入
 
 Hydro 支持所有主流的 Linux 发行版，兼容 x86_64 和 arm64 架构设备，且均可一键安装。  
-Hydro 可在 树莓派 / Apple M1 上正常运行。
+Hydro 可在 树莓派 或是 Apple M1/M2 上正常运行。
 
 使用 `hydrooj backup` 即可备份系统全部数据，使用 `hydrooj restore 文件名` 即可导入备份数据。
 整个过程无需手工干预。
@@ -102,11 +102,177 @@ Hydro 的语言设置并非硬编码于系统中，而是使用了配置文件�
 ## 联系我们
 
 Email：i@undefined.moe
-Hydro 用户群：1085853538  
 Telegram [@undefinedmoe](https://t.me/undefinedmoe)  
+Hydro 用户群：1085853538  
+
+注：加入用户群请先阅读[《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)。  
+同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
+
+## UI 4.54.2
+
+- ui: 修复 markdown 预览
+- ui: 优化禁用内置登录时的登录框显示
+
+## UI 4.54.1
+
+- ui: 修复 view-transitions
+- onlyoffice: 支持处理 PDF 文件
+- ui: markdown 支持显示代码行号
+- ui: 支持扩展 richmedia 功能
+- ui: 支持嵌入优酷视频
+- ui: 移除部分页面组件多余的横向滚动条
+
+### Hydro 4.15.0 / UI 4.54.0
+
+- core: 修复题解投票数量计算
+- ui: 优化暗色模式 404 页图片
+- ui: 点击展开编译信息
+- ui: 修复比赛计分板关注用户
+- core: ProblemModel.import: 支持 delSource 选项
+- ui: 修复生成测试数据实时推送
+- prom-client: 上报状态至控制台
+- core: oauth: 支持固定用户名
+- utils: 支持查找 nix 安装的 pm2
+- ui: 优化比赛页题目导航
+- ui: 弃用 monacoTheme 选项
+- ui: markdown 编辑器支持暗色模式
+- framework: 优化堆栈追踪
+- core: oplog: 记录访问路径
+- migrate: 加长超时时间
+- vjudge: 修复 yacs 导致系统崩溃的问题
+- sonic: 支持按题目 ID 搜索题目
+- core: 修复导入用户时若含小组会覆盖原有小组设置的问题
+
+### Hydro 4.14.1 / UI 4.53.2
+- core: 修复分数泄露
+- core: 优化错误堆栈
+- core: UserModel.getListForRender: 支持额外字段
+- core: ProblemModel.import: 合并参数为导入选项
+- ui: 启用 view-transistions
+
+### Hydro 4.14.0 / UI 4.53.1
+- core: 修复能够越权查看隐藏题目的问题 [security]
+- ui: 优化提交记录详情富文本展示
+- ui: 支持头像缓存
+- ui: 禁止文本越界显示
+- vjudge: codeforces: 优化提交 ID 获取
+- ui: 默认禁用 sentry
+- core: 支持隐藏训练左侧用户栏
+- core: cli: 支持 eval
+- ui: 添加实验性 speculation rules 支持
+- core: 修复训练参加人数计数
+
+### Hydro 4.13.4 / UI 4.52.3
+- framework: 修复 404 返回页
+- ui: 优化用户权限页布局
+- vjudge: codeforces: 优化 katex 显示
+- core: cli: 修复 script 加载顺序
+- install: 默认禁用 yarn 更新检查
+- core: 添加 contest/edit 和 contest/del 钩子
+- ui: 支持展开测试点详情
+- core: 修复 IOI 赛制封榜
+- core: 修复缓存文件不会删除的问题
+- core: 导入题目时显示进度
+- ui: 修复含空格标签的筛选
+
+### Hydro 4.13.2 / UI 4.52.0
+- a11y: 优化网页测性能测试输出顺序
+- ui: 使用新 markdown 编辑器
+- core: 优化计分板逻辑
+- ui: 将缓存移至 IndexedDB
+- core: 转写 migration 为服务
+- ui: 优化 safari 浏览器兼容
+- core: 修复题目 maintainer 字段
+- judge: 支持 pretest 中使用文件 IO
+- vjudge: codeforces: 添加检查是否提交成功
+
+### Hydro 4.13.0 / UI 4.51.0
+- ui: 添加 sentry
+- core&ui: 支持显示当前编译器版本
+- core: 数据库索引优化
+- core: 文件复制使用软链接
+- a11y: 添加性能测试工具
+- utils: 支持识别大写文件扩展名
+- ui: 优化下拉菜单样式
+- core: 优化页面标题
+- register: 支持从文件读取原 sourcemap
+- ui: 修复站内消息推送
+- ui: ranking 页面添加说明
+- ui: 添加生成测试数据提示
+- framework: 从 core 解离
+- core: loader: 支持多 profile 切换
+- ui: 修复比赛计分板选手组显示
+- core: 重设比赛分数时自动重算分数
+
+本版本同时引入下述插件 API 修改：
+
+- 移除了 app/load/${category} 钩子
+- 移除了 ctx.app (请使用 ctx.root)
+- 移除了 ctx.options (请使用 ctx.root.config)
+- serializer: 移除 showDisplayName 参数
+- 移除了 loader.addScript, loader.addon 函数
+- 移除了 Hydro.module.render (请使用 ctx.server.registerRenderer)
+- 移除了 lib/paginate 和 lib/rank (请使用 db.paginate 和 db.ranked)
+
+### Hydro 4.12.3 / UI 4.50.2
+- core: 将 API 模块移入 service
+- core: 比赛时提交被 hack 不触发整体重测
+- core: 将添加 pid match 的逻辑移入搜索中
+- ui: 修正 cssFilter
+- judge: builtin: 维护 callback 顺序
+- core: 优化邮件地址处理
+- ui: 显示提交记录长度
+- migrate: 支持仅为冲突用户设置随机邮件地址
+- core&ui: 支持自动整理 hack 输入
+- elastic: 优化模糊搜索
+- ui: 修复客观题中多选题载入答案出错的问题
+- core: 修复 hack 按钮
+
+### Hydro 4.12.0 / UI 4.50.0
+- core: 添加题目统计页
+- core: 在记录详情页显示测评进度
+- core: problem_list: 允许 hook 修改排序逻辑
+- migrate: 添加 poj 支持
+- core: api: 支持查询 rpInfo 与 avatarUrl
+- ui: 允许禁用 timeago
+- core: 修复 IOI(strict) 下取消成绩
+- ui: 比赛计分板中高亮自己与关注的用户
+- core: 修正比赛榜单 AC 量计算
+- core: 禁止重测自测提交
+- ui: 优化讨论编辑历史显示
+- core: 登录/注册后返回当前的 UserContext
+- core: 修复比赛计分板导出的 PERM_VIEW_DISPLAYNAME 检查
+- ui: 修复 domain_user 选择框的默认值
+- ui: 修复客观题加载上次答案
+- core: 重置密码时自动禁用 2FA
+- core: import: 题目包导入时支持导入题解和标程
+- core: 性能优化和漏洞修复
+
+### Hydro 4.11.2 / UI 4.49.8
+- core: 支持给比赛题目设置分数倍率 (#765)
+- workspace: 升级 ts 版本至 5.4.3
+- core: ws: 处理 JSON 解析异常
+- core: 允许向作业中上传文件 (#755)
+- ui: 在比赛管理页显示赛题的题目标签
+- judge: 修复部分情况下客观题返回结果异常的问题 (#770)
+- ui: 在 `mdInline` 中禁用部分标签 (#767)
+- core: 添加 R 语言和 cpp20 支持
+- ui: 在评测记录页显示峰值耗时
+- core: 修复比赛管理员无法查看代码的问题 (#764)
+- judge: 提供 `hydrojudge terminal` 入口 (#725)
+- core: 支持从 `/nix/store` 加载插件
+- core: 添加 `contest/list` 钩子
+- judge: vj4 支持
+- ui: 修复评测设置面板 testlib 选择 (#762)
+- fps-importer: 支持设置大小限制
+- core: 添加 `PERM_VIEW_RECORD` 权限组 (#753)
+- core: 修复未登录可以查看比赛公告的问题 (#756)
+- ui: 允许使用 Enter 键提交 2FA (#752)
+- core: 优化训练参与成员列表 (#750)
+- core&ui: 其他性能优化和漏洞修复
 
 ### Hydro 4.11.0 / UI 4.49.6
 - core: 升级至 cordis@3
@@ -574,7 +740,8 @@ Telegram [@undefinedmoe](https://t.me/undefinedmoe)
 
 ## 开源许可
 
-本项目中的 examples/ install/ packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。
+本项目中 framework/ examples/ install/ 下的内容采用 MIT 协议授权，您可自由使用。  
+本项目中 packages/ui-default/ 下的内容仅采用 AGPL-3.0 进行授权。  
 项目其余部分使用双重许可：
 
 1. 您可以在遵守 AGPL-3.0 许可证和下述附加条款章节的前提下免费使用这些代码：  

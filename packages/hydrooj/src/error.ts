@@ -1,58 +1,12 @@
 /* eslint-disable max-len */
-/* eslint-disable func-names */
+// eslint-disable-next-line simple-import-sort/imports
+import {
+    CreateError as Err,
+    HydroError, UserFacingError,
+    BadRequestError, ForbiddenError, NotFoundError,
+} from '@hydrooj/framework';
 
-interface IHydroError {
-    new(...args: any[]): HydroError
-}
-
-export class HydroError extends Error {
-    params: any[];
-    code: number;
-
-    constructor(...params: any[]) {
-        super();
-        this.params = params;
-    }
-
-    msg() {
-        return 'HydroError';
-    }
-
-    get message() {
-        return this.msg();
-    }
-}
-
-const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | string | number>) => {
-    let msg: () => string;
-    let code: number;
-    for (const item of info) {
-        if (typeof item === 'number') {
-            code = item;
-        } else if (typeof item === 'string') {
-            msg = function () { return item; };
-        } else if (typeof item === 'function') {
-            msg = item;
-        }
-    }
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    return class HydroError extends Class {
-        name = name;
-        constructor(...args: any[]) {
-            super(...args);
-            if (msg) this.msg = msg;
-            if (code) this.code = code;
-        }
-    };
-};
-
-export const UserFacingError = Err('UserFacingError', HydroError, 'UserFacingError', 400);
-export const SystemError = Err('SystemError', HydroError, 'SystemError', 500);
-
-export const BadRequestError = Err('BadRequestError', UserFacingError, 'BadRequestError', 400);
-export const ForbiddenError = Err('ForbiddenError', UserFacingError, 'ForbiddenError', 403);
-export const NotFoundError = Err('NotFoundError', UserFacingError, 'NotFoundError', 404);
-export const MethodNotAllowedError = Err('MethodNotAllowedError', UserFacingError, 'MethodNotAllowedError', 405);
+export * from '@hydrooj/framework/error';
 export const RemoteOnlineJudgeError = Err('RemoteOnlineJudgeError', UserFacingError, 'RemoteOnlineJudgeError', 500);
 export const SendMailError = Err('SendMailError', UserFacingError, 'Failed to send mail to {0}. (1)', 500);
 
@@ -77,16 +31,6 @@ export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function (th
     }
     return "You don't have the required privilege.";
 });
-export const ValidationError = Err('ValidationError', ForbiddenError, function (this: HydroError) {
-    if (this.params.length === 3) {
-        return this.params[1]
-            ? 'Field {0} or {1} validation failed. ({2})'
-            : 'Field {0} validation failed. ({2})';
-    }
-    return this.params[1]
-        ? 'Field {0} or {1} validation failed.'
-        : 'Field {0} validation failed.';
-});
 export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenError, "You haven't attended this contest yet.");
 export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');
 export const ContestAlreadyAttendedError = Err('ContestAlreadyAttendedError', ForbiddenError, "You've already attended this contest.");
@@ -97,7 +41,6 @@ export const TrainingAlreadyEnrollError = Err('TrainingAlreadyEnrollError', Forb
 export const HomeworkNotLiveError = Err('HomeworkNotLiveError', ForbiddenError, 'This homework is not open.');
 export const HomeworkNotAttendedError = Err('HomeworkNotAttendedError', ForbiddenError, "You haven't claimed this homework yet.");
 export const RoleAlreadyExistError = Err('RoleAlreadyExistError', ForbiddenError, 'This role already exists.');
-export const CsrfTokenError = Err('CsrfTokenError', ForbiddenError, 'CsrfTokenError');
 export const DomainAlreadyExistsError = Err('DomainAlreadyExistsError', ForbiddenError, 'The domain {0} already exists.');
 export const DomainJoinForbiddenError = Err('DomainJoinForbiddenError', ForbiddenError, 'You are not allowed to join the domain. The link is either invalid or expired.');
 export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', ForbiddenError, 'Failed to join the domain. You are already a member.');
@@ -114,6 +57,7 @@ export const ProblemAlreadyUsedByContestError = Err('ProblemAlreadyUsedByContest
 export const ProblemNotAllowPretestError = Err('ProblemNotAllowPretestError', ForbiddenError, 'Pretesting is not supported for {0}.');
 export const ProblemNotAllowLanguageError = Err('ProblemNotAllowSubmitError', ForbiddenError, 'This language is not allowed to submit.');
 
+export const PretestRejudgeFailedError = Err('PretestRejudgeFailedError', BadRequestError, 'Cannot rejudge a pretest record.');
 export const HackRejudgeFailedError = Err('HackRejudgeFailedError', BadRequestError, 'Cannot rejudge a hack record.');
 export const CannotDeleteSystemDomainError = Err('CannotDeleteSystemDomainError', BadRequestError, 'You are not allowed to delete system domain.');
 export const OnlyOwnerCanDeleteDomainError = Err('OnlyOwnerCanDeleteDomainError', BadRequestError, 'You are not the owner of this domain.');
@@ -136,48 +80,4 @@ export const ContestNotFoundError = Err('ContestNotFoundError', DocumentNotFound
 export const DiscussionNotFoundError = Err('DiscussionNotFoundError', DocumentNotFoundError, 'Discussion {1} not found.');
 export const DiscussionNodeNotFoundError = Err('DiscussionNodeNotFoundError', DocumentNotFoundError, 'Discussion node {1} not found.');
 
-export const InvalidOperationError = Err('InvalidOperationError', MethodNotAllowedError);
 export const NotLaunchedByPM2Error = Err('NotLaunchedByPM2Error', BadRequestError, 'Not launched by PM2.');
-export const FileTooLargeError = Err('FileTooLargeError', ValidationError, 'The uploaded file is too long.');
-
-global.Hydro.error = module.exports;
-
-/*
-class FileTypeNotAllowedError(ValidationError):
-  @property
-  def message(self):
-    return 'This type of files are not allowed to be uploaded.'
-
-class InvalidTokenDigestError(ForbiddenError):
-  pass
-
-class DiscussionCategoryAlreadyExistError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Discussion category {1} already exists.'
-
-class DiscussionCategoryNotFoundError(NotFoundError):
-  @property
-  def message(self):
-    return 'Discussion category {1} not found.'
-
-class DiscussionNodeAlreadyExistError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Discussion node {1} already exists.'
-
-class TrainingRequirementNotSatisfiedError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Training requirement is not satisfied.'
-
-class UsageExceededError(ForbiddenError):
-  @property
-  def message(self):
-    return 'Usage exceeded.'
-
-class InvalidArgumentError(BadRequestError):
-  @property
-  def message(self):
-    return 'Argument {0} is invalid.'
-*/

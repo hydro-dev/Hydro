@@ -54,6 +54,10 @@ export default class Sock {
   onclose: (code: number, reason: string) => void;
   onopen: (sock: ReconnectingWebSocket) => void;
 
+  on(event: 'message' | 'close' | 'open', callback: (...args: any[]) => void) {
+    this[`on${event}`] = callback;
+  }
+
   send(data) {
     this.sock.send(data);
   }

@@ -118,6 +118,6 @@ function calculate(users: RatingInputUser[]): RatingOutputUser[] {
     return calculator.calculate() as RatingOutputUser[];
 }
 
-export = calculate;
+export default calculate;
 
 global.Hydro.lib.rating = calculate;

@@ -21,6 +21,8 @@ export interface RuntimeContext {
     checker?: Execute;
     executeInteractor?: Execute;
     executeUser?: Execute;
+
+    _callbackAwait?: Promise<any>;
 }
 
 export interface ContextSubTask {

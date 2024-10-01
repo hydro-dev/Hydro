@@ -54,7 +54,7 @@ module.exports = {
     // FIXME A bug with eslint-parser
     // 'template-curly-spacing': 'off',
 
-    '@typescript-eslint/indent': [
+    '@stylistic/indent': [
       'warn',
       2,
       { SwitchCase: 1 },

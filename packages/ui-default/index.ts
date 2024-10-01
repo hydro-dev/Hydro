@@ -10,13 +10,6 @@ class WikiHelpHandler extends Handler {
   noCheckPermView = true;
 
   async get() {
-    const LANGS = SettingModel.langs;
-    const languages = {};
-    for (const key in LANGS) {
-      if (LANGS[key].hidden) continue;
-      languages[`${LANGS[key].display}(${key})`] = LANGS[key].compile || LANGS[key].execute;
-    }
-    this.response.body = { languages };
     this.response.template = 'wiki_help.html';
   }
 }
@@ -137,6 +130,12 @@ class RichMediaHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
+  ctx.inject(['setting'], (c) => {
+    c.setting.PreferenceSetting(
+      SettingModel.Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
+      SettingModel.Setting('setting_display', 'showTimeAgo', true, 'boolean', 'Enable Time Ago'),
+    );
+  });
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
   ctx.Route('wiki_about', '/wiki/about', WikiAboutHandler);
@@ -160,6 +159,7 @@ export function apply(ctx: Context) {
         SystemModel.get('server.url'),
         SystemModel.get('server.cdn'),
       ],
+      assets: ((SystemModel.get('ui-default.assets') || '').split(',')).filter((i) => i) || [],
       domains: SystemModel.get('ui-default.domains') || [],
     };
   });

@@ -18,6 +18,7 @@ export const judge = async (ctx: JudgeTask) => {
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '128m'),
+            filename: ctx.config.filename,
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },

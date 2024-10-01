@@ -36,13 +36,9 @@ const langMap = {
     Python3: 'py.py3',
 };
 function handleMailLower(mail: string) {
-    let data = mail.trim().toLowerCase();
-    if (data.endsWith('@googlemail.com')) data = data.replace('@googlemail.com', '@gmail.com');
-    if (data.endsWith('@gmail.com')) {
-        const [prev] = data.split('@');
-        data = `${prev.replace(/[.+]/g, '')}@gmail.com`;
-    }
-    return data;
+    const [n, d] = mail.trim().toLowerCase().split('@');
+    const [name] = n.split('+');
+    return `${name.replace(/\./g, '')}@${d === 'googlemail.com' ? 'gmail.com' : d}`;
 }
 
 export async function run({

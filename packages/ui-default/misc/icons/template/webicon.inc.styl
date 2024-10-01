@@ -1,6 +1,5 @@
-$icon-font-name = '{{ options.fontName }}'
+$icon-font-name = 'hydro-icons'
 
-{% for icon in glyphs %}
-$icon-{{ icon.name }} = '\{{ icon.unicode[0].charCodeAt(0).toString(16)|upper }}'
-$icon-{{ icon.name }}-file = '{{ icon.name }}.svg'
-{% endfor %}
+{% for name, value in infoData %}
+${{prefix}}-{{ name }} = '{{ value.encodedCode }}'
+{%- endfor %}

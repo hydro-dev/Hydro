@@ -1,7 +1,5 @@
-import { assign } from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 import AutoComplete, { AutoCompleteOptions } from '.';
 import FileSelectAutoCompleteFC from './components/FileSelectAutoComplete';
 
@@ -29,9 +27,8 @@ const Component = React.forwardRef<any, any>((props, ref) => {
   );
 });
 
-export default class FileSelectAutoComplete<Multi extends boolean> extends AutoComplete {
+export default class FileSelectAutoComplete<Multi extends boolean> extends AutoComplete<FileSelectOptions> {
   static DOMAttachKey = 'ucwFileSelectAutoCompleteInstance';
-  options: FileSelectOptions & AutoCompleteOptions;
 
   constructor($dom, options: FileSelectOptions & AutoCompleteOptions<Multi>) {
     super($dom, {
@@ -59,5 +56,4 @@ export default class FileSelectAutoComplete<Multi extends boolean> extends AutoC
   }
 }
 
-assign(FileSelectAutoComplete, DOMAttachedObject);
 window.Hydro.components.FileSelectAutoComplete = FileSelectAutoComplete;

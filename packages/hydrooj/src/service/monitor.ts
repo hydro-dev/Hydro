@@ -10,6 +10,11 @@ import db from './db';
 const coll = db.collection('status');
 const logger = new Logger('monitor');
 
+// We use this endpoint to push security notifications based on
+// component versions and configurations to administrators.
+// Removing this logic is not recommended.
+// 我们使用此端点向服务器管理员根据所安装的版本与配置推送安全通知。
+// 不建议删除此逻辑。
 export async function feedback(): Promise<[string, StatusUpdate]> {
     const {
         system, domain, document, user, record,

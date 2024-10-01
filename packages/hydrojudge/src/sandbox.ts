@@ -74,7 +74,7 @@ function parseArgs(execute: string): string[] {
 
 function proc(params: Parameter): Cmd {
     const copyOut = supportOptional
-        ? params.copyOut
+        ? (params.copyOut || [])
         : (params.copyOut || []).map((i) => (i.endsWith('?') ? i.substring(0, i.length - 1) : i));
     const stdioLimit = parseMemoryMB(getConfig('stdio_size'));
     const stdioSize = params.cacheStdoutAndStderr ? stdioLimit : 4;
@@ -82,7 +82,7 @@ function proc(params: Parameter): Cmd {
     if (params.cacheStdoutAndStderr) {
         copyOutCached.push('stdout', 'stderr');
         if (params.filename) copyOutCached.push(`${params.filename}.out?`);
-    }
+    } else if (params.filename) copyOut.push(`${params.filename}.out${supportOptional ? '?' : ''}`);
     const copyIn = { ...(params.copyIn || {}) };
     const stdin = params.stdin || { content: '' };
     if (params.filename) copyIn[`${params.filename}.in`] = stdin;
@@ -230,7 +230,8 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
     } catch (e) {
-        reportError('Your sandbox version is tooooooo low! Please upgrade!');
+        if (e?.syscall === 'connect') reportError('Connecting to sandbox failed, please check sandbox_host config and if your sandbox is running.');
+        else reportError('Your sandbox version is tooooooo low! Please upgrade!');
         return false;
     }
     const { osinfo } = await sysinfo.get();

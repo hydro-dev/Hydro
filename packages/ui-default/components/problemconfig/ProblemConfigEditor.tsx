@@ -87,8 +87,8 @@ export function configYamlFormat(config: ProblemConfigFile) {
 export default connect(mapStateToProps, mapDispatchToProps)(class MonacoEditor extends React.PureComponent<Props> {
   disposable = [];
   containerElement: HTMLElement;
-  private __preventUpdate = false;
-  private __preventFormat = false;
+  __preventUpdate = false;
+  __preventFormat = false;
 
   editor: editor.IStandaloneCodeEditor;
   model: editor.ITextModel;

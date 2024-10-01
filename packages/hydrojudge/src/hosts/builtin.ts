@@ -2,11 +2,13 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import { fs } from '@hydrooj/utils';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
-    JudgeResultBody, ObjectId, RecordModel, SettingModel,
-    StorageModel, SystemModel, TaskModel,
+    db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
+    SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
-import { end, next, processJudgeFileCallback } from 'hydrooj/src/handler/judge';
+import { langs } from 'hydrooj/src/model/setting';
+import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Context } from '../judge/interface';
@@ -23,21 +25,21 @@ const session = {
         return target;
     },
     getNext(t: Context) {
-        return async (data: Partial<JudgeResultBody>) => {
+        t._callbackAwait ||= Promise.resolve();
+        return (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
             data.rid = new ObjectId(t.rid);
-            const rdoc = await RecordModel.get(data.rid);
             if (data.case) data.case.message ||= '';
-            next({ ...data, domainId: rdoc.domainId });
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, domainId: t.request.domainId }));
         };
     },
     getEnd(t: Context) {
-        return async (data: Partial<JudgeResultBody>) => {
+        t._callbackAwait ||= Promise.resolve();
+        return (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
             data.rid = new ObjectId(t.rid);
-            const rdoc = await RecordModel.get(data.rid);
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            end({ ...data, domainId: rdoc.domainId });
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, domainId: t.request.domainId }));
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -47,7 +49,7 @@ const session = {
         return null;
     },
     async postFile(target: string, filename: string, filepath: string) {
-        return await processJudgeFileCallback(new ObjectId(target), filename, filepath);
+        return await JudgeHandler.processJudgeFileCallback(new ObjectId(target), filename, filepath);
     },
     async cacheOpen(source: string, files: any[]) {
         const filePath = path.join(getConfig('cache_dir'), source);
@@ -83,6 +85,7 @@ export async function postInit(ctx) {
         c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
     });
     await fs.ensureDir(getConfig('tmp_dir'));
+    const info = await sysinfo.get();
     const handle = async (t) => {
         const rdoc = await RecordModel.get(t.domainId, t.rid);
         if (!rdoc) {
@@ -93,9 +96,19 @@ export async function postInit(ctx) {
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
     const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    function collectCompilerInfo() {
+        const coll = db.collection('status');
+        compilerVersions(langs).then((compilers) => coll.updateOne(
+            { mid: info.mid, type: 'server' },
+            { $set: { compilers } },
+            { upsert: true },
+        )).catch((e) => logger.error(e));
+    }
     ctx.on('system/setting', () => {
         taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
+        collectCompilerInfo();
     });
+    collectCompilerInfo();
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
     TaskModel.consume({ type: 'generate' }, handle);
 }

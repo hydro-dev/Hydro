@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import _ from 'lodash';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
 
 const TAB_TRANSITION_DURATION = 300;
@@ -144,5 +143,3 @@ export default class Tab extends DOMAttachedObject {
     return true;
   }
 }
-
-_.assign(Tab, DOMAttachedObject);

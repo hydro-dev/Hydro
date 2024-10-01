@@ -120,6 +120,10 @@ $highlight-button-color = #F6DF45
   &.nojs .col--submit-at
     width: rem(160px)
 
+  .col--score
+    width: rem(80px)
+    text-align: center;
+
   .col--problem
     border-left: 1px solid $table-border-color
 
@@ -192,6 +196,9 @@ $highlight-button-color = #F6DF45
     .col--problem
       display: none
 
+  .star-highlight
+  	background: lighten($primary-color, 90%)
+
 .page--contest_user
   .col--uid
     width: rem(100px)
@@ -208,3 +215,7 @@ $highlight-button-color = #F6DF45
 
   .col--awards
     width: rem(130px)
+
+.page--contest_manage
+  .col--score
+    width: rem(80px)

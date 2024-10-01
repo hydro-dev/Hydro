@@ -23,12 +23,12 @@ langs:
       - ~ All keys starting with _ will be ignored
       - ~ Entries named like [foo], [foo].[bar] [foo].[baz]
       -   will be merged into one category.
-      - ~ A entry named [foo].[bar] will inhert all options 
+      - ~ A entry named [foo].[bar] will inhert all options
       -   defined in entry [foo] if not overwritten
       - ~ code_file option defaults to foo.[name]
       - ~ highlight option defaults to [name]
       - ~ if highlight option was set, monaco option defaults
-      -   to [highlight], otherwise defaults to [name] 
+      -   to [highlight], otherwise defaults to [name]
       - ~ Compiling be be ignored if compile option wasn't set
       - ~ Key marked with a ? means the option is optional
       - (name):
@@ -49,11 +49,13 @@ langs:
       code_file: foo.sh
       execute: /bin/bash foo.sh
       highlight: bash
+      version: /bin/bash --version
     c:
       compile: /usr/bin/gcc -Wall --std=c99 -o foo foo.c -lm
       highlight: c
       monaco: c
       display: C
+      version: /usr/bin/gcc --version
     cc:
       compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -I/include
       code_file: foo.cc
@@ -62,6 +64,7 @@ langs:
       display: C++
       address_space_limit: true
       process_limit: 1
+      version: /usr/bin/g++ --version
     cc.cc98:
       compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
       display: C++98
@@ -85,10 +88,17 @@ langs:
     cc.cc17o2:
       compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2 -I/include
       display: C++17(O2)
+    cc.cc20:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -I/include
+      display: C++20
+    cc.cc20o2:
+      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -O2 -I/include
+      display: C++20(O2)
     pas:
       compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
       highlight: pascal
       display: Pascal
+      version: /usr/bin/fpc -iW
     java:
       compile: /usr/bin/bash -c "javac -d /w -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
       code_file: Main.java
@@ -99,6 +109,7 @@ langs:
       monaco: java
       display: Java
       compile_time_limit: 30000
+      version: /usr/bin/javac -version
     kt:
       compile: echo "Invalid language selection"
       code_file: foo.kt
@@ -113,6 +124,7 @@ langs:
       execute: /usr/bin/java -jar foo.jar
       display: Kotlin/JVM
       compile_time_limit: 30000
+      version: /usr/bin/kotlinc -version
     py:
       compile: /usr/bin/python -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       code_file: foo.py
@@ -126,35 +138,48 @@ langs:
       compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       execute: /usr/bin/python3 foo
       display: Python 3
+      version: /usr/bin/python3 --version
     py.pypy3:
       compile: /bin/bash -c "/usr/bin/pypy3 -c \"import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)\" && mv foo.py foo"
       execute: /bin/bash -c 'mv foo foo.py && /usr/bin/pypy3 -B foo.py'
       display: PyPy3
+      version: /usr/bin/pypy3 --version
     php:
       execute: /usr/bin/php foo.php
       display: PHP
+      version: /usr/bin/php -v
     rs:
       compile: /usr/bin/rustc -O -o /w/foo /w/foo.rs
       highlight: rust
       display: Rust
+      version: /usr/bin/rustc --version
     hs:
       compile: /usr/bin/ghc -O -outputdir /tmp -o foo foo.hs
       highlight: haskell
       display: Haskell
+      version: /usr/bin/ghc --version
     js:
       execute: /usr/bin/node /w/foo.js
       highlight: javascript
       display: NodeJS
+      version: /usr/bin/node --version
     go:
       compile: /usr/bin/go build -o foo foo.go
       display: Golang
+      version: /usr/bin/go version
     rb:
       execute: /usr/bin/ruby foo.rb
       highlight: ruby
       display: Ruby
+      version: /usr/bin/ruby --version
     cs:
       compile: /usr/bin/mcs -optimize+ -out:/w/foo /w/foo.cs
       execute: /usr/bin/mono foo
       highlight: csharp
       monaco: csharp
       display: 'C#'
+      version: /usr/bin/mcs --version
+    r:
+      display: R
+      execute: /bin/sh -c "cat /dev/stdin >stdin && /usr/bin/Rscript --vanilla foo.r"
+      highlight: r
