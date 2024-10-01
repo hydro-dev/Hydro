@@ -5,6 +5,7 @@
     "editor.detectIndentation": true,
     "typescript.tsdk": "node_modules/typescript/lib",
     "typescript.tsserver.maxTsServerMemory": 16384,
+    "typescript.tsserver.nodePath": "node",
     "[json]": {
         "files.insertFinalNewline": true,
         "files.trimFinalNewlines": false
