@@ -4,7 +4,7 @@ import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoCom
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  getAvailableLangs, request, tpl, withTransistionCallback,
+  getAvailableLangs, request, tpl, withTransitionCallback,
 } from 'vj/utils';
 
 const page = new NamedPage('record_main', async () => {
@@ -20,7 +20,7 @@ const page = new NamedPage('record_main', async () => {
   sock.onmessage = (_, data) => {
     const msg = JSON.parse(data);
     const $newTr = $(msg.html);
-    withTransistionCallback(() => {
+    withTransitionCallback(() => {
       const $oldTr = $(`.record_main__table tr[data-rid="${$newTr.attr('data-rid')}"]`);
       if ($oldTr.length) {
         $oldTr.trigger('vjContentRemove');

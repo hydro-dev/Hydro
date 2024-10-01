@@ -29,9 +29,11 @@ import {
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
+    async prepare() {
+        if (!system.get('server.login')) throw new BuiltinLoginError();
+    }
 
     async get() {
-        if (!system.get('server.login')) throw new BuiltinLoginError();
         this.response.template = 'user_login.html';
     }
 
@@ -45,7 +47,6 @@ class UserLoginHandler extends Handler {
         domainId: string, uname: string, password: string, rememberme = false, redirect = '',
         tfa = '', authnChallenge = '',
     ) {
-        if (!system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
@@ -191,6 +192,9 @@ class UserLogoutHandler extends Handler {
 
 export class UserRegisterHandler extends Handler {
     noCheckPermView = true;
+    async prepare() {
+        if (!system.get('server.login')) throw new BuiltinLoginError();
+    }
 
     async get() {
         this.response.template = 'user_register.html';

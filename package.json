@@ -35,7 +35,7 @@
     "devDependencies": {
         "@simplewebauthn/types": "9.0.1",
         "@types/autocannon": "^7.12.5",
-        "@types/chai": "^4.3.19",
+        "@types/chai": "^4.3.20",
         "@types/cross-spawn": "^6.0.6",
         "@types/node": "20.12.12",
         "@types/semver": "^7.5.8",
@@ -52,11 +52,11 @@
         "globby": "^14.0.2",
         "inspectpack": "^4.7.1",
         "mongodb-memory-server": "9.4.1",
-        "nyc": "^17.0.0",
+        "nyc": "^17.1.0",
         "ora": "^8.1.0",
         "package-json": "^10.0.1",
         "semver": "^7.6.3",
-        "simple-git": "^3.26.0",
+        "simple-git": "^3.27.0",
         "supertest": "^7.0.0",
         "typescript": "5.3.3",
         "wtfnode": "^0.9.3"

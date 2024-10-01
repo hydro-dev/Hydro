@@ -1,5 +1,6 @@
 <div class="dialog dialog--signin" style="display:none">
   <div class="dialog__content">
+    {% if model.system.get('server.login') %}
     <div class="dialog--signin__bg">
       <div class="dialog--signin__side">
         <h1>{{ _("Don't have an account?") }}</h1>
@@ -9,6 +10,7 @@
         {% endif %}
       </div>
     </div>
+    {% endif %}
     <div class="dialog--signin__main">
       <form action="{{ url('user_login') }}" method="post">
         <div class="dialog--signin__close-container supplementary">

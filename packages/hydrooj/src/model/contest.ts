@@ -135,7 +135,7 @@ const acm = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -171,7 +171,7 @@ const acm = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -308,7 +308,7 @@ const oi = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -342,7 +342,7 @@ const oi = buildContestRule({
             if (typeof score !== 'number') return '-';
             return score * ((tdoc.score?.[pid] || 100) / 100);
         };
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -487,7 +487,7 @@ const strictioi = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -559,7 +559,7 @@ const ledo = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -649,7 +649,7 @@ const homework = buildContestRule({
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -698,7 +698,7 @@ const homework = buildContestRule({
                 raw: tsdoc.uid,
             },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });

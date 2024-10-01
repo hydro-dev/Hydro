@@ -481,7 +481,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
             const name = HandlerClass.name.replace(/Handler$/, '');
             const steps = [
-                'init', 'handler/init',
+                'log/__init', 'init', 'handler/init',
                 `handler/before-prepare/${name}#${method}`, `handler/before-prepare/${name}`, 'handler/before-prepare',
                 'log/__prepare', '__prepare', '_prepare', 'prepare', 'log/__prepareDone',
                 `handler/before/${name}#${method}`, `handler/before/${name}`, 'handler/before',
@@ -493,6 +493,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 `handler/after/${name}#${method}`, `handler/after/${name}`, 'handler/after',
                 'cleanup',
                 `handler/finish/${name}#${method}`, `handler/finish/${name}`, 'handler/finish',
+                'log/__finish',
             ];
 
             let current = 0;

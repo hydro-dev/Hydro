@@ -294,8 +294,6 @@ export interface ProblemStatusDoc extends StatusDocBase {
     rid?: ObjectId;
     score?: number;
     status?: number;
-    nSubmit?: number;
-    nAccept?: number;
     star?: boolean;
 }
 
