@@ -175,7 +175,7 @@ export async function run({
                     samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }, 'html');
+                }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=');
                 const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     try {
