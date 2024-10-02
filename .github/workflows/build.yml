@@ -48,6 +48,8 @@ jobs:
         yarn dedupe
       env:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
+        # NPM_TOKEN替换为库Settings -> Secrets and variables -> Actions中Repository secrets下的token名
+
     - name: Get specific changed files
       id: ui-changed-files
       uses: tj-actions/changed-files@v41
