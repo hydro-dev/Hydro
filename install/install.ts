@@ -483,7 +483,10 @@ ${nixConfBase}`);
                 `pm2 start mongod --name mongodb -e /dev/null -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
                 async () => {
-                    if (noCaddy) return;
+                    if (noCaddy) {
+                        exec('hydrooj cli system set server.host 0.0.0.0');
+                        return;
+                    }
                     if (!await isPortFree(80)) log.warn('port.80');
                     if (migration === 'hustoj') {
                         exec('systemctl stop nginx || true');

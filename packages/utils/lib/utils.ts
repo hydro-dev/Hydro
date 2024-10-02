@@ -69,7 +69,8 @@ String.prototype.format = function formatStr(...args) {
 export function isClass(obj: any, strict = false): obj is new (...args: any) => any {
     if (typeof obj !== 'function') return false;
     if (obj.prototype === undefined) return false;
-    if (obj.prototype.constructor !== obj) return false;
+    // FIXME cordis proxies the object and make this assertion fail
+    // if (obj.prototype.constructor !== obj) return false;
     if (Object.getOwnPropertyNames(obj.prototype).length >= 2) return true;
     const str = obj.toString();
     if (str.slice(0, 5) === 'class') return true;
