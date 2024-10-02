@@ -23,6 +23,8 @@ import serializer from './serializer';
 
 export { WebSocket, WebSocketServer } from 'ws';
 
+const kHandler = Symbol.for('hydro.handler');
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
 export function encodeRFC5987ValueChars(str: string) {
     return (
@@ -109,6 +111,7 @@ export interface UserModel {
 
 export interface HandlerCommon { }
 export class HandlerCommon {
+    static [kHandler] = true;
     session: Record<string, any>;
     args: Record<string, any>;
     request: HydroRequest;
@@ -316,6 +319,7 @@ interface WebServiceConfig {
     cors?: string;
     upload?: string;
     port: number;
+    host?: string;
     xff?: string;
     xhost?: string;
 }
@@ -446,7 +450,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             wsServer.close();
         });
         await new Promise((r) => {
-            httpServer.listen(this.config.port, () => {
+            httpServer.listen(this.config.port, this.config.host || '127.0.0.1', () => {
                 logger.success('Server listening at: %d', this.config.port);
                 r(true);
             });
@@ -596,7 +600,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
         const name = HandlerClass.name;
-        if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
+        if (!HandlerClass?.[kHandler] || !isClass(HandlerClass)) throw new Error('Invalid registration.');
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
             logger.warn('Route with name %s already exists.', name);
         }
@@ -625,10 +629,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     ) {
         if (this.registry[name]) callback(this.registry[name]);
         // @ts-ignore
-        this.ctx.on(`handler/register/${name}`, callback);
+        const dispose = this.ctx.on(`handler/register/${name}`, callback);
         this[Context.current]?.on('dispose', () => {
-            // @ts-ignore
-            this.ctx.off(`handler/register/${name}`, callback);
+            dispose();
         });
     }
 

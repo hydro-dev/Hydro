@@ -93,7 +93,7 @@ export class ContestDetailBaseHandler extends Handler {
 
     tsdocAsPublic() {
         if (!this.tsdoc) return null;
-        return pick(this.tsdoc, ['attend', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
+        return pick(this.tsdoc, ['attend', 'subscribe', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
     }
 
     @param('tid', Types.ObjectId, true)
@@ -163,7 +163,15 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
         this.checkPerm(PERM.PERM_ATTEND_CONTEST);
         if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
         if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
-        await contest.attend(domainId, tid, this.user._id);
+        await contest.attend(domainId, tid, this.user._id, { subscribe: 1 });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('subscribe', Types.Boolean)
+    async postSubscribe(domainId: string, tid: ObjectId, subscribe = false) {
+        if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
+        await contest.setStatus(domainId, tid, this.user._id, { subscribe: subscribe ? 1 : 0 });
         this.back();
     }
 }
@@ -546,12 +554,16 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
                 }), message.FLAG_I18N | message.FLAG_ALERT),
             ]);
         } else {
-            const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).toArray();
+            const tsdocs = await contest.getMultiStatus(domainId, { docId: tid, subscribe: 1 }).toArray();
             const uids = Array.from<number>(new Set(tsdocs.map((tsdoc) => tsdoc.uid)));
             const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
             await Promise.all([
                 contest.addClarification(domainId, tid, 0, content, this.request.ip, subject),
-                ...uids.map((uid) => message.send(1, uid, content, flag)),
+                ...uids.map((uid) => message.send(1, uid, JSON.stringify({
+                    message: 'Broadcast message from contest {0}:\n{1}',
+                    params: [this.tdoc.title, content],
+                    url: this.url('contest_problemlist', { tid }),
+                }), flag | message.FLAG_I18N)),
             ]);
         }
         this.back();

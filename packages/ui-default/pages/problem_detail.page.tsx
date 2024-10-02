@@ -115,8 +115,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeIn() {
-    // @ts-ignore
     await $('#scratchpad')
+      // @ts-ignore
       .transition(
         { opacity: 1 },
         { duration: 200, easing: 'easeOutCubic' },
@@ -125,8 +125,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeOut() {
-    // @ts-ignore
     await $('#scratchpad')
+      // @ts-ignore
       .transition(
         { opacity: 0 },
         { duration: 200, easing: 'easeOutCubic' },

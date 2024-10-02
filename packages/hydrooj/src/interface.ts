@@ -28,6 +28,7 @@ export interface SystemKeys {
     'server.url': string,
     'server.xff': string,
     'server.xhost': string,
+    'server.host': string,
     'server.port': number,
     'server.language': string,
     'limit.problem_files_max': number,
