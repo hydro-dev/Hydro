@@ -87,6 +87,8 @@ export function register(cli: CAC) {
             src: _src,
             lastUpdate: Date.now(),
         }));
+        logger.success(`Successfully installed ${_src}.`);
+        logger.info('Please restart Hydro to apply changes.');
     });
     cli.command('uninstall [package]').action(async (name) => {
         if (!name) {

@@ -148,6 +148,7 @@ Domain {0} already exists.: 域 {0} 已經存在。
 Domain {0} is bulit-in and cannot be modified.: 域 {0} 為內建，不可修改。
 Domain {0} not found.: 域 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在創建後不能更改 ID。
+domain_create: 創建域
 domain_main: 首頁
 Don't have an account?: 還沒有賬戶？
 Done: 已結束
