@@ -481,8 +481,8 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 throw new ProblemNotAllowPretestError('type');
             }
         }
-        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
-        await this.limitRate('add_record', 60, system.get('limit.submission'), false);
+        await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
         const files: Record<string, string> = {};
         if (!code) {
             const file = this.request.files?.file;
@@ -554,8 +554,8 @@ export class ProblemHackHandler extends ProblemDetailHandler {
     @param('autoOrganizeInput', Types.Boolean, true)
     @param('tid', Types.ObjectId, true)
     async post(domainId: string, input = '', autoOrganizeInput = false, tid?: ObjectId) {
-        await this.limitRate('add_record', 60, system.get('limit.submission_user'), true);
-        await this.limitRate('add_record', 60, system.get('limit.submission'), false);
+        await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
+        await this.limitRate('add_record', 60, system.get('limit.submission'));
         const id = `${this.user._id}/${nanoid()}`;
         if (this.request.files?.file?.size > 0) {
             const file = this.request.files.file;

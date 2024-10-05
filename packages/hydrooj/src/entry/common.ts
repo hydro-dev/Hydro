@@ -59,7 +59,7 @@ const getLoader = (type: LoadTask, filename: string, dontLoad = false) => async 
 
 export const handler = getLoader('handler', 'handler', true);
 export const addon = getLoader('addon', 'index');
-export const model = getLoader('model', 'model', true);
+export const model = getLoader('model', 'model');
 export const lib = getLoader('lib', 'lib', true);
 export const script = getLoader('script', 'script', true);
 export const service = getLoader('service', 'service');
