@@ -3,9 +3,7 @@ import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectA
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import {
-  getAvailableLangs, request, tpl, withTransitionCallback,
-} from 'vj/utils';
+import { getAvailableLangs, request, tpl } from 'vj/utils';
 
 const page = new NamedPage('record_main', async () => {
   const [{ default: WebSocket }, { DiffDOM }] = await Promise.all([
