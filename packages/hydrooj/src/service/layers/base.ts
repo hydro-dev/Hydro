@@ -1,7 +1,7 @@
 import type { Next } from 'koa';
 import { cloneDeep, omit } from 'lodash';
 import type { KoaContext } from '@hydrooj/framework';
-import { randomPick } from '@hydrooj/utils';
+import { randomPick, Time } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
 import * as system from '../../model/system';
 import token from '../../model/token';
@@ -48,7 +48,8 @@ export default async (ctx: KoaContext, next: Next) => {
     const expireSeconds = ctx.session.save
         ? system.get('session.saved_expire_seconds')
         : system.get('session.unsaved_expire_seconds');
-    if (!ctx.session._id && !Object.getOwnPropertyNames(ctx.session).length) return;
+    const isRecent = ctx.session.updateAt ? Date.now() - new Date(ctx.session.updateAt).getTime() < 5 * Time.minute : true;
+    if (!Object.getOwnPropertyNames(ctx.session).length && isRecent) return;
     Object.assign(ctx.session, { updateIp: request.ip, updateUa: ua });
     if (ctx.session._id && !ctx.session.recreate) {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
