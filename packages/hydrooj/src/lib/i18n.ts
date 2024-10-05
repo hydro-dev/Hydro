@@ -19,10 +19,12 @@ class I18nService extends Service {
     }
 
     load(lang: string, content: Record<string, string>) {
-        translations[lang] ||= [];
-        translations[lang].unshift(content);
-        this[Context.current]?.on('dispose', () => {
-            translations[lang] = translations[lang].filter((i) => i !== content);
+        this.ctx.effect(() => {
+            translations[lang] ||= [];
+            translations[lang].unshift(content);
+            return () => {
+                translations[lang] = translations[lang].filter((i) => i !== content);
+            };
         });
     }
 

@@ -72,9 +72,11 @@ export class WorkerService extends Service {
     }
 
     public addHandler(type: string, handler: Function) {
-        this.handlers[type] = handler;
-        this[Context.current]?.on('dispose', () => {
-            delete this.handlers[type];
+        this.ctx.effect(() => {
+            this.handlers[type] = handler;
+            return () => {
+                delete this.handlers[type];
+            };
         });
     }
 

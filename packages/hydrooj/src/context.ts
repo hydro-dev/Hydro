@@ -50,8 +50,10 @@ export abstract class Service<T = any, C extends Context = Context> extends cord
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     function method(this: cordis.Service, ...args: Parameters<F>) {
-        const res = origFunc(...args);
-        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+        this.ctx.effect(() => {
+            const res = origFunc(...args);
+            return () => (disposeFunc ? disposeFunc(res) : res());
+        });
     };
 
 export class ApiMixin extends Service {

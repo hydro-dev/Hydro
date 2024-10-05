@@ -194,9 +194,7 @@ class VJudgeService extends Service {
         }
         // FIXME: potential race condition
         if (provider.Langs) this.updateLangs(type, provider.Langs);
-        this[Context.current]?.on('dispose', () => {
-            // TODO dispose session
-        });
+        // TODO dispose session
     }
 
     async updateLangs(provider: string, mapping: Record<string, Partial<LangConfig>>) {
