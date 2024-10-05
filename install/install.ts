@@ -89,6 +89,7 @@ If you have any questions about the migration process, please add QQ group 10858
 
 const installAsJudge = process.argv.includes('--judge');
 const noCaddy = process.argv.includes('--no-caddy');
+const exposeDb = process.argv.includes('--expose-db');
 const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer', '@hydrooj/a11y'];
 const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
@@ -480,7 +481,7 @@ ${nixConfBase}`);
             ...installAsJudge ? [] : [
                 () => console.log(`WiredTiger cache size: ${wtsize}GB`),
                 // The only thing mongod writes to stderr is 'libcurl no version information available'
-                `pm2 start mongod --name mongodb -e /dev/null -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
+                `pm2 start mongod --name mongodb -e /dev/null -- --auth ${exposeDb ? '--bind_ip=0.0.0.0 ' : ''}--wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
                 async () => {
                     if (noCaddy) {
