@@ -111,6 +111,20 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 4.16.0 / UI 4.54.3
+
+- core: 停用 handler, lib, script 组件类型
+- core: 升级到 ts5.6, cordis3.18
+- recaptcha: 移除
+- core: 大幅提升每日任务性能
+- core: (部分)支持 icpc package format
+- core: limitRate: 支持自定义 id
+- core: 弃用 array 格式题面
+- core: backup: 添加 `--withAddons` 选项 (测试)
+- core: session 性能优化
+- install: mongodb 默认监听 127.0.0.1
+- core&ui: 其他错误修复
+
 ## UI 4.54.2
 
 - ui: 修复 markdown 预览

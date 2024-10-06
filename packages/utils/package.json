@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.4.27",
+    "version": "1.4.28",
     "description": "hydrooj utils",
     "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -12,7 +12,7 @@
         "cac": "^6.7.14",
         "fs-extra": "^11.2.0",
         "js-yaml": "^4.1.0",
-        "moment-timezone": "^0.5.45",
+        "moment-timezone": "^0.5.46",
         "mongodb": "^5.9.2",
         "reggol": "^1.7.1",
         "search-query-parser": "^1.6.0",

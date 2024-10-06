@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.54.2",
+  "version": "4.54.3",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -19,7 +19,7 @@
     "@fontsource/dm-mono": "^5.1.0",
     "@fontsource/fira-code": "^5.1.0",
     "@fontsource/inconsolata": "^5.1.0",
-    "@fontsource/jetbrains-mono": "^5.1.0",
+    "@fontsource/jetbrains-mono": "^5.1.1",
     "@fontsource/pt-mono": "^5.1.0",
     "@fontsource/roboto-mono": "^5.1.0",
     "@fontsource/source-code-pro": "^5.1.0",

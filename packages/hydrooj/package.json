@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "4.15.0",
+    "version": "4.16.0",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -37,7 +37,7 @@
         "lodash": "^4.17.21",
         "lru-cache": "^10.4.3",
         "mime-types": "^2.1.35",
-        "moment-timezone": "^0.5.45",
+        "moment-timezone": "^0.5.46",
         "mongodb": "^5.9.2",
         "mongodb-uri": "^0.9.7",
         "nanoid": "^5.0.7",
