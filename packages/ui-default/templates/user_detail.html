@@ -26,8 +26,8 @@
                 {{ _('UID') }}: {{ udoc['_id'] }},
                 {{ _('Registered at') }} {{ datetimeSpan(udoc['regat'])|safe }},
                 {{ _('last login at') }} {{ datetimeSpan(udoc['loginat'])|safe }},
-              {% if sdoc %}
-                {{ _('last active at') }} {{ datetimeSpan(sdoc['updateAt'])|safe }}.
+              {% if sdoc and sdoc.updateAt %}
+                {{ _('last active at') }} {{ datetimeSpan(sdoc['updateAt'])|safe if Date.now() - sdoc.updateAt.getTime() > 300000 else _('just now') }}.
               {% else %}
                 {{ _('currently offline') }}.
               {% endif %}
