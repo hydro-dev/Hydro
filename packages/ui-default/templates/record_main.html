@@ -111,7 +111,8 @@
               + (('&lang=' + filterLang) if filterLang else '')
               + (('&status=' + filterStatus) if filterStatus else '')
               + (('&pid=' + filterPid) if filterPid else '')
-              + ('&allDomain=1' if all else '') }}">{{ _('pager_next') }}</a>
+              + ('&all=1' if all else '')
+              + ('&allDomain=1' if allDomain else '') }}">{{ _('pager_next') }}</a>
           </li>
         </ul>
         {% endif %}

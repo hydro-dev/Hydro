@@ -235,6 +235,7 @@ Domain {0} not found.: 그룹 {0} 없음
 Domain ID cannot be changed once the domain is created.: 그룹 ID는 수정할 수 없습니다.
 Domain ID: 그룹 ID
 Domain Settings: 그룹 설정
+domain_create: 그룹 생성
 domain_dashboard: 그룹 게시판
 domain_discussion: 그룹 토론
 domain_edit: 그룹 수정

@@ -338,7 +338,6 @@ export class WebService extends Service {
     HandlerCommon = HandlerCommon;
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
-    handlerCtxBase = this.ctx;
 
     constructor(ctx: Context, public config: WebServiceConfig) {
         super(ctx, 'server', true);
@@ -439,9 +438,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
             socket.close();
         });
-        this.ctx.inject(['server'], (c) => {
-            this.handlerCtxBase = c;
-        });
     }
 
     async listen() {
@@ -460,7 +456,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, this.handlerCtxBase);
+        const h = new HandlerClass(ctx, this.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
         try {
@@ -534,7 +530,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, this.handlerCtxBase);
+        const h = new HandlerClass(ctx, this.ctx);
         await this.ctx.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
@@ -599,8 +595,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
-        const name = HandlerClass.name;
         if (!HandlerClass?.[kHandler] || !isClass(HandlerClass)) throw new Error('Invalid registration.');
+        const name = HandlerClass.name;
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
             logger.warn('Route with name %s already exists.', name);
         }
@@ -617,7 +613,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = router.disposeLastOp;
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this[Context.current]?.on('dispose', () => {
+        this.ctx.on('dispose', () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();
@@ -650,7 +646,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = () => {
             this[name] = this[name].filter((i) => i !== layer);
         };
-        this[Context.current]?.on('dispose', dispose);
+        this[Context.origin]?.on('dispose', dispose);
         return dispose;
     }
 
@@ -683,9 +679,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     public registerRenderer(name: string, func: RendererFunction) {
         if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
-        this.renderers[name] = func;
-        this[Context.current]?.on('dispose', () => {
-            delete this.renderers[name];
+        this.ctx.effect(() => {
+            this.renderers[name] = func;
+            return () => {
+                delete this.renderers[name];
+            };
         });
     }
 }

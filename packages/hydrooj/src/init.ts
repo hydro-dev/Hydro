@@ -8,7 +8,6 @@ if (!global.Hydro) {
             node: process.version.split('v')[1],
             hydrooj: require('hydrooj/package.json').version,
         },
-        handler: {},
         // @ts-ignore
         service: {},
         // @ts-ignore

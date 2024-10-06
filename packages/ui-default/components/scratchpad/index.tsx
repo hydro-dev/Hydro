@@ -60,9 +60,14 @@ declare module '../../context' {
   }
 }
 
+let scratchpad: ScratchpadService;
+
 export default function ScratchpadContainer() {
   const store = useStore();
-  ctx.set('scratchpad', new ScratchpadService(store));
+  if (!scratchpad) {
+    scratchpad = new ScratchpadService(store);
+    ctx.set('scratchpad', scratchpad);
+  }
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   React.useEffect(() => {

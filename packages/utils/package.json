@@ -14,7 +14,7 @@
         "js-yaml": "^4.1.0",
         "moment-timezone": "^0.5.45",
         "mongodb": "^5.9.2",
-        "reggol": "^1.7.0",
+        "reggol": "^1.7.1",
         "search-query-parser": "^1.6.0",
         "systeminformation": "^5.23.5"
     },

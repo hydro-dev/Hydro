@@ -58,8 +58,8 @@ class UserLoginHandler extends Handler {
             }
         }
         await Promise.all([
-            this.limitRate('user_login', 60, 30, false),
-            this.limitRate(`user_login_${uname}`, 60, 5, false),
+            this.limitRate('user_login', 60, 30),
+            this.limitRate('user_login_id', 60, 5, uname),
             oplog.log(this, 'user.login', { redirect }),
         ]);
         if (udoc.tfa || udoc.authn) {
@@ -99,7 +99,7 @@ class UserSudoHandler extends Handler {
     async post(domainId: string, password = '', tfa = '', authnChallenge = '') {
         if (!this.session.sudoArgs?.method) throw new ForbiddenError();
         await Promise.all([
-            this.limitRate('user_sudo', 60, 5, true),
+            this.limitRate('user_sudo', 60, 5, '{{user}}'),
             oplog.log(this, 'user.sudo', {}),
         ]);
         if (this.user.authn && authnChallenge) {
@@ -206,8 +206,8 @@ export class UserRegisterHandler extends Handler {
         const mailDomain = mail.split('@')[1];
         if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
         await Promise.all([
-            this.limitRate(`send_mail_${mail}`, 60, 3, false),
-            this.limitRate('send_mail', 3600, 30, false),
+            this.limitRate('send_mail', 60, 1, mail),
+            this.limitRate('send_mail', 3600, 30),
             oplog.log(this, 'user.register', {}),
         ]);
         const t = await token.add(
@@ -239,7 +239,7 @@ class UserRegisterWithCodeHandler extends Handler {
         this.tdoc = await token.get(code, token.TYPE_REGISTRATION);
         if (!this.tdoc || (!this.tdoc.mail && !this.tdoc.phone)) {
             // prevent brute forcing tokens
-            await this.limitRate('user_register_with_code', 60, 5, false);
+            await this.limitRate('user_register_with_code', 60, 5);
             throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
         }
     }
@@ -295,8 +295,8 @@ class UserLostPassHandler extends Handler {
         const udoc = await user.getByEmail('system', mail);
         if (!udoc) throw new UserNotFoundError(mail);
         await Promise.all([
-            this.limitRate('send_mail', 3600, 30, false),
-            this.limitRate(`user_lostpass_${mail}`, 60, 3, false),
+            this.limitRate('send_mail', 3600, 30),
+            this.limitRate('send_mail', 60, 1, mail),
             oplog.log(this, 'user.lostpass', {}),
         ]);
         const [tid] = await token.add(

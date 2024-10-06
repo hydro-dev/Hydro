@@ -33,7 +33,7 @@ declare module '@hydrooj/framework' {
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
         progress(message: string, params: any[]): void;
-        limitRate(op: string, periodSecs: number, maxOperations: number, withUserId?: boolean): Promise<void>;
+        limitRate(op: string, periodSecs: number, maxOperations: number, defaultKey?: string): Promise<void>;
         renderTitle(str: string): string;
     }
 }
@@ -253,14 +253,15 @@ export async function apply(ctx: Context) {
                 Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
             },
             async limitRate(
-                op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user'),
+                op: string, periodSecs: number, maxOperations: number, defaultKey = system.get('limit.by_user') ? '{{ip}}@{{user}}' : '{{ip}}',
             ) {
                 if (ignoredLimit.includes(op)) return;
                 if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
                 const overrideLimit = system.get(`limit.${op}`);
                 if (overrideLimit) maxOperations = overrideLimit;
-                let id = this.request.ip;
-                if (withUserId) id += `@${this.user._id}`;
+                // deprecated: remove boolean support in future
+                if (typeof defaultKey === 'boolean') defaultKey = defaultKey ? '{{user}}' : '{{ip}}';
+                const id = defaultKey.replace('{{ip}}', this.request.ip).replace('{{user}}', this.user._id);
                 await opcount.inc(op, id, periodSecs, maxOperations);
             },
             renderTitle(str: string) {

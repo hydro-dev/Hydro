@@ -14,7 +14,7 @@
     "cli": false
   },
   "devDependencies": {
-    "@blueprintjs/core": "^5.13.0",
+    "@blueprintjs/core": "^5.13.1",
     "@cordisjs/core": "3.18.1",
     "@fontsource/dm-mono": "^5.1.0",
     "@fontsource/fira-code": "^5.1.0",
@@ -25,8 +25,8 @@
     "@fontsource/source-code-pro": "^5.1.0",
     "@fontsource/ubuntu-mono": "^5.1.0",
     "@hydrooj/utils": "workspace:^",
-    "@sentry/browser": "^8.32.0",
-    "@sentry/webpack-plugin": "^2.22.4",
+    "@sentry/browser": "^8.33.1",
+    "@sentry/webpack-plugin": "^2.22.5",
     "@simplewebauthn/browser": "9.0.1",
     "@svgr/webpack": "^8.1.0",
     "@types/jquery": "^3.5.31",
@@ -37,7 +37,7 @@
     "@types/nunjucks": "^3.2.6",
     "@types/pickadate": "^3.5.35",
     "@types/qrcode": "^1.5.5",
-    "@types/react": "^18.3.10",
+    "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@types/redux-logger": "^3.0.13",
     "@types/uuid": "^10.0.0",

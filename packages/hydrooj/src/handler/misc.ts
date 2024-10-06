@@ -2,6 +2,7 @@
 import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
+import { Context } from '../context';
 import {
     AccessDeniedError, FileExistsError, FileLimitExceededError, FileUploadError, NotFoundError,
     ValidationError,
@@ -132,7 +133,7 @@ export class SwitchAccountHandler extends Handler {
     }
 }
 
-export async function apply(ctx) {
+export async function apply(ctx: Context) {
     ctx.Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     ctx.Route('home_files', '/file', FilesHandler);
     ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);

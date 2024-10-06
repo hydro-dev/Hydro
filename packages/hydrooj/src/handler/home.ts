@@ -179,7 +179,6 @@ export class HomeHandler extends Handler {
     }
 }
 
-let geoip: Context['geoip'] = null;
 class HomeSecurityHandler extends Handler {
     @requireSudo
     async get() {
@@ -189,7 +188,7 @@ class HomeSecurityHandler extends Handler {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
             session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
-            session.updateGeoip = geoip?.lookup?.(
+            session.updateGeoip = this.ctx.geoip?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
             );
@@ -202,7 +201,7 @@ class HomeSecurityHandler extends Handler {
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
-            geoipProvider: geoip?.provider,
+            geoipProvider: this.ctx?.geoip?.provider,
             icon: (str = '') => str.split(' ')[0].toLowerCase(),
         };
     }
@@ -591,10 +590,8 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply(ctx: Context) {
-    ctx.inject(['geoip'], (g) => {
-        geoip = g.geoip;
-    });
+export const inject = { geoip: { required: false } };
+export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);

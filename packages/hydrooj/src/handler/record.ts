@@ -332,8 +332,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
                 }
             }
         }
-        if (this.pid && rdoc.pid !== this.pid) return;
-        if (this.uid && rdoc.uid !== this.uid) return;
+        if (typeof this.pid === 'number' && rdoc.pid !== this.pid) return;
+        if (typeof this.uid === 'number' && rdoc.uid !== this.uid) return;
 
         // eslint-disable-next-line prefer-const
         let [udoc, pdoc] = await Promise.all([
