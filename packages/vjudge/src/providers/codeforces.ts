@@ -218,23 +218,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             files,
             tag,
             difficulty: getDifficulty(tag),
-            content: buildContent([
-                {
-                    type: 'Text', sectionTitle: 'Description', subType: 'markdown', text: description.replace(/tex-span/g, 'katex'),
-                },
-                ...input ? [{
-                    type: 'Text', sectionTitle: 'Input', subType: 'markdown', text: input.replace(/tex-span/g, 'katex'),
-                }] : [],
-                ...output ? [{
-                    type: 'Text', sectionTitle: 'Output', subType: 'markdown', text: output.replace(/tex-span/g, 'katex'),
-                }] : [],
-                ...inputs.length ? [{
-                    type: 'Plain', text: [...inputs, ...outputs].join('\n'),
-                }] : [] as any,
-                ...note ? [{
-                    type: 'Text', sectionTitle: 'Note', subType: 'markdown', text: note.replace(/tex-span/g, 'katex'),
-                }] : [],
-            ]),
+            content: buildContent({
+                description: description.replace(/tex-span/g, 'katex'),
+                input: input.replace(/tex-span/g, 'katex'),
+                output: output.replace(/tex-span/g, 'katex'),
+                samplesRaw: inputs.map((ipt, idx) => [ipt, outputs[idx]]).join('\n'),
+                hint: note.replace(/tex-span/g, 'katex'),
+            }),
         };
     }
 
