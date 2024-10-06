@@ -39,40 +39,58 @@ export function register(cli: CAC) {
             child.spawn('mongo', [url], { stdio: 'inherit' });
         }
     });
-    cli.command('backup').option('--dbOnly', 'Only dump database', { default: false }).action(() => {
-        const url = getUrl();
-        exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
-        const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
-        exec('zip', ['-r', target, 'dump'], { cwd: dir, stdio: 'inherit' });
-        if (!argv.options.dbOnly) {
-            exec('zip', ['-r', target, 'file'], { cwd: '/data', stdio: 'inherit' });
-        }
-        exec('rm', ['-rf', dir]);
-        const stat = fs.statSync(target);
-        logger.success(`Database backup saved at ${target} , size: ${size(stat.size)}`);
-    });
-    cli.command('restore <filename>').option('-y', 'Assume yes', { default: false }).action(async (filename) => {
-        const url = getUrl();
-        if (!fs.existsSync(filename)) {
-            logger.error('Cannot find file');
-            return;
-        }
-        if (!argv.options.y) {
-            const rl = readline.createInterface(process.stdin, process.stdout);
-            const answer = await rl.question(`Overwrite current database with backup file ${filename}? [y/N]`);
-            rl.close();
-            if (answer.toLowerCase() !== 'y') {
-                logger.warn('Abort.');
+    cli.command('backup')
+        .option('--dbOnly', 'Only dump database', { default: false })
+        .option('--withAddons', 'Include addons', { default: false })
+        .action(() => {
+            const url = getUrl();
+            exec('mongodump', [url, `--out=${dir}/dump`], { stdio: 'inherit' });
+            const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
+            const addToZip = (cwd: string, item: string) => exec('zip', ['-r', target, item], { cwd, stdio: 'inherit' });
+            addToZip(dir, 'dump');
+            if (!argv.options.dbOnly) addToZip('/data', 'file');
+            if (argv.options.withAddons) {
+                if (fs.existsSync(path.join(hydroPath, 'addons'))) addToZip(hydroPath, 'addons');
+                if (fs.existsSync(path.join(hydroPath, 'addon.json'))) addToZip(hydroPath, 'addon.json');
+            }
+            fs.removeSync(dir);
+            const stat = fs.statSync(target);
+            logger.success(`Database backup saved at ${target} , size: ${size(stat.size)}`);
+        });
+    cli.command('restore <filename>')
+        .option('-y', 'Assume yes', { default: false })
+        .option('--withAddons', 'Include addons', { default: false })
+        .action(async (filename) => {
+            const url = getUrl();
+            if (!fs.existsSync(filename)) {
+                logger.error('Cannot find file');
                 return;
             }
-        }
-        exec('unzip', [filename, '-d', dir], { stdio: 'inherit' });
-        exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/hydro`, '--drop'], { stdio: 'inherit' });
-        if (fs.existsSync(`${dir}/file`)) {
-            exec('rm', ['-rf', '/data/file/hydro'], { stdio: 'inherit' });
-            exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });
-        }
-        fs.removeSync(dir);
-        logger.success('Successfully restored.');
-    });
+            if (!argv.options.y) {
+                const rl = readline.createInterface(process.stdin, process.stdout);
+                const answer = await rl.question(`Overwrite current database with backup file ${filename}? [y/N]`);
+                rl.close();
+                if (answer.toLowerCase() !== 'y') {
+                    logger.warn('Abort.');
+                    return;
+                }
+            }
+            exec('unzip', [filename, '-d', dir], { stdio: 'inherit' });
+            exec('mongorestore', [`--uri=${url}`, `--dir=${dir}/dump/hydro`, '--drop'], { stdio: 'inherit' });
+            if (fs.existsSync(`${dir}/file`)) {
+                exec('rm', ['-rf', '/data/file/hydro'], { stdio: 'inherit' });
+                exec('bash', ['-c', `mv ${dir}/file/* /data/file`], { stdio: 'inherit' });
+            }
+            if (argv.options.withAddons) {
+                if (fs.existsSync(`${dir}/addons.json`)) {
+                    fs.copyFileSync(`${dir}/addons.json`, path.join(hydroPath, 'addons.json'));
+                }
+                if (fs.existsSync(`${dir}/addons`)) {
+                    fs.removeSync(path.join(hydroPath, 'addons'));
+                    fs.copySync(`${dir}/addons`, path.join(hydroPath, 'addons'));
+                }
+            }
+            fs.removeSync(dir);
+            logger.success('Successfully restored.');
+        });
 }
