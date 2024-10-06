@@ -220,10 +220,10 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             difficulty: getDifficulty(tag),
             content: buildContent({
                 description: description.replace(/tex-span/g, 'katex'),
-                input: input.replace(/tex-span/g, 'katex'),
-                output: output.replace(/tex-span/g, 'katex'),
+                input: input?.replace(/tex-span/g, 'katex'),
+                output: output?.replace(/tex-span/g, 'katex'),
                 samplesRaw: inputs.map((ipt, idx) => [ipt, outputs[idx]]).join('\n'),
-                hint: note.replace(/tex-span/g, 'katex'),
+                hint: note?.replace(/tex-span/g, 'katex'),
             }),
         };
     }
