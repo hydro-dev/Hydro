@@ -45,12 +45,7 @@ function findOverrideContent(dir: string, base: string) {
     if (!files.length) return null;
     for (const file of files) {
         const lang = file.slice(8, -3);
-        let content: string | any[] = fs.readFileSync(path.join(dir, file), 'utf8');
-        try {
-            content = JSON.parse(content);
-            if (!(content instanceof Array)) content = JSON.stringify(content);
-        } catch (e) { }
-        languages[lang] = content;
+        languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
     }
     return JSON.stringify(languages);
 }
@@ -548,12 +543,12 @@ export class ProblemModel {
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: pdoc.title.trim(),
-                        content: overrideContent || pdoc.content || 'No content',
+                        content: overrideContent || pdoc.content.toString() || 'No content',
                         tag,
                         difficulty: pdoc.difficulty,
                     })).docId
                     : await ProblemModel.add(
-                        domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
+                        domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content.toString() || 'No content',
                         operator || pdoc.owner, tag, { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                     );
                 // TODO delete unused file when updating pdoc

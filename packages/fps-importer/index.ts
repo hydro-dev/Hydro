@@ -2,7 +2,7 @@
 import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
-    _, AdmZip, BadRequestError, buildContent, ContentNode, Context, FileTooLargeError, fs, Handler,
+    _, AdmZip, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler,
     PERM, ProblemConfigFile, ProblemModel, ProblemType, SettingModel, SolutionModel, SystemModel, ValidationError, yaml,
 } from 'hydrooj';
 
@@ -19,48 +19,14 @@ class FpsProblemImportHandler extends Handler {
         if (!result?.fps) throw new BadRequestError('Selected file is not a valid FPS problemset.');
         for (const p of result.fps.item) {
             const markdown = [p.description?.[0], p.input?.[0], p.output?.[0], p.hint?.[0]].some((i) => i?.includes('[md]'));
-            const content: ContentNode[] = [];
-            const stripBBCode = (input: string) => input.replace(/\[md]/g, '').replace(/\[\/md]/g, '');
-
-            if (p.description?.[0]) {
-                content.push({
-                    type: 'Text',
-                    subType: markdown ? 'markdown' : 'html',
-                    sectionTitle: this.translate('Description'),
-                    text: stripBBCode(p.description[0]),
-                });
-            }
-            if (p.input?.[0]) {
-                content.push({
-                    type: 'Text',
-                    subType: markdown ? 'markdown' : 'html',
-                    sectionTitle: this.translate('Input Format'),
-                    text: stripBBCode(p.input[0]),
-                });
-            }
-            if (p.output?.[0]) {
-                content.push({
-                    type: 'Text',
-                    subType: markdown ? 'markdown' : 'html',
-                    sectionTitle: this.translate('Output Format'),
-                    text: stripBBCode(p.output[0]),
-                });
-            }
-            if (p.sample_input?.length) {
-                content.push(...p.sample_input.map((input, i) => ({
-                    type: 'Sample',
-                    sectionTitle: this.translate('Sample'),
-                    payload: [input, p.sample_output[i]],
-                })));
-            }
-            if (p.hint?.[0]) {
-                content.push({
-                    type: 'Text',
-                    subType: markdown ? 'markdown' : 'html',
-                    sectionTitle: this.translate('Hint'),
-                    text: stripBBCode(p.hint[0]),
-                });
-            }
+            const content = buildContent({
+                description: p.description?.[0],
+                input: p.input?.[0],
+                output: p.output?.[0],
+                samples: p.sample_input?.map((input, i) => [input, p.sample_output[i]]),
+                hint: p.hint?.[0],
+                source: p.source?.join(' '),
+            }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
             const config: ProblemConfigFile = {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,
@@ -72,17 +38,17 @@ class FpsProblemImportHandler extends Handler {
             }
             const title = decodeHTML(p.title.join(' '));
             const tags = _.filter(p.source, (i: string) => i.trim()).flatMap((i) => i.split(' ')).filter((i) => i);
-            const pid = await ProblemModel.add(domainId, null, title, buildContent(content, 'html'), this.user._id, tags);
+            const pid = await ProblemModel.add(domainId, null, title, content, this.user._id, tags);
             const tasks: Promise<any>[] = [ProblemModel.addTestdata(domainId, pid, 'config.yaml', Buffer.from(yaml.dump(config)))];
             if (!markdown) tasks.push(ProblemModel.edit(domainId, pid, { html: true }));
-            const addTestdata = (node: any, id: string, ext: string) => {
-                if (!node && typeof node !== 'string') return; // Ignore file not exist
-                let c = node;
-                if (node.$?.name) {
-                    id = node.$.name;
-                    c = node._ || '';
-                }
-                tasks.push(ProblemModel.addTestdata(domainId, pid, `${id}.${ext}`, Buffer.from(c)));
+            const addTestdata = (node: any, index: string, ext: string) => {
+                if (!node || !['object', 'string'].includes(typeof node)) return; // Ignore file not exist
+                const id = node.$?.name || `${index}`;
+                // `filename` attribute introduced by winterant/OnlineJudge
+                // PLEASE, respect the spec
+                const filename = node.$?.filename || `${id}.${ext}`;
+                const c = node._ || node;
+                tasks.push(ProblemModel.addTestdata(domainId, pid, filename, Buffer.from(c)));
             };
             if (p.test_output) {
                 for (let i = 0; i < p.test_input.length; i++) {
@@ -90,6 +56,7 @@ class FpsProblemImportHandler extends Handler {
                     addTestdata(p.test_output[i], `${i + 1}`, 'out');
                 }
             } else if (p.test_input) {
+                // Some version of hustoj exports only test_input section
                 for (let i = 0; i < p.test_input.length / 2; i++) {
                     addTestdata(p.test_input[2 * i], `${i + 1}`, 'in');
                     addTestdata(p.test_input[2 * i + 1], `${i + 1}`, 'out');

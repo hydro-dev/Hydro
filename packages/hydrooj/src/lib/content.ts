@@ -1,17 +1,18 @@
-import { ContentNode } from '../interface';
-
 export interface ProblemSource {
     description?: string,
     input?: string,
     output?: string,
     samples?: [string, string][],
+    samplesRaw?: string,
     hint?: string,
     source?: string,
 }
 
-export function buildContent(source: ProblemSource | ContentNode[], type: 'markdown' | 'html' = 'markdown', translate?: Function) {
+export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 'markdown', translate?: Function) {
     const _ = translate || ((s: string) => s);
     let cnt = 0;
+    // Keep it for backward compatibility, but don't add to typings
+    // required by upgrade 90_91
     if (source instanceof Array) {
         return type === 'html'
             ? source.map((node) => [
@@ -54,6 +55,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 sample[1],
                 '</code></pre>',
             ].join('')),
+            ...source.samplesRaw ? [source.samplesRaw] : [],
             ...source.hint ? [`<h2>${_('Hint')}</h2>`, source.hint] : [],
             ...source.source ? [`<h2>${_('Source')}</h2>`, source.source] : [],
         ].join('\n')
@@ -69,6 +71,7 @@ export function buildContent(source: ProblemSource | ContentNode[], type: 'markd
                 sample[1],
                 '```',
             ].join('\n')),
+            ...source.samplesRaw ? [source.samplesRaw] : [],
             ...source.hint ? [`## ${_('Hint')}`, source.hint] : [],
             ...source.source ? [`## ${_('Source')}`, source.source] : [],
         ].join('\n');
