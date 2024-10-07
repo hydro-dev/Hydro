@@ -42,6 +42,7 @@ export const HomeworkNotLiveError = Err('HomeworkNotLiveError', ForbiddenError, 
 export const HomeworkNotAttendedError = Err('HomeworkNotAttendedError', ForbiddenError, "You haven't claimed this homework yet.");
 export const RoleAlreadyExistError = Err('RoleAlreadyExistError', ForbiddenError, 'This role already exists.');
 export const DomainAlreadyExistsError = Err('DomainAlreadyExistsError', ForbiddenError, 'The domain {0} already exists.');
+export const DomainNotJoinableError = Err('DomainNotJoinableError', ForbiddenError, 'You cannot join the domain at current. Contact domain administrator for help.');
 export const DomainJoinForbiddenError = Err('DomainJoinForbiddenError', ForbiddenError, 'You are not allowed to join the domain. The link is either invalid or expired.');
 export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', ForbiddenError, 'Failed to join the domain. You are already a member.');
 export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeError', ForbiddenError, 'The invitation code you provided is invalid.');

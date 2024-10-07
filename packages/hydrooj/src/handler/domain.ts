@@ -3,7 +3,7 @@ import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import type { Context } from '../context';
 import {
-    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
+    CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainNotJoinableError, ForbiddenError,
     InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
@@ -24,7 +24,7 @@ class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await this.paginate(
-            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } }).sort({ rp: -1 }),
+            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, join: true }).sort({ rp: -1 }),
             page,
             'ranking',
         );
@@ -281,19 +281,19 @@ class DomainJoinHandler extends Handler {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id);
         this.joinSettings = domain.getJoinSettings(this.domain, roles);
-        if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
-        if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
+        if (!this.joinSettings) throw new DomainNotJoinableError(this.domain._id);
+        if (this.user._dudoc.join) throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
     }
 
     @param('code', Types.Content, true)
-    async get(domainId: string, code: string) {
+    async get({ }, code: string) {
         this.response.template = 'domain_join.html';
         this.response.body.joinSettings = this.joinSettings;
         this.response.body.code = code;
     }
 
     @param('code', Types.Content, true)
-    async post(domainId: string, code: string) {
+    async post({ }, code: string) {
         if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
             if (this.joinSettings.code !== code) {
                 throw new InvalidJoinInvitationCodeError(this.domain._id);
@@ -301,6 +301,7 @@ class DomainJoinHandler extends Handler {
         }
         await Promise.all([
             domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role),
+            domain.updateUserInDomain(this.domain._id, this.user._id, { join: true }),
             oplog.log(this, 'domain.join', {}),
         ]);
         this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
