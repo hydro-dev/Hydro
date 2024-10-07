@@ -16,25 +16,25 @@ import type {
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
 import { buildProjection } from '../utils';
 import { PERM, STATUS } from './builtin';
 import * as document from './document';
-import DomainModel from './domain';
 import RecordModel from './record';
 import SolutionModel from './solution';
 import storage from './storage';
 import * as SystemModel from './system';
-import user from './user';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
 const logger = new Logger('problem');
 function sortable(source: string) {
-    return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
+    const [namespace, pid] = source.includes('-') ? source.split('-') : ['', source];
+    return (namespace ? namespace.padEnd(6, ' ') : '') + pid.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
 }
 
 function findOverrideContent(dir: string, base: string) {
@@ -191,30 +191,12 @@ export class ProblemModel {
     static async list(
         domainId: string, query: Filter<ProblemDoc>,
         page: number, pageSize: number,
-        projection = ProblemModel.PROJECTION_LIST, uid?: number,
+        projection = ProblemModel.PROJECTION_LIST,
     ): Promise<[ProblemDoc[], number, number]> {
-        const union = await DomainModel.get(domainId);
-        const domainIds = [domainId, ...(union.union || [])];
-        let count = 0;
-        const pdocs = [];
-        for (const id of domainIds) {
-            // TODO enhance performance
-            if (typeof uid === 'number') {
-                // eslint-disable-next-line no-await-in-loop
-                const udoc = await user.getById(id, uid);
-                if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
-            }
-            // eslint-disable-next-line no-await-in-loop
-            const ccount = await document.count(id, document.TYPE_PROBLEM, query);
-            if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
-                // eslint-disable-next-line no-await-in-loop
-                pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
-                    .sort({ sort: 1, docId: 1 })
-                    .skip(Math.max((page - 1) * pageSize - count, 0)).limit(pageSize - pdocs.length).toArray());
-            }
-            count += ccount;
-        }
-        return [pdocs, Math.ceil(count / pageSize), count];
+        return await db.paginate(
+            document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1, docId: 1 }),
+            page, pageSize,
+        );
     }
 
     static getStatus(domainId: string, docId: number, uid: number) {
