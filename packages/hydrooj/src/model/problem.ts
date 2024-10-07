@@ -480,7 +480,7 @@ export class ProblemModel {
             }
             const files = await fs.readdir(tmpdir, { withFileTypes: true });
             problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
-        } finally {
+        } catch (e) {
             if (options.delSource) await fs.remove(tmpdir);
         }
         for (const i of problems) {
@@ -504,8 +504,12 @@ export class ProblemModel {
                     }
                     return true;
                 };
-                const getFiles = async (...type: string[]) => {
-                    if (type.length > 1) return type.flatMap((t) => getFiles(t));
+                const getFiles = async (...type: string[]): Promise<[fs.Dirent, string][]> => {
+                    if (type.length > 1) {
+                        let result = [];
+                        for (const t of type) result = result.concat(await getFiles(t));
+                        return result;
+                    }
                     const [t] = type;
                     if (!files.find((f) => f.name === t && f.isDirectory())) return [];
                     const rs = await fs.readdir(path.join(tmpdir, i, t), { withFileTypes: true });
