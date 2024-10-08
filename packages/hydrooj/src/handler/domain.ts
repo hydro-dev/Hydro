@@ -109,15 +109,17 @@ class DomainUserHandler extends ManageHandler {
         ]);
         const uids = dudocs.map((dudoc) => dudoc.uid);
         const udict = await user.getList(domainId, uids);
+        const joined = {};
         for (const role of roles) rudocs[role._id] = [];
         for (const dudoc of dudocs) {
             const udoc = udict[dudoc.uid];
             if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) continue;
             rudocs[udoc.role || 'default'].push(udoc);
+            joined[udoc._id] = dudoc.join;
         }
         this.response.template = 'domain_user.html';
         this.response.body = {
-            roles, rudocs, udict, domain: this.domain,
+            roles, rudocs, domain: this.domain, joined,
         };
     }
 
