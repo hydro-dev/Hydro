@@ -305,7 +305,7 @@ const Steps = () => [
     {
         init: 'install.preparing',
         operations: [
-            () => {
+            async () => {
                 if (process.env.IGNORE_BT) return;
                 const res = exec('bt default');
                 if (!res.code) {
@@ -314,6 +314,7 @@ const Steps = () => [
                         process.exit(1);
                     } else {
                         log.warn('warn.bt');
+                        await sleep(5000);
                     }
                 }
             },
@@ -407,7 +408,7 @@ ${nixConfBase}`);
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code || installAsJudge || noCaddy,
+        skip: () => !exec('caddy version').code || installAsJudge || noCaddy || !existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
             'nix-env -iA nixpkgs.caddy',
