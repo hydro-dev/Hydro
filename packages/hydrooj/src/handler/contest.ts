@@ -285,6 +285,13 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         const pid = (i: number) => String.fromCharCode(65 + i);
         const escape = (i: string) => i.replace(/[",]/g, '');
         const unknownSchool = this.translate('Unknown School');
+        const statusMap = {
+            [STATUS.STATUS_ACCEPTED]: 'AC',
+            [STATUS.STATUS_WRONG_ANSWER]: 'WA',
+            [STATUS.STATUS_COMPILE_ERROR]: 'CE',
+            [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'TL',
+            [STATUS.STATUS_RUNTIME_ERROR]: 'RT',
+        };
         const submissions = teams.flatMap((i, idx) => {
             if (!i.journal) return [];
             const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
@@ -292,7 +299,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
             return journal.map((s) => {
                 const id = pid(tdoc.pids.indexOf(s.pid));
                 c[id]++;
-                return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${s.status === STATUS.STATUS_ACCEPTED ? 'AC' : 'RJ'}`;
+                return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${statusMap[s.status] || 'RJ'}`;
             });
         });
         const res = [
