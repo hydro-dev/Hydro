@@ -2,14 +2,13 @@
 {%- if not invalid -%}
   {% set _linkArgs = { pid:pdoc.pid|default(pdoc.docId) } %}
   {% if tdoc %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
-  {% if pdoc.domainId !== handler.args.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
-{%- if pdoc.domainId !== handler.args.domainId -%}<b>{{ pdoc.domainId }}#</b>{%- endif -%}
+{%- if pdoc.pid and pdoc.pid.includes('-') -%}<b>{{ pdoc.pid.split('-')[0] }}#</b>{%- endif -%}
 {%- if tdoc and alphabetic -%}
   <b>{{ String.fromCharCode(65 + tdoc.pids.indexOf(pdoc.docId)) if tdoc.pids.includes(pdoc.docId) else '#' }}</b>
 {%- else -%}
-  <b>{{ pdoc.pid or ('P'+pdoc.docId if pdoc.domainId === handler.args.domainId else pdoc.docId) }}</b>
+  <b>{{ pdoc.pid.split('-')[1] if pdoc.pid else ('P'+pdoc.docId) }}</b>
 {%- endif -%}
 {%- if not small -%}&nbsp;&nbsp;{{ pdoc.title }}{%- endif -%}
 {%- if not invalid -%}
