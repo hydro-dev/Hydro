@@ -3,6 +3,7 @@ import { generateRegistrationOptions, verifyRegistrationResponse } from '@simple
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectId } from 'mongodb';
+import Parser from 'ua-parser-js';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -12,7 +13,6 @@ import {
 import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar, { validate } from '../lib/avatar';
 import * as mail from '../lib/mail';
-import * as useragent from '../lib/useragent';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
@@ -187,7 +187,11 @@ class HomeSecurityHandler extends Handler {
         for (const session of sessions) {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
-            session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
+            const ua = session.updateUa || session.createUa;
+            if (ua) {
+                const parser = new Parser(ua);
+                session.updateUaInfo = parser.getResult();
+            }
             session.updateGeoip = this.ctx.geoip?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
@@ -202,7 +206,6 @@ class HomeSecurityHandler extends Handler {
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
             geoipProvider: this.ctx?.geoip?.provider,
-            icon: (str = '') => str.split(' ')[0].toLowerCase(),
         };
     }
 
