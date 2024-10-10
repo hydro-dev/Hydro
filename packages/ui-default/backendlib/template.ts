@@ -157,9 +157,10 @@ env.addGlobal('set', (obj, key, val) => {
 env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template).filter((n) => n.startsWith(prefix)));
 env.addGlobal('templateExists', (name) => !!global.Hydro.ui.template[name]);
 
+const platformIconMap = { 'mac os': 'mac' };
 const supportedPlatformIcons = ['android', 'chromeos', 'ios', 'linux', 'mac', 'mobile', 'windows'];
 env.addGlobal('platformIcon', (platform) => {
-  const key = platform?.toLowerCase();
+  const key = platformIconMap[platform?.toLowerCase()] || platform?.toLowerCase();
   if (supportedPlatformIcons.includes(key)) return key;
   return 'unknown';
 });
