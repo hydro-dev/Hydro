@@ -457,7 +457,7 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const set: Partial<Udoc> = { oauth: args.type, ...r.set };
+            const set: Partial<Udoc> = { ...(r.set || {}), oauth: args.type };
             if (r.bio) set.bio = r.bio;
             if (r.viewLang) set.viewLang = r.viewLang;
             if (r.avatar) set.avatar = r.avatar;
