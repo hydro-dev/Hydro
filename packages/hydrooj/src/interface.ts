@@ -58,6 +58,8 @@ export interface OAuthUserResponse {
     bio?: string;
     uname?: string[];
     viewLang?: string;
+    set?: Record<string, any>;
+    setInDomain?: Record<string, any>;
 }
 
 export interface Authenticator {
@@ -221,26 +223,7 @@ export interface ProblemConfig {
     hackable?: boolean;
 }
 
-export interface PlainContentNode {
-    type: 'Plain',
-    subType: 'html' | 'markdown',
-    text: string,
-}
-export interface TextContentNode {
-    type: 'Text',
-    subType: 'html' | 'markdown',
-    sectionTitle: string,
-    text: string,
-}
-export interface SampleContentNode {
-    type: 'Sample',
-    text: string,
-    sectionTitle: string,
-    payload: [string, string],
-}
-// TODO drop contentNode support
-export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
-export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
+export type Content = string | Record<string, string>;
 
 export interface Document {
     _id: ObjectId;

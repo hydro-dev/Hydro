@@ -153,7 +153,7 @@
           <li class="sessionlist__item">
             <div class="media">
               <div class="media__left medium">
-                <span class="sessionlist__icon icon icon-platform--{{ icon(session.updateUa.os) }}"></span>
+                <span class="sessionlist__icon icon icon-platform--{{ platformIcon(session.updateUaInfo.os.name) }}"></span>
               </div>
               <div class="media__body medium typo">
                 <p>{{ _('Last Update At') }}: {{ datetimeSpan(session.updateAt)|safe }}</p>
@@ -161,8 +161,8 @@
                   <p>{{ _('Hostname') }}: {{ session.createHost }}</p>
                 {% endif %}
                 <p>{{ _('Location') }}: {{ _(session.updateGeoip.display) }} ({{ session.updateIp }})</p>
-                <p>{{ _('Operating System') }}: {{ session.updateUa.os }}</p>
-                <p>{{ _('Browser') }}: {{ session.updateUa.name }} {{ session.updateUa.version }}</p>
+                <p>{{ _('Operating System') }}: {{ session.updateUaInfo.os.name }} {{ session.updateUaInfo.os.version }}</p>
+                <p>{{ _('Browser') }}: {{ session.updateUaInfo.browser.name }} {{ session.updateUaInfo.browser.version }}</p>
                 {% if session.isCurrent %}
                 <p class="sessionlist__current-session"><span class="icon icon-check"></span> {{ _('This is the current session') }}</p>
                 {% endif %}

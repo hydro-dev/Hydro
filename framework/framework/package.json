@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/framework",
-    "version": "0.0.7",
+    "version": "0.1.0",
     "main": "index.ts",
     "license": "MIT",
     "peerDependencies": {
@@ -15,7 +15,7 @@
         "koa-compress": "^5.1.1",
         "koa-router": "^13.0.1",
         "lodash": "^4.17.21",
-        "moment-timezone": "^0.5.45",
+        "moment-timezone": "^0.5.46",
         "path-to-regexp": "^8.2.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",

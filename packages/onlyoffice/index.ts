@@ -1,7 +1,7 @@
 import { sign } from 'jsonwebtoken';
 import { } from '@hydrooj/ui-default/backendlib/markdown-it-media';
 import {
-    Context, Handler, superagent, SystemModel, UiContextBase,
+    Context, Handler, superagent, SystemModel, UiContextBase, ValidationError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -19,7 +19,12 @@ class OnlyofficeJWTHandler extends Handler {
             const res = await superagent.get(SystemModel.get('onlyoffice.externalSign')).query({ url });
             this.response.body = res.body;
         }
-        const path = new URL(url).pathname;
+        let path: string;
+        try {
+            path = new URL(url).pathname;
+        } catch (e) {
+            throw new ValidationError('url');
+        }
         const allowDownload = !!SystemModel.get('onlyoffice.allowDownload');
         const payload = {
             document: {

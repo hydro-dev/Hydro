@@ -23,13 +23,17 @@ const loader = (mode) => async (element) => {
   const id = `${mode}-${Math.random().toString()}`;
   $(element).attr('id', id);
   const url = new URL($(element).text(), window.location.href).toString();
-  const payload = await request.get('/onlyoffice-jwt', { url });
-  // @ts-ignore
-  window.editor = new DocsAPI.DocEditor(id, {
-    ...payload,
-    documentType: mode,
-    height: mode === 'slide' ? '560px' : '900px',
-  });
+  try {
+    const payload = await request.get('/onlyoffice-jwt', { url });
+    // @ts-ignore
+    window.editor = new DocsAPI.DocEditor(id, {
+      ...payload,
+      documentType: mode,
+      height: mode === 'slide' ? '560px' : '900px',
+    });
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 const getEles = (types: string[]) => types.flatMap((type) => $(`div[data-${type}]`).get());

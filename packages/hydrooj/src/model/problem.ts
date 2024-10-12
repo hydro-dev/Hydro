@@ -45,12 +45,7 @@ function findOverrideContent(dir: string, base: string) {
     if (!files.length) return null;
     for (const file of files) {
         const lang = file.slice(8, -3);
-        let content: string | any[] = fs.readFileSync(path.join(dir, file), 'utf8');
-        try {
-            content = JSON.parse(content);
-            if (!(content instanceof Array)) content = JSON.stringify(content);
-        } catch (e) { }
-        languages[lang] = content;
+        languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
     }
     return JSON.stringify(languages);
 }
@@ -485,7 +480,7 @@ export class ProblemModel {
             }
             const files = await fs.readdir(tmpdir, { withFileTypes: true });
             problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
-        } finally {
+        } catch (e) {
             if (options.delSource) await fs.remove(tmpdir);
         }
         for (const i of problems) {
@@ -509,8 +504,12 @@ export class ProblemModel {
                     }
                     return true;
                 };
-                const getFiles = async (...type: string[]) => {
-                    if (type.length > 1) return type.flatMap((t) => getFiles(t));
+                const getFiles = async (...type: string[]): Promise<[fs.Dirent, string][]> => {
+                    if (type.length > 1) {
+                        let result = [];
+                        for (const t of type) result = result.concat(await getFiles(t));
+                        return result;
+                    }
                     const [t] = type;
                     if (!files.find((f) => f.name === t && f.isDirectory())) return [];
                     const rs = await fs.readdir(path.join(tmpdir, i, t), { withFileTypes: true });
@@ -548,12 +547,12 @@ export class ProblemModel {
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: pdoc.title.trim(),
-                        content: overrideContent || pdoc.content || 'No content',
+                        content: overrideContent || pdoc.content.toString() || 'No content',
                         tag,
                         difficulty: pdoc.difficulty,
                     })).docId
                     : await ProblemModel.add(
-                        domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content || 'No content',
+                        domainId, pid, pdoc.title.trim(), overrideContent || pdoc.content.toString() || 'No content',
                         operator || pdoc.owner, tag, { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
                     );
                 // TODO delete unused file when updating pdoc

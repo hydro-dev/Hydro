@@ -238,7 +238,7 @@ export async function apply(ctx: Context) {
                 return res;
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
-                return db.paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+                return db.paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`) || 20);
             },
             checkPerm(...args: bigint[]) {
                 if (!this.user.hasPerm(...args)) {
