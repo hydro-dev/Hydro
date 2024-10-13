@@ -18,6 +18,7 @@ class OnlyofficeJWTHandler extends Handler {
         if (SystemModel.get('onlyoffice.externalSign')) {
             const res = await superagent.get(SystemModel.get('onlyoffice.externalSign')).query({ url });
             this.response.body = res.body;
+            return;
         }
         let path: string;
         try {
