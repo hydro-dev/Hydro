@@ -13,7 +13,7 @@ export default new NamedPage('record_detail', async () => {
   $(document).on('click', '.subtask-case', function () {
     const text = $(this).find('.message').text();
     const data = $(this).find('.message').html();
-    if (!text?.trim()) return;
+    if (!text?.trim() || (!text.includes('\n') && text.length < 20)) return;
     new InfoDialog({
       $body: tpl(<pre dangerouslySetInnerHTML={{ __html: data }} />),
     }).open();

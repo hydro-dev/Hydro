@@ -58,6 +58,8 @@ export interface OAuthUserResponse {
     bio?: string;
     uname?: string[];
     viewLang?: string;
+    set?: Record<string, any>;
+    setInDomain?: Record<string, any>;
 }
 
 export interface Authenticator {

@@ -22,6 +22,7 @@ interface MongoConfig {
     url?: string,
     uri?: string,
     prefix?: string,
+    collectionMap?: Record<string, string>,
 }
 
 class MongoService {
@@ -54,8 +55,9 @@ class MongoService {
     }
 
     public collection<K extends keyof Collections>(c: K) {
-        if (this.opts.prefix) return this.db.collection<Collections[K]>(`${this.opts.prefix}.${c}`);
-        return this.db.collection<Collections[K]>(c);
+        let coll = this.opts.prefix ? `${this.opts.prefix}.${c}` : c;
+        if (this.opts.collectionMap?.[coll]) coll = this.opts.collectionMap[coll];
+        return this.db.collection<Collections[K]>(coll);
     }
 
     public async fixExpireAfter() {

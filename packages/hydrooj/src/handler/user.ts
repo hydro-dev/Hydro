@@ -271,6 +271,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
+        if (Object.keys(this.tdoc.setInDomain || {}).length) await domain.setUserInDomain(domainId, uid, this.tdoc.setInDomain);
         if (this.tdoc.oauth) await oauth.set(this.tdoc.oauth[1], uid);
         this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
@@ -453,7 +454,7 @@ class OauthCallbackHandler extends Handler {
                     break;
                 }
             }
-            const set: Partial<Udoc> = { oauth: args.type };
+            const set: Partial<Udoc> = { ...(r.set || {}), oauth: args.type };
             if (r.bio) set.bio = r.bio;
             if (r.viewLang) set.viewLang = r.viewLang;
             if (r.avatar) set.avatar = r.avatar;
@@ -465,6 +466,7 @@ class OauthCallbackHandler extends Handler {
                     username,
                     redirect: this.domain.registerRedirect,
                     set,
+                    setInDomain: r.setInDomain,
                     oauth: [args.type, r._id],
                 },
             );
