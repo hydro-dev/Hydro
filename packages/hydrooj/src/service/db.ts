@@ -124,12 +124,12 @@ class MongoService {
         return [pageDocs, numPages, count];
     }
 
-    async ranked<T extends Record<string, any>>(cursor: FindCursor<T>, equ: (a: T, b: T) => boolean): Promise<[number, T][]> {
+    async ranked<T extends Record<string, any>>(cursor: T[] | FindCursor<T>, equ: (a: T, b: T) => boolean): Promise<[number, T][]> {
         let last = null;
         let r = 0;
         let count = 0;
         const results = [];
-        const docs = await cursor.toArray();
+        const docs = cursor instanceof Array ? cursor : await cursor.toArray();
         for (const doc of docs) {
             if ((doc as any).unrank) {
                 results.push([0, doc]);
