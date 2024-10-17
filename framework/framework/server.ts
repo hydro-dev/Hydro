@@ -313,7 +313,7 @@ function executeMiddlewareStack(context: any, middlewares: { name: string, func:
     return dispatch(0);
 }
 
-interface WebServiceConfig {
+export interface WebServiceConfig {
     keys: string[];
     proxy: boolean;
     cors?: string;
@@ -697,7 +697,7 @@ declare module 'cordis' {
     }
 }
 
-export async function apply(ctx: Context, config) {
+export async function apply(ctx: Context, config: WebServiceConfig) {
     ctx.provide('server', undefined, true);
     ctx.server = new WebService(ctx, config);
 }
