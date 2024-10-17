@@ -38,6 +38,7 @@
           {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) and not tdoc %}
             <form class="form--inline" action="" method="post">
               <input type="hidden" name="star" value="{{ 'true' if not psdoc.star else 'false' }}">
+              <input type="hidden" name="operation" value="star">
               <button class="star{% if psdoc.star %} activated{% endif %}" type="submit">
                 <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
                 <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
