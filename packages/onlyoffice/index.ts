@@ -84,6 +84,18 @@ export function apply(ctx: Context) {
             enumerable: false,
         });
     });
+
+    ctx.inject(['i18n'], (c) => {
+        c.i18n.load('en', {
+            'onlyoffice.not_configured': 'Onlyoffice API not configured.',
+            'onlyoffice.initialize_fail': 'Failed to initialize onlyoffice: {0}',
+        });
+        c.i18n.load('zh', {
+            'onlyoffice.not_configured': 'Onlyoffice 未配置。自行安装 onlyoffice 软件或是使用外部提供的 API。',
+            'onlyoffice.initialize_fail': '初始化 onlyoffice 失败: {0}',
+        });
+    });
+
     ctx.Route('onlyoffice-jwt', '/onlyoffice-jwt', OnlyofficeJWTHandler);
     if (SystemModel.get('onlyoffice.pdf')) {
         ctx.provideModule('richmedia', 'pdf', {

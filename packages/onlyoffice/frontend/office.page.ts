@@ -1,19 +1,23 @@
 /* eslint-disable github/array-foreach */
 import {
-  $, addPage, AutoloadPage, request,
+  $, addPage, AutoloadPage, i18n, Notification, request,
 } from '@hydrooj/ui-default';
-
 /* global DocsAPI */
 
 let loaded = false;
-async function load() {
-  if (loaded) return Promise.resolve();
+function load(): Promise<boolean> {
+  if (loaded) return Promise.resolve(true);
+  if (!UiContext.onlyofficeApi) {
+    console.error('Onlyoffice api not set');
+    Notification.error(i18n('onlyoffice.not_configured'));
+    return Promise.resolve(false);
+  }
   return new Promise((resolve, reject) => {
     const scriptElement = document.createElement('script');
     scriptElement.src = UiContext.onlyofficeApi;
     scriptElement.async = true;
     document.head.appendChild(scriptElement);
-    scriptElement.onload = resolve;
+    scriptElement.onload = () => resolve(true);
     scriptElement.onerror = reject;
     loaded = true;
   });
@@ -40,9 +44,16 @@ const getEles = (types: string[]) => types.flatMap((type) => $(`div[data-${type}
 
 addPage(new AutoloadPage('onlyoffice', async () => {
   const all = getEles(['doc', 'docx', 'cell', 'xls', 'xlsx', 'slide', 'ppt', 'pptx', 'pdf']);
-  if (all.length) await load();
-  getEles(['doc', 'docx']).forEach(loader('word'));
-  getEles(['cell', 'xls', 'xlsx']).forEach(loader('cell'));
-  getEles(['slide', 'ppt', 'pptx']).forEach(loader('slide'));
-  getEles(['pdf']).forEach(loader('pdf'));
+  if (!all.length) return;
+  try {
+    const result = await load();
+    if (!result) return;
+    getEles(['doc', 'docx']).forEach(loader('word'));
+    getEles(['cell', 'xls', 'xlsx']).forEach(loader('cell'));
+    getEles(['slide', 'ppt', 'pptx']).forEach(loader('slide'));
+    getEles(['pdf']).forEach(loader('pdf'));
+  } catch (e) {
+    console.error(`Failed to initialize onlyoffice: ${e.message}`);
+    Notification.error(i18n('onlyoffice.inialize_fail', e.message));
+  }
 }));
