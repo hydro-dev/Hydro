@@ -186,18 +186,6 @@ export class ProblemMainHandler extends Handler {
         }
     }
 
-    @param('pid', Types.UnsignedInt)
-    async postStar(domainId: string, pid: number) {
-        await problem.setStar(domainId, pid, this.user._id, true);
-        this.back({ star: true });
-    }
-
-    @param('pid', Types.UnsignedInt)
-    async postUnstar(domainId: string, pid: number) {
-        await problem.setStar(domainId, pid, this.user._id, false);
-        this.back({ star: false });
-    }
-
     @param('pids', Types.NumericArray)
     @param('target', Types.String)
     async postCopy(domainId: string, pids: number[], target: string) {
@@ -437,6 +425,12 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         if (tdocs.length) throw new ProblemAlreadyUsedByContestError(this.pdoc.docId, tdocs[0]._id);
         await problem.del(this.pdoc.domainId, this.pdoc.docId);
         this.response.redirect = this.url('problem_main');
+    }
+
+    @param('star', Types.Boolean)
+    async postStar(domainId: string, star: boolean) {
+        await problem.setStar(domainId, this.pdoc.docId, this.user._id, star);
+        this.back({ star });
     }
 }
 

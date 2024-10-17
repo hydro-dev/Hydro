@@ -121,14 +121,12 @@ export class HomeHandler extends Handler {
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) return [[], {}];
         const psdocs = await ProblemModel.getMultiStatus(domainId, { uid: this.user._id, star: true })
             .sort('_id', 1).limit(limit).toArray();
-        const psdict = {};
-        for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
         const pdict = await ProblemModel.getList(
             domainId, psdocs.map((pdoc) => pdoc.docId),
             this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
         );
         const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
-        return [pdocs, psdict];
+        return [pdocs];
     }
 
     async getRecentProblems(domainId: string, limit = 10) {
