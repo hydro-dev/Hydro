@@ -103,7 +103,7 @@
                   {% set pdoc=pdict[pid] %}
                   {% set psdoc=psdict[pid] %}
                   {% set self_psdoc=selfPsdict[pid] %}
-                  <tr>
+                  <tr data-pid="{{ pid }}">
                     {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                       {% if psdoc['rid'] %}
                         {{ record.render_status_td(psdoc, rid_key='rid', short=should_compare) }}
@@ -118,17 +118,7 @@
                         {% endif %}
                       {% endif %}
                     {% endif %}
-                    <td class="col--name col--problem-name">
-                      {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-                        <form class="form--inline" action="{{ url('problem_main') }}" method="post">
-                          <input type="hidden" name="pid" value="{{ pdoc.docId }}">
-                          <input type="hidden" name="operation" value="{% if not psdoc['star'] %}star{% else %}unstar{% endif %}">
-                          <button class="star{% if psdoc['star'] %} activated{% endif %}" type="submit">
-                            <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                            <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
-                          </button>
-                        </form>
-                      {% endif %}
+                    <td class="col--name col--problem-name"{% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %} data-star="{{ psdoc.star }}"{% endif %}>
                       {{ problem.render_problem_title(
                         pdoc,
                         invalid=not tsdoc['enroll'] or nsdict[node['_id']]['isInvalid'],
