@@ -136,14 +136,12 @@ export async function calcLevel(domainId: string, report: Function) {
 }
 
 async function runInDomain(domainId: string, report: Function) {
-    const info = await domain.get(domainId);
-    const domainIds = [domainId, ...(info.union || [])];
     const results: Record<keyof typeof RpTypes, ND> = {};
     const udict = Counter();
     await db.collection('domain.user').updateMany({ domainId }, { $set: { rpInfo: {} } });
     for (const type in RpTypes) {
         results[type] = new Proxy({}, { get: (self, key) => self[key] || RpTypes[type].base });
-        await RpTypes[type].run(domainIds, results[type], report);
+        await RpTypes[type].run([domainId], results[type], report);
         const bulk = db.collection('domain.user').initializeUnorderedBulkOp();
         for (const uid in results[type]) {
             const udoc = await UserModel.getById(domainId, +uid);
