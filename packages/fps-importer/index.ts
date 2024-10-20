@@ -47,7 +47,7 @@ class FpsProblemImportHandler extends Handler {
                 // `filename` attribute introduced by winterant/OnlineJudge
                 // PLEASE, respect the spec
                 const filename = node.$?.filename || `${id}.${ext}`;
-                const c = node._ || node;
+                const c = node._ || (typeof node === 'string' ? node : '');
                 tasks.push(ProblemModel.addTestdata(domainId, pid, filename, Buffer.from(c)));
             };
             if (p.test_output) {
