@@ -106,13 +106,14 @@
           {% endif %}
           {% if ui.getNodes('UserDropdown').length %}
             <li class="menu__seperator"></li>
-            {%- for item in ui.getNodes('UserDropdown') -%}
+            {%- for item in ui.getNodes('UserDropdown') -%} {% if item.checker(handler) %}
             <li class="menu__item nojs--hide">
               {% set args = (item.args(handler) if typeof(item.args)=='function' else item.args) or {} %}
               <a href="{{ url(item.name, args) }}" class="menu__link">
                 <span class="icon icon-{{ args.icon }}"></span> {{ _(args.displayName or item.name) }}
               </a>
             </li>
+            {% endif %}
             {%- endfor -%}
           {% endif %}
           <li class="menu__seperator"></li>
