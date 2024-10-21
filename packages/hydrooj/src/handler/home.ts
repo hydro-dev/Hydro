@@ -499,15 +499,11 @@ class HomeDomainHandler extends Handler {
     }
 
     @param('id', Types.String)
-    async postStar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
-        this.back({ star: true });
-    }
-
-    @param('id', Types.String)
-    async postUnstar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
-        this.back({ star: false });
+    @param('star', Types.Boolean)
+    async postStar({ }, id: string, star = false) {
+        if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
+        else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        this.back({ star });
     }
 }
 

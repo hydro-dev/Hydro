@@ -338,15 +338,10 @@ class DiscussionDetailHandler extends DiscussionHandler {
     }
 
     @param('did', Types.ObjectId)
-    async postStar(domainId: string, did: ObjectId) {
-        await discussion.setStar(domainId, did, this.user._id, true);
-        this.back({ star: true });
-    }
-
-    @param('did', Types.ObjectId)
-    async postUnstar(domainId: string, did: ObjectId) {
-        await discussion.setStar(domainId, did, this.user._id, false);
-        this.back({ star: false });
+    @param('star', Types.Boolean)
+    async postStar(domainId: string, did: ObjectId, star = false) {
+        await discussion.setStar(domainId, did, this.user._id, star);
+        this.back({ star });
     }
 }
 

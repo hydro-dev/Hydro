@@ -30,13 +30,7 @@
       {% endif %}
         <li>{{ _('{0} views').format(ddoc.views) }}</li>
       {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-        <li><form class="form--inline" method="post">
-          <input type="hidden" name="operation" value="{% if not dsdoc['star'] %}star{% else %}unstar{% endif %}">
-          <button class="star{% if dsdoc['star'] %} activated{% endif %}" type="submit">
-            <span class="starred--hide"><span class="icon icon-star--outline"></span> {{ _('Star') }}</span>
-            <span class="starred--show"><span class="icon icon-star"></span> {{ _('Unstar') }}</span>
-          </button>
-        </form></li>
+        <li data-star="{{ dsdoc['star'] }}"></li>
       {% endif %}
         <li><a href="{{ url('wiki_help', anchor='contact') }}">
           <span class="icon icon-warning"></span> {{ _('Report') }}

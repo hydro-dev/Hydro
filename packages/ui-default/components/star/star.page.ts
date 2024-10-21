@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import { AutoloadPage } from 'vj/misc/Page';
-import { request, tpl } from 'vj/utils';
+import { i18n, request, tpl } from 'vj/utils';
 
 function setStarButtonState($starButton: JQuery<any>, star: boolean) {
   if (star) {
@@ -14,18 +14,17 @@ const starPage = new AutoloadPage('starPage', () => {
   function render(container) {
     const eles = $(container).find('[data-star]');
     for (const el of eles) {
-      if ($(el).find('.star-form')) continue;
-      const pid = $(el).closest('[data-pid]').data('pid');
-      const star = $(el).data('star') === 'true' ? 1 : 0;
-      if (!pid) continue;
-      $(tpl`<form class="form--inline" action="/d/${UiContext.domain._id}/p/${pid}" method="post">
+      if ($(el).find('.star-form').length) continue;
+      const action = $(el).closest('[data-star-action]').data('star-action');
+      const star = ['true', true].includes($(el).data('star')) ? 1 : 0;
+      $(tpl`<form class="star-form form--inline" action="${action}" method="post">
         <input type="hidden" name="operation" value="star">
         <input type="hidden" name="star" value="${star ? 'false' : 'true'}">
         <button class="star${star ? ' activated' : ''}" type="submit">
-          <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-          <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+          <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="${i18n('Star')}"></span></span>
+          <span class="starred--show"><span class="icon icon-star" data-tooltip="${i18n('Unstar')}"></span></span>
         </button>
-      </form>`);
+      </form>`).prependTo($(el));
     }
   }
 
@@ -39,9 +38,10 @@ const starPage = new AutoloadPage('starPage', () => {
     const currentState = $button.hasClass('activated');
     const $form = $button.closest('form');
     const $op = $form.find('[name="operation"]');
-    if (!['star', 'unstar'].includes($op.val() as any)) return;
+    const $star = $form.find('[name="star"]');
+    if ($op.val() !== 'star') return;
     ev.preventDefault();
-    $op.val(currentState ? 'unstar' : 'star');
+    $star.val(currentState ? 'false' : 'true');
     setStarButtonState($button, !currentState);
     request
       .post($form.attr('action'), $form)
