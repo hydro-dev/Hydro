@@ -11,6 +11,6 @@ export type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after
 
 export interface ServerEvents<T extends Handler = Handler, C extends ConnectionHandler = ConnectionHandler> extends HandlerEvents<T, C> {
     'handler/create': (thisArg: Handler, type: 'ws' | 'http') => VoidReturn
-    'handler/init': (thisArg: Handler) => VoidReturn
+    'handler/init': (thisArg: Handler) => VoidReturn | string | Promise<string>
     'handler/error': (thisArg: Handler, e: Error) => VoidReturn
 }

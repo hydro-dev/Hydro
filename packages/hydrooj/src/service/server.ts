@@ -286,7 +286,15 @@ export async function apply(ctx: Context) {
                     icon: global.Hydro.module.oauth[key].icon,
                     text: global.Hydro.module.oauth[key].text,
                 }));
-            if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
+        });
+        on('handler/init', async (h) => { // eslint-disable-line consistent-return
+            if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) {
+                if (!h.user._dudoc.join && !h.user.hasPerm(PERM.PERM_VIEW)) {
+                    h.response.redirect = h.url('domain_join', {});
+                    return 'cleanup';
+                }
+                h.checkPerm(PERM.PERM_VIEW);
+            }
             if (h.context.pendingError) throw h.context.pendingError;
         });
 

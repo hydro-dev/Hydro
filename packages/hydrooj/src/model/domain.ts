@@ -206,6 +206,7 @@ class DomainModel {
         let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
         dudoc ||= { domainId, uid: udoc._id };
         if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
+        if (!dudoc.join) dudoc.role = 'guest';
         if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
         dudoc.role ||= 'default';
         const ddoc = await DomainModel.get(domainId);
@@ -251,7 +252,7 @@ class DomainModel {
 
     @ArgMethod
     static async getDictUserByDomainId(uid: number) {
-        const dudocs = await collUser.find({ uid }).toArray();
+        const dudocs = await collUser.find({ uid, join: true }).toArray();
         const dudict: Record<string, any> = {};
         for (const dudoc of dudocs) dudict[dudoc.domainId] = dudoc;
         return dudict;

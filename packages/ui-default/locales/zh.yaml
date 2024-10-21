@@ -510,6 +510,7 @@ LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
 Leave empty for default: 留空以使用默认
+Leave: 退出
 Ledo: 乐多
 Legacy mode: 兼容模式
 Light: 亮色
@@ -603,6 +604,7 @@ Not Attended: 未参加
 Not available: 不可用
 Not Claimed: 未认领
 Not Enrolled: 未参加
+Not joined yet: 暂未加入
 Not started with a number: 不以数字开头
 Not wrapped with space: 两侧不含空格
 Numeric PID: 数字题号
