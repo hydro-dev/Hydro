@@ -352,28 +352,43 @@ class HomeSecurityHandler extends Handler {
 }
 
 function set(s: Setting, key: string, value: any) {
-    if (s) {
-        if (s.family === 'setting_storage') return undefined;
-        if (s.flag & setting.FLAG_DISABLED) return undefined;
-        if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
-        if (s.type === 'boolean') {
-            if (value === 'on') return true;
-            return false;
-        }
-        if (s.type === 'number') {
-            if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
-            return +value;
-        }
-        if (s.subType === 'yaml') {
-            try {
-                yaml.load(value);
-            } catch (e) {
-                throw new ValidationError(key);
-            }
-        }
-        return value;
+    if (!s) return undefined;
+    if (s.family === 'setting_storage') return undefined;
+    if (s.flag & setting.FLAG_DISABLED) return undefined;
+    if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
+    if (s.type === 'boolean') {
+        if (value === 'on') return true;
+        return false;
     }
-    return undefined;
+    if (s.type === 'number') {
+        if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
+        return +value;
+    }
+    if (s.type === 'float') {
+        if (Number.isNaN(+value)) throw new ValidationError(key);
+        return +value;
+    }
+    if (['json', 'yaml', 'markdown', 'textarea'].includes(s.type)) {
+        if (!Types.Content[1](value)) throw new ValidationError(key);
+    }
+    if (s.type === 'text') {
+        if (!Types.String[1](value)) throw new ValidationError(key);
+    }
+    if (s.subType === 'yaml') {
+        try {
+            yaml.load(value);
+        } catch (e) {
+            throw new ValidationError(key);
+        }
+    }
+    if (s.subType === 'json') {
+        try {
+            JSON.parse(value);
+        } catch (e) {
+            throw new ValidationError(key);
+        }
+    }
+    return value;
 }
 
 class HomeSettingsHandler extends Handler {
