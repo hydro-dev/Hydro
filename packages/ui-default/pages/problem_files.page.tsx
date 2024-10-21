@@ -366,7 +366,7 @@ const page = new NamedPage('problem_files', () => {
     }
   }
 
-  if (UiContext.pdoc) {
+  if (UiContext.pdoc && $('[name="generate_testdata"]').length) {
     FileSelectAutoComplete.getOrConstruct($('[name=gen]'), { data: UiContext.pdoc.data });
     FileSelectAutoComplete.getOrConstruct($('[name=std]'), { data: UiContext.pdoc.data });
     $('[name="generate_testdata"]').on('click', handleGenerateTestdata);
