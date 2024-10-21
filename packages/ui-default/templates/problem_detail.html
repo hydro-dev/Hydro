@@ -45,7 +45,13 @@
               </button>
             </form>
           {% endif %}
-          #{{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) if tdoc else pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }}
+          {%- if tdoc -%}
+            {{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) }}
+          {%- elif pdoc.pid and pdoc.pid.includes('-') -%}
+            {{ pdoc.pid.split('-').join('#') }}
+          {%- else -%}
+            #{{ pdoc.pid|default(pdoc.docId) }}
+          {%- endif -%}. {{ pdoc.title }}
         </h1>
         {% if tdoc and tdoc.pids|length <= 26 %}
           <div class="section__tools contest-problems">
