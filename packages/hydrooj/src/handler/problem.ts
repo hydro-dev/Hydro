@@ -145,7 +145,6 @@ export class ProblemMainHandler extends Handler {
             : await problem.list(
                 domainId, query, sort.length ? 1 : page, limit,
                 quick ? ['title', 'pid', 'domainId', 'docId'] : undefined,
-                this.user._id,
             );
         if (total) {
             pcount = total;
