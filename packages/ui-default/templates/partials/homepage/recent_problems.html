@@ -8,7 +8,7 @@
     <div class="section__body typo no-media col--problem-name">
       {%- for pdoc in pdocs -%}
         <p>
-          {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false) }}
+          {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false, show_pid=false) }}
           <span style="float: right">{{ datetimeSpan(pdoc._id)|safe }}</span>
         </p>
       {%- endfor -%}
