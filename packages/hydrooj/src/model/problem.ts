@@ -33,7 +33,7 @@ export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
 const logger = new Logger('problem');
-function sortable(source: string, namespaces: Record<string, string> = {}) {
+function sortable(source: string, namespaces: Record<string, string>) {
     const [namespace, pid] = source.includes('-') ? source.split('-') : ['default', source];
     return ((namespaces ? `${namespaces[namespace]}-` : '') + pid)
         .replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
