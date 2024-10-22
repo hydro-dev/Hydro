@@ -192,6 +192,7 @@ export class ProblemModel {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
     }
 
+    /** @deprecated */
     static async list(
         domainId: string, query: Filter<ProblemDoc>,
         page: number, pageSize: number,
