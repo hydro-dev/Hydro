@@ -142,9 +142,9 @@ export class ProblemMainHandler extends Handler {
         // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
-            : await problem.list(
-                domainId, query, sort.length ? 1 : page, limit,
-                quick ? ['title', 'pid', 'domainId', 'docId'] : undefined,
+            : await this.paginate(
+                problem.getMulti(domainId, query, quick ? ['title', 'pid', 'domainId', 'docId'] : undefined).sort({ sort: 1, docId: 1 }),
+                sort.length ? 1 : page, limit,
             );
         if (total) {
             pcount = total;
