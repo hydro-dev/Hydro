@@ -67,13 +67,15 @@ class HomeworkMainHandler extends Handler {
 }
 
 class HomeworkDetailHandler extends Handler {
+    tdoc: Tdoc;
+
     @param('tid', Types.ObjectId)
     async prepare(domainId: string, tid: ObjectId) {
-        const tdoc = await contest.get(domainId, tid);
-        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
-        if (tdoc.assign?.length && !this.user.own(tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
-            if (!Set.intersection(tdoc.assign, this.user.group).size) {
-                throw new NotAssignedError('homework', tdoc.docId);
+        this.tdoc = await contest.get(domainId, tid);
+        if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
+        if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
+            if (!Set.intersection(this.tdoc.assign, this.user.group).size) {
+                throw new NotAssignedError('homework', this.tdoc.docId);
             }
         }
     }
@@ -81,37 +83,34 @@ class HomeworkDetailHandler extends Handler {
     @param('tid', Types.ObjectId)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, tid: ObjectId, page = 1) {
-        const [tdoc, tsdoc] = await Promise.all([
-            contest.get(domainId, tid),
-            contest.getStatus(domainId, tid, this.user._id),
-        ]);
-        if (tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
+        const tsdoc = await contest.getStatus(domainId, tid, this.user._id);
+        if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         // discussion
         const [ddocs, dpcount, dcount] = await this.paginate(
-            discussion.getMulti(domainId, { parentType: tdoc.docType, parentId: tdoc.docId }),
+            discussion.getMulti(domainId, { parentType: this.tdoc.docType, parentId: this.tdoc.docId }),
             page,
             'discussion',
         );
         const uids = ddocs.map((ddoc) => ddoc.owner);
-        uids.push(tdoc.owner);
+        uids.push(this.tdoc.owner);
         const udict = await user.getList(domainId, uids);
         this.response.template = 'homework_detail.html';
         this.response.body = {
-            tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
+            tdoc: this.tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
         this.response.body.tdoc.content = this.response.body.tdoc.content
-            .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
-            .replace(/="file:\/\//g, `="./${tdoc.docId}/file/`);
+            .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
+            .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
         if (
-            (contest.isNotStarted(tdoc) || (!tsdoc?.attend && !contest.isDone(tdoc)))
-            && !this.user.own(tdoc)
+            (contest.isNotStarted(this.tdoc) || (!tsdoc?.attend && !contest.isDone(this.tdoc)))
+            && !this.user.own(this.tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
         ) return;
-        const pdict = await problem.getList(domainId, tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST);
+        const pdict = await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
-            if (tsdoc.attend && !tsdoc.startAt && contest.isOngoing(tdoc)) {
+            if (tsdoc.attend && !tsdoc.startAt && contest.isOngoing(this.tdoc)) {
                 await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
                 tsdoc.startAt = new Date();
             }
@@ -119,7 +118,7 @@ class HomeworkDetailHandler extends Handler {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
             }
-            if (contest.canShowSelfRecord.call(this, tdoc) && tsdoc.journal) {
+            if (contest.canShowSelfRecord.call(this, this.tdoc) && tsdoc.journal) {
                 rdict = await record.getList(
                     domainId,
                     tsdoc.journal.map((pdetail) => pdetail.rid),
@@ -129,12 +128,10 @@ class HomeworkDetailHandler extends Handler {
         Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
-    @param('tid', Types.ObjectId)
-    async postAttend(domainId: string, tid: ObjectId) {
+    async postAttend(domainId: string) {
         this.checkPerm(PERM.PERM_ATTEND_HOMEWORK);
-        const tdoc = await contest.get(domainId, tid);
-        if (contest.isDone(tdoc)) throw new HomeworkNotLiveError(tdoc.docId);
-        await contest.attend(domainId, tdoc.docId, this.user._id);
+        if (contest.isDone(this.tdoc)) throw new HomeworkNotLiveError(this.tdoc.docId);
+        await contest.attend(domainId, this.tdoc.docId, this.user._id);
         this.back();
     }
 }
