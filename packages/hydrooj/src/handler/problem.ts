@@ -109,7 +109,7 @@ export class ProblemMainHandler extends Handler {
         const psdict = {};
         const search = global.Hydro.lib.problemSearch || defaultSearch;
         const parsed = parser.parse(q, {
-            keywords: ['category', 'difficulty'],
+            keywords: ['category', 'difficulty', 'namespace'],
             offsets: false,
             alwaysArray: true,
             tokenize: true,
@@ -120,6 +120,12 @@ export class ProblemMainHandler extends Handler {
             query.difficulty = { $in: parsed.difficulty.map(Number) };
         }
         if (category.length) query.$and = category.map((tag) => ({ tag }));
+        if (parsed.namespace?.length) {
+            const mappedPrefix = this.domain.namespaces?.[parsed.namespace[0]];
+            query.$and ||= [];
+            if (mappedPrefix) query.$and.push({ sort: new RegExp(`^${mappedPrefix}-`) });
+            else query.$and.push({ tag: parsed.namespace[0] });
+        }
         if (text) category.push(text);
         if (category.length) this.UiContext.extraTitleContent = category.join(',');
         let total = 0;

@@ -111,7 +111,7 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-## Hydro 4.17.0 / UI 4.55.0
+## Hydro 4.17.1 / UI 4.55.1
 
 - core: 限制显示名长度
 - core: 支持调整代码长度限制

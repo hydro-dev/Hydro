@@ -54,7 +54,7 @@
             <td class="col--status record-status--border edit-mode-hide"></td>
           {% endif %}
         {% endif %}
-        <td class="col--name col--problem-name" data-action="{{ url('problem_detail', docId=pdoc.docId) }}" {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %} data-star="{{ psdoc.star }}"{% endif %}>
+        <td class="col--name col--problem-name" data-action="{{ url('problem_detail', pid=pdoc.docId) }}" {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %} data-star="{{ psdoc.star }}"{% endif %}>
           {{ problem.render_problem_title(pdoc) }}
         </td>
         <td class="col--ac-tried">{{ pdoc.nAccept }} / {{ pdoc.nSubmit }}</td>
