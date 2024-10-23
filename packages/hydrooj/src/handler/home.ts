@@ -372,7 +372,7 @@ function set(s: Setting, key: string, value: any) {
         if (!Types.Content[1](value)) throw new ValidationError(key);
     }
     if (s.type === 'text') {
-        if (!Types.String[1](value)) throw new ValidationError(key);
+        if (!Types.ShortString[1](value)) throw new ValidationError(key);
     }
     if (s.subType === 'yaml') {
         try {
