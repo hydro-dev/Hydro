@@ -8,7 +8,7 @@ export interface ProblemSource {
     source?: string,
 }
 
-export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 'markdown', translate?: Function) {
+export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 'markdown', translate?: (s: string) => string) {
     const _ = translate || ((s: string) => s);
     let cnt = 0;
     // Keep it for backward compatibility, but don't add to typings

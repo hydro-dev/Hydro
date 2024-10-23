@@ -483,8 +483,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (!file || file.size === 0) throw new ValidationError('code');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : lengthLimit;
             if (file.size > sizeLimit) throw new ValidationError('file');
-            if (file.size < lengthLimit && !file.filepath.endsWith('.zip')) {
-                // TODO auto detect & convert encoding
+            if (file.size < lengthLimit && !file.filepath.endsWith('.zip') && !setting.langs[lang].isBinary) {
                 // TODO submission file shape
                 code = await readFile(file.filepath, 'utf-8');
             } else {

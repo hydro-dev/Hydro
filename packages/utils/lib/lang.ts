@@ -15,6 +15,7 @@ export interface LangConfig {
     target?: string;
     key: string;
     hidden: boolean;
+    isBinary?: boolean;
     analysis?: string;
     /** @deprecated */
     remote?: string;
@@ -52,6 +53,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.key = key;
         entry.hidden ||= false;
         entry.disabled ||= false;
+        entry.isBinary ||= false;
         entry.validAs ||= {};
     }
     return file;
