@@ -3,9 +3,7 @@ import $ from 'jquery';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
-import {
-  api, gql, i18n, request, tpl,
-} from 'vj/utils';
+import { i18n, request, tpl } from 'vj/utils';
 
 async function verifywebauthn($form) {
   if (!window.isSecureContext || !('credentials' in navigator)) {
