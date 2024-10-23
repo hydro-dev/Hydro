@@ -48,6 +48,9 @@ export interface EventMap extends KnownHandlerEvents {
     'user/get': (udoc: User) => void
     'user/delcache': (content: string | true) => void
 
+    'user/import/parse': (payload: any) => VoidReturn
+    'user/import/create': (uid: number, udoc: any) => VoidReturn
+
     'domain/create': (ddoc: DomainDoc) => VoidReturn
     'domain/before-get': (query: Filter<DomainDoc>) => VoidReturn
     'domain/get': (ddoc: DomainDoc) => VoidReturn
