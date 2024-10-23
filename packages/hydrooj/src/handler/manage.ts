@@ -248,12 +248,13 @@ class SystemUserImportHandler extends SystemHandler {
                             groups[data.group] ||= [];
                             groups[data.group].push(email);
                         }
-                        if (data.school) payload.school = data.school;
-                        if (data.studentId) payload.studentId = data.studentId;
+                        Object.assign(payload, data);
                     } catch (e) { }
-                    udocs.push({
-                        email, username, password, displayName, payload,
+                    Object.assign(payload, {
+                        email, username, password, displayName,
                     });
+                    await this.ctx.serial('user/import/parse', payload);
+                    udocs.push(payload);
                 }
             } else messages.push(`Line ${+i + 1}: Input invalid.`);
         }
@@ -266,6 +267,7 @@ class SystemUserImportHandler extends SystemHandler {
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
                     if (udoc.payload?.school) await user.setById(uid, { school: udoc.payload.school });
                     if (udoc.payload?.studentId) await user.setById(uid, { studentId: udoc.payload.studentId });
+                    await this.ctx.serial('user/import/create', uid, udoc);
                 } catch (e) {
                     messages.push(e.message);
                 }
