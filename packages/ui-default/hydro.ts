@@ -34,6 +34,16 @@ function buildSequence(pages, type) {
     }));
 }
 
+function rounded() {
+  if (!UserContext.rounded) return;
+  const style = document.createElement('style');
+  style.innerHTML = `
+    .section { border-radius: 8px; }
+    .section__table-header { border-radius: 8px 8px 0 0; }
+  `;
+  document.head.append(style);
+}
+
 async function animate() {
   if (UserContext.skipAnimate) return;
   const style = document.createElement('style');
@@ -54,6 +64,7 @@ async function animate() {
 
 export async function initPageLoader() {
   const pageLoader = new PageLoader();
+  rounded();
 
   const currentPageName = document.documentElement.getAttribute('data-page');
   const currentPage = pageLoader.getNamedPage(currentPageName);
