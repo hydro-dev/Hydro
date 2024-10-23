@@ -6,7 +6,7 @@
     </div>
     <div class="section__body typo no-media col--problem-name">
       {%- for pdoc in pdocs -%}
-        <p data-action="{{ url('problem_detail', pid=pdoc.docId) }}" data-star="true">
+        <p data-star-action="{{ url('problem_detail', pid=pdoc.docId) }}" data-star="true">
           {{ problem.render_problem_title(pdoc, show_tags=false, show_invisible_flag=false) }}
         </p>
       {%- endfor -%}

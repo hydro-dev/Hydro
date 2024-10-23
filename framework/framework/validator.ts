@@ -26,6 +26,7 @@ export interface Types {
     Role: Type<string>;
     Title: Type<string>;
     Emoji: Type<string>;
+    ShortString: Type<string>;
     String: Type<string>;
 
     // Number outputs
@@ -75,7 +76,7 @@ const saslprepString = <T = string>(regex?: RegExp, cb?: (i: string) => boolean,
 
 export const Types: Types = {
     Content: [(v) => v.toString().trim(), (v) => v?.toString()?.trim() && v.toString().trim().length < 65536],
-    Key: saslprepString(/^[a-zA-Z0-9-_]+$/),
+    Key: saslprepString(/^[a-zA-Z0-9-_]{1,255}$/),
     /** @deprecated */
     Name: saslprepString(/^.{1,255}$/),
     Filename: saslprepString(/^[^\\/?#~!|*]{1,255}$/, (i) => sanitize(i) === i),
@@ -87,6 +88,7 @@ export const Types: Types = {
     DomainId: saslprepString(/^[a-zA-Z][a-zA-Z0-9_]{3,31}$/),
     Role: saslprepString(/^[_0-9A-Za-z\u4e00-\u9fa5]{1,31}$/i),
     Title: basicString(/^.{1,64}$/, (i) => !!i.trim()),
+    ShortString: basicString(/^.{1,255}$/),
     String: basicString(),
 
     Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],
