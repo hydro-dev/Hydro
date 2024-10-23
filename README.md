@@ -111,6 +111,20 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 4.17.0 / UI 4.55.0
+
+- core: 限制显示名长度
+- core: 支持调整代码长度限制
+- core: 在作业中关闭在线 IDE 代码缓存
+- core: API: 检查 PERM_VIEW
+- judge: 添加 HYDRO_TIME_USAGE 和 HYDRO_MEMORY_USAGE 环境变量
+- core&ui: 支持 i18n 热重载
+- fps-import: 优化图片导入
+- ui: 支持圆角设置
+- core: 支持 StorageModel.copy 和 StorageModel.exists
+- core: 弃用 ProblemModel.list
+- core: 添加 user/import/parse 和 user/import/create 钩子
+
 ## Hydro 4.16.0 / UI 4.54.3
 
 - core: 停用 handler, lib, script 组件类型
