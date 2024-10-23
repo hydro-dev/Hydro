@@ -457,7 +457,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     }
 
     @param('lang', Types.Name)
-    @param('code', Types.Content, true)
+    @param('code', Types.String, true)
     @param('pretest', Types.Boolean)
     @param('input', Types.String, true)
     @param('tid', Types.ObjectId, true)
@@ -478,12 +478,13 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
         await this.limitRate('add_record', 60, system.get('limit.submission'));
         const files: Record<string, string> = {};
+        const lengthLimit = system.get('limit.codelength') || 128 * 1024;
         if (!code) {
             const file = this.request.files?.file;
             if (!file || file.size === 0) throw new ValidationError('code');
-            const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : 65535;
+            const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : lengthLimit;
             if (file.size > sizeLimit) throw new ValidationError('file');
-            if (file.size < 65535 && !file.filepath.endsWith('.zip')) {
+            if (file.size < lengthLimit && !file.filepath.endsWith('.zip')) {
                 // TODO auto detect & convert encoding
                 // TODO submission file shape
                 code = await readFile(file.filepath, 'utf-8');
@@ -492,7 +493,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
                 files.code = `${this.user._id}/${id}#${file.originalFilename}`;
             }
-        }
+        } else if (code.length > lengthLimit) throw new ValidationError('code');
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
             pretest ? { input, type: 'pretest' } : { contest: tid, files, type: 'judge' },
