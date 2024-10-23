@@ -11,7 +11,11 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     doc.content &&= doc.content.replace(/[[\]【】()（）]/g, ' ');
     doc.title &&= doc.title.replace(/[[\]【】()（）]/g, ' ')
         .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
-    doc.pid &&= doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
+    if (doc.pid?.includes('-')) {
+        const ns = doc.pid.split('-')[0];
+        doc.tag.push(ns);
+    }
+    doc.pid &&= doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2').replace(/-/g, ' ');
     return _.omit(doc, indexOmit);
 };
 
