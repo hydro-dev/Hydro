@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import {
-    _, Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
+    _, Context, iterateAllProblem, iterateAllProblemInDomain,
     ProblemDoc, ProblemModel, Schema, SystemModel,
 } from 'hydrooj';
 
@@ -19,8 +19,6 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
     const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
-    const union = await DomainModel.get(domainId);
-    const domainIds = [domainId, ...(union?.union || [])];
     const res = await client.search({
         index: 'problem',
         size,
@@ -34,7 +32,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         post_filter: {
             bool: {
                 minimum_should_match: 1,
-                should: domainIds.map((i) => ({ match: { domainId: i } })),
+                should: [{ match: { domainId } }],
             },
         },
     });

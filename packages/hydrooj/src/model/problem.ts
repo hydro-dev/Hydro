@@ -16,6 +16,7 @@ import type {
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
+import db from '../service/db';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
 } from '../typeutils';
@@ -27,14 +28,15 @@ import RecordModel from './record';
 import SolutionModel from './solution';
 import storage from './storage';
 import * as SystemModel from './system';
-import user from './user';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;
 
 const logger = new Logger('problem');
-function sortable(source: string) {
-    return source.replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
+function sortable(source: string, namespaces: Record<string, string>) {
+    const [namespace, pid] = source.includes('-') ? source.split('-') : ['default', source];
+    return ((namespaces ? `${namespaces[namespace]}-` : '') + pid)
+        .replace(/(\d+)/g, (str) => (str.length >= 6 ? str : ('0'.repeat(6 - str.length) + str)));
 }
 
 function findOverrideContent(dir: string, base: string) {
@@ -149,8 +151,9 @@ export class ProblemModel {
         content: string, owner: number, tag: string[] = [],
         meta: ProblemCreateOptions = {},
     ) {
+        const ddoc = await DomainModel.get(domainId);
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`),
+            title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`, ddoc?.namespaces),
         };
         if (pid) args.pid = pid;
         if (meta.difficulty) args.difficulty = meta.difficulty;
@@ -171,9 +174,10 @@ export class ProblemModel {
         rawConfig = false,
     ): Promise<ProblemDoc | null> {
         if (Number.isSafeInteger(+pid)) pid = +pid;
+        const ddoc = await DomainModel.get(domainId);
         const res = typeof pid === 'number'
             ? await document.get(domainId, document.TYPE_PROBLEM, pid, projection)
-            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid), pid })
+            : (await document.getMulti(domainId, document.TYPE_PROBLEM, { sort: sortable(pid, ddoc?.namespaces), pid })
                 .project(buildProjection(projection)).limit(1).toArray())[0];
         if (!res) return null;
         try {
@@ -188,33 +192,16 @@ export class ProblemModel {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
     }
 
+    /** @deprecated */
     static async list(
         domainId: string, query: Filter<ProblemDoc>,
         page: number, pageSize: number,
-        projection = ProblemModel.PROJECTION_LIST, uid?: number,
+        projection = ProblemModel.PROJECTION_LIST,
     ): Promise<[ProblemDoc[], number, number]> {
-        const union = await DomainModel.get(domainId);
-        const domainIds = [domainId, ...(union.union || [])];
-        let count = 0;
-        const pdocs = [];
-        for (const id of domainIds) {
-            // TODO enhance performance
-            if (typeof uid === 'number') {
-                // eslint-disable-next-line no-await-in-loop
-                const udoc = await user.getById(id, uid);
-                if (!udoc.hasPerm(PERM.PERM_VIEW_PROBLEM)) continue;
-            }
-            // eslint-disable-next-line no-await-in-loop
-            const ccount = await document.count(id, document.TYPE_PROBLEM, query);
-            if (pdocs.length < pageSize && (page - 1) * pageSize - count <= ccount) {
-                // eslint-disable-next-line no-await-in-loop
-                pdocs.push(...await document.getMulti(id, document.TYPE_PROBLEM, query, projection)
-                    .sort({ sort: 1, docId: 1 })
-                    .skip(Math.max((page - 1) * pageSize - count, 0)).limit(pageSize - pdocs.length).toArray());
-            }
-            count += ccount;
-        }
-        return [pdocs, Math.ceil(count / pageSize), count];
+        return await db.paginate(
+            document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1, docId: 1 }),
+            page, pageSize,
+        );
     }
 
     static getStatus(domainId: string, docId: number, uid: number) {
@@ -227,11 +214,12 @@ export class ProblemModel {
 
     static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
+        const ddoc = await DomainModel.get(domainId);
         if (delpid) {
             delete $set.pid;
-            $set.sort = sortable(`P${_id}`);
+            $set.sort = sortable(`P${_id}`, ddoc.namespaces);
         } else if ($set.pid) {
-            $set.sort = sortable($set.pid);
+            $set.sort = sortable($set.pid, ddoc.namespaces);
         }
         await bus.parallel('problem/before-edit', $set);
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);

@@ -123,6 +123,19 @@ export class StorageModel {
         return await storage.signDownloadLink(res.value?.link || res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 
+    static async move(src: string, dst: string) {
+        const res = await StorageModel.coll.findOneAndUpdate(
+            { path: src, autoDelete: null },
+            { $set: { path: dst } },
+        );
+        return !!res.value;
+    }
+
+    static async exists(path: string) {
+        const value = await StorageModel.coll.findOne({ path, autoDelete: null });
+        return !!value;
+    }
+
     static async copy(src: string, dst: string) {
         const { value } = await StorageModel.coll.findOneAndUpdate(
             { path: src, autoDelete: null },

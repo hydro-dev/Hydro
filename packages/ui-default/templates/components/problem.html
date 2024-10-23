@@ -1,17 +1,15 @@
-{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false, inline=false, small=false, alphabetic=false) %}
+{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false, inline=false, show_pid=true, small=false, alphabetic=false) %}
 {%- if not invalid -%}
   {% set _linkArgs = { pid:pdoc.pid|default(pdoc.docId) } %}
   {% if tdoc %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
-  {% if pdoc.domainId !== handler.args.domainId %}{{ set(_linkArgs, 'domainId', pdoc.domainId) }}{% endif %}
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
-{%- if pdoc.domainId !== handler.args.domainId -%}<b>{{ pdoc.domainId }}#</b>{%- endif -%}
-{%- if tdoc and alphabetic -%}
-  <b>{{ String.fromCharCode(65 + tdoc.pids.indexOf(pdoc.docId)) if tdoc.pids.includes(pdoc.docId) else '#' }}</b>
-{%- else -%}
-  <b>{{ pdoc.pid or ('P'+pdoc.docId if pdoc.domainId === handler.args.domainId else pdoc.docId) }}</b>
-{%- endif -%}
-{%- if not small -%}&nbsp;&nbsp;{{ pdoc.title }}{%- endif -%}
+{% if show_pid %}
+<b>{%- if tdoc and alphabetic -%}{{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) }}
+{%- elif pdoc.pid and pdoc.pid.includes('-') -%}{{ pdoc.pid.split('-').join('#') }}
+{%- else -%}{{ pdoc.pid|default(pdoc.docId) }}{%- endif -%}</b>
+{% endif %}
+{%- if not small -%}{% if show_pid %}&nbsp;&nbsp;{% endif %}{{ pdoc.title }}{%- endif -%}
 {%- if not invalid -%}
   </a>
 {%- endif -%}
