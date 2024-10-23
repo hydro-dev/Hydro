@@ -119,6 +119,16 @@ class UserSudoHandler extends Handler {
     }
 }
 
+class UserTFAHandler extends Handler {
+    @param('q', Types.String)
+    async get({ }, q: string) {
+        let udoc = await user.getByUname('system', q);
+        udoc ||= await user.getByEmail('system', q);
+        if (!udoc) this.response.body = { tfa: false, authn: false };
+        else this.response.body = { tfa: udoc.tfa, authn: udoc.authn };
+    }
+}
+
 class UserWebauthnHandler extends Handler {
     noCheckPermView = true;
 
@@ -500,6 +510,7 @@ export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('user_tfa', '/user/tfa', UserTFAHandler);
     ctx.Route('user_webauthn', '/user/webauthn', UserWebauthnHandler);
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
@@ -523,8 +534,6 @@ export async function apply(ctx: Context) {
             ['regat', 'Date!'],
             ['priv', 'Int!', 'User Privilege'],
             ['avatarUrl', 'String'],
-            ['tfa', 'Boolean!'],
-            ['authn', 'Boolean!'],
             ['displayName', 'String @if(perm: "PERM_VIEW_DISPLAYNAME")'],
             ['rpInfo', 'JSONObject'],
         ]);

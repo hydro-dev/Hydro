@@ -71,7 +71,7 @@ const applyAuthDirective = (s) => mapSchema(s, {
 
 class ApiHandler extends Handler {
     category = '#api';
-    noCheckPermView = true;
+    // FIXME: adding PERM_VIEW check will break omnibar search
 
     query(q: string, variables: any) {
         return graphql({
