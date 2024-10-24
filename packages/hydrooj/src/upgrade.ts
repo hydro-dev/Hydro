@@ -702,4 +702,7 @@ export const coreScripts: MigrationScript[] = [
             } catch { }
         });
     },
+    async function _91_92() {
+        await domain.collUser.updateMany({ join: { $exists: false } }, { $set: { join: true } });
+    },
 ];
