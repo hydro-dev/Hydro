@@ -74,6 +74,23 @@ class MongoService {
         }
     }
 
+    public async clearIndexes<T>(coll: Collection<T>, dropIndex?: string[]) {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
+        let existed: any[];
+        try {
+            existed = await coll.listIndexes().toArray();
+        } catch (e) {
+            existed = [];
+        }
+        for (const index of dropIndex) {
+            const i = existed.find((t) => t.name === index);
+            if (i) {
+                logger.info('Drop index %s.%s', coll.collectionName, i.name);
+                await coll.dropIndex(i.name);
+            }
+        }
+    }
+
     public async ensureIndexes<T>(coll: Collection<T>, ...args: IndexDescription[]) {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
         let existed: any[];
@@ -91,7 +108,14 @@ class MongoService {
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.createIndexes([index]);
-            } else if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
+                continue;
+            }
+            const isDifferent = () => {
+                if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) return true;
+                if (!!i.sparse !== !!index.sparse) return true;
+                return false;
+            };
+            if (isDifferent()) {
                 if (i.textIndexVersion) {
                     const cur = Object.keys(i.key).filter((t) => !t.startsWith('_')).map((k) => `${k}:${i.key[k]}`);
                     for (const key of Object.keys(i.weights)) cur.push(`${key}:text`);
