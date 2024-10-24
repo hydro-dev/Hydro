@@ -111,7 +111,7 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-## Hydro 4.17.2 / UI 4.55.2
+## Hydro 4.17.3 / UI 4.55.2
 
 - core: 限制显示名长度
 - core: 支持调整代码长度限制
@@ -124,6 +124,7 @@ Hydro 用户群：1085853538
 - core: 支持 StorageModel.copy 和 StorageModel.exists
 - core: 弃用 ProblemModel.list
 - core: 添加 user/import/parse 和 user/import/create 钩子
+- core: 优化题目列表查询性能
 
 ## Hydro 4.16.0 / UI 4.54.3
 

@@ -128,7 +128,7 @@ class HomeworkDetailHandler extends Handler {
         Object.assign(this.response.body, { pdict, psdict, rdict });
     }
 
-    async postAttend(domainId: string) {
+    async postAttend({ domainId }) {
         this.checkPerm(PERM.PERM_ATTEND_HOMEWORK);
         if (contest.isDone(this.tdoc)) throw new HomeworkNotLiveError(this.tdoc.docId);
         await contest.attend(domainId, this.tdoc.docId, this.user._id);
