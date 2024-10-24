@@ -149,7 +149,8 @@ export class ProblemMainHandler extends Handler {
         let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
             : await this.paginate(
-                problem.getMulti(domainId, query, quick ? ['title', 'pid', 'domainId', 'docId'] : undefined).sort({ sort: 1, docId: 1 }),
+                problem.getMulti(domainId, query, quick ? ['title', 'pid', 'domainId', 'docId'] : undefined)
+                    .sort({ sort: 1, docId: 1 }).hint('sort'),
                 sort.length ? 1 : page, limit,
             );
         if (total) {

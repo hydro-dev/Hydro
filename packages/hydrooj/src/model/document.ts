@@ -430,15 +430,14 @@ export async function apply(ctx: Context) {
         coll.deleteMany({ domainId }),
         collStatus.deleteMany({ domainId }),
     ]));
+    await db.clearIndexes(coll, ['tag', 'hidden']);
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },
         // For problem
         { key: { domainId: 1, docType: 1, search: 'text', title: 'text' }, name: 'search', sparse: true },
-        { key: { domainId: 1, docType: 1, sort: 1, docId: 1 }, name: 'sort', sparse: true },
-        { key: { domainId: 1, docType: 1, tag: 1, sort: 1 }, name: 'tag', sparse: true },
-        { key: { domainId: 1, docType: 1, hidden: 1, tag: 1, sort: 1 }, name: 'hidden', sparse: true },
+        { key: { domainId: 1, docType: 1, sort: 1, docId: 1 }, name: 'sort' },
         // For problem solution
         { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
         // For discussion
