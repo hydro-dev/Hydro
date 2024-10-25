@@ -121,7 +121,7 @@ export const xss = new FilterXSS({
     ...commonRules.whiteList,
     area: ['shape', 'coords', 'href', 'alt'],
     article: [],
-    audio: ['autoplay', 'controls', 'loop', 'preload', 'src'],
+    audio: ['controls', 'loop', 'preload', 'src'],
     col: ['align', 'valign', 'span', 'width'],
     colgroup: ['align', 'valign', 'span', 'width'],
     dd: [],
@@ -146,7 +146,7 @@ export const xss = new FilterXSS({
     thead: ['align', 'valign'],
     tr: ['rowspan', 'align', 'valign'],
     ul: [],
-    video: ['autoplay', 'controls', 'loop', 'preload', 'src', 'height', 'width'],
+    video: ['controls', 'loop', 'preload', 'src', 'height', 'width'],
   },
   css: cssFilterOptions,
   safeAttrValue(tag, name, value) {
