@@ -241,7 +241,7 @@ declare module './model/problem' {
         docId: number;
         pid: string;
         title: string;
-        content: string;
+        content: ({ id: string, name: string, lang: string } | { from: string, name: string, lang: string })[];
         nSubmit: number;
         nAccept: number;
         tag: string[];

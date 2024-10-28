@@ -90,6 +90,8 @@ export class ProblemModel {
         'reference', 'maintainer',
     ];
 
+    static collContent = db.collection('problem.content');
+
     static default = {
         _id: new ObjectId(),
         domainId: 'system',
@@ -98,7 +100,7 @@ export class ProblemModel {
         pid: '',
         owner: 1,
         title: '*',
-        content: '',
+        content: [],
         html: false,
         nSubmit: 0,
         nAccept: 0,
@@ -119,7 +121,7 @@ export class ProblemModel {
         pid: null,
         owner: 1,
         title: '*',
-        content: 'Deleted Problem',
+        content: [],
         html: false,
         nSubmit: 0,
         nAccept: 0,
@@ -133,7 +135,7 @@ export class ProblemModel {
     };
 
     static async add(
-        domainId: string, pid: string = '', title: string, content: string, owner: number,
+        domainId: string, pid: string = '', title: string, content: ProblemDoc['content'], owner: number,
         tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
@@ -148,7 +150,7 @@ export class ProblemModel {
 
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
-        content: string, owner: number, tag: string[] = [],
+        content: ProblemDoc['content'], owner: number, tag: string[] = [],
         meta: ProblemCreateOptions = {},
     ) {
         const ddoc = await DomainModel.get(domainId);
@@ -186,6 +188,11 @@ export class ProblemModel {
             res.config = `Cannot parse: ${e.message}`;
         }
         return res;
+    }
+
+    static async getContent(contentIds: string[]) {
+        const content = await ProblemModel.collContent.find({ _id: { $in: contentIds } }).toArray();
+        return Object.fromEntries(content.map((i) => [i._id.toString(), i.content]));
     }
 
     static getMulti(domainId: string, query: Filter<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
@@ -234,7 +241,7 @@ export class ProblemModel {
         if (pid && (/^[0-9]+$/.test(pid) || await ProblemModel.get(target, pid))) pid = '';
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
         return await ProblemModel.add(
-            target, pid, original.title, original.content,
+            target, pid, original.title, original.content.map((i) => ({ name: i.name, lang: i.lang, from: 'id' in i ? i.id : i.from })),
             original.owner, original.tag, { hidden: original.hidden, reference: { domainId, pid: _id } },
         );
     }
@@ -611,16 +618,20 @@ export class ProblemModel {
                 nAccept: pdoc.nAccept,
                 difficulty: pdoc.difficulty,
             });
-            await fs.writeFile(problemYaml, problemYamlContent);
-            try {
-                const c = JSON.parse(pdoc.content);
-                for (const key of Object.keys(c)) {
-                    const problemContent = path.join(problemPath, `problem_${key}.md`);
-                    await fs.writeFile(problemContent, typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]));
-                }
-            } catch (e) {
-                const problemContent = path.join(problemPath, 'problem.md');
-                await fs.writeFile(problemContent, pdoc.content);
+            const [c] = await Promise.all([
+                ProblemModel.getContent(pdoc.content.map((i) => ('id' in i ? i.id : i.from))),
+                fs.writeFile(problemYaml, problemYamlContent),
+            ]);
+            for (const i of pdoc.content) {
+                await fs.writeFile(path.join(problemPath, `problem_${'id' in i ? i.id : i.from}.md`), [
+                    '---',
+                    yaml.dump({
+                        name: i.name,
+                        lang: i.lang,
+                    }),
+                    '---',
+                    c['id' in i ? i.id : i.from],
+                ].join('\n'));
             }
             if ((pdoc.data || []).length) {
                 const testdataPath = path.join(problemPath, 'testdata');
