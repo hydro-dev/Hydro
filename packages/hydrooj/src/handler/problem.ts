@@ -595,7 +595,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @route('pid', Types.ProblemId)
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.ProblemId, true, (i) => /^[a-zA-Z]+[a-zA-Z0-9]*$/i.test(i))
+    @post('pid', Types.ProblemId, true, (i) => /^([a-zA-Z0-9]{1,10}-)?[a-zA-Z]+[a-zA-Z0-9]*$/i.test(i))
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
