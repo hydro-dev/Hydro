@@ -219,7 +219,7 @@ class SystemUserImportHandler extends SystemHandler {
     @param('draft', Types.Boolean)
     async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
-        const udocs: { email: string, username: string, password: string, displayName?: string, payload?: any }[] = [];
+        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any; }[] = [];
         const messages = [];
         const mapping = {};
         const groups: Record<string, string[]> = {};
@@ -265,8 +265,8 @@ class SystemUserImportHandler extends SystemHandler {
                     const uid = await user.create(udoc.email, udoc.username, udoc.password);
                     mapping[udoc.email] = uid;
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
-                    if (udoc.payload?.school) await user.setById(uid, { school: udoc.payload.school });
-                    if (udoc.payload?.studentId) await user.setById(uid, { studentId: udoc.payload.studentId });
+                    if (udoc.school) await user.setById(uid, { school: udoc.school });
+                    if (udoc.studentId) await user.setById(uid, { studentId: udoc.studentId });
                     await this.ctx.serial('user/import/create', uid, udoc);
                 } catch (e) {
                     messages.push(e.message);
