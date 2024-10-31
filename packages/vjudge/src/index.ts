@@ -55,7 +55,7 @@ class AccountService {
             }
             if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
             const comment = langConfig.comment;
-            if (comment) {
+            if (comment && !this.Provider.noComment) {
                 const msg = `Hydro submission #${task.rid}@${new Date().getTime()}`;
                 if (typeof comment === 'string') task.code = `${comment} ${msg}\n${task.code}`;
                 else if (comment instanceof Array) task.code = `${comment[0]} ${msg} ${comment[1]}\n${task.code}`;
