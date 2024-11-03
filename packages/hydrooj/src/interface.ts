@@ -348,6 +348,7 @@ export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
     meta: JudgeMeta;
     data: FileInfo[];
     source: string;
+    trusted: boolean;
 }
 
 export interface ScoreboardNode {
