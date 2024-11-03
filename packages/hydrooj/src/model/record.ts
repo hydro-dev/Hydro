@@ -14,6 +14,7 @@ import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
+import DomainModel from './domain';
 import problem from './problem';
 import task from './task';
 
@@ -80,11 +81,13 @@ export default class RecordModel {
     static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
         rids = rids instanceof Array ? rids : [rids];
         if (!rids.length) return null;
-        const rdocs = (await Promise.all(rids.map((rid) => RecordModel.get(domainId, rid)))).filter((i) => i);
+        const rdocs = await RecordModel.getMulti(domainId, { _id: { $in: rids } }).toArray();
         if (!rdocs.length) return null;
         let source = `${domainId}/${rdocs[0].pid}`;
-        await task.deleteMany({ rid: { $in: rids } });
-        let pdoc = await problem.get(domainId, rdocs[0].pid);
+        let [pdoc] = await Promise.all([
+            problem.get(domainId, rdocs[0].pid),
+            task.deleteMany({ rid: { $in: rids } }),
+        ]);
         if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
         if (pdoc.reference) {
             pdoc = await problem.get(pdoc.reference.domainId, pdoc.reference.pid);
@@ -92,6 +95,7 @@ export default class RecordModel {
             source = `${pdoc.domainId}/${pdoc.docId}`;
         }
         meta = { ...meta, problemOwner: pdoc.owner };
+        const ddoc = await DomainModel.get(pdoc.domainId);
         return await task.addMany(rdocs.map((rdoc) => {
             let type = 'judge';
             if (typeof pdoc.config === 'string') throw new Error(pdoc.config);
@@ -110,6 +114,7 @@ export default class RecordModel {
                 },
                 data: pdoc.data,
                 source,
+                trusted: ddoc.isTrusted,
                 meta,
             } as any);
         }));

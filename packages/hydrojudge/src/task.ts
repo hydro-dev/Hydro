@@ -112,6 +112,7 @@ export class JudgeTask {
                 next: this.next,
                 isSelfSubmission: this.meta.problemOwner === this.request.uid,
                 key: md5(`${this.source}/${getConfig('secret')}`),
+                trusted: this.request.trusted,
                 lang: this.lang,
                 langConfig: (this.request.type === 'generate' || ['objective', 'submit_answer'].includes(this.request.config.type))
                     ? null : this.session.getLang(this.lang),

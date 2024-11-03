@@ -41,6 +41,7 @@ interface Args {
     next: NextFunction;
     key: string;
     isSelfSubmission: boolean;
+    trusted: boolean;
     lang: string;
     langConfig?: LangConfig;
 }
@@ -85,6 +86,6 @@ export default async function readCases(folder: string, cfg: ProblemConfigFile =
     }
     result.subtasks = normalizeSubtasks(result.subtasks || [], checkFile, config.time, config.memory, false, timeRate, memoryRate);
     if (result.key && args.key !== result.key) throw new FormatError('Incorrect secret key');
-    if (!result.key) isValidConfig(result);
+    if (!result.key && !args.trusted) isValidConfig(result);
     return result;
 }
