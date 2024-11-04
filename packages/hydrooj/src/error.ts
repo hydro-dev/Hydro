@@ -56,6 +56,7 @@ export const ProblemAlreadyExistError = Err('ProblemAlreadyExistError', Forbidde
 export const ProblemAlreadyUsedByContestError = Err('ProblemAlreadyUsedByContestError', ForbiddenError, 'Problem {0} is already used by contest {1}.');
 export const ProblemNotAllowPretestError = Err('ProblemNotAllowPretestError', ForbiddenError, 'Pretesting is not supported for {0}.');
 export const ProblemNotAllowLanguageError = Err('ProblemNotAllowSubmitError', ForbiddenError, 'This language is not allowed to submit.');
+export const ProblemNotAllowCopyError = Err('ProblemNotAllowCopyError', ForbiddenError, 'You are not allowed to copy this problem from {0} to {1}.');
 
 export const PretestRejudgeFailedError = Err('PretestRejudgeFailedError', BadRequestError, 'Cannot rejudge a pretest record.');
 export const HackRejudgeFailedError = Err('HackRejudgeFailedError', BadRequestError, 'Cannot rejudge a hack record.');
