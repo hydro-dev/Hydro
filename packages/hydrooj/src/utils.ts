@@ -1,5 +1,5 @@
 export function buildProjection<T extends string | number = string>(fields: readonly T[]): Record<T, true> {
-    const o: Record<T, true> = {} as any;
+    const o: Record<T, true> = Object.create(null);
     for (const k of fields) o[k] = true;
     return o;
 }
