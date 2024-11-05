@@ -221,8 +221,8 @@ class SystemUserImportHandler extends SystemHandler {
         const users = _users.split('\n');
         const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any; }[] = [];
         const messages = [];
-        const mapping = {};
-        const groups: Record<string, string[]> = {};
+        const mapping = Object.create(null);
+        const groups: Record<string, string[]> = Object.create(null);
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;

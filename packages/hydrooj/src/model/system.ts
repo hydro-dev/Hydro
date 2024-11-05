@@ -5,7 +5,7 @@ import { NumberKeys } from '../typeutils';
 import { SYSTEM_SETTINGS } from './setting';
 
 const coll = db.collection('system');
-const cache: Record<string, any> = {};
+const cache: Record<string, any> = Object.create(null);
 
 export function get<K extends keyof SystemKeys>(key: K): SystemKeys[K];
 export function get(key: string): any;
