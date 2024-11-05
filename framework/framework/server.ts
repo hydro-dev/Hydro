@@ -141,8 +141,8 @@ export class HandlerCommon {
     url(name: string, ...kwargsList: Record<string, any>[]) {
         if (name === '#') return '#';
         let res = '#';
-        const args: any = {};
-        const query: any = {};
+        const args: any = Object.create(null);
+        const query: any = Object.create(null);
         for (const kwargs of kwargsList) {
             for (const key in kwargs) {
                 args[key] = kwargs[key].toString().replace(/\//g, '%2F');
@@ -325,14 +325,14 @@ export interface WebServiceConfig {
 }
 
 export class WebService extends Service {
-    private registry: Record<string, any> = {};
+    private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];
     private handlerLayers = [];
     private wsLayers = [];
-    private captureAllRoutes = {};
+    private captureAllRoutes = Object.create(null);
 
-    renderers: Record<string, RendererFunction> = {};
+    renderers: Record<string, RendererFunction> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
