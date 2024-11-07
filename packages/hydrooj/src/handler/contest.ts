@@ -27,7 +27,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, Type, Types,
 } from '../service/server';
 
 export class ContestListHandler extends Handler {
@@ -618,10 +618,10 @@ type BuiltinInput = {
     groups: any[];
 };
 type AnyFunction = (...args: any) => any;
-type ParseArgs<T extends { [key: string]: keyof BuiltinInput | AnyFunction }> = {
-    [key in keyof T]: T[key] extends keyof BuiltinInput ? BuiltinInput[T[key]] : T[key] extends AnyFunction ? ReturnType<T[key]> : never
+type ParseArgs<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }> = {
+    [key in keyof T]: T[key] extends keyof BuiltinInput ? BuiltinInput[T[key]] : T[key] extends AnyFunction ? ReturnType<T[key]> : any
 };
-export interface ScoreboardView<T extends { [key: string]: keyof BuiltinInput | AnyFunction }> {
+export interface ScoreboardView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }> {
     id: string;
     name: string;
     supportedRules: string[];
@@ -650,12 +650,16 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
         for (const key in view.args) {
             if (typeof view.args[key] === 'function') {
                 try {
-                    args[key] = view.args[key](this.args);
+                    args[key] = view.args[key](this.args[key]);
                 } catch (e) {
                     throw new ValidationError(key);
                 }
-            } else if (fetcher[key]) {
-                args[key] = await fetcher[key](); // eslint-disable-line no-await-in-loop
+            } else if (view.args[key] instanceof Array) {
+                if (this.args[key] === undefined && view.args[key].find((i) => i === true)) continue;
+                if (view.args[key][1] && !view.args[key][1](this.args[key])) throw new ValidationError(key);
+                args[key] = view.args[key][0](this.args[key]);
+            } else if (fetcher[view.args[key]]) {
+                args[key] = await fetcher[view.args[key]](); // eslint-disable-line no-await-in-loop
             }
         }
         await view.display.call(this, args);
@@ -677,7 +681,7 @@ class ScoreboardService extends Service {
         ctx.set('scoreboard', this);
     }
 
-    addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction }>(
+    addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }>(
         id: string, name: string, args: T,
         { display, supportedRules, cacheTime }: {
             display: (this: ContestScoreboardHandler, args: ParseArgs<T>) => Promise<void>,
@@ -697,7 +701,8 @@ class ScoreboardService extends Service {
     }
 
     getAvailableViews(rule: string) {
-        return Object.values(this.views).filter((i) => i.supportedRules.includes(rule) || i.supportedRules.includes('*'));
+        return Object.fromEntries(Object.values(this.views).filter((i) => i.supportedRules.includes(rule) || i.supportedRules.includes('*'))
+            .map((i) => [i.id, i.name]));
     }
 
     getView(id: string) {
@@ -765,8 +770,8 @@ export async function apply(ctx: Context) {
     ctx.plugin(ScoreboardService);
     ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
         Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
-        Route('contest_scoreboard', '/contest/:tid/scoreboard/:viewId', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
-        scoreboard.addView('default', 'Default', { tdoc: 'tdoc', groups: 'groups', realtime: Schema.boolean().default(false) }, {
+        Route('contest_scoreboard_view', '/contest/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
+        scoreboard.addView('default', 'Default', { tdoc: 'tdoc', groups: 'groups', realtime: Types.Boolean }, {
             async display({ realtime, tdoc, groups }) {
                 if (realtime && !this.user.own(tdoc)) {
                     this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
@@ -780,8 +785,9 @@ export async function apply(ctx: Context) {
                 const page_name = tdoc.rule === 'homework'
                     ? 'homework_scoreboard'
                     : 'contest_scoreboard';
+                const availableViews = scoreboard.getAvailableViews(tdoc.rule);
                 this.response.body = {
-                    tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups,
+                    tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups, availableViews,
                 };
                 this.response.pjax = 'partials/scoreboard.html';
                 this.response.template = 'contest_scoreboard.html';
@@ -839,17 +845,27 @@ export async function apply(ctx: Context) {
             },
             supportedRules: ['*'],
         });
-        scoreboard.addView('export', 'Export', { tdoc: 'tdoc', ext: Schema.union(['csv', 'html']).required() }, {
-            async display({ tdoc, ext }) {
+        scoreboard.addView('html', 'HTML', { tdoc: 'tdoc' }, {
+            async display({ tdoc }) {
                 await this.limitRate('scoreboard_download', 60, 3);
-                const getContent = {
-                    csv: async (rows) => `\uFEFF${rows.map((c) => (c.map((i) => i.value?.toString().replace(/\n/g, ' ')).join(','))).join('\n')}`,
-                    html: (rows) => this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }),
-                };
                 const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
                     isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
                 });
-                this.binary(await getContent[ext](rows), `${this.tdoc.title}.${ext}`);
+                this.binary(await this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }), `${this.tdoc.title}.html`);
+            },
+            supportedRules: ['*'],
+        });
+        scoreboard.addView('csv', 'CSV', { tdoc: 'tdoc' }, {
+            async display({ tdoc }) {
+                await this.limitRate('scoreboard_download', 60, 3);
+                const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
+                    isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                });
+                const escapeValue = (i: string) => `"${i.toString().replace(/\n/g, ' ').replace(/"/g, '\\"')}"`;
+                this.binary(
+                    `\uFEFF${rows.map((c) => (c.map((i) => escapeValue(i.value)).join(','))).join('\n')}`,
+                    `${this.tdoc.title}.csv`,
+                );
             },
             supportedRules: ['*'],
         });
