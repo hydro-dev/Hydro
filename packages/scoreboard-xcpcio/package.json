@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "main": "index.ts",
     "scripts": {
-        "install": "node -r @hydrooj/register install.ts"
+        "postinstall": "node -r @hydrooj/register install.ts"
     },
     "dependencies": {
         "@xcpcio/board-app": "^0.53.2"
