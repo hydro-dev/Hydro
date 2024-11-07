@@ -43,6 +43,7 @@ export interface EventMap extends KnownHandlerEvents {
     'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
+    'task/daily/finish': (pref: Record<string, number>) => void;
 
     'user/message': (uid: number, mdoc: MessageDoc) => void
     'user/get': (udoc: User) => void
