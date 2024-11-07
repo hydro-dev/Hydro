@@ -1,9 +1,9 @@
 import AdmZip from 'adm-zip';
+import { stringify as toCSV } from 'csv-stringify/sync';
 import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import Schema from 'schemastery';
 import {
     Counter, sortFiles, streamToBuffer, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
@@ -861,11 +861,7 @@ export async function apply(ctx: Context) {
                 const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
                     isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
                 });
-                const escapeValue = (i: string) => `"${i.toString().replace(/\n/g, ' ').replace(/"/g, '\\"')}"`;
-                this.binary(
-                    `\uFEFF${rows.map((c) => (c.map((i) => escapeValue(i.value)).join(','))).join('\n')}`,
-                    `${this.tdoc.title}.csv`,
-                );
+                this.binary(toCSV(rows.map((r) => r.map((c) => c.value.toString()))), `${this.tdoc.title}.csv`);
             },
             supportedRules: ['*'],
         });

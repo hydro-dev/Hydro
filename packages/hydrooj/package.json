@@ -25,6 +25,7 @@
         "adm-zip": "0.5.14",
         "cac": "^6.7.14",
         "cordis": "3.18.1",
+        "csv-stringify": "^6.5.1",
         "emoji-regex": "^10.4.0",
         "emojis-list": "2.1.0",
         "fs-extra": "^11.2.0",
