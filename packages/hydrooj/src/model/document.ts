@@ -19,6 +19,7 @@ type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, Symbol>;
 
 export const coll = db.collection('document');
 export const collStatus = db.collection('document.status');
+export const collContent = db.collection('content');
 
 export const TYPE_PROBLEM: 10 = 10;
 export const TYPE_PROBLEM_SOLUTION: 11 = 11;
@@ -51,13 +52,13 @@ export interface DocStatusType {
 }
 
 export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(
-    domainId: string, content: Content, owner: number,
+    domainId: string, content: DocType[T]['content'], owner: number,
     docType: T, docId: K,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
 ): Promise<K>;
 export async function add<T extends keyof DocType>(
-    domainId: string, content: Content, owner: number,
+    domainId: string, content: DocType[T]['content'], owner: number,
     docType: T, docId: null,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
@@ -425,6 +426,29 @@ export async function revSetStatus<T extends keyof DocStatusType>(
     return res.value;
 }
 
+export async function getContent(contentId: string) {
+    return await collContent.findOne({ _id: contentId });
+}
+
+export async function getContents(contentIds: string[]) {
+    return await collContent.find({ _id: { $in: contentIds } }).toArray();
+}
+
+export async function addContent(content: string) {
+    const id = String.random(32);
+    await collContent.insertOne({ _id: id, content });
+    return id;
+}
+
+export async function setContent(contentId: string, content: string) {
+    const res = await collContent.updateOne({ _id: contentId }, { $set: { content } });
+    return !!res.matchedCount;
+}
+
+export async function deleteContent(contentId: string) {
+    return await collContent.deleteOne({ _id: contentId });
+}
+
 export async function apply(ctx: Context) {
     ctx.on('domain/delete', (domainId) => Promise.all([
         coll.deleteMany({ domainId }),
@@ -463,6 +487,7 @@ export async function apply(ctx: Context) {
 
 global.Hydro.model.document = {
     coll,
+    collContent,
     collStatus,
 
     add,
@@ -494,6 +519,11 @@ global.Hydro.model.document = {
     setStatus,
     setMultiStatus,
     setSub,
+    getContent,
+    getContents,
+    addContent,
+    setContent,
+    deleteContent,
 
     TYPE_CONTEST,
     TYPE_CONTEST_CLARIFICATION,

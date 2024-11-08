@@ -68,7 +68,7 @@ export interface EventMap extends KnownHandlerEvents {
     'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn
     'discussion/add': (payload: Partial<DiscussionDoc>) => VoidReturn
 
-    'problem/before-add': (domainId: string, content: string, owner: number, docId: number, doc: Partial<ProblemDoc>) => VoidReturn
+    'problem/before-add': (domainId: string, content: ProblemDoc['content'], owner: number, docId: number, doc: Partial<ProblemDoc>) => VoidReturn
     'problem/add': (doc: Partial<ProblemDoc>, docId: number) => VoidReturn
     'problem/before-edit': (doc: Partial<ProblemDoc>) => VoidReturn
     'problem/edit': (doc: ProblemDoc) => VoidReturn

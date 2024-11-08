@@ -12,7 +12,7 @@ import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, ProblemConfigFile, ProblemDict, ProblemStatusDoc, User,
+    Document, LocalizedContent, ProblemConfigFile, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
@@ -90,8 +90,6 @@ export class ProblemModel {
         'reference', 'maintainer',
     ];
 
-    static collContent = db.collection('problem.content');
-
     static default = {
         _id: new ObjectId(),
         domainId: 'system',
@@ -135,15 +133,29 @@ export class ProblemModel {
     };
 
     static async add(
-        domainId: string, pid: string = '', title: string, content: ProblemDoc['content'], owner: number,
-        tag: string[] = [], meta: ProblemCreateOptions = {},
+        domainId: string, pid: string = '', title: string,
+        content: { content?: string, from?: string, lang: string, name: string }[] | string,
+        owner: number, tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
+        let c: LocalizedContent;
+        if (typeof content === 'string') {
+            c.push({ id: await document.addContent(content), name: 'default', lang: 'en' });
+        } else {
+            for (const entry of content) {
+                if (entry.from) {
+                    c.push(entry as any);
+                } else {
+                    const id = await document.addContent(entry.content);
+                    c.push({ id, name: entry.name, lang: entry.lang });
+                }
+            }
+        }
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
         const result = await ProblemModel.addWithId(
             domainId, (doc?.docId || 0) + 1, pid,
-            title, content, owner, tag, meta,
+            title, c, owner, tag, meta,
         );
         return result;
     }
@@ -191,7 +203,7 @@ export class ProblemModel {
     }
 
     static async getContent(contentIds: string[]) {
-        const content = await ProblemModel.collContent.find({ _id: { $in: contentIds } }).toArray();
+        const content = await document.getContents(contentIds);
         return Object.fromEntries(content.map((i) => [i._id.toString(), i.content]));
     }
 
@@ -219,7 +231,10 @@ export class ProblemModel {
         return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
     }
 
-    static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
+    static async edit(
+        domainId: string, _id: number,
+        $set: (Partial<ProblemDoc> & ({ content?: { content: string }[] })),
+    ): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
         const ddoc = await DomainModel.get(domainId);
         if (delpid) {
@@ -229,6 +244,23 @@ export class ProblemModel {
             $set.sort = sortable($set.pid, ddoc.namespaces);
         }
         await bus.parallel('problem/before-edit', $set);
+        if ($set.content) {
+            const update = $set.content instanceof Array ? $set.content : [{ content: $set.content, lang: 'en', name: 'default' }];
+            const existing = await document.get(domainId, document.TYPE_PROBLEM, _id);
+            if (!existing) throw new ProblemNotFoundError(domainId, _id);
+            const contents = existing.content;
+            const final = [];
+            for (const entry of update) {
+                if ('id' in entry && contents.find((i) => i.id === entry.id)) {
+                    await document.setContent(entry.id, entry.content);
+                    final.push({ id: entry.id, name: entry.name, lang: entry.lang });
+                } else {
+                    const cid = await document.addContent(entry.content);
+                    final.push({ id: cid, name: entry.name, lang: entry.lang });
+                }
+            }
+            $set.content = final;
+        }
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
         await bus.emit('problem/edit', result);
         return result;
@@ -542,7 +574,9 @@ export class ProblemModel {
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: pdoc.title.trim(),
-                        content: overrideContent || pdoc.content.toString() || 'No content',
+                        content: [{
+                            id: '', name: 'default', content: overrideContent || pdoc.content.toString() || 'No content', lang: 'en',
+                        }],
                         tag,
                         difficulty: pdoc.difficulty,
                     })).docId
