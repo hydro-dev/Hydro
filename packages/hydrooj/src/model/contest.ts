@@ -849,25 +849,23 @@ export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
-async function _updateStatus(
-    tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
-    subtasks: Record<number, SubtaskResult>,
+export async function updateStatus(
+    domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
+    {
+        status = STATUS.STATUS_WAITING,
+        score = 0,
+        subtasks,
+        lang,
+    }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
+    const tdoc = await get(domainId, tid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
-        rid, pid, status, score, subtasks,
+        rid, pid, status, score, subtasks, lang,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
-}
-
-export async function updateStatus(
-    domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
-    status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
-) {
-    const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
-    return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {
