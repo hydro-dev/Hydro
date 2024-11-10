@@ -491,7 +491,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             }
         }
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
-        await this.limitRate('add_record', 60, system.get('limit.submission'));
+        await this.limitRate('add_record', 60, pretest ? system.get('limit.pretest') : system.get('limit.submission'));
         const files: Record<string, string> = {};
         const lengthLimit = system.get('limit.codelength') || 128 * 1024;
         if (!code) {
