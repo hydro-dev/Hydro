@@ -1,5 +1,6 @@
 {% extends "layout/html5.html" %}
 {% block body %}
+{{ set(UiContext, 'payload', payload) }}
 <div class="rank-list" id="rank-list"></div>
 <footer class="footer">
     <div class="container clearfix">

@@ -2,7 +2,7 @@
 import { animated, easings, useSprings } from '@react-spring/web';
 import useKey from 'react-use/lib/useKey';
 import {
-  addPage, NamedPage, React, ReactDOM, request, sleep,
+  addPage, NamedPage, React, ReactDOM, request,
 } from '@hydrooj/ui-default';
 import { ResolverInput } from '../interface';
 
@@ -325,6 +325,13 @@ async function loadAndStart(input: string, lock = 0, options: DisplaySettings) {
 }
 
 addPage(new NamedPage(['resolver'], () => {
+  if (UiContext.payload) {
+    start(UiContext.payload, {
+      showAvatar: true,
+      showSchool: true,
+    });
+    return;
+  }
   const current = new URL(window.location.href);
   const input = current.searchParams.get('input');
   if (input) {
