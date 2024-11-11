@@ -76,6 +76,7 @@ export async function run({
     const query = (q: string) => new Promise<any[]>((res, rej) => {
         src.query(q).then((r) => res(r)).catch((e) => rej(e));
     });
+    report({ message: JSON.stringify(await query("show VARIABLES like 'char%';")) });
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
@@ -167,6 +168,7 @@ export async function run({
             }
             if (!pidMap[pdoc.problem_id]) {
                 const files = {};
+                const markdown = [pdoc.description?.[0], pdoc.input?.[0], pdoc.output?.[0], pdoc.hint?.[0]].some((i) => i?.includes('[md]'));
                 let content = buildContent({
                     description: pdoc.description,
                     input: pdoc.input,
@@ -174,7 +176,7 @@ export async function run({
                     samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }, 'html');
+                }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
                 const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     try {
@@ -190,6 +192,7 @@ export async function run({
                     1, pdoc.source?.trim().length ? pdoc.source.split(' ').map((i) => i.trim()).filter((i) => i) : [],
                     { hidden: pdoc.defunct === 'Y' },
                 );
+                if (!markdown) await ProblemModel.edit(domainId, pid, { html: true });
                 pidMap[pdoc.problem_id] = pid;
                 await Promise.all(Object.keys(files).map((filename) => ProblemModel.addAdditionalFile(domainId, pid, filename, files[filename])));
                 if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for problem ${pid}` });

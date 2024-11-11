@@ -1,0 +1,12 @@
+{
+    "name": "@hydrooj/scoreboard-xcpcio",
+    "license": "AGPL-3.0-or-later",
+    "version": "0.0.1",
+    "main": "index.ts",
+    "scripts": {
+        "postinstall": "node -r @hydrooj/register install.ts"
+    },
+    "dependencies": {
+        "@xcpcio/board-app": "^0.53.2"
+    }
+}

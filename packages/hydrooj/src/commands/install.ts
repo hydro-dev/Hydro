@@ -7,6 +7,7 @@ import fs from 'fs-extra';
 import superagent from 'superagent';
 import tar from 'tar';
 import { extractZip, Logger } from '@hydrooj/utils';
+import { version } from 'hydrooj/package.json';
 
 const logger = new Logger('install');
 let yarnVersion = 0;
@@ -23,6 +24,7 @@ const addonDir = path.join(hydroPath, 'addons');
 function downloadAndExtractTgz(url: string, dest: string) {
     return new Promise((resolve, reject) => {
         superagent.get(url)
+            .set('User-Agent', `Hydro/${version} Node.js/${process.version.split('v').pop()}`)
             .pipe(tar.x({
                 C: dest,
                 strip: 1,
@@ -85,6 +87,8 @@ export function register(cli: CAC) {
             src: _src,
             lastUpdate: Date.now(),
         }));
+        logger.success(`Successfully installed ${_src}.`);
+        logger.info('Please restart Hydro to apply changes.');
     });
     cli.command('uninstall [package]').action(async (name) => {
         if (!name) {

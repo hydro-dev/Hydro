@@ -22,6 +22,7 @@ interface MongoConfig {
     url?: string,
     uri?: string,
     prefix?: string,
+    collectionMap?: Record<string, string>,
 }
 
 class MongoService {
@@ -54,8 +55,9 @@ class MongoService {
     }
 
     public collection<K extends keyof Collections>(c: K) {
-        if (this.opts.prefix) return this.db.collection<Collections[K]>(`${this.opts.prefix}.${c}`);
-        return this.db.collection<Collections[K]>(c);
+        let coll = this.opts.prefix ? `${this.opts.prefix}.${c}` : c;
+        if (this.opts.collectionMap?.[coll]) coll = this.opts.collectionMap[coll];
+        return this.db.collection<Collections[K]>(coll);
     }
 
     public async fixExpireAfter() {
@@ -68,6 +70,23 @@ class MongoService {
                 if (typeof i.expireAfterSeconds !== 'number') continue;
                 const key = Object.keys(i.key)[0];
                 await coll.deleteMany({ [key]: { $lt: new Date(Date.now() - i.expireAfterSeconds * 1000) } });
+            }
+        }
+    }
+
+    public async clearIndexes<T>(coll: Collection<T>, dropIndex?: string[]) {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
+        let existed: any[];
+        try {
+            existed = await coll.listIndexes().toArray();
+        } catch (e) {
+            existed = [];
+        }
+        for (const index of dropIndex) {
+            const i = existed.find((t) => t.name === index);
+            if (i) {
+                logger.info('Drop index %s.%s', coll.collectionName, i.name);
+                await coll.dropIndex(i.name);
             }
         }
     }
@@ -89,7 +108,14 @@ class MongoService {
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.createIndexes([index]);
-            } else if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) {
+                continue;
+            }
+            const isDifferent = () => {
+                if (i.v < 2 || i.name !== index.name || JSON.stringify(i.key) !== JSON.stringify(index.key)) return true;
+                if (!!i.sparse !== !!index.sparse) return true;
+                return false;
+            };
+            if (isDifferent()) {
                 if (i.textIndexVersion) {
                     const cur = Object.keys(i.key).filter((t) => !t.startsWith('_')).map((k) => `${k}:${i.key[k]}`);
                     for (const key of Object.keys(i.weights)) cur.push(`${key}:text`);
@@ -122,12 +148,12 @@ class MongoService {
         return [pageDocs, numPages, count];
     }
 
-    async ranked<T extends Record<string, any>>(cursor: FindCursor<T>, equ: (a: T, b: T) => boolean): Promise<[number, T][]> {
+    async ranked<T extends Record<string, any>>(cursor: T[] | FindCursor<T>, equ: (a: T, b: T) => boolean): Promise<[number, T][]> {
         let last = null;
         let r = 0;
         let count = 0;
         const results = [];
-        const docs = await cursor.toArray();
+        const docs = cursor instanceof Array ? cursor : await cursor.toArray();
         for (const doc of docs) {
             if ((doc as any).unrank) {
                 results.push([0, doc]);

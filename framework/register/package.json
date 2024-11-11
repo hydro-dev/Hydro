@@ -1,13 +1,13 @@
 {
     "name": "@hydrooj/register",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "license": "MIT",
     "main": "index.js",
     "engines": {
         "node": ">=16"
     },
     "dependencies": {
-        "esbuild": "0.21.4",
+        "esbuild": "0.24.0",
         "source-map-support": "^0.5.21"
     },
     "devDependencies": {

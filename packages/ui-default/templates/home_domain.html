@@ -32,16 +32,8 @@
           <td class="col--icon">
             <img src="{{ avatarUrl(ddoc.avatar, 32) }}" width="32" height="32">
           </td>
-          <td class="col--name">
-            <form class="form--inline" method="post">
-              <input type="hidden" name="id" value="{{ ddoc['_id'] }}">
               {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
-              <input type="hidden" name="operation" value="{{ "unstar" if _show else "star" }}">
-              <button class="star{% if _show %} activated{% endif %}" type="submit">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
-              </button>
-            </form>
+          <td class="col--name" data-star-action="?id={{ ddoc['_id'] }}" data-star="{{ _show }}">
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})
           </td>
           <td class="col--role">

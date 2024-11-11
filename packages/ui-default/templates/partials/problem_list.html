@@ -54,17 +54,7 @@
             <td class="col--status record-status--border edit-mode-hide"></td>
           {% endif %}
         {% endif %}
-        <td class="col--name col--problem-name">
-          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-            <form class="form--inline" action="{{ url('problem_main', domainId = pdoc.domainId) }}" method="post">
-              <input type="hidden" name="pid" value="{{ pdoc.docId }}">
-              <input type="hidden" name="operation" value="{{ "star" if not psdoc.star else "unstar" }}">
-              <button class="star{% if psdoc.star %} activated{% endif %}" type="submit">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
-              </button>
-            </form>
-          {% endif %}
+        <td class="col--name col--problem-name" data-star-action="{{ url('problem_detail', pid=pdoc.docId) }}" {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %} data-star="{{ psdoc.star }}"{% endif %}>
           {{ problem.render_problem_title(pdoc) }}
         </td>
         <td class="col--ac-tried">{{ pdoc.nAccept }} / {{ pdoc.nSubmit }}</td>

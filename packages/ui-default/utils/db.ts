@@ -11,7 +11,7 @@ export const openDB = _open('hydro', 1, {
       for (const key of keys) {
         if (key.endsWith('#objective')) {
           const value = localStorage.getItem(key);
-          if (value) solutionStore.put({ id: key, value: JSON.parse(value) });
+          if (value) solutionStore.put({ id: key, value });
           localStorage.removeItem(key);
         }
         if (key.startsWith('scoreboard-star/')) localStorage.removeItem(key);

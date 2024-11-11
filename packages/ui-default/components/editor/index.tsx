@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import { i18n } from 'vj/utils';
+import { getTheme, i18n } from 'vj/utils';
 import uploadFiles from '../upload';
 
 interface MonacoOptions {
@@ -40,7 +40,7 @@ export default class Editor extends DOMAttachedObject {
     const { load } = await import('vj/components/monaco/loader');
     const {
       onChange, language = 'markdown',
-      theme = UserContext.monacoTheme || 'vs-light',
+      theme = `vs-${getTheme()}`,
       model = `file://model-${Math.random().toString(16)}`,
       autoResize = true, autoLayout = true,
       hide = [], lineNumbers = 'on',
@@ -170,6 +170,7 @@ export default class Editor extends DOMAttachedObject {
         codeStyleReverse={false}
         ref={renderCallback}
         modelValue={val}
+        theme={getTheme()}
         noMermaid
         noPrettier
         autoDetectCode

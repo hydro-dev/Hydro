@@ -43,10 +43,14 @@ export interface EventMap extends KnownHandlerEvents {
     'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
     'task/daily': () => void;
+    'task/daily/finish': (pref: Record<string, number>) => void;
 
     'user/message': (uid: number, mdoc: MessageDoc) => void
     'user/get': (udoc: User) => void
     'user/delcache': (content: string | true) => void
+
+    'user/import/parse': (payload: any) => VoidReturn
+    'user/import/create': (uid: number, udoc: any) => VoidReturn
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn
     'domain/before-get': (query: Filter<DomainDoc>) => VoidReturn
@@ -83,9 +87,11 @@ export interface EventMap extends KnownHandlerEvents {
 
     'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn
     'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn
+    'contest/edit': (payload: Tdoc) => VoidReturn
     'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn
     'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
+    'contest/del': (domainId: string, tid: ObjectId) => VoidReturn
 
     'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
 

@@ -34,12 +34,13 @@ function locateFile(basePath: string, filenames: string[]) {
 }
 
 type LoadTask = 'handler' | 'model' | 'addon' | 'lib' | 'script' | 'service';
-const getLoader = (type: LoadTask, filename: string) => async function loader(pending: string[], fail: string[], ctx: Context) {
+const getLoader = (type: LoadTask, filename: string, dontLoad = false) => async function loader(pending: string[], fail: string[], ctx: Context) {
     for (const i of pending) {
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {
             const name = type.replace(/^(.)/, (t) => t.toUpperCase());
             try {
+                if (dontLoad) throw new Error(`deprecated ${name} in %s will not be load: ${i}`);
                 const m = unwrapExports(require(p));
                 if (m.apply) ctx.loader.reloadPlugin(ctx, p, {});
                 else logger.info(`${name} init: %s`, i);
@@ -56,11 +57,11 @@ const getLoader = (type: LoadTask, filename: string) => async function loader(pe
     }
 };
 
-export const handler = getLoader('handler', 'handler');
+export const handler = getLoader('handler', 'handler', true);
 export const addon = getLoader('addon', 'index');
 export const model = getLoader('model', 'model');
-export const lib = getLoader('lib', 'lib');
-export const script = getLoader('script', 'script');
+export const lib = getLoader('lib', 'lib', true);
+export const script = getLoader('script', 'script', true);
 export const service = getLoader('service', 'service');
 
 export async function builtinModel(ctx: Context) {

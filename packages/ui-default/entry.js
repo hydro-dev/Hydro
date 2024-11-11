@@ -1,6 +1,5 @@
 import './polyfill';
 
-import * as Sentry from '@sentry/browser';
 import $ from 'jquery';
 
 window.Hydro = {
@@ -30,32 +29,15 @@ console.log(
 
 window.UiContext = JSON.parse(window.UiContext);
 window.UserContext = JSON.parse(window.UserContext);
-if (process.env.NODE_ENV === 'production' && !UiContext.sentry_disable) {
-  window.captureException = (e) => {
-    if (!e.isUserFacingError) Sentry.captureException(e);
-  };
-  Sentry.init({
-    dsn: UiContext.sentry_dsn || 'https://2f95d53751e08c74c1af1c4b93ccaff7@sentry.hydro.ac/2',
-    release: `hydro-web@${process.env.VERSION}`,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.browserApiErrorsIntegration(),
-      Sentry.replayIntegration({
-        networkRequestHeaders: ['Content-Type'],
-        networkResponseHeaders: ['Content-Type', 'Location'],
-      }),
-    ],
-    tracesSampleRate: 0.1,
-    tracePropagationTargets: ['localhost', /^\//, window.location.host],
-    replaysSessionSampleRate: 0.03,
-    replaysOnErrorSampleRate: 1.0,
-  });
-}
 try { __webpack_public_path__ = UiContext.cdn_prefix; } catch (e) { }
 if ('serviceWorker' in navigator) {
-  const encodedConfig = encodeURIComponent(JSON.stringify(UiContext.SWConfig));
-  navigator.serviceWorker.register(`/service-worker.js?config=${encodedConfig}`).then((registration) => {
+  navigator.serviceWorker.register('/service-worker.js').then((registration) => {
     console.log('SW registered: ', registration);
+    fetch('/service-worker-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(UiContext.SWConfig),
+    });
   }).catch((registrationError) => {
     console.log('SW registration failed: ', registrationError);
   });
@@ -64,6 +46,15 @@ if ('serviceWorker' in navigator) {
 const PageLoader = '<div class="page-loader nojs--hide" style="display:none;"><div class="loader"></div></div>';
 $('body').prepend(PageLoader);
 $('.page-loader').fadeIn(500);
+if (process.env.NODE_ENV === 'production' && UiContext.sentry_dsn) {
+  window._sentryEvents = [];
+  window.captureException = (e) => {
+    if (!e.isUserFacingError) window._sentryEvents.push(e);
+  };
+  const script = document.createElement('script');
+  script.src = '/sentry.js';
+  document.body.appendChild(script);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
   Object.assign(window.UiContext, JSON.parse(window.UiContextNew));

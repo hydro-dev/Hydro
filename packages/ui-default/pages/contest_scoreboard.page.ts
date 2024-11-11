@@ -7,7 +7,7 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], async 
   const db = await openDB;
   const { tdoc } = UiContext;
   const id = `${tdoc.domainId}/${tdoc.docId}`;
-  const read = async () => (await db.get('scoreboard-star', id))?.value || [];
+  const read = async () => (await db.get('scoreboard-star', id))?.data || [];
   const write = (data) => db.put('scoreboard-star', { id, data });
 
   $(`.star.user--${UserContext._id}`).closest('tr').addClass('star-highlight');

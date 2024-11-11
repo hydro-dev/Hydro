@@ -18,7 +18,7 @@
     {% endif %}
     {% if levelbadge and udoc.level %}
       {% set level = udoc.level %}
-      <a class="user-profile-badge v-center badge--lv{{ level }}" href="{{ url('user_detail', uid=udoc._id) }}" data-tooltip="LV {{ level }}: Top {{ model.builtin.LEVELS[level]|default('N/A') }}%">LV {{ level }}</a>
+      <a class="user-profile-badge v-center badge--lv{{ level }}" href="{{ url('user_detail', uid=udoc._id) }}" data-tooltip="{{ _('LV '+ level) }}: Top {{ model.builtin.LEVELS[level]|default('N/A') }}%">{{ _('LV '+ level) }}</a>
     {% endif %}
     {% if modbadge %}
       {% if udoc.hasPriv(PRIV.PRIV_MOD_BADGE) %}

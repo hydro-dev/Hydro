@@ -8,11 +8,16 @@
 <div class="row"><div class="medium-12 columns scoreboard--{{ tdoc.rule }}">
   <div class="section visible">
     <div class="section__header">
-      {%- for ext in ['HTML','CSV','Ghost'] -%}
-        <a class="button" target="_blank" href="{{ url(type + '_scoreboard_download', tid=tdoc.docId, ext=ext.toLowerCase()) }}">
+      {%- for ext in ['HTML', 'CSV', 'Ghost'] -%}
+        <a class="button" target="_blank" href="{{ url(type + '_scoreboard_view', tid=tdoc.docId, view=ext.toLowerCase()) }}">
           <span class="icon icon-download"></span> {{ _('Export as {0}').format(ext) }}
         </a>
       {%- endfor -%}
+      {% for id, name in availableViews %}{% if not ['html', 'csv', 'default', 'ghost'].includes(id) %}
+        <a class="button" target="_blank" href="{{ url(type + '_scoreboard_view', tid=tdoc.docId, view=id) }}">
+          <span class="icon icon-copy"></span> {{ _(name) }}
+        </a>
+      {% endif %}{% endfor %}
       {% if model.contest.isDone(tdoc) and tdoc.lockAt and handler.user.own(tdoc) and not tdoc.unlocked %}
         <form method="POST">
           <input type="hidden" name="operation" value="unlock">

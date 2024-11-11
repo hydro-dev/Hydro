@@ -48,6 +48,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
         domainId: handler.args.domainId,
         ua: handler.request.headers?.['user-agent'],
         referer: handler.request.headers?.referer,
+        path: handler.request.path,
         args,
         operator: handler.user?._id,
         operateIp: handler.request.ip,

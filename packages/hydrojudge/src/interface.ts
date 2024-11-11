@@ -32,5 +32,5 @@ export interface Session {
     cacheOpen: (source: string, files: any[], next?: NextFunction) => Promise<string>;
     fetchFile: (target: string) => Promise<string>;
     postFile: (target: string, filename: string, file: string) => Promise<void>;
-    config: { detail: boolean, host?: string };
+    config: { detail: boolean, host?: string, trusted?: boolean };
 }

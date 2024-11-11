@@ -67,9 +67,10 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 || request.query.noTemplate || !response.template) {
                 // Send raw data
                 try {
-                    if (typeof response.body === 'object') {
-                        response.body.UiContext = UiContext;
-                        response.body.UserContext = user;
+                    if (typeof response.body === 'object' && request.headers['x-hydro-inject']) {
+                        const inject = request.headers['x-hydro-inject'].toString().toLowerCase().split(',').map((i) => i.trim());
+                        if (inject.includes('uicontext')) response.body.UiContext = UiContext;
+                        if (inject.includes('usercontext')) response.body.UserContext = user;
                     }
                     response.body = JSON.stringify(response.body, serializer(false, handler));
                 } catch (e) {

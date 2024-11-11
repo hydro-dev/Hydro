@@ -1,8 +1,7 @@
 import * as status from '@hydrooj/utils/lib/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import {
-  avatar, buildContent, Context,
-  fs, PERM, PRIV, STATUS, yaml,
+  avatar, Context, fs, PERM, PRIV, STATUS, yaml,
 } from 'hydrooj';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
@@ -86,14 +85,13 @@ class Nunjucks extends nunjucks.Environment {
       } catch {
         s = content;
       }
-      if (typeof s === 'object' && !(s instanceof Array)) {
+      if (typeof s === 'object') {
         const langs = Object.keys(s);
         const f = langs.filter((i) => i.startsWith(language));
         if (s[language]) s = s[language];
         else if (f.length) s = s[f[0]];
         else s = s[langs[0]];
       }
-      if (s instanceof Array) s = buildContent(s, html ? 'html' : 'markdown', (str) => str.translate(language));
       return ensureTag(html ? xss.process(s) : markdown.render(s));
     });
     this.addFilter('contentLang', (content) => {
@@ -103,9 +101,7 @@ class Nunjucks extends nunjucks.Environment {
       } catch {
         s = content;
       }
-      if (typeof s === 'object' && !(s instanceof Array)) {
-        return Object.keys(s);
-      }
+      if (typeof s === 'object') return Object.keys(s);
       return [];
     });
     this.addFilter('log', (self) => {
@@ -160,6 +156,14 @@ env.addGlobal('set', (obj, key, val) => {
 });
 env.addGlobal('findSubModule', (prefix) => Object.keys(global.Hydro.ui.template).filter((n) => n.startsWith(prefix)));
 env.addGlobal('templateExists', (name) => !!global.Hydro.ui.template[name]);
+
+const platformIconMap = { 'mac os': 'mac' };
+const supportedPlatformIcons = ['android', 'chromeos', 'ios', 'linux', 'mac', 'mobile', 'windows'];
+env.addGlobal('platformIcon', (platform) => {
+  const key = platformIconMap[platform?.toLowerCase()] || platform?.toLowerCase();
+  if (supportedPlatformIcons.includes(key)) return key;
+  return 'unknown';
+});
 
 const render = (name: string, state: any) => new Promise<string>((resolve, reject) => {
   env.render(name, {

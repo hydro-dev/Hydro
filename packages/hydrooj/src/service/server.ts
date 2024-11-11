@@ -32,8 +32,9 @@ declare module '@hydrooj/framework' {
         domain: DomainDoc;
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
+        paginate<T>(cursor: FindCursor<T>, page: number, limit: number): Promise<[docs: T[], numPages: number, count: number]>;
         progress(message: string, params: any[]): void;
-        limitRate(op: string, periodSecs: number, maxOperations: number, withUserId?: boolean): Promise<void>;
+        limitRate(op: string, periodSecs: number, maxOperations: number, defaultKey?: string): Promise<void>;
         renderTitle(str: string): string;
     }
 }
@@ -102,7 +103,6 @@ export class Handler extends HandlerOriginal {
             });
         } else {
             this.response.status = error instanceof UserFacingError ? error.code : 500;
-            logger.error(error);
             this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
             this.response.body = {
                 UserFacingError,
@@ -139,6 +139,7 @@ export async function apply(ctx: Context) {
         cors: system.get('server.cors') || '',
         upload: system.get('server.upload') || '256m',
         port: argv.options.port || system.get('server.port'),
+        host: argv.options.host || system.get('server.host'),
         xff: system.get('server.xff'),
         xhost: system.get('server.xhost'),
     });
@@ -196,8 +197,8 @@ export async function apply(ctx: Context) {
             url(name: string, ...kwargsList: Record<string, any>[]) {
                 if (name === '#') return '#';
                 let res = '#';
-                const args: any = {};
-                const query: any = {};
+                const args: any = Object.create(null);
+                const query: any = Object.create(null);
                 for (const kwargs of kwargsList) {
                     for (const key in kwargs) {
                         if (kwargs[key] instanceof ObjectId) args[key] = kwargs[key].toHexString();
@@ -237,8 +238,8 @@ export async function apply(ctx: Context) {
                     : str.toString().translate(...this.context.acceptsLanguages(), system.get('server.language'));
                 return res;
             },
-            paginate<T>(cursor: FindCursor<T>, page: number, key: string) {
-                return db.paginate(cursor, page, this.ctx.setting.get(`pagination.${key}`));
+            paginate<T>(cursor: FindCursor<T>, page: number, key: string | number) {
+                return db.paginate(cursor, page, typeof key === 'number' ? key : (this.ctx.setting.get(`pagination.${key}`) || 20));
             },
             checkPerm(...args: bigint[]) {
                 if (!this.user.hasPerm(...args)) {
@@ -249,18 +250,19 @@ export async function apply(ctx: Context) {
             checkPriv(...args: number[]) {
                 if (!this.user.hasPriv(...args)) throw new PrivilegeError(...args);
             },
-            progress(message: string, params: any[]) {
+            progress(message: string, params: any[] = []) {
                 Hydro.model.message.sendInfo(this.user._id, JSON.stringify({ message, params }));
             },
             async limitRate(
-                op: string, periodSecs: number, maxOperations: number, withUserId = system.get('limit.by_user'),
+                op: string, periodSecs: number, maxOperations: number, defaultKey = system.get('limit.by_user') ? '{{ip}}@{{user}}' : '{{ip}}',
             ) {
                 if (ignoredLimit.includes(op)) return;
                 if (this.user && this.user.hasPriv(PRIV.PRIV_UNLIMITED_ACCESS)) return;
                 const overrideLimit = system.get(`limit.${op}`);
                 if (overrideLimit) maxOperations = overrideLimit;
-                let id = this.request.ip;
-                if (withUserId) id += `@${this.user._id}`;
+                // deprecated: remove boolean support in future
+                if (typeof defaultKey === 'boolean') defaultKey = defaultKey ? '{{user}}' : '{{ip}}';
+                const id = defaultKey.replace('{{ip}}', this.request.ip).replace('{{user}}', this.user._id);
                 await opcount.inc(op, id, periodSecs, maxOperations);
             },
             renderTitle(str: string) {

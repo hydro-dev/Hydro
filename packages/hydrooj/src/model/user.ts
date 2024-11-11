@@ -384,9 +384,12 @@ class UserModel {
         return projection ? coll.find(params).project<Udoc>(buildProjection(projection)) : coll.find(params);
     }
 
-    static async getListForRender(domainId: string, uids: number[], showDisplayName = true) {
+    static async getListForRender(domainId: string, uids: number[], extraFields?: string[]): Promise<BaseUserDict>;
+    static async getListForRender(domainId: string, uids: number[], arg: string[] | boolean) {
+        const fields = ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId'].concat(arg instanceof Array ? arg : []);
+        const showDisplayName = arg instanceof Array ? fields.includes('displayName') : arg;
         const [udocs, vudocs, dudocs] = await Promise.all([
-            UserModel.getMulti({ _id: { $in: uids } }, ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId']).toArray(),
+            UserModel.getMulti({ _id: { $in: uids } }, fields).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
             domain.getDomainUserMulti(domainId, uids).project({ uid: 1, ...(showDisplayName ? { displayName: 1 } : {}) }).toArray(),
         ]);

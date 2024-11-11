@@ -82,6 +82,16 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         return _tta;
     }
 
+    getCsrfTokenOnDocument(document: Document) {
+        const meta = document.querySelector("meta[name='X-Csrf-Token']")?.getAttribute('content');
+        if (meta?.length === 32) return meta;
+        const span = document.querySelector('span.csrf-token')?.getAttribute('data-csrf');
+        if (span?.length === 32) return span;
+        const input = document.querySelector('input[name="csrf_token"]')?.getAttribute('value');
+        if (input?.length === 32) return input;
+        return '';
+    }
+
     async getCsrfToken(url: string) {
         const { document, html, headers } = await this.html(url);
         if (document.body.children.length < 2 && html.length < 512) {
@@ -89,13 +99,7 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         }
         const ftaa = this.getCookie('70a7c28f3de') || 'n/a';
         const bfaa = this.getCookie('raa') || this.getCookie('bfaa') || 'n/a';
-        return [
-            (
-                document.querySelector('meta[name="X-Csrf-Token"]')
-                || document.querySelector('input[name="csrf_token"]')
-            )?.getAttribute('content'),
-            ftaa, bfaa, headers,
-        ];
+        return [this.getCsrfTokenOnDocument(document), ftaa, bfaa, headers];
     }
 
     get loggedIn() {
@@ -214,23 +218,13 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             files,
             tag,
             difficulty: getDifficulty(tag),
-            content: buildContent([
-                {
-                    type: 'Text', sectionTitle: 'Description', subType: 'markdown', text: description,
-                },
-                ...input ? [{
-                    type: 'Text', sectionTitle: 'Input', subType: 'markdown', text: input,
-                }] : [],
-                ...output ? [{
-                    type: 'Text', sectionTitle: 'Output', subType: 'markdown', text: output,
-                }] : [],
-                ...inputs.length ? [{
-                    type: 'Plain', text: [...inputs, ...outputs].join('\n'),
-                }] : [] as any,
-                ...note ? [{
-                    type: 'Text', sectionTitle: 'Note', subType: 'markdown', text: note,
-                }] : [],
-            ]),
+            content: buildContent({
+                description: description.replace(/tex-span/g, 'katex'),
+                input: input?.replace(/tex-span/g, 'katex'),
+                output: output?.replace(/tex-span/g, 'katex'),
+                samplesRaw: inputs.map((ipt, idx) => [ipt, outputs[idx]]).join('\n'),
+                hint: note?.replace(/tex-span/g, 'katex'),
+            }),
         };
     }
 
@@ -270,45 +264,55 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
         });
     }
 
+    async readLatestSubmission(contestId = '', allowEmpty = false) {
+        for (let i = 1; i <= 3; i++) {
+            await sleep(1000);
+            const { document } = await this.html(contestId ? `/gym/${contestId}/my` : '/problemset/status?my=on');
+            this.csrf = this.getCsrfTokenOnDocument(document);
+            const id = document.querySelector('[data-submission-id]')?.getAttribute('data-submission-id');
+            if (id || allowEmpty) return id;
+        }
+        return null;
+    }
+
     async submitProblem(id: string, lang: string, code: string, info, next, end) {
         const programTypeId = lang.includes('codeforces.') ? lang.split('codeforces.')[1] : '54';
         const [type, contestId, problemId] = parseProblemId(id);
         const endpoint = type === 'GYM'
             ? `/gym/${contestId}/submit`
             : `/problemset/submit/${contestId}/${problemId}`;
-        const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
-        // TODO check submit time to ensure submission
-        const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
-            csrf_token: csrf,
-            action: 'submitSolutionFormSubmitted',
-            programTypeId,
-            source: code,
-            tabSize: 4,
-            sourceFile: '',
-            ftaa,
-            bfaa,
-            _tta: this.tta(this.getCookie('39ce7')),
-            contestId,
-            submittedProblemIndex: problemId,
-        });
-        const { window: { document: statusDocument } } = new JSDOM(submit);
-        const message = Array.from(statusDocument.querySelectorAll('.error'))
-            .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
-        if (message) {
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message });
+        try {
+            const latestSubmission = await this.readLatestSubmission(type === 'GYM' ? contestId : '', true);
+            const [csrf, ftaa, bfaa] = await this.getCsrfToken(endpoint);
+            // TODO check submit time to ensure submission
+            const { text: submit, redirects } = await this.post(`${endpoint}?csrf_token=${csrf}`).send({
+                csrf_token: csrf,
+                action: 'submitSolutionFormSubmitted',
+                programTypeId,
+                source: code,
+                tabSize: 4,
+                sourceFile: '',
+                ftaa,
+                bfaa,
+                _tta: this.tta(this.getCookie('39ce7')),
+                contestId,
+                submittedProblemIndex: problemId,
+            });
+            const { window: { document: statusDocument } } = new JSDOM(submit);
+            const message = Array.from(statusDocument.querySelectorAll('.error'))
+                .map((i) => i.textContent).join('').replace(/&nbsp;/g, ' ').trim();
+            if (message) throw new Error(message);
+            const submission = await this.readLatestSubmission(type === 'GYM' ? contestId : '');
+            if (!submission) throw new Error('Failed to get submission id.');
+            if (submission === latestSubmission) throw new Error('Submission page is not updated.');
+            if (redirects.length === 0 || !redirects.toString().includes('my')) throw new Error('No redirect to submission page.');
+            return type !== 'GYM' ? submission : `${contestId}#${submission}`;
+        } catch (e) {
+            next({ message: e.message });
+            // eslint-disable-next-line max-len
+            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit to remote failed. Check service status or use better network to avoid rejection by server protection.' });
             return null;
         }
-        if (redirects.length === 0 || !redirects.toString().includes('my')) {
-            // Submit failed so the request is not redirected
-            end({ status: STATUS.STATUS_SYSTEM_ERROR, message: 'Submit failed' });
-            return null;
-        }
-        const { document } = await this.html(type !== 'GYM'
-            ? '/problemset/status?my=on'
-            : `/gym/${contestId}/my`);
-        this.csrf = document.querySelector('meta[name="X-Csrf-Token"]').getAttribute('content');
-        const submission = document.querySelector('[data-submission-id]').getAttribute('data-submission-id');
-        return type !== 'GYM' ? submission : `${contestId}#${submission}`;
     }
 
     async waitForSubmission(id: string, next, end) {

@@ -22,10 +22,10 @@ if (!argv.args[0] || argv.args[0] === 'cli') {
         const addons = getAddons();
         for (const i of addons) {
             try {
-                require(`${i}/command.ts`).apply(cli);
+                require(`${i}/command.ts`).register(cli);
             } catch (e) {
                 try {
-                    require(`${i}/command.js`).apply(cli);
+                    require(`${i}/command.js`).register(cli);
                 } catch (err) { }
             }
         }

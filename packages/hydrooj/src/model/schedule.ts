@@ -63,13 +63,26 @@ export async function apply(ctx: Context) {
     ctx.inject(['worker'], (c) => {
         ScheduleModel.Worker = c.worker;
         c.worker.addHandler('task.daily', async () => {
+            const pref: Record<string, number> = {};
+            let start = Date.now();
             await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
-            await global.Hydro.script.rp?.run({}, new Logger('task/rp').debug);
-            await global.Hydro.script.problemStat?.run({}, new Logger('task/problem').debug);
+            pref.record = Date.now() - start;
+            start = Date.now();
+            await global.Hydro.script.rp?.run(pref, new Logger('task/rp').debug);
+            pref.rp = Date.now() - start;
+            start = Date.now();
+            await global.Hydro.script.problemStat?.run(pref, new Logger('task/problem').debug);
+            pref.problemStat = Date.now() - start;
+            start = Date.now();
             if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
                 await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
+                pref.checkUpdate = Date.now() - start;
+                start = Date.now();
             }
             await ctx.parallel('task/daily');
+            pref.hook = Date.now() - start;
+            logger.info('task/daily', pref);
+            ctx.emit('task/daily/finish', pref);
         });
     });
 

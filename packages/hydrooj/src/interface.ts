@@ -1,6 +1,6 @@
-import type { AttestationFormat } from '@simplewebauthn/server/dist/helpers/decodeAttestationObject';
-import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/dist/helpers/decodeAuthenticatorExtensions';
-import { CredentialDeviceType } from '@simplewebauthn/typescript-types';
+import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/esm/helpers/decodeAuthenticatorExtensions';
+import type { AttestationFormat } from '@simplewebauthn/server/helpers';
+import { CredentialDeviceType } from '@simplewebauthn/types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
@@ -28,6 +28,7 @@ export interface SystemKeys {
     'server.url': string,
     'server.xff': string,
     'server.xhost': string,
+    'server.host': string,
     'server.port': number,
     'server.language': string,
     'limit.problem_files_max': number,
@@ -57,6 +58,8 @@ export interface OAuthUserResponse {
     bio?: string;
     uname?: string[];
     viewLang?: string;
+    set?: Record<string, any>;
+    setInDomain?: Record<string, any>;
 }
 
 export interface Authenticator {
@@ -220,26 +223,7 @@ export interface ProblemConfig {
     hackable?: boolean;
 }
 
-export interface PlainContentNode {
-    type: 'Plain',
-    subType: 'html' | 'markdown',
-    text: string,
-}
-export interface TextContentNode {
-    type: 'Text',
-    subType: 'html' | 'markdown',
-    sectionTitle: string,
-    text: string,
-}
-export interface SampleContentNode {
-    type: 'Sample',
-    text: string,
-    sectionTitle: string,
-    payload: [string, string],
-}
-// TODO drop contentNode support
-export type ContentNode = PlainContentNode | TextContentNode | SampleContentNode;
-export type Content = string | ContentNode[] | Record<string, ContentNode[]>;
+export type Content = string | Record<string, string>;
 
 export interface Document {
     _id: ObjectId;
@@ -294,8 +278,6 @@ export interface ProblemStatusDoc extends StatusDocBase {
     rid?: ObjectId;
     score?: number;
     status?: number;
-    nSubmit?: number;
-    nAccept?: number;
     star?: boolean;
 }
 
@@ -366,6 +348,7 @@ export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
     meta: JudgeMeta;
     data: FileInfo[];
     source: string;
+    trusted: boolean;
 }
 
 export interface ScoreboardNode {
@@ -407,7 +390,7 @@ export interface Tdoc extends Document {
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
-    balloon?: Record<number, string>;
+    balloon?: Record<number, string | { color: string, name: string }>;
     score?: Record<number, number>;
 
     /**
@@ -801,6 +784,7 @@ export interface ModuleInterfaces {
         icon?: string;
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+        lockUsername?: boolean;
     };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
 }

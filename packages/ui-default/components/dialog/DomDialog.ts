@@ -109,9 +109,8 @@ export default class DomDialog extends DOMAttachedObject {
   }
 
   show() {
-    if (this.isShown || this.isAnimating) {
-      return Promise.reject();
-    }
+    if (this.isShown) return Promise.reject(new Error('dialog isShown'));
+    if (this.isAnimating) return Promise.reject(new Error('dialog isAnimating'));
     const promise = new Promise<string>((resolve) => {
       this._resolve = resolve;
     });

@@ -9,6 +9,8 @@ browserUpdate({
   },
   insecure: true,
   api: 2022.03,
+  url: 'https://google.cn/chrome/',
+  jsshowurl: '/browser-update.js',
 });
 
 // monaco-editor requires this polyfill

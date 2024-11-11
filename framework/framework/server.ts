@@ -23,6 +23,8 @@ import serializer from './serializer';
 
 export { WebSocket, WebSocketServer } from 'ws';
 
+export const kHandler = Symbol.for('hydro.handler');
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
 export function encodeRFC5987ValueChars(str: string) {
     return (
@@ -109,6 +111,7 @@ export interface UserModel {
 
 export interface HandlerCommon { }
 export class HandlerCommon {
+    static [kHandler]: string | boolean = true;
     session: Record<string, any>;
     args: Record<string, any>;
     request: HydroRequest;
@@ -138,8 +141,8 @@ export class HandlerCommon {
     url(name: string, ...kwargsList: Record<string, any>[]) {
         if (name === '#') return '#';
         let res = '#';
-        const args: any = {};
-        const query: any = {};
+        const args: any = Object.create(null);
+        const query: any = Object.create(null);
         for (const kwargs of kwargsList) {
             for (const key in kwargs) {
                 args[key] = kwargs[key].toString().replace(/\//g, '%2F');
@@ -287,44 +290,54 @@ class NotFoundHandler extends Handler {
     all() { }
 }
 
-async function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
-    const first = middlewares[0];
-    if (!first) return Promise.resolve();
+function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+    let index = -1;
     context.__timers ||= {};
-    context.__timers[`${first.name}.start`] = Date.now();
-    const next = () => executeMiddlewareStack(context, middlewares.slice(1));
-    try {
-        return await first.func(context, next);
-    } finally {
-        context.__timers[`${first.name}.end`] = Date.now();
+    function dispatch(i) {
+        if (i <= index) return Promise.reject(new Error('next() called multiple times'));
+        index = i;
+        if (!middlewares[i]) return Promise.resolve();
+        const name = middlewares[i].name;
+        const fn = middlewares[i].func;
+        context.__timers[`${name}.start`] = Date.now();
+        try {
+            return Promise.resolve(fn(context, dispatch.bind(null, i + 1))).finally(() => {
+                context.__timers[`${name}.end`] = Date.now();
+            });
+        } catch (e) {
+            return Promise.reject(e);
+        } finally {
+            context.__timers[`${name}.end`] = Date.now();
+        }
     }
+    return dispatch(0);
 }
 
-interface WebServiceConfig {
+export interface WebServiceConfig {
     keys: string[];
     proxy: boolean;
     cors?: string;
     upload?: string;
     port: number;
+    host?: string;
     xff?: string;
     xhost?: string;
 }
 
 export class WebService extends Service {
-    private registry: Record<string, any> = {};
+    private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];
     private handlerLayers = [];
     private wsLayers = [];
-    private captureAllRoutes = {};
+    private captureAllRoutes = Object.create(null);
 
-    renderers: Record<string, RendererFunction> = {};
+    renderers: Record<string, RendererFunction> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
-    handlerCtxBase = this.ctx;
 
     constructor(ctx: Context, public config: WebServiceConfig) {
         super(ctx, 'server', true);
@@ -384,6 +397,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             this.ctx.on('dispose', () => {
                 fs.emptyDirSync(uploadDir);
             });
+            // if killed by ctrl-c, on('dispose') will not be called
+            process.on('exit', () => {
+                fs.emptyDirSync(uploadDir);
+            });
         } else {
             this.server.use(Body({
                 multipart: true,
@@ -393,19 +410,17 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.router.use((c, next) => executeMiddlewareStack(c, [
             ...this.handlerLayers,
-            {
-                name: '404',
-                func: async (t: any, n) => {
-                    await n();
-                    if (!t.handler) this.handleHttp(t, NotFoundHandler, () => true);
-                },
-            },
             { name: 'logic', func: next },
         ]).catch(console.error));
         this.server.use((c) => executeMiddlewareStack(c, [
             ...this.serverLayers,
             { name: 'routes', func: router.routes() },
             { name: 'methods', func: router.allowedMethods() },
+            ...this.handlerLayers,
+            {
+                name: '404',
+                func: (t) => this.handleHttp(t, NotFoundHandler, () => true),
+            },
         ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
         wsServer.on('connection', async (socket, request) => {
@@ -423,9 +438,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
             socket.close();
         });
-        this.ctx.inject(['server'], (c) => {
-            this.handlerCtxBase = c;
-        });
     }
 
     async listen() {
@@ -434,7 +446,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             wsServer.close();
         });
         await new Promise((r) => {
-            httpServer.listen(this.config.port, () => {
+            httpServer.listen(this.config.port, this.config.host || '127.0.0.1', () => {
                 logger.success('Server listening at: %d', this.config.port);
                 r(true);
             });
@@ -444,9 +456,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, this.handlerCtxBase);
+        const h = new HandlerClass(ctx, this.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
+        const name = (typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
         try {
             const operation = (method === 'post' && ctx.request.body?.operation)
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
@@ -467,9 +480,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 throw new MethodNotAllowedError(method);
             }
 
-            const name = HandlerClass.name.replace(/Handler$/, '');
             const steps = [
-                'init', 'handler/init',
+                'log/__init', 'init', 'handler/init',
                 `handler/before-prepare/${name}#${method}`, `handler/before-prepare/${name}`, 'handler/before-prepare',
                 'log/__prepare', '__prepare', '_prepare', 'prepare', 'log/__prepareDone',
                 `handler/before/${name}#${method}`, `handler/before/${name}`, 'handler/before',
@@ -481,6 +493,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 `handler/after/${name}#${method}`, `handler/after/${name}`, 'handler/after',
                 'cleanup',
                 `handler/finish/${name}#${method}`, `handler/finish/${name}`, 'handler/finish',
+                'log/__finish',
             ];
 
             let current = 0;
@@ -503,7 +516,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             try {
-                await this.ctx.serial(`handler/error/${HandlerClass.name.replace(/Handler$/, '')}`, h, e);
+                await this.ctx.serial(`handler/error/${name}`, h, e);
                 await this.ctx.serial('handler/error', h, e);
                 await h.onerror(e);
             } catch (err) {
@@ -517,7 +530,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, this.handlerCtxBase);
+        const h = new HandlerClass(ctx, this.ctx);
         await this.ctx.parallel('connection/create', h);
         ctx.handler = h;
         h.conn = conn;
@@ -582,8 +595,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
-        const name = HandlerClass.name;
-        if (!isClass(HandlerClass)) throw new Error('Invalid registration.');
+        if (!HandlerClass?.[kHandler] || !isClass(HandlerClass)) throw new Error('Invalid registration.');
+        const name = typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name;
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
             logger.warn('Route with name %s already exists.', name);
         }
@@ -600,7 +613,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = router.disposeLastOp;
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this[Context.current]?.on('dispose', () => {
+        this.ctx.on('dispose', () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();
@@ -612,10 +625,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     ) {
         if (this.registry[name]) callback(this.registry[name]);
         // @ts-ignore
-        this.ctx.on(`handler/register/${name}`, callback);
+        const dispose = this.ctx.on(`handler/register/${name}`, callback);
         this[Context.current]?.on('dispose', () => {
-            // @ts-ignore
-            this.ctx.off(`handler/register/${name}`, callback);
+            dispose();
         });
     }
 
@@ -634,7 +646,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = () => {
             this[name] = this[name].filter((i) => i !== layer);
         };
-        this[Context.current]?.on('dispose', dispose);
+        this[Context.origin]?.on('dispose', dispose);
         return dispose;
     }
 
@@ -667,9 +679,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     public registerRenderer(name: string, func: RendererFunction) {
         if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
-        this.renderers[name] = func;
-        this[Context.current]?.on('dispose', () => {
-            delete this.renderers[name];
+        this.ctx.effect(() => {
+            this.renderers[name] = func;
+            return () => {
+                delete this.renderers[name];
+            };
         });
     }
 }
@@ -683,7 +697,7 @@ declare module 'cordis' {
     }
 }
 
-export async function apply(ctx: Context, config) {
+export async function apply(ctx: Context, config: WebServiceConfig) {
     ctx.provide('server', undefined, true);
     ctx.server = new WebService(ctx, config);
 }

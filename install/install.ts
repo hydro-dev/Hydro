@@ -24,6 +24,9 @@ const sleep = (t: number) => new Promise((r) => { setTimeout(r, t); });
 const locales = {
     zh: {
         'install.start': '开始运行 Hydro 安装工具',
+        'note.avx': `检测到您的 CPU 不支持 avx 指令集，这可能会影响系统运行速度。
+如果您正在使用 PVE/VirtualBox 等虚拟机平台，请尝试关机后将虚拟机的 CPU 类型设置为 Host，重启后再次运行该脚本。
+您也可以选择忽略此问题，安装脚本将在一分钟后自动继续安装。`,
         'warn.avx': '检测到您的 CPU 不支持 avx 指令集，将使用 mongodb@v4.4',
         'error.rootRequired': '请先使用 sudo su 切换到 root 用户后再运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
@@ -51,6 +54,11 @@ const locales = {
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
+        'note.avx': `Your CPU does not support avx, this may affect system performance.
+If you are using a virtual machine platform such as PVE/VirtualBox,
+try shutting down and setting the CPU type of the virtual machine to Host,
+then restart and run the script again.
+You can also choose to ignore this issue, the installation script will continue in one minute.`,
         'warn.avx': 'Your CPU does not support avx, will use mongodb@v4.4',
         'error.rootRequired': 'Please run this tool as root user.',
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
@@ -81,6 +89,7 @@ If you have any questions about the migration process, please add QQ group 10858
 
 const installAsJudge = process.argv.includes('--judge');
 const noCaddy = process.argv.includes('--no-caddy');
+const exposeDb = process.argv.includes('--expose-db');
 const addons = ['@hydrooj/ui-default', '@hydrooj/hydrojudge', '@hydrooj/fps-importer', '@hydrooj/a11y'];
 const installTarget = installAsJudge ? '@hydrooj/hydrojudge' : `hydrooj ${addons.join(' ')}`;
 const substitutersArg = process.argv.find((i) => i.startsWith('--substituters='));
@@ -296,7 +305,7 @@ const Steps = () => [
     {
         init: 'install.preparing',
         operations: [
-            () => {
+            async () => {
                 if (process.env.IGNORE_BT) return;
                 const res = exec('bt default');
                 if (!res.code) {
@@ -305,7 +314,14 @@ const Steps = () => [
                         process.exit(1);
                     } else {
                         log.warn('warn.bt');
+                        await sleep(5000);
                     }
+                }
+            },
+            async () => {
+                if (!avx && !installAsJudge) {
+                    log.warn('note.avx');
+                    await sleep(60000);
                 }
             },
             () => {
@@ -322,7 +338,8 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            'nix-env -iA nixpkgs.pm2 nixpkgs.yarn nixpkgs.esbuild nixpkgs.bash nixpkgs.unzip nixpkgs.zip nixpkgs.diffutils nixpkgs.patch',
+            `nix-env -iA ${['pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen'].map((i) => `nixpkgs.${i}`).join(' ')}`,
+            'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
                 try {
@@ -372,7 +389,7 @@ ${nixConfBase}`);
         "openssl-1.1.1z"
     ];
 }`),
-            `nix-env -iA hydro.mongodb${avx ? 6 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
+            `nix-env -iA hydro.mongodb${avx ? 7 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
         ],
     },
     {
@@ -391,7 +408,7 @@ ${nixConfBase}`);
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code || installAsJudge || noCaddy,
+        skip: () => !exec('caddy version').code || installAsJudge || noCaddy || !existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
             'nix-env -iA nixpkgs.caddy',
@@ -441,7 +458,9 @@ ${nixConfBase}`);
                     readPreference: 'nearest',
                     writeConcern: new WriteConcern('majority'),
                 });
-                await client.db('hydro').addUser('hydro', password, {
+                await client.db('hydro').command({
+                    createUser: 'hydro',
+                    pwd: password,
                     roles: [{ role: 'readWrite', db: 'hydro' }],
                 });
                 await client.close();
@@ -462,11 +481,14 @@ ${nixConfBase}`);
             `pm2 start bash --name hydro-sandbox -- -c "ulimit -s unlimited && hydro-sandbox -mount-conf ${process.env.HOME}/.hydro/mount.yaml -http-addr=localhost:5050"`,
             ...installAsJudge ? [] : [
                 () => console.log(`WiredTiger cache size: ${wtsize}GB`),
-                `pm2 start mongod --name mongodb -- --auth --bind_ip 0.0.0.0 --wiredTigerCacheSizeGB=${wtsize}`,
+                // The only thing mongod writes to stderr is 'libcurl no version information available'
+                `pm2 start mongod --name mongodb -e /dev/null -- --auth ${exposeDb ? '--bind_ip=0.0.0.0 ' : ''}--wiredTigerCacheSizeGB=${wtsize}`,
                 () => sleep(1000),
-                'pm2 start hydrooj',
                 async () => {
-                    if (noCaddy) return;
+                    if (noCaddy) {
+                        exec('hydrooj cli system set server.host 0.0.0.0');
+                        return;
+                    }
                     if (!await isPortFree(80)) log.warn('port.80');
                     if (migration === 'hustoj') {
                         exec('systemctl stop nginx || true');
@@ -476,7 +498,9 @@ ${nixConfBase}`);
                     exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
                     exec('hydrooj cli system set server.xff x-forwarded-for');
                     exec('hydrooj cli system set server.xhost x-forwarded-host');
+                    exec('hydrooj cli system set server.xproxy true');
                 },
+                'pm2 start hydrooj',
             ],
             'pm2 startup',
             'pm2 save',
@@ -570,10 +594,11 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
+            'echo "layout=1" >/etc/HYDRO_INSTALLER',
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
-            ['pm2 install pm2-logrotate', { retry: true }],
-            'pm2 set pm2-logrotate:max_size 64M',
+            // dont retry this as it usually fails
+            'screen -d -m "pm2 install pm2-logrotate && pm2 set pm2-logrotate:max_size 64M"',
         ],
     },
     {
@@ -614,7 +639,9 @@ async function main() {
                     let res = exec(op[0], { stdio: 'inherit' });
                     while (res.code && op[1].ignore !== true) {
                         if (op[1].retry && retry < 30) {
-                            log.warn('Retry... (%s)', op[0]);
+                            log.warn('Retry in 3 secs... (%s)', op[0]);
+                            // eslint-disable-next-line no-await-in-loop
+                            await sleep(3000);
                             res = exec(op[0], { stdio: 'inherit' });
                             retry++;
                         } else log.fatal('Error when running %s', op[0]);
@@ -624,7 +651,9 @@ async function main() {
                     let res = await op[0](op[1]);
                     while (res === 'retry') {
                         if (retry < 30) {
-                            log.warn('Retry...');
+                            log.warn('Retry in 3 secs...');
+                            // eslint-disable-next-line no-await-in-loop
+                            await sleep(3000);
                             // eslint-disable-next-line no-await-in-loop
                             res = await op[0](op[1]);
                             retry++;

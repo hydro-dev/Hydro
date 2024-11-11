@@ -20,7 +20,7 @@ import { compilerText, md5 } from './utils';
 const logger = new Logger('judge');
 
 export class JudgeTask {
-    stat: Record<string, Date>;
+    stat: Record<string, Date> = Object.create(null);
     source: string;
     rid: string;
     lang: string;
@@ -38,7 +38,6 @@ export class JudgeTask {
     callbackCache?: TestCase[];
 
     constructor(public session: Session, public request: JudgeRequest) {
-        this.stat = {};
         this.stat.receive = new Date();
         logger.debug('%o', request);
     }
@@ -112,6 +111,7 @@ export class JudgeTask {
                 next: this.next,
                 isSelfSubmission: this.meta.problemOwner === this.request.uid,
                 key: md5(`${this.source}/${getConfig('secret')}`),
+                trusted: this.request.trusted && this.session.config.trusted,
                 lang: this.lang,
                 langConfig: (this.request.type === 'generate' || ['objective', 'submit_answer'].includes(this.request.config.type))
                     ? null : this.session.getLang(this.lang),

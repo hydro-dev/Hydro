@@ -50,7 +50,7 @@ process.stdin.on('data', (buf) => {
     } else executeCommand(input);
 });
 
-export const useReadline = (callback: (string) => any) => {
+export const useReadline = (callback: (str: string) => any) => {
     if (readlineCallback) throw new Error('Already waiting for input.');
     readlineCallback = callback;
 };

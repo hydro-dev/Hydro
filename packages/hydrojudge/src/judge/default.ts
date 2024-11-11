@@ -44,7 +44,12 @@ function judgeCase(c: NormalizedCase) {
                     user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
                     score: c.score,
                     detail,
-                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
+                    env: {
+                        ...ctx.env,
+                        HYDRO_TESTCASE: c.id.toString(),
+                        HYDRO_TIME_USAGE: time.toString(),
+                        HYDRO_MEMORY_USAGE: Math.floor(memory / 1024).toString(),
+                    },
                 }));
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && detail) {

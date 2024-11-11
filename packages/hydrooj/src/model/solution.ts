@@ -70,12 +70,18 @@ class SolutionModel {
     }
 
     static async vote(domainId: string, psid: ObjectId, uid: number, value: number) {
-        let pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
-        await document.setStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid, { vote: value });
-        if (pssdoc) value += -pssdoc.vote;
-        const psdoc = await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', value);
-        pssdoc = await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid);
-        return [psdoc, pssdoc];
+        const before = await document.setStatus(
+            domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid,
+            { vote: value }, 'before',
+        );
+        let inc = value;
+        if (before?.vote) inc -= before.vote;
+        return [
+            inc
+                ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
+                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid),
+            await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid),
+        ];
     }
 
     static async getListStatus(domainId: string, psids: ObjectId[], uid: number) {

@@ -1,15 +1,12 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "main": "index.ts",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "maxmind": "^4.3.20"
+        "maxmind": "^4.3.22"
     },
-    "preferUnplugged": true,
-    "scripts": {
-        "prepublish": "./download.sh"
-    }
+    "preferUnplugged": true
 }

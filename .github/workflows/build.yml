@@ -62,7 +62,7 @@ jobs:
       run: |
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
         then
-          yarn build:ui:gulp
+          yarn build:ui:iconfont
           parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
         else
           parallel --tty -j+0 yarn ::: lint:ci build test

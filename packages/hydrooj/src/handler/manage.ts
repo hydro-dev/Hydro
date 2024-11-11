@@ -219,10 +219,10 @@ class SystemUserImportHandler extends SystemHandler {
     @param('draft', Types.Boolean)
     async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
-        const udocs: { email: string, username: string, password: string, displayName?: string, payload?: any }[] = [];
+        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any; }[] = [];
         const messages = [];
-        const mapping = {};
-        const groups: Record<string, string[]> = {};
+        const mapping = Object.create(null);
+        const groups: Record<string, string[]> = Object.create(null);
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;
@@ -248,12 +248,13 @@ class SystemUserImportHandler extends SystemHandler {
                             groups[data.group] ||= [];
                             groups[data.group].push(email);
                         }
-                        if (data.school) payload.school = data.school;
-                        if (data.studentId) payload.studentId = data.studentId;
+                        Object.assign(payload, data);
                     } catch (e) { }
-                    udocs.push({
-                        email, username, password, displayName, payload,
+                    Object.assign(payload, {
+                        email, username, password, displayName,
                     });
+                    await this.ctx.serial('user/import/parse', payload);
+                    udocs.push(payload);
                 }
             } else messages.push(`Line ${+i + 1}: Input invalid.`);
         }
@@ -264,16 +265,19 @@ class SystemUserImportHandler extends SystemHandler {
                     const uid = await user.create(udoc.email, udoc.username, udoc.password);
                     mapping[udoc.email] = uid;
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
-                    if (udoc.payload?.school) await user.setById(uid, { school: udoc.payload.school });
-                    if (udoc.payload?.studentId) await user.setById(uid, { studentId: udoc.payload.studentId });
+                    if (udoc.school) await user.setById(uid, { school: udoc.school });
+                    if (udoc.studentId) await user.setById(uid, { studentId: udoc.studentId });
+                    await this.ctx.serial('user/import/create', uid, udoc);
                 } catch (e) {
                     messages.push(e.message);
                 }
             }
-        }
-        for (const name in groups) {
-            const uids = groups[name].map((i) => mapping[i]).filter((i) => i);
-            if (uids.length) await user.updateGroup(domainId, name, uids);
+            const existing = await user.listGroup(domainId);
+            for (const name in groups) {
+                const uids = groups[name].map((i) => mapping[i]).filter((i) => i);
+                const current = existing.find((i) => i.name === name)?.uids || [];
+                if (uids.length) await user.updateGroup(domainId, name, Array.from(new Set([...current, ...uids])));
+            }
         }
         this.response.body.users = udocs;
         this.response.body.messages = messages;

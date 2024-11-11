@@ -6,6 +6,7 @@ import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
+import type { } from './service/migration';
 import type { ConnectionHandler, Handler } from './service/server';
 
 export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap, ServerEvents<Handler, ConnectionHandler> { }
@@ -49,8 +50,10 @@ export abstract class Service<T = any, C extends Context = Context> extends cord
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
     function method(this: cordis.Service, ...args: Parameters<F>) {
-        const res = origFunc(...args);
-        this[Context.current]?.on('dispose', () => (disposeFunc ? disposeFunc(res) : res()));
+        this.ctx.effect(() => {
+            const res = origFunc(...args);
+            return () => (disposeFunc ? disposeFunc(res) : res());
+        });
     };
 
 export class ApiMixin extends Service {

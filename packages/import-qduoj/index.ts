@@ -2,12 +2,41 @@
 import os from 'os';
 import path from 'path';
 import {
-    AdmZip, buildContent, ContentNode, Context, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, ValidationError, yaml,
+    AdmZip, buildContent, Context, FileTooLargeError, fs, Handler, PERM,
+    ProblemConfigFile, ProblemModel, Schema, ValidationError, yaml,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
 fs.ensureDirSync(tmpdir);
+
+const StringValue = Schema.object({
+    value: Schema.string(),
+});
+const ProblemSchema = Schema.object({
+    tags: Schema.array(Schema.string()),
+    title: Schema.string().required(),
+    description: StringValue,
+    input_description: StringValue,
+    output_description: StringValue,
+    samples: Schema.array(Schema.object({
+        input: Schema.string(),
+        output: Schema.string(),
+    })),
+    hint: StringValue,
+    source: StringValue,
+    display_id: Schema.string(),
+    time_limit: Schema.union([Schema.number(), Schema.string()]).required(),
+    memory_limit: Schema.union([Schema.number(), Schema.string()]).required(),
+    spj: Schema.object({
+        language: Schema.string().required(),
+        code: Schema.string().required(),
+    }),
+    test_case_score: Schema.array(Schema.object({
+        input_name: Schema.string().required(),
+        output_name: Schema.string().required(),
+        score: Schema.number().required(),
+    })),
+});
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
@@ -27,55 +56,15 @@ class ImportQduojHandler extends Handler {
             for (const { name: folder } of folders.filter((i) => i.isDirectory())) {
                 if (!fs.existsSync(path.join(tmp, folder, 'problem.json'))) continue;
                 const buf = await fs.readFile(path.join(tmp, folder, 'problem.json'));
-                const pdoc = JSON.parse(buf.toString());
-                const content: ContentNode[] = [];
-                if (pdoc.description?.value) {
-                    content.push({
-                        type: 'Text',
-                        subType: 'html',
-                        sectionTitle: this.translate('Description'),
-                        text: pdoc.description.value,
-                    });
-                }
-                if (pdoc.input_description?.value) {
-                    content.push({
-                        type: 'Text',
-                        subType: 'html',
-                        sectionTitle: this.translate('Input Format'),
-                        text: pdoc.input_description.value,
-                    });
-                }
-                if (pdoc.output_description?.value) {
-                    content.push({
-                        type: 'Text',
-                        subType: 'html',
-                        sectionTitle: this.translate('Output Format'),
-                        text: pdoc.output_description.value,
-                    });
-                }
-                if (pdoc.samples?.length) {
-                    content.push(...pdoc.samples.map((sample) => ({
-                        type: 'Sample',
-                        sectionTitle: this.translate('Sample'),
-                        payload: [sample.input, sample.output],
-                    })));
-                }
-                if (pdoc.hint?.value) {
-                    content.push({
-                        type: 'Text',
-                        subType: 'html',
-                        sectionTitle: this.translate('Hint'),
-                        text: pdoc.hint.value,
-                    });
-                }
-                if (pdoc.source?.value) {
-                    content.push({
-                        type: 'Text',
-                        subType: 'html',
-                        sectionTitle: this.translate('Source'),
-                        text: pdoc.source.value,
-                    });
-                }
+                const pdoc = ProblemSchema(JSON.parse(buf.toString()));
+                const content = buildContent({
+                    description: pdoc.description?.value,
+                    input: pdoc.input_description?.value,
+                    output: pdoc.output_description?.value,
+                    samples: pdoc.samples.map((sample) => [sample.input, sample.output]),
+                    hint: pdoc.hint?.value,
+                    source: pdoc.source?.value,
+                }, 'html');
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const isValidPid = async (id: string) => {
                     if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
@@ -84,7 +73,7 @@ class ImportQduojHandler extends Handler {
                 };
                 if (!await isValidPid(pdoc.display_id)) pdoc.display_id = null;
                 const pid = await ProblemModel.add(
-                    domainId, pdoc.display_id, pdoc.title, buildContent(content, 'html'),
+                    domainId, pdoc.display_id, pdoc.title, content,
                     this.user._id, pdoc.tags || [],
                 );
                 const config: ProblemConfigFile = {
@@ -141,7 +130,7 @@ class ImportQduojHandler extends Handler {
     async post({ domainId }) {
         if (!this.request.files.file) throw new ValidationError('file');
         const stat = await fs.stat(this.request.files.file.filepath);
-        if (stat.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
+        if (stat.size > 256 * 1024 * 1024) throw new FileTooLargeError('256m');
         await this.fromFile(domainId, this.request.files.file.filepath);
         this.response.redirect = this.url('problem_main');
     }

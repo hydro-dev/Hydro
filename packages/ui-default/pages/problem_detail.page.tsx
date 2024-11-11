@@ -115,8 +115,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeIn() {
-    // @ts-ignore
     await $('#scratchpad')
+      // @ts-ignore
       .transition(
         { opacity: 1 },
         { duration: 200, easing: 'easeOutCubic' },
@@ -125,8 +125,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
   }
 
   async function scratchpadFadeOut() {
-    // @ts-ignore
     await $('#scratchpad')
+      // @ts-ignore
       .transition(
         { opacity: 0 },
         { duration: 200, easing: 'easeOutCubic' },
@@ -262,9 +262,9 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     }
     async function loadAns() {
       const saved = await db.get('solutions', `${cacheKey}#objective`);
-      if (!saved) return;
+      if (typeof saved?.value !== 'string') return;
       const isValidOption = (v) => v.length === 1 && v.charCodeAt(0) >= 65 && v.charCodeAt(0) <= 90;
-      Object.assign(ans, JSON.parse(saved));
+      Object.assign(ans, JSON.parse(saved?.value || '{}'));
       for (const [id, val] of Object.entries(ans)) {
         if (Array.isArray(val)) {
           for (const v of val) {
@@ -275,7 +275,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }
-      setUpdate((v) => v + 1);
+      setUpdate?.((v) => v + 1);
     }
 
     if (cnt) {

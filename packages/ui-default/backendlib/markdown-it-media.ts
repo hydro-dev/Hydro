@@ -38,14 +38,9 @@ function extractVideoParameters(url: string) {
   }
   return parameterMap;
 }
-function resourceUrl(service: string, src: string, url: string, options) {
+function resourceUrl(service: string, src: string, url: string) {
   if (service === 'youtube') {
     const parameters = extractVideoParameters(url);
-    if (options.youtube.parameters) {
-      Object.keys(options.youtube.parameters).forEach((key) => {
-        parameters.set(key, options.youtube.parameters[key]);
-      });
-    }
     const timeParameter = parameters.get('t');
     if (timeParameter !== undefined) {
       let startTime = 0;
@@ -63,14 +58,20 @@ function resourceUrl(service: string, src: string, url: string, options) {
     parameters.delete('origin');
     const parameterArray = Array.from(parameters, (p) => p.join('='));
     const parameterPos = src.indexOf('?');
-    let finalUrl = 'https://www.youtube';
-    if (options.youtube.nocookie || url.indexOf('youtube-nocookie.com') > -1) finalUrl += '-nocookie';
-    finalUrl += `.com/embed/${parameterPos > -1 ? src.substr(0, parameterPos) : src}`;
+    let finalUrl = `https://www.youtube.com/embed/${parameterPos > -1 ? src.substring(0, parameterPos) : src}`;
     if (parameterArray.length > 0) finalUrl += `?${parameterArray.join('&')}`;
     return finalUrl;
   }
+  if (service === 'bilibili') {
+    if (src.startsWith('http')) src = src.split('/').pop();
+    if (src.toLowerCase().startsWith('av')) src = src.toLowerCase().split('av')[1];
+    src = src.split('?')[0];
+    return `//player.bilibili.com/player.html?${src.startsWith('BV') ? 'bvid' : 'aid'}=${src}&autoplay=0`;
+  }
+  if (service === 'msoffice') return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}`;
+  if (service === 'youku') return `https://player.youku.com/embed/${src}`;
   if (service === 'vimeo') return `https://player.vimeo.com/video/${src}`;
-  if (service === 'vine') return `https://vine.co/v/${src}/embed/${options.vine.embed}`;
+  if (service === 'vine') return `https://vine.co/v/${src}/embed/simple`;
   if (service === 'prezi') {
     return `https://prezi.com/embed/${src}/?bgcolor=ffffff&amp;lock_to_path=0&amp;autoplay=0&amp;autohide_ctrls=0&amp;`
       + 'landing_data=bHVZZmNaNDBIWnNjdEVENDRhZDFNZGNIUE43MHdLNWpsdFJLb2ZHanI5N1lQVHkxSHFxazZ0UUNCRHloSXZROHh3PT0&amp;'
@@ -79,33 +80,22 @@ function resourceUrl(service: string, src: string, url: string, options) {
   return src;
 }
 
+declare module 'hydrooj' {
+  interface ModuleInterfaces {
+    richmedia: {
+      get: (service: string, src: string, md: MarkdownIt) => string | null;
+    }
+  }
+}
+
 export function Media(md: MarkdownIt) {
-  const options = {
-    url: resourceUrl,
-    video: resourceUrl,
-    youtube: { width: 640, height: 390, nocookie: false },
-    vimeo: { width: 500, height: 281 },
-    vine: { width: 600, height: 600, embed: 'simple' },
-    prezi: { width: 550, height: 400 },
-    pdf: resourceUrl,
-  };
+  const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku', 'msoffice'];
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
     const service = md.utils.escapeHtml(tokens[idx].attrGet('service')).toLowerCase();
-    if (service === 'bilibili') {
-      if (src.startsWith('http')) src = src.split('/').pop();
-      if (src.toLowerCase().startsWith('av')) src = src.toLowerCase().split('av')[1];
-      src = src.split('?')[0];
-      return `\
-        <iframe src="//player.bilibili.com/player.html?${src.startsWith('BV') ? 'bvid' : 'aid'}=${src}&autoplay=0"
-          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
-      `;
-    }
-    if (service === 'msoffice') {
-      return `\
-        <iframe src="https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(src)}"
-          scrolling="no" border="0" frameborder="no" framespacing="0" width="100%" style="min-height:500px" ${allowFullScreen}></iframe>
-      `;
+    if (Hydro?.module?.richmedia?.[service]) {
+      const result = Hydro?.module?.richmedia[service].get(service, src, md);
+      if (result) return result;
     }
     if (service === 'pdf') {
       if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
@@ -124,12 +114,12 @@ export function Media(md: MarkdownIt) {
           Your browser doesn't support video tag.
         </video>`;
     }
-    if (options[service]?.width) {
-      return `<div class="embed-responsive embed-responsive-16by9">
-      <iframe class="embed-responsive-item ${service}-player" type="text/html" width="${options[service].width || 640}"\
-        height="${options[service].height || 390}"\
-        src="${options.url(service, src, tokens[idx].attrGet('url'), options)}"
-        frameborder="0"${allowFullScreen}></iframe></div>`;
+    if (supported.includes(service)) {
+      return `\
+      <iframe class="embed-responsive-item ${service}-player" type="text/html" \
+        width="100%" style="min-height: 500px" ${allowFullScreen} \
+        src="${resourceUrl(service, src, tokens[idx].attrGet('url'))}"
+        scrolling="no" border="0" frameborder="no" framespacing="0"></iframe>`;
     }
     return `<div data-${service}>${md.utils.escapeHtml(src)}</div>`;
   };

@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -51,25 +52,7 @@ export const coreScripts: MigrationScript[] = [
         return true;
     },
     // Init
-    ...new Array(26).fill(unsupportedUpgrade),
-    null,
-    async function _28_29() {
-        return await iterateAllProblem(['content', 'html'], async (pdoc) => {
-            try {
-                const parsed = JSON.parse(pdoc.content);
-                if (parsed instanceof Array) {
-                    await problem.edit(pdoc.domainId, pdoc.docId, { content: buildContent(parsed, pdoc.html ? 'html' : 'markdown') });
-                    return;
-                }
-                const res = {};
-                for (const key in parsed) {
-                    if (typeof parsed[key] === 'string') res[key] = parsed[key];
-                    else res[key] = buildContent(parsed[key]);
-                }
-                await problem.edit(pdoc.domainId, pdoc.docId, { content: JSON.stringify(res) });
-            } catch { }
-        });
-    },
+    ...new Array(28).fill(unsupportedUpgrade),
     async function _29_30() {
         return await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
     },
@@ -683,6 +666,40 @@ export const coreScripts: MigrationScript[] = [
                 }
                 await user.coll.updateOne({ _id: udoc._id }, { $set: { mailLower: wanted } });
             }
+        });
+    },
+    async function _90_91() {
+        await document.collStatus.updateMany({ docType: document.TYPE_PROBLEM }, { $unset: { nSubmit: '', nAccept: '' } });
+        const psdocs = await document.coll.find({ docType: document.TYPE_PROBLEM_SOLUTION, vote: { $ne: 0 } })
+            .project({ docId: 1, domainId: 1 }).toArray();
+        for (const psdoc of psdocs) {
+            const filter = { docType: document.TYPE_PROBLEM_SOLUTION, domainId: psdoc.domainId, docId: psdoc.docId };
+            const [upvote, downvote] = await Promise.all([
+                document.collStatus.countDocuments({ ...filter, vote: 1 }),
+                document.collStatus.countDocuments({ ...filter, vote: -1 }),
+            ]);
+            if (upvote - downvote !== psdoc.vote) {
+                await document.set(psdoc.domainId, document.TYPE_PROBLEM_SOLUTION, psdoc.docId, { vote: upvote - downvote });
+            }
+        }
+        await iterateAllProblem(['domainId', 'docId', 'tag'], async (pdoc) => {
+            if (pdoc.tag?.some((i) => typeof i !== 'string')) {
+                return { tag: pdoc.tag.filter((i) => i).map((i) => i.toString()) };
+            }
+        });
+        return await iterateAllProblem(['domainId', 'docId', 'content', 'html'], async (pdoc) => {
+            try {
+                const parsed = JSON.parse(pdoc.content);
+                if (parsed instanceof Array) {
+                    return { content: buildContent(parsed as any, pdoc.html ? 'html' : 'markdown') };
+                }
+                const res = {};
+                for (const key in parsed) {
+                    if (typeof parsed[key] === 'string') res[key] = parsed[key];
+                    else res[key] = buildContent(parsed[key]);
+                }
+                return { content: JSON.stringify(res) };
+            } catch { }
         });
     },
 ];

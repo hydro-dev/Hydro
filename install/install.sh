@@ -8,7 +8,7 @@ if [ $EUID != 0 ]; then
     exit $?
 fi
 set -e
-echo "Executing Hydro install script v3.0.0"
+echo "Executing Hydro install script v3.0.1"
 echo "Hydro includes system telemetry,
 which helps developers figure out the most commonly used operating system and platform.
 To disable this feature, checkout our sourcecode."
@@ -22,6 +22,7 @@ echo "// File created by Hydro install script\n" >/tmp/install.js
 cat >/tmp/install.b64 << EOF123
 %PLACEHOLDER%
 EOF123
-cat /tmp/install.b64 | base64 -d >>/tmp/install.js 
+cat /tmp/install.b64 | base64 -d >>/tmp/install.js
+rm /tmp/install.b64
 node /tmp/install.js "$@"
 set +e

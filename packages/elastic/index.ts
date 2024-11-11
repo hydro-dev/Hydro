@@ -1,6 +1,6 @@
 import { Client } from '@elastic/elasticsearch';
 import {
-    _, Context, DomainModel, iterateAllProblem, iterateAllProblemInDomain,
+    _, Context, iterateAllProblem, iterateAllProblemInDomain,
     ProblemDoc, ProblemModel, Schema, SystemModel,
 } from 'hydrooj';
 
@@ -11,7 +11,11 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     doc.content &&= doc.content.replace(/[[\]【】()（）]/g, ' ');
     doc.title &&= doc.title.replace(/[[\]【】()（）]/g, ' ')
         .replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
-    doc.pid &&= doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2');
+    if (doc.pid?.includes('-')) {
+        const ns = doc.pid.split('-')[0];
+        doc.tag.push(ns);
+    }
+    doc.pid &&= doc.pid.replace(/([a-zA-Z]{2,})(\d+)/, '$1$2 $1 $2').replace(/-/g, ' ');
     return _.omit(doc, indexOmit);
 };
 
@@ -19,8 +23,6 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
     const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
     const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
-    const union = await DomainModel.get(domainId);
-    const domainIds = [domainId, ...(union?.union || [])];
     const res = await client.search({
         index: 'problem',
         size,
@@ -34,22 +36,25 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         post_filter: {
             bool: {
                 minimum_should_match: 1,
-                should: domainIds.map((i) => ({ match: { domainId: i } })),
+                should: [{ match: { domainId } }],
             },
         },
     });
     let hits = res.hits.hits.map((i) => i._id);
     if (!opts.skip) {
-        const pdoc = await ProblemModel.get(domainId, +q || q, ProblemModel.PROJECTION_LIST);
+        let pdoc = await ProblemModel.get(domainId, +q || q, ProblemModel.PROJECTION_LIST);
         if (pdoc) {
             hits = hits.filter((i) => i !== `${pdoc.domainId}/${pdoc.docId}`);
             hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
+        } else if (/^P\d+$/.test(q)) {
+            pdoc = await ProblemModel.get(domainId, +q.substring(1), ProblemModel.PROJECTION_LIST);
+            if (pdoc) hits.unshift(`${pdoc.domainId}/${pdoc.docId}`);
         }
     }
     return {
         countRelation: typeof res.hits.total === 'number' ? 'eq' : res.hits.total.relation,
         total: typeof res.hits.total === 'number' ? res.hits.total : res.hits.total.value,
-        hits,
+        hits: Array.from(new Set(hits)),
     };
 };
 

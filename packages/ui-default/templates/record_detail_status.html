@@ -1,4 +1,4 @@
-<div class="section visible" id="status">
+<div class="section visible" id="status" data-status="{{ rdoc.status }}">
   <div class="section__header">
     <h1 class="section__title">
       <span class="icon record-status--icon {{ model.builtin.STATUS_CODES[rdoc['status']] }}"></span>
@@ -13,7 +13,7 @@
   </div>
 {% if rdoc.compilerTexts.length %}
   <div class="section__body">
-    <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n')|ansi|safe }}</pre>
+    <pre class="compiler-text">{{ rdoc.compilerTexts|join('\n')|ansi|safe }}<div class="compiler-text-mask"><p><span class="icon icon-expand_more">{{ _('Expand') }}</span></p></div></pre>
   </div>
 {% endif %}
 {% if rdoc.judgeTexts.length %}
@@ -21,7 +21,7 @@
     <pre class="judge-text">{{ formatJudgeTexts(rdoc.judgeTexts)|ansi|safe }}</pre>
   </div>
 {% endif %}
-{% if rdoc.testCases.length %} 
+{% if rdoc.testCases.length %}
   <div class="section__body no-padding">
     <table class="data-table record_detail__table">
       <colgroup>
@@ -79,7 +79,7 @@
                 {{ (rdoc.subtasks[subtaskId]['score'] if _key != 'id' else rcdoc.score)|default(0) }}
               </span>
               {% endif %}
-              <span>{{ formatJudgeTexts([rcdoc.message]) if rcdoc.message else '' }}</span>
+              <span class="message">{{ formatJudgeTexts([rcdoc.message])|ansi|safe if rcdoc.message else '' }}</span>
             </td>
             <td class="col--time">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ rcdoc.time|round|int }}ms</td>
             <td class="col--memory">{% if rcdoc['status'] == STATUS.STATUS_TIME_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_MEMORY_LIMIT_EXCEEDED or rcdoc['status'] == STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED %}&ge;{% endif %}{{ size(rcdoc.memory, 1024) }}</td>

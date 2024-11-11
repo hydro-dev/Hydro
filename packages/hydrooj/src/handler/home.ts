@@ -3,6 +3,7 @@ import { generateRegistrationOptions, verifyRegistrationResponse } from '@simple
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectId } from 'mongodb';
+import Parser from 'ua-parser-js';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -12,7 +13,6 @@ import {
 import { DomainDoc, MessageDoc, Setting } from '../interface';
 import avatar, { validate } from '../lib/avatar';
 import * as mail from '../lib/mail';
-import * as useragent from '../lib/useragent';
 import { verifyTFA } from '../lib/verifyTFA';
 import BlackListModel from '../model/blacklist';
 import { PERM, PRIV } from '../model/builtin';
@@ -121,14 +121,12 @@ export class HomeHandler extends Handler {
         if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) return [[], {}];
         const psdocs = await ProblemModel.getMultiStatus(domainId, { uid: this.user._id, star: true })
             .sort('_id', 1).limit(limit).toArray();
-        const psdict = {};
-        for (const psdoc of psdocs) psdict[psdoc.docId] = psdoc;
         const pdict = await ProblemModel.getList(
             domainId, psdocs.map((pdoc) => pdoc.docId),
             this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, false,
         );
         const pdocs = Object.keys(pdict).filter((i) => +i).map((i) => pdict[i]);
-        return [pdocs, psdict];
+        return [pdocs];
     }
 
     async getRecentProblems(domainId: string, limit = 10) {
@@ -179,7 +177,6 @@ export class HomeHandler extends Handler {
     }
 }
 
-let geoip: Context['geoip'] = null;
 class HomeSecurityHandler extends Handler {
     @requireSudo
     async get() {
@@ -188,8 +185,12 @@ class HomeSecurityHandler extends Handler {
         for (const session of sessions) {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
-            session.updateUa = useragent.parse(session.updateUa || session.createUa || '');
-            session.updateGeoip = geoip?.lookup?.(
+            const ua = session.updateUa || session.createUa;
+            if (ua) {
+                const parser = new Parser(ua);
+                session.updateUaInfo = parser.getResult();
+            }
+            session.updateGeoip = this.ctx.geoip?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
             );
@@ -202,8 +203,7 @@ class HomeSecurityHandler extends Handler {
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
-            geoipProvider: geoip?.provider,
-            icon: (str = '') => str.split(' ')[0].toLowerCase(),
+            geoipProvider: this.ctx?.geoip?.provider,
         };
     }
 
@@ -288,7 +288,7 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
     async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
-        const options = generateRegistrationOptions({
+        const options = await generateRegistrationOptions({
             rpName: system.get('server.name'),
             rpID: this.getAuthnHost(),
             userID: this.user._id.toString(),
@@ -352,28 +352,45 @@ class HomeSecurityHandler extends Handler {
 }
 
 function set(s: Setting, key: string, value: any) {
-    if (s) {
-        if (s.family === 'setting_storage') return undefined;
-        if (s.flag & setting.FLAG_DISABLED) return undefined;
-        if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
-        if (s.type === 'boolean') {
-            if (value === 'on') return true;
-            return false;
-        }
-        if (s.type === 'number') {
-            if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
-            return +value;
-        }
-        if (s.subType === 'yaml') {
-            try {
-                yaml.load(value);
-            } catch (e) {
-                throw new ValidationError(key);
-            }
-        }
-        return value;
+    if (!s) return undefined;
+    if (s.family === 'setting_storage') return undefined;
+    if (s.flag & setting.FLAG_DISABLED) return undefined;
+    if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
+    if (s.type === 'boolean') {
+        if (value === 'on') return true;
+        return false;
     }
-    return undefined;
+    if (s.type === 'number') {
+        if (!Number.isSafeInteger(+value)) throw new ValidationError(key);
+        return +value;
+    }
+    if (s.type === 'float') {
+        if (Number.isNaN(+value)) throw new ValidationError(key);
+        return +value;
+    }
+    if (value) {
+        if (['json', 'yaml', 'markdown', 'textarea'].includes(s.type)) {
+            if (!Types.Content[1](value)) throw new ValidationError(key);
+        }
+        if (s.type === 'text') {
+            if (!Types.ShortString[1](value)) throw new ValidationError(key);
+        }
+    }
+    if (s.subType === 'yaml') {
+        try {
+            yaml.load(value);
+        } catch (e) {
+            throw new ValidationError(key);
+        }
+    }
+    if (s.subType === 'json') {
+        try {
+            JSON.parse(value);
+        } catch (e) {
+            throw new ValidationError(key);
+        }
+    }
+    return value;
 }
 
 class HomeSettingsHandler extends Handler {
@@ -484,15 +501,11 @@ class HomeDomainHandler extends Handler {
     }
 
     @param('id', Types.String)
-    async postStar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
-        this.back({ star: true });
-    }
-
-    @param('id', Types.String)
-    async postUnstar(domainId: string, id: string) {
-        await user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
-        this.back({ star: false });
+    @param('star', Types.Boolean)
+    async postStar({ }, id: string, star = false) {
+        if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
+        else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        this.back({ star });
     }
 }
 
@@ -591,10 +604,8 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export async function apply(ctx: Context) {
-    ctx.inject(['geoip'], (g) => {
-        geoip = g.geoip;
-    });
+export const inject = { geoip: { required: false } };
+export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_changemail_with_code', '/home/changeMail/:code', UserChangemailWithCodeHandler, PRIV.PRIV_USER_PROFILE);

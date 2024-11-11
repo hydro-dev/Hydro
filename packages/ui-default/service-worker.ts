@@ -89,7 +89,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 const PRECACHE = `precache-${process.env.VERSION}`;
-const DO_NOT_PRECACHE = ['.worker.js', 'fonts', 'i.monaco'];
+const DO_NOT_PRECACHE = ['.worker.js', 'fonts'];
 
 function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;
@@ -114,19 +114,20 @@ interface ServiceWorkerConfig {
   hosts: string[];
   /** service domains */
   domains: string[];
+  /** assets domains */
+  assets: string[];
   preload?: string;
 }
 let config: ServiceWorkerConfig = null;
 
-function initConfig() {
-  config = JSON.parse(new URLSearchParams(location.search).get('config'));
+function initConfig(cfg) {
+  config = cfg;
   config.hosts ||= [];
-  if (!config.domains?.length) config.domains = [location.host];
+  config.domains = Array.from(new Set([location.host, ...(config.domains || [])]));
   console.log('Config:', config);
 }
 
 self.addEventListener('install', (event) => event.waitUntil((async () => {
-  initConfig();
   if (process.env.NODE_ENV === 'production' && config?.preload) {
     const [cache, manifest] = await Promise.all([
       caches.open(PRECACHE),
@@ -140,7 +141,6 @@ self.addEventListener('install', (event) => event.waitUntil((async () => {
 })()));
 
 self.addEventListener('activate', (event) => {
-  initConfig();
   event.waitUntil(self.clients.claim());
   const valid = [PRECACHE];
   caches.keys().then((names) => names
@@ -175,34 +175,64 @@ async function get(request: Request) {
       console.warn(source.toString(), ' Load fail ', error);
     }
   }
-  return fetch(request);
+  return null;
 }
 
 function transformUrl(url: string) {
   const urlObject = new URL(url);
-  if (urlObject.pathname.startsWith('/fs/')) urlObject.search = '';
+  const path = urlObject.pathname;
+  if (path.startsWith('/fs/') || path.toLowerCase().includes('x-amz')) urlObject.search = '';
   return urlObject.toString();
 }
 
-async function cachedRespond(request: Request) {
+async function cached(request: Request, cacheKey: string, fetchFunc: () => Promise<Response | null>) {
   const url = transformUrl(request.url);
-  const cachedResponse = await caches.match(url);
-  if (cachedResponse) return cachedResponse;
-  console.log(`Caching ${url}`);
+  const urlObject = new URL(url);
+  const isAsset = config.assets.some((i) => request.url.startsWith(i));
+  const rewritable = !isAsset && config.domains.length > 1
+    && config.domains.includes(urlObject.hostname)
+    && urlObject.origin === location.origin;
+  let targets = [url];
+  if (rewritable) {
+    targets = config.domains.map((i) => {
+      const t = new URL(request.url);
+      t.host = i;
+      return transformUrl(t.toString());
+    });
+  }
+
+  if (!shouldCache(request)) return rewritable ? fetchFunc() : fetch(request);
+
+  const results = await Promise.all(targets.map((i) => caches.match(i)));
+  const found = results.find((i) => i);
+  if (found) {
+    console.debug('Serve from cache %s <- %s', request.url, found.url);
+    return found;
+  }
   const [cache, response] = await Promise.all([
-    caches.open(PRECACHE),
-    get(request),
+    caches.open(cacheKey),
+    fetchFunc().catch(() => null),
   ]);
-  if (response.ok) {
+  if (response?.status === 206) return response; // partial response cannot be cached
+  if (response?.ok) {
+    console.log(`Cached ${url}`);
     cache.put(url, response.clone());
     return response;
   }
+  console.log(`Failed to cache ${url}`, response);
+  // If response fails, re-fetch the original request to prevent
+  // errors caused by different headers and do not cache them
   return fetch(request);
 }
 
 self.addEventListener('fetch', (event: FetchEvent) => {
   if (event.request.url.endsWith('/ping')) {
     event.respondWith(new Response('pong'));
+    return;
+  }
+  if (event.request.url.endsWith('/service-worker-config')) {
+    event.request.json().then((cfg) => initConfig(cfg));
+    event.respondWith(new Response('ok'));
     return;
   }
   if (map.get(event.request.url)) {
@@ -212,46 +242,24 @@ self.addEventListener('fetch', (event: FetchEvent) => {
   if (!['get', 'post', 'head'].includes(event.request.method.toLowerCase())) return;
   if (!config) return; // Don't do anything when not initialized
   const url = new URL(event.request.url);
-  const rewritable = config.domains.length > 1
-    && config.domains.includes(url.hostname) && url.origin === location.origin;
+  const isAsset = config.assets.some((i) => event.request.url.startsWith(i));
+  const rewritable = !isAsset && config.domains.length > 1
+    && config.domains.includes(url.hostname)
+    && url.origin === location.origin;
   // Only handle whitelisted origins;
-  if (!config.hosts.some((i) => event.request.url.startsWith(i))) return;
+  if (!isAsset && !config.hosts.some((i) => event.request.url.startsWith(i))) return;
+  // Do not cache range requests
+  if (event.request.headers.get('range')?.trim()?.length) return;
 
-  if (shouldCache(event.request)) {
-    event.respondWith((async () => {
-      if (rewritable) {
-        const targets = config.domains.map((i) => {
-          const t = new URL(event.request.url);
-          t.host = i;
-          return transformUrl(t.toString());
-        });
-        const results = await Promise.all(targets.map((i) => caches.match(i)));
-        return results.find((i) => i) || cachedRespond(event.request);
-      }
-      const transformedUrl = transformUrl(event.request.url);
-      const cachedResponse = await caches.match(transformedUrl);
-      if (cachedResponse) return cachedResponse;
-      console.log(`Caching ${transformedUrl}`);
-      const [cache, response] = await Promise.all([
-        caches.open(PRECACHE),
-        fetch(url, {
-          method: event.request.method,
-          headers: event.request.headers,
-          redirect: event.request.redirect,
-          keepalive: event.request.keepalive,
-          referrer: event.request.referrer,
-          referrerPolicy: event.request.referrerPolicy,
-          signal: event.request.signal,
-        }), // Fetch from url to prevent opaque response
-      ]);
-      if (response.ok) {
-        cache.put(transformedUrl, response.clone());
-        return response;
-      }
-      console.log(`Failed to cache ${transformedUrl}`, response);
-      // If response fails, re-fetch the original request to prevent
-      // errors caused by different headers and do not cache them
-      return fetch(event.request);
-    })());
-  } else if (rewritable) event.respondWith(get(event.request));
+  event.respondWith((async () => cached(event.request, isAsset ? 'assets' : PRECACHE, () => (rewritable
+    ? get(event.request)
+    : fetch(url, {
+      method: event.request.method,
+      headers: event.request.headers,
+      redirect: event.request.redirect,
+      keepalive: event.request.keepalive,
+      referrer: event.request.referrer,
+      referrerPolicy: event.request.referrerPolicy,
+      signal: event.request.signal,
+    }))))());
 });

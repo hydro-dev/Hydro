@@ -9,7 +9,7 @@ console.log('SharedWorker init');
 
 let conn: ReconnectingWebsocket;
 let lcookie: string;
-let ports: MessagePort[] = [];
+const ports: Set<MessagePort> = new Set();
 interface RequestInitSharedConnPayload {
   type: 'conn';
   cookie: string;
@@ -29,6 +29,7 @@ function broadcastMsg(message: any) {
   for (const p of ports) p.postMessage(message);
 }
 function initConn(path: string, port: MessagePort, cookie: any) {
+  ports.add(port);
   if (cookie !== lcookie) conn?.close();
   else if (conn && conn.readyState === conn.OPEN) return;
   const url = new URL(path, location.origin);
@@ -37,7 +38,6 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   console.log('Init connection for', path);
   conn?.close();
   conn = new ReconnectingWebsocket(url.toString());
-  ports.push(port);
   conn.onopen = () => {
     console.log('Connected to', path);
     broadcastMsg({ type: 'open' });
@@ -85,8 +85,8 @@ self.onconnect = function (e) { // eslint-disable-line no-undef
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {
     if (msg.data.type === 'conn') initConn(msg.data.path, port, msg.data.cookie);
-    if (msg.data.type === 'ack') ack[msg.data.id]();
-    if (msg.data.type === 'unload') ports = ports.filter((i) => i !== port);
+    if (msg.data.type === 'ack') ack[msg.data.id]?.();
+    if (msg.data.type === 'unload') ports.delete(port);
   });
 
   port.start();

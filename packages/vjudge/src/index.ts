@@ -1,8 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
+import { LangConfig } from '@hydrooj/utils/lib/lang';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger,
-    ProblemModel, RecordModel, Service, SettingModel, sleep, STATUS, TaskModel, Time,
+    Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
+    sleep, STATUS, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
@@ -14,6 +15,7 @@ const syncing = {};
 class AccountService {
     api: IBasicProvider;
     problemLists: Set<string>;
+    syncing = false;
     listUpdated = false;
     working = false;
     error = '';
@@ -47,9 +49,13 @@ class AccountService {
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
+            if (this.Provider.Langs && !langConfig?.validAs?.[this.account.type]) {
+                end({ status: STATUS.STATUS_COMPILE_ERROR, message: `Language not supported: ${task.lang}` });
+                return;
+            }
             if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
             const comment = langConfig.comment;
-            if (comment) {
+            if (comment && !this.Provider.noComment) {
                 const msg = `Hydro submission #${task.rid}@${new Date().getTime()}`;
                 if (typeof comment === 'string') task.code = `${comment} ${msg}\n${task.code}`;
                 else if (comment instanceof Array) task.code = `${comment[0]} ${msg} ${comment[1]}\n${task.code}`;
@@ -84,13 +90,14 @@ class AccountService {
                 }
                 if (id.search('\\\\#') !== -1) continue;
                 const [pid, metastr = '{}'] = id.split('#');
+                const normalizedPid = pid.replace(/[_-]/g, '');
                 const meta = JSON.parse(metastr);
-                if (await ProblemModel.get(domainId, pid) || syncing[`${domainId}/${pid}`]) continue;
+                if (await ProblemModel.get(domainId, normalizedPid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
                     const res = await this.api.getProblem(pid, meta);
                     if (!res) continue;
-                    const docId = await ProblemModel.add(domainId, pid, res.title, res.content, 1, res.tag);
+                    const docId = await ProblemModel.add(domainId, normalizedPid, res.title, res.content, 1, res.tag);
                     if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
                     for (const key in res.files) {
                         await ProblemModel.addAdditionalFile(domainId, docId, key, res.files[key]);
@@ -119,29 +126,42 @@ class AccountService {
         return false;
     }
 
+    async handleSync() {
+        if (this.syncing) return;
+        this.syncing = true;
+        try {
+            const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
+            do {
+                this.listUpdated = false;
+                for (const listName of this.problemLists) {
+                    for (const ddoc of ddocs) {
+                        if (ddoc.syncDone === true) {
+                            await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
+                            ddoc.syncDone = { main: true };
+                        }
+                        if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
+                        else await this.sync(ddoc._id, true, listName);
+                        await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
+                        ddoc.syncDone ||= {};
+                        ddoc.syncDone[listName] = true;
+                    }
+                }
+            } while (this.listUpdated);
+        } catch (e) {
+            this.error = e;
+            logger.error('%s sync failed', this.account.handle);
+            logger.error(e);
+        }
+        this.syncing = false;
+    }
+
     async main() {
         const res = await this.login();
         if (!res) return;
         setInterval(() => this.login(), Time.hour);
         TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
-        const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
         this.working = true;
-        do {
-            this.listUpdated = false;
-            for (const listName of this.problemLists) {
-                for (const ddoc of ddocs) {
-                    if (ddoc.syncDone === true) {
-                        await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
-                        ddoc.syncDone = { main: true };
-                    }
-                    if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
-                    else await this.sync(ddoc._id, true, listName);
-                    await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
-                    ddoc.syncDone ||= {};
-                    ddoc.syncDone[listName] = true;
-                }
-            }
-        } while (this.listUpdated);
+        this.handleSync();
     }
 }
 
@@ -158,9 +178,10 @@ class VJudgeService extends Service {
 
     accounts: RemoteAccount[];
     private providers: Record<string, any> = {};
-    private pool: Record<string, any> = {};
+    private pool: Record<string, AccountService> = {};
     async start() {
         this.accounts = await coll.find().toArray();
+        this.ctx.setInterval(this.sync.bind(this), Time.week);
     }
 
     addProvider(type: string, provider: BasicProvider, override = false) {
@@ -171,9 +192,33 @@ class VJudgeService extends Service {
             if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
             this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
         }
-        this[Context.current]?.on('dispose', () => {
-            // TODO dispose session
-        });
+        // FIXME: potential race condition
+        if (provider.Langs) this.updateLangs(type, provider.Langs);
+        // TODO dispose session
+    }
+
+    async updateLangs(provider: string, mapping: Record<string, Partial<LangConfig>>) {
+        const config = yaml.load(SystemModel.get('hydrooj.langs'));
+        const old = yaml.dump(config);
+        for (const key in mapping) {
+            config[key] ||= {
+                execute: '/bin/echo For remote judge only',
+                hidden: true,
+                ...mapping[key],
+            };
+            config[key].validAs ||= {};
+            config[key].validAs[provider] = mapping[key].key;
+        }
+        const newConfig = yaml.dump(config);
+        if (old !== newConfig) await SystemModel.set('hydrooj.langs', newConfig);
+    }
+
+    async sync() {
+        for (const key in this.pool) {
+            const account = this.pool[key];
+            if (!account.working) continue;
+            await account.handleSync();
+        }
     }
 
     async checkStatus(onCheckFunc = false) {
@@ -182,7 +227,7 @@ class VJudgeService extends Service {
             res[k] = {
                 working: v.working,
                 error: v.error,
-                status: v.api.checkStatus ? await v.api.checkStatus(onCheckFunc) : null,
+                status: 'checkStatus' in v.api ? await v.api.checkStatus(onCheckFunc) : null,
             };
         }
         return res;
@@ -198,10 +243,26 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (process.env.HYDRO_CLI) return;
     ctx.plugin(VJudgeService);
+    ctx.inject(['migration'], async (c) => {
+        c.migration.registerChannel('vjudge', [
+            async function init() { }, // eslint-disable-line
+            c.migration.dontWait(async () => {
+                const rewrite = (from: string[], to: string) => RecordModel.coll.updateMany({ lang: { $in: from } }, { $set: { lang: to } });
+                await Promise.all([
+                    rewrite(['csgoj.0', 'poj.1', 'poj.5'], 'c'),
+                    rewrite(['csgoj.1'], 'cc.cc17o2'),
+                    rewrite(['csgoj.3', 'poj.2'], 'java'),
+                    rewrite(['csgoj.6'], 'py.py3'),
+                    rewrite(['csgoj.17'], 'go'),
+                    rewrite(['poj.0', 'poj.4'], 'cc.cc98'),
+                ]);
+            }, 'update csgoj and poj langs in record collection'),
+        ]);
+    });
     ctx.inject(['vjudge'], async (c) => {
         await c.vjudge.start();
         for (const [k, v] of Object.entries(providers)) {
-            c.vjudge.addProvider(k, v);
+            if (!SystemModel.get(`vjudge.builtin-${k}-disable`)) c.vjudge.addProvider(k, v);
         }
         c.inject(['check'], ({ check }) => {
             check.addChecker('Vjudge', async (_ctx, log, warn, error) => {

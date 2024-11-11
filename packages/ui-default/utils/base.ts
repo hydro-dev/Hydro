@@ -81,6 +81,15 @@ export const zIndexManager = {
   },
 };
 
+export function addSpeculationRules(rules) {
+  if (HTMLScriptElement.supports?.('speculationrules')) {
+    const specScript = document.createElement('script');
+    specScript.type = 'speculationrules';
+    specScript.textContent = JSON.stringify(rules);
+    document.body.append(specScript);
+  }
+}
+
 export const request = {
   ajax(options: Record<string, any>) {
     const stack = new Error().stack;
@@ -174,6 +183,28 @@ export const request = {
   },
 };
 
+export async function withTransitionCallback(callback: () => (Promise<void> | void)) {
+  // @ts-ignore
+  if (!document.startViewTransition) return callback?.();
+  // @ts-ignore
+  const transition = document.startViewTransition(callback);
+  return await transition.finished;
+}
+
+export async function setTemporaryViewTransitionNames(entries, vtPromise: Promise<void>) {
+  for (const [$el, name] of entries) {
+    $el.style.viewTransitionName = name;
+  }
+  await vtPromise;
+  for (const [$el] of entries) {
+    $el.style.viewTransitionName = '';
+  }
+}
+
+export function getTheme(): 'dark' | 'light' {
+  return ['light', 'dark'].includes(UserContext.theme) ? UserContext.theme : 'light';
+}
+
 Object.assign(window.Hydro.utils, {
   i18n,
   rawHtml,
@@ -183,4 +214,6 @@ Object.assign(window.Hydro.utils, {
   tpl,
   delay,
   zIndexManager,
+  withTransitionCallback,
+  setTemporaryViewTransitionNames,
 });

@@ -23,7 +23,7 @@ const {
   list,
   targets,
 } = compat({
-  targets: '> 1%, chrome 70, firefox 60, safari 16, ios_saf 16, not ie 11, not op_mini all',
+  targets: '> 1%, chrome 70, firefox 90, safari 16, ios_saf 16, not ie 11, not op_mini all',
   modules: [
     'core-js/stable',
   ],
@@ -35,16 +35,18 @@ fs.writeFileSync(root('__core-js.js'), `${list.map((i) => `import 'core-js/modul
 
 export default async function (env: { watch?: boolean, production?: boolean, measure?: boolean } = {}) {
   if (env.production) console.log(targets);
-  let isNew = false;
-  const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
-  if (typeof version === 'string' && gt(version, latest)) isNew = true;
+  let createSentryRelease = !!(process.env.CI && process.env.SENTRY_AUTH_TOKEN);
+  if (createSentryRelease) {
+    const { version: latest } = await packageJson('@hydrooj/ui-default', { version: 'latest' });
+    createSentryRelease = typeof version === 'string' && gt(version, latest);
+  }
 
   function esbuildLoader() {
     return {
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'es2015',
+        target: 'es6',
         sourcemap: true,
       },
     };
@@ -99,6 +101,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     devtool: env.production ? 'source-map' : false,
     entry: {
       [`hydro-${version}`]: './entry.js',
+      'sentry': './sentry.ts',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
     },
@@ -124,6 +127,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
+        'graphql-ws': root('../../modules/nop.ts'),
       },
     },
     module: {
@@ -209,9 +213,9 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     },
     optimization: {
       splitChunks: {
-        minSize: 256000,
-        maxAsyncRequests: 5,
-        maxInitialRequests: 3,
+        minSize: 64000,
+        maxAsyncRequests: 10,
+        maxInitialRequests: 7,
         automaticNameDelimiter: '-',
         cacheGroups: {
           style: {
@@ -222,7 +226,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
             enforce: true,
           },
           vendors: {
-            test: /[\\/]node_modules[\\/].+\.([jt]sx?|json|yaml)$/,
+            test: /[\\/]node_modules[\\/].+\.(m?[jt]sx?|json|yaml)$/,
             priority: -10,
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
@@ -288,7 +292,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         sourcemaps: {
           rewriteSources: (source) => source.replace('@hydrooj/ui-default/../../node_modules/', ''),
         },
-        release: (process.env.CI && isNew) ? {
+        release: createSentryRelease ? {
           name: `hydro-web@${version}`,
           uploadLegacySourcemaps: root('public'),
         } : {},

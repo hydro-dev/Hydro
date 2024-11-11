@@ -135,7 +135,7 @@ const acm = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -171,7 +171,7 @@ const acm = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -225,7 +225,7 @@ const acm = buildContestRule({
     async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
+        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         // Find first accept
         const first = {};
         const data = await document.collStatus.aggregate([
@@ -283,14 +283,15 @@ const oi = buildContestRule({
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
+            if (lockAt && j.rid.getTimestamp() > lockAt) {
+                npending[j.pid]++;
+                display[j.pid] ||= {};
+                display[j.pid].npending = npending[j.pid];
+                continue;
+            }
             if (!detail[j.pid] || detail[j.pid].score < j.score || this.submitAfterAccept) {
                 detail[j.pid] = j;
                 display[j.pid] ||= {};
-                if (lockAt && j.rid.getTimestamp() > lockAt) {
-                    npending[j.pid]++;
-                    display[j.pid].npending = npending[j.pid];
-                    continue;
-                }
                 display[j.pid] = j;
             }
         }
@@ -307,7 +308,7 @@ const oi = buildContestRule({
             { type: 'rank', value: '#' },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -341,7 +342,7 @@ const oi = buildContestRule({
             if (typeof score !== 'number') return '-';
             return score * ((tdoc.score?.[pid] || 100) / 100);
         };
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -395,7 +396,7 @@ const oi = buildContestRule({
     async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
+        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         const psdict = {};
         const first = {};
         await Promise.all(tdoc.pids.map(async (pid) => {
@@ -486,7 +487,7 @@ const strictioi = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -558,7 +559,7 @@ const ledo = buildContestRule({
             { type: 'rank', value: rank.toString() },
             { type: 'user', value: udoc.uname, raw: tsdoc.uid },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -648,7 +649,7 @@ const homework = buildContestRule({
             { type: 'rank', value: _('Rank') },
             { type: 'user', value: _('User') },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             columns.push({ type: 'email', value: _('Email') });
             columns.push({ type: 'string', value: _('School') });
             columns.push({ type: 'string', value: _('Name') });
@@ -697,7 +698,7 @@ const homework = buildContestRule({
                 raw: tsdoc.uid,
             },
         ];
-        if (config.isExport) {
+        if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
             row.push({ type: 'string', value: udoc.school || '' });
             row.push({ type: 'string', value: udoc.displayName || '' });
@@ -745,7 +746,7 @@ const homework = buildContestRule({
     async scoreboard(config, _, tdoc, pdict, cursor) {
         const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score);
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
-        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName);
+        const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         const columns = await this.scoreboardHeader(config, _, tdoc, pdict);
         const rows: ScoreboardRow[] = [
             columns,
@@ -794,11 +795,14 @@ export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>)
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(domainId, tid);
     RULES[$set.rule || tdoc.rule].check(Object.assign(tdoc, $set));
-    return await document.set(domainId, document.TYPE_CONTEST, tid, $set);
+    const res = await document.set(domainId, document.TYPE_CONTEST, tid, $set);
+    await bus.parallel('contest/edit', res);
+    return res;
 }
 
 export async function del(domainId: string, tid: ObjectId) {
     await Promise.all([
+        bus.parallel('contest/del', domainId, tid),
         document.deleteOne(domainId, document.TYPE_CONTEST, tid),
         document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }),
     ]);
@@ -845,25 +849,23 @@ export async function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return await document.getStatus(domainId, document.TYPE_CONTEST, tid, uid);
 }
 
-async function _updateStatus(
-    tdoc: Tdoc, uid: number, rid: ObjectId, pid: number, status: STATUS, score: number,
-    subtasks: Record<number, SubtaskResult>,
+export async function updateStatus(
+    domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
+    {
+        status = STATUS.STATUS_WAITING,
+        score = 0,
+        subtasks,
+        lang,
+    }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
+    const tdoc = await get(domainId, tid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
-        rid, pid, status, score, subtasks,
+        rid, pid, status, score, subtasks, lang,
     }, 'rid');
     const journal = _getStatusJournal(tsdoc);
     const stats = RULES[tdoc.rule].stat(tdoc, journal);
     return await document.revSetStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, tsdoc.rev, { journal, ...stats });
-}
-
-export async function updateStatus(
-    domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number,
-    status = STATUS.STATUS_WRONG_ANSWER, score = 0, subtasks: Record<number, SubtaskResult> = {},
-) {
-    const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
-    return await _updateStatus(tdoc, uid, rid, pid, status, score, subtasks);
 }
 
 export async function getListStatus(domainId: string, uid: number, tids: ObjectId[]) {

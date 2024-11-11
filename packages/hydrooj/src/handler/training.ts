@@ -104,7 +104,7 @@ class TrainingDetailHandler extends Handler {
         let enrollUsers: number[] = [];
         let shouldCompare = false;
         const pids = training.getPids(tdoc.dag);
-        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+        if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE) && this.ctx.setting.get('training.enrolled-users')) {
             enrollUsers = (await training.getMultiStatus(domainId, { docId: tid, uid: { $gt: 1 }, enroll: 1 })
                 .project({ uid: 1 }).limit(500).toArray()).map((x) => +x.uid);
             shouldCompare = uid !== this.user._id;
@@ -112,7 +112,7 @@ class TrainingDetailHandler extends Handler {
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)),
+            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
             problem.getList(domainId, pids, canViewHidden, true),
             problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},

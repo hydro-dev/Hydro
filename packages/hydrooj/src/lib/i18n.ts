@@ -7,6 +7,11 @@ declare module '../context' {
         i18n: I18nService;
     }
 }
+declare module '../service/bus' {
+    interface EventMap {
+        'app/i18n/update': (lang: string) => void;
+    }
+}
 declare global {
     interface String {
         translate: (...languages: string[]) => string;
@@ -19,10 +24,13 @@ class I18nService extends Service {
     }
 
     load(lang: string, content: Record<string, string>) {
-        translations[lang] ||= [];
-        translations[lang].unshift(content);
-        this[Context.current]?.on('dispose', () => {
-            translations[lang] = translations[lang].filter((i) => i !== content);
+        this.ctx.effect(() => {
+            translations[lang] ||= [];
+            translations[lang].unshift(content);
+            this.ctx.emit('app/i18n/update', lang);
+            return () => {
+                translations[lang] = translations[lang].filter((i) => i !== content);
+            };
         });
     }
 
