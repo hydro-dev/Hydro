@@ -1,0 +1,35 @@
+{% set page_name = 'contest_scoreboard_xcpcio' %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<script>
+    function normalizePath(_) {
+        for (; _.endsWith("/");)_ = _.slice(0, -1);
+        return `${_}/`;
+    }
+    window.CDN_HOST = "{{ '/' if process.env.DEV else UiContext.cdn_prefix }}";
+    window.__toAssetUrl = url => window.CDN_HOST + url;
+    window.DATA_HOST = "/";
+    window.DATA_REGION = "Hydro";
+    window.DEFAULT_LANG = "{{ 'zh-CN' if _('__id').startsWith('zh') else 'en' }}";
+    window.DATA_SOURCE = "{{ dataSource }}";
+    if (document.documentElement.classList.contains("theme--dark")) document.documentElement.classList.toggle("dark", !0);
+    setInterval(() => {
+        const location = window.location.href;
+        if (location.includes("%2F")) {
+            window.history.replaceState(null, "", location.replace(/%2F/g, "/"));
+        }
+    }, 500);
+</script>
+<style>
+    #app .nav, .omnibar-toggle, #app>main>footer>div>a, #app>main>footer>div>p { display: none; }
+    #app footer { padding-top: 0 !important; padding-bottom: 0 !important; }
+    .nav__item .icon img { display: inherit; }
+    table { border-spacing: 2px; }
+    th { text-align: center; }
+    td.unattempted, td.empty { background-color: transparent !important; }
+</style>
+<script type="module" crossorigin src="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ js }}.js"></script>
+<link rel="stylesheet" crossorigin href="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ css }}.css">
+<div id="app"></div>
+<noscript>This website requires JavaScript to function properly. Please enable JavaScript tocontinue.</noscript>
+{% endblock %}

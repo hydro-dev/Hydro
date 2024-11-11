@@ -390,7 +390,7 @@ export interface Tdoc extends Document {
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
-    balloon?: Record<number, string>;
+    balloon?: Record<number, string | { color: string, name: string }>;
     score?: Record<number, number>;
 
     /**
