@@ -120,7 +120,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       async highlightTeam(teamId: string, scrollIdx: number) {
         setP(null);
         setTeam(teamId);
-        await scrollTo(scrollIdx * 80 - window.innerHeight + 161);
+        await scrollTo(scrollIdx * 80 - window.innerHeight + 241 + 40);
       },
       async highlightProblem(problemId: string) {
         setP(problemId);
