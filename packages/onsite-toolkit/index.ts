@@ -37,7 +37,7 @@ export function apply(ctx: Context) {
     });
 
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
-        scoreboard.addView('resolver', 'Resolver', { tdoc: 'tdoc' }, {
+        scoreboard.addView('resolver-tiny', 'Resolver(Tiny)', { tdoc: 'tdoc' }, {
             async display({ tdoc }) {
                 if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 const teams = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();

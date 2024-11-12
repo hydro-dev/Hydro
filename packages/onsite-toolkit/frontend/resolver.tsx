@@ -1,45 +1,8 @@
 /* eslint-disable no-await-in-loop */
 import { animated, easings, useSprings } from '@react-spring/web';
 import useKey from 'react-use/lib/useKey';
-import {
-  addPage, NamedPage, React, ReactDOM, request,
-} from '@hydrooj/ui-default';
+import { React, ReactDOM } from '@hydrooj/ui-default';
 import { ResolverInput } from '../interface';
-
-function convertPayload(ghost: string, lock: number): ResolverInput {
-  const lines = ghost.split('\n');
-
-  const problemCount = +(lines[2].split(' ')[1]);
-  const teamCount = +(lines[3].split(' ')[1]);
-  const submissionCount = +(lines[4].split(' ')[1]);
-  const data: ResolverInput = {
-    name: lines[0].split('"')[1].split('"')[0],
-    frozen: +lock || 1800,
-    teams: [],
-    submissions: [],
-  };
-  for (let i = 5 + problemCount; i < 5 + problemCount + teamCount; i++) {
-    const team = lines[i].match(/@t (\d+),\d+,\d+,(.*)/);
-    if (!team) continue;
-    data.teams.push({
-      id: team[2].split('-')[1],
-      name: team[2].split('-')[1],
-      institution: team[2].split('-')[0],
-      exclude: false,
-    });
-  }
-  for (let i = 5 + problemCount + teamCount; i < 5 + problemCount + teamCount + submissionCount; i++) {
-    // @s 3,C,1,10066,AC
-    const line = lines[i].split(' ')[1].split(',');
-    data.submissions.push({
-      team: line[0],
-      problem: line[1],
-      verdict: line[4] as 'AC' | 'RJ',
-      time: +(line[3]),
-    });
-  }
-  return data;
-}
 
 async function scrollTo(offset) {
   const fixedOffset = offset.toFixed();
@@ -59,7 +22,7 @@ async function scrollTo(offset) {
     });
   });
 }
-interface DisplaySettings {
+export interface DisplaySettings {
   showAvatar: boolean;
   showSchool: boolean;
 }
@@ -77,17 +40,16 @@ function status(problem) {
 }
 
 function submissions(problem) {
+  console.log(problem);
   const st = status(problem);
   if (st === 'ac') { return `${problem.old}`; }
   if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
   if (st === 'failed') { return problem.old; }
-  return String.fromCharCode('A'.charCodeAt(0) + problem.problem_index);
+  return String.fromCharCode('A'.charCodeAt(0) + problem.index);
 }
 
-function start(data: ResolverInput, options: DisplaySettings) {
-  $('title').text(data.name);
-  $('#title').text(data.name);
-  $('.footer').css('display', 'none');
+export function start(data: ResolverInput, options: DisplaySettings) {
+  $('title').text(`${data.name} - Ranklist`);
   const teams = data.teams.map((v) => ({
     id: v.id,
     rank: 0,
@@ -95,11 +57,12 @@ function start(data: ResolverInput, options: DisplaySettings) {
     penalty: 0,
     ranked: !v.exclude,
     total: 0,
-    problems: data.problems.map((v) => ({
+    problems: data.problems.map((problem, idx) => ({
       old: 0,
       frozen: 0,
       pass: false,
-      id: v.id,
+      id: problem.id,
+      index: idx,
     })),
   }));
   const allSubmissions = data.submissions.sort((a, b) => a.time - b.time);
@@ -209,12 +172,12 @@ function start(data: ResolverInput, options: DisplaySettings) {
       function queueOperations(name: string, ...args: any[]) {
         ops.push({ name, args });
       }
-      let order = processRank(clone);
+      let orders = processRank(clone);
       for (let i = clone.length - 1; i > 0; i--) {
-        const team = clone[order[i]];
+        const team = clone[orders[i]];
         queueOperations('highlightTeam', team.id, i);
         for (const pinfo of data.problems) {
-          const problem = team.problems.find((i) => i.id === pinfo.id);
+          const problem = team.problems.find((idx) => idx.id === pinfo.id);
           if (!problem || !problem.frozen || problem.pass) continue;
           queueOperations('highlightProblem', pinfo.id);
           queueOperations('revealProblem', team.id, pinfo.id);
@@ -236,9 +199,9 @@ function start(data: ResolverInput, options: DisplaySettings) {
             problem.pass = true;
             problem.frozen = 0;
             queueOperations('updateRank');
-            const oldOrder = JSON.stringify(order);
-            order = processRank(clone);
-            if (oldOrder !== JSON.stringify(order)) {
+            const oldOrder = JSON.stringify(orders);
+            orders = processRank(clone);
+            if (oldOrder !== JSON.stringify(orders)) {
               i++;
               break;
             }
@@ -266,7 +229,7 @@ function start(data: ResolverInput, options: DisplaySettings) {
         zIndex, y,
       }, i) => {
         const team = teams[i];
-        const teamInfo = data.teams.find((i) => i.id === team.id);
+        const teamInfo = data.teams.find((idx) => idx.id === team.id);
         if (!teamInfo) return <animated.div key={i}>Team info for id {team.id} not found</animated.div>;
         return <animated.div
           key={i}
@@ -283,23 +246,23 @@ function start(data: ResolverInput, options: DisplaySettings) {
           }}
           children={<>
             <div className="rank">{team.rank === -1 ? '*' : team.rank}</div>
-            {props.showAvatar && <img className="avatar" style={{ height: 32 }} src={`${teamInfo?.avatar}`} />}
+            {props.showAvatar && <img className="avatar" src={`${teamInfo?.avatar}`} />}
             <div className="content">
-              <div className="name" style={{ color: 'white', fontSize: 24 }}>
-                {props.showSchool ? `${teamInfo.institution}--` : ''}{teamInfo.name}
+              <div className="name">
+                {props.showSchool ? `${teamInfo.institution} - ` : ''}{teamInfo.name}
               </div>
-              <ul className="problems">
+              <div className="problems">
                 {data.problems.map((v) => {
                   const uncover = team?.id === selectedTeam && selectedProblem === v.id;
-                  const problemStatus = team.problems.find((i) => i.id === v.id);
-                  return <li className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
-                    <div className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} p-content`}>{submissions(problemStatus)}</div>
-                  </li>;
+                  const problemStatus = team.problems.find((idx) => idx.id === v.id);
+                  return <span className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
+                    {submissions(problemStatus)}
+                  </span>;
                 })}
-              </ul>
+              </div>
             </div>
-            <div className="penalty" style={{ color: 'white' }}>{Math.floor(team.penalty / 60)}</div>
-            <div className="solved" style={{ color: 'white' }}>{team.score}</div>
+            <div className="penalty">{Math.floor(team.penalty / 60)}</div>
+            <div className="solved">{team.score}</div>
           </>}
         />;
       })}
@@ -307,46 +270,3 @@ function start(data: ResolverInput, options: DisplaySettings) {
   }
   ReactDOM.createRoot(document.getElementById('rank-list')!).render(<MainList {...options} data={data} />);
 }
-
-async function loadAndStart(input: string, lock = 0, options: DisplaySettings) {
-  let data;
-  try {
-    if (input.startsWith('@')) data = convertPayload(input, lock);
-    else data = JSON.parse(input);
-  } catch (e) {
-    console.log(`load data from url. [url=${input}]`);
-    const res = await request.get(input, {}, {
-      dataType: 'text',
-    });
-    if (res.startsWith('@')) data = convertPayload(res, lock);
-    else data = JSON.parse(res);
-  }
-  start(data, options);
-}
-
-addPage(new NamedPage(['resolver'], () => {
-  if (UiContext.payload) {
-    start(UiContext.payload, {
-      showAvatar: true,
-      showSchool: true,
-    });
-    return;
-  }
-  const current = new URL(window.location.href);
-  const input = current.searchParams.get('input');
-  if (input) {
-    loadAndStart(input, +(current.searchParams.get('lock') || 0), {
-      showAvatar: true,
-      showSchool: true,
-    });
-  }
-  $('#load').on('click', () => {
-    const src = $('#input-data').val()?.toString()?.trim();
-    if (src) {
-      loadAndStart(src, +($('[name="lock"]').val() || 0), {
-        showAvatar: $('#show-avatar').prop('checked') || false,
-        showSchool: $('#show-school').prop('checked') || false,
-      });
-    }
-  });
-}));

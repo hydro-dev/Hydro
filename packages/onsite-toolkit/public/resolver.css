@@ -1,50 +1,71 @@
-.navbar {
-    margin-bottom: 0;
-}
-.app {
-    color: white;
+body {
+    color: #eee;
+    background-color: #121212;
 }
 .rank-list {
     background: repeating-linear-gradient(
       180deg,
       #3e3e3e 0px,
-      #3e3e3e 103px,
-      black 103px,
-      black 206px
+      #3e3e3e 80px,
+      #121212 80px,
+      #121212 160px
     );
-}
-.item {
-    border-radius: 3px;
-}
-.rank, .content, .problems li {
-    float: left;
-}
-.solved, .penalty {
-    float: right;
-}
-.rank, .solved, .penalty {
-    font-size: 35px;
-    text-align: center;
-    vertical-align: middle;
-    line-height: 83px;
 }
 .rank-list-item {
     padding: 10px;
-    height: 103px;
+    height: 80px;
     position: relative;
     background: transparent;
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+
+}
+.rank-list-item .rank, .solved, .penalty {
+    padding: 10px 20px;
+    min-width: 60px;
+    font-size: 40px;
+    text-align: center;
+    vertical-align: middle;
+}
+.rank-list-item .avatar {
+    height: 60px;
+    width: 60px;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.rank-list-item .content {
+    flex-grow: 1;
+    height: 60px
+}
+.rank-list-item .content .name {
+    font-size: 30px;
+    margin-bottom: 6px;
+}
+.rank-list-item .content .problems {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.rank-list-item .problems .item {
+    padding: 2px;
+    width: 95px;
+    text-align: center;
+    border-radius: 5px;
+    font-size: 20px;
 }
 .ac {
-    background-color: #5eb95e;
+    background-color: #009c00;
 }
 .failed, .WA {
     background-color: #dd514c;
 }
 .frozen {
-    background-color: #607D8B;
+    background-color: #6083e2;
 }
 .untouched {
-    background-color: #1f1f1f;
+    background-color: #282828;
+    color: #8a919b;
 }
 .uncover {
     animation: flashing 300ms infinite;
@@ -57,39 +78,4 @@
 @-webkit-keyframes flashing {/*Safari and Chrome*/
     from { background-color: #8a6d3b }
     to { background-color: #BD995B }
-}
-.rank {
-    width: 58px;
-    height: 58px;
-    font-size: 35px;
-    text-align: center;
-    vertical-align: middle;
-    line-height: 83px;
-    margin-right: 15px;
-}
-.name {
-    font-size: 35px;
-    margin-bottom: 5px;
-}
-.problems {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    font-size: 12px;
-}
-.problems .item {
-    padding: 2px;
-    margin-right: 5px;
-    width: 80px;
-    text-align: center;
-}
-.problems .item .p-content {
-    padding: 1px 0;
-    font-size: 15px;
-}
-.solved {
-    width: 70px;
-}
-.penalty {
-    width: 100px;
 }
