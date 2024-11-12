@@ -48,7 +48,8 @@ function submissions(problem) {
 }
 
 export function start(data: ResolverInput, options: DisplaySettings) {
-  $('title').text(`${data.name} - Ranklist`);
+  $('title').text(`${data.name} - Resolver`);
+  $('.header .title').text(`${data.name}`);
   const teams = data.teams.map((v) => ({
     id: v.id,
     rank: 0,
@@ -258,8 +259,8 @@ export function start(data: ResolverInput, options: DisplaySettings) {
                 })}
               </div>
             </div>
-            <div className="penalty">{Math.floor(team.penalty / 60)}</div>
             <div className="solved">{team.score}</div>
+            <div className="penalty">{Math.floor(team.penalty / 60)}</div>
           </>}
         />;
       })}

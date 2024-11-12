@@ -19,9 +19,33 @@ body {
     display: flex;
     align-items: center;
     vertical-align: middle;
-
 }
-.rank-list-item .rank, .solved, .penalty {
+.header {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    height: 40px;
+}
+.header .rank, .header .solved, .header .penalty {
+    width: 90px;
+    font-size: 20px;
+    text-align: center;
+}
+.header .content {
+    flex-grow: 1;
+    text-align: left;
+    display: flex;
+}
+.header .content .title {
+    flex-grow: 1;
+    text-align: left;
+    display: flex;
+}
+.header .content .copyright {
+    color: #8a919b;
+    font-size: 15px;
+}
+.rank-list-item .rank, .rank-list-item .solved, .rank-list-item .penalty {
     padding: 10px 0px;
     width: 90px;
     font-size: 40px;
