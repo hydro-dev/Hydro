@@ -61,21 +61,23 @@ body {
     background-color: #dd514c;
 }
 .frozen {
-    background-color: #6083e2;
+    background-color: #3c6ef6;
 }
 .untouched {
     background-color: #282828;
     color: #8a919b;
 }
 .uncover {
-    animation: flashing 300ms infinite;
-    -webkit-animation: flashing 30ms infinite; /*Safari and Chrome*/
+    animation: flashing 1000ms infinite;
+    -webkit-animation: flashing 1000ms infinite; /*Safari and Chrome*/
 }
 @keyframes flashing {
-    from { background-color: #8a6d3b }
-    to { background-color: #BD995B }
+    from { background-color: #3c6ef6 }
+    50% { background-color: #7699ea }
+    to { background-color: #3c6ef6 }
 }
 @-webkit-keyframes flashing {/*Safari and Chrome*/
-    from { background-color: #8a6d3b }
-    to { background-color: #BD995B }
+    from { background-color: #3c6ef6 }
+    50% { background-color: #7699ea }
+    to { background-color: #3c6ef6 }
 }

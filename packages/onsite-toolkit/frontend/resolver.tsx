@@ -119,7 +119,6 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       async highlightTeam(teamId: string, scrollIdx: number) {
         setP(null);
         setTeam(teamId);
-        console.log('highlightTeam', scrollIdx * 80 - window.innerHeight + 161);
         await scrollTo(scrollIdx * 80 - window.innerHeight + 161);
       },
       async highlightProblem(problemId: string) {
@@ -214,11 +213,10 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       return ops;
     }, [data]);
 
-    useKey('ArrowRight', async () => {
+    useKey('n', async () => {
       const op = calculated[executeIdx];
       if (!op) return;
       setExecuteIdx(executeIdx + 1);
-      console.log(op.name, op.args);
       await operations[op.name](...op.args);
       setRenderC((i) => i + 1);
     }, {}, [executeIdx, calculated]);
