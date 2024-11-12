@@ -1,7 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { animated, easings, useSprings } from '@react-spring/web';
 import useKey from 'react-use/lib/useKey';
-import { React, ReactDOM } from '@hydrooj/ui-default';
+import {
+  addPage, NamedPage, React, ReactDOM,
+} from '@hydrooj/ui-default';
 import { ResolverInput } from '../interface';
 
 async function scrollTo(offset) {
@@ -228,6 +230,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       }, i) => {
         const team = teams[i];
         const teamInfo = data.teams.find((idx) => idx.id === team.id);
+        if (!teams[i]) return <animated.div key={i}>Team {i} not found</animated.div>;
         if (!teamInfo) return <animated.div key={i}>Team info for id {team.id} not found</animated.div>;
         return <animated.div
           key={i}
@@ -251,9 +254,9 @@ export function start(data: ResolverInput, options: DisplaySettings) {
               </div>
               <div className="problems">
                 {data.problems.map((v) => {
-                  const uncover = team?.id === selectedTeam && selectedProblem === v.id;
+                  const uncover = team.id === selectedTeam && selectedProblem === v.id;
                   const problemStatus = team.problems.find((idx) => idx.id === v.id);
-                  return <span className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
+                  return <span key={v.id} className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
                     {submissions(problemStatus)}
                   </span>;
                 })}
@@ -268,3 +271,10 @@ export function start(data: ResolverInput, options: DisplaySettings) {
   }
   ReactDOM.createRoot(document.getElementById('rank-list')!).render(<MainList {...options} data={data} />);
 }
+
+addPage(new NamedPage(['resolver'], () => {
+  start(UiContext.payload, {
+    showAvatar: true,
+    showSchool: true,
+  });
+}));

@@ -12,34 +12,4 @@
 </header>
 <div class="rank-list" id="rank-list"></div>
 <link rel="stylesheet" href="/resolver.css?_={{ Date.now() }}" />
-{% if not payload %}
-<div class="dialog withBg " style="display: flex; z-index: 1003; opacity: 1;">
-  <div class="dialog__content" style="transform: scale(1, 1);">
-    <div class="dialog__body" style="height:calc(100% - 45px)">
-      <div class="row">
-        <div class="columns">
-          <h1>加载数据</h1>
-        </div>
-      </div>
-      <div class="row">
-        <div class="columns">
-          <label>
-            赛事数据
-            <textarea id="input-data" rows="5" style="width:800px"></textarea>
-            <br />
-            <p class="help-text">你也可以在比赛中选择直接滚榜</p>
-          </label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="columns clearfix">
-          <div class="float-right dialog__action">
-            <button id="load" class="primary rounded button">确定</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 {% endblock %}
