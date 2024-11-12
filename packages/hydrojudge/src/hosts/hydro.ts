@@ -170,7 +170,6 @@ export default class Hydro implements Session {
         const reportProgress = (filename: string, count: number, total: number) => {
             this.ws.send(JSON.stringify({
                 key: 'syncReport',
-                judger: this.config.host,
                 taskId,
                 domainId,
                 docId,
