@@ -375,7 +375,7 @@ const page = new NamedPage('problem_files', () => {
     }).open();
     if (action !== 'yes') return;
     const data = await request.post('', { operation: 'sync_data' });
-    window.location.href = data.url;
+    window.open(data.url, '_blank');
   }
 
   if (UiContext.pdoc && $('[name="generate_testdata"]').length) {
