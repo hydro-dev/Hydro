@@ -14,7 +14,6 @@ export default new NamedPage('problem_sync_data_progress', async () => {
     const {
       domainId, docId, taskId, filename, count, total,
     } = JSON.parse(data);
-    console.log(domainId, docId, domainId !== targetDomainId, docId !== Number(targetDocId));
     if (domainId !== targetDomainId || docId !== Number(targetDocId)) return;
     if ($('#noJudgers').length) {
       $('#noJudgers').replaceWith(`
@@ -23,11 +22,9 @@ export default new NamedPage('problem_sync_data_progress', async () => {
     }
     current = Math.max(current, count);
     if ($(`#judger-${taskId}`).length) {
-      console.log('update info', current, $(`#judger-${taskId}-progress`).length, $(`[id="judger-${taskId}-filename"]`).length);
       $(`#judger-${taskId}-progress`).css('width', `${current / total * 100}%`);
       $(`#judger-${taskId}-filename`).text(`Sync done: ${filename} (${current / total * 100}%)`);
     } else {
-      console.log('new judger');
       $('#judgersContainer').append(`
         <div class="section" style="transform: none; opacity: 1;" id="judger-${taskId}">
           <div class="section__header"><h1 class="section__title">${taskId}</h1></div>
