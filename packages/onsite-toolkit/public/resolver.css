@@ -35,9 +35,12 @@ body {
     flex-grow: 1;
     text-align: left;
     display: flex;
+    justify-content: center;
+    align-items: center;
 }
 .header .content .title {
     flex-grow: 1;
+    font-size: 20px;
     text-align: left;
     display: flex;
 }
