@@ -25,6 +25,9 @@
             <button class="rounded button" name="remove_selected_testdata">{{ _('Remove Selected') }}</button>
             <button class="rounded button" name="rename_selected_testdata">{{ _('Rename Selected') }}</button>
           {% endif %}
+          {% if not reference and (handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) %}
+            <button class="rounded button" name="sync_data">{{ _('Sync data to judgers') }}</button>
+          {% endif %}
         </div>
       {% endif %}
     </div>

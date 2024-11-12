@@ -63,7 +63,7 @@ export default class Hydro implements Session {
         }
     }
 
-    async _cacheOpen(source: string, files: any[], next?) {
+    async _cacheOpen(source: string, files: any[], next?, reportProgess?: (filename: string, count: number, total: number) => void) {
         const [domainId, pid] = source.split('/');
         const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
@@ -84,6 +84,11 @@ export default class Hydro implements Session {
             if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
         }
         if (filenames.length) {
+            let doneCount = 0;
+            const addDoneCount = (filename: string) => {
+                doneCount++;
+                reportProgess?.(filename, doneCount, filenames.length);
+            };
             log.info(`Getting problem data: ${this.config.host}/${source}`);
             next?.({ message: 'Syncing testdata, please wait...' });
             await this.ensureLogin();
@@ -99,6 +104,7 @@ export default class Hydro implements Session {
                     if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
                     const w = fs.createWriteStream(path.join(filePath, name));
                     await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
+                    addDoneCount(name);
                 }));
             }
             await Promise.all(tasks);
@@ -160,6 +166,22 @@ export default class Hydro implements Session {
         };
     }
 
+    async syncData(domainId: string, docId: string, files: any[], taskId) {
+        const reportProgress = (filename: string, count: number, total: number) => {
+            this.ws.send(JSON.stringify({
+                key: 'syncReport',
+                judger: this.config.host,
+                taskId,
+                domainId,
+                docId,
+                filename,
+                count,
+                total,
+            }));
+        };
+        await this._cacheOpen(`${domainId}/${docId}`, files, null, reportProgress);
+    }
+
     async consume(queue: PQueue) {
         log.info('正在连接 %sjudge/conn', this.config.server_url);
         this.ws = new WebSocket(`${this.config.server_url.replace(/^http/i, 'ws')}judge/conn`, {
@@ -189,6 +211,7 @@ export default class Hydro implements Session {
                     compilerVersionCallback();
                 });
             }
+            if (request.sync) this.syncData(request.sync.domainId, request.sync.docId, request.sync.files, request.sync.taskId);
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
         });
         this.ws.on('close', (data, reason) => {

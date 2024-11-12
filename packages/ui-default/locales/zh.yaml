@@ -682,6 +682,7 @@ Privilege: 权限
 Problem {1} not found.: 题目 {1} 不存在。
 Problem Category: 标签
 Problem Data: 题目数据
+Problem Data Sync Progress: 题目数据同步进度
 Problem ID cannot be a pure number. Leave blank if you want to use numberic id.: 题目ID不能为纯数字。 若要自动分配数字ID请将此处留空。
 Problem ID List: 题目 ID 列表
 Problem Set: 题库
@@ -888,6 +889,7 @@ SuperUser: 超级管理员
 SuperUser's Password: 超级管理员的密码
 Support: 支持
 Switch account: 切换账户
+Sync data to judgers: 同步数据到评测机
 Tags: 标签
 Task Settings: 任务设置
 tasks_list: 任务列表
@@ -1054,6 +1056,7 @@ Year: 年
 You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.: 您当前处于兼容模式。某些功能在此模式下不可用。我们强烈建议在现代浏览器上切换为标准模式以获得更好的体验。
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以将头像上传到 <a href="https://gravatar.com/">Gravatar</a>，本站的头像将自动更新。
+You can check the progress of the testdata synchronization here.: 你可以在这里查看评测数据同步的进度。
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 该比赛已结束，您无法在比赛模式下递交该题目。您可以点击“在题库中打开”以普通模式查看和递交本题。
 You cannot submit for this problem because the homework's deadline is due.: 作业已超过截止时间，您无法递交本题目。

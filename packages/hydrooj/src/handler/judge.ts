@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
+import { nanoid } from 'nanoid';
 import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
 import { Context } from '../context';
@@ -10,7 +11,7 @@ import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
 import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
+    FileInfo, JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
 } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
@@ -245,6 +246,15 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         this.send({ language: setting.langs });
     }
 
+    @subscribe('problem/syncData')
+    async sendSyncDataTask(domainId: string, docId: number, files: FileInfo[]) {
+        this.send({
+            sync: {
+                domainId, docId, files, taskId: nanoid(),
+            },
+        }); // use task id to identify, useful when displaying progress
+    }
+
     async newTask(t: Task) {
         const rdoc = await record.get(t.domainId, t.rid);
         if (!rdoc) return;
@@ -265,7 +275,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async message(msg) {
-        if (!['ping', 'prio', 'config', 'start'].includes(msg.key)) {
+        if (!['ping', 'prio', 'config', 'start', 'syncReport'].includes(msg.key)) {
             const method = ['status', 'next'].includes(msg.key) ? 'debug' : 'info';
             const keys = method === 'debug' ? ['key'] : ['key', 'subtasks', 'cases'];
             logger[method]('%o', omit(msg, keys));
@@ -306,6 +316,8 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             clearTimeout(this.startTimeout);
             this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
             logger.info('Judge daemon started');
+        } else if (msg.key === 'syncReport') {
+            this.ctx.emit('problem/syncDataReport', msg.domainId, msg.docId, msg.taskId, msg.filename, msg.count, msg.total);
         }
     }
 

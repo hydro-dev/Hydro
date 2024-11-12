@@ -366,6 +366,18 @@ const page = new NamedPage('problem_files', () => {
     }
   }
 
+  async function handleSyncDataToJudgers(ev) {
+    ev.preventDefault();
+    const action = await new ConfirmDialog({
+      $body: tpl.typoMsg(i18n(
+        'Manually synchronize data to judgers is NOT necessary, it can be done automatically. Do you really want to do this?',
+      )),
+    }).open();
+    if (action !== 'yes') return;
+    const data = await request.post('', { operation: 'sync_data' });
+    window.location.href = data.url;
+  }
+
   if (UiContext.pdoc && $('[name="generate_testdata"]').length) {
     FileSelectAutoComplete.getOrConstruct($('[name=gen]'), { data: UiContext.pdoc.data });
     FileSelectAutoComplete.getOrConstruct($('[name=std]'), { data: UiContext.pdoc.data });
@@ -385,6 +397,7 @@ const page = new NamedPage('problem_files', () => {
     $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev, 'additional_file'));
     $(document).on('click', '[name="remove_selected_testdata"]', () => handleClickRemoveSelected('testdata'));
     $(document).on('click', '[name="remove_selected_file"]', () => handleClickRemoveSelected('additional_file'));
+    $(document).on('click', '[name="sync_data"]', handleSyncDataToJudgers);
   }
   $(document).on('dragover', '.problem-files-testdata', (ev) => handleDragOver('testdata', ev));
   $(document).on('dragover', '.problem-files-additional_file', (ev) => handleDragOver('additional_file', ev));

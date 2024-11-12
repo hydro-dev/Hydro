@@ -612,6 +612,7 @@ problem_main: 题库
 problem_solution: 题解
 problem_statistics: 题目统计
 problem_submit: 递交代码
+problem_sync_data_progress: 题目数据同步进度
 problem-category-delim: '|'
 problem-subcategory-delim: 、
 Problem: 题目

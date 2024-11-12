@@ -32,7 +32,8 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, query, route, Types,
+    ConnectionHandler, Handler, param, post, query, route, subscribe,
+    Types,
 } from '../service/server';
 import { ContestDetailBaseHandler } from './contest';
 
@@ -793,6 +794,14 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         });
         this.response.redirect = this.url('record_detail', { rid });
     }
+
+    async postSyncData() {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+
+        // push the sync data task to judgers
+        this.ctx.emit('problem/syncData', this.pdoc.domainId, this.pdoc.docId, this.pdoc.data);
+        this.response.redirect = this.url('problem_sync_data_progress', { docId: this.pdoc.docId });
+    }
 }
 
 export class ProblemFileDownloadHandler extends ProblemDetailHandler {
@@ -1022,6 +1031,23 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
+export class ProblemSyncDataProgressHandler extends Handler {
+    @route('docId', Types.Int)
+    async get(domainId: string, docId: number) {
+        this.response.body = { domainId, docId };
+        this.response.template = 'problem_sync_data_progress.html';
+    }
+}
+
+export class ProblemSyncDataProgressConnectionHandler extends ConnectionHandler {
+    @subscribe('problem/syncDataReport')
+    async pushProgress(domainId: string, docId: number, taskId: string, filename: string, count: number, total: number) {
+        this.send({
+            domainId, docId, taskId, filename, count, total,
+        });
+    }
+}
+
 export async function apply(ctx: Context) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
@@ -1038,6 +1064,13 @@ export async function apply(ctx: Context) {
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
+    ctx.Route('problem_sync_data_progress', '/p/:docId/sync_data_progress', ProblemSyncDataProgressHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Connection(
+        'problem_sync_data_progress_conn',
+        '/problem/sync_data_progress_conn',
+        ProblemSyncDataProgressConnectionHandler,
+        PRIV.PRIV_EDIT_SYSTEM,
+    );
     ctx.inject(['api'], ({ api }) => {
         api.value('FileInfo', [
             ['_id', 'String!'],
