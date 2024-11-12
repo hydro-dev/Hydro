@@ -12,7 +12,7 @@ body {
     );
 }
 .rank-list-item {
-    padding: 10px;
+    padding: 10px 0;
     height: 80px;
     position: relative;
     background: transparent;
@@ -22,8 +22,8 @@ body {
 
 }
 .rank-list-item .rank, .solved, .penalty {
-    padding: 10px 20px;
-    min-width: 60px;
+    padding: 10px 0px;
+    width: 90px;
     font-size: 40px;
     text-align: center;
     vertical-align: middle;

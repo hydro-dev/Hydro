@@ -40,7 +40,6 @@ function status(problem) {
 }
 
 function submissions(problem) {
-  console.log(problem);
   const st = status(problem);
   if (st === 'ac') { return `${problem.old}`; }
   if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
@@ -109,7 +108,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
     const order = React.useRef(processRank());
 
     const [springs, api] = useSprings(teams.length, (index) => ({
-      y: order.current.indexOf(index) * 103 - index * 103,
+      y: order.current.indexOf(index) * 80 - index * 80,
       scale: 1,
       zIndex: 0,
       shadow: 1,
@@ -120,7 +119,8 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       async highlightTeam(teamId: string, scrollIdx: number) {
         setP(null);
         setTeam(teamId);
-        await scrollTo(scrollIdx * 103 - window.innerHeight + 261);
+        console.log('highlightTeam', scrollIdx * 80 - window.innerHeight + 161);
+        await scrollTo(scrollIdx * 80 - window.innerHeight + 161);
       },
       async highlightProblem(problemId: string) {
         setP(problemId);
@@ -154,7 +154,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       async updateRank() {
         order.current = processRank();
         api.start((index) => ({
-          y: order.current.indexOf(index) * 103 - index * 103,
+          y: order.current.indexOf(index) * 80 - index * 80,
           scale: 1,
           zIndex: 0,
           shadow: 1,
@@ -211,7 +211,6 @@ export function start(data: ResolverInput, options: DisplaySettings) {
           }
         }
       }
-      console.log(ops);
       return ops;
     }, [data]);
 
