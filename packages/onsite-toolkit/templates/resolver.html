@@ -1,0 +1,15 @@
+{% extends "layout/html5.html" %}
+{% block body %}
+{{ set(UiContext, 'payload', payload) }}
+<header class="header">
+  <span class="rank">#Rank</span>
+  <span class="content">
+    <span class="title">Contest</span>
+    <span class="copyright">@Hydro/TinyResolver</span>
+  </span>
+  <span class="solved">Solved</span>
+  <span class="penalty">Penalty</span>
+</header>
+<div class="rank-list" id="rank-list"></div>
+<link rel="stylesheet" href="/resolver.css?_={{ Date.now() }}" />
+{% endblock %}
