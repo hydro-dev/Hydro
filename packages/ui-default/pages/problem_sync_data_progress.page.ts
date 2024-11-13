@@ -8,7 +8,7 @@ export default new NamedPage('problem_sync_data_progress', async () => {
   const { default: WebSocket } = await import('../components/socket');
   const sock = new WebSocket(`${UiContext.ws_prefix}problem/sync_data_progress_conn`);
 
-  let current = 0;
+  const current: Record<string, number> = {};
 
   sock.onmessage = (_, data) => {
     const {
@@ -20,19 +20,19 @@ export default new NamedPage('problem_sync_data_progress', async () => {
         <div id="judgersContainer"></div>  
       `);
     }
-    current = Math.max(current, count);
+    current[taskId] = Math.max(current[taskId] || 0, count);
     if ($(`#judger-${taskId}`).length) {
-      $(`#judger-${taskId}-progress`).css('width', `${current / total * 100}%`);
-      $(`#judger-${taskId}-filename`).text(`Sync done: ${filename} (${current / total * 100}%)`);
+      $(`#judger-${taskId}-progress`).css('width', `${current[taskId] / total * 100}%`);
+      $(`#judger-${taskId}-filename`).text(`Sync done: ${filename} (${current[taskId] / total * 100}%)`);
     } else {
       $('#judgersContainer').append(`
         <div class="section" style="transform: none; opacity: 1;" id="judger-${taskId}">
           <div class="section__header"><h1 class="section__title">${taskId}</h1></div>
           <div class="section__body">
             <div style="width: 100%; margin-bottom: 4px;">
-              <div id="judger-${taskId}-progress" style="background-color: #0ea5e9; width: ${current / total * 100}%; height: 16px;"></div>
+              <div id="judger-${taskId}-progress" style="background-color: #0ea5e9; width: ${current[taskId] / total * 100}%; height: 16px;"></div>
             </div>
-            <p id="judger-${taskId}-filename">Sync done: ${filename} (${current / total * 100}%)</p>
+            <p id="judger-${taskId}-filename">Sync done: ${filename} (${current[taskId] / total * 100}%)</p>
           </div>
         </div>  
       `);

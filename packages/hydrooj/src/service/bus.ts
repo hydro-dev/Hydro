@@ -78,8 +78,9 @@ export interface EventMap extends KnownHandlerEvents {
     'problem/list': (query: Filter<ProblemDoc>, handler: any, sort?: string[]) => VoidReturn
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn
     'problem/delete': (domainId: string, docId: number) => VoidReturn
-    'problem/syncData': (domainId: string, docId: number, files: FileInfo[]) => VoidReturn
+    'problem/syncData': (domainId: string, docId: number, files: FileInfo[], addStartTaskCallback: (f: () => string) => void) => VoidReturn
     'problem/syncDataReport': (domainId: string, docId: string, taskId: string, filename: string, count: number, total: number) => VoidReturn
+    'problem/syncDataDone': (taskId: string) => VoidReturn
     'problem/addTestdata': (domainId: string, docId: number, name: string, payload: Omit<FileInfo, '_id'>) => VoidReturn
     'problem/renameTestdata': (domainId: string, docId: number, name: string, newName: string) => VoidReturn
     'problem/delTestdata': (domainId: string, docId: number, name: string[]) => VoidReturn

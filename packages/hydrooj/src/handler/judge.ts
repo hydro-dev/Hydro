@@ -247,12 +247,16 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     @subscribe('problem/syncData')
-    async sendSyncDataTask(domainId: string, docId: number, files: FileInfo[]) {
-        this.send({
-            sync: {
-                domainId, docId, files, taskId: nanoid(),
-            },
-        }); // use task id to identify, useful when displaying progress
+    async sendSyncDataTask(domainId: string, docId: number, files: FileInfo[], addStartTaskCallback: (f: () => string) => void) {
+        addStartTaskCallback(() => {
+            const taskId = nanoid();
+            this.send({
+                sync: {
+                    domainId, docId, files, taskId,
+                },
+            }); // use task id to identify, useful when displaying progress
+            return taskId;
+        });
     }
 
     async newTask(t: Task) {
@@ -318,6 +322,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             logger.info('Judge daemon started');
         } else if (msg.key === 'syncReport') {
             this.ctx.emit('problem/syncDataReport', msg.domainId, msg.docId, msg.taskId, msg.filename, msg.count, msg.total);
+            if (msg.count === msg.total) this.ctx.emit('problem/syncDataDone', msg.taskId);
         }
     }
 

@@ -109,6 +109,8 @@ export default class Hydro implements Session {
             }
             await Promise.all(tasks);
             await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
+        } else {
+            reportProgess?.('No testdata to sync.', 1, 1);
         }
         await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;

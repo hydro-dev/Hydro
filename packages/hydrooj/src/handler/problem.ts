@@ -799,8 +799,24 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
 
         // push the sync data task to judgers
-        this.ctx.emit('problem/syncData', this.pdoc.domainId, this.pdoc.docId, this.pdoc.data);
-        this.response.redirect = this.url('problem_sync_data_progress', { docId: this.pdoc.docId });
+        const startTaskCallbacks: (() => string)[] = [];
+        const addStartTaskCallback = (f: () => string) => {
+            startTaskCallbacks.push(f);
+        };
+        await this.ctx.serial('problem/syncData', this.pdoc.domainId, this.pdoc.docId, this.pdoc.data, addStartTaskCallback);
+        this.response.redirect = `${this.url('problem_sync_data_progress', {
+            docId: this.pdoc.docId,
+        })}?judgersCount=${startTaskCallbacks.length}`; // any better ways to pass this arg?
+        const runTask = () => {
+            if (!startTaskCallbacks.length) return;
+            const callback = startTaskCallbacks.shift();
+            const taskId = callback();
+            this.ctx.on('problem/syncDataDone', (eventTaskId) => {
+                if (taskId !== eventTaskId) return;
+                runTask();
+            });
+        };
+        runTask();
     }
 }
 
@@ -1033,8 +1049,9 @@ export class ProblemCreateHandler extends Handler {
 
 export class ProblemSyncDataProgressHandler extends Handler {
     @route('docId', Types.Int)
-    async get(domainId: string, docId: number) {
-        this.response.body = { domainId, docId };
+    @param('judgersCount', Types.Int, true)
+    async get(domainId: string, docId: number, judgersCount: number = 0) {
+        this.response.body = { domainId, docId, judgersCount };
         this.response.template = 'problem_sync_data_progress.html';
     }
 }
