@@ -29,14 +29,33 @@ const tmp = tmpdir();
 const federationPlugin: esbuild.Plugin = {
   name: 'federation',
   setup(b) {
+    const packages = {
+      react: 'React',
+      'react-dom': 'ReactDOM',
+      jquery: '$',
+    };
     b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
       path: 'api',
       namespace: 'ui-default',
     }));
-    b.onLoad({ filter: /.*/, namespace: 'ui-default' }, () => ({
-      contents: 'module.exports = window.HydroExports;',
-      loader: 'tsx',
-    }));
+    for (const key in packages) {
+      b.onResolve({ filter: new RegExp(`^${key}($|\\/)`) }, () => ({
+        path: packages[key],
+        namespace: 'ui-default',
+      }));
+    }
+    b.onLoad({ filter: /.*/, namespace: 'ui-default' }, (args) => {
+      if (args.path === 'api') {
+        return {
+          contents: 'module.exports = window.HydroExports;',
+          loader: 'tsx',
+        };
+      }
+      return {
+        contents: `module.exports = window.HydroExports['${args.path}'];`,
+        loader: 'tsx',
+      };
+    });
   },
 };
 
