@@ -41,19 +41,20 @@ function sortable(source: string, namespaces: Record<string, string>) {
 
 function findOverrideContent(dir: string, base: string) {
     let files = fs.readdirSync(dir);
-    if (files.includes(`${base}.md`)) return fs.readFileSync(path.join(dir, `${base}.md`), 'utf8');
-    if (files.includes(`${base}.pdf`)) return `@[PDF](file://${base}.pdf)`;
-    const languages = {};
+    if (files.includes(`${base}.md`)) return [{ name: 'default', content: fs.readFileSync(path.join(dir, `${base}.md`), 'utf8'), lang: 'en' }];
+    if (files.includes(`${base}.pdf`)) return [{ name: 'default', content: `@[PDF](file://${base}.pdf)`, lang: 'en' }];
+    const c: LocalizedContent = [];
     files = files.filter((i) => new RegExp(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`).test(i));
     if (!files.length) return null;
     for (const file of files) {
         const match = file.match(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`);
         const lang = match[1];
         const ext = match[2];
-        if (ext === 'pdf') languages[lang] = `@[PDF](file://${file})`;
-        else languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
+        // TODO: parse markdown header to get name
+        if (ext === 'pdf') c.push({ name: lang, content: `@[PDF](file://${file})`, lang });
+        else c.push({ name: lang, content: fs.readFileSync(path.join(dir, file), 'utf8'), lang });
     }
-    return JSON.stringify(languages);
+    return c;
 }
 
 interface ProblemImportOptions {
@@ -138,22 +139,10 @@ export class ProblemModel {
 
     static async add(
         domainId: string, pid: string = '', title: string,
-        content: { content?: string, from?: string, lang: string, name: string }[] | string,
+        content: { content: string, lang: string, name: string }[] | string,
         owner: number, tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
-        let c: LocalizedContent;
-        if (typeof content === 'string') {
-            c.push({ id: await document.addContent(content), name: 'default', lang: 'en' });
-        } else {
-            for (const entry of content) {
-                if (entry.from) {
-                    c.push(entry as any);
-                } else {
-                    const id = await document.addContent(entry.content);
-                    c.push({ id, name: entry.name, lang: entry.lang });
-                }
-            }
-        }
+        const c = typeof content === 'string' ? [{ content, lang: 'en', name: 'default' }] : content;
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
@@ -206,11 +195,6 @@ export class ProblemModel {
         return res;
     }
 
-    static async getContent(contentIds: string[]) {
-        const content = await document.getContents(contentIds);
-        return Object.fromEntries(content.map((i) => [i._id.toString(), i.content]));
-    }
-
     static getMulti(domainId: string, query: Filter<ProblemDoc>, projection = ProblemModel.PROJECTION_LIST) {
         return document.getMulti(domainId, document.TYPE_PROBLEM, query, projection).sort({ sort: 1 });
     }
@@ -235,10 +219,7 @@ export class ProblemModel {
         return document.getMultiStatus(domainId, document.TYPE_PROBLEM, query);
     }
 
-    static async edit(
-        domainId: string, _id: number,
-        $set: (Partial<ProblemDoc> & ({ content?: { content: string }[] })),
-    ): Promise<ProblemDoc> {
+    static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
         const ddoc = await DomainModel.get(domainId);
         if (delpid) {
@@ -248,23 +229,6 @@ export class ProblemModel {
             $set.sort = sortable($set.pid, ddoc.namespaces);
         }
         await bus.parallel('problem/before-edit', $set);
-        if ($set.content) {
-            const update = $set.content instanceof Array ? $set.content : [{ content: $set.content, lang: 'en', name: 'default' }];
-            const existing = await document.get(domainId, document.TYPE_PROBLEM, _id);
-            if (!existing) throw new ProblemNotFoundError(domainId, _id);
-            const contents = existing.content;
-            const final = [];
-            for (const entry of update) {
-                if ('id' in entry && contents.find((i) => i.id === entry.id)) {
-                    await document.setContent(entry.id, entry.content);
-                    final.push({ id: entry.id, name: entry.name, lang: entry.lang });
-                } else {
-                    const cid = await document.addContent(entry.content);
-                    final.push({ id: cid, name: entry.name, lang: entry.lang });
-                }
-            }
-            $set.content = final;
-        }
         const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
         await bus.emit('problem/edit', result);
         return result;
@@ -277,7 +241,7 @@ export class ProblemModel {
         if (pid && (/^[0-9]+$/.test(pid) || await ProblemModel.get(target, pid))) pid = '';
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
         return await ProblemModel.add(
-            target, pid, original.title, original.content.map((i) => ({ name: i.name, lang: i.lang, from: 'id' in i ? i.id : i.from })),
+            target, pid, original.title, original.content,
             original.owner, original.tag, { hidden: original.hidden, reference: { domainId, pid: _id } },
         );
     }
@@ -585,8 +549,8 @@ export class ProblemModel {
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: pdoc.title.trim(),
-                        content: [{
-                            id: '', name: 'default', content: overrideContent || pdoc.content.toString() || 'No content', lang: 'en',
+                        content: overrideContent || [{
+                            name: 'default', content: pdoc.content.toString() || 'No content', lang: 'en',
                         }],
                         tag,
                         difficulty: pdoc.difficulty,
@@ -663,19 +627,16 @@ export class ProblemModel {
                 nAccept: pdoc.nAccept,
                 difficulty: pdoc.difficulty,
             });
-            const [c] = await Promise.all([
-                ProblemModel.getContent(pdoc.content.map((i) => ('id' in i ? i.id : i.from))),
-                fs.writeFile(problemYaml, problemYamlContent),
-            ]);
+            await fs.writeFile(problemYaml, problemYamlContent);
             for (const i of pdoc.content) {
-                await fs.writeFile(path.join(problemPath, `problem_${'id' in i ? i.id : i.from}.md`), [
+                await fs.writeFile(path.join(problemPath, `problem_${i.name}_${i.lang}.md`), [
                     '---',
                     yaml.dump({
                         name: i.name,
                         lang: i.lang,
                     }),
                     '---',
-                    c['id' in i ? i.id : i.from],
+                    i.content,
                 ].join('\n'));
             }
             if ((pdoc.data || []).length) {

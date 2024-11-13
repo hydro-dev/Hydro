@@ -223,7 +223,7 @@ export interface ProblemConfig {
     hackable?: boolean;
 }
 
-export type LocalizedContent = ({ id: string, name: string, lang: string } | { from: string, name: string, lang: string })[];
+export type LocalizedContent = ({ content: string, name: string, lang: string })[];
 export type Content = string | LocalizedContent;
 
 export interface Document {
@@ -680,11 +680,6 @@ export interface ContestBalloonDoc {
     sentAt?: Date;
 }
 
-export interface ContentDoc {
-    _id: string;
-    content: string;
-}
-
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -696,7 +691,6 @@ declare module './service/db' {
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
         }[keyof DocStatusType];
-        'content': ContentDoc;
         'discussion.history': DiscussionHistoryDoc;
         'user': Udoc;
         'user.preference': UserPreferenceDoc;
