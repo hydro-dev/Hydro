@@ -548,7 +548,7 @@ export class ProblemModel {
                 }
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
-                        title: pdoc.title.trim(),
+                        title: title.trim(),
                         content: overrideContent || [{
                             name: 'default', content: pdoc.content.toString() || 'No content', lang: 'en',
                         }],
