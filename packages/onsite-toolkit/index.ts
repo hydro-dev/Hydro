@@ -178,7 +178,7 @@ export function apply(ctx: Context) {
                     })),
                     teams.map((i) => getFeed('teams', 'create', {
                         id: i.team_id,
-                        icpc_id: `icpc-${i.team_id}`,
+                        icpc_id: i.team_id,
                         label: i.team_id,
                         name: i.name,
                         display_name: i.displayName || i.name,
@@ -251,10 +251,10 @@ export function apply(ctx: Context) {
                     zip.addFile(`${i}/`, Buffer.alloc(0));
                 }
                 for (const i of teams) {
-                    zip.addFile(`teams/team-${i.team_id}/photo.download.txt`, Buffer.from(i.avatar));
+                    zip.addFile(`teams/${i.team_id}/photo.download.txt`, Buffer.from(i.avatar));
                 }
                 for (const i of organizations) {
-                    zip.addFile(`organizations/org-${orgId[i]}/photo.download.txt`, Buffer.from(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
+                    zip.addFile(`organizations/${orgId[i]}/photo.download.txt`, Buffer.from(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
                 }
                 this.binary(zip.toBuffer(), `contest-${tdoc._id}-cdp.zip`);
             },
