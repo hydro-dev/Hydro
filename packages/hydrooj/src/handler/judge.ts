@@ -232,6 +232,8 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         t: Task,
     }> = {};
 
+    judgerId: string = '';
+
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
@@ -239,6 +241,7 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         this.startTimeout = setTimeout(() => {
             this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
         }, 15000);
+        this.judgerId = nanoid();
     }
 
     @subscribe('system/setting')
@@ -247,16 +250,15 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     @subscribe('problem/syncData')
-    async sendSyncDataTask(domainId: string, docId: number, files: FileInfo[], addStartTaskCallback: (f: () => string) => void) {
-        addStartTaskCallback(() => {
-            const taskId = nanoid();
-            this.send({
-                sync: {
-                    domainId, docId, files, taskId,
-                },
-            }); // use task id to identify, useful when displaying progress
-            return taskId;
-        });
+    async sendSyncDataTask(domainId: string, docId: number, files: FileInfo[], doneIds: string[]): Promise<null | string> {
+        if (doneIds.includes(this.judgerId)) return null;
+        const taskId = this.judgerId;
+        this.send({
+            sync: {
+                domainId, docId, files, taskId,
+            },
+        }); // use task id to identify, useful when displaying progress
+        return taskId;
     }
 
     async newTask(t: Task) {

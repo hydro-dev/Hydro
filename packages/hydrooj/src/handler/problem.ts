@@ -799,24 +799,26 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
 
         // push the sync data task to judgers
-        const startTaskCallbacks: (() => string)[] = [];
-        const addStartTaskCallback = (f: () => string) => {
-            startTaskCallbacks.push(f);
-        };
-        await this.ctx.serial('problem/syncData', this.pdoc.domainId, this.pdoc.docId, this.pdoc.data, addStartTaskCallback);
-        this.response.redirect = `${this.url('problem_sync_data_progress', {
-            docId: this.pdoc.docId,
-        })}?judgersCount=${startTaskCallbacks.length}`; // any better ways to pass this arg?
-        const runTask = () => {
-            if (!startTaskCallbacks.length) return;
-            const callback = startTaskCallbacks.shift();
-            const taskId = callback();
-            this.ctx.on('problem/syncDataDone', (eventTaskId) => {
-                if (taskId !== eventTaskId) return;
-                runTask();
-            });
-        };
-        runTask();
+        (async () => {
+            const doneIds = [];
+            let taskId: string | null = null;
+            do {
+                // eslint-disable-next-line no-await-in-loop
+                taskId = await this.ctx.serial('problem/syncData', this.pdoc.domainId, this.pdoc.docId, this.pdoc.data, doneIds);
+                if (!taskId) break;
+                doneIds.push(taskId);
+                const _target = taskId;
+                // eslint-disable-next-line no-await-in-loop
+                await new Promise((resolve) => {
+                    this.ctx.on('problem/syncDataDone', (eventTaskId) => {
+                        if (_target !== eventTaskId) return;
+                        resolve(null);
+                    });
+                });
+            } while (taskId);
+        })();
+
+        this.response.redirect = this.url('problem_sync_data_progress', { docId: this.pdoc.docId });
     }
 }
 
@@ -1049,9 +1051,8 @@ export class ProblemCreateHandler extends Handler {
 
 export class ProblemSyncDataProgressHandler extends Handler {
     @route('docId', Types.Int)
-    @param('judgersCount', Types.Int, true)
-    async get(domainId: string, docId: number, judgersCount: number = 0) {
-        this.response.body = { domainId, docId, judgersCount };
+    async get(domainId: string, docId: number) {
+        this.response.body = { domainId, docId };
         this.response.template = 'problem_sync_data_progress.html';
     }
 }
