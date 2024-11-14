@@ -323,8 +323,8 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
             logger.info('Judge daemon started');
         } else if (msg.key === 'syncReport') {
-            this.ctx.emit('problem/syncDataReport', msg.domainId, msg.docId, msg.taskId, msg.filename, msg.count, msg.total);
-            if (msg.count === msg.total) this.ctx.emit('problem/syncDataDone', msg.taskId);
+            this.ctx.broadcast('problem/syncDataReport', msg.domainId, msg.docId, msg.taskId, msg.filename, msg.count, msg.total);
+            if (msg.count === msg.total) this.ctx.broadcast('problem/syncDataDone', msg.taskId);
         }
     }
 

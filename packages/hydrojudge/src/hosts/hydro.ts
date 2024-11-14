@@ -180,7 +180,11 @@ export default class Hydro implements Session {
                 total,
             }));
         };
-        await this._cacheOpen(`${domainId}/${docId}`, files, null, reportProgress);
+        try {
+            await this._cacheOpen(`${domainId}/${docId}`, files, null, reportProgress);
+        } catch (e) {
+            reportProgress(`Sync failed: ${e.message}`, 0, 1);
+        }
     }
 
     async consume(queue: PQueue) {
