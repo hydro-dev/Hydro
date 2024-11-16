@@ -1,6 +1,6 @@
 import path from 'path';
 import {
-    ContestModel, Context, fs, Handler, ObjectId, Schema, STATUS, Types, UserModel,
+    ContestModel, Context, fs, Handler, ObjectId, PERM, Schema, STATUS, Types, UserModel,
 } from 'hydrooj';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
@@ -41,13 +41,15 @@ export async function apply(ctx: Context) {
             tdoc: 'tdoc',
             groups: 'groups',
             json: Types.Boolean,
+            realtime: Types.Boolean,
             gold: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             silver: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             bronze: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
         }, {
             async display({
-                tdoc, groups, json, gold, silver, bronze,
+                tdoc, groups, json, realtime, gold, silver, bronze,
             }) {
+                if (realtime && !this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 if (json || this.request.json) {
                     const tsdocs = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
                     const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
@@ -109,24 +111,32 @@ export async function apply(ctx: Context) {
                                 submission_timestamp_unit: 'millisecond',
                             },
                         },
-                        submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => ({
-                            problem_id: tdoc.pids.indexOf(j.pid),
-                            team_id: `${i.uid}`,
-                            timestamp: Math.floor(new ObjectId(j.rid).getTimestamp().getTime() - tdoc.beginAt.getTime()),
-                            status: status[j.status] || 'SYSTEM_ERROR',
-                            language: j.lang || '',
-                            submission_id: j.rid,
-                        }))),
+                        submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
+                            const submit = new ObjectId(j.rid).getTimestamp().getTime();
+                            const curStatus = status[j.status] || 'SYSTEM_ERROR';
+                            return {
+                                problem_id: tdoc.pids.indexOf(j.pid),
+                                team_id: `${i.uid}`,
+                                timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
+                                status: realtime
+                                    ? curStatus
+                                    : ContestModel.isLocked(tdoc) && submit > tdoc.lockAt.getTime()
+                                        ? 'PENDING'
+                                        : curStatus,
+                                language: j.lang || '',
+                                submission_id: j.rid,
+                            };
+                        })),
                         teams,
                     };
                 } else {
                     this.response.template = 'xcpcio_board.html';
                     let query = '';
-                    if (gold || silver || bronze) {
-                        query = `&gold=${gold}&silver=${silver}&bronze=${bronze}`;
-                    }
+                    if (gold || silver || bronze) query = `&gold=${gold}&silver=${silver}&bronze=${bronze}`;
+                    if (realtime) query += '&realtime=true';
+                    const endpoint = `/d/${tdoc.domainId}/contest/${tdoc.docId}/scoreboard/xcpcio`;
                     this.response.body = {
-                        dataSource: `/d/${tdoc.domainId}/contest/${tdoc.docId}/scoreboard/xcpcio?json=true${query}#allInOne=true`,
+                        dataSource: `${endpoint}?json=true${query}#allInOne=true`,
                         js: indexJs,
                         css: indexCss,
                     };
