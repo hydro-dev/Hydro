@@ -175,7 +175,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
         ops.push({ name, args });
       }
       let orders = processRank(clone);
-      for (let i = clone.length - 1; i > 0; i--) {
+      for (let i = clone.length - 1; i >= 0; i--) {
         const team = clone[orders[i]];
         queueOperations('highlightTeam', team.id, i);
         for (const pinfo of data.problems) {
@@ -216,7 +216,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       return ops;
     }, [data]);
 
-    useKey('n', async () => {
+    useKey((key) => ['n', 'ArrowRight'].includes(key.key), async () => {
       const op = calculated[executeIdx];
       if (!op) return;
       setExecuteIdx(executeIdx + 1);
