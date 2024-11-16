@@ -21,6 +21,6 @@
     "devDependencies": {
         "@types/adm-zip": "^0.4.34",
         "@types/shell-quote": "^1.7.5",
-        "@types/ws": "^8.5.12"
+        "@types/ws": "^8.5.13"
     }
 }
