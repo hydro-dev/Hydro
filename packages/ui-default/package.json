@@ -108,7 +108,7 @@
     "style-loader": "^3.3.4",
     "stylus": "^0.64.0",
     "stylus-loader": "7.1.2",
-    "svgtofont": "^6.0.1",
+    "svgtofont": "^6.1.0",
     "tether": "1.4.7",
     "tether-drop": "^1.4.2",
     "timeago-react": "^3.0.6",

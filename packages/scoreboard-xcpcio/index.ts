@@ -96,7 +96,7 @@ export async function apply(ctx: Context) {
                                 },
                             },
                             balloon_color: tdoc.balloon
-                                ? tdoc.pids.map((i) => ({
+                                ? tdoc.pids.filter((i) => tdoc.balloon[i]).map((i) => ({
                                     color: '#000',
                                     background_color: typeof tdoc.balloon[i] === 'string' ? tdoc.balloon[i] : tdoc.balloon[i].color,
                                 }))
