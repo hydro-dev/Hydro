@@ -861,7 +861,7 @@ export async function apply(ctx: Context) {
                 const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
                     isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
                 });
-                this.binary(toCSV(rows.map((r) => r.map((c) => c.value.toString()))), `${this.tdoc.title}.csv`);
+                this.binary(toCSV(rows.map((r) => r.map((c) => c.value.toString())), { bom: true }), `${this.tdoc.title}.csv`);
             },
             supportedRules: ['*'],
         });
