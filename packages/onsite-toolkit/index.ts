@@ -39,7 +39,7 @@ export function apply(ctx: Context) {
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('resolver-tiny', 'Resolver(Tiny)', { tdoc: 'tdoc' }, {
             async display({ tdoc }) {
-                if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+                if (!this.user.own(tdoc) && ContestModel.isLocked(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 const teams = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
                 const udict = await UserModel.getList(tdoc.domainId, teams.map((i) => i.uid));
                 const teamIds: Record<number, number> = {};

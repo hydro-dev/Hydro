@@ -33,7 +33,14 @@ interface Props extends DisplaySettings {
   data: ResolverInput;
 }
 
-function status(problem) {
+interface ProblemStatus {
+  old: number;
+  frozen: number;
+  pass: boolean;
+  time: number;
+}
+
+function status(problem: ProblemStatus) {
   if (!problem) return 'untouched';
   if (problem.pass) return 'ac';
   if (!problem.old && !problem.frozen) return 'untouched';
@@ -41,9 +48,9 @@ function status(problem) {
   return 'failed';
 }
 
-function submissions(problem) {
+function submissions(problem: ProblemStatus) {
   const st = status(problem);
-  if (st === 'ac') { return `${problem.old}`; }
+  if (st === 'ac') { return `${problem.old} / ${problem.time}`; }
   if (st === 'frozen') { return `${problem.old}+${problem.frozen}`; }
   if (st === 'failed') { return problem.old; }
   return String.fromCharCode('A'.charCodeAt(0) + problem.index);
@@ -80,6 +87,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
     else {
       if (submission.verdict === 'AC') {
         problem.pass = true;
+        problem.time = Math.floor(submission.time / 60);
         team.score += 1;
         team.penalty += submission.time + problem.old * 20 * 60;
       }
@@ -129,16 +137,17 @@ export function start(data: ResolverInput, options: DisplaySettings) {
       },
       async revealProblem(teamId: string, problemId: string) {
         const team = teams.find((i) => i.id === teamId);
-        const problem = team?.problems.find((i) => i.id === problemId);
+        const problem: ProblemStatus = team?.problems.find((i) => i.id === problemId);
         if (!team || !problem) return;
         if (allAc.find((s) => s.team === teamId && s.problem === problemId)) {
           const sub = allSubmissions.filter((s) => s.team === teamId && s.problem === problemId);
           let penalty = 0;
           for (const s of sub) {
+            problem.old++;
             if (s.verdict !== 'AC') {
               penalty += 20 * 60;
-              problem.old++;
             } else {
+              problem.time = Math.floor(s.time / 60);
               penalty += s.time;
               break;
             }
@@ -179,7 +188,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
         const team = clone[orders[i]];
         queueOperations('highlightTeam', team.id, i);
         for (const pinfo of data.problems) {
-          const problem = team.problems.find((idx) => idx.id === pinfo.id);
+          const problem: ProblemStatus = team.problems.find((idx) => idx.id === pinfo.id);
           if (!problem || !problem.frozen || problem.pass) continue;
           queueOperations('highlightProblem', pinfo.id);
           queueOperations('revealProblem', team.id, pinfo.id);
@@ -188,10 +197,11 @@ export function start(data: ResolverInput, options: DisplaySettings) {
             const sub = allSubmissions.filter((s) => s.team === team.id && s.problem === problem.id);
             let penalty = 0;
             for (const s of sub) {
+              problem.old++;
               if (s.verdict !== 'AC') {
                 penalty += 20 * 60;
-                problem.old++;
               } else {
+                problem.time = Math.floor(s.time / 60);
                 penalty += s.time;
                 break;
               }
