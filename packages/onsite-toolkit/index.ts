@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import moment from 'moment';
 import {
-    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, ForbiddenError,
+    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync, ForbiddenError,
     fs,
     ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
 } from 'hydrooj';
@@ -249,7 +249,7 @@ export function apply(ctx: Context) {
                 ];
                 const zip = new AdmZip();
                 zip.addFile('event-feed.ndjson', Buffer.from(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n')));
-                zip.addFile('contest/logo.png', Buffer.from(fs.readFileSync(`${__dirname}/public/logo.png`)));
+                zip.addFile('contest/logo.png', fs.readFileSync(findFileSync('@hydrooj/onsite-toolkit/public/logo.png')));
                 for (const i of ['teams', 'organizations']) {
                     zip.addFile(`${i}/`, Buffer.alloc(0));
                 }
