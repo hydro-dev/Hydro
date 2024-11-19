@@ -111,6 +111,15 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 4.18.0 / UI 4.56.0
+
+- core&ui: ScoreboardView API
+- onsite-toolkit: Resolver
+- core: 优化 icpc 格式导入
+- core: 添加 limit.pretest 选项
+- core: 添加 task/daily 性能日志
+- framework: 默认移除 UiContext 和 UserContext
+
 ## Hydro 4.17.4 / UI 4.55.3
 
 - core: 修复 markdown 模式下使用 HTML 导入时解析异常

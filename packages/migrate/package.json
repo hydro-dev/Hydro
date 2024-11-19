@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "mariadb": "^3.3.2",
+        "mariadb": "^3.4.0",
         "mongodb": "^5.9.2",
         "turndown": "^7.2.0",
         "xml2js": "^0.6.2"

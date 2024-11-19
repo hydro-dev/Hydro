@@ -41,7 +41,7 @@ export function apply(ctx: Context) {
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('resolver-tiny', 'Resolver(Tiny)', { tdoc: 'tdoc' }, {
             async display({ tdoc }) {
-                if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+                if (!this.user.own(tdoc) && ContestModel.isLocked(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 const teams = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
                 const udict = await UserModel.getList(tdoc.domainId, teams.map((i) => i.uid));
                 const teamIds: Record<number, number> = {};
@@ -57,7 +57,7 @@ export function apply(ctx: Context) {
                     payload: {
                         name: tdoc.title,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
-                        frozen: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.lockAt).getTime()) / 1000),
+                        frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
                         problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),

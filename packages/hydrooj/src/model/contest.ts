@@ -223,7 +223,7 @@ const acm = buildContestRule({
         return row;
     },
     async scoreboard(config, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score && a.time === b.time);
+        const rankedTsdocs = await db.ranked(cursor, (a, b) => (a.score || 0) === (b.score || 0) && (a.time || 0) === (b.time || 0));
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         // Find first accept
@@ -394,7 +394,7 @@ const oi = buildContestRule({
         return row;
     },
     async scoreboard(config, _, tdoc, pdict, cursor) {
-        const rankedTsdocs = await db.ranked(cursor, (a, b) => a.score === b.score);
+        const rankedTsdocs = await db.ranked(cursor, (a, b) => (a.score || 0) === (b.score || 0));
         const uids = rankedTsdocs.map(([, tsdoc]) => tsdoc.uid);
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         const psdict = {};
