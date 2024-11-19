@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 import moment from 'moment';
 import {
-    AdmZip, avatar, ContestModel, Context, db, ForbiddenError,
+    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, ForbiddenError,
     ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
@@ -78,17 +78,15 @@ export function apply(ctx: Context) {
             supportedRules: ['acm'],
         });
 
-        scoreboard.addView('cdp', 'CDP', { tdoc: 'tdoc', groups: 'groups' }, {
-            async display({ tdoc, groups }) {
+        scoreboard.addView('cdp', 'CDP', { tdoc: 'tdoc' }, {
+            async display({ tdoc }) {
                 if (ContestModel.isLocked(tdoc) && !this.user.own(tdoc)) {
                     this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 }
+                if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
                 let token = 0;
-                const getFeed = (type: string, op: string | null, data: any) => ({
-                    id: `t${token++}`,
-                    type,
-                    ...op && { op },
-                    data,
+                const getFeed = (type: string, data: any) => ({
+                    type, id: data.id, data, token: `t${token++}`,
                 });
                 const [pdict, tsdocs] = await Promise.all([
                     ProblemModel.getList(tdoc.domainId, tdoc.pids, true, false, ProblemModel.PROJECTION_LIST, true),
@@ -104,12 +102,12 @@ export function apply(ctx: Context) {
                         organization: udoc.school || udoc.uname,
                         avatar: avatar(udoc.avatar),
                         group: [
-                            ...(udoc.group || []),
+                            ...(udoc.group.filter((g) => g !== `${udoc._id}`)),
                             i.unrank ? 'observers' : 'participants',
                         ],
                     };
                 });
-                const relatedGroups = teams.flatMap((i) => i.group);
+                const relatedGroups = Array.from(new Set(teams.flatMap((i) => i.group)));
                 const groupId = {};
                 let gid = 1;
                 for (const i of relatedGroups) groupId[i] = `group-${gid++}`;
@@ -118,54 +116,55 @@ export function apply(ctx: Context) {
                 let oid = 1;
                 for (const i of organizations) orgId[i] = `org-${oid++}`;
                 const duration = moment(tdoc.endAt).diff(tdoc.beginAt, 'seconds');
-                const lockDuration = tdoc.lockAt ? moment(tdoc.lockAt).diff(tdoc.endAt, 'seconds') : null;
+                const lockDuration = tdoc.lockAt ? moment(tdoc.lockAt).diff(tdoc.beginAt, 'seconds') : null;
                 const eventfeed: Record<string, any>[] = [
-                    getFeed('contest', 'create', {
+                    getFeed('contest', {
                         id: tdoc._id.toHexString(),
                         name: tdoc.title,
                         formal_name: tdoc.title,
-                        start_time: moment(tdoc.beginAt).format(),
+                        start_time: moment(tdoc.beginAt).format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
                         // 1:00:00.000
-                        duration: `${Math.floor(duration / 3600)}:${Math.floor(duration / 60) % 60}:${duration % 60}.000`,
+                        duration: moment().startOf('day').seconds(duration).format('HH:mm:ss.SSS'),
                         ...lockDuration && {
-                            scoreboard_freeze_duration: `${Math.floor(lockDuration / 3600)}:${Math.floor(lockDuration / 60) % 60}:${lockDuration % 60}.000`,
+                            scoreboard_freeze_duration: moment().startOf('day').seconds(lockDuration).format('HH:mm:ss.SSS'),
                         },
                         penalty_time: 20,
                     }),
-                    ...Object.keys(STATUS_SHORT_TEXTS).map((i) => getFeed('judgement-types', 'create', {
+                    ...Object.keys(STATUS_SHORT_TEXTS).map((i) => getFeed('judgement-types', {
                         id: STATUS_SHORT_TEXTS[i],
                         name: STATUS_TEXTS[i],
                         penalty: ![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_SYSTEM_ERROR].includes(+i),
+                        solved: +i === STATUS.STATUS_ACCEPTED,
                     })),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'c', name: 'C', 'entry_point_required': false, extensions: ['c'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'cpp', name: 'C++', 'entry_point_required': false, extensions: ['cpp', 'cc', 'cxx', 'c++'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'java', name: 'Java', 'entry_point_required': true, extensions: ['java'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'python3', name: 'Python 3', 'entry_point_required': false, 'entry_point_name': 'Main file', extensions: ['py', 'py3'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'kotlin', name: 'Kotlin', 'entry_point_required': true, extensions: ['kt'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'rust', name: 'Rust', 'entry_point_required': true, extensions: ['rs'],
                     }),
-                    getFeed('languages', null, {
+                    getFeed('languages', {
                         id: 'go', name: 'Go', 'entry_point_required': true, extensions: ['go'],
                     }),
-                    getFeed('groups', 'create', { id: 'participants', name: '正式队伍' }),
-                    getFeed('groups', 'create', { id: 'observers', name: '打星队伍' }),
-                    groups.map((i) => getFeed('groups', 'create', {
-                        id: i.name,
-                        name: i.name,
+                    getFeed('groups', { id: 'participants', name: '正式队伍' }),
+                    getFeed('groups', { id: 'observers', name: '打星队伍' }),
+                    ...relatedGroups.map((i) => getFeed('groups', {
+                        id: groupId[i],
+                        name: i,
                     })),
-                    organizations.map((i) => getFeed('organizations', 'create', {
-                        id: i,
+                    ...organizations.map((i) => getFeed('organizations', {
+                        id: orgId[i],
                         name: i,
                         formal_name: i,
                         logo: [{
@@ -176,15 +175,13 @@ export function apply(ctx: Context) {
                             height: 64,
                         }],
                     })),
-                    teams.map((i) => getFeed('teams', 'create', {
+                    ...teams.map((i) => getFeed('teams', {
                         id: i.team_id,
-                        icpc_id: i.team_id,
                         label: i.team_id,
                         name: i.name,
                         display_name: i.displayName || i.name,
                         group_ids: i.group.map((j) => groupId[j]),
                         organization_id: orgId[i.organization],
-                        affiliation: i.organization,
                         photo: [{
                             href: `contest/${tdoc._id}/teams/${i.team_id}/photo`,
                             filename: 'photo.png',
@@ -193,10 +190,9 @@ export function apply(ctx: Context) {
                             height: 1080,
                         }],
                     })),
-                    tdoc.pids.map((i, idx) => getFeed('problems', 'create', {
+                    ...tdoc.pids.map((i, idx) => getFeed('problems', {
                         id: `${i}`,
-                        short_name: 'A'.charCodeAt(0) + idx,
-                        label: 'A'.charCodeAt(0) + idx,
+                        label: String.fromCharCode(65 + idx),
                         name: pdict[i].title,
                         ordinal: idx,
                         color: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].name : tdoc.balloon?.[idx]) || 'white',
@@ -211,42 +207,47 @@ export function apply(ctx: Context) {
                     const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
                     const result: any[] = [];
                     for (const s of journal) {
-                        const ridTime = moment(s.rid.getTimestamp());
-                        const contestDelta = ridTime.diff(tdoc.beginAt, 'seconds');
-                        const contestAt = `${Math.floor(contestDelta / 3600)}:${Math.floor(contestDelta / 60) % 60}:${contestDelta % 60}`;
-                        result.push(getFeed('submissions', 'create', {
+                        const submitTime = moment(s.rid.getTimestamp());
+                        const submitDelta = submitTime.diff(tdoc.beginAt, 'seconds');
+                        const submitAt = moment().startOf('day').seconds(submitDelta).format('HH:mm:ss.SSS');
+                        const judgeTime = submitTime.add(1, 'seconds');
+                        const judgeDelta = judgeTime.diff(tdoc.beginAt, 'seconds');
+                        const judgeAt = moment().startOf('day').seconds(judgeDelta).format('HH:mm:ss.SSS');
+                        result.push(getFeed('submissions', {
                             id: s.rid,
                             team_id: `team-${i.uid}`,
                             problem_id: `${s.pid}`,
                             language_id: s.lang?.split('.')[0] || 'cpp',
-                            created_at: ridTime.format(),
                             files: [],
-                            contest_time: `${contestAt}.000`,
-                            time: `${ridTime.format()}.000`,
+                            contest_time: submitAt,
+                            time: submitTime.format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
                         }));
-                        result.push(getFeed('judgements', 'update', {
-                            id: `${cntJudge}`,
-                            submission_id: s.rid,
-                            start_contest_time: `${contestAt}.001`,
-                            start_time: `${ridTime.format()}.001`,
-                            judgement_type_id: null,
-                        }));
-                        result.push(getFeed('judgements', 'create', {
+                        result.push(getFeed('judgements', {
                             id: `${cntJudge}`,
                             submission_id: s.rid,
                             judgement_type_id: STATUS_SHORT_TEXTS[s.status],
                             max_run_time: 0.1,
-                            start_contest_time: `${contestAt}.001`,
-                            start_time: `${ridTime.format()}.001`,
-                            end_contest_time: `${contestAt}.901`,
-                            end_time: `${ridTime.format()}.901`,
+                            start_contest_time: submitAt,
+                            end_contest_time: judgeAt,
+                            start_time: submitTime.format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
+                            end_time: judgeTime.format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
                         }));
                         cntJudge++;
                     }
                     return result;
                 });
+                const endState = [
+                    getFeed('state', {
+                        started: moment(tdoc.beginAt).format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
+                        ended: moment(tdoc.endAt).format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
+                        ...tdoc.lockAt && {
+                            frozen: moment(tdoc.lockAt).format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
+                        },
+                        finalized: moment().format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
+                    }),
+                ];
                 const zip = new AdmZip();
-                zip.addFile('event-feed.ndjson', Buffer.from(eventfeed.concat(submissions).map((i) => JSON.stringify(i)).join('\n')));
+                zip.addFile('event-feed.ndjson', Buffer.from(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n')));
                 for (const i of ['teams', 'organizations']) {
                     zip.addFile(`${i}/`, Buffer.alloc(0));
                 }
