@@ -92,7 +92,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
         problem.pass = true;
         problem.time = Math.floor(submission.time / 60);
         team.score += 1;
-        team.penalty += submission.time + problem.old * 20 * 60;
+        team.penalty += Math.floor(submission.time / 60) + problem.old * 20;
       }
       problem.old += 1;
     }
