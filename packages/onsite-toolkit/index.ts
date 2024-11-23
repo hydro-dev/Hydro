@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
 import moment from 'moment';
 import {
-    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync, ForbiddenError,
-    fs,
-    ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
+    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
+    STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
 
@@ -69,7 +69,7 @@ export function apply(ctx: Context) {
                         submissions: submissions.map((i) => ({
                             team: i.uid.toString(),
                             problem: i.pid.toString(),
-                            verdict: i.status === STATUS.STATUS_ACCEPTED ? 'AC' : 'RJ',
+                            verdict: STATUS_SHORT_TEXTS[i.status],
                             time: time(i.rid),
                         })),
                     } as ResolverInput,
