@@ -427,7 +427,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 domain.get(this.pdoc.reference.domainId),
             ]);
             if (!pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            t = `,${ddoc.domain.share || ''},`;
+            t = `,${ddoc.share || ''},`;
             if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(ddoc._id, target);
         }
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
