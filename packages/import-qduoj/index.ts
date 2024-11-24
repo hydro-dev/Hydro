@@ -10,6 +10,7 @@ const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
 fs.ensureDirSync(tmpdir);
 
 const StringValue = Schema.object({
+    format: Schema.union(['html', 'markdown']).default('html'),
     value: Schema.string(),
 });
 const ProblemSchema = Schema.object({
@@ -23,7 +24,7 @@ const ProblemSchema = Schema.object({
         output: Schema.string(),
     })),
     hint: StringValue,
-    source: StringValue,
+    source: Schema.union([StringValue, Schema.string()]),
     display_id: Schema.string(),
     time_limit: Schema.union([Schema.number(), Schema.string()]).required(),
     memory_limit: Schema.union([Schema.number(), Schema.string()]).required(),
@@ -63,7 +64,7 @@ class ImportQduojHandler extends Handler {
                     output: pdoc.output_description?.value,
                     samples: pdoc.samples.map((sample) => [sample.input, sample.output]),
                     hint: pdoc.hint?.value,
-                    source: pdoc.source?.value,
+                    source: typeof pdoc.source === 'string' ? pdoc.source : pdoc.source?.value || '',
                 }, 'html');
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const isValidPid = async (id: string) => {
