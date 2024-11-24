@@ -6,6 +6,6 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "@elastic/elasticsearch": "^8.16.0"
+        "@elastic/elasticsearch": "^8.16.2"
     }
 }
