@@ -185,7 +185,7 @@ class VJudgeService extends Service {
     }
 
     addProvider(type: string, provider: BasicProvider, override = false) {
-        if (process.env.VJUDGE_DEBUG && process.env.VJUDGE_DEBUG !== type) return;
+        if (process.env.VJUDGE_DEBUG && !(`,${process.env.VJUDGE_DEBUG},`).includes(`,${type},`)) return;
         if (!override && this.providers[type]) throw new Error(`duplicate provider ${type}`);
         this.providers[type] = provider;
         for (const account of this.accounts.filter((a) => a.type === type)) {
