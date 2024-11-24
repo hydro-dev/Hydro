@@ -39,7 +39,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
     }
 
     get loggedIn() {
-        return this.get('/login').then(({ text: html }) => !html.includes('<title>登录 - Universal Online Judge</title>'));
+        return this.get('/login').then(({ text: html }) => !html.includes('<title>登录 - '));
     }
 
     async ensureLogin() {
