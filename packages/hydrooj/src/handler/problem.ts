@@ -81,6 +81,7 @@ export interface QueryContext {
     text: string;
     total: number;
     fail: boolean;
+    hint: string;
 }
 
 export class ProblemMainHandler extends Handler {
@@ -93,6 +94,7 @@ export class ProblemMainHandler extends Handler {
         text: '',
         total: 0,
         fail: false,
+        hint: 'sort',
     };
 
     @param('page', Types.PositiveInt, true)
@@ -134,13 +136,8 @@ export class ProblemMainHandler extends Handler {
             total = result.total;
             this.queryContext.pcountRelation = result.countRelation;
             if (!result.hits.length) this.queryContext.fail = true;
-            query.$and ||= [];
-            query.$and.push({
-                $or: result.hits.map((i) => {
-                    const [did, docId] = i.split('/');
-                    return { domainId: did, docId: +docId };
-                }),
-            });
+            query.docId = { $in: result.hits.map((t) => +t.split('/')[1]) };
+            this.queryContext.hint = 'basic';
             this.queryContext.sort = result.hits;
         }
         const sort = this.queryContext.sort;
@@ -150,7 +147,7 @@ export class ProblemMainHandler extends Handler {
             ? [[], 0, 0]
             : await this.paginate(
                 problem.getMulti(domainId, query, quick ? ['title', 'pid', 'domainId', 'docId'] : undefined)
-                    .sort({ sort: 1, docId: 1 }).hint('sort'),
+                    .sort({ sort: 1, docId: 1 }).hint(this.queryContext.hint),
                 sort.length ? 1 : page, limit,
             );
         if (total) {
