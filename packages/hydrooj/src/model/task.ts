@@ -16,13 +16,20 @@ const argv = cac().parse();
 
 async function getFirst(query: Filter<Task>) {
     if (process.env.CI) return null;
-    const q = { ...query };
-    const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
-    if (res.value) {
-        logger.debug('%o', res.value);
-        return res.value;
+    try {
+        const q = { ...query };
+        const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
+        if (res.value) {
+            logger.debug('%o', res.value);
+            return res.value;
+        }
+        return null;
+    } catch (e) {
+        // Usually caused by the database being down
+        // Should recover once it is back
+        logger.error(e);
+        return null;
     }
-    return null;
 }
 
 export class Consumer {
@@ -163,11 +170,17 @@ export async function apply(ctx: Context) {
         logger.info('No replica set found.');
         // eslint-disable-next-line no-constant-condition
         while (true) {
-            // eslint-disable-next-line no-await-in-loop
-            const res = await collEvent.findOneAndUpdate(
-                { expire: { $gt: new Date() }, ack: { $nin: [id] } },
-                { $push: { ack: id } },
-            );
+            let res;
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                res = await collEvent.findOneAndUpdate(
+                    { expire: { $gt: new Date() }, ack: { $nin: [id] } },
+                    { $push: { ack: id } },
+                );
+            } catch (e) {
+                logger.error(e);
+                continue;
+            }
             if (argv.options.showEvent) logger.info('Event: %o', res.value);
             // eslint-disable-next-line no-await-in-loop
             await (res.value ? handleEvent(res.value) : sleep(500));
