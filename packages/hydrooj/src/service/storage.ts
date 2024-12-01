@@ -209,7 +209,8 @@ class RemoteStorageService {
             Key: target,
             ResponseContentDisposition: filename ? `attachment; filename="${encodeRFC5987ValueChars(filename)}"` : '',
         }), {
-            expiresIn: noExpire ? 24 * 60 * 60 * 7 : 10 * 60,
+            // aliyun s3 will reject download if expires >= 7 days
+            expiresIn: noExpire ? 24 * 60 * 60 * 7 - 1 : 10 * 60,
         });
         // using something like /fs/
         if (useAlternativeEndpointFor && this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor]) {
