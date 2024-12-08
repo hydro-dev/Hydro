@@ -1,3 +1,4 @@
+import { sleep } from '@hydrooj/utils/lib/common';
 import { dump } from 'js-yaml';
 import PQueue from 'p-queue';
 import streamsaver from 'streamsaver';
@@ -31,7 +32,7 @@ export default async function download(filename, targets) {
   const abortCallbackReceiver: any = {};
   function stopDownload() { abortCallbackReceiver.abort?.(); }
   let i = 0;
-  async function downloadFile(target) {
+  async function downloadFile(target, retry = 5) {
     try {
       let stream;
       if (target.url) {
@@ -46,6 +47,11 @@ export default async function download(filename, targets) {
         stream,
       };
     } catch (e) {
+      if (retry) {
+        Notification.warn(i18n('Download Error: {0} {1}, retry in 3 secs...', [target.filename, e.toString()]));
+        await sleep(3000);
+        return await downloadFile(target, retry - 1);
+      }
       window.captureException?.(e);
       stopDownload();
       Notification.error(i18n('Download Error: {0} {1}', [target.filename, e.toString()]));
