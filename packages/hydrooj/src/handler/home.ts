@@ -6,7 +6,7 @@ import { Binary, ObjectId } from 'mongodb';
 import Parser from 'ua-parser-js';
 import { Context } from '../context';
 import {
-    AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -506,6 +506,14 @@ class HomeDomainHandler extends Handler {
         if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
         else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
         this.back({ star });
+    }
+
+    @param('id', Types.String)
+    async postLeave({ }, id: string) {
+        const dudoc = await domain.getDomainUser(id, this.user);
+        if (!dudoc.join) throw new BadRequestError('You are not in this domain');
+        await domain.updateUserInDomain(id, this.user._id, { $set: { join: false } });
+        this.back();
     }
 }
 
