@@ -639,6 +639,7 @@ export interface EventDoc {
     event: number | string;
     payload: string;
     expire: Date;
+    trace?: string;
 }
 
 export interface OpCountDoc {

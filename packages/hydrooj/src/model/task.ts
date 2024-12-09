@@ -144,12 +144,13 @@ const id = process.env.exec_mode === 'cluster_mode' ? hostname() : nanoid();
 
 export async function apply(ctx: Context) {
     ctx.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
-    ctx.on('bus/broadcast', (event, payload) => {
+    ctx.on('bus/broadcast', (event, payload, trace) => {
         collEvent.insertOne({
             ack: [id],
             event,
             payload: BSON.EJSON.stringify(payload),
             expire: new Date(Date.now() + 10000),
+            trace,
         });
     });
 
