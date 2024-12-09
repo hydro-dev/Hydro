@@ -78,7 +78,7 @@ export async function next(body: Partial<JudgeResultBody>) {
         $set, $push, $unset, $inc,
     } = processPayload(body);
     const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
-    bus.broadcast('record/change', rdoc, $set, $push, body);
+    if (rdoc) bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
 
@@ -144,10 +144,9 @@ export async function end(body: Partial<JudgeResultBody>) {
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    let rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
+    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
+    if (rdoc) bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
     await postJudge(rdoc);
-    rdoc = await record.get(body.rid);
-    bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
     return rdoc;
 }
 
@@ -246,20 +245,17 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     }
 
     async newTask(t: Task) {
-        const rdoc = await record.get(t.domainId, t.rid);
-        if (!rdoc) return;
-
-        const rid = rdoc._id.toHexString();
+        const rid = t.rid.toHexString();
         let resolve: (_: any) => void;
         const p = new Promise((r) => { resolve = r; });
         this.tasks[rid] = {
             queue: new PQueue({ concurrency: 1 }),
-            domainId: rdoc.domainId,
+            domainId: t.domainId,
             resolve,
             t,
         };
-        this.send({ task: { ...rdoc, ...t } });
-        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: rdoc.domainId, rid: rdoc._id }));
+        this.send({ task: t });
+        this.tasks[rid].queue.add(() => next({ status: STATUS.STATUS_FETCHED, domainId: t.domainId, rid: t.rid }));
         await p;
         delete this.tasks[rid];
     }
