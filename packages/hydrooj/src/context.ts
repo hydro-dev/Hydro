@@ -61,7 +61,9 @@ export class ApiMixin extends Service {
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
     injectUI = T(inject);
-    broadcast = (event: keyof EventMap, ...payload) => this.ctx.emit('bus/broadcast', event, payload);
+    broadcast = (event: keyof EventMap, ...payload) =>
+        this.ctx.emit('bus/broadcast', event, payload, process.env.TRACE_BROADCAST ? new Error().stack : null);
+
     constructor(ctx) {
         super(ctx, '$api', true);
         ctx.mixin('$api', ['addScript', 'setImmediate', 'provideModule', 'injectUI', 'broadcast']);
