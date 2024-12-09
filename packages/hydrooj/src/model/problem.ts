@@ -12,7 +12,7 @@ import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, ProblemConfigFile, ProblemDict, ProblemStatusDoc, User,
+    Document, LocalizedContent, ProblemConfigFile, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
@@ -41,19 +41,20 @@ function sortable(source: string, namespaces: Record<string, string>) {
 
 function findOverrideContent(dir: string, base: string) {
     let files = fs.readdirSync(dir);
-    if (files.includes(`${base}.md`)) return fs.readFileSync(path.join(dir, `${base}.md`), 'utf8');
-    if (files.includes(`${base}.pdf`)) return `@[PDF](file://${base}.pdf)`;
-    const languages = {};
+    if (files.includes(`${base}.md`)) return [{ name: 'default', content: fs.readFileSync(path.join(dir, `${base}.md`), 'utf8'), lang: 'en' }];
+    if (files.includes(`${base}.pdf`)) return [{ name: 'default', content: `@[PDF](file://${base}.pdf)`, lang: 'en' }];
+    const c: LocalizedContent = [];
     files = files.filter((i) => new RegExp(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`).test(i));
     if (!files.length) return null;
     for (const file of files) {
         const match = file.match(`^${base}(?:_|.)([a-zA-Z_]+)\\.(md|pdf)$`);
         const lang = match[1];
         const ext = match[2];
-        if (ext === 'pdf') languages[lang] = `@[PDF](file://${file})`;
-        else languages[lang] = fs.readFileSync(path.join(dir, file), 'utf8');
+        // TODO: parse markdown header to get name
+        if (ext === 'pdf') c.push({ name: lang, content: `@[PDF](file://${file})`, lang });
+        else c.push({ name: lang, content: fs.readFileSync(path.join(dir, file), 'utf8'), lang });
     }
-    return JSON.stringify(languages);
+    return c;
 }
 
 interface ProblemImportOptions {
@@ -102,7 +103,7 @@ export class ProblemModel {
         pid: '',
         owner: 1,
         title: '*',
-        content: '',
+        content: [],
         html: false,
         nSubmit: 0,
         nAccept: 0,
@@ -123,7 +124,7 @@ export class ProblemModel {
         pid: null,
         owner: 1,
         title: '*',
-        content: 'Deleted Problem',
+        content: [],
         html: false,
         nSubmit: 0,
         nAccept: 0,
@@ -137,22 +138,24 @@ export class ProblemModel {
     };
 
     static async add(
-        domainId: string, pid: string = '', title: string, content: string, owner: number,
-        tag: string[] = [], meta: ProblemCreateOptions = {},
+        domainId: string, pid: string = '', title: string,
+        content: { content: string, lang: string, name: string }[] | string,
+        owner: number, tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
+        const c = typeof content === 'string' ? [{ content, lang: 'en', name: 'default' }] : content;
         const [doc] = await ProblemModel.getMulti(domainId, {})
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
         const result = await ProblemModel.addWithId(
             domainId, (doc?.docId || 0) + 1, pid,
-            title, content, owner, tag, meta,
+            title, c, owner, tag, meta,
         );
         return result;
     }
 
     static async addWithId(
         domainId: string, docId: number, pid: string = '', title: string,
-        content: string, owner: number, tag: string[] = [],
+        content: ProblemDoc['content'], owner: number, tag: string[] = [],
         meta: ProblemCreateOptions = {},
     ) {
         const ddoc = await DomainModel.get(domainId);
@@ -546,7 +549,9 @@ export class ProblemModel {
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
                         title: title.trim(),
-                        content: overrideContent || pdoc.content?.toString() || 'No content',
+                        content: overrideContent || [{
+                            name: 'default', content: pdoc.content.toString() || 'No content', lang: 'en',
+                        }],
                         tag,
                         difficulty: pdoc.difficulty,
                     })).docId
@@ -623,15 +628,16 @@ export class ProblemModel {
                 difficulty: pdoc.difficulty,
             });
             await fs.writeFile(problemYaml, problemYamlContent);
-            try {
-                const c = JSON.parse(pdoc.content);
-                for (const key of Object.keys(c)) {
-                    const problemContent = path.join(problemPath, `problem_${key}.md`);
-                    await fs.writeFile(problemContent, typeof c[key] === 'string' ? c[key] : JSON.stringify(c[key]));
-                }
-            } catch (e) {
-                const problemContent = path.join(problemPath, 'problem.md');
-                await fs.writeFile(problemContent, pdoc.content);
+            for (const i of pdoc.content) {
+                await fs.writeFile(path.join(problemPath, `problem_${i.name}_${i.lang}.md`), [
+                    '---',
+                    yaml.dump({
+                        name: i.name,
+                        lang: i.lang,
+                    }),
+                    '---',
+                    i.content,
+                ].join('\n'));
             }
             if ((pdoc.data || []).length) {
                 const testdataPath = path.join(problemPath, 'testdata');
