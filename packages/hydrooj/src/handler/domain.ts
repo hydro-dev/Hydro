@@ -96,7 +96,8 @@ class DomainDashboardHandler extends ManageHandler {
 
 class DomainUserHandler extends ManageHandler {
     @requireSudo
-    async get({ domainId }) {
+    @param('format', Types.Range(['default', 'raw']), true)
+    async get({ domainId }, format = 'default') {
         const rudocs = {};
         const [dudocs, roles] = await Promise.all([
             domain.getMultiUserInDomain(domainId, {
@@ -117,7 +118,7 @@ class DomainUserHandler extends ManageHandler {
             rudocs[udoc.role || 'default'].push(udoc);
             joined[udoc._id] = dudoc.join;
         }
-        this.response.template = 'domain_user.html';
+        this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
             roles, rudocs, domain: this.domain, joined,
         };

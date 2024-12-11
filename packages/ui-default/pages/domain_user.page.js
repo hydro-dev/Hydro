@@ -73,7 +73,7 @@ const page = new NamedPage('domain_user', () => {
   function ensureAndGetSelectedUsers() {
     const users = _.map(
       $('.domain-users tbody [type="checkbox"]:checked'),
-      (ch) => $(ch).closest('tr').attr('data-uid'),
+      (ch) => $(ch).attr('data-uid') || $(ch).closest('tr').attr('data-uid'),
     );
     if (users.length === 0) {
       Notification.error(i18n('Please select at least one user to perform this operation.'));
