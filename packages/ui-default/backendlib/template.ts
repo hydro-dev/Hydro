@@ -166,6 +166,7 @@ env.addGlobal('platformIcon', (platform) => {
 });
 
 const render = (name: string, state: any) => new Promise<string>((resolve, reject) => {
+  const start = Date.now();
   env.render(name, {
     page_name: name.split('.')[0],
     ...state,
@@ -180,6 +181,8 @@ const render = (name: string, state: any) => new Promise<string>((resolve, rejec
     STATUS,
     UiContext: state.handler?.UiContext || {},
   }, (err, res) => {
+    const end = Date.now();
+    if (end - start > 5000) console.error(`Render of ${name} took ${end - start}ms`);
     if (err) reject(err);
     else resolve(res);
   });
