@@ -498,8 +498,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (file.size > sizeLimit) throw new ValidationError('file');
             const showReadFile = () => {
                 if (config.type === 'objective') return true;
-                if (lang === '_') return true;
-                return file.size < lengthLimit && !file.filepath.endsWith('.zip') && !setting.langs[lang].isBinary;
+                const endsWithZip = file.filepath.endsWith('.zip');
+                if (lang === '_') return !endsWithZip;
+                return file.size < lengthLimit && !endsWithZip && !setting.langs[lang].isBinary;
             };
             if (showReadFile()) {
                 // TODO submission file shape
