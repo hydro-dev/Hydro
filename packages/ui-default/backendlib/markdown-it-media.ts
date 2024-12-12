@@ -26,7 +26,7 @@ function preziParser(url: string) {
   const match = url.match(preziRegex);
   return match ? match[1] : url;
 }
-const EMBED_REGEX = /@\[([a-zA-Z].+?)]\((.*?)[)]/im;
+const EMBED_REGEX = /@\[([a-zA-Z]+)\]\((.*?)\)/;
 function extractVideoParameters(url: string) {
   const parameterMap = new Map();
   const params = url.replace(/&amp;/gi, '&').split(/[#?&]/);
@@ -150,7 +150,7 @@ export function Media(md: MarkdownIt) {
       token.attrPush(['url', match[2]]);
       token.level = theState.level;
     }
-    theState.pos += theState.src.indexOf(')', theState.pos);
+    theState.pos += match[0].length-1;
     return true;
   });
 }
