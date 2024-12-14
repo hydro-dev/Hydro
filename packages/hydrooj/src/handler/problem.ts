@@ -496,16 +496,13 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (!file || file.size === 0) throw new ValidationError('code');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : lengthLimit;
             if (file.size > sizeLimit) throw new ValidationError('file');
-            const showReadFile = () => {
+            const shouldReadFile = () => {
                 if (config.type === 'objective') return true;
-                const endsWithZip = file.filepath.endsWith('.zip');
-                if (lang === '_') return !endsWithZip;
-                return file.size < lengthLimit && !endsWithZip && !setting.langs[lang].isBinary;
+                if (lang === '_') return false;
+                return file.size < lengthLimit && !file.filepath.endsWith('.zip') && !setting.langs[lang].isBinary;
             };
-            if (showReadFile()) {
-                // TODO submission file shape
-                code = await readFile(file.filepath, 'utf-8');
-            } else {
+            if (shouldReadFile()) code = await readFile(file.filepath, 'utf-8');
+            else {
                 const id = nanoid();
                 await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
                 files.code = `${this.user._id}/${id}#${file.originalFilename}`;
