@@ -3,6 +3,6 @@
     "version": "0.0.3",
     "dependencies": {
         "@react-spring/web": "^9.7.5",
-        "react-use": "^17.5.1"
+        "react-use": "^17.6.0"
     }
 }
