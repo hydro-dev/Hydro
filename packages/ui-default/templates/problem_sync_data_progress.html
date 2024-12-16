@@ -1,0 +1,22 @@
+{% import "components/nothing.html" as nothing with context %}
+{% extends "layout/basic.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section" id="noJudgers">
+      {{ nothing.render('No judgers reported yet...') }}
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Problem Data Sync Progress') }}</h1>
+      </div>
+      <div class="section__body typo">
+        <p id="target" data-domain="{{ domainId }}" data-docid="{{ docId }}">{{ _('You can check the progress of the testdata synchronization here.') }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
