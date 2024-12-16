@@ -55,7 +55,7 @@
               {% endif %}
               {%- for udoc in udocs -%}
               <tr>
-                <td class="col--rank">{{ (page - 1) * 100 + loop.index }}</td>
+                <td class="col--rank">{{ (page - 1) * model.system.get('pagination.ranking') + loop.index }}</td>
                 <td class="col--user">{{ user.render_inline(udoc) }}</td>
                 <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
                 {% for key, def in model.rp %}
