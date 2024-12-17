@@ -3,7 +3,7 @@ import { generateRegistrationOptions, verifyRegistrationResponse } from '@simple
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectId } from 'mongodb';
-import Parser from 'ua-parser-js';
+import { UAParser } from 'ua-parser-js';
 import { Context } from '../context';
 import {
     AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
@@ -186,10 +186,7 @@ class HomeSecurityHandler extends Handler {
             session.isCurrent = session._id === this.session._id;
             session._id = md5(session._id);
             const ua = session.updateUa || session.createUa;
-            if (ua) {
-                const parser = new Parser(ua);
-                session.updateUaInfo = parser.getResult();
-            }
+            if (ua) session.updateUaInfo = UAParser(ua);
             session.updateGeoip = this.ctx.geoip?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
@@ -253,7 +250,7 @@ class HomeSecurityHandler extends Handler {
     }
 
     @param('tokenDigest', Types.String)
-    async postDeleteToken(domainId: string, tokenDigest: string) {
+    async postDeleteToken({ }, tokenDigest: string) {
         const sessions = await token.getSessionListByUid(this.user._id);
         for (const session of sessions) {
             if (tokenDigest === md5(session._id)) {
@@ -273,7 +270,7 @@ class HomeSecurityHandler extends Handler {
     @requireSudo
     @param('code', Types.String)
     @param('secret', Types.String)
-    async postEnableTfa(domainId: string, code: string, secret: string) {
+    async postEnableTfa({ }, code: string, secret: string) {
         if (this.user._tfa) throw new AuthOperationError('2FA', 'enabled');
         if (!verifyTFA(secret, code)) throw new InvalidTokenError('2FA');
         await user.setById(this.user._id, { tfa: secret });
@@ -287,7 +284,7 @@ class HomeSecurityHandler extends Handler {
 
     @requireSudo
     @param('type', Types.Range(['cross-platform', 'platform']))
-    async postRegister(domainId: string, type: 'cross-platform' | 'platform') {
+    async postRegister({ }, type: 'cross-platform' | 'platform') {
         const options = await generateRegistrationOptions({
             rpName: system.get('server.name'),
             rpID: this.getAuthnHost(),
@@ -309,7 +306,7 @@ class HomeSecurityHandler extends Handler {
 
     @requireSudo
     @param('name', Types.String)
-    async postEnableAuthn(domainId: string, name: string) {
+    async postEnableAuthn({ }, name: string) {
         if (!this.session.webauthnVerify) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
         const verification = await verifyRegistrationResponse({
             response: this.args.result,
@@ -336,7 +333,7 @@ class HomeSecurityHandler extends Handler {
 
     @requireSudo
     @param('id', Types.String)
-    async postDisableAuthn(domainId: string, id: string) {
+    async postDisableAuthn({ }, id: string) {
         const authenticators = this.user._authenticators?.filter((c) => Buffer.from(c.credentialID.buffer).toString('base64') !== id);
         if (this.user._authenticators?.length === authenticators?.length) throw new ValidationError('authenticator');
         await user.setById(this.user._id, { authenticators });
@@ -395,7 +392,7 @@ function set(s: Setting, key: string, value: any) {
 
 class HomeSettingsHandler extends Handler {
     @param('category', Types.Range(['preference', 'account', 'domain']))
-    async get(domainId: string, category: string) {
+    async get({ }, category: string) {
         this.response.template = 'home_settings.html';
         this.response.body = {
             category,
@@ -432,7 +429,7 @@ class HomeSettingsHandler extends Handler {
 
 class HomeAvatarHandler extends Handler {
     @param('avatar', Types.String, true)
-    async post(domainId: string, input: string) {
+    async post({ }, input: string) {
         if (input) {
             if (!validate(input)) throw new ValidationError('avatar');
             await user.setById(this.user._id, { avatar: input });
@@ -565,7 +562,7 @@ class HomeMessagesHandler extends Handler {
 
     @param('uid', Types.Int)
     @param('content', Types.Content)
-    async postSend(domainId: string, uid: number, content: string) {
+    async postSend({ }, uid: number, content: string) {
         this.checkPriv(PRIV.PRIV_SEND_MESSAGE);
         const udoc = await user.getById('system', uid);
         if (!udoc) throw new UserNotFoundError(uid);
@@ -575,7 +572,7 @@ class HomeMessagesHandler extends Handler {
     }
 
     @param('messageId', Types.ObjectId)
-    async postDeleteMessage(domainId: string, messageId: ObjectId) {
+    async postDeleteMessage({ }, messageId: ObjectId) {
         const msg = await message.get(messageId);
         if ([msg.from, msg.to].includes(this.user._id)) await message.del(messageId);
         else throw new PermissionError();
@@ -583,7 +580,7 @@ class HomeMessagesHandler extends Handler {
     }
 
     @param('messageId', Types.ObjectId)
-    async postRead(domainId: string, messageId: ObjectId) {
+    async postRead({ }, messageId: ObjectId) {
         const msg = await message.get(messageId);
         if ([msg.from, msg.to].includes(this.user._id)) {
             await message.setFlag(messageId, message.FLAG_UNREAD);

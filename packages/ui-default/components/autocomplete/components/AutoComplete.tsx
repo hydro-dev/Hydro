@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/role-supports-aria-props */
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { debounce, uniqueId } from 'lodash';
-import PropTypes from 'prop-types';
 import React, {
   forwardRef, useEffect,
   useImperativeHandle, useRef, useState,
@@ -102,8 +101,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const [rerender, setRerender] = useState(false);
   const [draggableId] = useState(uniqueId());
 
-  const inputRef = useRef<HTMLInputElement>();
-  const listRef = useRef<HTMLUListElement>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   let [queryCache, valueCache] = [useRef({}).current, useRef({}).current];
   if (props.cacheKey) {
@@ -346,40 +345,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     </div>
   );
 }) as (<T>(props: AutoCompleteProps<T> & { ref: React.Ref<AutoCompleteHandle<T>> }) => React.ReactElement) & React.FC;
-
-AutoComplete.propTypes = {
-  width: PropTypes.string,
-  height: PropTypes.string,
-  disabled: PropTypes.bool,
-  disabledHint: PropTypes.string,
-  listStyle: PropTypes.object,
-  queryItems: PropTypes.func.isRequired,
-  itemKey: PropTypes.func,
-  renderItem: PropTypes.func,
-  itemText: PropTypes.func,
-  onChange: PropTypes.func.isRequired,
-  multi: PropTypes.bool,
-  selectedKeys: PropTypes.arrayOf(PropTypes.string),
-  allowEmptyQuery: PropTypes.bool,
-  freeSolo: PropTypes.bool,
-  freeSoloConverter: PropTypes.func,
-  placeholder: PropTypes.string,
-};
-
-AutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  disabled: false,
-  disabledHint: '',
-  listStyle: {},
-  renderItem: (item) => item,
-  itemText: (item) => item.toString(),
-  multi: false,
-  selectedKeys: [],
-  allowEmptyQuery: false,
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
-};
 
 AutoComplete.displayName = 'AutoComplete';
 

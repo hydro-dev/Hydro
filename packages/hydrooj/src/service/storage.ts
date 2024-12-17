@@ -275,7 +275,7 @@ class LocalStorageService {
         target = resolve(this.dir, convertPath(target));
         await ensureDir(dirname(target));
         if (typeof file === 'string') await copyFile(file, target);
-        else if (file instanceof Buffer) await writeFile(target, file);
+        else if (Buffer.isBuffer(file)) await writeFile(target, file);
         else await writeFile(target, await streamToBuffer(file));
     }
 
