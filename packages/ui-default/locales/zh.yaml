@@ -1,49 +1,49 @@
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
-'[Richtext message]': '[富文本消息]'
-'{0} comments': '{0} 条评论'
-'{0} discussions': '{0} 条讨论'
-'{0} is a moderator of this domain.': '{}是本课程的管理者之一。'
-'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
-'{0} problems': '{0} 道题'
-'{0} sections': '{0} 小节'
-'{0} solutions': '{0} 条题解'
-'{0} views': '{0} 次查看'
-'{0}: Groups': '{0}: 小组'
-'{0}: Permissions': '{0}: 权限'
-'{0}: Roles': '{0}: 角色'
-'{0}: Users': '{0}: 用户'
-'# My Submissions': '我的递交数'
-'# Submissions': '递交数'
-'↓ # Comments': '↓ 评论数'
-'↓ # Enrollees': '↓ 参与人数'
-'↓ # Likes': '↓ 赞数'
-'↓ # Stars': '↓ 收藏数'
-'↓ Create Time': '↓ 创建时间'
-'↓ Update Time': '↓ 更新时间'
-'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
-'Copy "{data}" failed :(': '复制“{data}”失败 :('
-'Copy failed :(': '复制失败 :('
-'Current dataset: {0}': '当前测试数据: {0}'
-'Discussion: Terms Of Service': 讨论区服务条款
-'Drag and drop testcases here:': '拖拽测试点到此处：'
-'Enter a new name for the file: ': 请输入新的文件名：
-'Failed to get credential: {0}': '获取认证数据失败: {0}'
-'File IO: {0}': 文件IO：{0}
-'File upload failed: {0}': 文件上传失败：{0}
-'Format: category 1, category 2, ..., category n': 格式：分类1, 分类2, ..., 分类n
-'Hello, {0}! You can click following link to active your new email of your {1} account:': 您好，{0}！您可以点击以下链接来激活您 {1} 账户的新电子邮件地址：
-'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以点击以下链接来重置您 {1} 账户的密码：
-'Hello! You can click following link to sign up your {0} account:': 您好！您可以点击以下链接来注册您的 {0} 账户：
-'Join {0}': '加入 {0}'
-'No': 否
-'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
-'Packages have new version: {0}': '以下组件有新版本： {0}'
-'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'
-'Role {1} already exists in domain {0}.': '课程 {0} 中已存在角色 {1}。'
-'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
-'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
-'Yes': 是
+"[Richtext message]": "[富文本消息]"
+"{0} comments": "{0} 条评论"
+"{0} discussions": "{0} 条讨论"
+"{0} is a moderator of this domain.": "{}是本课程的管理者之一。"
+"{0} limit exceeded (limit: {2} operations in {1} seconds).": "{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。"
+"{0} problems": "{0} 道题"
+"{0} sections": "{0} 小节"
+"{0} solutions": "{0} 条题解"
+"{0} views": "{0} 次查看"
+"{0}: Groups": "{0}: 小组"
+"{0}: Permissions": "{0}: 权限"
+"{0}: Roles": "{0}: 角色"
+"{0}: Users": "{0}: 用户"
+"# My Submissions": "我的递交数"
+"# Submissions": "递交数"
+"↓ # Comments": "↓ 评论数"
+"↓ # Enrollees": "↓ 参与人数"
+"↓ # Likes": "↓ 赞数"
+"↓ # Stars": "↓ 收藏数"
+"↓ Create Time": "↓ 创建时间"
+"↓ Update Time": "↓ 更新时间"
+"A domain ID cannot be changed after creation. It is supposed to be:": "创建后将无法更改 ID。ID 必须满足以下条件："
+'Copy "{data}" failed :(': "复制“{data}”失败 :("
+"Copy failed :(": "复制失败 :("
+"Current dataset: {0}": "当前测试数据: {0}"
+"Discussion: Terms Of Service": 讨论区服务条款
+"Drag and drop testcases here:": "拖拽测试点到此处："
+"Enter a new name for the file: ": 请输入新的文件名：
+"Failed to get credential: {0}": "获取认证数据失败: {0}"
+"File IO: {0}": 文件IO：{0}
+"File upload failed: {0}": 文件上传失败：{0}
+"Format: category 1, category 2, ..., category n": 格式：分类1, 分类2, ..., 分类n
+"Hello, {0}! You can click following link to active your new email of your {1} account:": 您好，{0}！您可以点击以下链接来激活您 {1} 账户的新电子邮件地址：
+"Hello, {0}! You can click following link to reset the password of your {1} account:": 您好，{0}！您可以点击以下链接来重置您 {1} 账户的密码：
+"Hello! You can click following link to sign up your {0} account:": 您好！您可以点击以下链接来注册您的 {0} 账户：
+"Join {0}": "加入 {0}"
+"No": 否
+"Note: Problem title may not be hidden.": 注意：题目标题可能不会被隐藏。
+"Packages have new version: {0}": "以下组件有新版本： {0}"
+"Please use your two factor authentication app to scan the qrcode below:": "请使用你的两步验证APP扫描此二维码:"
+"Role {1} already exists in domain {0}.": "课程 {0} 中已存在角色 {1}。"
+"Solved {0} problems, RP: {1} (No. {2})": "解决了 {0} 道题目，RP: {1} (No. {2})"
+"The value `{1}` of {0} already exists.": "{0} 的值 `{1}` 已经存在。"
+"Yes": 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "View other's records": 查看他人的记录
@@ -394,7 +394,7 @@ File: 文件
 Filename: 文件名
 Files: 文件
 Filter: 过滤
-First of Contest: 全场一血 
+First of Contest: 全场一血
 First of Problem: 题目一血
 fontFamily: 字体
 Footer: 页脚
@@ -597,7 +597,7 @@ No Submissions: 没有递交
 No target available: 无可用目标
 No testcase here: 此处没有测试点
 No user is allowed to join this domain: 没有用户可以自助加入此课程
-no_translation_warn: ''
+no_translation_warn: ""
 None: 无
 Not Attended: 未参加
 Not available: 不可用
@@ -703,15 +703,15 @@ problem_type.interactive: 交互题
 problem_type.objective: 客观题
 problem_type.remote_judge: 远端评测题
 problem_type.submit_answer: 提交答案题
-problem-category-delim: '|'
+problem-category-delim: "|"
 problem-subcategory-delim: 、
 Problem: 题目
-problem.import.additional_file: '## 附加文件'
-problem.import.hint: '## 提示'
-problem.import.input_format: '## 输入格式'
-problem.import.limit_and_hint: '## 限制'
-problem.import.output_format: '## 输出格式'
-problem.import.problem_description: '## 题目描述'
+problem.import.additional_file: "## 附加文件"
+problem.import.hint: "## 提示"
+problem.import.input_format: "## 输入格式"
+problem.import.limit_and_hint: "## 限制"
+problem.import.output_format: "## 输出格式"
+problem.import.problem_description: "## 题目描述"
 problem.stats.sort.date: 提交时间
 problem.stats.sort.length: 代码长度
 problem.stats.sort.memory: 内存占用
@@ -815,7 +815,7 @@ Selected files have been deleted.: 所选文件已被删除。
 Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
-Selected users have been removed from the domain.: 所选用户已从此课程中移除。评测队列
+Selected users have been removed from the domain.: 所选用户已从此课程中移除。
 Send By: 递送者
 Send Code after acceptance: 通过题目后发送源代码
 Send Message: 发送站内信息
