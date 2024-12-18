@@ -3,7 +3,7 @@ __langname: 简体中文
 '[Richtext message]': '[富文本消息]'
 '{0} comments': '{0} 条评论'
 '{0} discussions': '{0} 条讨论'
-'{0} is a moderator of this domain.': '{}是这个域的管理者之一。'
+'{0} is a moderator of this domain.': '{}是本课程的管理者之一。'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
 '{0} problems': '{0} 道题'
 '{0} sections': '{0} 小节'
@@ -40,7 +40,7 @@ __langname: 简体中文
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
 'Packages have new version: {0}': '以下组件有新版本： {0}'
 'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'
-'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
+'Role {1} already exists in domain {0}.': '课程 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
@@ -97,8 +97,8 @@ Allow user view others code after contest: 允许用户赛后查看其他人的�
 Always granted all privileges: 总是拥有所有权限
 An error has occurred.: 发生了一个错误。
 An example of dataset: 测试数据集的一个例子
-Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此域
-Any user is allowed to join this domain: 任意用户都可以加入此域
+Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此课程
+Any user is allowed to join this domain: 任意用户都可以加入此课程
 API: API
 Are you sure to rename the following file?: 确认对重命名以下文件？
 Are you sure you want to delete this subtask?: 确认删除此子任务？
@@ -136,7 +136,7 @@ Boom!: 炸了！
 Browser: 浏览器
 Built-in: 内置
 Bulletin: 公告
-By clicking the button, you will become a member of the domain {0}.: 点击按钮，您将成为域 {0} 的成员。
+By clicking the button, you will become a member of the domain {0}.: 点击按钮，您将成为课程 {0} 的成员。
 By Contest: 由比赛
 By Language: 由语言
 By Problem: 由题目
@@ -229,7 +229,7 @@ Create contests: 创建比赛
 Create Discussion in {0}: 在 {0} 下创建讨论
 Create Discussion: 创建讨论
 Create discussions: 创建讨论
-Create Domain: 创建域
+Create Domain: 创建课程
 Create File: 创建文件
 Create Group: 创建小组
 Create homework: 创建作业
@@ -244,7 +244,7 @@ Create training plans: 创建训练计划
 Create: 创建
 Created By: 创建人
 Current dataset comes from: 当前数据集来自
-current domain: 当前域
+current domain: 当前课程
 Current Email: 当前电子邮件
 Current Location: 当前位置
 Current password doesn't match.: 当前密码输入错误。
@@ -266,7 +266,7 @@ Default Code Template: 默认代码模板
 Delete discussion replies of own discussion: 删除自己讨论中的回复
 Delete discussion replies: 删除讨论回复
 Delete discussions: 删除讨论
-Delete Domain: 删除域
+Delete Domain: 删除课程
 Delete own discussion replies: 删除讨论中自己的回复
 Delete own discussions: 删除自己的讨论
 Delete own problem solution replies: 删除题解中自己的回复
@@ -278,7 +278,7 @@ delete: 删除
 Delete: 删除
 Dependencies: 依赖
 Description: 说明
-Destination Domain: 目标域
+Destination Domain: 目标课程
 Development: 开发
 Difficulty Algorithm: 难度算法
 Difficulty by admin: 管理员设定的难度
@@ -305,22 +305,22 @@ Display Name: 显示名
 display_name: 显示名
 Do not discuss solutions otherwise you will be regarded as cheating and then lose qualifications.: 请勿讨论解法，否则以作弊论处并且将失去参赛资格。
 Document {2} not found.: 文档 {2} 不存在。
-Domain {0} already exists.: 域 {0} 已经存在。
-Domain {0} is bulit-in and cannot be modified.: 域 {0} 为内置，不可修改。
-Domain {0} not found.: 域 {0} 不存在。
+Domain {0} already exists.: 课程 {0} 已经存在。
+Domain {0} is bulit-in and cannot be modified.: 课程 {0} 为内置，不可修改。
+Domain {0} not found.: 课程 {0} 不存在。
 Domain ID cannot be changed once the domain is created.: 在创建后不能更改 ID。
-Domain ID: 域 ID
-Domain Settings: 域设置
-domain_dashboard: 管理域
+Domain ID: 课程 ID
+Domain Settings: 课程设置
+domain_dashboard: 管理课程
 domain_discussion: 讨论节点
-domain_edit: 编辑域资料
-domain_join: 加入域
+domain_edit: 编辑课程资料
+domain_join: 加入课程
 domain_main: 首页
 domain_permission: 管理权限
 domain_role: 管理角色
 domain_user: 管理用户
-domain: 域
-Domain: 域
+domain: 课程
+Domain: 课程
 Don't have an account?: 还没有账户？
 Don't show again: 不再显示
 Done: 已结束
@@ -334,11 +334,11 @@ Duration: 持续时间
 Edit any contests: 修改任意的比赛
 Edit any homework: 修改任意的作业
 Edit Contest: 编辑比赛
-Edit description of this domain: 修改此域描述
+Edit description of this domain: 修改此课程描述
 Edit discussion replies of own discussion: 修改自己讨论中的回复
 Edit discussion replies: 修改讨论的回复
 Edit discussions: 修改讨论
-Edit Domain: 编辑域
+Edit Domain: 编辑课程
 Edit Homework: 编辑作业
 Edit own contests: 修改自己的比赛
 Edit own discussion replies: 修改讨论中自己的回复
@@ -379,7 +379,7 @@ Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Extra Files Config: 额外文件设置
 Failed to fetch registration data.: 获取注册数据失败。
-Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
+Failed to join the domain. You are already a member.: 加入此课程失败，您已是该课程的学员。
 Failed to parse subtask.: 无法解析子任务信息。
 Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
@@ -414,7 +414,7 @@ Group / UID: 小组或 UID
 Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列
-Have ALL PERMISSIONS in this domain: 在此域中拥有全部权限
+Have ALL PERMISSIONS in this domain: 在此课程中拥有全部权限
 He: 他
 Help: 帮助
 Hidden: 隐藏
@@ -433,9 +433,9 @@ Hint::page::problem_files: 您可以将文件或压缩包拖拽至对应区域�
 Hint::page::problem_main: 这是题目列表页面。您可在页面右侧进行筛选或搜索。
 Hitokoto: 一言
 home_account: 账户设置
-home_domain_account: 当前域的设置
-home_domain_create: 创建域
-home_domain: 我的域
+home_domain_account: 当前课程的设置
+home_domain_create: 创建课程
+home_domain: 我的课程
 home_messages: 站内消息
 home_preference: 偏好设置
 home_security: 安全设置
@@ -536,7 +536,7 @@ Lost Password: 忘记密码
 Lucky: 手气不错
 manage_config: 配置管理
 manage_dashboard: 控制面板
-manage_join_applications: 加域申请
+manage_join_applications: 申请加入课程
 manage_module: 管理模块
 manage_script: 脚本管理
 manage_setting: 系统设置
@@ -561,7 +561,7 @@ More: 更多
 Most Upvoted Solutions: 最被赞同的题解
 Move to subtask: 移动到子任务
 Multi Platform Authenticator: 跨平台认证器
-My Domains: 我的域
+My Domains: 我的课程
 My Files: 我的文件
 My Profile: 我的资料
 My Recent Submissions: 我的最近递交记录
@@ -596,7 +596,7 @@ No submission language available for this problem.: 本题没有可用的提交�
 No Submissions: 没有递交
 No target available: 无可用目标
 No testcase here: 此处没有测试点
-No user is allowed to join this domain: 没有用户可以自助加入此域
+No user is allowed to join this domain: 没有用户可以自助加入此课程
 no_translation_warn: ''
 None: 无
 Not Attended: 未参加
@@ -815,7 +815,7 @@ Selected files have been deleted.: 所选文件已被删除。
 Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
 Selected roles have been deleted.: 所选角色已删除。
-Selected users have been removed from the domain.: 所选用户已从此域中移除。
+Selected users have been removed from the domain.: 所选用户已从此课程中移除。
 Send By: 递送者
 Send Code after acceptance: 通过题目后发送源代码
 Send Message: 发送站内信息
@@ -833,7 +833,7 @@ Set Score for Contest: 设置赛时分数
 Set time and memory limits: 设置时空限制
 setting_customize: 个性化
 setting_display: 显示偏好
-setting_domain: 域设置
+setting_domain: 课程设置
 setting_info_domain: 个人信息
 setting_info: 个人信息
 setting_privacy: 隐私
@@ -857,7 +857,7 @@ Solve: 解决
 Solved: 解决
 Sorry, there are no problems in the problem set.: 题库中没有题目
 Sorry, there are no training plans.: 目前没有训练计划。
-Sorry, there are no users in this domain.: 对不起，此域中没有用户。
+Sorry, there are no users in this domain.: 对不起，此课程中没有用户。
 Sorry: 对不起
 Sort by: 排序
 Source type: 来源类型
@@ -902,13 +902,13 @@ Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
-The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
+The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此课程的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
 The invitation code you provided is invalid.: 您提供的邀请码无效。
 The link will be expired at {0}: 链接将于 {0} 过期
-The role to assign when user joining the domain.: 用户加入此域时分配的角色。
+The role to assign when user joining the domain.: 用户加入此课程时分配的角色。
 The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the last {0} minutes of the contest are still shown as pending.: 比赛已于 {1} 在剩余 {0} 分钟时封榜 - 比赛最后 {0} 分钟的提交将显示为待定。
 The uploaded file is too long.: 上传的文件太长。
-The user is already a member of the domain.: 该用户已是域的成员。
+The user is already a member of the domain.: 该用户已是课程的学员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)
 Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
 Theme: 主题
@@ -985,10 +985,10 @@ Use Subtasks Mode: 使用子任务模式
 Use TFA Code: 使用两步验证码
 User {0} already exists.: 用户 {0} 已存在。
 User {0} not found.: 用户 {0} 不存在。
-User can join this domain by visiting the following URL: 用户可以访问此链接来加入此域
+User can join this domain by visiting the following URL: 用户可以访问此链接来加入此课程
 User ID: 用户 ID
 User Privilege: 用户权限
-User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此域。
+User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此课程。
 user_detail: 用户
 user_extra_files: 用户额外文件
 user_login: 登录
@@ -1000,10 +1000,10 @@ User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID
 Username: 用户名
-Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此域中移除。
+Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此课程中移除。
 Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户
-Valid for registered users who are not members of the domain: 对域外注册用户有效
+Valid for registered users who are not members of the domain: 对课程外注册用户有效
 Valid for visitors: 对未登录的游客有效
 Version: 版本
 Videos: 视频
@@ -1025,7 +1025,7 @@ View Owned Training Plans: 查看自己的训练计划
 View problem solutions: 查看题解
 View Problem: 查看题目
 View problems: 查看题目
-View this domain: 查看此域
+View this domain: 查看此课程
 View training plans: 查看训练计划
 View Training: 查看训练计划
 View: 查看
@@ -1039,36 +1039,36 @@ WeChat Visibility: 微信可见性
 WeChat: 微信
 Week: 周
 WenQuanYi Micro Hei: 文泉驿
-What is domain?: 什么是域?
+What is domain?: 什么是课程?
 What is this?: 这是什么？
-What's domain?: 什么是域？
+What's domain?: 什么是课程？
 What's script?: 什么是脚本？
 What's this?: 这是什么？
 Whether to show tags in the problem list.: 是否在题目列表中显示题目的标签。
 wiki_help: 帮助
 Will be used as the domain icon.: 将被用作系统图标。
-With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某域下您能查看的题目复制到其它域中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
+With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某己课程下您能查看的题目复制到其它课程中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
 Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 Year: 年
 You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.: 您当前处于兼容模式。某些功能在此模式下不可用。我们强烈建议在现代浏览器上切换为标准模式以获得更好的体验。
-You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
+You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该课程，链接无效或已过期。
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以将头像上传到 <a href="https://gravatar.com/">Gravatar</a>，本站的头像将自动更新。
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 该比赛已结束，您无法在比赛模式下递交该题目。您可以点击“在题库中打开”以普通模式查看和递交本题。
 You cannot submit for this problem because the homework's deadline is due.: 作业已超过截止时间，您无法递交本题目。
-You cannot visit this domain.: 您不能访问此域。
+You cannot visit this domain.: 您不能访问此课程。
 You don't have permission to upload file.: 您没有权限上传文件。
-You don't have the required permission ({0}) in this domain.: 您在该域中无相应权限 ({0})。
+You don't have the required permission ({0}) in this domain.: 您在该课程中无相应权限 ({0})。
 You don't have the required privilege.: 您没有相应的特权。
-You don't own any domain and don't have privilege to create domain.: 您不拥有任何域也没有创建域的特权。
+You don't own any domain and don't have privilege to create domain.: 您不拥有任何课程也没有创建课程的特权。
 You have not submitted any solutions for this problem: 您在该题下没有递交过任何解答
-You have permission to create problems for this domain.: 您有权限为此域创建题目。
-You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 您有未完成的创建域操作。您可以点击“继续”来完成创建。
+You have permission to create problems for this domain.: 您有权限为此课程创建题目。
+You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 您有未完成的创建课程操作。您可以点击“继续”来完成创建。
 You haven't attended this contest yet.: 您还没有参加本次比赛。
 You haven't claimed this homework yet.: 您还未认领过该作业。
 You may want to create a new role in 'Manage Role' page.: 您可能希望在右侧管理角色面板中添加一个新角色。
-You need to enter the invitation code to join the domain.: 您需要输入邀请码来加入此域。
+You need to enter the invitation code to join the domain.: 您需要输入邀请码来加入此课程。
 You received a system message, click here to view.: 您收到一条系统通知，点击查看。
 You're not logged in.: 您没有登录。
 You've already attended this contest.: 您已经参加本次比赛。
