@@ -1,45 +1,5 @@
 <div class="footer">
   <div class="row"><div class="columns">
-  {% if show_topics|default(true) %}
-    <div class="row footer__links">
-      <div class="medium-3 large-2 columns footer__category expandable">
-        <h1>
-          {{ _('Status') }}
-          <span class="expand-icon">
-            <span class="icon icon-expand_more"></span>
-          </span>
-        </h1>
-        <div class="footer__category__expander"><ul class="footer__category__list">
-          <li class="footer__category__item"><a href="{{ url('record_main') }}">{{ _('Judging Queue') }}</a></li>
-          <li class="footer__category__item"><a href="{{ url('status') }}">{{ _('Service Status') }}</a></li>
-        </ul></div>
-      </div>
-      <div class="medium-3 large-2 columns footer__category expandable">
-        <h1>
-          {{ _('Development') }}
-          <span class="expand-icon">
-            <span class="icon icon-expand_more"></span>
-          </span>
-        </h1>
-        <div class="footer__category__expander"><ul class="footer__category__list">
-          <li class="footer__category__item"><a href="https://github.com/hydro-dev/Hydro" target="_blank">{{ _('Open Source') }}</a></li>
-          <li class="footer__category__item"><a href="{{ url('api') }}">{{ _('API') }}</a></li>
-        </ul></div>
-      </div>
-      <div class="medium-3 large-2 columns footer__category expandable end">
-        <h1>
-          {{ _('Support') }}
-          <span class="expand-icon">
-            <span class="icon icon-expand_more"></span>
-          </span>
-        </h1>
-        <div class="footer__category__expander"><ul class="footer__category__list">
-          <li class="footer__category__item"><a href="{{ url('wiki_help') }}">{{ _('Help') }}</a></li>
-          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('QQ Group') }}</a></li>
-        </ul></div>
-      </div>
-    </div>
-  {% endif %}
     <div class="footer__extra-link clearfix">
       <div class="footer__extra-left">
         <ol class="clearfix">
@@ -84,6 +44,7 @@
           <!-- Prepare {{ handler.args.__prepareDone - handler.args.__prepare }}ms -->
           <!-- Method {{ handler.args.__methodDone - handler.args.__method }}ms -->
           <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a> {{ "Professional" if model.system.get('server.pro') else "Community" }}</li>
+          <li class="footer__extra-link-item">Modified by Netsain </li>
         </ol>
       </div>
     </div>
