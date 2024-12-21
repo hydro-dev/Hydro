@@ -53,6 +53,9 @@ class DomainEditHandler extends ManageHandler {
     async post(args) {
         if (args.operation) return;
         const $set = {};
+        const booleanKeys = args.booleanKeys || {};
+        delete args.booleanKeys;
+        for (const key in booleanKeys) if (!args[key]) $set[key] = false;
         for (const key in args) {
             if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
         }
