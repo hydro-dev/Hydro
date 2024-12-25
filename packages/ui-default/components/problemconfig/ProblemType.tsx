@@ -134,6 +134,17 @@ export default function ProblemType() {
             )}
           />
           <Tab
+            id="Communication"
+            title={i18n('problem_type.communication')}
+            panel={(
+              <div className="row">
+                <FormItem columns={6} label="Manager">
+                  <SingleFileSelect formKey="manager" />
+                </FormItem>
+              </div>
+            )}
+          />
+          <Tab
             id="submit_answer"
             title={i18n('problem_type.submit_answer')}
             panel={(

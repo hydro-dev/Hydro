@@ -145,33 +145,24 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     return ret;
 }
 
-export async function runPiped(execute0: Parameter, execute1: Parameter): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
+export async function runPiped(execute: Parameter[], pipeMapping: [number, number][]): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
         const body = {
-            cmd: [
-                proc(execute0),
-                proc(execute1),
-            ],
-            pipeMapping: [{
-                in: { index: 0, fd: 1 },
-                out: { index: 1, fd: 0 },
+            cmd: execute.map((exe) => proc(exe)),
+            pipeMapping: pipeMapping.map(([i, o]) => ({
+                in: { index: i, fd: 1 },
+                out: { index: o, fd: 0 },
                 proxy: true,
                 name: 'stdout',
                 max: 1024 * 1024 * size,
-            }, {
-                in: { index: 1, fd: 1 },
-                out: { index: 0, fd: 0 },
-                proxy: true,
-                name: 'stdout',
-                max: 1024 * 1024 * size,
-            }],
+            })),
         };
-        body.cmd[0].files[0] = null;
-        body.cmd[0].files[1] = null;
-        body.cmd[1].files[0] = null;
-        body.cmd[1].files[1] = null;
+        for (const cmd of body.cmd) {
+            cmd.files[0] = null;
+            cmd.files[1] = null;
+        }
         const id = callId++;
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
         res = await client.run(body);

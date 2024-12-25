@@ -11,7 +11,7 @@ function judgeCase(c: NormalizedCase) {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const [{
             code, signalled, time, memory,
-        }, resInteractor] = await runPiped([
+        }, resManager] = await runPiped([
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
@@ -42,16 +42,16 @@ function judgeCase(c: NormalizedCase) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > c.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-        } else if (detail && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code))) {
+        } else if (detail && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resManager.code))) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         } else {
-            const result = parse(resInteractor.stderr, c.score);
+            const result = parse(resManager.stderr, c.score);
             status = result.status;
             score = result.score;
             message = result.message;
-            if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
+            if (resManager.code && !(resManager.stderr || '').trim().length) message += ` (Manager exited with code ${resManager.code})`;
         }
         return {
             id: c.id,
@@ -67,9 +67,9 @@ function judgeCase(c: NormalizedCase) {
 
 export const judge = async (ctx: Context) => await runFlow(ctx, {
     compile: async () => {
-        [ctx.executeUser, ctx.executeInteractor] = await Promise.all([
+        [ctx.executeUser, ctx.executeManager] = await Promise.all([
             ctx.compile(ctx.lang, ctx.code),
-            ctx.compileLocalFile('interactor', ctx.config.interactor),
+            ctx.compileLocalFile('manager', ctx.config.manager),
         ]);
     },
     judgeCase,
