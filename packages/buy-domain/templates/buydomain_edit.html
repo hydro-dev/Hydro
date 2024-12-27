@@ -1,0 +1,63 @@
+{% import "components/form.html" as form with context %} {% extends
+"layout/basic.html" %} {% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__body">
+        <form method="post">
+          <div class="row">
+            <div class="medium-12 columns">
+              <label>
+                {{ _('Title') }}
+                <input
+                  name="title"
+                  placeholder="{{ _('title') }}"
+                  value="{{ ddoc.title|default('') }}"
+                  class="textbox"
+                  autofocus
+                />
+              </label>
+            </div>
+          </div>
+          {{ form.form_textarea({ columns:12, label:'Content', name:'content',
+          value:ddoc.content|default(''), hotkeys:'ctrl+enter:submit',
+          markdown:true, required:true, extra_style:'height: 500px',
+          extra_textarea_class:'auto-resize' }) }}
+          <div class="row">
+            <div class="columns">
+              <button
+                name="operation"
+                value="{{ 'update' if ddoc else 'create' }}"
+                data-default-submit
+                type="submit"
+                class="rounded primary button"
+              >
+                {{ _('Update') if ddoc else _('Create') }} (Ctrl+Enter)
+              </button>
+              {% if ddoc and (handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) or
+              handler.user.own(ddoc)) %}
+              <button
+                name="operation"
+                value="delete"
+                type="submit"
+                class="rounded button"
+              >
+                {{ _('Delete') }}
+              </button>
+              {% endif %}
+              <button
+                type="button"
+                class="rounded button"
+                onclick="window.history.go(-1)"
+              >
+                {{ _('Cancel') }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-3 columns">{% include 'components/md_hint.html' %}</div>
+</div>
+{% endblock %}
