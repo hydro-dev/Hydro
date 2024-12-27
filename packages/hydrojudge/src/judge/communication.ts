@@ -11,11 +11,8 @@ function judgeCase(c: NormalizedCase) {
         let managerArgs = '';
         const execute: Parameter[] = [{
             execute: ctx.executeManager.execute,
-            copyIn: {
-                in: c.input ? { src: c.input } : { content: '' },
-                out: c.output ? { src: c.output } : { content: '' },
-                ...ctx.executeManager.copyIn,
-            },
+            stdin: c.input ? { src: c.input } : { content: '' },
+            copyIn: ctx.executeManager.copyIn,
             time: c.time * 2,
             memory: c.memory * 2,
             env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
@@ -42,6 +39,7 @@ function judgeCase(c: NormalizedCase) {
         }
         execute[0].execute += managerArgs;
         const res = await runPiped(execute, pipeMapping);
+        console.info(res);
         const resManager = res[0];
         let time = 0;
         let memory = 0;

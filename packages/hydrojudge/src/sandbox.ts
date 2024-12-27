@@ -161,9 +161,9 @@ export async function runPiped(
                 ...pipe,
             })),
         };
-        for (const c of body.cmd) {
-            c.files[0] = null;
-            c.files[1] = null;
+        for (let i = 0; i < body.cmd.length; i++) {
+            if (pipeMapping.find((pipe) => pipe.out.index === i && pipe.out.fd === 0)) body.cmd[i].files[0] = null;
+            if (pipeMapping.find((pipe) => pipe.in.index === i && pipe.in.fd === 1)) body.cmd[i].files[1] = null;
         }
         const id = callId++;
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));

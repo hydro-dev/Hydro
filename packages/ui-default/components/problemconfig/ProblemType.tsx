@@ -134,7 +134,7 @@ export default function ProblemType() {
             )}
           />
           <Tab
-            id="Communication"
+            id="communication"
             title={i18n('problem_type.communication')}
             panel={(
               <div className="row">
