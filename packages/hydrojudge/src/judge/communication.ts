@@ -29,17 +29,18 @@ function judgeCase(c: NormalizedCase) {
                 processLimit: process_limit,
             });
             pipeMapping.push({
+                name: `sol2mgr[${i}]`,
                 in: { index: i + 1, fd: 1 },
                 out: { index: 0, fd: i * 2 + 3 },
             });
             pipeMapping.push({
+                name: `mgr2sol[${i}]`,
                 in: { index: 0, fd: i * 2 + 4 },
                 out: { index: i + 1, fd: 0 },
             });
         }
         execute[0].execute += managerArgs;
         const res = await runPiped(execute, pipeMapping);
-        console.info(res);
         const resManager = res[0];
         let time = 0;
         let memory = 0;
@@ -62,10 +63,10 @@ function judgeCase(c: NormalizedCase) {
             }
         }
         if (status === STATUS.STATUS_ACCEPTED) {
-            console.info(resManager.stdout, resManager.stderr);
-            score = 100;
-            // { status, score, message } = parseManagerMessage(resManager.stderr, c.score);
-            if (resManager.code && !(resManager.stderr || '').trim().length) message += ` (Manager exited with code ${resManager.code})`;
+            score = Math.floor(c.score * (+resManager.stdout || 0));
+            status = score === c.score ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
+            message = resManager.stderr;
+            if (resManager.code) message += ` (Manager exited with code ${resManager.code})`;
         }
         return {
             id: c.id,
