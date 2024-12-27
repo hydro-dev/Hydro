@@ -1,0 +1,69 @@
+{% import "components/nothing.html" as nothing with context %} {% import
+"components/user.html" as user with context %} {% import
+"components/paginator.html" as paginator with context %} {% extends
+"layout/basic.html" %} {% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      {% if not ddocs.length %} {{ nothing.render('no smquestion yet...') }} {%
+      else %}
+      <ol class="section__list discussion__list">
+        {%- for ddoc in ddocs -%}
+        <li class="section__list__item discussion__item">
+          <div class="media">
+            <div class="media__left">
+              <div class="discussion__replies numbox">
+                <div class="numbox__num large">
+                  {{ datetimeSpan(ddoc._id, false, 'D')|safe }}
+                </div>
+                <div class="numbox__text">
+                  {{ datetimeSpan(ddoc._id, false, 'YYYY-M')|safe }}
+                </div>
+              </div>
+            </div>
+            <div class="media__body top">
+              <h1 class="discussion__title">
+                <a
+                  href="{{ url('smquestion_detail', uid=udoc._id, did=ddoc._id, anchor=ddoc.updateAt.getTime()) }}"
+                  data-emoji-enabled
+                  >{{ ddoc['title'] }}</a
+                >
+              </h1>
+              <ul class="supplementary list">
+                <li>{{ _('{0} views').format(ddoc.views) }}</li>
+                <li>{{ datetimeSpan(ddoc.updateAt)|safe }}</li>
+              </ul>
+            </div>
+          </div>
+        </li>
+        {%- endfor -%}
+      </ol>
+      {% if page and dpcount %}{{ paginator.render(page, dpcount) }}{% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    <div class="section side">
+      {% if udoc.smquestionpic %}
+      <div class="discussion-node__bg {{ udoc.smquestionpic }}"></div>
+      {% endif %}
+      <div class="section__header">
+        <h1 class="section__title">
+          {{ _("{0}'s smquestion").format(udoc.uname) }}
+        </h1>
+      </div>
+      <div class="section__body">
+        {% if handler.user._id == udoc._id %}
+        <p>
+          <a
+            href="{{ url('smquestion_create', uid=udoc._id) }}"
+            class="expanded primary button"
+            >{{ _('Create a smquestion') }}</a
+          >
+        </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{
+  "name": "smquestion",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "fangjt",
+  "license": "MIT",
+  "private": true
+}
