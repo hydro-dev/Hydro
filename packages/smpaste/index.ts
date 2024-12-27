@@ -285,7 +285,7 @@ export async function apply(ctx: Context) {
     "UserDropdown",
     "smpaste_main",
     (h) => ({
-      icon: "book",
+      icon: "copy",
       displayName: "smpaste",
       uid: h.user._id.toString(),
     }),
