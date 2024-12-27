@@ -12,6 +12,7 @@ export default function ProblemType() {
   const Type = useSelector((state: RootState) => state.config.type);
   const checkerType = useSelector((state: RootState) => state.config.checker_type);
   const filename = useSelector((state: RootState) => state.config.filename);
+  const numProcesses = useSelector((state: RootState) => state.config.num_processes);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
   const [category, setCategory] = React.useState('');
@@ -140,6 +141,14 @@ export default function ProblemType() {
               <div className="row">
                 <FormItem columns={6} label="Manager">
                   <SingleFileSelect formKey="manager" />
+                </FormItem>
+                <FormItem columns={6} label="Number of Processes">
+                  <input
+                    defaultValue={numProcesses || 2}
+                    placeholder="2"
+                    onChange={(ev) => dispatch(({ type: 'CONFIG_FORM_UPDATE', key: 'num_processes', value: +ev.currentTarget.value }))}
+                    className="textbox"
+                  />
                 </FormItem>
               </div>
             )}
