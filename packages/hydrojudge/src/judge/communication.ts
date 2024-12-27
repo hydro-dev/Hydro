@@ -1,56 +1,72 @@
 import { STATUS } from '@hydrooj/utils/lib/status';
 import { runFlow } from '../flow';
-import { runPiped } from '../sandbox';
+import { Parameter, runPiped } from '../sandbox';
 import signals from '../signals';
-import { parse } from '../testlib';
 import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-        const [{
-            code, signalled, time, memory,
-        }, resManager] = await runPiped([
-            {
-                execute: ctx.executeUser.execute,
+        let managerArgs = '';
+        const execute: Parameter[] = [{
+            execute: ctx.executeManager.execute,
+            copyIn: {
+                in: c.input ? { src: c.input } : { content: '' },
+                out: c.output ? { src: c.output } : { content: '' },
+                ...ctx.executeManager.copyIn,
+            },
+            time: c.time * 2,
+            memory: c.memory * 2,
+            env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
+        }];
+        const pipeMapping = [];
+        for (let i = 0; i < ctx.config.num_processes; i++) {
+            managerArgs += ` /proc/self/fd/${i * 2 + 3} /proc/self/fd/${i * 2 + 4}`;
+            execute.push({
+                execute: `${ctx.executeUser.execute} ${i}`,
                 copyIn: ctx.executeUser.copyIn,
                 time: c.time,
                 memory: c.memory,
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
-            },
-            {
-                execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
-                copyIn: {
-                    in: c.input ? { src: c.input } : { content: '' },
-                    out: c.output ? { src: c.output } : { content: '' },
-                    ...ctx.executeInteractor.copyIn,
-                },
-                time: c.time * 2,
-                memory: c.memory * 2,
-                copyOut: ['/w/tout?'],
-                env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
-            },
-        ], [[0, 1], [1, 0]]);
-        // TODO handle tout (maybe pass to checker?)
-        let status: number;
+            });
+            pipeMapping.push({
+                in: { index: i + 1, fd: 1 },
+                out: { index: 0, fd: i * 2 + 3 },
+            });
+            pipeMapping.push({
+                in: { index: 0, fd: i * 2 + 4 },
+                out: { index: i + 1, fd: 0 },
+            });
+        }
+        execute[0].execute += managerArgs;
+        const res = await runPiped(execute, pipeMapping);
+        const resManager = res[0];
+        let time = 0;
+        let memory = 0;
         let score = 0;
-        let message: any = '';
+        let status = STATUS.STATUS_ACCEPTED;
+        let message: any;
         const detail = ctx.config.detail ?? true;
-        if (time > c.time) {
-            status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory > c.memory * 1024) {
-            status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-        } else if (detail && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resManager.code))) {
-            status = STATUS.STATUS_RUNTIME_ERROR;
-            if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [code] };
-        } else {
-            const result = parse(resManager.stderr, c.score);
-            status = result.status;
-            score = result.score;
-            message = result.message;
+        for (let i = 0; i < ctx.config.num_processes; i++) {
+            const result = res[i + 1];
+            time += result.time;
+            memory = Math.max(memory, result.memory);
+            if (result.time > c.time) status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
+            else if (result.memory > c.memory * 1024) status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
+            else if ((result.code && result.code !== 13 /* Broken Pipe */) || (result.code === 13 && !resManager.code)) {
+                status = STATUS.STATUS_RUNTIME_ERROR;
+                if (detail) {
+                    if (result.code < 32 && result.signalled) message = signals[result.code];
+                    else message = { message: 'Your program returned {0}.', params: [result.code] };
+                }
+            }
+        }
+        if (status === STATUS.STATUS_ACCEPTED) {
+            console.info(resManager.stdout, resManager.stderr);
+            score = 100;
+            // { status, score, message } = parseManagerMessage(resManager.stderr, c.score);
             if (resManager.code && !(resManager.stderr || '').trim().length) message += ` (Manager exited with code ${resManager.code})`;
         }
         return {

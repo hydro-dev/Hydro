@@ -32,7 +32,10 @@ function judgeCase(c: NormalizedCase) {
                 copyOut: ['/w/tout?'],
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             },
-        ], [[0, 1], [1, 0]]);
+        ], [
+            { in: { index: 0, fd: 1 }, out: { index: 1, fd: 0 } },
+            { in: { index: 1, fd: 1 }, out: { index: 0, fd: 0 } },
+        ]);
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;

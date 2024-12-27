@@ -4,12 +4,13 @@ import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
+import { Optional } from 'hydrooj';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
 import client from './sandbox/client';
 import {
-    Cmd, CopyIn, CopyInFile, SandboxResult, SandboxStatus,
+    Cmd, CopyIn, CopyInFile, PipeMap, SandboxResult, SandboxStatus,
 } from './sandbox/interface';
 import { cmd, parseMemoryMB } from './utils';
 
@@ -29,7 +30,7 @@ const statusMap: Map<SandboxStatus, number> = new Map([
     [SandboxStatus.Signalled, STATUS.STATUS_RUNTIME_ERROR],
 ]);
 
-interface Parameter {
+export interface Parameter {
     time?: number;
     stdin?: CopyInFile;
     execute?: string;
@@ -145,23 +146,24 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     return ret;
 }
 
-export async function runPiped(execute: Parameter[], pipeMapping: [number, number][]): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
+export async function runPiped(
+    execute: Parameter[], pipeMapping: Optional<PipeMap, 'proxy' | 'name' | 'max'>[],
+): Promise<SandboxAdaptedResult[]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
         const body = {
             cmd: execute.map((exe) => proc(exe)),
-            pipeMapping: pipeMapping.map(([i, o]) => ({
-                in: { index: i, fd: 1 },
-                out: { index: o, fd: 0 },
+            pipeMapping: pipeMapping.map((pipe) => ({
                 proxy: true,
                 name: 'stdout',
                 max: 1024 * 1024 * size,
+                ...pipe,
             })),
         };
-        for (const cmd of body.cmd) {
-            cmd.files[0] = null;
-            cmd.files[1] = null;
+        for (const c of body.cmd) {
+            c.files[0] = null;
+            c.files[1] = null;
         }
         const id = callId++;
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
@@ -172,7 +174,7 @@ export async function runPiped(execute: Parameter[], pipeMapping: [number, numbe
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    return await Promise.all(res.map((r) => adaptResult(r, {}))) as [SandboxAdaptedResult, SandboxAdaptedResult];
+    return await Promise.all(res.map((r) => adaptResult(r, {}))) as SandboxAdaptedResult[];
 }
 
 export async function del(fileId: string) {
