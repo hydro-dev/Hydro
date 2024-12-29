@@ -42,7 +42,9 @@
             data-star-action="?id={{ ddoc['_id'] }}"
             data-star="{{ _show }}"
           >
+	  <a style="color: balck" href="{{ url('homepage', domainId=ddoc['_id']) }}">
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})
+	    </a>
           </td>
           <td class="col--role">
             {{ dudict[ddoc._id].role|default('default') }}
