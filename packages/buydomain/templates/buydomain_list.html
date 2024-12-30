@@ -1,0 +1,62 @@
+{% extends "layout/home_base.html" %} {% block home_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Domains List') }}</h1>
+  </div>
+  <div class="section__body no-padding">
+    <table class="data-table">
+      <colgroup>
+        <col class="col--icon" />
+        <col class="col--name" />
+        <col class="col--role" />
+        <col class="col--action" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col--icon">&nbsp;</th>
+          <th class="col--name">{{ _('Name') }} ({{ _('ID') }})</th>
+          <th class="col--role">{{ _('My Role') }}</th>
+          <th class="col--action">{{ _('Action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for ddoc in ddocs -%}
+        <tr>
+          <td class="col--icon">
+            <img
+              src="{{ avatarUrl(ddoc.avatar, 32) }}"
+              width="32"
+              height="32"
+            />
+          </td>
+          {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
+          <td
+            class="col--name"
+            data-star-action="?id={{ ddoc['_id'] }}"
+            data-star="{{ _show }}"
+          >
+            {{ ddoc['name'] }} ({{ ddoc['_id'] }})
+          </td>
+
+          <td class="col--role">default</td>
+          <td class="col--action">
+            <!-- 
+              <a
+              class="typo-a"
+              href="{{ url('buydomain_pay', domainId=ddoc['_id']) }}"
+              >{{ _('Domain Buy') }}</a
+            >
+            -->
+            {% set joinUrl = '/d/'+ddoc['_id']+'/domain/join' %}
+            <a class="typo-a" href="{{ joinUrl }}">{{ _('Join') }}</a>
+            <a class="typo-a" href="{{ url('homepage', domainId=ddoc['_id']) }}"
+              >{{ _('Visit') }}</a
+            >
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
