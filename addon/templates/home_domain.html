@@ -7,6 +7,12 @@
       <a class="primary rounded button" href="{{ url('home_domain_create') }}"
         ><span class="icon icon-add"></span> {{ _('Create Domain') }}</a
       >
+      {% else %}
+      <a
+        class="primary rounded button"
+        href="{{ url('buydomain_list', uid=2) }}"
+        ><span class="icon icon-add"></span> {{ _('Buy Domain') }}</a
+      >
       {% endif %}
     </div>
   </div>
@@ -42,9 +48,12 @@
             data-star-action="?id={{ ddoc['_id'] }}"
             data-star="{{ _show }}"
           >
-	  <a style="color: balck" href="{{ url('homepage', domainId=ddoc['_id']) }}">
-            {{ ddoc['name'] }} ({{ ddoc['_id'] }})
-	    </a>
+            <a
+              style="color: balck"
+              href="{{ url('homepage', domainId=ddoc['_id']) }}"
+            >
+              {{ ddoc['name'] }} ({{ ddoc['_id'] }})
+            </a>
           </td>
           <td class="col--role">
             {{ dudict[ddoc._id].role|default('default') }}
