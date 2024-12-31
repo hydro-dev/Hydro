@@ -69,9 +69,7 @@
               >{{ _('Manage') }}</a
             >
             {% else %}
-            <a
-              class="typo-a"
-              href="{{ url('domain_exit', domainId=ddoc['_id']) }}"
+            <a class="typo-a" href="{{ url('domain_exit', did=ddoc['_id']) }}"
               >{{ _('Exit') }}</a
             >
             {% endif %}
