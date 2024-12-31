@@ -105,56 +105,15 @@ class BuydomainListHandler extends Handler {
   }
 }
 
-class DomainJoinHandler extends Handler {
-  joinSettings: any;
-  noCheckPermView = true;
-
-  async prepare() {
-    const r = await domain.getRoles(this.domain);
-    const roles = r.map((role) => role._id);
-    this.joinSettings = domain.getJoinSettings(this.domain, roles);
-    if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
-    if (this.user.role !== "default")
-      throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
-  }
-
-  @param("code", Types.Content, true)
-  async get(domainId: string, code: string) {
-    this.response.template = "domain_join.html";
-    this.response.body.joinSettings = this.joinSettings;
-    this.response.body.code = code;
-  }
-
-  @param("code", Types.Content, true)
-  async post(domainId: string, code: string) {
-    if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
-      if (this.joinSettings.code !== code) {
-        throw new InvalidJoinInvitationCodeError(this.domain._id);
-      }
-    }
-
-    await Promise.all([
-      domain.setUserRole(
-        this.domain._id,
-        this.user._id,
-        this.joinSettings.role
-      ),
-      OplogModel.log(this, "domain.join", {}),
-    ]);
-    this.response.redirect = this.url("home_domain", {
-      query: { notification: "Successfully joined domain." },
-    });
-  }
-}
-
 class DomainExitHandler extends Handler {
-  async get(domainId: string) {
+  @param("did", Types.String, true)
+  async get(domainId: string, did: string) {
     await Promise.all([
-      DomainModel.setUserRole(domainId.domainId, this.user._id, "guest"),
+      DomainModel.setUserRole(did, this.user._id, "default"),
       OplogModel.log(this, "domain.exit", {}),
     ]);
     this.response.redirect = this.url("home_domain", {
-      query: { notification: "Successfully Exited domain." },
+      query: { notification: "Successfully Exited domain." + did },
     });
   }
 }
@@ -164,6 +123,25 @@ class BuydomainDetailHandler extends Handler {}
 class BuydomainPayHandler extends Handler {}
 
 class BuydomainTryHandler extends Handler {}
+
+async function post(domainId: string, code: string) {
+  if (this.joinSettings.method === DomainModel.JOIN_METHOD_CODE) {
+    if (this.joinSettings.code !== code) {
+      throw new InvalidJoinInvitationCodeError(this.domain._id);
+    }
+  }
+  await Promise.all([
+    DomainModel.setUserRole(
+      this.domain._id,
+      this.user._id,
+      this.joinSettings.role
+    ),
+    OplogModel.log(this, "domain.join", {}),
+  ]);
+  this.response.redirect = this.url("home_domain", {
+    query: { notification: "Successfully joined domain." },
+  });
+}
 
 export async function apply(ctx: Context) {
   ctx.Route("buydomain_list", "/buydomain/list", BuydomainListHandler);
@@ -175,16 +153,9 @@ export async function apply(ctx: Context) {
   ctx.Route("buydomain_pay", "/buydomain/pay/:did/:uid", BuydomainPayHandler);
   ctx.Route("buydomain_try", "/buydomain/try/:did/:uid", BuydomainTryHandler);
 
-  // 覆盖
-  ctx.Route(
-    "domain_join",
-    "/domain/join",
-    DomainJoinHandler,
-    PRIV.PRIV_USER_PROFILE
-  );
   ctx.Route(
     "domain_exit",
-    "/domain/exit",
+    "/domain/exit/:did",
     DomainExitHandler,
     PRIV.PRIV_USER_PROFILE
   );
@@ -199,6 +170,12 @@ export async function apply(ctx: Context) {
     }),
     PRIV.PRIV_USER_PROFILE
   );
+
+  // 覆盖
+  ctx.withHandlerClass("DomainJoinHandler", (DomainJoinHandler) => {
+    // 修改 DomainJoinHandler 中的一个方法
+    DomainJoinHandler.prototype.post = post;
+  });
 
   ctx.i18n.load("zh", {
     buydomain_detail: "课程详情",
