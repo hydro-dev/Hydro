@@ -55,6 +55,7 @@ export const ProblemAdd = (name, args, icon = 'add', text = 'Create Problem') =>
 inject('Nav', 'homepage', { prefix: 'homepage' });
 inject('Nav', 'home_domain', { prefix: 'home_domain' });
 inject('Nav', 'problem_main', { prefix: 'problem' }, PRIV.PRIV_EDIT_SYSTEM);
+inject('Nav', 'homework_main', { prefix: 'homework' }, PERM.PERM_VIEW_HOMEWORK);
 inject('Nav', 'training_main', { prefix: 'training' }, PERM.PERM_VIEW_TRAINING);
 inject('Nav', 'contest_main', { prefix: 'contest' }, PERM.PERM_VIEW_CONTEST);
 inject('Nav', 'discussion_main', { prefix: 'discussion' }, PERM.PERM_VIEW_DISCUSSION);
