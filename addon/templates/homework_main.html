@@ -1,0 +1,68 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'docs', calendar) }}
+<div class="row">
+  <div class="medium-12 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('All Homeworks') }}</h1>
+        <div class="section__tools">
+          <span class="nojs--hide">
+            {{ _('View') }}:
+            <select class="inline compact select" name="homework_display">
+              <option value="list" selected>{{ _('List View') }}</option>
+            </select>
+          </span>
+        {% if groups.length %}
+          <form method="get" class="filter-form" name="filter-form">
+            {{ _('Show') }}:
+            <select class="inline compact select" name="group">
+              <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
+              {%- for g in groups -%}
+                <option value="{{ g }}"{% if group == g %} selected{% endif %}>{{ g }}</option>
+              {%- endfor -%}
+              {%- if not groups|length -%}
+                <option disabled>{{ _('No group available') }}</option>
+              {%- endif -%}
+            </select>
+            <button type="submit" class="compact button hasjs--hide">
+              {{ _('Search') }}
+            </button>
+          </form>
+        {% endif %}
+        {% if handler.user.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
+          <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
+        {% endif %}
+        </div>
+      </div>
+      <div class="section__body no-padding">
+      {% if not tdocs.length %}
+        {{ nothing.render('There is no homework so far ╰(*°▽°*)╯') }}
+      {% else %}
+        <ol class="section__list homework__list">
+        {%- for tdoc in tdocs -%}
+          <li class="section__list__item homework__item">
+            <div class="media">
+              <div class="media__left medium">
+                <div class="homework__date numbox">
+                  <div class="numbox__num large">{{ loop.index }}</div>
+                </div>
+              </div>
+              <div class="media__body medium">
+                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <ul class="supplementary list">
+                  <li>{{ _('Status') }}: {{ _(model.contest.statusText(tdoc)) }}</li>
+                </ul>
+              </div>
+            </div>
+          </li>
+        {%- endfor -%}
+        </ol>
+        {{ paginator.render(page, tpcount, add_qs=qs) }}
+        <div name="calendar_entry"></div>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
