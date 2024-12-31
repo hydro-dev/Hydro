@@ -40,7 +40,7 @@
         {{ nothing.render('There is no homework so far ╰(*°▽°*)╯') }}
       {% else %}
         <ol class="section__list homework__list">
-        {%- for tdoc in tdocs -%}
+        {%- for tdoc in tdocs | reverse -%}
           <li class="section__list__item homework__item">
             <div class="media">
               <div class="media__left medium">
