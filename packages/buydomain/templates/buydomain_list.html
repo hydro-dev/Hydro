@@ -7,16 +7,21 @@
   <div class="section__body no-padding">
     <table class="data-table">
       <colgroup>
-        <col class="col--icon" />
+        <col class="col--icon" style="width: 5%" />
         <col class="col--name" />
-        <col class="col--role" />
-        <col class="col--action" />
+        <col
+          class="col--role"
+          style="width: 15%; border-left: 1px solid gray"
+        />
+        <col class="col--action" style="width: 15%" />
       </colgroup>
       <thead>
         <tr>
           <th class="col--icon">&nbsp;</th>
           <th class="col--name">{{ _('Name') }} ({{ _('ID') }})</th>
-          <th class="col--role">{{ _('My Role') }}</th>
+          <th class="col--role" style="border-left: 1px solid gray">
+            {{ _('My Role') }}
+          </th>
           <th class="col--action">{{ _('Action') }}</th>
         </tr>
       </thead>
@@ -28,6 +33,7 @@
               src="{{ avatarUrl(ddoc.avatar, 32) }}"
               width="32"
               height="32"
+              style="border-radius: 50%"
             />
           </td>
           {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
@@ -39,14 +45,14 @@
               {{ ddoc['name'] }} ({{ ddoc['_id'] }})
             </a>
           </td>
-          <td class="col--role">
+          <td class="col--role" style="border-left: 1px solid gray">
             {{ dudict[ddoc._id].role|default('default') }}
           </td>
           <td class="col--action">
             <a class="typo-a" href="{{ url('homepage', domainId=ddoc['_id']) }}"
               >{{ _('Visit') }}</a
             >
-            {% set joinUrl = '/d/'+ddoc['_id']+'/domain/join' %}
+            &nbsp; {% set joinUrl = '/d/'+ddoc['_id']+'/domain/join' %}
             <a class="typo-a" href="{{ joinUrl }}">{{ _('Join') }}</a>
           </td>
         </tr>
