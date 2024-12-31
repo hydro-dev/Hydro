@@ -68,6 +68,12 @@
               href="{{ url('domain_dashboard', domainId=ddoc['_id']) }}"
               >{{ _('Manage') }}</a
             >
+            {% else %}
+            <a
+              class="typo-a"
+              href="{{ url('domain_exit', domainId=ddoc['_id']) }}"
+              >{{ _('Exit') }}</a
+            >
             {% endif %}
           </td>
         </tr>

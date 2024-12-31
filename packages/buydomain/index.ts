@@ -1,13 +1,15 @@
 import {
   _,
   Context,
-  DiscussionNotFoundError,
+  DomainJoinAlreadyMemberError,
+  DomainJoinForbiddenError,
+  InvalidJoinInvitationCodeError,
   DocumentModel,
+  OplogModel,
   Filter,
   Handler,
   NumberKeys,
   ObjectId,
-  OplogModel,
   paginate,
   param,
   PRIV,
@@ -15,7 +17,6 @@ import {
   UserModel,
   DomainModel,
 } from "hydrooj";
-import { requireSudo } from "../hydrooj/src/service/server";
 
 /*
   提供如下功能：
@@ -83,18 +84,17 @@ export class BuydomainModel {
 }
 
 class BuydomainListHandler extends Handler {
-  @param("uid", Types.Int)
   @param("page", Types.PositiveInt, true)
-  async get(uid: number, page = 1) {
-    // const [ddocs, dpcount] = await paginate(
+  async get(page = 1) {
+    // const [tddocs, dpcount] = await paginate(
     //   //DomainModel.getMulti({ owner: { $not: { $eq: uid } } }),
     //   DomainModel.getMulti(),
     //   page,
-    //   10
+    //   20
     // );
-
     const ddocs = await DomainModel.getMulti().toArray();
-    const dpcount = 1;
+    const dpcount = 0;
+
     // 过滤掉已经加入的domain， todo...
     this.response.template = "buydomain_list.html";
     this.response.body = {
@@ -105,6 +105,60 @@ class BuydomainListHandler extends Handler {
   }
 }
 
+class DomainJoinHandler extends Handler {
+  joinSettings: any;
+  noCheckPermView = true;
+
+  async prepare() {
+    const r = await domain.getRoles(this.domain);
+    const roles = r.map((role) => role._id);
+    this.joinSettings = domain.getJoinSettings(this.domain, roles);
+    if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
+    if (this.user.role !== "default")
+      throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
+  }
+
+  @param("code", Types.Content, true)
+  async get(domainId: string, code: string) {
+    this.response.template = "domain_join.html";
+    this.response.body.joinSettings = this.joinSettings;
+    this.response.body.code = code;
+  }
+
+  @param("code", Types.Content, true)
+  async post(domainId: string, code: string) {
+    if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
+      if (this.joinSettings.code !== code) {
+        throw new InvalidJoinInvitationCodeError(this.domain._id);
+      }
+    }
+
+    await Promise.all([
+      domain.setUserRole(
+        this.domain._id,
+        this.user._id,
+        this.joinSettings.role
+      ),
+      OplogModel.log(this, "domain.join", {}),
+    ]);
+    this.response.redirect = this.url("home_domain", {
+      query: { notification: "Successfully joined domain." },
+    });
+  }
+}
+
+class DomainExitHandler extends Handler {
+  async get(domainId: string) {
+    await Promise.all([
+      DomainModel.setUserRole(domainId.domainId, this.user._id, "guest"),
+      OplogModel.log(this, "domain.exit", {}),
+    ]);
+    this.response.redirect = this.url("home_domain", {
+      query: { notification: "Successfully Exited domain." },
+    });
+  }
+}
+
 class BuydomainDetailHandler extends Handler {}
 
 class BuydomainPayHandler extends Handler {}
@@ -112,7 +166,7 @@ class BuydomainPayHandler extends Handler {}
 class BuydomainTryHandler extends Handler {}
 
 export async function apply(ctx: Context) {
-  ctx.Route("buydomain_list", "/buydomain/list/:uid", BuydomainListHandler);
+  ctx.Route("buydomain_list", "/buydomain/list", BuydomainListHandler);
   ctx.Route(
     "buydomain_detail",
     "/buydomain/detail/:did/:uid",
@@ -120,6 +174,20 @@ export async function apply(ctx: Context) {
   );
   ctx.Route("buydomain_pay", "/buydomain/pay/:did/:uid", BuydomainPayHandler);
   ctx.Route("buydomain_try", "/buydomain/try/:did/:uid", BuydomainTryHandler);
+
+  // 覆盖
+  ctx.Route(
+    "domain_join",
+    "/domain/join",
+    DomainJoinHandler,
+    PRIV.PRIV_USER_PROFILE
+  );
+  ctx.Route(
+    "domain_exit",
+    "/domain/exit",
+    DomainExitHandler,
+    PRIV.PRIV_USER_PROFILE
+  );
 
   ctx.injectUI(
     "UserDropdown",

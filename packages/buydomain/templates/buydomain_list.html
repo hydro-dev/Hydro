@@ -2,27 +2,30 @@
 <div class="section">
   <div class="section__header">
     <h1 class="section__title">{{ _('Domains List') }}</h1>
+    <div class="section__tools"></div>
   </div>
   <div class="section__body no-padding">
     <table class="data-table">
       <colgroup>
-        <col class="col--icon" />
-        <col class="col--name" />
-        <col class="col--role" />
-        <col class="col--action" />
+        <col class="col--icon" style="width: 5%" />
+        <col class="col--name" style="text-align: left; width: auto" />
+        <col class="col--role" style="width: 15%" />
+        <col class="col--action" style="width: 15%" />
       </colgroup>
       <thead>
         <tr>
-          <th class="col--icon">&nbsp;</th>
-          <th class="col--name">{{ _('Name') }} ({{ _('ID') }})</th>
-          <th class="col--role">{{ _('My Role') }}</th>
-          <th class="col--action">{{ _('Action') }}</th>
+          <th class="col--icon" style="width: 5%">&nbsp;</th>
+          <th class="col--name" style="text-align: left; width: auto">
+            {{ _('Name') }} ({{ _('ID') }})
+          </th>
+          <th class="col--role" style="width: 15%">{{ _('My Role') }}</th>
+          <th class="col--action" style="width: 15%">{{ _('Action') }}</th>
         </tr>
       </thead>
       <tbody>
         {%- for ddoc in ddocs -%}
         <tr>
-          <td class="col--icon">
+          <td class="col--icon" style="width: 5%">
             <img
               src="{{ avatarUrl(ddoc.avatar, 32) }}"
               width="32"
@@ -30,28 +33,23 @@
             />
           </td>
           {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
-          <td
-            class="col--name"
-            data-star-action="?id={{ ddoc['_id'] }}"
-            data-star="{{ _show }}"
-          >
-            {{ ddoc['name'] }} ({{ ddoc['_id'] }})
-          </td>
-
-          <td class="col--role">default</td>
-          <td class="col--action">
-            <!-- 
-              <a
-              class="typo-a"
-              href="{{ url('buydomain_pay', domainId=ddoc['_id']) }}"
-              >{{ _('Domain Buy') }}</a
+          <td class="col--name" style="text-align: left; width: auto">
+            <a
+              style="color: balck"
+              href="{{ url('homepage', domainId=ddoc['_id']) }}"
             >
-            -->
-            {% set joinUrl = '/d/'+ddoc['_id']+'/domain/join' %}
-            <a class="typo-a" href="{{ joinUrl }}">{{ _('Join') }}</a>
+              {{ ddoc['name'] }} ({{ ddoc['_id'] }})
+            </a>
+          </td>
+          <td class="col--role" style="width: 15%">
+            {{ dudict[ddoc._id].role|default('default') }}
+          </td>
+          <td class="col--action" style="width: 15%">
             <a class="typo-a" href="{{ url('homepage', domainId=ddoc['_id']) }}"
               >{{ _('Visit') }}</a
             >
+            {% set joinUrl = '/d/'+ddoc['_id']+'/domain/join' %}
+            <a class="typo-a" href="{{ joinUrl }}">{{ _('Join') }}</a>
           </td>
         </tr>
         {%- endfor -%}
