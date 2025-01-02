@@ -1,6 +1,6 @@
-import fs from 'fs';
 import { resolve } from 'path';
 import cac from 'cac';
+import fs from 'fs-extra';
 import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';

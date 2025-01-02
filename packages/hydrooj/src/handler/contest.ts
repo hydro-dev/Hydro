@@ -1,6 +1,5 @@
 import AdmZip from 'adm-zip';
 import { stringify as toCSV } from 'csv-stringify/sync';
-import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';

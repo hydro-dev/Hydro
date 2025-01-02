@@ -1,5 +1,4 @@
 import assert from 'assert';
-import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
