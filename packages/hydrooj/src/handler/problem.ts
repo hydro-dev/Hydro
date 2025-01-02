@@ -705,13 +705,14 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Filename, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (!this.request.files.file) throw new ValidationError('file');
-        filename ||= this.request.files.file.originalFilename || String.random(16);
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
+        filename ||= file.originalFilename || String.random(16);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
             let zip: AdmZip;
             try {
-                zip = new AdmZip(this.request.files.file.filepath);
+                zip = new AdmZip(file.filepath);
             } catch (e) {
                 throw new ValidationError('zip', null, e.message);
             }

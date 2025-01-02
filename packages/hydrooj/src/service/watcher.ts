@@ -102,7 +102,7 @@ export default class Watcher extends Service {
             let hasUpdate = false;
             while (index < pending.length) {
                 const filename = pending[index];
-                const { children } = require.cache[filename];
+                const children = require.cache[filename]?.children || [];
                 let isDeclined = true;
                 let isAccepted = false;
                 for (const { filename } of children) {
