@@ -116,11 +116,20 @@ export default class Hydro implements Session {
         return target;
     }
 
-    async postFile(target: string, filename: string, file: string) {
-        await this.post('judge/upload')
-            .field('rid', target)
-            .field('name', filename)
-            .attach('file', fs.createReadStream(file));
+    async postFile(target: string, filename: string, file: string, retry = 3) {
+        try {
+            await this.post('judge/upload')
+                .field('rid', target)
+                .field('name', filename)
+                .attach('file', await fs.readFile(file));
+        } catch (e) {
+            if (!retry) {
+                log.error('PostFile Fail: %s %s %o', target, filename, e);
+                throw e;
+            }
+            await new Promise((resolve) => { setTimeout(resolve, 1000); });
+            await this.postFile(target, filename, file, retry - 1);
+        }
     }
 
     getLang(name: string, doThrow = true) {
