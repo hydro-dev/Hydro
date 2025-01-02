@@ -257,6 +257,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     pretest = false;
     tdoc: Tdoc;
     applyProjection = false;
+    noTemplate = false;
     queue: Map<string, () => Promise<any>> = new Map();
     throttleQueueClear: () => void;
 
@@ -267,9 +268,10 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     @param('pretest', Types.Boolean)
     @param('all', Types.Boolean)
     @param('allDomain', Types.Boolean)
+    @param('noTemplate', Types.Boolean, true)
     async prepare(
         domainId: string, tid?: ObjectId, pid?: string | number, uidOrName?: string,
-        status?: number, pretest = false, all = false, allDomain = false,
+        status?: number, pretest = false, all = false, allDomain = false, noTemplate = false,
     ) {
         if (tid) {
             this.tdoc = await contest.get(domainId, tid);
@@ -308,6 +310,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
             this.allDomain = true;
         }
+        this.noTemplate = noTemplate;
         this.throttleQueueClear = throttle(this.queueClear, 100, { trailing: true });
     }
 
@@ -346,8 +349,11 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
         if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
-        if (this.pretest) this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
-        else {
+        if (this.pretest) {
+            this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
+        } else if (this.noTemplate) {
+            this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc }));
+        } else {
             this.queueSend(rdoc._id.toHexString(), async () => ({
                 html: await this.renderHTML('record_main_tr.html', {
                     rdoc, udoc, pdoc, tdoc, allDomain: this.allDomain,
@@ -374,9 +380,11 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     disconnectTimeout: NodeJS.Timeout;
     throttleSend: any;
     applyProjection = false;
+    noTemplate = false;
 
     @param('rid', Types.ObjectId)
-    async prepare(domainId: string, rid: ObjectId) {
+    @param('noTemplate', Types.Boolean, true)
+    async prepare(domainId: string, rid: ObjectId, noTemplate = false) {
         const rdoc = await record.get(domainId, rid);
         if (!rdoc) return;
         if (rdoc.contest && ![record.RECORD_GENERATE, record.RECORD_PRETEST].some((i) => i.toHexString() === rdoc.contest.toHexString())) {
@@ -408,17 +416,22 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
         }
 
         this.pdoc = pdoc;
+        this.noTemplate = noTemplate;
         this.throttleSend = throttle(this.sendUpdate, 1000, { trailing: true });
         this.rid = rid.toString();
         this.onRecordChange(rdoc);
     }
 
     async sendUpdate(rdoc: RecordDoc) {
-        this.send({
-            status: rdoc.status,
-            status_html: await this.renderHTML('record_detail_status.html', { rdoc, pdoc: this.pdoc }),
-            summary_html: await this.renderHTML('record_detail_summary.html', { rdoc, pdoc: this.pdoc }),
-        });
+        if (this.noTemplate) {
+            this.send({ rdoc });
+        } else {
+            this.send({
+                status: rdoc.status,
+                status_html: await this.renderHTML('record_detail_status.html', { rdoc, pdoc: this.pdoc }),
+                summary_html: await this.renderHTML('record_detail_summary.html', { rdoc, pdoc: this.pdoc }),
+            });
+        }
     }
 
     @subscribe('record/change')
