@@ -1,0 +1,64 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="create" data-heading>{{ _('Create Domain') }}</h1>
+      </div>
+      <div class="section__body">
+        <blockquote class="note typo">
+          <p>{{ _('A domain ID cannot be changed after creation. It is supposed to be:') }}</p>
+          <ul>
+            <li>{{ _('Unique') }}</li>
+            <li>{{ _('At least 4 characters') }}</li>
+            <li>{{ _('Not wrapped with space') }}</li>
+            <li>{{ _('Not started with a number') }}</li>
+            <li>{{ _('Only A-Z, a-z, 0-9 and _ are accepted') }}</li>
+          </ul>
+        </blockquote>
+        <form method="post">
+            {{ form.form_text({
+                label:'ID',
+                name:'id',
+                autofocus:true,
+                required:true
+            }) }}
+            {{ form.form_text({
+                label:'Name',
+                name:'name',
+                required:true
+            }) }}
+            {{ form.form_textarea({
+                label:'Bulletin',
+                name:'bulletin',
+                markdown:true,
+                required:true
+            }) }}
+            {{ form.form_text({
+                label:'Avatar',
+                name:'avatar'
+            }) }}
+            
+            {{ form.form_checkbox({
+              columns:2,
+              label:'Show',
+              name:'show',
+              placeholder:_('Is Show?'),
+              value:tdoc.show|default(true),
+              row:false
+            }) }}
+          <div class="row"><div class="columns">
+            <button type="submit" class="rounded primary button">
+              {{ _('Create') }}
+            </button>
+            <button type="button" class="rounded button" onclick="window.history.go(-1)">
+              {{ _('Cancel') }}
+            </button>
+          </div></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

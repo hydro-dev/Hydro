@@ -1,0 +1,9 @@
+{
+    "name": "@hydrooj/login-with-wechat",
+    "version": "0.1.0",
+    "main": "index.ts",
+    "repository": "git@github.com:helloxm/Hydro-sm.git",
+    "author": "fang <fjt0327@163.com>",
+    "license": "AGPL-3.0-or-later",
+    "preferUnplugged": true
+}

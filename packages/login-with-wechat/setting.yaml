@@ -1,0 +1,15 @@
+id:
+    type: text
+    category: system
+    desc: Wechat OAuth AppID
+    name: id
+secret:
+    type: text
+    category: system
+    desc: Wechat OAuth Secret
+    name: secret
+proxy:
+    type: text
+    category: system
+    desc: Wechat OAuth Proxy
+    name: proxy
