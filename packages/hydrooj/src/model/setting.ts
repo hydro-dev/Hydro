@@ -203,6 +203,7 @@ AccountSetting(
 );
 
 DomainSetting(
+    Setting('setting_domain', 'hidden', false, 'boolean', 'Hidden'),
     Setting('setting_domain', 'name', 'New domain', 'text', 'name'),
     Setting('setting_domain', 'avatar', '', 'text', 'avatar', 'Will be used as the domain icon.'),
     Setting('setting_domain', 'share', '', 'text', 'Share problem with domain (* for any)'),
