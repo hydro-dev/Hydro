@@ -92,7 +92,8 @@ class BuydomainListHandler extends Handler {
     //   page,
     //   20
     // );
-    const ddocs = await DomainModel.getMulti().toArray();
+    
+    const ddocs = await DomainModel.getMulti({ hidden: false }).toArray();
     const dpcount = 0;
 
     // 过滤掉已经加入的domain， todo...
