@@ -1,4 +1,3 @@
-import { statSync } from 'fs-extra';
 import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import moment from 'moment-timezone';

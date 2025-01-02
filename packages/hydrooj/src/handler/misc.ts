@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import { Context } from '../context';
