@@ -323,6 +323,51 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+class SystemUserListHandler extends SystemHandler {
+    @requireSudo
+    async get() {
+        const defaultPriv = system.get('default.list');
+        const udocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }}).limit(1000).sort({ _id: 1 }).toArray();
+        //const banudocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
+        this.response.body = {
+            udocs: [...udocs],
+            defaultPriv,
+            Priv,
+        };
+        this.response.pjax = 'partials/manage_user_list.html';
+        this.response.template = 'manage_user_list.html';
+    }
+
+    @requireSudo
+    @param('uid', Types.Int)
+    async postSetBan(domainId: string, uid: number) {
+        const udoc = await user.getById(domainId, uid);
+        if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new CannotEditSuperAdminError();
+       
+        await user.setPriv(uid, 0); // 0: NONE 
+        this.ctx.broadcast('user/delcache', true);
+        
+        this.back();
+    }
+
+    @requireSudo
+    @param('uid', Types.Int)
+    async postSetDel(domainId: string, uid: number) {
+        const udoc = await user.getById(domainId, uid);
+        if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new CannotEditSuperAdminError();
+       
+        const tid = await ScheduleModel.add({
+            executeAfter: moment().add(7, 'days').toDate(),
+            type: 'script',
+            id: 'deleteUser',
+            args: { uid: uid },
+        });
+        await user.setById(uid, { del: tid });
+        this.response.template = 'user_delete_pending.html';
+    }
+
+}
+
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
@@ -331,5 +376,6 @@ export async function apply(ctx) {
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Route('manage_user_list', '/manage/userlist', SystemUserListHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }

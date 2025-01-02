@@ -1,0 +1,65 @@
+{% import "components/user.html" as user with context %}
+
+{% macro show_priv(upriv) %}
+{%- if upriv == 0 -%}
+  PRIV_NONE
+{%- elif upriv == -1 -%}
+  PRIV_ALL
+{%- else -%}
+  {%- for name, priv in Priv -%}
+    {%- if priv|bitand(upriv) and not priv|bitand(defaultPriv) -%}
+      <p class="priv_plus">+{{ name }}</p>
+    {%- elif priv|bitand(defaultPriv) and not priv|bitand(upriv) -%}
+      <p class="priv_minus">-{{ name }}</p>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+{% endmacro %}
+
+<tbody data-fragment-id="user_priv-tbody">
+  {%- for priv, gudocs in udocs|groupby('priv') -%}
+  {% set index = loop.index %}
+    {%- if gudocs|length > 50 -%}
+      <tr>
+        <td colspan="3" style="text-wrap: wrap;">
+          <div style="max-height: 300px; overflow-y: auto">
+            {%- for udoc in gudocs -%}
+              [{{udoc._id}}]{{ user.render_inline(udoc, avatar=false, badge=false) }}
+              <a name="set_priv" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('Edit') }}</a>&nbsp;&nbsp;&nbsp;
+            {%- endfor -%}
+        </td>
+        <td colspan="2">
+          {{ priv }}<br/>
+          {{ show_priv(priv) }}
+        </td>
+      </tr>
+    {%- else -%}
+      {%- for udoc in gudocs -%}
+      <tr data-uid="{{ udoc._id }}">
+        <td class="col--uid">
+          {{ index }}
+        </td>
+        <td class="col--user">
+          {{ user.render_inline(udoc, badge=false) }}({{ udoc._id }})
+        </td>
+        <td class="col--priv_info">
+          {{ show_priv(udoc.priv) }}
+        </td>
+        <td class="col--actions">
+          <form method="post">
+            <input type="hidden" name="operation" value="set_ban">
+            <button type="submit" class="primary rounded button"><span class="icon icon-refresh"></span> {{ _('ban') }}</button>
+          </form>
+          
+          <form method="post">
+            <input type="hidden" name="operation" value="set_sel">
+            <button type="submit" class="primary rounded button"><span class="icon icon-refresh"></span> {{ _('del') }}</button>
+          </form>
+          <a name="set_ban" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('ban') }}</a> ·
+          <a name="set_del" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('del') }}</a>
+        </td>
+      </tr>
+      {%- endfor -%}
+    {%- endif -%}
+  {%- endfor -%}
+</tbody>
