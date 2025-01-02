@@ -82,12 +82,12 @@ class FpsProblemImportHandler extends Handler {
     }
 
     async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
         const tasks = [];
         try {
-            const file = await fs.stat(this.request.files.file.filepath);
             if (file.size > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
-            const content = fs.readFileSync(this.request.files.file.filepath, 'utf-8');
+            const content = await fs.readFile(file.filepath, 'utf-8');
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {
@@ -95,7 +95,7 @@ class FpsProblemImportHandler extends Handler {
             console.log(e);
             let zip: AdmZip;
             try {
-                zip = new AdmZip(this.request.files.file.filepath);
+                zip = new AdmZip(file.filepath);
             } catch (err) {
                 throw new ValidationError('zip', null, err.message);
             }

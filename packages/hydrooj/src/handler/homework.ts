@@ -273,8 +273,7 @@ export class HomeworkFilesHandler extends Handler {
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
-        const f = statSync(file.filepath);
-        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
+        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + file.size;
         if (size >= system.get('limit.contest_files_size')) {
             throw new FileLimitExceededError('size');
         }
