@@ -41,12 +41,10 @@
             }) }}
             
             {{ form.form_checkbox({
-              columns:2,
-              label:'Show',
-              name:'show',
-              placeholder:_('Is Show?'),
-              value:tdoc.show|default(true),
-              row:false
+              label:'Hidden',
+              name:'hidden',
+              placeholder:_('Is Hidden?'),
+              value:false
             }) }}
           <div class="row"><div class="columns">
             <button type="submit" class="rounded primary button">

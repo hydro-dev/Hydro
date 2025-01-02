@@ -54,11 +54,6 @@
             >
               {{ ddoc['name'] }} ({{ ddoc['_id'] }})
             </a>
-            {% if handler.user.hasPriv(model.builtin.PRIV.PRIV_CREATE_DOMAIN) %}
-              {%- if ddoc['hidden'] -%}
-                <span class="text-orange">({{ _('Hidden') }})</span>
-              {%- endif -%}
-            {%- endif -%}
           </td>
           <td class="col--role">
             {{ dudict[ddoc._id].role|default('default') }}
@@ -72,10 +67,6 @@
               class="typo-a"
               href="{{ url('domain_dashboard', domainId=ddoc['_id']) }}"
               >{{ _('Manage') }}</a
-            >
-            {% else %}
-            <a class="typo-a" href="{{ url('domain_exit', did=ddoc['_id']) }}"
-              >{{ _('Exit') }}</a
             >
             {% endif %}
           </td>
