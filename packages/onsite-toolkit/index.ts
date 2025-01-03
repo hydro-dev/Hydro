@@ -62,7 +62,7 @@ export function apply(ctx: Context) {
                         problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
-                            name: `${t.unstar ? '⭐' : ''}${udict[t.uid].displayName || udict[t.uid].uname}`,
+                            name: `${t.unrank ? '⭐' : ''}${udict[t.uid].displayName || udict[t.uid].uname}`,
                             avatar: avatar(udict[t.uid].avatar),
                             institution: udict[t.uid].school || unknownSchool,
                         })),
