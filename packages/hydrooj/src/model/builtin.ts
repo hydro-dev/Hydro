@@ -274,8 +274,9 @@ export const LEVELS = [100, 90, 70, 55, 40, 30, 20, 10, 5, 2, 1];
 export const BUILTIN_ROLES = {
     guest: PERM.PERM_BASIC,
     default: PERM.PERM_DEFAULT,
-    teacher: PERM.PERM_TEACHER,
-    vip: PERM.PERM_VIP,
+    Free: PERM.PERM_FREE,
+    VIP: PERM.PERM_VIP,
+    Teacher: PERM.PERM_TEACHER,
     root: PERM.PERM_ALL,
 };
 
