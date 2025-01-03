@@ -308,7 +308,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 if (setting.langs[p]) dl.push(p);
                 baseLangs = dl;
             } else {
-                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
+                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote && !setting.langs[i].hidden);
             }
             const t = [];
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
