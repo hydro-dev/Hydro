@@ -342,9 +342,21 @@ class SystemUserListHandler extends SystemHandler {
     @param('uid', Types.Int)
     async postSetBan(domainId: string, uid: number) {
         const udoc = await user.getById(domainId, uid);
-        if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new CannotEditSuperAdminError();
+        if (udoc.priv === -1) throw new CannotEditSuperAdminError();
        
-        await user.setPriv(uid, 0); // 0: NONE 
+        await user.setPriv(uid, PRIV.PRIV_NONE); // 0: NONE 
+        this.ctx.broadcast('user/delcache', true);
+        
+        this.back();
+    }
+
+    @requireSudo
+    @param('uid', Types.Int)
+    async postSetOpen(domainId: string, uid: number) {
+        const udoc = await user.getById(domainId, uid);
+        if (udoc.priv === -1) throw new CannotEditSuperAdminError();
+       
+        await user.setPriv(uid, PRIV.PRIV_USER_PROFILE|PRIV.PRIV_SEND_MESSAGE); 
         this.ctx.broadcast('user/delcache', true);
         
         this.back();
@@ -354,7 +366,7 @@ class SystemUserListHandler extends SystemHandler {
     @param('uid', Types.Int)
     async postSetDel(domainId: string, uid: number) {
         const udoc = await user.getById(domainId, uid);
-        if (udoc.priv === -1 || priv === -1 || priv === allPriv) throw new CannotEditSuperAdminError();
+        if (udoc.priv === -1) throw new CannotEditSuperAdminError();
        
         const tid = await ScheduleModel.add({
             executeAfter: moment().add(7, 'days').toDate(),
