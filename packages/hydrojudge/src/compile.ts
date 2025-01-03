@@ -51,7 +51,7 @@ const testlibFile = {
 };
 
 export async function compileLocalFile(
-    src: string, type: 'checker' | 'validator' | 'interactor' | 'generator' | 'std',
+    src: string, type: 'checker' | 'validator' | 'interactor' | 'generator' | 'manager' | 'std',
     getLang, copyIn: CopyIn, withTestlib = true, next?: any,
 ) {
     const s = src.replace('@', '.').split('.');

@@ -20,6 +20,7 @@ export interface RuntimeContext {
     execute?: Execute;
     checker?: Execute;
     executeInteractor?: Execute;
+    executeManager?: Execute;
     executeUser?: Execute;
 
     _callbackAwait?: Promise<any>;

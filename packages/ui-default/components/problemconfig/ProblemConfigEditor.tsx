@@ -29,9 +29,9 @@ interface Props {
 const configKey = [
   'type', 'subType', 'target', 'score', 'time',
   'memory', 'filename', 'checker_type', 'checker', 'interactor',
-  'validator', 'user_extra_files', 'judge_extra_files', 'detail', 'outputs',
-  'redirect', 'cases', 'subtasks', 'langs', 'key',
-  'time_limit_rate', 'memory_limit_rate',
+  'manager', 'num_processes', 'validator', 'user_extra_files', 'judge_extra_files',
+  'detail', 'outputs', 'redirect', 'cases', 'subtasks',
+  'langs', 'key', 'time_limit_rate', 'memory_limit_rate',
 ];
 
 const subtasksKey = [
