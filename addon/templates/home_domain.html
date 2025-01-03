@@ -54,7 +54,7 @@
             >
               {{ ddoc['name'] }} ({{ ddoc['_id'] }})
             </a>
-            {% if handler.user.hasPriv(model.builtin.PRIV.PRIV_CREATE_DOMAIN) %}
+            {% if canManage[ddoc.id] %}
               {%- if ddoc['hidden'] -%}
                 <span class="text-orange">({{ _('Hidden') }})</span>
               {%- endif -%}

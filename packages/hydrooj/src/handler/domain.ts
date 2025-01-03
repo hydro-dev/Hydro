@@ -50,6 +50,7 @@ class DomainEditHandler extends ManageHandler {
         this.response.body = { current: this.domain, settings: DOMAIN_SETTINGS };
     }
 
+    @requireSudo
     async post(args) {
         if (args.operation) return;
         const $set = {};
@@ -187,7 +188,8 @@ class DomainRoleHandler extends ManageHandler {
         this.response.template = 'domain_role.html';
         this.response.body = { roles, domain: this.domain };
     }
-
+    
+    @requireSudo
     @param('role', Types.Role)
     async postAdd(domainId: string, role: string) {
         const roles = await domain.getRoles(this.domain);
@@ -265,12 +267,14 @@ class DomainUserGroupHandler extends ManageHandler {
         };
     }
 
+    @requireSudo
     @param('name', Types.Name)
     async postDel(domainId: string, name: string) {
         await user.delGroup(domainId, name);
         this.back();
     }
 
+    @requireSudo
     @param('name', Types.Name)
     @param('uids', Types.NumericArray)
     async postUpdate(domainId: string, name: string, uids: number[]) {
