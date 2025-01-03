@@ -68,5 +68,8 @@ manage_user_list: 用户列表
 ban: 禁用
 del: 删除
 open: 放行
+reset password: 重置密码
+User Detail: 用户详情
 Actions: 操作
 Join: 添加
+Add User: 添加用户

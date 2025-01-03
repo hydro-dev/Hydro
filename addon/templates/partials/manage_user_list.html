@@ -75,6 +75,15 @@
             <a >{{ _('del') }}</a>
             </button>
           </form>
+          <form method="post">
+            <input type="hidden" name="operation" value="reset_password">
+            <input type="hidden" name="uid" value="{{udoc._id}}">
+            </input>
+            <button type="submit" >
+            <a >{{ _('reset password') }}</a>
+            </button>
+          </form>
+          <a class="typo-a" href="{{ url('user_detail', uid=udoc['_id']) }}"> {{ _('User Detail') }} </a>
           </div>
         </td>
       </tr>

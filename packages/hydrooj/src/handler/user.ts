@@ -24,7 +24,7 @@ import * as system from '../model/system';
 import token from '../model/token';
 import user, { deleteUserCache } from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, requireSudo, Types,
 } from '../service/server';
 
 class UserLoginHandler extends Handler {
@@ -293,6 +293,32 @@ class UserRegisterWithCodeHandler extends Handler {
     }
 }
 
+class UserRegisterWithManualHandler extends Handler {
+    noCheckPermView = true;
+    tdoc: TokenDoc;
+
+    async get() {
+        this.tdoc = {};
+        this.tdoc.mail = `${String.random(12)}@hydro.local`;
+        this.tdoc.password = "asdfzxcv";
+        this.response.template = 'user_register_with_manual.html';
+        this.response.body = this.tdoc;
+    }
+
+    @requireSudo
+    @param('mail', Types.string)
+    @param('password', Types.Password)
+    @param('uname', Types.Username)
+    async post(
+        domainId: string, mail: string, password: string, 
+        uname: string
+    ) {
+        if (!Types.Username[1](uname)) throw new ValidationError('uname');
+        const uid = await user.create(mail, uname, password, undefined, this.request.ip);
+        this.response.redirect= this.url('user_register_with_manual', {query: {Notification: "add user successfully"}})
+    }
+}
+
 class UserLostPassHandler extends Handler {
     noCheckPermView = true;
 
@@ -512,6 +538,7 @@ export async function apply(ctx: Context) {
     ctx.Route('user_oauth_callback', '/oauth/:type/callback', OauthCallbackHandler);
     ctx.Route('user_register', '/register', UserRegisterHandler, PRIV.PRIV_REGISTER_USER);
     ctx.Route('user_register_with_code', '/register/:code', UserRegisterWithCodeHandler, PRIV.PRIV_REGISTER_USER);
+    ctx.Route('user_register_with_manual', '/reg/manual', UserRegisterWithManualHandler, PRIV.PRIV_EDIT_SYSTEM);
     ctx.Route('user_logout', '/logout', UserLogoutHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_lostpass', '/lostpass', UserLostPassHandler);
     ctx.Route('user_lostpass_with_code', '/lostpass/:code', UserLostPassWithCodeHandler);

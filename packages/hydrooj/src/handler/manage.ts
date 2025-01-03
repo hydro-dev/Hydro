@@ -347,7 +347,9 @@ class SystemUserListHandler extends SystemHandler {
         await user.setPriv(uid, PRIV.PRIV_NONE); // 0: NONE 
         this.ctx.broadcast('user/delcache', true);
         
-        this.back();
+        this.response.redirect = this.url("manage_user_list", {
+            query: { notification: "禁用成功" },
+        });
     }
 
     @requireSudo
@@ -356,10 +358,11 @@ class SystemUserListHandler extends SystemHandler {
         const udoc = await user.getById(domainId, uid);
         if (udoc.priv === -1) throw new CannotEditSuperAdminError();
        
-        await user.setPriv(uid, PRIV.PRIV_USER_PROFILE|PRIV.PRIV_SEND_MESSAGE); 
+        await user.setPriv(uid, PRIV.PRIV_USER_PROFILE|PRIV.PRIV_SEND_MESSAGE|PRIV.PRIV_REGISTER_USER); 
         this.ctx.broadcast('user/delcache', true);
-        
-        this.back();
+        this.response.redirect = this.url("manage_user_list", {
+            query: { notification: "已放行" },
+        });
     }
 
     @requireSudo
@@ -375,9 +378,24 @@ class SystemUserListHandler extends SystemHandler {
             args: { uid: uid },
         });
         await user.setById(uid, { del: tid });
-        this.response.template = 'user_delete_pending.html';
+        this.response.redirect = this.url("manage_user_list", {
+            query: { notification: "删除成功" },
+        });
     }
 
+    @requireSudo
+    @param('uid', Types.Int)
+    async postResetPassword(domainId: string, uid: number) {
+        const udoc = await user.getById(domainId, uid);
+        if (udoc.priv === -1) throw new CannotEditSuperAdminError();
+   
+        const password:string = "123456";
+        await user.setPassword(uid, password);
+            
+        this.response.redirect = this.url("manage_user_list", {
+            query: { notification: "reset passowrd: "+password },
+        });
+    }
 }
 
 export async function apply(ctx) {

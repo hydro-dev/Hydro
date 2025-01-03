@@ -46,11 +46,11 @@
 <div class="section">
   <div class="section__header">
     <h1 class="section__title">{{ _('All Users') }}</h1>
-    <!--
-    <div class="section__tools">
-      <button class="primary rounded button" name="select_user"><span class="icon icon-search"></span>{{ _('Select User') }}</button>
+      <div class="section__tools">
+      <a class="primary rounded button" href="{{ url('user_register_with_manual') }}"
+        ><span class="icon icon-add"></span> {{ _('Add User') }}</a
+      >
     </div>
-    -->
   </div>
   {{ noscript_note.render() }}
   <div class="section__body no-padding">
