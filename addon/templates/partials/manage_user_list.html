@@ -46,17 +46,36 @@
           {{ show_priv(udoc.priv) }}
         </td>
         <td class="col--actions">
+          <div  style="display: grid; ">
+            {% if  udoc.priv != 0 %}
           <form method="post">
             <input type="hidden" name="operation" value="set_ban">
-            <button type="submit" class="primary rounded button"><span class="icon icon-refresh"></span> {{ _('ban') }}</button>
+            <input type="hidden" name="uid" value="{{udoc._id}}">
+            </input>
+            <button type="submit">
+            <a style="color: red;">{{ _('ban') }}</a>
+            </button>
           </form>
+          {% else %}
+          <form method="post">
+            <input type="hidden" name="operation" value="set_open">
+            <input type="hidden" name="uid" value="{{udoc._id}}">
+            </input>
+            <button type="submit" >
+            <a style="color: green;">{{ _('open') }}</a>
+            </button>
+          </form>
+          {% endif %}
           
           <form method="post">
-            <input type="hidden" name="operation" value="set_sel">
-            <button type="submit" class="primary rounded button"><span class="icon icon-refresh"></span> {{ _('del') }}</button>
+            <input type="hidden" name="operation" value="set_del">
+            <input type="hidden" name="uid" value="{{udoc._id}}">
+            </input>
+            <button type="submit" >
+            <a >{{ _('del') }}</a>
+            </button>
           </form>
-          <a name="set_ban" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('ban') }}</a> ·
-          <a name="set_del" data-uid="{{ udoc._id }}" data-priv="{{ udoc.priv }}">{{ _('del') }}</a>
+          </div>
         </td>
       </tr>
       {%- endfor -%}
