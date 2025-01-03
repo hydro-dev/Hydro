@@ -180,10 +180,10 @@ export async function apply(ctx: Context) {
 
   ctx.i18n.load("zh", {
     buydomain_detail: "课程详情",
-    buydomain_main: "购买课程",
+    buydomain_main: "添加课程",
     buydomain_list: "所有课程",
     "Domain Detail": "详情",
-    "Domain Buy": "购买",
+    "Domain Buy": "添加",
     "Domain Try": "试用",
     "Domains List": "课程列表",
   });

@@ -11,15 +11,15 @@ Domain ID cannot be changed once the domain is created.: 在创建后不能更�
 domain_dashboard: 管理课程
 domain_discussion: 讨论节点
 domain_edit: 编辑课程资料
-domain_join: 加入课程
+domain_join: 添加课程
 domain_main: 首页
 domain_permission: 管理权限
 domain_role: 管理角色
 domain_user: 管理用户
 domain: 课程
-domain_join_applications: 加入课程申请
+domain_join_applications: 课程申请
 Edit description of this domain: 修改此课程描述
-Failed to join the domain. You are already a member.: 加入此课程失败，您已是该课程的学员。
+Failed to join the domain. You are already a member.: 添加此课程失败，您已是该课程的学员。
 Have ALL PERMISSIONS in this domain: 在此课程中拥有全部权限
 home_domain_account: 当前课程的设置
 home_domain_create: 创建课程
@@ -59,7 +59,7 @@ Destination Domain: 目标课程
 "Domain {0} not found.": "课程 {0} 不存在。"
 Domain ID: 课程 ID
 Domain Settings: 课程设置
-Buy Domain: 购买课程
+Buy Domain: 添加课程
 In half year: 半年后
 In 1 year: 1年后
 In 2 years: 2年后
@@ -68,3 +68,4 @@ manage_user_list: 用户列表
 ban: 禁用
 del: 删除
 Actions: 操作
+Join: 添加
