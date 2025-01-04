@@ -603,11 +603,14 @@ export class ProblemModel {
         if (options.delSource) await fs.remove(tmpdir);
     }
 
-    static async export(domainId: string, pidFilter?:string) {
+    static async export(domainId: string, pidFilter = '') {
         console.log('Exporting problems...');
         const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.export`);
         await fs.mkdir(tmpdir);
-        const pdocs = await ProblemModel.getMulti(domainId, pidFilter ? { pid: pidFilter } : {}, ProblemModel.PROJECTION_PUBLIC).toArray();
+        const pdocs = await ProblemModel.getMulti(
+            domainId, pidFilter ? { pid: new RegExp(pidFilter) } : {},
+            ProblemModel.PROJECTION_PUBLIC,
+        ).toArray();
         if (process.env.HYDRO_CLI) logger.info(`Exporting ${pdocs.length} problems`);
         for (const pdoc of pdocs) {
             if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid || (`P${pdoc.docId}`)} (${pdoc.title})`);

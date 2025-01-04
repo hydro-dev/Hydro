@@ -730,8 +730,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             files.push({
                 type,
                 name: filename,
-                size: statSync(this.request.files.file.filepath).size,
-                data: () => this.request.files.file.filepath,
+                size: file.size,
+                data: () => file.filepath,
             });
         }
         if (!this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
