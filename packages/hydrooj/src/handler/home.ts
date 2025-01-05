@@ -613,12 +613,15 @@ class HomeDomainHandler extends Handler {
         delete dudict[ddoc._id];
         continue;
       }
+
+      if (ddoc.hidden && !["root","Teacher"].includes(dudoc.role)) {
+        continue;
+      }
+
       const bManage: Boolean =
         udoc.hasPerm(PERM.PERM_EDIT_DOMAIN) ||
         udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
-      if (ddoc.hidden && !bManage) {
-        continue;
-      }
+
       ddocs.push(ddoc);
       canManage[ddoc._id] = bManage;
     }

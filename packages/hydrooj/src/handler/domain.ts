@@ -64,7 +64,7 @@ class DomainEditHandler extends ManageHandler {
             if (DOMAIN_SETTINGS_BY_KEY[key]) $set[key] = args[key];
         }
         await domain.edit(args.domainId, $set);
-        this.response.redirect = this.url('domain_dashboard',  { query: { notification: JSON.stringify($set) } });
+        this.response.redirect = this.url('domain_dashboard',  { query: { notification: "save successfully!" } });
     }
 }
 

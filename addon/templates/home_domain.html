@@ -54,11 +54,9 @@
             >
               {{ ddoc['name'] }} ({{ ddoc['_id'] }})
             </a>
-            {% if canManage[ddoc.id] %}
               {%- if ddoc['hidden'] -%}
                 <span class="text-orange">({{ _('Hidden') }})</span>
               {%- endif -%}
-            {%- endif -%}
           </td>
           <td class="col--role">
             {{ dudict[ddoc._id].role|default('default') }}
