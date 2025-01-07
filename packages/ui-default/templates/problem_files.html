@@ -11,6 +11,8 @@
             <a href="{{ url('problem_config', pid=pdoc.docId) }}" class="primary rounded button">{{ _('Config') }}</a>
             <button class="primary rounded button" name="create_testdata">{{ _('Create') }}</button>
             <button class="primary rounded button" name="upload_testdata">{{ _('Upload') }}</button>
+          {% else %}
+            <a href="{{ url('problem_detail', domainId=pdoc.reference.domainId, pid=pdoc.reference.pid) }}" class="primary rounded button">{{ _('Source') }}</a>
           {% endif %}
         </div>
       </div>
