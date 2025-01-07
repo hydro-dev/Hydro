@@ -91,12 +91,17 @@ class HomeworkDetailHandler extends Handler {
             page,
             'discussion',
         );
+	let qrcode = {}
+	if (this.tdoc.maintainer && this.tdoc.maintainer != this.user._id) {
+		const udoc = await user.getById(domainId, this.tdoc.maintainer);
+		qrcode.url = udoc.key.qrcodeurl;
+	}
         const uids = ddocs.map((ddoc) => ddoc.owner);
         uids.push(this.tdoc.owner);
         const udict = await user.getList(domainId, uids);
         this.response.template = 'homework_detail.html';
         this.response.body = {
-            tdoc: this.tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
+            tdoc: this.tdoc, tsdoc, udict, ddocs, page, dpcount, dcount, qrcode
         };
         this.response.body.tdoc.content = this.response.body.tdoc.content
             .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
@@ -150,10 +155,10 @@ class HomeworkEditHandler extends Handler {
             : 1;
         const beginAt = tid
             ? moment(tdoc.beginAt).tz(this.user.timeZone)
-            : moment().add(1, 'day').tz(this.user.timeZone).hour(0).minute(0).millisecond(0);
+            : moment().add(0, 'day').tz(this.user.timeZone).hour(0).minute(0).millisecond(0);
         const penaltySince = tid
             ? moment(tdoc.penaltySince).tz(this.user.timeZone)
-            : beginAt.clone().add(7, 'days').tz(this.user.timeZone).hour(23).minute(59).millisecond(0);
+            : moment("2099-12-31 00:00:00").tz(this.user.timeZone).hour(23).minute(59).millisecond(0);
         this.response.template = 'homework_edit.html';
         this.response.body = {
             tdoc,
