@@ -335,15 +335,15 @@ class DomainSearchHandler extends Handler {
 
 export async function apply(ctx: Context) {
     ctx.Route('ranking', '/ranking', DomainRankHandler, PERM.PERM_VIEW_RANKING);
-    ctx.Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
-    ctx.Route('domain_edit', '/domain/edit', DomainEditHandler);
-    ctx.Route('domain_user', '/domain/user', DomainUserHandler);
-    ctx.Route('domain_permission', '/domain/permission', DomainPermissionHandler);
-    ctx.Route('domain_role', '/domain/role', DomainRoleHandler);
-    ctx.Route('domain_group', '/domain/group', DomainUserGroupHandler);
-    ctx.Route('domain_join_applications', '/domain/join_applications', DomainJoinApplicationsHandler);
-    ctx.Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('domain_dashboard', '/course/dashboard', DomainDashboardHandler);
+    ctx.Route('domain_edit', '/course/edit', DomainEditHandler);
+    ctx.Route('domain_user', '/course/user', DomainUserHandler);
+    ctx.Route('domain_permission', '/course/permission', DomainPermissionHandler);
+    ctx.Route('domain_role', '/course/role', DomainRoleHandler);
+    ctx.Route('domain_group', '/course/group', DomainUserGroupHandler);
+    ctx.Route('domain_join_applications', '/course/join_applications', DomainJoinApplicationsHandler);
+    ctx.Route('domain_join', '/course/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
+    ctx.Route('domain_search', '/course/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
     ctx.inject(['api'], ({ api }) => {
         api.value('GroupInfo', [
             ['name', 'String!'],

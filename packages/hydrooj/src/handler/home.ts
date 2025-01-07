@@ -498,7 +498,7 @@ function set(s: Setting, key: string, value: any) {
 }
 
 class HomeSettingsHandler extends Handler {
-  @param("category", Types.Range(["preference", "account", "domain"]))
+  @param("category", Types.Range(["preference", "account", "course"]))
   async get({}, category: string) {
     this.response.template = "home_settings.html";
     this.response.body = {
@@ -510,7 +510,7 @@ class HomeSettingsHandler extends Handler {
       this.response.body.settings = setting.PREFERENCE_SETTINGS;
     } else if (category === "account") {
       this.response.body.settings = setting.ACCOUNT_SETTINGS;
-    } else if (category === "domain") {
+    } else if (category === "course") {
       this.response.body.settings = setting.DOMAIN_USER_SETTINGS;
     } else throw new NotFoundError(category);
   }
@@ -520,11 +520,11 @@ class HomeSettingsHandler extends Handler {
     const booleanKeys = args.booleanKeys || {};
     delete args.booleanKeys;
     const setter =
-      args.category === "domain"
+      args.category === "course"
         ? (s) => domain.setUserInDomain(args.domainId, this.user._id, s)
         : (s) => user.setById(this.user._id, s);
     const settings =
-      args.category === "domain"
+      args.category === "course"
         ? setting.DOMAIN_USER_SETTINGS_BY_KEY
         : setting.SETTINGS_BY_KEY;
     for (const key in args) {
@@ -790,13 +790,13 @@ export function apply(ctx: Context) {
   );
   ctx.Route(
     "home_domain",
-    "/home/domain",
+    "/home/course",
     HomeDomainHandler,
     PRIV.PRIV_USER_PROFILE
   );
   ctx.Route(
     "home_domain_create",
-    "/home/domain/create",
+    "/home/course/create",
     HomeDomainCreateHandler,
     PRIV.PRIV_CREATE_DOMAIN
   );
