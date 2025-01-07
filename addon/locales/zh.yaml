@@ -73,36 +73,36 @@ User Detail: 用户详情
 Actions: 操作
 Join: 添加
 Add User: 添加用户
-Claim homework: 认领课时
+Claim homework: 认领作业
 Create homework: 创建课时
 Edit any homework: 修改任意的课时
 Edit own homework: 修改自己的课时
 homework_create: 创建课时
-homework_detail_problem_submit: 递交课时题目
+homework_detail_problem_submit: 递交作业题目
 homework_edit: 编辑课时
 homework_main: 课时
-homework_scoreboard: 课时成绩表
-homework_status: 课时成绩表
+homework_scoreboard: 作业成绩表
+homework_status: 作业成绩表
 In following homework: 在以下课时中
 perm_homework: 课时
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 课时已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
-There is no homework so far ╰(*°▽°*)╯: 目前还没有课时 ╰(*°▽°*)╯
-This homework is not open and you cannot view problems.: 该课时还未到开放时间，您无法查看课时题目。
-This homework is not open.: 该课时还未开放递交。
-View hidden homework submission status and scoreboard: 查看隐藏的课时递交状态和成绩表
-View homework scoreboard: 查看课时成绩表
-View homework: 查看课时
+There is no homework so far ╰(*°▽°*)╯: 目前还没有安排上课 ╰(*°▽°*)╯
+This homework is not open and you cannot view problems.: 该作业还未到开放时间，您无法查看作业题目。
+This homework is not open.: 该作业还未开放递交。
+View hidden homework submission status and scoreboard: 查看隐藏的作业递交状态和成绩表
+View homework scoreboard: 查看作业成绩表
 You cannot submit for this problem because the homework's deadline is due.: 课时已超过截止时间，您无法递交本题目。
-You haven't claimed this homework yet.: 您还未认领过该课时。
-You've already claimed this homework.: 您已认领过该课时。
+You haven't claimed this homework yet.: 您还未认领过该作业。
+You've already claimed this homework.: 您已认领过该作业。
 All Homeworks: 所有课时
-Claim Homework: 认领课时
+Claim Homework: 认领作业
 Create Homework: 创建课时
 Edit Homework: 编辑课时
 Homework Introduction: 课时介绍
 Homework Maintainer: 课时管理员
-Homework scoreboard is not visible.: 目前无法查看课时成绩表。
+Homework scoreboard is not visible.: 目前无法查看作业成绩表。
 Homework: 课时
-Login to Claim Homework: 登录后认领课时
-No Permission to Claim Homework: 您没有权限认领课时
-View Homework: 查看课时
+Homework2: 作业
+Login to Claim Homework: 登录后认领作业
+No Permission to Claim Homework: 您没有权限认领作业
+View Homework: 查看作业
