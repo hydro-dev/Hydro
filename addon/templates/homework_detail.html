@@ -1,0 +1,100 @@
+{% extends "layout/basic.html" %}
+{% import "components/record.html" as record with context %}
+{% import "components/problem.html" as problem with context %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Homework Introduction') }}</h1>
+      </div>
+      <div class="section__body typo richmedia">
+        {{ tdoc['content']|markdown|safe }}
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Homework2') }}</h1>
+    	{% if not tsdoc.attend and not model.contest.isDone(tdoc) %}
+	<div class="section__tools">
+	{% if handler.user.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <form action="{{ url('homework_detail', tid=tdoc.docId) }}" method="POST">
+          <input type="hidden" name="operation" value="attend">
+          <button class="menu__link" type="submit">
+            <span class="icon icon-add"></span> {{ _('Claim Homework') }}
+          </button>
+        </form>
+    	{% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <a class="menu__link" href="javascript:showSignInDialog()">
+          <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
+        </a>
+    	{% else %}
+        <a class="menu__link disabled" href="javascript:;">
+          <span class="icon icon-add"></span> {{ _('No Permission to Claim Homework') }}
+        </a>
+    	{% endif %}
+	</div>
+    	{% endif %}
+      </div>
+    {% if pdict %}
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <colgroup>
+          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+            <col class="col--status">
+            <col class="col--submit-at">
+          {% endif %}
+            <col class="col--problem">
+          </colgroup>
+          <thead>
+            <tr>
+            {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+              <th class="col--status record-status--border">{{ _('Status') }}</th>
+              <th class="col--submit-at">{{ _('Last Submit At') }}</th>
+            {% endif %}
+              <th class="col--problem">{{ _('Problem') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% set isAdmin = handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD) %}
+          {% set ntdoc = model.contest.isDone(tdoc) or (tsdoc.attend and not model.contest.isNotStarted(tdoc)) %}
+          {%- for pid in tdoc.pids -%}
+            <tr>
+              {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+                {% if psdict[pid] and psdict[pid].rid %}
+                  {% set rdoc = rdict[psdict[pid].rid] %}
+                  {% if model.contest.canShowSelfRecord.call(handler, tdoc) %}
+                    {{ record.render_status_td(rdoc) }}
+                  {% else %}
+                    <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
+                  {% endif %}
+                  <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
+                {% else %}
+                  <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
+                  <td class="col--submit-at">-</td>
+                {% endif %}
+              {% endif %}
+              <td class="col--problem col--problem-name">
+                {% if isAdmin and not ntdoc %}
+                  {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false) }}
+                {% else %}
+                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                {% endif %}
+              </td>
+            </tr>
+          {%- endfor -%}
+          </tbody>
+        </table>
+      </div>
+    {% elif tsdoc.attend %}
+      {{ nothing.render('This homework is not open and you cannot view problems.') }}
+    {% else %}
+      {{ nothing.render('Please claim the assignment to see the problems.') }}
+    {% endif %}
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/homework_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}
