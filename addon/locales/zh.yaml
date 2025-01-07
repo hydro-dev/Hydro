@@ -1,75 +1,33 @@
-__id: zh
-__langname: 简体中文
-"{0} is a moderator of this domain.": "{}是本课程的管理者之一。"
-"A domain ID cannot be changed after creation. It is supposed to be:": "创建后将无法更改 ID。ID 必须满足以下条件："
-"Role {1} already exists in domain {0}.": "课程 {0} 中已存在角色 {1}。"
-Any user is allowed to join this domain with an invitation code: 任意用户都可以通过邀请码加入此课程
-Any user is allowed to join this domain: 任意用户都可以加入此课程
-By clicking the button, you will become a member of the domain {0}.: 点击按钮，您将成为课程 {0} 的成员。
-current domain: 当前课程
-Domain ID cannot be changed once the domain is created.: 在创建后不能更改 ID。
-domain_dashboard: 管理课程
-domain_discussion: 讨论节点
-domain_edit: 编辑课程资料
-domain_join: 添加课程
-domain_main: 首页
-domain_permission: 管理权限
-domain_role: 管理角色
-domain_user: 管理用户
-domain: 课程
-domain_join_applications: 课程申请
-Edit description of this domain: 修改此课程描述
-Failed to join the domain. You are already a member.: 添加此课程失败，您已是该课程的学员。
-Have ALL PERMISSIONS in this domain: 在此课程中拥有全部权限
-home_domain_account: 当前课程的设置
-home_domain_create: 创建课程
-home_domain: 我的课程
-No user is allowed to join this domain: 没有用户可以自助加入此课程
-Selected users have been removed from the domain.: 所选用户已从此课程中移除。
-setting_info_domain: 个人信息
-Sorry, there are no users in this domain.: 对不起，此课程中没有用户。
-The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此课程的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
-The role to assign when user joining the domain.: 用户加入此课程时分配的角色。
-The user is already a member of the domain.: 该用户已是课程的学员。
-User can join this domain by visiting the following URL: 用户可以访问此链接来加入此课程
-User will no longer be allowed to join the domain after expiration.: 过期后，用户将不能加入此课程。
-Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此课程中移除。
-Valid for registered users who are not members of the domain: 对课程外注册用户有效
-View this domain: 查看此课程
-What is domain?: 什么是课程?
-What's domain?: 什么是课程？
-Will be used as the domain icon.: 将被用作系统图标。
-With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以通过这个功能将某己课程下您能查看的题目复制到其它课程中，题目的标题、描述、标签与分类将被复制过来。但是测试数据不会被直接复制。
-You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该课程，链接无效或已过期。
-You cannot visit this domain.: 您不能访问此课程。
-You don't have the required permission ({0}) in this domain.: 您在该课程中无相应权限 ({0})。
-You don't own any domain and don't have privilege to create domain.: 您不拥有任何课程也没有创建课程的特权。
-You have permission to create problems for this domain.: 您有权限为此课程创建题目。
-You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 您有未完成的创建课程操作。您可以点击“继续”来完成创建。
-You need to enter the invitation code to join the domain.: 您需要输入邀请码来加入此课程。
-Create Domain: 创建课程
-Delete Domain: 删除课程
-Edit domain settings: 编辑课程设置
-setting_domain: 课程设置
-Edit Domain: 编辑课程
-My Domains: 我的课程
-Destination Domain: 目标课程
-"Domain {0} already exists.": "课程 {0} 已经存在。"
-"Domain {0} is bulit-in and cannot be modified.": "课程 {0} 为内置，不可修改。"
-"Domain {0} not found.": "课程 {0} 不存在。"
-Domain ID: 课程 ID
-Domain Settings: 课程设置
-Buy Domain: 添加课程
-In half year: 半年后
-In 1 year: 1年后
-In 2 years: 2年后
-Is Hidden?: 隐藏本课程？
-manage_user_list: 用户列表
-ban: 禁用
-del: 删除
-open: 放行
-reset password: 重置密码
-User Detail: 用户详情
-Actions: 操作
-Join: 添加
-Add User: 添加用户
+Claim homework: 认领课时
+Create homework: 创建课时
+Edit any homework: 修改任意的课时
+Edit own homework: 修改自己的课时
+homework_create: 创建课时
+homework_detail_problem_submit: 递交课时题目
+homework_edit: 编辑课时
+homework_main: 课时
+homework_scoreboard: 课时成绩表
+homework_status: 课时成绩表
+In following homework: 在以下课时中
+perm_homework: 课时
+The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 课时已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
+There is no homework so far ╰(*°▽°*)╯: 目前还没有课时 ╰(*°▽°*)╯
+This homework is not open and you cannot view problems.: 该课时还未到开放时间，您无法查看课时题目。
+This homework is not open.: 该课时还未开放递交。
+View hidden homework submission status and scoreboard: 查看隐藏的课时递交状态和成绩表
+View homework scoreboard: 查看课时成绩表
+View homework: 查看课时
+You cannot submit for this problem because the homework's deadline is due.: 课时已超过截止时间，您无法递交本题目。
+You haven't claimed this homework yet.: 您还未认领过该课时。
+You've already claimed this homework.: 您已认领过该课时。
+All Homeworks: 所有课时
+Claim Homework: 认领课时
+Create Homework: 创建课时
+Edit Homework: 编辑课时
+Homework Introduction: 课时介绍
+Homework Maintainer: 课时管理员
+Homework scoreboard is not visible.: 目前无法查看课时成绩表。
+Homework: 课时
+Login to Claim Homework: 登录后认领课时
+No Permission to Claim Homework: 您没有权限认领课时
+View Homework: 查看课时
