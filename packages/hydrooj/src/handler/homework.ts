@@ -298,15 +298,15 @@ export class HomeworkFilesHandler extends Handler {
 }
 
 export async function apply(ctx) {
-    ctx.Route('homework_main', '/homework', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_create', '/homework/create', HomeworkEditHandler);
-    ctx.Route('homework_detail', '/homework/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
-    ctx.Route('homework_files', '/homework/:tid/file', HomeworkFilesHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_file_download', '/homework/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_main', '/lession', HomeworkMainHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_create', '/lession/create', HomeworkEditHandler);
+    ctx.Route('homework_detail', '/lession/:tid', HomeworkDetailHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_code', '/lession/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_edit', '/lession/:tid/edit', HomeworkEditHandler);
+    ctx.Route('homework_files', '/lession/:tid/file', HomeworkFilesHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_file_download', '/lession/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
     ctx.inject(['scoreboard'], ({ Route }) => {
-        Route('homework_scoreboard', '/homework/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
-        Route('homework_scoreboard_view', '/homework/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
+        Route('homework_scoreboard', '/lession/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
+        Route('homework_scoreboard_view', '/lession/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
     });
 }
