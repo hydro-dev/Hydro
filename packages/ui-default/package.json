@@ -122,6 +122,7 @@
     "webpackbar": "^7.0.0"
   },
   "dependencies": {
+    "@liradb2000/markdown-it-mermaid": "^0.4.4",
     "ansi_up": "^6.0.2",
     "cssfilter": "^0.0.11",
     "esbuild": "0.24.0",
@@ -138,6 +139,7 @@
     "markdown-it-mark": "^4.0.0",
     "markdown-it-merge-cells": "^2.0.0",
     "markdown-it-table-of-contents": "^0.8.0",
+    "mermaid": "^11.4.1",
     "nunjucks": "^3.2.4",
     "schemastery-jsonschema": "^1.1.0",
     "streamsaver": "^2.0.6",

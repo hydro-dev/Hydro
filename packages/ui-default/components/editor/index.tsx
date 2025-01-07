@@ -193,7 +193,7 @@ export default class Editor extends DOMAttachedObject {
           // 'link',
           // 'image',
           // 'table',
-          'mermaid',
+          // 'mermaid',
           // 'katex',
           // '-',
           // 'revoke',

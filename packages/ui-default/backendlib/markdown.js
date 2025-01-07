@@ -25,6 +25,7 @@ const MergeCells = require('markdown-it-merge-cells');
 const { Media } = require('./markdown-it-media');
 const { default: Katex } = require('./markdown-it-katex');
 const { xssProtector } = require('./markdown-it-xss');
+const Mermaid = require('@liradb2000/markdown-it-mermaid').default;
 
 class Markdown extends MarkdownIt {
   constructor() {
@@ -42,6 +43,7 @@ class Markdown extends MarkdownIt {
     this.use(Katex);
     this.use(MergeCells);
     this.use(xssProtector);
+    //this.use(Mermaid);
   }
 }
 
