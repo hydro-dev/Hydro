@@ -1,37 +1,38 @@
 {% import "components/user.html" as user with context %} {% import
 "components/homework.html" as homework with context %}
 <div class="section side">
-  {% if page_name != 'homework_detail' %}
   <a
     class="contest-sidebar__bg"
     href="{{ url('homework_detail', tid=tdoc.docId) }}"
   >
     <div class="section__body">
       <h1>{{ tdoc['title'] }}</h1>
+      {% if page_name != 'homework_detail' %}
       <div class="contest-sidebar__status">
         {% if tsdoc.attend %}
         <span class="icon icon-check"></span> {{ _('Claimed') }} {% else %}
         <span class="icon icon-schedule"></span> {{ _('Not Claimed') }} {% endif
         %}
       </div>
+      {% endif %}
     </div>
   </a>
-  {% endif %}
   <div>
     <ol class="menu">
+      {% if page_name == 'homework_detail' %}
       <li class="menu__item" onclick="showModule('id-introduction')">
-        <a class="menu__link">
+        <a class="menu__link" id="id-introduction-menu">
           <span class="icon icon-homework"></span>
           {{ _('View Homework Introduction') }}
         </a>
       </li>
       <li class="menu__item" onclick="showModule('id-video')">
-        <a class="menu__link">
+        <a class="menu__link" id="id-video-menu">
           <span class="icon icon-homework"></span>
           {{ _('View Homework Video') }}
         </a>
       </li>
-      {% if page_name != 'homework_detail' %}
+      {% endif %} {% if page_name != 'homework_detail' %}
       <li class="menu__item">
         <a
           class="menu__link"
@@ -65,14 +66,14 @@
         {% endif %}
       </li>
       {% endif %} {% if handler.user.hasPerm(perm.PERM_VIEW_CONTEST_SCOREBOARD)
-      %}
-
+      %} {% if page_name == 'homework_detail' %}
       <li class="menu__item" onclick="showModule('id-homework')">
-        <a class="menu__link">
+        <a class="menu__link" id="id-homework-menu">
           <span class="icon icon-homework"></span> {{ _('View Homework') }}
         </a>
       </li>
-      {% if model.contest.canShowScoreboard.call(handler, tdoc, false) %}
+      {% endif %} {% if model.contest.canShowScoreboard.call(handler, tdoc,
+      false) %}
       <li class="menu__item">
         <a
           class="menu__link"

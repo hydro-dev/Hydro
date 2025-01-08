@@ -129,17 +129,23 @@ with context %} {% import "components/problem.html" as problem with context %}
 {% endblock %} {% block script %}
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
+  function hidden(idname) {
+    var el = document.getElementById(idname);
+    el.style.display = "none";
+    document.getElementById(idname + "-menu").classList.remove("active");
+  }
+  function show(idname) {
+    var el = document.getElementById(idname);
+    el.style.display = "block";
+    document.getElementById(idname + "-menu").classList.add("active");
+  }
+
   function showModule(idname) {
-    document.getElementById("id-video").style.display = "none";
-    document.getElementById("id-introduction").style.display = "none";
-    document.getElementById("id-homework").style.display = "none";
-    if (idname == "id-video") {
-      document.getElementById("id-video").style.display = "block";
-    } else if (idname == "id-introduction") {
-      document.getElementById("id-introduction").style.display = "block";
-    } else if (idname == "id-homework") {
-      document.getElementById("id-homework").style.display = "block";
-    }
+    hidden("id-video");
+    hidden("id-introduction");
+    hidden("id-homework");
+
+    show(idname);
   }
 
   function playUrl(url) {
