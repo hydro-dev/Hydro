@@ -1,0 +1,30 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+      {% if handler.user.own(tdoc) or
+      handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+        <div class="section__tools">
+          <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+        </div>
+	{% endif %}
+      </div>
+      {{ noscript_note.render() }}
+      {% include "partials/files.html" %}
+      {% if handler.user.own(tdoc) or
+      handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+      <div class="section__body">
+        <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="medium-3 columns">
+    {% include "partials/homework_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}

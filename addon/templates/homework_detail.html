@@ -21,13 +21,24 @@ with context %} {% import "components/problem.html" as problem with context %}
         </iframe>
       </div>
     </div>
-    <div class="section" id="id-introduction">
+    <div id="id-introduction">
+    <div class="section" >
       <div class="section__header">
         <h1 class="section__title">{{ _('Homework Introduction') }}</h1>
       </div>
       <div class="section__body typo richmedia">
         {{ tdoc['content']|markdown|safe }}
       </div>
+    </div>
+    {% if files.length > 0 %}
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+      </div>
+      {{ noscript_note.render() }}
+      {% include "partials/files.html" %}
+    </div>
+    {% endif %}
     </div>
 
     <div class="section" id="id-homework">

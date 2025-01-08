@@ -132,6 +132,7 @@ class HomeworkDetailHandler extends Handler {
       const udoc = await user.getById(domainId, this.tdoc.maintainer[0]);
       qrcode.url = udoc?.qrcodeurl;
     }
+
     const uids = ddocs.map((ddoc) => ddoc.owner);
     uids.push(this.tdoc.owner);
     const udict = await user.getList(domainId, uids);
@@ -145,6 +146,9 @@ class HomeworkDetailHandler extends Handler {
       dpcount,
       dcount,
       qrcode,
+      files: sortFiles(this.tdoc.files || []),
+      urlForFile: (filename: string) =>
+        this.url("homework_file_download", { tid, filename }),
     };
     this.response.body.tdoc.content = this.response.body.tdoc.content
       .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
