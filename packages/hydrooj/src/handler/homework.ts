@@ -128,11 +128,8 @@ class HomeworkDetailHandler extends Handler {
       "discussion"
     );
     let qrcode = {};
-    if (
-      this.tdoc.maintainer != undefined &&
-      this.tdoc.maintainer != this.user._id
-    ) {
-      const udoc = await user.getById(domainId, this.tdoc.maintainer);
+    if (this.tdoc.maintainer?.length > 0) {
+      const udoc = await user.getById(domainId, this.tdoc.maintainer[0]);
       qrcode.url = udoc?.qrcodeurl;
     }
     const uids = ddocs.map((ddoc) => ddoc.owner);
