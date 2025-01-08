@@ -21,6 +21,25 @@ with context %} {% import "components/problem.html" as problem with context %}
         </iframe>
       </div>
     </div>
+    <div class="section" id="id-ppt">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Homework PPT') }}</h1>
+      </div>
+      <div class="section__body">
+        <iframe
+          id="ppt-iframe"
+          scrolling="no"
+          border="0"
+          frameborder="no"
+          framespacing="0"
+          allowfullscreen="true"
+          width="100%"
+          height="600"
+        >
+        </iframe>
+      </div>
+    </div>
+
     <div id="id-introduction">
     <div class="section" >
       <div class="section__header">
@@ -170,6 +189,7 @@ with context %} {% import "components/problem.html" as problem with context %}
     hidden("id-video");
     hidden("id-introduction");
     hidden("id-homework");
+    hidden("id-ppt");
     for (let i = 0; i < 20; i++) {
       inactive("id-video-" + i);
     }
@@ -182,14 +202,18 @@ with context %} {% import "components/problem.html" as problem with context %}
     }
   }
 
-  function playUrl(url) {
-    var iframe = document.getElementById("video-iframe");
+  function playUrl(idname, url) {
+    var iframe = document.getElementById(idname);
     iframe.src = url;
   }
 
   function showVideoModule(idname, url) {
     showModule(idname);
-    playUrl(url);
+    playUrl("video-iframe", url);
+  }
+  function showPptModule(idname, url) {
+    showModule(idname);
+    playUrl("ppt-iframe", url);
   }
 
   {# playUrl(
@@ -202,7 +226,8 @@ with context %} {% import "components/problem.html" as problem with context %}
     //"https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
   );
 			#}
-  showModule("id-introduction");
+	{#showModule("id-introduction"); #}
+  showPptModule("id-ppt", "https://intro.noicoding.cn");
 </script>
 
 {% endblock %}

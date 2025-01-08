@@ -90,13 +90,22 @@
         {% endif %}
       </li>
       {% endif %} {% if handler.user.hasPerm(perm.PERM_VIEW_CONTEST_SCOREBOARD)
-      %} {% if page_name == 'homework_detail' %}
+      %} 
+      {% if page_name == 'homework_detail' %}
       <li class="menu__item" onclick="showModule('id-homework')">
         <a class="menu__link" id="id-homework-menu">
           <span class="icon icon-homework"></span> {{ _('View Homework') }}
         </a>
       </li>
-      {% endif %} {% if model.contest.canShowScoreboard.call(handler, tdoc,
+      {% endif %} 
+      {% set ppt="https://intro.noicoding.cn" %}
+      <li class="menu__item" onclick="showPptModule('id-ppt', '{{ ppt }}')">
+        <a class="menu__link" id="id-ppt-menu">
+          <span class="icon icon-homework"></span> {{ _('View PPT') }}
+        </a>
+      </li>
+
+      {% if model.contest.canShowScoreboard.call(handler, tdoc,
       false) %}
       <li class="menu__item">
         <a
