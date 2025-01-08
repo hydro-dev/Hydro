@@ -98,7 +98,8 @@ All Homeworks: 所有课时
 Claim Homework: 认领作业
 Create Homework: 创建课时
 Edit Homework: 编辑课时
-Homework Introduction: 课时介绍
+Homework Introduction: 本节笔记
+Homework Video: 本节视频
 Homework Maintainer: 课时管理员
 Homework scoreboard is not visible.: 目前无法查看作业成绩表。
 Homework: 课时
@@ -106,4 +107,6 @@ Homework2: 作业
 Login to Claim Homework: 登录后认领作业
 No Permission to Claim Homework: 您没有权限认领作业
 View Homework: 查看作业
+View Homework Video: 查看视频
+View Homework Introduction: 查看笔记
 QrcodeUrl: 微信二维码url

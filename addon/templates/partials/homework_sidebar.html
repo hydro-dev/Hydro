@@ -1,85 +1,150 @@
-{% import "components/user.html" as user with context %}
-{% import "components/homework.html" as homework with context %}
+{% import "components/user.html" as user with context %} {% import
+"components/homework.html" as homework with context %}
 <div class="section side">
-{% if page_name != 'homework_detail' %}
-  <a class="contest-sidebar__bg" href="{{ url('homework_detail', tid=tdoc.docId) }}">
+  {% if page_name != 'homework_detail' %}
+  <a
+    class="contest-sidebar__bg"
+    href="{{ url('homework_detail', tid=tdoc.docId) }}"
+  >
     <div class="section__body">
       <h1>{{ tdoc['title'] }}</h1>
       <div class="contest-sidebar__status">
-      {% if tsdoc.attend %}
-        <span class="icon icon-check"></span> {{ _('Claimed') }}
-      {% else %}
-        <span class="icon icon-schedule"></span> {{ _('Not Claimed') }}
-      {% endif %}
+        {% if tsdoc.attend %}
+        <span class="icon icon-check"></span> {{ _('Claimed') }} {% else %}
+        <span class="icon icon-schedule"></span> {{ _('Not Claimed') }} {% endif
+        %}
       </div>
     </div>
   </a>
-{% endif %}
+  {% endif %}
   <div>
     <ol class="menu">
-    {% if page_name != 'homework_detail' %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_detail', tid=tdoc.docId) }}">
-        <span class="icon icon-homework"></span> {{ _('View Homework') }}
-      </a></li>
-    {% endif %}
-    {% if not tsdoc.attend and not model.contest.isDone(tdoc) %}
+      <li class="menu__item" onclick="showModule('id-introduction')">
+        <a class="menu__link">
+          <span class="icon icon-homework"></span>
+          {{ _('View Homework Introduction') }}
+        </a>
+      </li>
+      <li class="menu__item" onclick="showModule('id-video')">
+        <a class="menu__link">
+          <span class="icon icon-homework"></span>
+          {{ _('View Homework Video') }}
+        </a>
+      </li>
+      {% if page_name != 'homework_detail' %}
       <li class="menu__item">
-    {% if handler.user.hasPerm(perm.PERM_ATTEND_HOMEWORK) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-        <form action="{{ url('homework_detail', tid=tdoc.docId) }}" method="POST">
-          <input type="hidden" name="operation" value="attend">
+        <a
+          class="menu__link"
+          href="{{ url('homework_detail', tid=tdoc.docId) }}"
+        >
+          <span class="icon icon-homework"></span> {{ _('View Homework') }}
+        </a>
+      </li>
+      {% endif %} {% if not tsdoc.attend and not model.contest.isDone(tdoc) %}
+      <li class="menu__item">
+        {% if handler.user.hasPerm(perm.PERM_ATTEND_HOMEWORK) and
+        handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        <form
+          action="{{ url('homework_detail', tid=tdoc.docId) }}"
+          method="POST"
+        >
+          <input type="hidden" name="operation" value="attend" />
           <button class="menu__link" type="submit">
             <span class="icon icon-add"></span> {{ _('Claim Homework') }}
           </button>
         </form>
-    {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+        {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
         </a>
-    {% else %}
+        {% else %}
         <a class="menu__link disabled" href="javascript:;">
-          <span class="icon icon-add"></span> {{ _('No Permission to Claim Homework') }}
+          <span class="icon icon-add"></span> {{ _('No Permission to Claim
+          Homework') }}
         </a>
-    {% endif %}
+        {% endif %}
       </li>
-    {% endif %}
-    {% if handler.user.hasPerm(perm.PERM_VIEW_CONTEST_SCOREBOARD) %}
-    {% if model.contest.canShowScoreboard.call(handler, tdoc, false) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_scoreboard', tid=tdoc.docId) }}">
-        <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
-      </a></li>
-    {% elif model.contest.canViewHiddenScoreboard(handler, tdoc) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_scoreboard', tid=tdoc.docId) }}">
-        <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
-      </a></li>
-    {% endif %}
-    {% endif %}
-    {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_edit', tid=tdoc.docId) }}">
-        <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
-      </a></li>
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_files', tid=tdoc.docId) }}">
-        <span class="icon icon-file"></span> {{ _('Files') }}
-      </a></li>
-    {% endif %}
-    {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('homework_code', tid=tdoc.docId) }}" data-no-instant>
-        <span class="icon icon-download"></span> {{ _('Export All Code') }}
-      </a></li>
-      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
-        <span class="icon icon-flag"></span> {{ _('All Submissions') }}
-      </a></li>
-    {% elif tsdoc.attend %}
-      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={uidOrName:handler.user._id, tid:tdoc.docId}) }}">
-        <span class="icon icon-flag"></span> {{ _('My Recent Submissions') }}
-      </a></li>
-    {% endif %}
+      {% endif %} {% if handler.user.hasPerm(perm.PERM_VIEW_CONTEST_SCOREBOARD)
+      %}
+
+      <li class="menu__item" onclick="showModule('id-homework')">
+        <a class="menu__link">
+          <span class="icon icon-homework"></span> {{ _('View Homework') }}
+        </a>
+      </li>
+      {% if model.contest.canShowScoreboard.call(handler, tdoc, false) %}
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('homework_scoreboard', tid=tdoc.docId) }}"
+        >
+          <span class="icon icon-statistics"></span> {{ _('Scoreboard') }}
+        </a>
+      </li>
+      {% elif model.contest.canViewHiddenScoreboard(handler, tdoc) %}
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('homework_scoreboard', tid=tdoc.docId) }}"
+        >
+          <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)')
+          }}
+        </a>
+      </li>
+      {% endif %} {% endif %} {% if handler.user.own(tdoc) or
+      handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+      <li class="menu__item">
+        <a class="menu__link" href="{{ url('homework_edit', tid=tdoc.docId) }}">
+          <span class="icon icon-edit"></span> {{ _('Edit Homework') }}
+        </a>
+      </li>
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('homework_files', tid=tdoc.docId) }}"
+        >
+          <span class="icon icon-file"></span> {{ _('Files') }}
+        </a>
+      </li>
+      {% endif %} {% if handler.user.own(tdoc) or
+      handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or
+      handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('homework_code', tid=tdoc.docId) }}"
+          data-no-instant
+        >
+          <span class="icon icon-download"></span> {{ _('Export All Code') }}
+        </a>
+      </li>
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('record_main', query={tid:tdoc.docId}) }}"
+        >
+          <span class="icon icon-flag"></span> {{ _('All Submissions') }}
+        </a>
+      </li>
+      {% elif tsdoc.attend %}
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('record_main', query={uidOrName:handler.user._id, tid:tdoc.docId}) }}"
+        >
+          <span class="icon icon-flag"></span> {{ _('My Recent Submissions') }}
+        </a>
+      </li>
+      {% endif %}
       <li class="menu__seperator"></li>
     </ol>
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-      <dt>{{ _('Status') }}</dt><dd>{{ _(model.contest.statusText(tdoc)) }}</dd>
-      <dt>{{ _('Problem') }}</dt><dd>{{ tdoc['pids']|length }}</dd>
+      <dt>{{ _('Status') }}</dt>
+      <dd>{{ _(model.contest.statusText(tdoc)) }}</dd>
+      <dt>{{ _('Problem') }}</dt>
+      <dd>{{ tdoc['pids']|length }}</dd>
     </dl>
   </div>
   <div>
@@ -89,11 +154,15 @@
   </div>
   <div class="section__body typo">
     <dl class="large horizontal">
-	{% if qrcode.url %}
-	    <img src="{{ qrcode.url }}" style="width: 210px; heigth: 210px">
-	{% else %}
-      <img src="https://oj.noicoding.cn/file/2/oDFtQ50DVK-VrSF18vDat.png" alt="牛老师微信" style="width: 210px; heigth: 210px">
-       {% endif %}
+      {% if qrcode.url %}
+      <img src="{{ qrcode.url }}" style="width: 210px; heigth: 210px" />
+      {% else %}
+      <img
+        src="https://oj.noicoding.cn/file/2/oDFtQ50DVK-VrSF18vDat.png"
+        alt="牛老师微信"
+        style="width: 210px; heigth: 210px"
+      />
+      {% endif %}
     </dl>
   </div>
 </div>
