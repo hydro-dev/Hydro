@@ -133,7 +133,7 @@ class HomeworkDetailHandler extends Handler {
       this.tdoc.maintainer != this.user._id
     ) {
       const udoc = await user.getById(domainId, this.tdoc.maintainer);
-      qrcode.url = udoc.qrcodeurl;
+      qrcode.url = udoc?.qrcodeurl;
     }
     const uids = ddocs.map((ddoc) => ddoc.owner);
     uids.push(this.tdoc.owner);
