@@ -182,7 +182,16 @@ with context %} {% import "components/problem.html" as problem with context %}
     playUrl(url);
   }
 
-  showModule("id-introduction");
+  {# playUrl(
+    "https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
+  ); #}
+
+  showVideoModule(
+    "id-video-1",
+    "https://www.bilibili.com/video/BV19b4y1V7gK?spm_id_from=333.788.player.player_end_recommend_autoplay&vd_source=e89382ee6d3ed8d50abd955098b795fa"
+    //"https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
+  );
+  //showModule("id-introduction");
 </script>
 
 {% endblock %}
