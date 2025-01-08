@@ -127,7 +127,6 @@ with context %} {% import "components/problem.html" as problem with context %}
   </div>
 </div>
 {% endblock %} {% block script %}
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
   function active(idname) {
     var el = document.getElementById(idname);
@@ -186,12 +185,13 @@ with context %} {% import "components/problem.html" as problem with context %}
     "https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
   ); #}
 
-  showVideoModule(
+	{#showVideoModule(
     "id-video-1",
     "https://www.bilibili.com/video/BV19b4y1V7gK?spm_id_from=333.788.player.player_end_recommend_autoplay&vd_source=e89382ee6d3ed8d50abd955098b795fa"
     //"https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
   );
-  //showModule("id-introduction");
+			#}
+  showModule("id-introduction");
 </script>
 
 {% endblock %}
