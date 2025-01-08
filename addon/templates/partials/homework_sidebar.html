@@ -26,13 +26,37 @@
           {{ _('View Homework Introduction') }}
         </a>
       </li>
+      {#
       <li class="menu__item" onclick="showModule('id-video')">
         <a class="menu__link" id="id-video-menu">
           <span class="icon icon-homework"></span>
           {{ _('View Homework Video') }}
         </a>
       </li>
-      {% endif %} {% if page_name != 'homework_detail' %}
+      #} {% if tdoc.video %}
+      <li class="menu__item">
+        <div class="menu__link expandable">
+          <span class="icon icon-homework"></span>
+          {{ _('View Homework Video') }}
+        </div>
+        <ol class="menu collapsed">
+          {%- for item in tdoc.video -%}
+          <li
+            class="menu__item"
+            {%
+            set
+            elid="id-video-"
+            +
+            loop.index
+            %}
+            onclick="showVideoModule('{{ elid }}', item.url)"
+          >
+            <a class="menu__link" id="{{ elid }}"> {{ _(item.name) }} </a>
+          </li>
+          {%- endfor -%}
+        </ol>
+      </li>
+      {% endif %} {% endif %} {% if page_name != 'homework_detail' %}
       <li class="menu__item">
         <a
           class="menu__link"

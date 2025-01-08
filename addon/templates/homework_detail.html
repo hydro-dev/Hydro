@@ -129,34 +129,60 @@ with context %} {% import "components/problem.html" as problem with context %}
 {% endblock %} {% block script %}
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>
+  function active(idname) {
+    var el = document.getElementById(idname);
+    if (el === null) return;
+    el.classList.add("active");
+  }
+
+  function inactive(idname) {
+    var el = document.getElementById(idname);
+    if (el === null) return;
+    el.classList.remove("active");
+  }
+
   function hidden(idname) {
     var el = document.getElementById(idname);
+    if (el === null) return;
     el.style.display = "none";
-    document.getElementById(idname + "-menu").classList.remove("active");
+
+    inactive(idname + "-menu");
   }
   function show(idname) {
     var el = document.getElementById(idname);
+    if (el === null) return;
     el.style.display = "block";
-    document.getElementById(idname + "-menu").classList.add("active");
+
+    active(idname + "-menu");
   }
 
   function showModule(idname) {
     hidden("id-video");
     hidden("id-introduction");
     hidden("id-homework");
+    for (let i = 0; i < 20; i++) {
+      inactive("id-video-" + i);
+    }
 
-    show(idname);
+    if (idname.includes("id-video")) {
+      show("id-video");
+      active(idname);
+    } else {
+      show(idname);
+    }
   }
 
   function playUrl(url) {
-    showModule("id-video");
     var iframe = document.getElementById("video-iframe");
     iframe.src = url;
   }
 
-  playUrl(
-    "https://player.bilibili.com/player.html?aid=56850347&cid=99299213&page=1"
-  );
+  function showVideoModule(idname, url) {
+    showModule(idname);
+    playUrl(url);
+  }
+
+  showModule("id-introduction");
 </script>
 
 {% endblock %}
