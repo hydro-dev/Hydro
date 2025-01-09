@@ -774,18 +774,18 @@ function _getStatusJournal(tsdoc) {
 
 export async function add(
     domainId: string, title: string, content: string, owner: number,
-    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
+    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [], ppt: string,
     rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, ppt, attend: 0,
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
+        ...data, title, rule, beginAt, endAt, pids, ppt, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, res);
     return res;

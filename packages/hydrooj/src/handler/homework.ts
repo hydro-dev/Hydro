@@ -237,6 +237,7 @@ class HomeworkEditHandler extends Handler {
       extensionDays,
       penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
       pids: tid ? tdoc.pids.join(",") : "",
+      ppt: tdoc.ppt,
       page_name: tid ? "homework_edit" : "homework_create",
     };
   }
@@ -256,6 +257,7 @@ class HomeworkEditHandler extends Handler {
   @param("title", Types.Title)
   @param("content", Types.Content)
   @param("pids", Types.Content)
+  @param("ppt", Types.Content)
   @param("rated", Types.Boolean)
   @param("maintainer", Types.NumericArray, true)
   @param("assign", Types.CommaSeperatedArray, true)
@@ -271,6 +273,7 @@ class HomeworkEditHandler extends Handler {
     title: string,
     content: string,
     _pids: string,
+    ppt: string,
     rated = false,
     maintainer: number[] = [],
     assign: string[] = []
@@ -316,6 +319,7 @@ class HomeworkEditHandler extends Handler {
         beginAt.toDate(),
         endAt.toDate(),
         pids,
+        ppt,
         rated,
         { penaltySince: penaltySince.toDate(), penaltyRules, assign }
       );
@@ -326,6 +330,7 @@ class HomeworkEditHandler extends Handler {
         beginAt: beginAt.toDate(),
         endAt: endAt.toDate(),
         pids,
+        ppt,
         penaltySince: penaltySince.toDate(),
         penaltyRules,
         rated,

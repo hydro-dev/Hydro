@@ -98,12 +98,13 @@
         </a>
       </li>
       {% endif %} 
-      {% set ppt="https://intro.noicoding.cn" %}
-      <li class="menu__item" onclick="showPptModule('id-ppt', '{{ ppt }}')">
+      {%  if tdoc.ppt %}
+      <li class="menu__item" onclick="showPptModule('id-ppt', '{{ tdoc.ppt }}')">
         <a class="menu__link" id="id-ppt-menu">
           <span class="icon icon-homework"></span> {{ _('View PPT') }}
         </a>
       </li>
+      {% endif %} 
 
       {% if model.contest.canShowScoreboard.call(handler, tdoc,
       false) %}
