@@ -147,6 +147,7 @@ class HomeworkDetailHandler extends Handler {
       dcount,
       qrcode,
       files: sortFiles(this.tdoc.files || []),
+      videos: this.tdoc.videos || [],
       urlForFile: (filename: string) =>
         this.url("homework_file_download", { tid, filename }),
     };
@@ -446,6 +447,64 @@ export class HomeworkFilesHandler extends Handler {
   }
 }
 
+export class HomeworkVideosHandler extends Handler {
+  tdoc: Tdoc;
+
+  @param("tid", Types.ObjectId)
+  async prepare(domainId: string, tid: ObjectId) {
+    this.tdoc = await contest.get(domainId, tid);
+    if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+    else this.checkPerm(PERM.PERM_EDIT_HOMEWORK_SELF);
+  }
+
+  @param("tid", Types.ObjectId)
+  async get(domainId: string, tid: ObjectId) {
+    if (!this.user.own(this.tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
+    this.response.body = {
+      tdoc: this.tdoc,
+      tsdoc: await contest.getStatus(domainId, this.tdoc.docId, this.user._id),
+      udoc: await user.getById(domainId, this.tdoc.owner),
+      videos: this.tdoc.videos || []
+    };
+    this.response.pjax = "partials/files.html";
+    this.response.template = "homework_videos.html";
+  }
+
+  @param("tid", Types.ObjectId)
+  @post("filename", Types.Filename, true)
+  @post("filenameurl", Types.string, true)
+  async postUploadVideo(domainId: string, tid: ObjectId, filename: string, filenameurl: string) {
+    let fid = 1;
+    if (this.tdoc.videos?.length > 0) {
+      fid = this.tdoc.videos?.length + 1;
+    }
+    const payload = {
+      _id: fid,
+      name: filename,
+      url: filenameurl
+    };
+    await contest.edit(domainId, tid, {
+      videos: [...(this.tdoc.videos || []), payload],
+    });
+    this.back();
+  }
+
+  @param("tid", Types.ObjectId)
+  @post("videos", Types.ArrayOf(Types.Filename))
+  async postDeleteVideos(domainId: string, tid: ObjectId, videos: string[]) {
+    await Promise.all([
+      storage.del(
+        videos.map((t) => `contest/${domainId}/${tid}/${t}`),
+        this.user._id
+      ),
+      contest.edit(domainId, tid, {
+        files: this.tdoc.videos.filter((i) => !videos.includes(i.name)),
+      }),
+    ]);
+    this.back();
+  }
+}
+
 export async function apply(ctx) {
   ctx.Route(
     "homework_main",
@@ -478,6 +537,12 @@ export async function apply(ctx) {
     "/lession/:tid/file/:filename",
     ContestFileDownloadHandler,
     PERM.PERM_VIEW_HOMEWORK
+  );
+  ctx.Route(
+    "homework_videos",
+    "/lession/:tid/video",
+    HomeworkVideosHandler,
+    PERM.PERM_EDIT_HOMEWORK
   );
   ctx.inject(["scoreboard"], ({ Route }) => {
     Route(

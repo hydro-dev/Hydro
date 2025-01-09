@@ -33,14 +33,14 @@
           {{ _('View Homework Video') }}
         </a>
       </li>
-      #} {% if tdoc.video %}
+      #} {% if tdoc.videos %}
       <li class="menu__item">
         <div class="menu__link expandable">
           <span class="icon icon-homework"></span>
           {{ _('View Homework Video') }}
         </div>
         <ol class="menu collapsed">
-          {%- for item in tdoc.video -%}
+          {%- for item in tdoc.videos -%}
           <li
             class="menu__item"
             {%
@@ -49,7 +49,7 @@
             +
             loop.index
             %}
-            onclick="showVideoModule('{{ elid }}', item.url)"
+            onclick="showVideoModule('{{ elid }}', '{{item.url}}')"
           >
             <a class="menu__link" id="{{ elid }}"> {{ _(item.name) }} </a>
           </li>
@@ -139,6 +139,14 @@
           href="{{ url('homework_files', tid=tdoc.docId) }}"
         >
           <span class="icon icon-file"></span> {{ _('Files') }}
+        </a>
+      </li>
+      <li class="menu__item">
+        <a
+          class="menu__link"
+          href="{{ url('homework_videos', tid=tdoc.docId) }}"
+        >
+          <span class="icon icon-file"></span> {{ _('Videos') }}
         </a>
       </li>
       {% endif %} {% if handler.user.own(tdoc) or

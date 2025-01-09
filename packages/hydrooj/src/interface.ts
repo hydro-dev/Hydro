@@ -153,6 +153,13 @@ export interface FileInfo {
     lastModified: Date,
 }
 
+export interface VideoInfo {
+    _id: number,
+    /** filename */
+    name: string,
+    url: number,
+}
+
 export interface TestCaseConfig {
     input: string;
     output: string;
@@ -384,6 +391,7 @@ export interface Tdoc extends Document {
     _code?: string;
     assign?: string[];
     files?: FileInfo[];
+    videos?: VideoInfo[];
     allowViewCode?: boolean;
 
     // For contest
