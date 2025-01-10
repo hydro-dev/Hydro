@@ -80,6 +80,7 @@ export async function run({
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
+    await SystemModel.set('migrate.lock', 'hustoj');
     /*
         user_id     varchar 20	N	用户id（主键）
         email       varchar 100	Y	用户E-mail
@@ -349,5 +350,6 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         }
         await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
     }
+    await SystemModel.set('migrate.lock', 0);
     return true;
 }

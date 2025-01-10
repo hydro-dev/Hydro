@@ -520,6 +520,7 @@ ${nixConfBase}`);
         skip: () => migration !== 'hustoj',
         silent: true,
         operations: [
+            'pm2 restart hydrooj',
             () => {
                 const dbInc = readFileSync('/home/judge/src/web/include/db_info.inc.php', 'utf-8');
                 const l = dbInc.split('\n');
