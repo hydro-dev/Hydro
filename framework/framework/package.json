@@ -27,7 +27,7 @@
         "@types/koa": "^2.15.0",
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
-        "@types/lodash": "^4.17.13",
+        "@types/lodash": "^4.17.14",
         "@types/saslprep": "^1.0.3",
         "@types/ws": "^8.5.13"
     }

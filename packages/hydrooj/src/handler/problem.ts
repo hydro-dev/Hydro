@@ -1,5 +1,5 @@
 import AdmZip from 'adm-zip';
-import { readFile, statSync } from 'fs-extra';
+import { readFile } from 'fs-extra';
 import {
     escapeRegExp, flattenDeep, intersection, pick,
 } from 'lodash';
