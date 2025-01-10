@@ -317,12 +317,17 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             const source = await query(`SELECT \`source\` FROM \`source_code\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
             if (source[0]?.source) data.code = source[0].source;
             if (rdoc.contest_id) {
-                data.contest = new ObjectId(tidMap[rdoc.contest_id]);
-                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                if (!tidMap[rdoc.contest_id]) {
+                    report({ message: `warning: contest_id ${rdoc.contest_id} for submission ${rdoc.solution_id} not found` });
+                } else {
+                    data.contest = new ObjectId(tidMap[rdoc.contest_id]);
+                    await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                }
             }
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
+        if (pageId % 10 === 0) report({ message: `record finished ${pageId * step} / ${rcount} (${Math.round(((pageId * step) / rcount) * 100)}%)` });
     }
     report({ message: 'record finished' });
 
