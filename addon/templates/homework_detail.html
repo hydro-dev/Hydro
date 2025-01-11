@@ -214,7 +214,11 @@ with context %} {% import "components/problem.html" as problem with context %}
   }
   function showPptModule(idname, url) {
     showModule(idname);
-    playUrl("ppt-iframe", url);
+    let tUrl = "//player.bilibili.com/player.html?bvid="+url;
+    if(url.includes("bilibili")) {
+       tUrl = url;
+    }
+    playUrl("ppt-iframe", tUrl);
   }
 
   {# playUrl(

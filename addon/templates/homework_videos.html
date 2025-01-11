@@ -47,3 +47,16 @@
   </div>
 </div>
 {% endblock %}
+{% block script %}
+<script>
+
+function getVideoUrl(url) {
+    let tUrl = "//player.bilibili.com/player.html?bvid="+url;
+    if(url.includes("bilibili")) {
+       tUrl = url;
+    }
+    window.open(tUrl, "_blank");
+}
+</script>
+
+{% endblock %}

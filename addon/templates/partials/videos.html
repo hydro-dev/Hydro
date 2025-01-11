@@ -31,7 +31,7 @@
           </td>
 	{% endif %}
           <td class="col--name" data-preview>
-            <a href="{{ video.url }}" target="_blank">{{ video.name }}</a>
+		  <a onclick="getVideoUrl('{{ video.url }}')">{{ video.name }}</a>
           </td>
         </tr>
         {%- endfor -%}
