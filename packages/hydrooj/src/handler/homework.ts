@@ -238,7 +238,7 @@ class HomeworkEditHandler extends Handler {
       extensionDays,
       penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
       pids: tid ? tdoc.pids.join(",") : "",
-      ppt: tdoc.ppt,
+      ppt: tdoc?.ppt? tdoc.ppt : '',
       page_name: tid ? "homework_edit" : "homework_create",
     };
   }
