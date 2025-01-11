@@ -464,10 +464,11 @@ export class HomeworkVideosHandler extends Handler {
       tdoc: this.tdoc,
       tsdoc: await contest.getStatus(domainId, this.tdoc.docId, this.user._id),
       udoc: await user.getById(domainId, this.tdoc.owner),
-      videos: this.tdoc.videos || []
+      files: this.tdoc.videos || [],
+      videotag: {} 
     };
     this.response.pjax = "partials/files.html";
-    this.response.template = "homework_videos.html";
+    this.response.template = "homework_files.html";
   }
 
   @param("tid", Types.ObjectId)
@@ -490,15 +491,15 @@ export class HomeworkVideosHandler extends Handler {
   }
 
   @param("tid", Types.ObjectId)
-  @post("videos", Types.ArrayOf(Types.Filename))
-  async postDeleteVideos(domainId: string, tid: ObjectId, videos: string[]) {
+  @post("files", Types.ArrayOf(Types.Filename))
+  async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
     await Promise.all([
       storage.del(
-        videos.map((t) => `contest/${domainId}/${tid}/${t}`),
+        files.map((t) => `contest/${domainId}/${tid}/${t}`),
         this.user._id
       ),
       contest.edit(domainId, tid, {
-        files: this.tdoc.videos.filter((i) => !videos.includes(i.name)),
+        videos: this.tdoc.videos.filter((i) => !files.includes(i.name)),
       }),
     ]);
     this.back();
