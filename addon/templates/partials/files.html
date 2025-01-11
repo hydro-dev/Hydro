@@ -19,8 +19,10 @@
           </th>
 	  {% endif %}
           <th class="col--name">{{ _('Filename') }}</th>
+          {% if urlForFile? %}
           <th class="col--size">{{ _('Size') }}</th>
           <th class="col--operation"></th>
+	  {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -33,6 +35,7 @@
             </label>
           </td>
 	{% endif %}
+          {% if urlForFile? %}
           <td class="col--name" data-preview>
             <a href="{{ urlForFile(file.name) }}">{{ file.name }}</a>
           </td>
@@ -40,6 +43,11 @@
           <td class="col--operation">
             <a href="{{ urlForFile(file.name) }}" class="icon icon-download"></a>
           </td>
+	  {% else %}
+          <td class="col--name" data-preview>
+            <a onclick="getVideoUrl('{{ file.url }}')">{{ file.name }}</a>
+          </td>
+	  {% endif %}
         </tr>
         {%- endfor -%}
       </tbody>

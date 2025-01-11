@@ -6,11 +6,13 @@
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Files') }}</h1>
-      {% if handler.user.own(tdoc) or
-      handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+	{% if not videotag %}
+        {% if handler.user.own(tdoc) or
+          handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
         <div class="section__tools">
           <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
         </div>
+	{% endif %}
 	{% endif %}
       </div>
       {{ noscript_note.render() }}
@@ -22,9 +24,51 @@
       </div>
       {% endif %}
     </div>
+    {% if videotag %}
+   <div class="section__body">
+        <form method="post">
+          <div class="row">
+            {{ form.form_text({
+                columns:3,
+                label:'Video Title',
+                name:'filename',
+                value:'',
+                row:false,
+                required:true
+            }) }}
+            {{ form.form_text({
+                columns:6,
+                label:'Video URL',
+                name:'filenameurl',
+                value:'',
+                row:false,
+                required:true
+            }) }}
+            {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_HOMEWORK) %}
+            <button name="operation" value="upload_video" type="submit" class="rounded primary button">
+              {{ _('Add') }}
+            </button>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+      {% endif %}
   </div>
   <div class="medium-3 columns">
     {% include "partials/homework_sidebar.html" %}
   </div>
 </div>
+{% endblock %}
+{% block script %}
+<script>
+
+function getVideoUrl(url) {
+    let tUrl = "//player.bilibili.com/player.html?bvid="+url;
+    if(url.includes("bilibili")) {
+       tUrl = url;
+    }
+    window.open(tUrl, "_blank");
+}
+</script>
+
 {% endblock %}
