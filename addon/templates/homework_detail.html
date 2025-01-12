@@ -17,6 +17,7 @@ with context %} {% import "components/problem.html" as problem with context %}
           allowfullscreen="true"
           width="100%"
           height="600"
+	  sandbox="allow-top-navigation allow-same-origin allow-forms allow-scripts"
         >
         </iframe>
       </div>
@@ -210,15 +211,16 @@ with context %} {% import "components/problem.html" as problem with context %}
 
   function showVideoModule(idname, url) {
     showModule(idname);
-    playUrl("video-iframe", url);
-  }
-  function showPptModule(idname, url) {
-    showModule(idname);
-    let tUrl = "//player.bilibili.com/player.html?bvid="+url;
+    let tUrl = "https://player.bilibili.com/player.html?bvid="+url+"&page=1&high_quality=1&danmaku=0&as_wide=1";
+//    let tUrl = "//www.bilibili.com/blackboard/html5mobileplayer.html?bvid="url+"&page=1&high_quality=1&danmaku=0&as_wide=1";
     if(url.includes("bilibili")) {
        tUrl = url;
     }
-    playUrl("ppt-iframe", tUrl);
+    playUrl("video-iframe", tUrl);
+  }
+  function showPptModule(idname, url) {
+    showModule(idname);
+    playUrl("ppt-iframe", url);
   }
 
   {# playUrl(
