@@ -97,11 +97,6 @@
             </a>
           </li>
           <li class="menu__seperator"></li>
-          <li class="menu__item">
-            <a href="{{ url('home_domain') }}" class="menu__link">
-              <span class="icon icon-web"></span> {{ _('My Domains') }}
-            </a>
-          </li>
           {% if handler.user.hasPriv(PRIV.PRIV_CREATE_FILE) %}
             <li class="menu__item">
               <a href="{{ url('home_files') }}" class="menu__link">
