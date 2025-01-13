@@ -168,6 +168,7 @@ export async function apply(ctx: Context) {
     PRIV.PRIV_USER_PROFILE
   );
 
+  /* 
   ctx.injectUI(
     "UserDropdown",
     "buydomain_list",
@@ -178,6 +179,7 @@ export async function apply(ctx: Context) {
     }),
     PRIV.PRIV_USER_PROFILE
   );
+  */
 
   // 覆盖
   ctx.withHandlerClass("DomainJoinHandler", (DomainJoinHandler) => {
