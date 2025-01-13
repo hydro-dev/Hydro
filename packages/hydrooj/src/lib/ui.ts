@@ -51,9 +51,9 @@ export const ProblemAdd = (name, args, icon = 'add', text = 'Create Problem') =>
     inject('ProblemAdd', name, { ...args, icon, text });
 };
 
-//inject('Nav', 'problem_main', { prefix: 'problem' }, PERM.PERM_VIEW_PROBLEM);
 inject('Nav', 'homepage', { prefix: 'homepage' });
-inject('Nav', 'home_domain', { prefix: 'home_domain' });
+//inject('Nav', 'problem_main', { prefix: 'problem' }, PERM.PERM_VIEW_PROBLEM);
+//inject('Nav', 'home_domain', { prefix: 'home_domain' });
 inject('Nav', 'problem_main', { prefix: 'problem' }, PERM.PERM_EDIT_PROBLEM_SOLUTION);
 inject('Nav', 'homework_main', { prefix: 'homework' }, PERM.PERM_VIEW_HOMEWORK);
 inject('Nav', 'training_main', { prefix: 'training' }, PERM.PERM_VIEW_TRAINING);
