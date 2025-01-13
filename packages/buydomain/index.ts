@@ -111,9 +111,12 @@ class DomainExitHandler extends Handler {
   async get(domainId: string, did: string) {
     await Promise.all([
       DomainModel.setUserRole(did, this.user._id, "default"),
+      UserModel.setById(this.user._id, {
+        pinnedDomains: this.user.pinnedDomains.filter((i) => i !== did),
+      }),
       OplogModel.log(this, "domain.exit", {}),
     ]);
-    this.response.redirect = this.url("home_domain", {
+        this.response.redirect = this.url("home_domain", {
       query: { notification: "Successfully Exited domain." + did },
     });
   }
@@ -137,6 +140,9 @@ async function post(domainId: string, code: string) {
       this.user._id,
       this.joinSettings.role
     ),
+    UserModel.setById(this.user._id, {
+     pinnedDomains: [...this.user.pinnedDomains, this.domain._id],
+    }),
     OplogModel.log(this, "domain.join", {}),
   ]);
   this.response.redirect = this.url("home_domain", {
@@ -145,10 +151,11 @@ async function post(domainId: string, code: string) {
 }
 
 export async function apply(ctx: Context) {
+  //ctx.Route("buydomain_list", "/allcourse/list", BuydomainListHandler);
   ctx.Route("buydomain_list", "/buydomain/list", BuydomainListHandler);
   ctx.Route(
     "buydomain_detail",
-    "/buydomain/detail/:did/:uid",
+    "/buycourse/detail/:did/:uid",
     BuydomainDetailHandler
   );
   ctx.Route("buydomain_pay", "/buydomain/pay/:did/:uid", BuydomainPayHandler);
@@ -156,7 +163,7 @@ export async function apply(ctx: Context) {
 
   ctx.Route(
     "domain_exit",
-    "/domain/exit/:did",
+    "/course/exit/:did",
     DomainExitHandler,
     PRIV.PRIV_USER_PROFILE
   );
