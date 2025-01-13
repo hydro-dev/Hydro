@@ -42,11 +42,8 @@
               height="32"
             />
           </td>
-          {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
           <td
             class="col--name"
-            data-star-action="?id={{ ddoc['_id'] }}"
-            data-star="{{ _show }}"
           >
             <a
               style="color: balck"
