@@ -263,6 +263,8 @@ class SystemUserImportHandler extends SystemHandler {
             for (const udoc of udocs) {
                 try {
                     const uid = await user.create(udoc.email, udoc.username, udoc.password);
+                    // add to default course 'system
+                    await domain.setUserRole('system', uid, 'Free');
                     mapping[udoc.email] = uid;
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
                     if (udoc.school) await user.setById(uid, { school: udoc.school });
