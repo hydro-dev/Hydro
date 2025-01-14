@@ -23,6 +23,7 @@ export const PERM = {
     PERM_VIEW_PROBLEM_HIDDEN: 1n << 8n,
     PERM_SUBMIT_PROBLEM: 1n << 9n,
     PERM_READ_PROBLEM_DATA: 1n << 10n,
+    PERM_VIEW_PROBLEM_NAV: 1n << 71n,
 
     // Record
     PERM_VIEW_RECORD: 1n << 70n,
@@ -116,6 +117,7 @@ export const PERMS = [
     Permission('perm_problem', PERM.PERM_EDIT_PROBLEM, 'Edit problems'),
     Permission('perm_problem', PERM.PERM_EDIT_PROBLEM_SELF, 'Edit own problems'),
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM, 'View problems'),
+    Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_NAV, 'View problems nav'),
     Permission('perm_problem', PERM.PERM_VIEW_PROBLEM_HIDDEN, 'View hidden problems'),
     Permission('perm_problem', PERM.PERM_SUBMIT_PROBLEM, 'Submit problem'),
     Permission('perm_problem', PERM.PERM_READ_PROBLEM_DATA, 'Read data of problem'),
