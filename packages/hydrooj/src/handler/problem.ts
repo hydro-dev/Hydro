@@ -302,18 +302,20 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         }
         if (typeof this.pdoc.config !== 'string') {
             let baseLangs;
+            const t = [];
+            if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
+            if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
+            if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
                 const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);
                 if (setting.langs[p]) dl.push(p);
                 baseLangs = dl;
             } else {
-                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote && !setting.langs[i].hidden);
+                const needHiddenLangs = flattenDeep(t).length;
+                baseLangs = Object.keys(setting.langs).filter((i) =>
+                    (needHiddenLangs ? !setting.langs[i].remote : !setting.langs[i].remote && !setting.langs[i].hidden));
             }
-            const t = [];
-            if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
-            if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
