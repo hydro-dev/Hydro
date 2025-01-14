@@ -1,0 +1,30 @@
+{% import "components/user.html" as user %}
+{% extends "manage_base.html" %}
+{% block manage_content %}
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title" data-heading>{{ _('Import User') }}</h1>
+  </div>
+  <div class="section__body">
+    {{ noscript_note.render() }}
+    <p name="messages"></p>
+    {{ form.form_textarea({
+        columns:null,
+        label:'Users',
+        name:'users',
+        nospellcheck: true
+        }) }}
+    <div class="row"><div class="column">
+      <button name="preview" class="rounded primary button">{{ _('Preview') }}</button>
+      <button name="submit" class="rounded button">{{ _('Submit') }}</button>
+    </div></div>
+  </div>
+  <div>
+	  <h2> 示例：<a href="https://docs.hydro.ac/docs/system/import-user.html" target="_blank"> 官方链接 </a> </h2>
+	  邮箱,账号,密码,昵称 <br /> 
+	  1. foo@undefined.moe,user1,password1 <br />
+	  2. bar@undefined.moe,user2,password2,temp <br />
+	  3. test@undefined.moe,user3,password3,test,{"group":"class1","studentId":"123","school":"Hydro School"} <br />
+  </div>
+</div>
+{% endblock %}
