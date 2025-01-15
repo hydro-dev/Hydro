@@ -16,7 +16,7 @@
         "mongodb": "^5.9.2",
         "reggol": "^1.7.1",
         "search-query-parser": "^1.6.0",
-        "systeminformation": "^5.25.9"
+        "systeminformation": "^5.25.11"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4"
