@@ -1018,7 +1018,7 @@ export class ProblemCreateHandler extends Handler {
 }
 
 export async function apply(ctx: Context) {
-    ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
+    ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM_NAV);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_detail', '/p/:pid', ProblemDetailHandler);
     ctx.Route('problem_submit', '/p/:pid/submit', ProblemSubmitHandler, PERM.PERM_SUBMIT_PROBLEM);
