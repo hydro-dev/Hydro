@@ -283,6 +283,11 @@ class UserRegisterWithCodeHandler extends Handler {
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (Object.keys(this.tdoc.setInDomain || {}).length) await domain.setUserInDomain(domainId, uid, this.tdoc.setInDomain);
         if (this.tdoc.oauth) await oauth.set(this.tdoc.oauth[1], uid);
+
+	// default setting
+        await domain.setUserRole('system', uid, 'Free');
+        await user.setById(uid, { pinnedDomains: ['system'] }),
+
         this.context.HydroContext.user = await user.getById(domainId, uid);
         this.session.viewLang = '';
         this.session.uid = uid;

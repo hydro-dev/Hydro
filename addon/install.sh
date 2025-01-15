@@ -12,6 +12,7 @@ cp ../packages/hydrooj/src/handler/manage.ts /usr/local/share/.config/yarn/globa
 cp ../packages/hydrooj/src/handler/homework.ts /usr/local/share/.config/yarn/global/node_modules/hydrooj/src/handler/homework.ts -rf 
 cp ../packages/hydrooj/src/handler/contest.ts /usr/local/share/.config/yarn/global/node_modules/hydrooj/src/handler/contest.ts -rf 
 cp ../packages/hydrooj/src/handler/problem.ts /usr/local/share/.config/yarn/global/node_modules/hydrooj/src/handler/problem.ts -rf 
+cp ../packages/hydrooj/setting.yaml /usr/local/share/.config/yarn/global/node_modules/hydrooj/setting.yaml -rf
 cp templates/* /root/addon/templates/ -rf
 cp locales/* /root/addon/locales/ -rf 
 # cp public/* /root/addon/public/ -rf 

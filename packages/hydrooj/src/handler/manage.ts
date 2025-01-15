@@ -265,6 +265,9 @@ class SystemUserImportHandler extends SystemHandler {
                     const uid = await user.create(udoc.email, udoc.username, udoc.password);
                     // add to default course 'system
                     await domain.setUserRole('system', uid, 'Free');
+		    await user.setById(uid, {
+			     pinnedDomains: ['system'],
+      			}),
                     mapping[udoc.email] = uid;
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
                     if (udoc.school) await user.setById(uid, { school: udoc.school });
