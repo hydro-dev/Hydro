@@ -116,7 +116,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
         });
         this.config = config;
         this.updateConfig();
-        if (this.config.server) this.setEndpoint(this.config.server);
+        if (this.config.server) this.endpoint = this.config.server;
     }
 
     updateConfig() { }
