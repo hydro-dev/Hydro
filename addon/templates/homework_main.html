@@ -44,12 +44,23 @@
           <li class="section__list__item homework__item">
             <div class="media">
               <div class="media__left medium">
-                <div class="homework__date numbox">
-                  <div class="numbox__num large">{{ loop.index }}</div>
+                <div class="homework__date numbox" style="display: flex; justify-content: center;">
+		  <div>
+		  <div class="numbox__num large" style="font-size: 10pt"> &nbsp
+		  </div>
+                  <div class="numbox__num large" style="font-size: 10pt; color: gray">第</div>
+		  </div>
+                  <div class="numbox__num large" style ="bold;margin:5px">{{ loop.index }}</div>
+		  <div>
+		  <div class="numbox__num large" style="font-size: 10pt"> &nbsp
+		  </div>
+                  <div class="numbox__num large" style="font-size: 10pt; color: gray">课</div>
+		  </div>
                 </div>
               </div>
+	      {% set titleReg=r/^[0-9]+.[0-9]+-/i %}
               <div class="media__body medium">
-                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title }}</a></h1>
+                <h1 class="homework__title"><a href="{{ url('homework_detail', tid=tdoc.docId) }}" data-emoji-enabled>{{ tdoc.title | replace(titleReg, "") }}</a></h1>
                 <ul class="supplementary list">
                   <li>{{ _('Status') }}: {{ _(model.contest.statusText(tdoc)) }}</li>
                 </ul>
