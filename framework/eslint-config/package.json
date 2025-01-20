@@ -5,8 +5,8 @@
     "main": "react.yaml",
     "dependencies": {
         "@stylistic/eslint-plugin": "^2.13.0",
-        "@typescript-eslint/eslint-plugin": "^8.20.0",
-        "@typescript-eslint/parser": "^8.20.0",
+        "@typescript-eslint/eslint-plugin": "^8.21.0",
+        "@typescript-eslint/parser": "^8.21.0",
         "eslint-config-airbnb": "^19.0.4",
         "eslint-plugin-github": "^5.1.5",
         "eslint-plugin-import": "2.31.0",
