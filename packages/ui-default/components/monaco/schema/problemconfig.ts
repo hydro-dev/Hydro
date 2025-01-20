@@ -52,7 +52,7 @@ const problemConfigSchema: JSONSchema7 = {
   properties: {
     redirect: { type: 'string', pattern: '[0-9a-zA-Z_-]+\\/[0-9]+' },
     key: { type: 'string', pattern: '[0-9a-f]{32}' },
-    type: { enum: ['default', 'interactive', 'submit_answer', 'objective', 'remote_judge'] },
+    type: { enum: ['default', 'interactive', 'communication', 'submit_answer', 'objective', 'remote_judge'] },
     subType: { type: 'string' },
     langs: { type: 'array', items: { type: 'string' } },
     target: { type: 'string' },
@@ -64,6 +64,8 @@ const problemConfigSchema: JSONSchema7 = {
       ],
     },
     interactor: { type: 'string', pattern: '\\.' },
+    manager: { type: 'string', pattern: '\\.' },
+    num_processes: { type: 'number', minimum: 1, maximum: 5 },
     validator: { type: 'string', pattern: '\\.' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },

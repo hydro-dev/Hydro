@@ -135,7 +135,7 @@ export class JudgeTask {
         return result;
     }
 
-    async compileLocalFile(type: 'interactor' | 'validator' | 'checker' | 'generator' | 'std', file: string, checkerType?: string) {
+    async compileLocalFile(type: 'interactor' | 'validator' | 'checker' | 'generator' | 'manager' | 'std', file: string, checkerType?: string) {
         if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
         if (type === 'checker' && !checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
         const withTestlib = type !== 'std' && (type !== 'checker' || checkerType === 'testlib');
