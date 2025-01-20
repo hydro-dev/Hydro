@@ -10,7 +10,7 @@
     "dependencies": {
         "@hydrooj/register": "workspace:^",
         "cac": "^6.7.14",
-        "fs-extra": "^11.2.0",
+        "fs-extra": "^11.3.0",
         "js-yaml": "^4.1.0",
         "moment-timezone": "^0.5.46",
         "mongodb": "^5.9.2",
