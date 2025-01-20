@@ -19,6 +19,7 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
             config.checker ||= checkFile(cfg.checker, 'Cannot find checker {0}.');
         }
         if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
+        if (cfg.manager) config.manager = checkFile(cfg.manager, 'Cannot find Manager {0}.');
         if (cfg.validator) config.validator = checkFile(cfg.validator, 'Cannot find validator {0}.');
         for (const n of ['judge', 'user']) {
             const conf = cfg[`${n}_extra_files`];

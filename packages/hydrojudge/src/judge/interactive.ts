@@ -11,7 +11,7 @@ function judgeCase(c: NormalizedCase) {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const [{
             code, signalled, time, memory,
-        }, resInteractor] = await runPiped(
+        }, resInteractor] = await runPiped([
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,
@@ -32,7 +32,10 @@ function judgeCase(c: NormalizedCase) {
                 copyOut: ['/w/tout?'],
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             },
-        );
+        ], [
+            { in: { index: 0, fd: 1 }, out: { index: 1, fd: 0 }, name: 'userToInteractor' },
+            { in: { index: 1, fd: 1 }, out: { index: 0, fd: 0 }, name: 'interactorToUser' },
+        ]);
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;

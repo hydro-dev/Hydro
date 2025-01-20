@@ -9,7 +9,7 @@ import { FormatError, SystemError } from './error';
 import { Logger } from './log';
 import client from './sandbox/client';
 import {
-    Cmd, CopyIn, CopyInFile, SandboxResult, SandboxStatus,
+    Cmd, CopyIn, CopyInFile, PipeMap, SandboxResult, SandboxStatus,
 } from './sandbox/interface';
 import { cmd, parseMemoryMB } from './utils';
 
@@ -29,7 +29,7 @@ const statusMap: Map<SandboxStatus, number> = new Map([
     [SandboxStatus.Signalled, STATUS.STATUS_RUNTIME_ERROR],
 ]);
 
-interface Parameter {
+export interface Parameter {
     time?: number;
     stdin?: CopyInFile;
     execute?: string;
@@ -145,33 +145,24 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     return ret;
 }
 
-export async function runPiped(execute0: Parameter, execute1: Parameter): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
+export async function runPiped(
+    execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
+): Promise<SandboxAdaptedResult[]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
         const body = {
-            cmd: [
-                proc(execute0),
-                proc(execute1),
-            ],
-            pipeMapping: [{
-                in: { index: 0, fd: 1 },
-                out: { index: 1, fd: 0 },
+            cmd: execute.map((exe) => proc(exe)),
+            pipeMapping: pipeMapping.map((pipe) => ({
                 proxy: true,
-                name: 'stdout',
                 max: 1024 * 1024 * size,
-            }, {
-                in: { index: 1, fd: 1 },
-                out: { index: 0, fd: 0 },
-                proxy: true,
-                name: 'stdout',
-                max: 1024 * 1024 * size,
-            }],
+                ...pipe,
+            })),
         };
-        body.cmd[0].files[0] = null;
-        body.cmd[0].files[1] = null;
-        body.cmd[1].files[0] = null;
-        body.cmd[1].files[1] = null;
+        for (let i = 0; i < body.cmd.length; i++) {
+            if (pipeMapping.find((pipe) => pipe.out.index === i && pipe.out.fd === 0)) body.cmd[i].files[0] = null;
+            if (pipeMapping.find((pipe) => pipe.in.index === i && pipe.in.fd === 1)) body.cmd[i].files[1] = null;
+        }
         const id = callId++;
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
         res = await client.run(body);
@@ -181,7 +172,7 @@ export async function runPiped(execute0: Parameter, execute1: Parameter): Promis
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    return await Promise.all(res.map((r) => adaptResult(r, {}))) as [SandboxAdaptedResult, SandboxAdaptedResult];
+    return await Promise.all(res.map((r) => adaptResult(r, {}))) as SandboxAdaptedResult[];
 }
 
 export async function del(fileId: string) {

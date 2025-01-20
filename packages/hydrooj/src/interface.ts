@@ -165,6 +165,7 @@ export enum ProblemType {
     Default = 'default',
     SubmitAnswer = 'submit_answer',
     Interactive = 'interactive',
+    Communication = 'communication',
     Objective = 'objective',
     Remote = 'remote_judge',
 }
@@ -196,6 +197,8 @@ export interface ProblemConfigFile {
     checker_type?: string;
     checker?: string;
     interactor?: string;
+    manager?: string;
+    num_processes?: number;
     user_extra_files?: string[];
     judge_extra_files?: string[];
     detail?: boolean;

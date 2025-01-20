@@ -15,11 +15,14 @@ function isValidConfig(config) {
     if (config.type !== 'objective' && config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
-    const time = Math.sum(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.time)));
+    const time = (config.num_processes || 1) * Math.sum(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.time)));
     if (time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
     const memMax = Math.max(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.memory)));
+    if (config.type === 'communication' && (config.num_processes || 2) > getConfig('processLimit')) {
+        throw new FormatError('Number of processes larger than processLimit');
+    }
     if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
     if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
         throw new FormatError('You did not specify a checker.');
