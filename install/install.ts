@@ -2,6 +2,7 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
+import crypto from 'crypto';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import os, { cpus } from 'os';
@@ -128,13 +129,7 @@ if (!cpuInfoFile.includes('avx') && !installAsJudge) {
 }
 let retry = 0;
 log.info('install.start');
-const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-function randomstring(digit = 32, dict = defaultDict) {
-    let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
-    return str;
-}
-let password = randomstring(32);
+let password = crypto.randomBytes(32).toString('hex');
 // eslint-disable-next-line
 let CN = true;
 
