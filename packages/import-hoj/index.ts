@@ -46,7 +46,7 @@ class ImportHojHandler extends Handler {
                     content.samples = examples.map((sample) => ([sample.input, sample.output]));
                 }
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     if (await ProblemModel.get(domainId, id)) return false;
                     return true;
                 };
