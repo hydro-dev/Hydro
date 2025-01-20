@@ -4,7 +4,6 @@ import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
-import { Optional } from 'hydrooj';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
@@ -147,7 +146,7 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
 }
 
 export async function runPiped(
-    execute: Parameter[], pipeMapping: Optional<PipeMap, 'proxy' | 'name' | 'max'>[],
+    execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
 ): Promise<SandboxAdaptedResult[]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
@@ -156,7 +155,6 @@ export async function runPiped(
             cmd: execute.map((exe) => proc(exe)),
             pipeMapping: pipeMapping.map((pipe) => ({
                 proxy: true,
-                name: 'stdout',
                 max: 1024 * 1024 * size,
                 ...pipe,
             })),
