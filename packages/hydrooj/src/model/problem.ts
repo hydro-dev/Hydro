@@ -487,7 +487,7 @@ export class ProblemModel {
                 let overridePid = null;
 
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     const doc = await ProblemModel.get(domainId, id);
                     if (doc) {
                         if (!override) return false;
