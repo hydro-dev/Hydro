@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/onsite-toolkit",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "dependencies": {
         "@react-spring/web": "^9.7.5",
         "react-use": "^17.6.0"
