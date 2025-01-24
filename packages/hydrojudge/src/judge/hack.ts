@@ -25,6 +25,7 @@ export async function judge(ctx: Context) {
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
+        `hack.validator[${ctx.rid}]`,
     );
     if (validateResult.status !== STATUS.STATUS_ACCEPTED) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
@@ -42,6 +43,7 @@ export async function judge(ctx: Context) {
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
+        `hack[${ctx.rid}]`,
     );
     const {
         code, signalled, time, memory,

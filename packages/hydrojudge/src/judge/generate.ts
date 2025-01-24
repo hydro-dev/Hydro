@@ -37,6 +37,7 @@ export const judge = async (ctx: JudgeTask) => {
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
+            `generate[${i}]<${ctx.rid}>`,
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.in`);
@@ -89,6 +90,7 @@ export const judge = async (ctx: JudgeTask) => {
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
+            `generate.std[${i}]<${ctx.rid}>`,
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.out`);

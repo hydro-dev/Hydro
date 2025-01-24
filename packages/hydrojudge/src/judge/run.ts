@@ -22,6 +22,7 @@ export const judge = async (ctx: JudgeTask) => {
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
+        `judge[${ctx.rid}]`,
         1,
     );
     const {
