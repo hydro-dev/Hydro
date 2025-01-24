@@ -10,7 +10,7 @@
     "main": "package.json",
     "scripts": {
         "build": "node build/prepare.js && tsc -b --verbose",
-        "build:installer": "esbuild ./install/install.js --minify --format=cjs | base64",
+        "build:installer": "esbuild ./install/install.js --minify --format=cjs | gzip -9 | base64",
         "build:watch": "node build/prepare.js && tsc -b --watch",
         "build:ui": "node packages/ui-default/build --iconfont && node packages/ui-default/build",
         "build:ui:iconfont": "node packages/ui-default/build --iconfont",
