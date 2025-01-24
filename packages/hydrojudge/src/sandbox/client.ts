@@ -88,7 +88,7 @@ function _call(method: 'post' | 'get' | 'delete', endpoint: string, trace?: stri
 }
 const client = new Proxy({
     async run(req: SandboxRequest, trace?: string): Promise<SandboxResult[]> {
-        const res = await _call('get', 'run', trace).send(req);
+        const res = await _call('post', 'run', trace).send(req);
         return res.body;
     },
     async getFile(fileId: string, dest?: string): Promise<Buffer> {
