@@ -10,7 +10,7 @@ import {
 } from './interface';
 
 let url: string;
-const UA = `HydroJudge/${version.split('v')[1]} (${Math.random().toString(36).substring(2, 8)})`;
+const UA = `HydroJudge/${version} (${Math.random().toString(36).substring(2, 8)})`;
 
 export class Stream extends EventEmitter {
     private ws: WebSocket;
