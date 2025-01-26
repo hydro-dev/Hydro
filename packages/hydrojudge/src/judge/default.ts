@@ -21,6 +21,7 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
+            `judgeCase[${c.id}]<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,

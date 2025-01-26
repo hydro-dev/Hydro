@@ -3,12 +3,14 @@ import fs from 'fs';
 import superagent from 'superagent';
 import WebSocket from 'ws';
 import { pipeRequest } from '@hydrooj/utils';
+import { version } from '../../package.json';
 import { getConfig } from '../config';
 import {
     Input, Output, Resize, SandboxRequest, SandboxResult, SandboxVersion,
 } from './interface';
 
-let url;
+let url: string;
+const UA = `HydroJudge/${version} (${Math.random().toString(36).substring(2, 8)})`;
 
 export class Stream extends EventEmitter {
     private ws: WebSocket;
@@ -16,7 +18,7 @@ export class Stream extends EventEmitter {
     constructor(httpUrl: string, req: SandboxRequest) {
         super();
         const wsUrl = `${httpUrl.replace('http', 'ws')}/stream`;
-        this.ws = new WebSocket(wsUrl);
+        this.ws = new WebSocket(wsUrl, { headers: { 'User-Agent': UA } });
         this.ws.onmessage = (e) => {
             const data: Buffer = e.data as Buffer;
             switch (data[0]) {
@@ -81,28 +83,38 @@ export class Stream extends EventEmitter {
     }
 }
 
+function _call(method: 'post' | 'get' | 'delete', endpoint: string, trace?: string) {
+    return superagent[method](`${url}/${endpoint}`).set('User-Agent', trace ? `${UA} (${trace})` : UA);
+}
 const client = new Proxy({
-    run(req: SandboxRequest): Promise<SandboxResult[]> {
-        return superagent.post(`${url}/run`).send(req).then((res) => res.body);
+    async run(req: SandboxRequest, trace?: string): Promise<SandboxResult[]> {
+        const res = await _call('post', 'run', trace).send(req);
+        return res.body;
     },
-    getFile(fileId: string, dest?: string): Promise<Buffer> {
+    async getFile(fileId: string, dest?: string): Promise<Buffer> {
+        const req = _call('get', `file/${fileId}`);
         if (dest) {
             const w = fs.createWriteStream(dest);
-            return pipeRequest(superagent.get(`${url}/file/${fileId}`), w, 60000, fileId) as any;
+            return await pipeRequest(req, w, 60000, fileId) as any;
         }
-        return superagent.get(`${url}/file/${fileId}`).responseType('arraybuffer').then((res) => res.body);
+        const res = await req.responseType('arraybuffer');
+        return res.body;
     },
-    deleteFile(fileId: string): Promise<void> {
-        return superagent.delete(`${url}/file/${fileId}`).then((res) => res.body);
+    async deleteFile(fileId: string): Promise<void> {
+        const res = await _call('delete', `file/${fileId}`);
+        return res.body;
     },
-    listFiles(): Promise<Record<string, string>> {
-        return superagent.get(`${url}/file`).then((res) => res.body);
+    async listFiles(): Promise<Record<string, string>> {
+        const res = await _call('get', 'file');
+        return res.body;
     },
-    version(): Promise<SandboxVersion> {
-        return superagent.get(`${url}/version`).then((res) => res.body);
+    async version(): Promise<SandboxVersion> {
+        const res = await _call('get', 'version');
+        return res.body;
     },
-    config(): Promise<Record<string, any>> {
-        return superagent.get(`${url}/config`).then((res) => res.body);
+    async config(): Promise<Record<string, any>> {
+        const res = await _call('get', 'config');
+        return res.body;
     },
     stream(req: SandboxRequest): Stream {
         return new Stream(url, req);
