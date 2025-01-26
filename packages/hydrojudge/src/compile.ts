@@ -25,6 +25,7 @@ export default async function compile(
                 time: lang.compile_time_limit || 10000,
                 memory: lang.compile_memory_limit || 256 * 1024 * 1024,
             },
+            `compile[${lang.key}]`,
             3,
         );
         // TODO: distinguish user program and checker

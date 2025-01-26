@@ -167,7 +167,7 @@ export class JudgeTask {
                 env: this.env,
                 time: 5000,
                 memory: 256,
-            });
+            }, `analysis[${this.lang}]<${this.rid}>`, 5);
             const out = r.stdout.toString();
             if (out.length) this.next({ compilerText: out.substring(0, 1024) });
             if (process.env.DEV) console.log(r);
