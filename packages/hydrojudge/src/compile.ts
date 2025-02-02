@@ -23,7 +23,7 @@ export default async function compile(
                 copyOutCached: [target],
                 env: { HYDRO_LANG: lang.key },
                 time: lang.compile_time_limit || 10000,
-                memory: lang.compile_memory_limit || 256 * 1024 * 1024,
+                memory: lang.compile_memory_limit || 256,
             },
             `compile[${lang.key}]`,
             3,

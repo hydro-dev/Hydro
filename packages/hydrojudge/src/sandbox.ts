@@ -30,9 +30,11 @@ const statusMap: Map<SandboxStatus, number> = new Map([
 ]);
 
 export interface Parameter {
+    /** in ms */
     time?: number;
     stdin?: CopyInFile;
     execute?: string;
+    /** in MB */
     memory?: number;
     processLimit?: number;
     addressSpaceLimit?: boolean;

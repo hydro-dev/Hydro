@@ -10,7 +10,7 @@ export async function compilerVersions(langs: Record<string, LangConfig>) {
         const res = await runQueued(version, {
             copyIn: {},
             time: 10000,
-            memory: 256 * 1024 * 1024,
+            memory: 256,
         }, 'compilerVersions', 5);
         result[lang] = `${res.stdout}\n${res.stderr}`.trim();
     }
