@@ -485,7 +485,7 @@ class HomeDomainHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             const udoc = (await user.getById(ddoc._id, this.user._id))!;
             const dudoc = dudict[ddoc._id];
-            if (['default', 'guest'].includes(dudoc.role)) {
+            if (['default', 'guest'].includes(dudoc.role) && this.domain._id !== ddoc._id) {
                 delete dudict[ddoc._id];
                 continue;
             }

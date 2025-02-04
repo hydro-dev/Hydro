@@ -32,8 +32,8 @@
           <td class="col--icon">
             <img src="{{ avatarUrl(ddoc.avatar, 32) }}" width="32" height="32">
           </td>
-              {% set _show = handler.user.pinnedDomains.includes(ddoc._id) %}
-          <td class="col--name" data-star-action="?id={{ ddoc['_id'] }}" data-star="{{ _show }}">
+          {% set _star = handler.user.pinnedDomains.includes(ddoc._id) %}
+          <td class="col--name" data-star-action="?id={{ ddoc['_id'] }}" data-star="{{ _star }}">
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})
           </td>
           <td class="col--role">
