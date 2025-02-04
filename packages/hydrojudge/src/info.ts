@@ -16,3 +16,13 @@ export async function compilerVersions(langs: Record<string, LangConfig>) {
     }
     return result;
 }
+
+export async function stackSize() {
+    const res = await runQueued('/bin/bash -c "ulimit -s"', {
+        copyIn: {},
+        time: 10000,
+        memory: 256,
+    }, 'stackSize', 5);
+    if (res.stderr) return -1;
+    return +res.stdout;
+}

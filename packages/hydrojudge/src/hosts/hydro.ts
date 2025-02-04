@@ -7,9 +7,9 @@ import { fs, pipeRequest } from '@hydrooj/utils';
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
-import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { compilerVersions, stackSize as getStackSize } from '../info';
 import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
@@ -184,7 +184,8 @@ export default class Hydro implements Session {
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
         let compilers = {};
-        let compilerVersionCallback = () => { };
+        let sendStatus = () => { };
+        let stackSize = 0;
         this.ws.on('message', (data) => {
             if (data.toString() === 'ping') {
                 this.ws.send('pong');
@@ -193,9 +194,13 @@ export default class Hydro implements Session {
             const request = JSON.parse(data.toString());
             if (request.language) {
                 this.language = request.language;
-                compilerVersions(this.language).then((res) => {
-                    compilers = res;
-                    compilerVersionCallback();
+                Promise.allSettled([
+                    compilerVersions(this.language),
+                    getStackSize(),
+                ]).then(([compiler, stack]) => {
+                    compilers = compiler.status === 'fulfilled' ? compiler.value : {};
+                    stackSize = stack.status === 'fulfilled' ? stack.value : 0;
+                    sendStatus();
                 });
             }
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
@@ -214,14 +219,24 @@ export default class Hydro implements Session {
                 this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
-                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info } }));
-                    compilerVersionCallback = () => {
-                        this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers } }));
-                    };
-                    setInterval(async () => {
+                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info, stackSize } }));
+                    sendStatus = () => this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers, stackSize } }));
+                    const interval = setInterval(async () => {
                         const [mid, inf] = await sysinfo.update();
-                        this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf, compilers } }));
+                        this.ws.send(JSON.stringify({
+                            key: 'status',
+                            info: {
+                                mid, ...inf, compilers, stackSize,
+                            },
+                        }));
                     }, 1200000);
+                    let stopped = false;
+                    const stop = () => {
+                        if (!stopped) clearInterval(interval);
+                        stopped = true;
+                    };
+                    this.ws.on('close', stop);
+                    this.ws.on('error', stop);
                 }
                 resolve(null);
             });

@@ -220,7 +220,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
     } catch (e) {
-        if (e?.syscall === 'connect') reportError('Connecting to sandbox failed, please check sandbox_host config and if your sandbox is running.');
+        if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
         return false;
     }
