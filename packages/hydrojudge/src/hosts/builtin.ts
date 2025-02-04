@@ -8,9 +8,9 @@ import {
     SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
-import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { compilerVersions, stackSize } from '../info';
 import { Context } from '../judge/interface';
 import logger from '../log';
 import { versionCheck } from '../sandbox';
@@ -96,19 +96,26 @@ export async function postInit(ctx) {
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
     const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
-    function collectCompilerInfo() {
+    async function collectInfo() {
         const coll = db.collection('status');
-        compilerVersions(langs).then((compilers) => coll.updateOne(
+        const compilers = await compilerVersions(langs);
+        await coll.updateOne(
             { mid: info.mid, type: 'server' },
             { $set: { compilers } },
             { upsert: true },
-        )).catch((e) => logger.error(e));
+        );
+        const size = await stackSize();
+        await coll.updateOne(
+            { mid: info.mid, type: 'server' },
+            { $set: { stackSize: size } },
+            { upsert: true },
+        );
     }
     ctx.on('system/setting', () => {
         taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
-        collectCompilerInfo();
+        collectInfo();
     });
-    collectCompilerInfo();
+    collectInfo();
     TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
     TaskModel.consume({ type: 'generate' }, handle);
 }
