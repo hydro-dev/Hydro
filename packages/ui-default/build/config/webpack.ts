@@ -46,7 +46,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'es6',
+        target: ['es2020', 'chrome70', 'firefox90', 'safari16'],
         sourcemap: true,
       },
     };
@@ -252,7 +252,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome65',
+          'chrome70',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],
