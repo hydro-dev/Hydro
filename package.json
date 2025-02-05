@@ -60,9 +60,5 @@
         "supertest": "^7.0.0",
         "typescript": "5.7.2",
         "wtfnode": "^0.10.0"
-    },
-    "resolutions": {
-        "cosmokit": "1.6.3",
-        "monaco-editor": "0.50.0"
     }
 }
