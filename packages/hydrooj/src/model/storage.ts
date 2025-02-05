@@ -142,6 +142,7 @@ export class StorageModel {
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
         );
+        if (!value) throw new Error(`Original file ${src} not found`);
         const meta = {};
         await StorageModel.del([dst]);
         meta['Content-Type'] = mime(dst);
