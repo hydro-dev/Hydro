@@ -10,6 +10,6 @@
         "jsonwebtoken": "^9.0.2"
     },
     "devDependencies": {
-        "@types/jsonwebtoken": "^9.0.7"
+        "@types/jsonwebtoken": "^9.0.8"
     }
 }

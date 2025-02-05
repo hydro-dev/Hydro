@@ -15,7 +15,7 @@
         "koa-compress": "^5.1.1",
         "koa-router": "^13.0.1",
         "lodash": "^4.17.21",
-        "moment-timezone": "^0.5.46",
+        "moment-timezone": "^0.5.47",
         "path-to-regexp": "^8.2.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
@@ -27,8 +27,8 @@
         "@types/koa": "^2.15.0",
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
-        "@types/lodash": "^4.17.14",
+        "@types/lodash": "^4.17.15",
         "@types/saslprep": "^1.0.3",
-        "@types/ws": "^8.5.13"
+        "@types/ws": "^8.5.14"
     }
 }
