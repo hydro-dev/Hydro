@@ -1,12 +1,12 @@
 import { basename, join } from 'path';
-import { fs } from '@hydrooj/utils';
+import { findFileSync, fs } from '@hydrooj/utils';
 import { STATUS } from '@hydrooj/utils/lib/status';
 import type {
-    FileInfo, JudgeMeta, JudgeResultBody, TestCase,
+    CompilableSource, FileInfo, JudgeMeta, JudgeResultBody, TestCase,
 } from 'hydrooj';
 import readCases from './cases';
 import checkers from './checkers';
-import compile, { compileLocalFile } from './compile';
+import compile from './compile';
 import { getConfig } from './config';
 import { CompileError, FormatError } from './error';
 import {
@@ -18,6 +18,10 @@ import { CopyIn, CopyInFile, runQueued } from './sandbox';
 import { compilerText, Lock, md5 } from './utils';
 
 const logger = new Logger('judge');
+
+const testlibFile = {
+    src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
+};
 
 export class JudgeTask {
     stat: Record<string, Date> = Object.create(null);
@@ -93,6 +97,8 @@ export class JudgeTask {
     }
 
     async cacheOpen(source: string, files: FileInfo[]) {
+        // Backward compatibility for vj4
+        if ((this.session as any).cacheOpen) return (this.session as any).cacheOpen(source, files);
         const lockKey = `${this.session.config?.host || 'local'}/${source}`;
         await Lock.acquire(lockKey);
         const filePath = join(getConfig('cache_dir'), lockKey);
@@ -165,19 +171,36 @@ export class JudgeTask {
         return result;
     }
 
-    async compileLocalFile(type: 'interactor' | 'validator' | 'checker' | 'generator' | 'manager' | 'std', file: string, checkerType?: string) {
+    async compileLocalFile(
+        type: 'interactor' | 'validator' | 'checker' | 'generator' | 'manager' | 'std',
+        source: CompilableSource,
+        checkerType?: string,
+    ) {
         if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
         if (type === 'checker' && !checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
         const withTestlib = type !== 'std' && (type !== 'checker' || checkerType === 'testlib');
         const extra = type === 'std' ? this.config.user_extra_files : this.config.judge_extra_files;
         const copyIn = {
-            user_code: this.code,
             ...Object.fromEntries(
                 (extra || []).map((i) => [basename(i), { src: i }]),
             ),
+            ...(withTestlib ? { testlib: testlibFile } : {}),
         } as CopyIn;
+        let [file, langId] = typeof source === 'string' ? [source, 'auto'] : [source.file, source.lang];
         if (!file.startsWith('/')) file = join(this.folder, file);
-        const result = await compileLocalFile(file, type, this.session.getLang, copyIn, withTestlib, this.next);
+        let lang;
+        if (langId === 'auto') {
+            const s = file.replace('@', '.').split('.');
+            langId = s.pop();
+            while (s.length) {
+                lang = this.session.getLang(langId);
+                if (lang) break;
+                langId = `${s.pop()}.${langId}`;
+            }
+        } else lang = this.session.getLang(langId);
+        if (!lang) throw new FormatError(`Unknown ${type} language.`);
+        // TODO cache compiled binary
+        const result = await compile(lang, { src: file }, copyIn, this.next);
         this.clean.push(result.clean);
         return result;
     }

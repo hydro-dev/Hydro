@@ -1,7 +1,6 @@
 import { LangConfig } from '@hydrooj/utils/lib/lang';
 import { STATUS } from '@hydrooj/utils/lib/status';
-import { findFileSync } from '@hydrooj/utils/lib/utils';
-import { CompileError, FormatError } from './error';
+import { CompileError } from './error';
 import { Execute } from './interface';
 import {
     CopyIn, CopyInFile, del, runQueued,
@@ -45,26 +44,4 @@ export default async function compile(
         copyIn: { ...copyIn, [lang.code_file]: code },
         clean: () => Promise.resolve(null),
     };
-}
-
-const testlibFile = {
-    src: findFileSync('@hydrooj/hydrojudge/vendor/testlib/testlib.h'),
-};
-
-export async function compileLocalFile(
-    src: string, type: 'checker' | 'validator' | 'interactor' | 'generator' | 'manager' | 'std',
-    getLang, copyIn: CopyIn, withTestlib = true, next?: any,
-) {
-    const s = src.replace('@', '.').split('.');
-    let lang;
-    let langId = s.pop();
-    while (s.length) {
-        lang = getLang(langId, false);
-        if (lang) break;
-        langId = `${s.pop()}.${langId}`;
-    }
-    if (!lang) throw new FormatError(`Unknown ${type} language.`);
-    if (withTestlib) copyIn = { ...copyIn, 'testlib.h': testlibFile };
-    // TODO cache compiled binary
-    return await compile(lang, { src }, copyIn, next);
 }
