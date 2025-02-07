@@ -26,7 +26,7 @@ export default class VJ4 implements Session {
     progress = 0;
     ws: WebSocket;
 
-    async fetchFile(): Promise<string> {
+    async fetchFile(): Promise<any> {
         throw new Error('not implemented');
     }
 
