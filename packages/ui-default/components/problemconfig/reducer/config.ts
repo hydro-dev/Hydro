@@ -51,7 +51,7 @@ export default function reducer(state = {
       const next = { ...state, [action.key]: action.value };
       if (action.key === 'score' && action.value) next.score = +next.score;
       if (action.key === 'checker_type' && action.value === 'other') next.checker_type = 'syzoj';
-      if (!action.value || (typeof action.value === 'object' && !action.value.join(''))) delete next[action.key];
+      if (!action.value || (action.value instanceof Array && !action.value.join(''))) delete next[action.key];
       return next;
     }
     case 'CONFIG_CODE_UPDATE': {

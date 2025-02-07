@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import {
-    convertIniConfig, LangConfig,
-    normalizeSubtasks, ProblemConfigFile, readSubtasksFromFiles, readYamlCases,
+    convertIniConfig, LangConfig, normalizeSubtasks, ProblemConfigFile, readSubtasksFromFiles,
 } from '@hydrooj/common';
+import { readYamlCases } from '@hydrooj/common/cases';
 import {
     changeErrorType, fs, yaml,
 } from '@hydrooj/utils';
