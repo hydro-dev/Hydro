@@ -1,5 +1,5 @@
 /* eslint-disable no-template-curly-in-string */
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
 import { parse } from './testlib';

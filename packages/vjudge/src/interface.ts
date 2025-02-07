@@ -1,5 +1,4 @@
-import { LangConfig } from '@hydrooj/utils/lib/lang';
-import { JudgeResultBody } from 'hydrooj';
+import { JudgeResultBody, LangConfig } from '@hydrooj/common';
 
 export interface RemoteAccount {
     _id: string;

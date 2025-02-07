@@ -2,7 +2,7 @@ import cac from 'cac';
 import PQueue from 'p-queue';
 import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';

@@ -1,7 +1,7 @@
 import {
   Button, Classes, Icon, Popover, TreeNode,
 } from '@blueprintjs/core';
-import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/common';
 import { TestCaseConfig } from 'hydrooj';
 import { isEqual } from 'lodash';
 import React from 'react';

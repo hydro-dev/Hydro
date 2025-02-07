@@ -1,5 +1,4 @@
-import { LangConfig } from '@hydrooj/utils/lib/lang';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { LangConfig, STATUS } from '@hydrooj/common';
 import { CompileError } from './error';
 import { Execute } from './interface';
 import {

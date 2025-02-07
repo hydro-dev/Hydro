@@ -1,8 +1,8 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { JudgeTask } from '../task';
-import { parseMemoryMB, parseTimeMS } from '../utils';
 
 export const judge = async (ctx: JudgeTask) => {
     ctx.stat.judge = new Date();

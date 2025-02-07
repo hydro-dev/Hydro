@@ -1,7 +1,6 @@
-import type { LangConfig } from '@hydrooj/utils/lib/lang';
-import { NormalizedSubtask } from '@hydrooj/utils/lib/utils';
-import type { JudgeRequest as OrigJudgeRequest, ObjectId } from 'hydrooj';
-import { JudgeResultBody, ProblemConfigFile } from 'hydrooj';
+import {
+    JudgeResultBody, type LangConfig, NormalizedSubtask, ProblemConfigFile,
+} from '@hydrooj/common';
 import { CopyInFile } from './sandbox';
 import type { JudgeTask } from './task';
 
@@ -20,10 +19,7 @@ export interface ParsedConfig extends Omit<ProblemConfigFile, 'time' | 'memory' 
     subtasks: NormalizedSubtask[];
 }
 
-// replace ObjectId to string
-export type JudgeRequest = {
-    [K in keyof OrigJudgeRequest]: OrigJudgeRequest[K] extends ObjectId ? string : OrigJudgeRequest[K];
-};
+export { JudgeRequest } from '@hydrooj/common';
 
 export interface Session {
     getLang: (name: string) => LangConfig;

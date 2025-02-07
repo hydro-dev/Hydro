@@ -2,9 +2,9 @@ import {
     getScoreColor, STATUS, STATUS_CODES, STATUS_SHORT_TEXTS,
     STATUS_TEXTS, USER_GENDER_FEMALE, USER_GENDER_ICONS, USER_GENDER_MALE,
     USER_GENDER_OTHER, USER_GENDER_RANGE, USER_GENDERS,
-} from '@hydrooj/utils/lib/status';
+} from '@hydrooj/common';
 
-export * from '@hydrooj/utils/lib/status';
+export * from '@hydrooj/common/status';
 
 export const PERM = {
     PERM_NONE: 0n,

@@ -1,4 +1,4 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 
 const operation = /^\s*(status|score)\((\d+)\)\s*(.*)$/m;
 

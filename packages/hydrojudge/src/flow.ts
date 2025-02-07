@@ -1,10 +1,10 @@
 import Queue from 'p-queue';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import type { JudgeResultBody } from 'hydrooj';
+import {
+    JudgeResultBody, NormalizedCase, NormalizedSubtask, STATUS,
+} from '@hydrooj/common';
 import { getConfig } from './config';
 import { FormatError } from './error';
 import { Context, ContextSubTask } from './judge/interface';
-import { NormalizedCase, NormalizedSubtask } from './utils';
 
 interface Task {
     compile: () => Promise<void>;

@@ -4,10 +4,15 @@ import { CredentialDeviceType } from '@simplewebauthn/types';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
+import type {
+    FileInfo, RecordPayload,
+} from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { DocStatusType } from './model/document';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
+
+export * from '@hydrooj/common/types';
 
 type document = typeof import('./model/document');
 
@@ -142,76 +147,6 @@ export interface BaseUser {
 }
 export type BaseUserDict = Record<number, BaseUser>;
 
-export interface FileInfo {
-    /** storage path */
-    _id: string,
-    /** filename */
-    name: string,
-    /** file size (in bytes) */
-    size: number,
-    etag: string,
-    lastModified: Date,
-}
-
-export interface TestCaseConfig {
-    input: string;
-    output: string;
-    time?: string;
-    memory?: string;
-    score?: number;
-}
-
-export enum ProblemType {
-    Default = 'default',
-    SubmitAnswer = 'submit_answer',
-    Interactive = 'interactive',
-    Communication = 'communication',
-    Objective = 'objective',
-    Remote = 'remote_judge',
-}
-
-export enum SubtaskType {
-    min = 'min',
-    max = 'max',
-    sum = 'sum',
-}
-
-export interface SubtaskConfig {
-    time?: string;
-    memory?: string;
-    score?: number;
-    if?: number[];
-    id?: number;
-    type?: SubtaskType;
-    cases?: TestCaseConfig[];
-}
-
-export interface ProblemConfigFile {
-    type?: ProblemType;
-    subType?: string;
-    target?: string;
-    score?: number;
-    time?: string;
-    memory?: string;
-    filename?: string;
-    checker_type?: string;
-    checker?: string;
-    interactor?: string;
-    manager?: string;
-    num_processes?: number;
-    user_extra_files?: string[];
-    judge_extra_files?: string[];
-    detail?: boolean;
-    answers?: Record<string, [string | string[], number]>;
-    redirect?: string;
-    cases?: TestCaseConfig[];
-    subtasks?: SubtaskConfig[];
-    langs?: string[];
-    validator?: string;
-    time_limit_rate?: Record<string, number>;
-    memory_limit_rate?: Record<string, number>;
-}
-
 export interface ProblemConfig {
     redirect?: [string, string];
     count: number;
@@ -284,46 +219,11 @@ export interface ProblemStatusDoc extends StatusDocBase {
     star?: boolean;
 }
 
-export interface TestCase {
-    id?: number;
-    subtaskId?: number;
-    score?: number;
-    time: number;
-    memory: number;
-    status: number;
-    message: string;
-}
-
-export interface RecordDoc {
+export type RecordDoc = {
+    [K in keyof RecordPayload]: K extends 'hackTarget' | 'contest' ? ObjectId : RecordPayload[K];
+} & {
     _id: ObjectId;
-    domainId: string;
-    pid: number;
-    uid: number;
-    lang: string;
-    code: string;
-    score: number;
-    memory: number;
-    time: number;
-    judgeTexts: (string | JudgeMessage)[];
-    compilerTexts: string[];
-    testCases: Required<TestCase>[];
-    rejudged: boolean;
-    source?: string;
-    /** judge uid */
-    judger: number;
-    judgeAt: Date;
-    status: number;
-    progress?: number;
-    /** pretest */
-    input?: string;
-    /** hack target rid */
-    hackTarget?: ObjectId;
-    /** 0 if pretest&script */
-    contest?: ObjectId;
-
-    files?: Record<string, string>
-    subtasks?: Record<number, SubtaskResult>;
-}
+};
 
 export interface RecordStatDoc {
     _id: ObjectId;
@@ -334,24 +234,6 @@ export interface RecordStatDoc {
     memory: number;
     length: number;
     lang: string;
-}
-export interface JudgeMeta {
-    problemOwner: number;
-    hackRejudge?: string;
-    rejudge?: boolean;
-    // FIXME stricter types
-    type?: string;
-}
-
-export interface JudgeRequest extends Omit<RecordDoc, '_id' | 'testCases'> {
-    priority: number;
-    type: 'judge' | 'generate';
-    rid: ObjectId;
-    config: ProblemConfigFile;
-    meta: JudgeMeta;
-    data: FileInfo[];
-    source: string;
-    trusted: boolean;
 }
 
 export interface ScoreboardNode {
@@ -569,39 +451,6 @@ export interface Script {
     validate: any,
 }
 
-export interface JudgeMessage {
-    message: string;
-    params?: string[];
-    stack?: string;
-}
-
-export interface SubtaskResult {
-    type: SubtaskType;
-    score: number;
-    status: number;
-}
-
-export interface JudgeResultBody {
-    key: string;
-    domainId: string;
-    rid: ObjectId;
-    judger?: number;
-    progress?: number;
-    addProgress?: number;
-    case?: TestCase;
-    cases?: TestCase[];
-    status?: number;
-    score?: number;
-    /** in miliseconds */
-    time?: number;
-    /** in kilobytes */
-    memory?: number;
-    message?: string | JudgeMessage;
-    compilerText?: string;
-    nop?: boolean;
-    subtasks?: Record<number, SubtaskResult>;
-}
-
 export interface Task {
     _id: ObjectId;
     type: string;
@@ -683,6 +532,13 @@ export interface ContestBalloonDoc {
     sentAt?: Date;
 }
 
+export interface LockDoc {
+    _id: ObjectId;
+    key: string;
+    lockAt: Date;
+    daemonId: string;
+}
+
 declare module './service/db' {
     interface Collections {
         'blacklist': BlacklistDoc;
@@ -712,6 +568,7 @@ declare module './service/db' {
         'opcount': OpCountDoc;
         'schedule': Schedule;
         'contest.balloon': ContestBalloonDoc;
+        'lock': LockDoc;
     }
 }
 

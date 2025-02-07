@@ -1,10 +1,9 @@
 /* eslint-disable no-sequences */
-import { fs } from '@hydrooj/utils';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
+import { fs, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import checkers from '../checkers';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
-import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
 export async function judge(ctx: Context) {
@@ -13,7 +12,7 @@ export async function judge(ctx: Context) {
         ctx.compile(ctx.lang, ctx.code),
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ctx.compileLocalFile('validator', ctx.config.validator),
-        ctx.session.fetchFile(ctx.files.hack),
+        ctx.session.fetchFile(null, { [ctx.files.hack]: '' }),
     ]);
     ctx.clean.push(() => fs.unlink(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
