@@ -11,17 +11,18 @@ export default async function compile(
 ): Promise<Execute> {
     const target = lang.target || 'foo';
     const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
-    if (lang.compile) {
+    const command = copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile;
+    if (command) {
         const {
             status, stdout, stderr, fileIds,
         } = await runQueued(
-            copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile,
+            command,
             {
                 copyIn: { ...copyIn, [lang.code_file]: code },
                 copyOutCached: [target],
                 env: { HYDRO_LANG: lang.key },
                 time: lang.compile_time_limit || 10000,
-                memory: lang.compile_memory_limit || 256,
+                memory: lang.compile_memory_limit || 512,
             },
             `compile[${lang.key}]`,
             3,
@@ -36,6 +37,7 @@ export default async function compile(
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
             clean: () => del(fileIds[target]),
+            _cacheable: target,
         };
     }
     return {

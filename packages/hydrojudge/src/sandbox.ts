@@ -186,8 +186,8 @@ export async function del(fileId: string) {
     await client.deleteFile(fileId);
 }
 
-export async function get(fileId: string) {
-    return await client.getFile(fileId);
+export async function get(fileId: string, dest?: string) {
+    return await client.getFile(fileId, dest);
 }
 
 const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('parallelism') });
