@@ -1,7 +1,6 @@
 import { load } from 'js-yaml';
-import {
-    normalizeSubtasks, ProblemConfigFile, readYamlCases,
-} from '@hydrooj/common';
+import { normalizeSubtasks, ProblemConfigFile } from '@hydrooj/common';
+import { readYamlCases } from '@hydrooj/common/cases';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import type { ProblemConfig } from '../interface';
 
