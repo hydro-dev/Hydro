@@ -64,7 +64,6 @@ export default class Hydro implements Session {
     }
 
     async _cacheOpen(source: string, files: any[], next?) {
-        const [domainId, pid] = source.split('/');
         const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
         await fs.ensureDir(filePath);
         if (!files?.length) throw new FormatError('Problem data not found.');
@@ -86,34 +85,38 @@ export default class Hydro implements Session {
         if (filenames.length) {
             log.info(`Getting problem data: ${this.config.host}/${source}`);
             next?.({ message: 'Syncing testdata, please wait...' });
-            await this.ensureLogin();
-            const res = await this.post(`/d/${domainId}/judge/files`, {
-                pid: +pid,
-                files: filenames,
-            });
-            if (!res.body.links) throw new FormatError('problem not exist');
-            const tasks = [];
-            const queue = new PQueue({ concurrency: 10 });
-            for (const name in res.body.links) {
-                tasks.push(queue.add(async () => {
-                    if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                    const w = fs.createWriteStream(path.join(filePath, name));
-                    await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
-                }));
-            }
-            await Promise.all(tasks);
+            await this.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, path.join(filePath, i.name)])));
             await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
         }
         await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
         return filePath;
     }
 
-    async fetchFile(name: string) {
-        name = name.split('#')[0];
-        const res = await this.post('judge/files', { id: name });
-        const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
-        await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
-        return target;
+    async fetchFile<T extends string | null>(namespace: T, files: Record<string, string>): Promise<T extends null ? string : null> {
+        if (!namespace) { // record-related resource (code)
+            const name = Object.keys(files)[0].split('#')[0];
+            const res = await this.post('judge/files', { id: name });
+            const target = Object.values(files)[0] || path.join(getConfig('tmp_dir'), Math.random().toString(36).substring(2));
+            await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
+            return target as any;
+        }
+        const [domainId, pid] = namespace.split('/');
+        await this.ensureLogin();
+        const res = await this.post(`/d/${domainId}/judge/files`, {
+            pid: +pid,
+            files: Object.keys(files),
+        });
+        if (!res.body.links) throw new FormatError('problem not exist');
+        const queue = new PQueue({ concurrency: 10 });
+        for (const name in res.body.links) {
+            queue.add(async () => {
+                if (name.includes('/')) await fs.ensureDir(path.dirname(files[name]));
+                const w = fs.createWriteStream(files[name]);
+                await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
+            });
+        }
+        await queue.onEmpty();
+        return null;
     }
 
     async postFile(target: string, filename: string, file: string, retry = 3) {
