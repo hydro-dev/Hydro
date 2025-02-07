@@ -1,4 +1,4 @@
-import * as status from '@hydrooj/utils/lib/status';
+import * as status from '@hydrooj/common/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, fs, PERM, PRIV, STATUS, yaml,

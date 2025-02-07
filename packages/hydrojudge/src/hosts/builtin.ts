@@ -36,18 +36,16 @@ const session: Session = {
         t._callbackAwait ||= Promise.resolve();
         return (data: Partial<JudgeResultBody>) => {
             logger.debug('Next: %o', data);
-            data.rid = new ObjectId(t.rid);
             if (data.case) data.case.message ||= '';
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, domainId: t.request.domainId }));
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, rid: t.rid, domainId: t.request.domainId }));
         };
     },
     getEnd(t: Context) {
         t._callbackAwait ||= Promise.resolve();
         return (data: Partial<JudgeResultBody>) => {
             data.key = 'end';
-            data.rid = new ObjectId(t.rid);
             logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, domainId: t.request.domainId }));
+            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, rid: t.rid, domainId: t.request.domainId }));
         };
     },
     getLang(lang: string, doThrow = true) {

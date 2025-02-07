@@ -1,4 +1,4 @@
-import { getScoreColor } from '@hydrooj/utils/lib/status';
+import { getScoreColor } from '@hydrooj/common';
 import $ from 'jquery';
 import { NamedPage } from 'vj/misc/Page';
 import { getAvailableLangs, tpl } from 'vj/utils';

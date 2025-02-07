@@ -1,8 +1,7 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { runFlow } from '../flow';
 import { Parameter, runPiped } from '../sandbox';
 import signals from '../signals';
-import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
