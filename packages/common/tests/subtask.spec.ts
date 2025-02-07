@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { describe, it } from 'node:test';
-import { readSubtasksFromFiles } from '../cases';
+import { readSubtasksFromFiles } from '../subtask';
 
 interface Info {
     subtask: number;
