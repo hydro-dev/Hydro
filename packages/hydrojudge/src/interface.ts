@@ -8,6 +8,7 @@ export interface Execute {
     execute: string;
     clean: () => Promise<any>;
     copyIn: Record<string, CopyInFile>;
+    _cacheable?: string;
 }
 
 export type NextFunction = (body: Partial<JudgeResultBody>) => Promise<void> | void;
