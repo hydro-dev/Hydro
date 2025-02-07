@@ -15,7 +15,7 @@ import {
 import judge from './judge';
 import { Logger } from './log';
 import { CopyIn, CopyInFile, runQueued } from './sandbox';
-import { compilerText, md5 } from './utils';
+import { compilerText, Lock, md5 } from './utils';
 
 const logger = new Logger('judge');
 
@@ -92,11 +92,41 @@ export class JudgeTask {
         }
     }
 
+    async cacheOpen(source: string, files: FileInfo[]) {
+        const lockKey = `${this.session.config?.host || 'local'}/${source}`;
+        await Lock.acquire(lockKey);
+        const filePath = join(getConfig('cache_dir'), lockKey);
+        await fs.ensureDir(filePath);
+        if (!files?.length) throw new FormatError('Problem data not found.');
+        let etags: Record<string, string> = {};
+        try {
+            etags = JSON.parse(await fs.readFile(join(filePath, 'etags'), 'utf-8'));
+        } catch (e) { /* ignore */ }
+        const version = {};
+        const filenames = [];
+        const allFiles = new Set<string>();
+        for (const file of files) {
+            allFiles.add(file.name);
+            version[file.name] = file.etag + file.lastModified;
+            if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
+        }
+        const allFilesToRemove = Object.keys(etags).filter((name) => !allFiles.has(name) && fs.existsSync(join(filePath, name)));
+        await Promise.all(allFilesToRemove.map((name) => fs.remove(join(filePath, name))));
+        if (filenames.length) {
+            logger.info(`Getting problem data: ${this.session?.config.host || 'local'}/${source}`);
+            this.next({ message: 'Syncing testdata, please wait...' });
+            await this.session.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, join(filePath, i.name)])));
+            await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
+        }
+        await fs.writeFile(join(filePath, 'lastUsage'), new Date().getTime().toString());
+        return filePath;
+    }
+
     async doSubmission() {
         this.stat.cache_start = new Date();
-        this.folder = await this.session.cacheOpen(this.source, this.data, this.next);
+        this.folder = await this.cacheOpen(this.source, this.data);
         if (this.files?.code) {
-            const target = await this.session.fetchFile(this.files?.code);
+            const target = await this.session.fetchFile(null, { [this.files.code]: '' });
             this.code = { src: target };
             this.clean.push(() => fs.remove(target));
         }

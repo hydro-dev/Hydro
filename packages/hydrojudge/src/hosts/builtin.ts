@@ -9,20 +9,28 @@ import {
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
 import { getConfig } from '../config';
-import { FormatError, SystemError } from '../error';
+import { SystemError } from '../error';
 import { compilerVersions, stackSize } from '../info';
+import { Session } from '../interface';
 import { Context } from '../judge/interface';
 import logger from '../log';
 import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
-const session = {
+const session: Session = {
     config: { detail: SystemModel.get('hydrojudge.detail') },
-    async fetchFile(name: string) {
-        name = name.split('#')[0];
-        const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
-        await StorageModel.get(`submission/${name}`, target);
-        return target;
+    async fetchFile(namespace, files) {
+        if (namespace === null) {
+            const name = Object.keys(files)[0].split('#')[0];
+            const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
+            await StorageModel.get(`submission/${name}`, target);
+            return target as any;
+        }
+        for (const key in files) {
+            const target = files[key];
+            await StorageModel.get(`problem/${namespace}/testdata/${key}`, target);
+        }
+        return null;
     },
     getNext(t: Context) {
         t._callbackAwait ||= Promise.resolve();
@@ -50,32 +58,6 @@ const session = {
     },
     async postFile(target: string, filename: string, filepath: string) {
         return await JudgeHandler.processJudgeFileCallback(new ObjectId(target), filename, filepath);
-    },
-    async cacheOpen(source: string, files: any[]) {
-        const filePath = path.join(getConfig('cache_dir'), source);
-        await fs.ensureDir(filePath);
-        if (!files?.length) throw new FormatError('Problem data not found.');
-        let etags: Record<string, string> = {};
-        try {
-            etags = JSON.parse(await fs.readFile(path.join(filePath, 'etags'), 'utf-8'));
-        } catch (e) { /* ignore */ }
-        const version = {};
-        const filenames = new Set<string>();
-        for (const file of files) {
-            filenames.add(file.name);
-            version[file.name] = file.etag + file.lastModified;
-            if (etags[file.name] !== file.etag + file.lastModified) {
-                await StorageModel.get(`problem/${source}/testdata/${file.name}`, path.join(filePath, file.name));
-            }
-        }
-        for (const name in etags) {
-            if (!filenames.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
-        }
-        await Promise.all([
-            fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version)),
-            fs.writeFile(path.join(filePath, 'lastUsage'), Date.now().toString()),
-        ]);
-        return filePath;
     },
 };
 
