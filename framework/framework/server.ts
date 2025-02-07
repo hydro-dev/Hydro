@@ -8,7 +8,7 @@ import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import { Shorty } from 'shorty.js';
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import {
     Counter, errorMessage, isClass, Logger, parseMemoryMB,
 } from '@hydrooj/utils/lib/utils';
@@ -71,6 +71,7 @@ export interface HydroResponse {
     etag?: string;
     attachment: (name: string, stream?: any) => void;
     addHeader: (name: string, value: string) => void;
+    serializer: typeof serializer;
 }
 export type RendererFunction = (name: string, context: Record<string, any>) => string | Promise<string>;
 type HydroContext = {
@@ -170,7 +171,7 @@ export class HandlerCommon {
 
     renderHTML(templateName: string, args: Record<string, any>) {
         const type = templateName.split('.')[1];
-        const engine = this.ctx.server.renderers[type] || (() => JSON.stringify(args, serializer(false, this)));
+        const engine = this.ctx.server.renderers[type] || (() => JSON.stringify(args, this.response.serializer(false, this)));
         return engine(templateName, {
             handler: this,
             UserContext: this.user,
@@ -265,7 +266,7 @@ export class ConnectionHandler extends HandlerCommon {
     }
 
     send(data: any) {
-        let payload = JSON.stringify(data, serializer(false, this));
+        let payload = JSON.stringify(data, this.response.serializer(false, this));
         if (this.compression) {
             if (this.counter > 1000) this.resetCompression();
             payload = this.compression.deflate(payload);
@@ -327,6 +328,7 @@ export interface WebServiceConfig {
     host?: string;
     xff?: string;
     xhost?: string;
+    serializer?: typeof serializer;
 }
 
 export class WebService extends Service {
@@ -441,7 +443,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 func: (t) => this.handleHttp(t, NotFoundHandler, () => true),
             },
         ]));
-        this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
+        this.addLayer('base', base(logger, this.config.xff, this.config.xhost, this.config.serializer));
         wsServer.on('connection', async (socket, request) => {
             socket.on('error', (err) => {
                 logger.warn('Websocket Error: %s', err.message);

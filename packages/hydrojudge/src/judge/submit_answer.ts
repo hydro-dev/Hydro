@@ -1,9 +1,8 @@
+import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { fs } from '@hydrooj/utils';
-import { STATUS } from '@hydrooj/utils/lib/status';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
 import { del, runQueued } from '../sandbox';
-import { NormalizedCase } from '../utils';
 import { Context } from './interface';
 
 function judgeCase(c: NormalizedCase) {

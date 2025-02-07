@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import type { NormalizedSubtask } from '@hydrooj/utils/lib/common';
+import { NormalizedSubtask } from '@hydrooj/common';
 import { Execute } from '../interface';
 import { JudgeTask } from '../task';
 

@@ -1,4 +1,4 @@
-import { LangConfig } from '@hydrooj/utils/lib/lang';
+import { LangConfig } from '@hydrooj/common';
 import { runQueued } from './sandbox';
 
 export async function compilerVersions(langs: Record<string, LangConfig>) {

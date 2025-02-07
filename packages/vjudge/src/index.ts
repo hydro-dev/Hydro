@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
-import { LangConfig } from '@hydrooj/utils/lib/lang';
+import { LangConfig, STATUS } from '@hydrooj/common';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
-    sleep, STATUS, SystemModel, TaskModel, Time, yaml,
+    Context, db, DomainModel, JudgeHandler, Logger,
+    ProblemModel, RecordModel, Service, SettingModel,
+    sleep, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';

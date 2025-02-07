@@ -115,7 +115,7 @@ class SystemScriptHandler extends SystemHandler {
                 const time = new Date().getTime() - start;
                 judge.end({
                     domainId,
-                    rid,
+                    rid: rid.toHexString(),
                     status: STATUS.STATUS_ACCEPTED,
                     message: inspect(ret, false, 10, true),
                     judger: 1,
@@ -128,7 +128,7 @@ class SystemScriptHandler extends SystemHandler {
                 logger.error(err);
                 judge.end({
                     domainId,
-                    rid,
+                    rid: rid.toHexString(),
                     status: STATUS.STATUS_SYSTEM_ERROR,
                     message: `${err.message} \n${(err as any).params || []} \n${err.stack} `,
                     judger: 1,
