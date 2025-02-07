@@ -13,7 +13,9 @@ import {
 } from './interface';
 import judge from './judge';
 import { Logger } from './log';
-import { CopyIn, CopyInFile, runQueued } from './sandbox';
+import {
+    CopyIn, CopyInFile, get, PreparedFile, runQueued,
+} from './sandbox';
 import { compilerText, Lock, md5 } from './utils';
 
 const logger = new Logger('judge');
@@ -39,6 +41,7 @@ export class JudgeTask {
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
     callbackCache?: TestCase[];
+    compileCache: Record<string, Pick<Execute, 'execute' | 'copyIn'>> = {};
 
     constructor(public session: Session, public request: JudgeRequest) {
         this.stat.receive = new Date();
@@ -98,33 +101,43 @@ export class JudgeTask {
     async cacheOpen(source: string, files: FileInfo[]) {
         // Backward compatibility for vj4
         if ((this.session as any).cacheOpen) return (this.session as any).cacheOpen(source, files);
-        const lockKey = `${this.session.config?.host || 'local'}/${source}`;
-        await Lock.acquire(lockKey);
-        const filePath = join(getConfig('cache_dir'), lockKey);
-        await fs.ensureDir(filePath);
-        if (!files?.length) throw new FormatError('Problem data not found.');
-        let etags: Record<string, string> = {};
+        const host = this.session.config?.host || 'local';
+        const filePath = join(getConfig('cache_dir'), host, source);
+        await Lock.acquire(filePath);
         try {
-            etags = JSON.parse(await fs.readFile(join(filePath, 'etags'), 'utf-8'));
-        } catch (e) { /* ignore */ }
-        const version = {};
-        const filenames = [];
-        const allFiles = new Set<string>();
-        for (const file of files) {
-            allFiles.add(file.name);
-            version[file.name] = file.etag + file.lastModified;
-            if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
+            await fs.ensureDir(filePath);
+            if (!files?.length) throw new FormatError('Problem data not found.');
+            let etags: Record<string, string> = {};
+            try {
+                etags = JSON.parse(await fs.readFile(join(filePath, 'etags'), 'utf-8'));
+            } catch (e) { /* ignore */ }
+            this.compileCache = etags['*cache'] as any || {};
+            delete etags['*cache'];
+            const version = {};
+            const filenames = [];
+            const allFiles = new Set<string>();
+            for (const file of files) {
+                allFiles.add(file.name);
+                version[file.name] = file.etag + file.lastModified;
+                if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
+            }
+            const allFilesToRemove = Object.keys(etags).filter((name) => !allFiles.has(name) && fs.existsSync(join(filePath, name)));
+            await Promise.all(allFilesToRemove.map((name) => fs.remove(join(filePath, name))));
+            if (filenames.length) {
+                logger.info(`Getting problem data: ${this.session?.config.host || 'local'}/${source}`);
+                this.next({ message: 'Syncing testdata, please wait...' });
+                await this.session.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, join(filePath, i.name)])));
+                await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
+                this.compileCache = {};
+            }
+            await fs.writeFile(join(filePath, 'lastUsage'), Date.now().toString());
+            return filePath;
+        } catch (e) {
+            logger.warn('CacheOpen Fail: %s %o %o', source, files, e);
+            throw e;
+        } finally {
+            Lock.release(filePath);
         }
-        const allFilesToRemove = Object.keys(etags).filter((name) => !allFiles.has(name) && fs.existsSync(join(filePath, name)));
-        await Promise.all(allFilesToRemove.map((name) => fs.remove(join(filePath, name))));
-        if (filenames.length) {
-            logger.info(`Getting problem data: ${this.session?.config.host || 'local'}/${source}`);
-            this.next({ message: 'Syncing testdata, please wait...' });
-            await this.session.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, join(filePath, i.name)])));
-            await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
-        }
-        await fs.writeFile(join(filePath, 'lastUsage'), new Date().getTime().toString());
-        return filePath;
     }
 
     async doSubmission() {
@@ -172,11 +185,16 @@ export class JudgeTask {
 
     async compileLocalFile(
         type: 'interactor' | 'validator' | 'checker' | 'generator' | 'manager' | 'std',
-        source: CompilableSource,
-        checkerType?: string,
-    ) {
+        source: CompilableSource, checkerType?: string,
+    ): Promise<Execute> {
         if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
         if (type === 'checker' && !checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
+        if (this.compileCache?.[type]) {
+            return {
+                ...this.compileCache[type],
+                clean: () => Promise.resolve(null),
+            };
+        }
         const withTestlib = type !== 'std' && (type !== 'checker' || checkerType === 'testlib');
         const extra = type === 'std' ? this.config.user_extra_files : this.config.judge_extra_files;
         const copyIn = {
@@ -199,8 +217,22 @@ export class JudgeTask {
         } else lang = this.session.getLang(langId);
         if (!lang) throw new FormatError(`Unknown ${type} language.`);
         // TODO cache compiled binary
-        const result = await compile(lang, { src: file }, copyIn, this.next);
+        const result = await compile(lang, { src: file }, copyIn);
         this.clean.push(result.clean);
+        if (!result._cacheable) return result;
+        await Lock.acquire(this.folder);
+        try {
+            const loc = join(this.folder, `_${type}.cache`);
+            this.compileCache[type] = {
+                execute: result.execute,
+                copyIn: { ...result.copyIn, [result._cacheable]: { src: loc } },
+            };
+            await get((result.copyIn[result._cacheable] as PreparedFile).fileId, loc);
+            const currEtag = await fs.readFile(join(this.folder, 'etags'), 'utf-8');
+            await fs.writeFile(join(this.folder, 'etags'), JSON.stringify({ ...JSON.parse(currEtag), '*cache': this.compileCache }));
+        } finally {
+            Lock.release(this.folder);
+        }
         return result;
     }
 

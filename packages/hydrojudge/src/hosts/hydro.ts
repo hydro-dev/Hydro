@@ -51,47 +51,6 @@ export default class Hydro implements Session {
         setInterval(() => { this.get(''); }, 30000000); // Cookie refresh only
     }
 
-    async cacheOpen(source: string, files: any[], next?) {
-        await Lock.acquire(`${this.config.host}/${source}`);
-        try {
-            return await this._cacheOpen(source, files, next);
-        } catch (e) {
-            log.warn('CacheOpen Fail: %s %o %o', source, files, e);
-            throw e;
-        } finally {
-            Lock.release(`${this.config.host}/${source}`);
-        }
-    }
-
-    async _cacheOpen(source: string, files: any[], next?) {
-        const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
-        await fs.ensureDir(filePath);
-        if (!files?.length) throw new FormatError('Problem data not found.');
-        let etags: Record<string, string> = {};
-        try {
-            etags = JSON.parse(await fs.readFile(path.join(filePath, 'etags'), 'utf-8'));
-        } catch (e) { /* ignore */ }
-        const version = {};
-        const filenames = [];
-        const allFiles = new Set<string>();
-        for (const file of files) {
-            allFiles.add(file.name);
-            version[file.name] = file.etag + file.lastModified;
-            if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
-        }
-        for (const name in etags) {
-            if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
-        }
-        if (filenames.length) {
-            log.info(`Getting problem data: ${this.config.host}/${source}`);
-            next?.({ message: 'Syncing testdata, please wait...' });
-            await this.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, path.join(filePath, i.name)])));
-            await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
-        }
-        await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
-        return filePath;
-    }
-
     async fetchFile<T extends string | null>(namespace: T, files: Record<string, string>): Promise<T extends null ? string : null> {
         if (!namespace) { // record-related resource (code)
             const name = Object.keys(files)[0].split('#')[0];
