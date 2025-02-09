@@ -214,11 +214,13 @@ export function runQueued(
 export async function versionCheck(reportWarn: (str: string) => void, reportError = reportWarn) {
     let sandboxVersion: string;
     let sandboxCgroup: number;
+    let sandboxCgroupControllers: string[] | null;
     try {
         const version = await client.version();
         sandboxVersion = version.buildVersion.split('v')[1];
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
+        sandboxCgroupControllers = config.runnerConfig?.cgroupControllers || null;
     } catch (e) {
         if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
@@ -229,6 +231,11 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         const kernelVersion = osinfo.kernel.split('-')[0];
         if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
             reportWarn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
+        }
+    }
+    if (sandboxCgroupControllers) {
+        if (!sandboxCgroupControllers.includes('memory') && gte(sandboxVersion, '1.8.6')) {
+            reportWarn('The memory cgroup controller is not enabled. This could result in inaccurate memory usage measurements.');
         }
     }
     return true;
