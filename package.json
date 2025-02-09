@@ -49,7 +49,7 @@
         "eslint-import-resolver-typescript": "^3.7.0",
         "eslint-import-resolver-webpack": "^0.13.10",
         "fs-extra": "^11.3.0",
-        "globby": "^14.0.2",
+        "globby": "~14.0.2",
         "inspectpack": "^4.7.1",
         "mongodb-memory-server": "10.1.3",
         "nyc": "^17.1.0",
