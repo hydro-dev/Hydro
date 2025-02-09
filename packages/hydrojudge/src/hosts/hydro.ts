@@ -13,7 +13,6 @@ import { compilerVersions, stackSize as getStackSize } from '../info';
 import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
-import { Lock } from '../utils';
 
 function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
