@@ -422,7 +422,7 @@ ${nixConfBase}`);
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code || installAsJudge || noCaddy || !existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
+        skip: () => installAsJudge || noCaddy || existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
             'nix-env -iA nixpkgs.caddy',
