@@ -22,8 +22,6 @@ echo "// File created by Hydro install script\n" >/tmp/install.js
 cat >/tmp/install.b64 << EOF123
 %PLACEHOLDER%
 EOF123
-cat /tmp/install.b64 | base64 -d >>/tmp/install.js.gz
-rm /tmp/install.b64
-gunzip /tmp/install.js.gz
+cat /tmp/install.b64 | base64 -d | gunzip >/tmp/install.js
 node /tmp/install.js "$@"
 set +e
