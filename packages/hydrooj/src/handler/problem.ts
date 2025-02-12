@@ -11,7 +11,7 @@ import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import type { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
+    FileLimitExceededError, FileTooLargeError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
     ProblemIsReferencedError, ProblemNotAllowCopyError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError,
     ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError, ValidationError,
@@ -497,7 +497,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             const file = this.request.files?.file;
             if (!file || file.size === 0) throw new ValidationError('code');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : lengthLimit;
-            if (file.size > sizeLimit) throw new ValidationError('file');
+            if (file.size > sizeLimit) throw new FileTooLargeError('file');
             const shouldReadFile = () => {
                 if (config.type === 'objective') return true;
                 if (lang === '_') return false;
