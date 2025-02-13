@@ -16,7 +16,7 @@
         "build:ui:iconfont": "node packages/ui-default/build --iconfont",
         "build:ui:dev": "node packages/ui-default/build --iconfont && node --trace-deprecation packages/ui-default/build --dev",
         "build:ui:dev:https": "node packages/ui-default/build --iconfont && node --trace-deprecation packages/ui-default/build --dev --https",
-        "build:ui:production": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --iconfont && node packages/ui-default/build --production",
+        "build:ui:production": "cross-env-shell NODE_OPTIONS=--max_old_space_size=8192 \"node packages/ui-default/build --iconfont && node packages/ui-default/build --production\"",
         "build:ui:production:webpack": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --production",
         "test": "node -r @hydrooj/register packages/common/tests/subtask.spec.ts && node test/entry.js",
         "benchmark": "cross-env BENCHMARK=true node test/entry.js",
