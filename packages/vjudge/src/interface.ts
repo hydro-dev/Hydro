@@ -14,14 +14,15 @@ export interface RemoteAccount {
     enableOn?: string[];
     UA?: string;
 }
+export interface VjudgeMount {
+    _id: string; //  domainId, or `${domainId}.${namespace}`
+    mount: string;
+    syncDone: Record<string, boolean>;
+}
 declare module 'hydrooj' {
     interface Collections {
         vjudge: RemoteAccount;
-    }
-
-    interface DomainDoc {
-        mount?: string;
-        mountInfo?: any;
+        'vjudge.mount': VjudgeMount;
     }
 }
 type NextFunction = (body: Partial<JudgeResultBody>) => void;
