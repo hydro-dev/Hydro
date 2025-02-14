@@ -201,7 +201,7 @@ export class JudgeTask {
             ...Object.fromEntries(
                 (extra || []).map((i) => [basename(i), { src: i }]),
             ),
-            ...(withTestlib ? { testlib: testlibFile } : {}),
+            ...(withTestlib ? { 'testlib.h': testlibFile } : {}),
         } as CopyIn;
         let [file, langId] = typeof source === 'string' ? [source, 'auto'] : [source.file, source.lang];
         if (!file.startsWith('/')) file = join(this.folder, file);
