@@ -411,7 +411,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             rdoc.compilerTexts = [];
         }
 
-        if (!(rdoc.contest && this.user._id === rdoc.uid)) {
+        if (!rdoc.contest || this.user._id !== rdoc.uid) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         }
 

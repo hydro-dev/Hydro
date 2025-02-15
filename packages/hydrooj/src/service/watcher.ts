@@ -154,11 +154,11 @@ export default class Watcher extends Service {
         for (const filename in require.cache) {
             const module = require.cache[filename];
             const plugin = unwrapExports(module.exports);
-            if (!(typeof plugin === 'object' && plugin && 'apply' in plugin)) continue;
+            if (typeof plugin !== 'object' || !plugin || !('apply' in plugin)) continue;
             const runtime = this.ctx.registry.get(plugin);
             if (!runtime || this.declined.has(filename)) continue;
             pending.set(filename, runtime);
-            if (!(plugin && 'sideEffect' in plugin && plugin['sideEffect'])) this.declined.add(filename);
+            if (!plugin || !('sideEffect' in plugin) || !plugin['sideEffect']) this.declined.add(filename);
         }
 
         for (const [filename, runtime] of pending) {

@@ -396,7 +396,7 @@ export class ProblemModel {
         // TODO enhance
         if (pdocs.length !== pids.length) {
             for (const pid of pids) {
-                if (!(r[pid] || l[pid])) {
+                if (!r[pid] && !l[pid]) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
                     if (!indexByDocIdOnly) r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
                 }

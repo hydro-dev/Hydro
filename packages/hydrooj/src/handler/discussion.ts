@@ -275,8 +275,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drid', Types.ObjectId)
     async postDeleteReply(domainId: string, drid: ObjectId) {
         const deleteBy = this.user.own(this.drdoc) ? 'self' : this.user.own(this.ddoc) ? 'DiscussionOwner' : 'Admin';
-        if (!(this.user.own(this.ddoc)
-            && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION))) {
+        if (!this.user.own(this.ddoc) || !this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF_DISCUSSION)) {
             if (!this.user.own(this.drdoc)) {
                 this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
             } else this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF);
@@ -316,8 +315,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
     @param('drrid', Types.ObjectId)
     async postDeleteTailReply(domainId: string, drid: ObjectId, drrid: ObjectId) {
         const deleteBy = this.user.own(this.drrdoc) ? 'self' : 'Admin';
-        if (!(this.user.own(this.drrdoc)
-            && this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF))) {
+        if (!this.user.own(this.drrdoc) || !this.user.hasPerm(PERM.PERM_DELETE_DISCUSSION_REPLY_SELF)) {
             this.checkPerm(PERM.PERM_DELETE_DISCUSSION_REPLY);
         }
         const msg = JSON.stringify({
