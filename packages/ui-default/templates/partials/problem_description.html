@@ -19,5 +19,9 @@
       <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
     </blockquote>
   {% endif %}
-  {{ pdoc.content|content(handler.request.query.lang or handler.user.viewLang or handler.session.viewLang, pdoc.html)|safe }}
+  {% if not renderredContent %}
+    {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}
+    {% set renderredContent = pdoc.content|content(preferredLang, pdoc.html) %}
+  {% endif %}
+  {{ renderredContent|safe }}
 </div>

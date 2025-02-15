@@ -1,4 +1,4 @@
-import type { AttestationFormat, CredentialDeviceType, } from '@simplewebauthn/server';
+import type { AttestationFormat, CredentialDeviceType } from '@simplewebauthn/server';
 import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/esm/helpers/decodeAuthenticatorExtensions';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
