@@ -210,11 +210,11 @@ export class JudgeTask {
             const s = file.replace('@', '.').split('.');
             langId = s.pop();
             while (s.length) {
-                lang = this.session.getLang(langId);
+                lang = this.session.getLang(langId, false);
                 if (lang) break;
                 langId = `${s.pop()}.${langId}`;
             }
-        } else lang = this.session.getLang(langId);
+        } else lang = this.session.getLang(langId, false);
         if (!lang) throw new FormatError(`Unknown ${type} language.`);
         // TODO cache compiled binary
         const result = await compile(lang, { src: file }, copyIn);
