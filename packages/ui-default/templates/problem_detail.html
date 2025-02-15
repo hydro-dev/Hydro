@@ -24,6 +24,22 @@
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId) }}
 {% endif %}
 </script>
+{% if not tdoc %}
+  {% block ogp %}
+    {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}
+    {% set renderredContent = pdoc.content|content(preferredLang, pdoc.html) %}
+    {% set langs = pdoc.content|contentLang %}
+    {% for k in langs %}
+      {% if k != preferredLang %}
+        <meta property="og:locale:alternate" content="{{ k }}" />
+      {% else %}
+        <meta property="og:locale" content="{{ k }}" />
+      {% endif %}
+    {% endfor %}
+    <meta property="og:title" content="{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }} - {{ model.system.get('server.name') }}" />
+    <meta property="og:description" content="{{ renderredContent|problemPreview|truncate(100, true) }}" />
+  {% endblock %}
+{% endif %}
 <div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
