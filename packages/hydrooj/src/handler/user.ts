@@ -1,4 +1,5 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
+import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
 import type { Context } from '../context';
@@ -144,8 +145,7 @@ class UserWebauthnHandler extends Handler {
         if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
         const options = await generateAuthenticationOptions({
             allowCredentials: udoc._authenticators.map((authenticator) => ({
-                id: authenticator.credentialID.buffer,
-                type: 'public-key',
+                id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
             })),
             rpID: this.getAuthnHost(),
             userVerification: 'preferred',
@@ -169,10 +169,10 @@ class UserWebauthnHandler extends Handler {
             expectedChallenge: challenge,
             expectedOrigin: this.request.headers.origin,
             expectedRPID: this.getAuthnHost(),
-            authenticator: {
+            credential: {
                 ...authenticator,
-                credentialID: authenticator.credentialID.buffer,
-                credentialPublicKey: authenticator.credentialPublicKey.buffer,
+                id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
+                publicKey: authenticator.credentialPublicKey.buffer,
             },
         }).catch(() => null);
         if (!verification?.verified) throw new ValidationError('authenticator');

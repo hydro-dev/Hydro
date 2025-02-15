@@ -127,18 +127,12 @@ export class User {
             : doc.owner === this._id || (doc.maintainer || []).includes(this._id);
     }
 
-    hasPerm(...perm: bigint[]) {
-        for (const i in perm) {
-            if ((this.perm & this.scope & perm[i]) === perm[i]) return true;
-        }
-        return false;
+    hasPerm(...perms: bigint[]) {
+        return perms.some((perm) => (this.perm & this.scope & perm) === perm);
     }
 
-    hasPriv(...priv: number[]) {
-        for (const i in priv) {
-            if ((this.priv & priv[i]) === priv[i]) return true;
-        }
-        return false;
+    hasPriv(...privs: number[]) {
+        return privs.some((priv) => (this.priv & priv) === priv);
     }
 
     async checkPassword(password: string) {
