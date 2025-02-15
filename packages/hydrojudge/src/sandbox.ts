@@ -229,7 +229,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     const { osinfo } = await sysinfo.get();
     if (sandboxCgroup === 2) {
         const kernelVersion = osinfo.kernel.split('-')[0];
-        if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
+        if (!gte(kernelVersion, '5.19.0') || !gte(sandboxVersion, '1.6.10')) {
             reportWarn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
         }
     }

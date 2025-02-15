@@ -123,8 +123,7 @@ export class ConnectionHandler extends ConnectionHandlerOriginal {
     }
 
     onerror(err: HydroError) {
-        if (!(err instanceof NotFoundError)
-            && !((err instanceof PrivilegeError || err instanceof PermissionError) && this.user?._id === 0)) {
+        if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
             logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
             logger.error(err);
         }

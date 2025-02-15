@@ -23,7 +23,7 @@ function parseProblemId(id: string) {
 
 export function getDifficulty(tags: string[]) {
     const d = tags.find((i) => /^\*\d+$/.test(i))?.split('*')[1];
-    if (!(d && +d)) return null;
+    if (!Number.isSafeInteger(+d)) return null;
     const map = [
         [500, 1],
         [800, 2],
