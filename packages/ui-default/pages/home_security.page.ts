@@ -68,7 +68,7 @@ async function enableAuthn(type: string) {
   let credential;
   try {
     console.log(authnInfo);
-    credential = await startRegistration(authnInfo.authOptions);
+    credential = await startRegistration({ optionsJSON: authnInfo.authOptions });
   } catch (err) {
     Notification.error(i18n('Failed to get credential: {0}', err));
     return;

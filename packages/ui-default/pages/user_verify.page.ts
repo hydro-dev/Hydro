@@ -18,7 +18,7 @@ async function verifywebauthn($form) {
     return null;
   }
   Notification.info(i18n('Please follow the instructions on your device to complete the verification.'));
-  const result = await startAuthentication(authnInfo.authOptions)
+  const result = await startAuthentication({ optionsJSON: authnInfo.authOptions })
     .catch((e) => {
       Notification.error(i18n('Failed to get credential: {0}', e));
       return null;

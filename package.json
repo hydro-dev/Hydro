@@ -33,7 +33,6 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
-        "@simplewebauthn/types": "9.0.1",
         "@types/autocannon": "^7.12.6",
         "@types/chai": "^5.0.1",
         "@types/cross-spawn": "^6.0.6",
