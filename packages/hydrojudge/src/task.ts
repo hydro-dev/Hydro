@@ -223,9 +223,13 @@ export class JudgeTask {
         await Lock.acquire(this.folder);
         try {
             const loc = join(this.folder, `_${type}.cache`);
+            const newCopyIn = { ...result.copyIn, [result._cacheable]: { src: loc } };
+            // compiled checker should no longer need header file
+            // delete this copyIn as it's shipped with hydrojudge and may disappear after upgrade
+            delete newCopyIn['testlib.h'];
             this.compileCache[type] = {
                 execute: result.execute,
-                copyIn: { ...result.copyIn, [result._cacheable]: { src: loc } },
+                copyIn: newCopyIn,
             };
             await get((result.copyIn[result._cacheable] as PreparedFile).fileId, loc);
             const currEtag = await fs.readFile(join(this.folder, 'etags'), 'utf-8');
