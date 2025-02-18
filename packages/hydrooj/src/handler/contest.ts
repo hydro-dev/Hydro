@@ -675,7 +675,7 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
 class ScoreboardService extends Service {
     views: Record<string, ScoreboardView<any>> = {};
     constructor(ctx: Context) {
-        super(ctx, 'scoreboard', true);
+        super(ctx, 'scoreboard');
         ctx.set('scoreboard', this);
     }
 

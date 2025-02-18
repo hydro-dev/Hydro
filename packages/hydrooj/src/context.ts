@@ -24,10 +24,8 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
 }
 
 export type EffectScope = cordis.EffectScope<Context>;
-export type ForkScope = cordis.ForkScope<Context>;
-export type MainScope = cordis.MainScope<Context>;
 
-export type { Disposable, ScopeStatus, Plugin } from 'cordis';
+export { Disposable, Plugin, ScopeStatus } from 'cordis';
 
 export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Connection' | 'withHandlerClass'> {
     // @ts-ignore
@@ -40,12 +38,15 @@ export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Con
     injectUI: typeof inject;
     broadcast: Context['emit'];
     geoip?: GeoIP;
+    // TODO: move to @cordisjs/plugin-timer
+    setTimeout(callback: () => void, delay: number): () => void
+    setInterval(callback: () => void, delay: number): () => void
+    sleep(delay: number): Promise<void>
+    throttle<F extends (...args: any[]) => void>(callback: F, delay: number, noTrailing?: boolean): WithDispose<F>
+    debounce<F extends (...args: any[]) => void>(callback: F, delay: number): WithDispose<F>
 }
 
-export abstract class Service<T = any, C extends Context = Context> extends cordis.Service<T, C> {
-    [cordis.Service.setup]() {
-        this.ctx = new Context() as C;
-    }
+export abstract class Service extends cordis.Service<Context> {
 }
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
@@ -56,7 +57,7 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         });
     };
 
-export class ApiMixin extends Service {
+export class ApiMixin extends cordis.Service {
     addScript = T(addScript);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
@@ -65,17 +66,104 @@ export class ApiMixin extends Service {
         this.ctx.emit('bus/broadcast', event, payload, process.env.TRACE_BROADCAST ? new Error().stack : null);
 
     constructor(ctx) {
-        super(ctx, '$api', true);
+        super(ctx, '$api');
         ctx.mixin('$api', ['addScript', 'setImmediate', 'provideModule', 'injectUI', 'broadcast']);
+    }
+}
+
+type WithDispose<T> = T & { dispose: () => void };
+
+class TimerService extends Service {
+    constructor(ctx) {
+        super(ctx, '$timer');
+        ctx.mixin('$timer', ['setTimeout', 'setInterval', 'sleep', 'throttle', 'debounce']);
+    }
+
+    setTimeout(callback: () => void, delay: number) {
+        const dispose = this.ctx.effect(() => {
+            const timer = setTimeout(() => {
+                dispose();
+                callback();
+            }, delay);
+            return () => clearTimeout(timer);
+        });
+        return dispose;
+    }
+
+    setInterval(callback: () => void, delay: number) {
+        return this.ctx.effect(() => {
+            const timer = setInterval(callback, delay);
+            return () => clearInterval(timer);
+        });
+    }
+
+    sleep(delay: number) {
+        const caller = this.ctx;
+        return new Promise<void>((resolve, reject) => {
+            const dispose1 = this.setTimeout(() => {
+                dispose1();
+                dispose2(); // eslint-disable-line @typescript-eslint/no-use-before-define
+                resolve();
+            }, delay);
+            const dispose2 = caller.on('dispose', () => {
+                dispose1();
+                dispose2();
+                reject(new Error('Context has been disposed'));
+            });
+        });
+    }
+
+    private createWrapper(callback: (args: any[], check: () => boolean) => any, isDisposed = false) {
+        this.ctx.scope.assertActive();
+
+        let timer: number | NodeJS.Timeout | undefined;
+        const dispose = () => {
+            isDisposed = true;
+            remove(); // eslint-disable-line @typescript-eslint/no-use-before-define
+            clearTimeout(timer);
+        };
+
+        const wrapper: any = (...args: any[]) => {
+            clearTimeout(timer);
+            timer = callback(args, () => !isDisposed && this.ctx.scope.active);
+        };
+        wrapper.dispose = dispose;
+        const remove = this.ctx.scope.disposables.push(dispose);
+        return wrapper;
+    }
+
+    throttle<F extends (...args: any[]) => void>(callback: F, delay: number, noTrailing?: boolean): WithDispose<F> {
+        let lastCall = -Infinity;
+        const execute = (...args: any[]) => {
+            lastCall = Date.now();
+            callback(...args);
+        };
+        return this.createWrapper((args, isActive) => { // eslint-disable-line consistent-return
+            const now = Date.now();
+            const remaining = delay - (now - lastCall);
+            if (remaining <= 0) {
+                execute(...args);
+            } else if (isActive()) {
+                return setTimeout(execute, remaining, ...args);
+            }
+        }, noTrailing);
+    }
+
+    debounce<F extends (...args: any[]) => void>(callback: F, delay: number): WithDispose<F> {
+        return this.createWrapper((args, isActive) => {
+            if (!isActive()) return;
+            return setTimeout(callback, delay, ...args); // eslint-disable-line consistent-return
+        });
     }
 }
 
 export class Context extends cordis.Context {
     domain?: DomainDoc;
 
-    constructor(config: {} = {}) {
-        super(config);
+    constructor() {
+        super();
         this.plugin(ApiMixin);
+        this.plugin(TimerService);
     }
 }
 

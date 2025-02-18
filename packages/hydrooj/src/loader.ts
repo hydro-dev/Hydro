@@ -14,7 +14,7 @@ import './ui';
 import './lib/i18n';
 
 import { Logger } from './logger';
-import { Context } from './context';
+import { Context, Service, ScopeStatus } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
@@ -51,71 +51,72 @@ export function resolveConfig(plugin: any, config: any) {
     return config;
 }
 
-const timeout = Symbol.for('loader.timeout');
-const showLoadTime = argv.options.showLoadTime;
-
-export class Loader {
-    static readonly Record = Symbol.for('loader.record');
-
-    public app: Context;
+export class Loader extends Service {
+    public state: Record<string, any> = Object.create(null);
     public config: {};
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
+    // public warnings: Record<string, string> = Object.create(null);
 
-    unloadPlugin(ctx: Context, key: string) {
-        const fork = ctx.state[Loader.Record][key];
+    constructor(private app: Context) {
+        super(app, 'loader');
+    }
+
+    [Service.setup]() {
+        this.app.on('app/started', () => {
+            this.ctx.setInterval(async () => {
+                const pending = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.PENDING);
+                if (pending.length) {
+                    logger.warn('Plugins are still pending: %s', pending.map((v) => v[0]).join(', '));
+                    for (const [key, value] of pending) {
+                        logger.warn('Plugin %s is still pending', key);
+                        console.log(value);
+                    }
+                }
+                const loading = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.LOADING);
+                if (loading.length) {
+                    logger.warn('Plugins are still loading: %s', loading.map((v) => v[0]).join(', '));
+                    for (const [key, value] of loading) {
+                        logger.warn('Plugin %s is still loading', key);
+                        console.log(value);
+                    }
+                }
+                const failed = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.FAILED);
+                if (failed.length) {
+                    logger.warn('Plugins failed to load: %s', failed.map((v) => v[0]).join(', '));
+                    for (const [key, value] of failed) {
+                        logger.warn('Plugin %s failed to load', key);
+                        console.log(value);
+                    }
+                }
+            }, 10000);
+        });
+    }
+
+    unloadPlugin(key: string) {
+        const fork = this.state[key];
         if (fork) {
             fork.dispose();
-            delete ctx.state[Loader.Record][key];
+            delete this.state[key];
             logger.info('unload plugin %c', key);
         }
     }
 
     async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
-        let fork = parent.state[Loader.Record]?.[key];
+        let fork = this.state[key];
         if (fork) {
             logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
             logger.info('apply plugin %c', key.split('node_modules').pop());
-            let plugin = await this.resolvePlugin(key);
+            const plugin = await this.resolvePlugin(key);
             if (!plugin) return;
             resolveConfig(plugin, config);
             if (asName) plugin.name = asName;
             // fork = parent.plugin(plugin, this.interpolate(config));
-            if (plugin.apply) {
-                const original = plugin.apply;
-                const apply = (...args) => {
-                    const start = Date.now();
-                    const result = Promise.resolve()
-                        .then(() => original(...args))
-                        .catch((e) => logger.error(e));
-                    Promise.race([
-                        result,
-                        new Promise((resolve) => {
-                            setTimeout(() => resolve(timeout), 10000);
-                        }),
-                    ]).then((t) => {
-                        if (t === timeout) {
-                            logger.warn('Plugin %s took too long to load', key);
-                        }
-                    });
-                    if (showLoadTime && (typeof showLoadTime !== 'number' || Date.now() - start > showLoadTime)) {
-                        logger.info('Plugin %s loaded in %dms', key, Date.now() - start);
-                    }
-                    return result;
-                };
-                plugin = Object.create(plugin);
-                Object.defineProperty(plugin, 'apply', {
-                    writable: true,
-                    value: apply,
-                    enumerable: true,
-                });
-            }
             fork = parent.plugin(plugin, config);
             if (!fork) return;
-            parent.state[Loader.Record] ||= Object.create(null);
-            parent.state[Loader.Record][key] = fork;
+            this.state[key] = fork;
         }
         return fork;
     }
@@ -135,11 +136,7 @@ export class Loader {
     }
 }
 
-const loader = new Loader();
-app.provide('loader');
-app.loader = loader;
-loader.app = app;
-app.state[Loader.Record] = Object.create(null);
+app.plugin(Loader);
 
 function preload() {
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
