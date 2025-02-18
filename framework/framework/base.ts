@@ -27,8 +27,8 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         template: null,
         redirect: null,
         attachment: (name, streamOrBuffer) => {
-            ctx.attachment(name);
-            if (streamOrBuffer instanceof Buffer) {
+            if (name) ctx.attachment(name);
+            if (streamOrBuffer instanceof Buffer || streamOrBuffer instanceof PassThrough) {
                 response.body = null;
                 ctx.body = streamOrBuffer;
             } else {
