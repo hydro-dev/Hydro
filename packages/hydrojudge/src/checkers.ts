@@ -229,6 +229,7 @@ const checkers: Record<string, Checker> = new Proxy({
         return parse(stderr, config.score);
     },
 
+    // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
     async kattis(config) {
         const { files, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
             copyIn: {
@@ -246,17 +247,15 @@ const checkers: Record<string, Checker> = new Proxy({
             ],
         });
 
-        let status = STATUS.STATUS_SYSTEM_ERROR;
-
-        if (code === 42) {
-            status = STATUS.STATUS_ACCEPTED;
-        } else if (code === 43) {
-            status = STATUS.STATUS_WRONG_ANSWER;
-        }
+        let status = code === 42
+            ? STATUS.STATUS_ACCEPTED
+            : code === 43
+                ? STATUS.STATUS_WRONG_ANSWER
+                : STATUS.STATUS_SYSTEM_ERROR;
 
         const score = status === STATUS.STATUS_ACCEPTED
             ? config.score
-            : +files['feedback_dir/score.txt'] || (0);
+            : +files['feedback_dir/score.txt'] || 0;
 
         const message = status === STATUS.STATUS_SYSTEM_ERROR
             ? files['feedback_dir/judgeerror.txt'] || `Checker exited with code ${code}`
