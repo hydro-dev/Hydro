@@ -114,8 +114,6 @@ export async function load(ctx: Context) {
     await require('../settings').loadConfig();
     await require('../model/system').runConfig();
     await require('../service/storage').loadStorageService();
-    await ctx.root.start();
-    await ctx.lifecycle.flush();
     require('../lib/index');
     await Promise.all([
         lib(pending, fail, ctx),
@@ -132,6 +130,5 @@ export async function load(ctx: Context) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
-    await ctx.lifecycle.flush();
     await cli();
 }

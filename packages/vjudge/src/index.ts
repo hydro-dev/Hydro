@@ -19,6 +19,7 @@ class AccountService {
     problemLists: Set<string>;
     syncing = false;
     listUpdated = false;
+    stopped = false;
     working = false;
     error = '';
 
@@ -114,6 +115,7 @@ class AccountService {
                 await sleep(5000);
             }
             page++;
+            if (this.stopped) return;
             pids = await this.api.listProblem(page, resync, list);
         }
     }
@@ -153,13 +155,20 @@ class AccountService {
         this.syncing = false;
     }
 
+    async stop() { } // eslint-disable-line @typescript-eslint/no-empty-function
+
     async main() {
         const res = await this.login();
         if (!res) return;
-        setInterval(() => this.login(), Time.hour);
-        TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
+        const interval = setInterval(() => this.login(), Time.hour);
+        const consumer = TaskModel.consume({ type: 'remotejudge', subType: this.account.type.split('.')[0] }, this.judge.bind(this), false);
         this.working = true;
         this.handleSync();
+        this.stop = async () => {
+            clearInterval(interval);
+            consumer.destroy();
+            this.stopped = true;
+        };
     }
 }
 
@@ -171,13 +180,13 @@ declare module 'hydrooj' {
 
 class VJudgeService extends Service {
     constructor(ctx: Context) {
-        super(ctx, 'vjudge', false);
+        super(ctx, 'vjudge');
     }
 
     accounts: RemoteAccount[];
     private providers: Record<string, any> = {};
     private pool: Record<string, AccountService> = {};
-    async start() {
+    async [Service.setup]() {
         this.accounts = await coll.find().toArray();
         this.ctx.setInterval(this.sync.bind(this), Time.week);
     }
@@ -185,11 +194,20 @@ class VJudgeService extends Service {
     addProvider(type: string, provider: BasicProvider, override = false) {
         if (process.env.VJUDGE_DEBUG && !(`,${process.env.VJUDGE_DEBUG},`).includes(`,${type},`)) return;
         if (!override && this.providers[type]) throw new Error(`duplicate provider ${type}`);
-        this.providers[type] = provider;
-        for (const account of this.accounts.filter((a) => a.type === type)) {
-            if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
-            this.pool[`${account.type}/${account.handle}`] = new AccountService(provider, account);
-        }
+        this.ctx.effect(() => {
+            this.providers[type] = provider;
+            const services = [];
+            for (const account of this.accounts.filter((a) => a.type === type)) {
+                if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
+                const service = new AccountService(provider, account);
+                services.push(service);
+                this.pool[`${account.type}/${account.handle}`] = service;
+            }
+            return () => {
+                for (const service of services) service.stop();
+                delete this.providers[type];
+            };
+        });
         // FIXME: potential race condition
         if (provider.Langs) this.updateLangs(type, provider.Langs);
         // TODO dispose session
@@ -267,7 +285,6 @@ export async function apply(ctx: Context) {
         ]);
     });
     ctx.inject(['vjudge'], async (c) => {
-        await c.vjudge.start();
         for (const [k, v] of Object.entries(providers)) {
             if (!SystemModel.get(`vjudge.builtin-${k}-disable`)) c.vjudge.addProvider(k, v);
         }

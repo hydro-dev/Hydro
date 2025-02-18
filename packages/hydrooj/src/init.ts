@@ -33,5 +33,5 @@ if (!global.Hydro) {
 }
 global.app = new (require('./context').Context)();
 process.on('exit', () => {
-    app.stop();
+
 });

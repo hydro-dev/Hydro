@@ -315,7 +315,7 @@ export class SettingService extends Service {
     DomainUserSetting = T(DomainUserSetting);
     SystemSetting = T(SystemSetting);
     constructor(ctx: Context) {
-        super(ctx, 'setting', true);
+        super(ctx, 'setting');
     }
 
     get(key: string) {

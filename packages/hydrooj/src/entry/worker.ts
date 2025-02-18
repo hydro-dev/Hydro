@@ -42,15 +42,11 @@ export async function apply(ctx: Context) {
     await storage.loadStorageService();
     // Make sure everything is ready and then start main entry
     if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
-    await ctx.root.start();
-    await ctx.lifecycle.flush();
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     await require('../service/api').apply(ctx);
-    await ctx.lifecycle.flush();
     require('../lib/index');
     await lib(pending, fail, ctx);
-    await ctx.lifecycle.flush();
 
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/monitor'));
@@ -58,7 +54,6 @@ export async function apply(ctx: Context) {
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
-    await ctx.lifecycle.flush();
 
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
@@ -68,14 +63,11 @@ export async function apply(ctx: Context) {
     ctx.plugin(require('../service/migration').default);
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
-    await ctx.lifecycle.flush();
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
         ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
-    await ctx.lifecycle.flush();
     await script(pending, fail, ctx);
-    await ctx.lifecycle.flush();
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         await new Promise((resolve, reject) => {

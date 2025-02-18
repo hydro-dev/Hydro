@@ -17,7 +17,7 @@ export class WorkerService extends Service {
     coll = db.collection('schedule');
 
     constructor(ctx: Context) {
-        super(ctx, 'worker', true);
+        super(ctx, 'worker');
         this.consume();
     }
 
