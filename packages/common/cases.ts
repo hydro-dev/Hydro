@@ -1,7 +1,8 @@
-import { findFileSync, parseMemoryMB, parseTimeMS } from './utils';
+import { findFileSync, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
+import { CompilableSource, ProblemConfigFile } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export default async function readYamlCases(cfg: Record<string, any> = {}, checkFile = (s: string, errMsg: string) => s) {
+export async function readYamlCases(cfg: ProblemConfigFile = {}, checkFile = (s: CompilableSource, errMsg: string) => s) {
     const config: any = {
         checker_type: cfg.checker_type || 'default',
         judge_extra_files: [],
@@ -13,12 +14,14 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
         }
     } else {
         if (cfg.checker) {
-            if (!cfg.checker.includes('.')) {
-                config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${cfg.checker}.cpp`, false);
+            const name = typeof cfg.checker === 'string' ? cfg.checker : cfg.checker.file;
+            if (!name.includes('.')) {
+                config.checker = findFileSync(`@hydrooj/hydrojudge/vendor/testlib/checkers/${name}.cpp`, false);
             }
             config.checker ||= checkFile(cfg.checker, 'Cannot find checker {0}.');
         }
         if (cfg.interactor) config.interactor = checkFile(cfg.interactor, 'Cannot find interactor {0}.');
+        if (cfg.manager) config.manager = checkFile(cfg.manager, 'Cannot find Manager {0}.');
         if (cfg.validator) config.validator = checkFile(cfg.validator, 'Cannot find validator {0}.');
         for (const n of ['judge', 'user']) {
             const conf = cfg[`${n}_extra_files`];
@@ -37,23 +40,4 @@ export default async function readYamlCases(cfg: Record<string, any> = {}, check
     if (cfg.time) config.time = parseTimeMS(cfg.time);
     if (cfg.memory) config.memory = parseMemoryMB(cfg.memory);
     return Object.assign(cfg, config);
-}
-
-export function convertIniConfig(ini: string) {
-    const f = ini.split('\n');
-    const count = parseInt(f[0], 10);
-    const res = { subtasks: [] };
-    for (let i = 1; i <= count; i++) {
-        if (!f[i]?.trim()) throw new Error('Testdata count incorrect.');
-        const [input, output, time, score, memory] = f[i].split('|');
-        const cur = {
-            cases: [{ input, output }],
-            score: parseInt(score, 10),
-            time: `${time}s`,
-            memory: '256m',
-        };
-        if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
-        res.subtasks.push(cur);
-    }
-    return res;
 }

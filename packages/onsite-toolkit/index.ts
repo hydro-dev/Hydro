@@ -62,9 +62,10 @@ export function apply(ctx: Context) {
                         problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
-                            name: udict[t.uid].uname,
+                            name: udict[t.uid].displayName || udict[t.uid].uname,
                             avatar: avatar(udict[t.uid].avatar),
                             institution: udict[t.uid].school || unknownSchool,
+                            exclude: t.unrank,
                         })),
                         submissions: submissions.map((i) => ({
                             team: i.uid.toString(),
@@ -99,7 +100,7 @@ export function apply(ctx: Context) {
                     return {
                         team_id: `team-${udoc._id}`,
                         name: udoc.uname,
-                        displayName: udoc.displayName,
+                        displayName: (i.unrank ? '⭐' : '') + udoc.displayName,
                         organization: udoc.school || udoc.uname,
                         avatar: avatar(udoc.avatar),
                         group: [

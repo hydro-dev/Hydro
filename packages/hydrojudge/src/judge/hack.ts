@@ -1,10 +1,9 @@
 /* eslint-disable no-sequences */
-import { fs } from '@hydrooj/utils';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
+import { fs, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import checkers from '../checkers';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
-import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
 export async function judge(ctx: Context) {
@@ -13,7 +12,7 @@ export async function judge(ctx: Context) {
         ctx.compile(ctx.lang, ctx.code),
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ctx.compileLocalFile('validator', ctx.config.validator),
-        ctx.session.fetchFile(ctx.files.hack),
+        ctx.session.fetchFile(null, { [ctx.files.hack]: '' }),
     ]);
     ctx.clean.push(() => fs.unlink(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
@@ -25,6 +24,7 @@ export async function judge(ctx: Context) {
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
+        `hack.validator[${ctx.rid}]`,
     );
     if (validateResult.status !== STATUS.STATUS_ACCEPTED) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
@@ -42,6 +42,7 @@ export async function judge(ctx: Context) {
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
+        `hack[${ctx.rid}]`,
     );
     const {
         code, signalled, time, memory,

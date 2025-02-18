@@ -1,6 +1,7 @@
 extends:
   - airbnb-base
   - ./typescript
+  - plugin:de-morgan/recommended-legacy
 env:
   es6: true
 globals:
@@ -14,6 +15,7 @@ plugins:
   - eslint-plugin-import
   - eslint-plugin-github
   - '@stylistic'
+  - eslint-plugin-de-morgan
 rules:
   '@typescript-eslint/no-shadow': 1
 

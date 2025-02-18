@@ -4,10 +4,8 @@ import AdmZip from 'adm-zip';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
-import { fs, noop } from '@hydrooj/utils';
-import { parseLang } from '@hydrooj/utils/lib/lang';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import type { JudgeResultBody } from 'hydrooj';
+import { JudgeResultBody, parseLang, STATUS } from '@hydrooj/common';
+import { findFileSync, fs, noop } from '@hydrooj/utils';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Session } from '../interface';
@@ -19,14 +17,14 @@ function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
 }
 
-const langs = parseLang(fs.readFileSync(path.resolve(__dirname, '../../langs.yaml'), 'utf-8'));
+const langs = parseLang(fs.readFileSync(process.env.VJ4_LANGS || findFileSync('@hydrooj/hydrojudge/langs.yaml'), 'utf-8'));
 
 export default class VJ4 implements Session {
     config: any;
     progress = 0;
     ws: WebSocket;
 
-    async fetchFile(): Promise<string> {
+    async fetchFile(): Promise<any> {
         throw new Error('not implemented');
     }
 

@@ -1,6 +1,7 @@
-import fs from 'fs';
 import { Reader } from 'maxmind';
-import { Context, findFileSync, Service } from 'hydrooj';
+import {
+    Context, findFileSync, fs, Service,
+} from 'hydrooj';
 
 const buffer = fs.readFileSync(findFileSync('@hydrooj/geoip/GeoLite2-City.mmdb'));
 const reader = new Reader(buffer);

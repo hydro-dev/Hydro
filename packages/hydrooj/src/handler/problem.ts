@@ -1,5 +1,5 @@
 import AdmZip from 'adm-zip';
-import { readFile, statSync } from 'fs-extra';
+import { readFile } from 'fs-extra';
 import {
     escapeRegExp, flattenDeep, intersection, pick,
 } from 'lodash';
@@ -11,7 +11,7 @@ import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import type { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    FileLimitExceededError, HackFailedError, NoProblemError, NotFoundError,
+    FileLimitExceededError, FileTooLargeError, HackFailedError, NoProblemError, NotFoundError,
     PermissionError, ProblemAlreadyExistError, ProblemAlreadyUsedByContestError, ProblemConfigError,
     ProblemIsReferencedError, ProblemNotAllowCopyError, ProblemNotAllowLanguageError, ProblemNotAllowPretestError,
     ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError, ValidationError,
@@ -302,18 +302,20 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         }
         if (typeof this.pdoc.config !== 'string') {
             let baseLangs;
+            const t = [];
+            if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
+            if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
+            if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
                 const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);
                 if (setting.langs[p]) dl.push(p);
                 baseLangs = dl;
             } else {
-                baseLangs = Object.keys(setting.langs).filter((i) => !setting.langs[i].remote);
+                const needHiddenLangs = flattenDeep(t).length;
+                baseLangs = Object.keys(setting.langs).filter((i) =>
+                    (needHiddenLangs ? !setting.langs[i].remote : !setting.langs[i].remote && !setting.langs[i].hidden));
             }
-            const t = [];
-            if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
-            if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
             this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
@@ -495,7 +497,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             const file = this.request.files?.file;
             if (!file || file.size === 0) throw new ValidationError('code');
             const sizeLimit = config.type === 'submit_answer' ? 128 * 1024 * 1024 : lengthLimit;
-            if (file.size > sizeLimit) throw new ValidationError('file');
+            if (file.size > sizeLimit) throw new FileTooLargeError('file');
             const shouldReadFile = () => {
                 if (config.type === 'objective') return true;
                 if (lang === '_') return false;
@@ -705,13 +707,14 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     @post('filename', Types.Filename, true)
     @post('type', Types.Range(['testdata', 'additional_file']), true)
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
-        if (!this.request.files.file) throw new ValidationError('file');
-        filename ||= this.request.files.file.originalFilename || String.random(16);
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
+        filename ||= file.originalFilename || String.random(16);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
             let zip: AdmZip;
             try {
-                zip = new AdmZip(this.request.files.file.filepath);
+                zip = new AdmZip(file.filepath);
             } catch (e) {
                 throw new ValidationError('zip', null, e.message);
             }
@@ -729,8 +732,8 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
             files.push({
                 type,
                 name: filename,
-                size: statSync(this.request.files.file.filepath).size,
-                data: () => this.request.files.file.filepath,
+                size: file.size,
+                data: () => file.filepath,
             });
         }
         if (!this.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {

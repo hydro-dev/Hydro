@@ -1,6 +1,7 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
+import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
 import type { RootState } from './reducer/index';
 
@@ -21,6 +22,7 @@ export function FormItem({
 type KeyType<K, T = string | number> = {
   [Q in keyof K]: K[Q] extends T ? Q : never;
 }[keyof K];
+type FileSelectKey = 'checker' | 'interactor' | 'manager';
 
 export function ManagedInput({ placeholder, formKey }: { placeholder?: string, formKey: KeyType<RootState['config']> }) {
   const value = useSelector((state: RootState) => state.config[formKey]);
@@ -54,16 +56,42 @@ export function ManagedSelect({ options, formKey }: { options: string[], formKey
   );
 }
 
-export function SingleFileSelect({ formKey }: { formKey: KeyType<RootState['config']> }) {
+const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+const data = Object.keys(window.LANGS).filter((i) => !prefixes.has(i))
+  .map((i) => ({ name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`, _id: i }));
+data.unshift({ name: 'Auto', _id: 'auto' });
+
+export function SingleFileSelect({ formKey, withLang = false, label = 'Checker' }: { formKey: FileSelectKey, withLang?: boolean, label?: string }) {
   const value = useSelector((state: RootState) => state.config[formKey]);
   const Files = useSelector((state: RootState) => state.testdata);
   const dispatch = useDispatch();
-  return (
-    <FileSelectAutoComplete
-      width="100%"
-      data={Files}
-      selectedKeys={[value]}
-      onChange={(val) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: formKey, value: val })}
-    />
-  );
+  const selectedFile = typeof value === 'string' ? value : value?.file || '';
+  const selectedLang = typeof value === 'string' ? 'auto' : value?.lang || 'auto';
+  const update = (file: string, lang: string) => {
+    if (file === selectedFile && lang === selectedLang) return;
+    if (withLang) dispatch({ type: 'CONFIG_FORM_UPDATE', key: formKey, value: file ? { file, lang } : null });
+    else dispatch({ type: 'CONFIG_FORM_UPDATE', key: formKey, value: file });
+  };
+  return withLang ? (<>
+    <FormItem columns={5} label={label}>
+      <FileSelectAutoComplete
+        width="100%"
+        data={Files}
+        selectedKeys={[selectedFile]}
+        onChange={(val) => update(val, selectedLang)}
+      />
+    </FormItem>
+    <FormItem columns={3} label="Language">
+      <CustomSelectAutoComplete
+        data={data}
+        selectedKeys={[selectedLang]}
+        onChange={(val) => update(selectedFile, val)}
+      />
+    </FormItem>
+  </>) : (<FileSelectAutoComplete
+    width="100%"
+    data={Files}
+    selectedKeys={[selectedFile]}
+    onChange={(val) => update(val, selectedLang)}
+  />);
 }

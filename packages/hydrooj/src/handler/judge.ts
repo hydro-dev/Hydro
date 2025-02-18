@@ -5,13 +5,12 @@ import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import PQueue from 'p-queue';
 import sanitize from 'sanitize-filename';
+import { JudgeResultBody, ProblemConfigFile, TestCase } from '@hydrooj/common';
 import { Context } from '../context';
 import {
     FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
-import {
-    JudgeResultBody, ProblemConfigFile, RecordDoc, Task, TestCase,
-} from '../interface';
+import { RecordDoc, Task } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from '../model/builtin';
 import { PERM, STATUS } from '../model/builtin';
@@ -73,11 +72,10 @@ function processPayload(body: Partial<JudgeResultBody>) {
 }
 
 export async function next(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid); // TODO remove this
     const {
         $set, $push, $unset, $inc,
     } = processPayload(body);
-    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset, $inc);
+    const rdoc = await record.update(body.domainId, new ObjectId(body.rid), $set, $push, $unset, $inc);
     if (rdoc) bus.broadcast('record/change', rdoc, $set, $push, body);
     return rdoc;
 }
@@ -139,12 +137,11 @@ bus.on('record/judge', async (rdoc, updated, pdoc) => {
 });
 
 export async function end(body: Partial<JudgeResultBody>) {
-    body.rid = new ObjectId(body.rid); // TODO remove this
     const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
     $set.judgeAt = new Date();
     $set.judger = body.judger ?? 1;
-    const rdoc = await record.update(body.domainId, body.rid, $set, $push, $unset);
+    const rdoc = await record.update(body.domainId, new ObjectId(body.rid), $set, $push, $unset);
     if (rdoc) bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
     await postJudge(rdoc);
     return rdoc;

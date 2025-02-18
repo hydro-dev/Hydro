@@ -1,8 +1,8 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { JudgeTask } from '../task';
-import { parseMemoryMB, parseTimeMS } from '../utils';
 
 export const judge = async (ctx: JudgeTask) => {
     ctx.stat.judge = new Date();
@@ -17,11 +17,12 @@ export const judge = async (ctx: JudgeTask) => {
             copyIn: execute.copyIn,
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * 2,
-            memory: parseMemoryMB(ctx.config.memory || '128m'),
+            memory: parseMemoryMB(ctx.config.memory || '256m'),
             filename: ctx.config.filename,
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
+        `judge[${ctx.rid}]`,
         1,
     );
     const {
@@ -31,7 +32,7 @@ export const judge = async (ctx: JudgeTask) => {
     const message: string[] = [];
     if (time > parseTimeMS(ctx.config.time || '1s')) {
         status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-    } else if (memory > parseMemoryMB(ctx.config.memory || '128m') * 1024) {
+    } else if (memory > parseMemoryMB(ctx.config.memory || '256m') * 1024) {
         status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
     } else if (code) {
         status = STATUS.STATUS_RUNTIME_ERROR;

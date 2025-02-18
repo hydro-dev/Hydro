@@ -327,6 +327,9 @@ export async function extractZip(zip: AdmZip, dest: string, overwrite = false, s
 export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
     try {
         await new Promise((resolve, reject) => {
+            w.on('finish', () => {
+                resolve(null);
+            });
             req.buffer(false).timeout({
                 response: Math.min(10000, timeout),
                 deadline: timeout,
@@ -336,10 +339,10 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
                     resp.pipe(w);
                     resp.on('end', () => {
                         cb(null, undefined);
-                        resolve(null);
                     });
                     resp.on('error', (err) => {
                         cb(err, undefined);
+                        reject(err);
                     });
                 }
             }).catch(reject);

@@ -1,5 +1,6 @@
-import * as status from '@hydrooj/utils/lib/status';
+import * as status from '@hydrooj/common/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
+import { convert } from 'html-to-text';
 import {
   avatar, Context, fs, PERM, PRIV, STATUS, yaml,
 } from 'hydrooj';
@@ -93,6 +94,14 @@ class Nunjucks extends nunjucks.Environment {
         else s = s[langs[0]];
       }
       return ensureTag(html ? xss.process(s) : markdown.render(s));
+    });
+    this.addFilter('problemPreview', (html) => {
+      const res = convert(html, {
+        selectors: [
+          { selector: 'math', format: 'skip' },
+        ],
+      });
+      return res.split('\n').map((i) => i.trim()).join('\n').replace(/\n+/g, '\n');
     });
     this.addFilter('contentLang', (content) => {
       let s: any = '';

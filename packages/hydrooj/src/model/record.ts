@@ -5,11 +5,10 @@ import {
     Filter, FindOptions, MatchKeysAndValues,
     ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
+import { ProblemConfigFile } from '@hydrooj/common';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
-import {
-    JudgeMeta, ProblemConfigFile, RecordDoc,
-} from '../interface';
+import { JudgeMeta, RecordDoc } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';

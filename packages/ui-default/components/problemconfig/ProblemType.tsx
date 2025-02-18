@@ -12,6 +12,7 @@ export default function ProblemType() {
   const Type = useSelector((state: RootState) => state.config.type);
   const checkerType = useSelector((state: RootState) => state.config.checker_type);
   const filename = useSelector((state: RootState) => state.config.filename);
+  const numProcesses = useSelector((state: RootState) => state.config.num_processes);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
   const [category, setCategory] = React.useState('');
@@ -19,7 +20,8 @@ export default function ProblemType() {
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
   useEffect(() => {
     if (category || !checker) return;
-    if (checker.includes('.')) setCategory('custom');
+    const name = typeof checker === 'string' ? checker : checker.file;
+    if (name.includes('.')) setCategory('custom');
     else setCategory('preset');
   }, [checker]);
   return (
@@ -74,7 +76,7 @@ export default function ProblemType() {
                   title="testlib"
                   panel={(
                     <div className="row">
-                      <FormItem columns={6} label="Type">
+                      <FormItem columns={4} label="Type">
                         <select
                           value={category}
                           onChange={(ev) => {
@@ -88,9 +90,9 @@ export default function ProblemType() {
                         </select>
                       </FormItem>
                       {category === 'preset'
-                        ? <FormItem columns={6} label="Checker">
+                        ? <FormItem columns={8} label="Checker">
                           <select
-                            value={checker}
+                            value={typeof checker === 'string' ? checker : checker.file}
                             onChange={(ev) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'checker', value: ev.currentTarget.value })}
                             className="select"
                           >
@@ -99,9 +101,7 @@ export default function ProblemType() {
                             ))}
                           </select>
                         </FormItem>
-                        : <FormItem columns={6} label="Checker">
-                          <SingleFileSelect formKey="checker" />
-                        </FormItem>}
+                        : <SingleFileSelect formKey="checker" label="Checker" withLang />}
                     </div>
                   )}
                 />
@@ -110,12 +110,10 @@ export default function ProblemType() {
                   title="other"
                   panel={(
                     <div className="row">
-                      <FormItem columns={6} label="Interface">
+                      <FormItem columns={4} label="Interface">
                         <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon', 'kattis']} formKey="checker_type" />
                       </FormItem>
-                      <FormItem columns={6} label="Checker">
-                        <SingleFileSelect formKey="checker" />
-                      </FormItem>
+                      <SingleFileSelect formKey="checker" label="Checker" withLang />
                     </div>
                   )}
                 />
@@ -127,8 +125,23 @@ export default function ProblemType() {
             title={i18n('problem_type.interactive')}
             panel={(
               <div className="row">
-                <FormItem columns={6} label="Interactor">
-                  <SingleFileSelect formKey="interactor" />
+                <SingleFileSelect formKey="interactor" label="Interactor" withLang />
+              </div>
+            )}
+          />
+          <Tab
+            id="communication"
+            title={i18n('problem_type.communication')}
+            panel={(
+              <div className="row">
+                <SingleFileSelect formKey="manager" label="Manager" withLang />
+                <FormItem columns={4} label="Number of Processes">
+                  <input
+                    defaultValue={numProcesses || 2}
+                    placeholder="2"
+                    onChange={(ev) => dispatch(({ type: 'CONFIG_FORM_UPDATE', key: 'num_processes', value: +ev.currentTarget.value }))}
+                    className="textbox"
+                  />
                 </FormItem>
               </div>
             )}

@@ -8,8 +8,5 @@
     "license": "AGPL-3.0-or-later",
     "dependencies": {
         "jsonwebtoken": "^9.0.2"
-    },
-    "devDependencies": {
-        "@types/jsonwebtoken": "^9.0.7"
     }
 }

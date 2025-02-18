@@ -8,11 +8,12 @@ import yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
+import { ProblemConfigFile } from '@hydrooj/common';
 import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
-    Document, ProblemConfigFile, ProblemDict, ProblemStatusDoc, User,
+    Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
 import * as bus from '../service/bus';
@@ -157,7 +158,14 @@ export class ProblemModel {
     ) {
         const ddoc = await DomainModel.get(domainId);
         const args: Partial<ProblemDoc> = {
-            title, tag, hidden: meta.hidden || false, nSubmit: 0, nAccept: 0, sort: sortable(pid || `P${docId}`, ddoc?.namespaces),
+            title,
+            tag,
+            hidden: meta.hidden || false,
+            nSubmit: 0,
+            nAccept: 0,
+            sort: sortable(pid || `P${docId}`, ddoc?.namespaces),
+            data: [],
+            additional_file: [],
         };
         if (pid) args.pid = pid;
         if (meta.difficulty) args.difficulty = meta.difficulty;
@@ -388,7 +396,7 @@ export class ProblemModel {
         // TODO enhance
         if (pdocs.length !== pids.length) {
             for (const pid of pids) {
-                if (!(r[pid] || l[pid])) {
+                if (!r[pid] && !l[pid]) {
                     if (doThrow) throw new ProblemNotFoundError(domainId, pid);
                     if (!indexByDocIdOnly) r[pid] = { ...ProblemModel.default, domainId, pid: pid.toString() };
                 }
@@ -487,7 +495,7 @@ export class ProblemModel {
                 let overridePid = null;
 
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     const doc = await ProblemModel.get(domainId, id);
                     if (doc) {
                         if (!override) return false;
@@ -603,11 +611,14 @@ export class ProblemModel {
         if (options.delSource) await fs.remove(tmpdir);
     }
 
-    static async export(domainId: string, pidFilter?:string) {
+    static async export(domainId: string, pidFilter = '') {
         console.log('Exporting problems...');
         const tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.export`);
         await fs.mkdir(tmpdir);
-        const pdocs = await ProblemModel.getMulti(domainId, pidFilter ? { pid: pidFilter } : {}, ProblemModel.PROJECTION_PUBLIC).toArray();
+        const pdocs = await ProblemModel.getMulti(
+            domainId, pidFilter ? { pid: new RegExp(pidFilter) } : {},
+            ProblemModel.PROJECTION_PUBLIC,
+        ).toArray();
         if (process.env.HYDRO_CLI) logger.info(`Exporting ${pdocs.length} problems`);
         for (const pdoc of pdocs) {
             if (process.env.HYDRO_CLI) logger.info(`Exporting problem ${pdoc.pid || (`P${pdoc.docId}`)} (${pdoc.title})`);

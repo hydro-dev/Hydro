@@ -10,15 +10,15 @@
     "main": "package.json",
     "scripts": {
         "build": "node build/prepare.js && tsc -b --verbose",
-        "build:installer": "esbuild ./install/install.js --minify --format=cjs | base64",
+        "build:installer": "esbuild ./install/install.js --minify --format=cjs | gzip -9 | base64",
         "build:watch": "node build/prepare.js && tsc -b --watch",
         "build:ui": "node packages/ui-default/build --iconfont && node packages/ui-default/build",
         "build:ui:iconfont": "node packages/ui-default/build --iconfont",
         "build:ui:dev": "node packages/ui-default/build --iconfont && node --trace-deprecation packages/ui-default/build --dev",
         "build:ui:dev:https": "node packages/ui-default/build --iconfont && node --trace-deprecation packages/ui-default/build --dev --https",
-        "build:ui:production": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --iconfont && node packages/ui-default/build --production",
+        "build:ui:production": "cross-env-shell NODE_OPTIONS=--max_old_space_size=8192 \"node packages/ui-default/build --iconfont && node packages/ui-default/build --production\"",
         "build:ui:production:webpack": "cross-env NODE_OPTIONS=--max_old_space_size=8192 node packages/ui-default/build --production",
-        "test": "node -r @hydrooj/register packages/utils/tests/subtask.spec.ts && node test/entry.js",
+        "test": "node -r @hydrooj/register packages/common/tests/subtask.spec.ts && node test/entry.js",
         "benchmark": "cross-env BENCHMARK=true node test/entry.js",
         "lint": "eslint packages plugins modules --ext .ts,.tsx,.jsx --fix",
         "lint:ci": "eslint packages plugins modules --ext .ts,.tsx,.jsx --max-warnings=0",
@@ -33,8 +33,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
-        "@simplewebauthn/types": "9.0.1",
-        "@types/autocannon": "^7.12.5",
+        "@types/autocannon": "^7.12.6",
         "@types/chai": "^5.0.1",
         "@types/cross-spawn": "^6.0.6",
         "@types/node": "22.7.4",
@@ -48,21 +47,17 @@
         "eslint": "^8.57.1",
         "eslint-import-resolver-typescript": "^3.7.0",
         "eslint-import-resolver-webpack": "^0.13.10",
-        "fs-extra": "^11.2.0",
-        "globby": "^14.0.2",
+        "fs-extra": "^11.3.0",
+        "globby": "~14.0.2",
         "inspectpack": "^4.7.1",
-        "mongodb-memory-server": "9.4.1",
+        "mongodb-memory-server": "10.1.3",
         "nyc": "^17.1.0",
-        "ora": "^8.1.1",
+        "ora": "^8.2.0",
         "package-json": "^10.0.1",
-        "semver": "^7.6.3",
+        "semver": "^7.7.1",
         "simple-git": "^3.27.0",
         "supertest": "^7.0.0",
         "typescript": "5.7.2",
-        "wtfnode": "^0.9.4"
-    },
-    "resolutions": {
-        "cosmokit": "1.6.3",
-        "monaco-editor": "0.50.0"
+        "wtfnode": "^0.10.0"
     }
 }

@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import { Context } from '../context';
@@ -53,8 +52,7 @@ export class FilesHandler extends Handler {
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
-        const f = statSync(file.filepath);
-        const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
+        const size = Math.sum((this.user._files || []).map((i) => i.size)) + file.size;
         if (size >= system.get('limit.user_files_size')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('size');
         }

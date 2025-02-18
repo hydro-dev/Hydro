@@ -8,7 +8,7 @@ import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
 import { Shorty } from 'shorty.js';
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import {
     Counter, errorMessage, isClass, Logger, parseMemoryMB,
 } from '@hydrooj/utils/lib/utils';
@@ -86,6 +86,7 @@ export type KoaContext = Koa.Context & {
     handler: any;
     request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
+    holdFiles: (string | File)[];
 };
 
 const logger = new Logger('server');
@@ -197,6 +198,10 @@ export class Handler extends HandlerCommon {
         this.response.template = null;
         this.response.type = 'application/octet-stream';
         if (name) this.response.disposition = `attachment; filename="${encodeRFC5987ValueChars(name)}"`;
+    }
+
+    holdFile(name: string | File) {
+        this.context.holdFiles.push(name);
     }
 
     async init() {
@@ -394,6 +399,20 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     keepExtensions: true,
                 },
             }));
+            this.server.use(async (c, next) => {
+                c.holdFiles = [];
+                try {
+                    await next();
+                } finally {
+                    if (Object.keys(c.request.files || {}).length) {
+                        for (const k in c.request.files) {
+                            if (c.holdFiles.includes(k)) continue;
+                            const files = Array.isArray(c.request.files[k]) ? c.request.files[k] : [c.request.files[k]];
+                            for (const f of files) if (!c.holdFiles.includes(f as any)) fs.rmSync(f.filepath);
+                        }
+                    }
+                }
+            });
             this.ctx.on('dispose', () => {
                 fs.emptyDirSync(uploadDir);
             });

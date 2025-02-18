@@ -1,7 +1,7 @@
 import {
   Button, Classes, Dialog, DialogBody, DialogFooter, Icon,
 } from '@blueprintjs/core';
-import { readSubtasksFromFiles } from '@hydrooj/utils/lib/common';
+import { readSubtasksFromFiles } from '@hydrooj/common';
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useStore } from 'react-redux';
 import { i18n } from 'vj/utils';

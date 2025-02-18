@@ -1,14 +1,16 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
-import { LangConfig } from '@hydrooj/utils/lib/lang';
+import { LangConfig, STATUS } from '@hydrooj/common';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger, ProblemModel, RecordModel, Service, SettingModel,
-    sleep, STATUS, SystemModel, TaskModel, Time, yaml,
+    Context, db, DomainModel, JudgeHandler, Logger,
+    ProblemModel, RecordModel, Service, SettingModel,
+    sleep, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
 
 const coll = db.collection('vjudge');
+const collMount = db.collection('vjudge.mount');
 const logger = new Logger('vjudge');
 const syncing = {};
 
@@ -76,9 +78,10 @@ class AccountService {
         }
     }
 
-    async sync(domainId: string, resync = false, list: string) {
+    async sync(target: string, resync = false, list: string) {
         let page = 1;
         let pids = await this.api.listProblem(page, resync, list);
+        const [domainId, namespaceId] = target.split('.');
         while (pids.length) {
             logger.info(`${domainId}: Syncing page ${page}`);
             for (const id of pids) {
@@ -90,12 +93,13 @@ class AccountService {
                 const [pid, metastr = '{}'] = id.split('#');
                 const normalizedPid = pid.replace(/[_-]/g, '');
                 const meta = JSON.parse(metastr);
-                if (await ProblemModel.get(domainId, normalizedPid) || syncing[`${domainId}/${pid}`]) continue;
+                const targetPid = namespaceId ? `${namespaceId}-${normalizedPid}` : normalizedPid;
+                if (await ProblemModel.get(domainId, targetPid) || syncing[`${domainId}/${pid}`]) continue;
                 syncing[`${domainId}/${pid}`] = true;
                 try {
                     const res = await this.api.getProblem(pid, meta);
                     if (!res) continue;
-                    const docId = await ProblemModel.add(domainId, normalizedPid, res.title, res.content, 1, res.tag);
+                    const docId = await ProblemModel.add(domainId, targetPid, res.title, res.content, 1, res.tag);
                     if (res.difficulty) await ProblemModel.edit(domainId, docId, { difficulty: res.difficulty });
                     for (const key in res.files) {
                         await ProblemModel.addAdditionalFile(domainId, docId, key, res.files[key]);
@@ -103,7 +107,7 @@ class AccountService {
                     for (const key in res.data) {
                         await ProblemModel.addTestdata(domainId, docId, key, res.data[key]);
                     }
-                    logger.info(`${domainId}: problem ${docId}(${pid}) sync done`);
+                    logger.info(`${domainId}: problem ${docId}(${pid}) sync done -> ${targetPid}(${docId})`);
                 } finally {
                     delete syncing[`${domainId}/${pid}`];
                 }
@@ -128,20 +132,16 @@ class AccountService {
         if (this.syncing) return;
         this.syncing = true;
         try {
-            const ddocs = await DomainModel.getMulti({ mount: this.account.type.split('.')[0] }).toArray();
+            const mounts = await collMount.find({ mount: this.account.type.split('.')[0] }).toArray();
             do {
                 this.listUpdated = false;
                 for (const listName of this.problemLists) {
-                    for (const ddoc of ddocs) {
-                        if (ddoc.syncDone === true) {
-                            await DomainModel.edit(ddoc._id, { syncDone: { main: true } });
-                            ddoc.syncDone = { main: true };
-                        }
-                        if (!ddoc.syncDone?.[listName]) await this.sync(ddoc._id, false, listName);
-                        else await this.sync(ddoc._id, true, listName);
-                        await DomainModel.edit(ddoc._id, { [`syncDone.${listName}`]: true });
-                        ddoc.syncDone ||= {};
-                        ddoc.syncDone[listName] = true;
+                    for (const mount of mounts) {
+                        if (!mount.syncDone?.[listName]) await this.sync(mount._id, false, listName);
+                        else await this.sync(mount._id, true, listName);
+                        await collMount.updateOne({ _id: mount._id }, { $set: { [`syncDone.${listName}`]: true } });
+                        mount.syncDone ||= {};
+                        mount.syncDone[listName] = true;
                     }
                 }
             } while (this.listUpdated);
@@ -255,6 +255,15 @@ export async function apply(ctx: Context) {
                     rewrite(['poj.0', 'poj.4'], 'cc.cc98'),
                 ]);
             }, 'update csgoj and poj langs in record collection'),
+            async () => {
+                const ddocs = await DomainModel.coll.find({ mount: { $exists: true, $ne: null } }).toArray();
+                for (const ddoc of ddocs) {
+                    const syncDone = typeof ddoc.syncDone === 'object' ? ddoc.syncDone : { main: !!ddoc.syncDone };
+                    await collMount.updateOne({ _id: ddoc._id }, { $set: { mount: ddoc.mount, syncDone } }, { upsert: true });
+                }
+                await DomainModel.coll.updateMany({}, { $unset: { mount: '', mountInfo: '', syncDone: '' } });
+                return true;
+            },
         ]);
     });
     ctx.inject(['vjudge'], async (c) => {

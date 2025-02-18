@@ -1,5 +1,6 @@
 import path from 'path';
 import { parse } from 'shell-quote';
+import { CompilableSource } from '@hydrooj/common';
 import { fs } from '@hydrooj/utils';
 import { FormatError } from './error';
 
@@ -40,7 +41,8 @@ function restrictFile(p: string) {
 }
 
 export function ensureFile(folder: string) {
-    return (file: string, message: string) => {
+    return (src: CompilableSource, message: string) => {
+        const file = typeof src === 'string' ? src : src?.file;
         if (file === '/dev/null') return file;
         // Historical issue
         if (file.includes('/')) {

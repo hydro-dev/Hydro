@@ -33,6 +33,7 @@ langs:
       - ~ Key marked with a ? means the option is optional
       - (name):
           disabled?: whether to disable this language
+          hidden?: won't show in the language selection
           compile?: Compile Command
           code_file?: Where to write code file when compiling, defaults to `foo.[name]`
           execute: Command to execute the program
@@ -42,6 +43,7 @@ langs:
           target?: Compiler output file, defaults to `foo`
           display: Display name
           compile_time_limit?: Compile time limit, in milliseconds
+          compile_memory_limit?: Compile memory limit, in MB
           address_space_limit?: Enable address space memory limit as CCF did
           process_limit?: Limit the number of thread
     bash:

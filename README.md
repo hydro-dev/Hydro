@@ -111,6 +111,27 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Unreleased
+
+- judge: breaking: 不再支持在 checker 等的编译阶段读取选手代码
+
+
+## Hydro 4.19.0 / UI 4.57.0
+
+- core&ui&judge: 添加通信题支持
+- core: 优化语言列表筛选
+- ui: builder: 支持 css 引入
+- ui: 优化客观题题目导航样式
+- ui: 在引用题目中添加显示来源按钮
+- core: problem.export: 将 pidFilter 参数标记为可选
+- onsite-toolkit: resolver: 区分打星队伍
+- judge: 文件上传出错时重试
+- framework: 文件自动回收
+- core: DomainEdit: 添加 boolean 设置项支持
+- ui: contest_boolean: 修复默认值
+- ui: 修复排名分页
+- core: RecordConnection: 支持 noTemplate 选项
+
 ## Hydro 4.18.2 / UI 4.56.2
 
 - core: 修复提交答案题压缩包提交 (#917)

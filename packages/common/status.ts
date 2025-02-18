@@ -79,6 +79,16 @@ export const STATUS_CODES: Record<STATUS, string> = {
     [STATUS.STATUS_HACK_UNSUCCESSFUL]: 'fail',
 };
 
+export const NORMAL_STATUS: STATUS[] = [
+    STATUS.STATUS_ACCEPTED,
+    STATUS.STATUS_WRONG_ANSWER,
+    STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+    STATUS.STATUS_MEMORY_LIMIT_EXCEEDED,
+    STATUS.STATUS_OUTPUT_LIMIT_EXCEEDED,
+    STATUS.STATUS_RUNTIME_ERROR,
+    STATUS.STATUS_COMPILE_ERROR,
+];
+
 export function getScoreColor(score: number | string): string {
     if (score === null || score === undefined || !Number.isFinite(+score)) return '#000000';
     return [

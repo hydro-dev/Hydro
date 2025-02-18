@@ -1,9 +1,8 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { NormalizedCase, STATUS } from '@hydrooj/common';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
 import { del, runQueued } from '../sandbox';
 import signals from '../signals';
-import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -21,6 +20,7 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
+            `judgeCase[${c.id}]<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,

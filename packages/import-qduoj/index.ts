@@ -68,7 +68,7 @@ class ImportQduojHandler extends Handler {
                 }, 'html');
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     if (await ProblemModel.get(domainId, id)) return false;
                     return true;
                 };
@@ -129,10 +129,10 @@ class ImportQduojHandler extends Handler {
     }
 
     async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
-        const stat = await fs.stat(this.request.files.file.filepath);
-        if (stat.size > 256 * 1024 * 1024) throw new FileTooLargeError('256m');
-        await this.fromFile(domainId, this.request.files.file.filepath);
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
+        if (file.size > 256 * 1024 * 1024) throw new FileTooLargeError('256m');
+        await this.fromFile(domainId, file.filepath);
         this.response.redirect = this.url('problem_main');
     }
 }

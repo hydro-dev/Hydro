@@ -2,6 +2,7 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
+import crypto from 'crypto';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import os, { cpus } from 'os';
@@ -51,6 +52,7 @@ const locales = {
         'migrate.hustojFound': `检测到 HustOJ。安装程序可以将 HustOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 HustOJ）
 该功能支持原版 HustOJ 和部分修改版，输入 y 确认该操作。
 迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
+        'install.restartRequired': '安装完成，请使用 sudo reboot 重启系统。在此之前系统的部分功能可能无法正常使用。',
     },
     en: {
         'install.start': 'Starting Hydro installation tool',
@@ -84,6 +86,7 @@ To cancel the installation, please use Ctrl-C to exit. The installation program 
 The original data will not be lost, and you can switch back to HustOJ at any time.
 This feature supports the original version of HustOJ and some modified versions. Enter y to confirm this operation.
 If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
+        'install.restartRequired': 'Please reboot the system. Some functions may not work properly before the restart.',
     },
 };
 
@@ -96,6 +99,8 @@ const substitutersArg = process.argv.find((i) => i.startsWith('--substituters=')
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
 const migrationArg = process.argv.find((i) => i.startsWith('--migration='));
 let migration = migrationArg ? migrationArg.split('=')[1] : '';
+
+let needRestart = false;
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -128,13 +133,7 @@ if (!cpuInfoFile.includes('avx') && !installAsJudge) {
 }
 let retry = 0;
 log.info('install.start');
-const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-function randomstring(digit = 32, dict = defaultDict) {
-    let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
-    return str;
-}
-let password = randomstring(32);
+let password = crypto.randomBytes(32).toString('hex');
 // eslint-disable-next-line
 let CN = true;
 
@@ -324,6 +323,21 @@ const Steps = () => [
                     await sleep(60000);
                 }
             },
+            async () => {
+                if (process.arch !== 'arm64') return;
+                const isRpi = ['rpi', 'raspberrypi'].some((i) => readFileSync('/proc/cpuinfo', 'utf-8').toLowerCase().includes(i));
+                if (!isRpi) return;
+                const memoryLine = readFileSync('/proc/cgroups', 'utf-8').split('\n').find((i) => i.includes('memory'))?.trim();
+                const memoryCgroupEnabled = memoryLine && !memoryLine.endsWith('0');
+                if (memoryCgroupEnabled) return;
+                let targetFile = '/boot/cmdline.txt';
+                let content = readFileSync(targetFile, 'utf-8');
+                if (content.includes('has moved to /boot/firmware/cmdline.txt')) targetFile = '/boot/firmware/cmdline.txt';
+                content = readFileSync(targetFile, 'utf-8');
+                if (content.includes('cgroup_enable=memory')) return;
+                writeFileSync(targetFile, content.replace(' console=', ' cgroup_enable=memory cgroup_memory=1 console='));
+                needRestart = true;
+            },
             () => {
                 if (substituters.length) {
                     writeFileSync('/etc/nix/nix.conf', `substituters = ${substituters.join(' ')}
@@ -408,7 +422,7 @@ ${nixConfBase}`);
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code || installAsJudge || noCaddy || !existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
+        skip: () => installAsJudge || noCaddy || existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
             'nix-env -iA nixpkgs.caddy',
@@ -520,6 +534,7 @@ ${nixConfBase}`);
         skip: () => migration !== 'hustoj',
         silent: true,
         operations: [
+            'pm2 restart hydrooj',
             () => {
                 const dbInc = readFileSync('/home/judge/src/web/include/db_info.inc.php', 'utf-8');
                 const l = dbInc.split('\n');
@@ -607,6 +622,7 @@ ${nixConfBase}`);
             ...printInfo,
             () => log.info('install.alldone'),
             () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
+            () => needRestart && log.info('install.restartRequired'),
         ],
     },
 ];

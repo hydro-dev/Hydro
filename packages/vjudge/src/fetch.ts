@@ -29,7 +29,7 @@ export class BasicFetcher {
 
     get(url: string) {
         this.logger.debug('get', url);
-        url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
+        url = new URL(url, this.endpoint).toString();
         let req = superagent.get(url).set('Cookie', this.cookie).set('User-Agent', this.UA);
         if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
         if (this.fetchOptions.get?.headers) req = req.set(this.fetchOptions.get.headers);
@@ -46,7 +46,7 @@ export class BasicFetcher {
 
     post(url: string) {
         this.logger.debug('post', url, this.cookie);
-        url = new URL(url, this.account.endpoint || this.defaultEndpoint).toString();
+        url = new URL(url, this.endpoint).toString();
         let req = superagent.post(url).set('Cookie', this.cookie).set('User-Agent', this.UA).type(this.formType);
         if (this.fetchOptions.headers) req = req.set(this.fetchOptions.headers);
         if (this.fetchOptions.post?.headers) req = req.set(this.fetchOptions.post.headers);
@@ -60,7 +60,11 @@ export class BasicFetcher {
         return null;
     }
 
-    setEndpoint(endpoint: string) {
+    get endpoint() {
+        return this.account.endpoint || this.defaultEndpoint;
+    }
+
+    set endpoint(endpoint: string) {
         this.defaultEndpoint = endpoint;
     }
 }

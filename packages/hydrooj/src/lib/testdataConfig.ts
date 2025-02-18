@@ -1,7 +1,8 @@
 import { load } from 'js-yaml';
-import readYamlCases from '@hydrooj/utils/lib/cases';
-import type { ProblemConfig, ProblemConfigFile } from '../interface';
-import { normalizeSubtasks, parseMemoryMB, parseTimeMS } from '../utils';
+import { normalizeSubtasks, ProblemConfigFile } from '@hydrooj/common';
+import { readYamlCases } from '@hydrooj/common/cases';
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
+import type { ProblemConfig } from '../interface';
 
 export async function parseConfig(config: string | ProblemConfigFile = {}) {
     const cfg: ProblemConfigFile = typeof config === 'string'

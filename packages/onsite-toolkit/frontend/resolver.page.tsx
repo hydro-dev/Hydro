@@ -260,7 +260,7 @@ export function start(data: ResolverInput, options: DisplaySettings) {
             }),
           }}
           children={<>
-            <div className="rank">{team.rank === -1 ? '*' : team.rank}</div>
+            <div className="rank">{team.rank === -1 ? '⭐' : team.rank}</div>
             {props.showAvatar && <img className="avatar" src={`${teamInfo?.avatar}`} />}
             <div className="content">
               <div className="name">

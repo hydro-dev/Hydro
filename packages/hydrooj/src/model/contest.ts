@@ -387,8 +387,10 @@ const oi = buildContestRule({
                     raw: tsddict[pid]?.rid || null,
                     score: tsddict[pid]?.score,
                 };
-            if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]) {
-                node.style = 'background-color: rgb(217, 240, 199);';
+            if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED) {
+                if (tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt.getTime() || tdoc.beginAt.getTime())) {
+                    node.style = 'background-color: rgb(217, 240, 199);';
+                }
             }
             row.push(node);
         }
@@ -400,15 +402,13 @@ const oi = buildContestRule({
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         const psdict = {};
         const first = {};
-        await Promise.all(tdoc.pids.map(async (pid) => {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            const [data] = await getMultiStatus(tdoc.domainId, {
-                docType: document.TYPE_CONTEST,
-                docId: tdoc.docId,
-                [`detail.${pid}.status`]: STATUS.STATUS_ACCEPTED,
-            }).sort({ [`detail.${pid}.rid`]: 1 }).limit(1).toArray();
-            first[pid] = data ? data.detail[pid].rid.getTimestamp().getTime() : Date.now() / 1000;
-        }));
+        for (const [, tsdoc] of rankedTsdocs) {
+            for (const [pid, detail] of Object.entries(tsdoc.detail)) {
+                if (detail.status !== STATUS.STATUS_ACCEPTED) continue;
+                const time = detail.rid.getTimestamp().getTime() - (tsdoc.startAt.getTime() || tdoc.beginAt.getTime());
+                if (!first[pid] || first[pid] > time) first[pid] = time;
+            }
+        }
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         if (isDone(tdoc)) {
             const psdocs = await Promise.all(
@@ -511,7 +511,8 @@ const strictioi = buildContestRule({
                 hover: Object.values(tsddict[pid]?.subtasks || {}).map((i: SubtaskResult) => `${STATUS_SHORT_TEXTS[i.status]} ${i.score}`).join(','),
                 raw: tsddict[pid]?.rid,
                 score: tsddict[pid]?.score,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED
+                    && tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
@@ -587,7 +588,8 @@ const ledo = buildContestRule({
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
                 score: tsddict[pid]?.score,
-                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED && tsddict[pid]?.rid.getTimestamp().getTime() === meta?.first?.[pid]
+                style: tsddict[pid]?.status === STATUS.STATUS_ACCEPTED
+                    && tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime() === meta?.first?.[pid]
                     ? 'background-color: rgb(217, 240, 199);'
                     : undefined,
             });
