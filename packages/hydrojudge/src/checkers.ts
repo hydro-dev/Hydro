@@ -228,6 +228,41 @@ const checkers: Record<string, Checker> = new Proxy({
         }
         return parse(stderr, config.score);
     },
+
+    // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
+    async kattis(config) {
+        const { files, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
+            copyIn: {
+                input: config.input,
+                answer_file: config.output,
+                'feedback_dir/placeholder': { content: '' },
+                ...config.copyIn,
+            },
+            stdin: config.user_stdout,
+            copyOut: [
+                'feedback_dir/score.txt?',
+                'feedback_dir/judgemessage.txt?',
+                'feedback_dir/teammessage.txt?',
+                'feedback_dir/judgeerror.txt?',
+            ],
+        });
+
+        const status = code === 42
+            ? STATUS.STATUS_ACCEPTED
+            : code === 43
+                ? STATUS.STATUS_WRONG_ANSWER
+                : STATUS.STATUS_SYSTEM_ERROR;
+
+        const score = status === STATUS.STATUS_ACCEPTED
+            ? config.score
+            : +files['feedback_dir/score.txt'] || 0;
+
+        const message = status === STATUS.STATUS_SYSTEM_ERROR
+            ? files['feedback_dir/judgeerror.txt'] || `Checker exited with code ${code}`
+            : files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || '';
+
+        return { status, score, message };
+    },
 }, {
     get(self, key) {
         if (!self[key]) throw new FormatError('Unknown checker type {0}', [key]);

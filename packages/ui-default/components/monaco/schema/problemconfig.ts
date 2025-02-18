@@ -70,7 +70,7 @@ const problemConfigSchema: JSONSchema7 = {
     subType: { type: 'string' },
     langs: { type: 'array', items: { type: 'string' } },
     target: { type: 'string' },
-    checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj'] },
+    checker_type: { enum: ['default', 'lemon', 'syzoj', 'hustoj', 'testlib', 'strict', 'qduoj', 'kattis'] },
     checker: {
       oneOf: [
         { type: 'string', enum: testlibCheckers },
