@@ -247,7 +247,7 @@ const checkers: Record<string, Checker> = new Proxy({
             ],
         });
 
-        let status = code === 42
+        const status = code === 42
             ? STATUS.STATUS_ACCEPTED
             : code === 43
                 ? STATUS.STATUS_WRONG_ANSWER
