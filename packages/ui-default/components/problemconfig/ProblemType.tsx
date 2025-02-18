@@ -111,7 +111,7 @@ export default function ProblemType() {
                   panel={(
                     <div className="row">
                       <FormItem columns={4} label="Interface">
-                        <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon']} formKey="checker_type" />
+                        <ManagedSelect options={['syzoj', 'hustoj', 'qduoj', 'lemon', 'kattis']} formKey="checker_type" />
                       </FormItem>
                       <SingleFileSelect formKey="checker" label="Checker" withLang />
                     </div>
