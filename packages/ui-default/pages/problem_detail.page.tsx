@@ -317,7 +317,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       </li>));
       $(document).on('click', '#clearAnswers', async () => {
         const result = await new ConfirmDialog({
-          $body: tpl.typoMsg('All changes will be lost. Are you sure to clear all answers?'),
+          $body: tpl.typoMsg(i18n('All changes will be lost. Are you sure to clear all answers?')),
         }).open();
         if (result === 'yes') await clearAns();
       });
