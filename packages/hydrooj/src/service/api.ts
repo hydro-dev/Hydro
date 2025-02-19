@@ -121,7 +121,7 @@ export function registerUnion(...args: any[]) {
 // TODO support dispose
 class ApiService extends Service {
     constructor(ctx: Context) {
-        super(ctx, 'api', true);
+        super(ctx, 'api');
         this.rebuild = debounce(this.rebuild.bind(this), 500, { trailing: true });
         ctx.on('ready', this.rebuild);
     }

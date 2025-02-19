@@ -128,7 +128,6 @@ export function apply(ctx: Context) {
 
 export default app;
 export const on = (a, b, c?) => app.on(a, b, c);
-export const off = (a, b) => app.off(a, b);
 export const once = (a, b, c?) => app.once(a, b, c);
 export const parallel = app.parallel.bind(app);
 export const emit = app.parallel.bind(app);
