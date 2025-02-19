@@ -114,7 +114,15 @@ Hydro 用户群：1085853538
 ## Unreleased
 
 - judge: breaking: 不再支持在 checker 等的编译阶段读取选手代码
-
+- judge: 添加 checker 编译缓存
+- ui: 优化题目详情页面 OGP 信息
+- core&ui: 升级 simplewebauthn
+- register: 添加 tsdown 支持
+- ui&judge: 支持指定 checker 语言
+- core: 基于相对时间计算一血而非绝对时间
+- ui&judge: 添加栈空间回显
+- install: 在树莓派中自动启用 cgroup.memory
+- vjudge: 使用 vjudge.mount 表替代 domain.mount
 
 ## Hydro 4.19.0 / UI 4.57.0
 

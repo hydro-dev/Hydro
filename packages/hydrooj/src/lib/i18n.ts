@@ -20,7 +20,7 @@ declare global {
 
 class I18nService extends Service {
     constructor(ctx: Context) {
-        super(ctx, 'i18n', true);
+        super(ctx, 'i18n');
     }
 
     load(lang: string, content: Record<string, string>) {

@@ -11,7 +11,7 @@ export async function compilerVersions(langs: Record<string, LangConfig>) {
             copyIn: {},
             time: 10000,
             memory: 256,
-        }, 'compilerVersions', 5);
+        }, `compilerVersions<${lang}>`, 5);
         result[lang] = `${res.stdout}\n${res.stderr}`.trim();
     }
     return result;

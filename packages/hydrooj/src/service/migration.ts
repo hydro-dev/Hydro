@@ -17,7 +17,7 @@ export default class MigrationService extends Service {
     private called = false;
 
     constructor(ctx: Context) {
-        super(ctx, 'migration', true);
+        super(ctx, 'migration');
     }
 
     async registerChannel(name: string, s: MigrationScript[]) {

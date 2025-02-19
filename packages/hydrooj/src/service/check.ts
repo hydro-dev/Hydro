@@ -39,7 +39,7 @@ export class CheckService extends Service {
     }
 }
 
-export const check = new CheckService(app, 'check', true);
+export const check = new CheckService(app, 'check');
 
 check.addChecker('Db', async (ctx, log, warn, error) => {
     try {
