@@ -73,7 +73,6 @@ export interface HydroResponse {
     attachment: (name: string, stream?: any) => void;
     addHeader: (name: string, value: string) => void;
 }
-export type RendererFunction = (name: string, context: Record<string, any>) => string | Promise<string>;
 type HydroContext = {
     request: HydroRequest;
     response: HydroResponse;
@@ -88,6 +87,21 @@ export type KoaContext = Koa.Context & {
     request: Koa.Request & { body: any, files: Files };
     session: Record<string, any>;
     holdFiles: (string | File)[];
+};
+
+export type TextRenderer = {
+    output: 'html' | 'json' | 'text';
+    render: (name: string, args: Record<string, any>, context: Record<string, any>) => string | Promise<string>;
+};
+export type BinaryRenderer = {
+    output: 'binary';
+    render: (name: string, args: Record<string, any>, context: Record<string, any>) => Buffer | Promise<Buffer>;
+};
+export type Renderer = (BinaryRenderer | TextRenderer) & {
+    name: string;
+    accept: readonly string[];
+    priority: number;
+    asFallback: boolean;
 };
 
 const logger = new Logger('server');
@@ -170,14 +184,14 @@ export class HandlerCommon {
     }
 
     renderHTML(templateName: string, args: Record<string, any>) {
-        const type = templateName.split('.')[1];
-        const engine = this.ctx.server.renderers[type] || (() => JSON.stringify(args, serializer(false, this)));
-        return engine(templateName, {
+        const renderers = Object.values(this.ctx.server.renderers).filter((r) => r.accept.includes(templateName) || r.asFallback);
+        const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
+        const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
+        return engine(templateName, args, {
             handler: this,
             UserContext: this.user,
             url: this.url,
             _: this.translate,
-            ...args,
         });
     }
 }
@@ -338,7 +352,7 @@ export class WebService extends Service {
     private wsLayers = [];
     private captureAllRoutes = Object.create(null);
 
-    renderers: Record<string, RendererFunction> = Object.create(null);
+    renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
@@ -730,7 +744,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    public registerRenderer(name: string, func: RendererFunction) {
+    public registerRenderer(name: string, func: Renderer) {
         if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
         this.ctx.effect(() => {
             this.renderers[name] = func;

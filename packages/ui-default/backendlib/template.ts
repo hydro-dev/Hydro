@@ -199,7 +199,12 @@ const render = (name: string, state: any) => new Promise<string>((resolve, rejec
 
 export const inject = ['server'];
 export async function apply(ctx: Context) {
-  ctx.server.registerRenderer('html', render);
-  ctx.server.registerRenderer('yaml', render);
-  ctx.server.registerRenderer('md', render);
+  ctx.server.registerRenderer('ui-default', {
+    name: 'ui-default',
+    output: 'html',
+    accept: [],
+    asFallback: true,
+    priority: 1,
+    render: (name, args, context) => render(name, { ...context, ...args }),
+  });
 }
