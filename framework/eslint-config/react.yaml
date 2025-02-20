@@ -3,6 +3,7 @@ extends:
 - airbnb/hooks
 plugins:
 - react
+- react-refresh
 - jsx-a11y
 rules:
   react-hooks/exhaustive-deps: 0
@@ -24,4 +25,5 @@ rules:
   jsx-a11y/anchor-is-valid: 0
   jsx-a11y/click-events-have-key-events: 0
   jsx-a11y/label-has-associated-control: 0
+  react-refresh/only-export-components: ['warn', { allowConstantExport: true }]
   # 'react/no-unknown-property': ['error', { ignore: ['key'] }],
