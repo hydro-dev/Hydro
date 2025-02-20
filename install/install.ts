@@ -7,6 +7,17 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import os, { cpus } from 'os';
 import { createInterface } from 'readline/promises';
+import { supportsHyperlink } from 'supports-hyperlinks';
+
+const isSupported = supportsHyperlink(process.stdout);
+const OSC = '\u001B]';
+const BEL = '\u0007';
+const SEP = ';';
+export const link = isSupported ? (text: string, url: string) => [
+    OSC, '8', SEP, SEP, url, BEL, text, OSC, '8', SEP, SEP, BEL,
+].join('') : (text: string, url: string) => `${text} < ${url} > `;
+
+const warnings: [string, ...any[]][] = [];
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -22,12 +33,14 @@ const exec = (command: string, args?: ExecSyncOptions) => {
     }
 };
 const sleep = (t: number) => new Promise((r) => { setTimeout(r, t); });
+
+const shmFAQ = 'https://docs.hydro.ac/FAQ/#%E8%B0%83%E6%95%B4%E4%B8%B4%E6%97%B6%E7%9B%AE%E5%BD%95%E5%A4%A7%E5%B0%8F';
 const locales = {
     zh: {
+        'install.wait': '安装脚本将等待 %d 秒后自动继续安装，或按 Ctrl-C 退出。',
         'install.start': '开始运行 Hydro 安装工具',
         'note.avx': `检测到您的 CPU 不支持 avx 指令集，这可能会影响系统运行速度。
-如果您正在使用 PVE/VirtualBox 等虚拟机平台，请尝试关机后将虚拟机的 CPU 类型设置为 Host，重启后再次运行该脚本。
-您也可以选择忽略此问题，安装脚本将在一分钟后自动继续安装。`,
+如果您正在使用 PVE/VirtualBox 等虚拟机平台，请尝试关机后将虚拟机的 CPU 类型设置为 Host，重启后再次运行该脚本。`,
         'warn.avx': '检测到您的 CPU 不支持 avx 指令集，将使用 mongodb@v4.4',
         'error.rootRequired': '请先使用 sudo su 切换到 root 用户后再运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
@@ -43,24 +56,30 @@ const locales = {
         'install.editJudgeConfigAndStart': '请编辑 ~/.hydro/judge.yaml 后使用 pm2 start hydrojudge && pm2 save 启动。',
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
+        'port.80': '端口 80 已被占用，Caddy 无法正常监听此端口。',
+        'shm.readFail': '读取 /dev/shm 大小失败。请检查系统是否在此挂载了 tmpfs。',
+        'shm.sizeTooSmall': `您的系统 /dev/shm 大小为 %d MB，在高并发评测时可能产生问题。
+建议参照文档 ${link('FAQS', shmFAQ)} 进行调整。`,
         'info.skip': '步骤已跳过。',
-        'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Ubuntu 22.04 系统进行安装。
+        'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Debian 12 系统进行安装。
 要忽略该警告，请使用 --shamefully-unsafe-bt-panel 参数重新运行此脚本。`,
-        'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Ubuntu 22.04 系统进行安装。
+        'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Debian 12 系统进行安装。
 开发者对因为使用宝塔面板的数据丢失不承担任何责任。
 要取消安装，请使用 Ctrl-C 退出。安装程序将在五秒后继续。`,
         'migrate.hustojFound': `检测到 HustOJ。安装程序可以将 HustOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 HustOJ）
 该功能支持原版 HustOJ 和部分修改版，输入 y 确认该操作。
 迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
         'install.restartRequired': '安装完成，请使用 sudo reboot 重启系统。在此之前系统的部分功能可能无法正常使用。',
+        'install.warnings': '安装过程中产生了以下警告：',
     },
     en: {
+        'install.wait': `The installation script will wait for %d seconds before continuing.
+Press Ctrl-C to exit.`,
         'install.start': 'Starting Hydro installation tool',
         'note.avx': `Your CPU does not support avx, this may affect system performance.
 If you are using a virtual machine platform such as PVE/VirtualBox,
 try shutting down and setting the CPU type of the virtual machine to Host,
-then restart and run the script again.
-You can also choose to ignore this issue, the installation script will continue in one minute.`,
+then restart and run the script again.`,
         'warn.avx': 'Your CPU does not support avx, will use mongodb@v4.4',
         'error.rootRequired': 'Please run this tool as root user.',
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
@@ -76,10 +95,14 @@ You can also choose to ignore this issue, the installation script will continue 
         'install.editJudgeConfigAndStart': 'Please edit config at ~/.hydro/judge.yaml than start hydrojudge with:\npm2 start hydrojudge && pm2 save.',
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
+        'port.80': 'Port 80 is already in use, Caddy cannot listen to this port.',
+        'shm.readFail': 'Failed to read /dev/shm size.',
+        'shm.sizeTooSmall': `Your system /dev/shm size is %d MB, which may cause problems in high concurrency testing.
+Please refer to ${link('FAQS', shmFAQ)} for adjustments.`,
         'info.skip': 'Step skipped.',
-        'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a pure Ubuntu 22.04 OS.
+        'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a clean Debian 12 OS.
 To ignore this warning, please run this script again with '--shamefully-unsafe-bt-panel' flag.`,
-        'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a pure Ubuntu 22.04 OS.
+        'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a clean Debian 12 OS.
 The developer is not responsible for any data loss caused by using BT-Panel.
 To cancel the installation, please use Ctrl-C to exit. The installation program will continue in five seconds.`,
         'migrate.hustojFound': `HustOJ detected. The installation program can migrate all data from HustOJ to Hydro.
@@ -87,6 +110,7 @@ The original data will not be lost, and you can switch back to HustOJ at any tim
 This feature supports the original version of HustOJ and some modified versions. Enter y to confirm this operation.
 If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
         'install.restartRequired': 'Please reboot the system. Some functions may not work properly before the restart.',
+        'install.warnings': 'The following warnings occurred during the installation:',
     },
 };
 
@@ -130,6 +154,7 @@ const cpuInfoFile = readFileSync('/proc/cpuinfo', 'utf-8');
 if (!cpuInfoFile.includes('avx') && !installAsJudge) {
     avx = false;
     log.warn('warn.avx');
+    warnings.push(['warn.avx']);
 }
 let retry = 0;
 log.info('install.start');
@@ -287,9 +312,10 @@ const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
 // TODO: refuse to install if mem < 1.5
 const wtsize = Math.max(0.25, Math.floor((mem / 6) * 100) / 100);
 
+const inviteLink = 'https://qm.qq.com/cgi-bin/qm/qr?k=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw';
 const printInfo = [
-    'echo "扫码加入QQ群："',
-    'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
+    () => console.log(`扫码或点击${link('链接', inviteLink)}加入QQ群：`),
+    `echo '${inviteLink}' | qrencode -o - -m 2 -t UTF8`,
     () => {
         if (installAsJudge) return;
         const config = require(`${process.env.HOME}/.hydro/config.json`);
@@ -313,6 +339,8 @@ const Steps = () => [
                         process.exit(1);
                     } else {
                         log.warn('warn.bt');
+                        warnings.push(['warn.bt']);
+                        log.info('install.wait', 5);
                         await sleep(5000);
                     }
                 }
@@ -320,10 +348,25 @@ const Steps = () => [
             async () => {
                 if (!avx && !installAsJudge) {
                     log.warn('note.avx');
+                    log.info('install.wait', 60);
                     await sleep(60000);
                 }
             },
             async () => {
+                const shm = exec('df --output=avail -k /dev/shm').output?.split('\n')[1];
+                if (!shm || !+shm) {
+                    log.warn('shm.readFail');
+                    warnings.push(['shm.readFail']);
+                    return;
+                }
+                const size = (+shm) / 1024;
+                if (size < 250) {
+                    log.warn('shm.sizeTooSmall', size);
+                    warnings.push(['shm.sizeTooSmall', size]);
+                }
+            },
+            async () => {
+                // Enable memory cgroup for Raspberry Pi
                 if (process.arch !== 'arm64') return;
                 const isRpi = ['rpi', 'raspberrypi'].some((i) => readFileSync('/proc/cpuinfo', 'utf-8').toLowerCase().includes(i));
                 if (!isRpi) return;
@@ -467,7 +510,7 @@ ${nixConfBase}`);
             () => sleep(3000),
             async () => {
                 // eslint-disable-next-line
-                const { MongoClient, WriteConcern } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
+                const { MongoClient, WriteConcern } = eval('require')('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
                 const client = await MongoClient.connect('mongodb://127.0.0.1', {
                     readPreference: 'nearest',
                     writeConcern: new WriteConcern('majority'),
@@ -503,11 +546,15 @@ ${nixConfBase}`);
                         exec('hydrooj cli system set server.host 0.0.0.0');
                         return;
                     }
-                    if (!await isPortFree(80)) log.warn('port.80');
                     if (migration === 'hustoj') {
                         exec('systemctl stop nginx || true');
                         exec('systemctl disable nginx || true');
                         exec('/etc/init.d/nginx stop || true');
+                        await sleep(1000);
+                    }
+                    if (!await isPortFree(80)) {
+                        log.warn('port.80');
+                        warnings.push(['port.80']);
                     }
                     exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
                     exec('hydrooj cli system set server.xff x-forwarded-for');
@@ -623,6 +670,14 @@ ${nixConfBase}`);
             () => log.info('install.alldone'),
             () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
             () => needRestart && log.info('install.restartRequired'),
+            () => {
+                if (warnings.length) {
+                    log.warn('install.warnings');
+                    for (const warning of warnings) {
+                        log.warn(warning[0], ...warning.slice(1));
+                    }
+                }
+            },
         ],
     },
 ];
