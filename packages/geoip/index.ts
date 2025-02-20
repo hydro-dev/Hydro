@@ -16,7 +16,7 @@ export interface Result {
 
 export default class GeoIPService extends Service {
     constructor(ctx: Context) {
-        super(ctx, 'geoip', true);
+        super(ctx, 'geoip');
     }
 
     provider = '<a href="http://www.maxmind.com" target="_blank">MaxMind</a>';

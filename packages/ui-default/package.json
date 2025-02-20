@@ -26,7 +26,7 @@
     "@fontsource/ubuntu-mono": "^5.1.1",
     "@hydrooj/utils": "workspace:^",
     "@sentry/browser": "^9.1.0",
-    "@sentry/webpack-plugin": "^3.1.2",
+    "@sentry/webpack-plugin": "^3.2.0",
     "@simplewebauthn/browser": "13.1.0",
     "@svgr/webpack": "^8.1.0",
     "@types/html-to-text": "^9.0.4",
@@ -144,7 +144,7 @@
     "nunjucks": "^3.2.4",
     "schemastery-jsonschema": "^1.1.0",
     "streamsaver": "^2.0.6",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "xss": "^1.0.15"
   }
 }

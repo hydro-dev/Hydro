@@ -9,7 +9,7 @@ import { api, gql, loadReactRedux } from 'vj/utils';
 
 class MessagePadService extends Service {
   constructor(public store, public WebSocket: typeof import('../components/socket').default) {
-    super(ctx, 'messagepad', true);
+    super(ctx, 'messagepad');
   }
 }
 

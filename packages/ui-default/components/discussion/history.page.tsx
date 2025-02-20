@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Popover } from '@blueprintjs/core';
 import React from 'react';
 import ReactDOM from 'react-dom/client';

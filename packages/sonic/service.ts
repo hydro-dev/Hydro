@@ -46,7 +46,7 @@ export class SonicService extends Service {
     public error = '';
 
     constructor(ctx: Context) {
-        super(ctx, 'sonic', true);
+        super(ctx, 'sonic');
     }
 
     async start() {
