@@ -3,9 +3,8 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable @typescript-eslint/no-shadow */
 import { readFileSync } from 'fs';
-import { relative, resolve, sep } from 'path';
+import { relative } from 'path';
 import { codeFrameColumns } from '@babel/code-frame';
-import { FSWatcher, watch } from 'chokidar';
 import { BuildFailure } from 'esbuild';
 import { Context, Plugin, Service } from '../context';
 import { Logger } from '../logger';
@@ -14,6 +13,9 @@ import { unwrapExports } from '../utils';
 declare module '../context' {
     interface Events {
         'hmr/reload': (reloads: Map<Plugin, { filename: string, runtime: Plugin.Runtime<Context> }>) => void;
+    }
+    interface Context {
+        hmr: HMR;
     }
 }
 
@@ -59,57 +61,30 @@ function loadDependencies(filename: string, ignored: Set<string>) {
     return dependencies;
 }
 
-const logger = new Logger('watch');
+const logger = new Logger('hmr');
 
-export default class Watcher extends Service {
-    private root: string;
-    private watcher: FSWatcher;
+export default class HMR extends Service {
+    private root = process.cwd();
     private externals: Set<string>;
     private accepted: Set<string>;
     private declined: Set<string>;
     private stashed = new Set<string>();
 
-    constructor(public ctx: Context) {
-        super(ctx, 'watcher');
+    constructor(public ctx: Context, config: { watch: boolean }) {
+        super(ctx, 'hmr');
         this.externals = new Set(Object.keys(require.cache));
-    }
-
-    start() {
-        this.root = resolve(process.cwd());
-        const roots = [this.root];
-        if (process.env.WATCH_ROOT) roots.push(process.env.WATCH_ROOT);
-        this.watcher = watch(roots, {
-            ignored: (file) => [
-                'node_modules', '.git', 'logs', '.cache', '.yarn', 'tsconfig.tsbuildinfo',
-            ].some((rule) => file.startsWith(`${rule}/`) || file.endsWith(`/${rule}`) || file.includes(`/${rule}/`)),
-        });
-        logger.info(`Start watching changes in ${this.root}`);
-
-        // files independent from any plugins will trigger a full reload
-        const triggerLocalReload = this.ctx.debounce(() => this.triggerLocalReload(), 1000);
-
-        this.watcher.on('change', (path) => {
-            if (path.includes(`${sep}.`)) return;
-            logger.debug('change detected:', relative(this.root, path));
-            this.ctx.emit('app/watch/change', path);
-
+        const debouncedReload = ctx.debounce(() => this.triggerLocalReload(), 1000);
+        this.ctx.on('app/watch/change', (path) => {
             if (this.externals.has(path)) {
                 logger.warn('Require full reload');
             } else if (require.cache[path]) {
                 this.stashed.add(path);
                 this.ctx.emit('app/before-reload', this.stashed);
-                triggerLocalReload();
+                debouncedReload();
                 this.ctx.emit('app/reload', this.stashed);
             }
         });
-        this.watcher.on('unlink', (path) => {
-            logger.debug('change detected:', `-${relative(this.root, path)}`);
-            this.ctx.emit('app/watch/unlink', path);
-        });
-    }
-
-    stop() {
-        return this.watcher.close();
+        if (config.watch) ctx.plugin(require('./watch'));
     }
 
     private analyzeChanges() {
