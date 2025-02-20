@@ -1,4 +1,4 @@
-import $ from 'jquery';
+/* eslint-disable react-refresh/only-export-components */
 import yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
