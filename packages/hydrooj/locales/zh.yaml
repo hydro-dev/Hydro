@@ -1,4 +1,6 @@
+__flag: 🇨🇳
 __id: zh
+__interface: yes
 __langname: 简体中文
 '"{data}" copied to clipboard!': “{data}”已复制到剪贴板！
 '{0} {1} delete your discussion reply {2} in "{3}"({4}).' : '{0} {1} 从讨论 {3}({4}) 删除了你的回复 {2}。'

@@ -24,6 +24,7 @@ const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, strin
 const langRange: Dictionary<string> = {};
 
 for (const lang in global.Hydro.locales) {
+    if (!global.Hydro.locales[lang].__interface) continue;
     langRange[lang] = global.Hydro.locales[lang].__langname;
 }
 

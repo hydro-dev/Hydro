@@ -11,7 +11,7 @@ import child from 'child_process';
 import './utils';
 import cac from 'cac';
 import './ui';
-import './lib/i18n';
+import * as I18n from './lib/i18n';
 
 import { Logger } from './logger';
 import { Context, Service, ScopeStatus } from './context';
@@ -136,6 +136,7 @@ export class Loader extends Service {
     }
 }
 
+app.plugin(I18n);
 app.plugin(Loader);
 
 function preload() {

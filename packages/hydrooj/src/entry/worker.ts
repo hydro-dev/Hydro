@@ -19,7 +19,6 @@ const tmpdir = path.resolve(os.tmpdir(), 'hydro');
 
 export async function apply(ctx: Context) {
     fs.ensureDirSync(tmpdir);
-    require('../lib/i18n');
     require('../utils');
     require('../error');
     require('../service/bus').apply(ctx);
