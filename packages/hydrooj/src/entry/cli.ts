@@ -104,7 +104,6 @@ async function cli() {
 
 export async function load(ctx: Context) {
     fs.ensureDirSync(tmpdir);
-    require('../lib/i18n');
     require('../utils');
     require('../error');
     require('../service/bus').apply(ctx);
