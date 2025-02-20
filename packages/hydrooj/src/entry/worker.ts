@@ -39,8 +39,7 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
-    // Make sure everything is ready and then start main entry
-    if (argv.options.watch) ctx.plugin(require('../service/watcher').default, {});
+    ctx.plugin(require('../service/watcher').default, { watch: argv.options.watch });
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     await require('../service/api').apply(ctx);
