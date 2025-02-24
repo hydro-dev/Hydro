@@ -73,7 +73,7 @@ export default class Hydro implements Session {
                 await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
             });
         }
-        await queue.onEmpty();
+        await queue.onIdle();
         return null;
     }
 
