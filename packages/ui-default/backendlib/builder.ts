@@ -146,10 +146,9 @@ export async function buildUI() {
 class UiConstantsHandler extends Handler {
   noCheckPermView = true;
 
-  @param('name', Types.Filename, true)
+  @param('name', Types.Filename)
   async all(domainId: string, name: string) {
     this.response.type = 'application/javascript';
-    name ||= 'entry.js';
     if (!vfs[name]) throw new NotFoundError(name);
     this.response.addHeader('ETag', hashes[name]);
     this.response.body = vfs[name];
@@ -158,7 +157,6 @@ class UiConstantsHandler extends Handler {
 }
 
 export async function apply(ctx: Context) {
-  ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
   ctx.Route('constant', '/resource/:version/:name', UiConstantsHandler);
   ctx.on('app/started', buildUI);
