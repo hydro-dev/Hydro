@@ -34,6 +34,10 @@ config({
       });
     }
   },
+  markdownItPlugins(plugins) {
+    console.log('Active builtin mdit plugins', plugins);
+    return plugins.filter((plugin) => ['sub', 'sup'].includes(plugin.type));
+  },
 });
 
 export { MdEditor };
