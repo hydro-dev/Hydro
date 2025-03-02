@@ -31,10 +31,11 @@ const HYDROPATH = [];
 
 if (process.env.NIX_PROFILES) {
     try {
-        const result = JSON.parse(child.execSync('nix-env -q --json --out-path --meta').toString()) as Record<string, any>;
-        for (const derivation of Object.values(result)) {
-            if (derivation.name.startsWith('hydro-plugin-') && derivation.outputs?.out) {
-                HYDROPATH.push(derivation.outputs.out);
+        const result = JSON.parse(child.execSync('nix profile list --json').toString()) as any;
+        for (const [name, derivation] of Object.entries(result.elements) as any) {
+            if (!derivation.active) continue;
+            if (name.startsWith('hydro-plugin-') && derivation.storePaths) {
+                HYDROPATH.push(...derivation.storePaths);
             }
         }
     } catch (e) {
