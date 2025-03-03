@@ -4,7 +4,7 @@
     "main": "index.ts",
     "license": "MIT",
     "peerDependencies": {
-        "cordis": "*"
+        "@cordisjs/core": "*"
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
