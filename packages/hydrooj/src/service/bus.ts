@@ -17,7 +17,7 @@ import type { DocType } from '../model/document';
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
 type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
-type MapHandlerEvents<N extends string, H extends Handler> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;
+type MapHandlerEvents<N extends string, H extends Handler<Context>> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;
 type KnownHandlerEvents =
     MapHandlerEvents<'UserRegister', UserRegisterHandler>
     & MapHandlerEvents<'ProblemSolution', ProblemSolutionHandler>;
@@ -38,7 +38,7 @@ export interface EventMap extends KnownHandlerEvents {
     'database/config': () => VoidReturn
 
     'system/setting': (args: Record<string, any>) => VoidReturn
-    'bus/broadcast': (event: keyof EventMap | keyof ServerEvents, payload: any, trace?: string) => VoidReturn
+    'bus/broadcast': (event: keyof EventMap | keyof ServerEvents<Context>, payload: any, trace?: string) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
     'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
@@ -93,7 +93,7 @@ export interface EventMap extends KnownHandlerEvents {
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
     'contest/del': (domainId: string, tid: ObjectId) => VoidReturn
 
-    'oplog/log': (type: string, handler: Handler, args: any, data: any) => VoidReturn;
+    'oplog/log': (type: string, handler: Handler<Context>, args: any, data: any) => VoidReturn;
 
     'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
@@ -103,7 +103,7 @@ export interface EventMap extends KnownHandlerEvents {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-declare module 'cordis' {
+declare module '@cordisjs/core' {
     interface Events extends EventMap { }
 }
 

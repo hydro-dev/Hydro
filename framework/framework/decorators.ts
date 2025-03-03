@@ -1,3 +1,4 @@
+import { Context } from '@cordisjs/core';
 import { ValidationError } from './error';
 import type { Handler } from './server';
 import { Converter, Type, Validator } from './validator';
@@ -35,7 +36,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
 }
 
 function _descriptor(v: ParamOption<any>) {
-    return function desc(this: Handler, target: any, funcName: string, obj: any) {
+    return function desc<T extends Context>(this: Handler<T>, target: any, funcName: string, obj: any) {
         target.__param ||= {};
         target.__param[target.constructor.name] ||= {};
         if (!target.__param[target.constructor.name][funcName]) {
@@ -44,7 +45,7 @@ function _descriptor(v: ParamOption<any>) {
             const firstArg = val.split(')')[0]?.split(',')[0]?.split('(')[1]?.trim() || '';
             const domainIdStyle = firstArg.toLowerCase().startsWith('domainid');
             target.__param[target.constructor.name][funcName] = [];
-            obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
+            obj.value = function validate(this: Handler<T>, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
                 const arglist: ParamOption<any>[] = target.__param[target.constructor.name][funcName];

@@ -28,7 +28,7 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 const logger = new Logger('server');
 
 declare module '@hydrooj/framework' {
-    export interface HandlerCommon {
+    export interface HandlerCommon<C> {
         domain: DomainDoc;
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
@@ -73,10 +73,9 @@ export function requireSudo(target: any, funcName: string, obj: any) {
 
 export interface Handler {
     domain: DomainDoc;
-    ctx: Context;
 }
-export class Handler extends HandlerOriginal {
-    constructor(_, ctx: Context) {
+export class Handler extends HandlerOriginal<Context> {
+    constructor(_, ctx) {
         super(_, ctx);
         this.ctx = ctx.extend({ domain: this.domain });
         this.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
@@ -114,10 +113,9 @@ export class Handler extends HandlerOriginal {
 
 export interface ConnectionHandler {
     domain: DomainDoc;
-    ctx: Context;
 }
-export class ConnectionHandler extends ConnectionHandlerOriginal {
-    constructor(_, ctx: Context) {
+export class ConnectionHandler extends ConnectionHandlerOriginal<Context> {
+    constructor(_, ctx) {
         super(_, ctx);
         this.ctx = ctx.extend({ domain: this.domain });
     }

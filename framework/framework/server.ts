@@ -2,7 +2,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { PassThrough } from 'stream';
-import { Context, Service } from 'cordis';
+import { Context as CordisContext, Service } from '@cordisjs/core';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
@@ -125,8 +125,8 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon { }
-export class HandlerCommon {
+export interface HandlerCommon<C extends CordisContext> { }
+export class HandlerCommon<C extends CordisContext> {
     static [kHandler]: string | boolean = true;
     session: Record<string, any>;
     args: Record<string, any>;
@@ -135,7 +135,7 @@ export class HandlerCommon {
     UiContext: Record<string, any>;
     user: UserModel;
 
-    constructor(public context: KoaContext, public ctx: Context) {
+    constructor(public context: KoaContext, public ctx: C) {
         this.renderHTML = this.renderHTML.bind(this);
         this.url = this.url.bind(this);
         this.session = context.session;
@@ -196,7 +196,7 @@ export class HandlerCommon {
     }
 }
 
-export class Handler extends HandlerCommon {
+export class Handler<C extends CordisContext> extends HandlerCommon<C> {
     loginMethods: any;
     noCheckPermView = false;
     notUsage = false;
@@ -242,33 +242,7 @@ export class Handler extends HandlerCommon {
     }
 }
 
-const Checker = (permPrivChecker) => {
-    let perm: bigint;
-    let priv: number;
-    let checker = () => { };
-    for (const item of permPrivChecker) {
-        if (typeof item === 'object') {
-            if (typeof item.call !== 'undefined') {
-                checker = item;
-            } else if (typeof item[0] === 'number') {
-                priv = item;
-            } else if (typeof item[0] === 'bigint') {
-                perm = item;
-            }
-        } else if (typeof item === 'number') {
-            priv = item;
-        } else if (typeof item === 'bigint') {
-            perm = item;
-        }
-    }
-    return function check(this: Handler) {
-        checker();
-        if (perm) this.checkPerm(perm);
-        if (priv) this.checkPriv(priv);
-    };
-};
-
-export class ConnectionHandler extends HandlerCommon {
+export class ConnectionHandler<C extends CordisContext> extends HandlerCommon<C> {
     conn: WebSocket;
     compression: Shorty;
     counter = 0;
@@ -305,7 +279,7 @@ export class ConnectionHandler extends HandlerCommon {
     }
 }
 
-class NotFoundHandler extends Handler {
+class NotFoundHandler extends Handler<CordisContext> {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
@@ -344,7 +318,7 @@ export interface WebServiceConfig {
     xhost?: string;
 }
 
-export class WebService extends Service {
+export class WebService<C extends CordisContext = CordisContext> extends Service<C> {
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];
@@ -359,7 +333,7 @@ export class WebService extends Service {
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: Context, public config: WebServiceConfig) {
+    constructor(ctx: C, public config: WebServiceConfig) {
         super(ctx, 'server');
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
@@ -668,6 +642,33 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
+
+        const Checker = (permPrivChecker) => {
+            let perm: bigint;
+            let priv: number;
+            let checker = () => { };
+            for (const item of permPrivChecker) {
+                if (typeof item === 'object') {
+                    if (typeof item.call !== 'undefined') {
+                        checker = item;
+                    } else if (typeof item[0] === 'number') {
+                        priv = item;
+                    } else if (typeof item[0] === 'bigint') {
+                        perm = item;
+                    }
+                } else if (typeof item === 'number') {
+                    priv = item;
+                } else if (typeof item === 'bigint') {
+                    perm = item;
+                }
+            }
+            return function check(this: Handler<C>) {
+                checker();
+                if (perm) this.checkPerm(perm);
+                if (priv) this.checkPriv(priv);
+            };
+        };
+
         if (type === 'route') {
             router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
         } else {
@@ -688,23 +689,20 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     public withHandlerClass<T extends string>(
-        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any,
+        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
     ) {
         if (this.registry[name]) callback(this.registry[name]);
-        // @ts-ignore
-        const dispose = this.ctx.on(`handler/register/${name}`, callback);
-        this[Context.current]?.on('dispose', () => {
-            dispose();
-        });
+        this.ctx.on(`handler/register/${name}`, callback);
     }
 
+    // FIXME: should be typeof Handler<Context> instead of any
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
+    public Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler, ...permPrivChecker) {
+    public Connection(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
@@ -713,7 +711,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = () => {
             this[name] = this[name].filter((i) => i !== layer);
         };
-        this[Context.origin]?.on('dispose', dispose);
+        this[CordisContext.origin]?.on('dispose', dispose);
         return dispose;
     }
 
@@ -738,7 +736,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.captureAllRoutes[prefix] = cb;
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon>) {
+    public handlerMixin(MixinClass: Partial<HandlerCommon<C>>) {
         for (const val of Object.getOwnPropertyNames(MixinClass)) {
             HandlerCommon.prototype[val] = MixinClass[val];
         }
@@ -755,16 +753,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 }
 
-declare module 'cordis' {
+declare module '@cordisjs/core' {
     interface Context {
-        server: WebService;
-        Route: WebService['Route'];
-        Connection: WebService['Connection'];
-        withHandlerClass: WebService['withHandlerClass'];
+        server: WebService<this>;
+        Route: WebService<this>['Route'];
+        Connection: WebService<this>['Connection'];
+        withHandlerClass: WebService<this>['withHandlerClass'];
     }
-}
-
-export async function apply(ctx: Context, config: WebServiceConfig) {
-    ctx.provide('server', undefined, true);
-    ctx.server = new WebService(ctx, config);
 }
