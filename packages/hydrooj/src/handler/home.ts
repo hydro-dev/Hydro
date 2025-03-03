@@ -246,7 +246,7 @@ class HomeSecurityHandler extends Handler {
             uname: this.user.uname,
             url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
         });
-        await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m);
+        await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m.toString());
         this.response.template = 'user_changemail_mail_sent.html';
     }
 
