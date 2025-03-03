@@ -233,7 +233,7 @@ export class UserRegisterHandler extends Handler {
                 path: `/register/${t[0]}`,
                 url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
             });
-            await sendMail(mail, 'Sign Up', 'user_register_mail', m);
+            await sendMail(mail, 'Sign Up', 'user_register_mail', m.toString());
             this.response.template = 'user_register_mail_sent.html';
             this.response.body = { mail };
         } else this.response.redirect = this.url('user_register_with_code', { code: t[0] });
@@ -323,7 +323,7 @@ class UserLostPassHandler extends Handler {
             url_prefix: prefix.endsWith('/') ? prefix.slice(0, -1) : prefix,
             uname: udoc.uname,
         });
-        await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m);
+        await sendMail(mail, 'Lost Password', 'user_lostpass_mail', m.toString());
         this.response.template = 'user_lostpass_mail_sent.html';
     }
 }

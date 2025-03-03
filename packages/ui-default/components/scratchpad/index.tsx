@@ -28,7 +28,7 @@ const pages = {
 let rerenderCallback = null;
 class ScratchpadService extends Service {
   constructor(public store) {
-    super(ctx, 'scratchpad', true);
+    super(ctx, 'scratchpad');
     this.load = new Promise((resolve) => {
       this.loadCallback = resolve;
     });
