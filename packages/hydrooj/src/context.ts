@@ -1,5 +1,5 @@
 import * as cordis from '@cordisjs/core';
-import { Logger } from '@cordisjs/logger';
+import LoggerService from '@cordisjs/logger';
 import { TimerService } from '@cordisjs/plugin-timer';
 import Schema from 'schemastery';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
@@ -72,7 +72,7 @@ export class Context extends cordis.Context {
         super();
         this.plugin(ApiMixin);
         this.plugin(TimerService);
-        this.plugin(Logger);
+        this.plugin(LoggerService);
     }
 }
 
