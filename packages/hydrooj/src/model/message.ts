@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from 'mongodb';
 import { MessageDoc } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 import { PRIV } from './builtin';

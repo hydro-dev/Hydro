@@ -4,7 +4,7 @@ import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { Context } from '../context';
 import { Logger } from '../logger';
-import * as bus from './bus';
+import bus from './bus';
 import db from './db';
 
 const coll = db.collection('status');

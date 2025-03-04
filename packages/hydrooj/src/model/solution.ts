@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { SolutionNotFoundError } from '../error';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import * as document from './document';
 
 class SolutionModel {

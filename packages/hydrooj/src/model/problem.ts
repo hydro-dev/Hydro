@@ -16,7 +16,7 @@ import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,

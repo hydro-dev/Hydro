@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { ObjectId } from 'mongodb';
 import { OplogDoc } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import type { Handler } from '../service/server';
 

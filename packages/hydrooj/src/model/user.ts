@@ -9,7 +9,7 @@ import {
 } from '../interface';
 import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
 import { ArgMethod, buildProjection } from '../utils';

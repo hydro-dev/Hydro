@@ -7,7 +7,7 @@ import { Time } from '@hydrooj/utils';
 import { ValidationError } from '../error';
 import { Logger } from '../logger';
 import { load } from '../options';
-import * as bus from './bus';
+import bus from './bus';
 
 const logger = new Logger('mongo');
 export interface Collections { }

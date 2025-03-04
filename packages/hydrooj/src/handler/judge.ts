@@ -23,7 +23,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import task, { Consumer } from '../model/task';
 import user from '../model/user';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import { updateJudge } from '../service/monitor';
 import {
     ConnectionHandler, Handler, post, subscribe, Types,

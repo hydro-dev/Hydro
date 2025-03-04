@@ -114,14 +114,6 @@ export function apply(ctx: Context) {
 }
 
 export default app;
-export const on = (a, b, c?) => app.on(a, b, c);
-export const once = (a, b, c?) => app.once(a, b, c);
-export const parallel = app.parallel.bind(app);
-export const emit = app.parallel.bind(app);
-export const bail = app.bail.bind(app);
-// For backward compatibility
-export const serial: any = app.parallel.bind(app);
-export const broadcast = app.broadcast.bind(app);
 
 global.Hydro.service.bus = app as any;
 global.bus = app;
