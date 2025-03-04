@@ -1,5 +1,5 @@
 import { SystemKeys } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { NumberKeys } from '../typeutils';
 import { SYSTEM_SETTINGS } from './setting';

@@ -2,7 +2,7 @@ import { Dictionary, escapeRegExp } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Filter } from 'mongodb';
 import { DomainDoc } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod } from '../utils';
