@@ -42,6 +42,11 @@ export async function apply(ctx: Context) {
     ctx.plugin(require('../service/hmr').default, { watch: argv.options.watch });
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['server'], (c) => {
+            resolve(c);
+        });
+    });
     await require('../service/api').apply(ctx);
     require('../lib/index');
     await lib(pending, fail, ctx);
