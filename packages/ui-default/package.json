@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@blueprintjs/core": "^5.16.6",
-    "@cordisjs/core": "4.0.0-alpha.0",
+    "@cordisjs/core": "4.0.0-alpha.1",
     "@fontsource/dm-mono": "^5.1.1",
     "@fontsource/fira-code": "^5.1.1",
     "@fontsource/inconsolata": "^5.1.1",

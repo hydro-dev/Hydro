@@ -2,16 +2,15 @@ import * as cordis from '@cordisjs/core';
 import { Logger } from '@cordisjs/logger';
 import { TimerService } from '@cordisjs/plugin-timer';
 import Schema from 'schemastery';
-import type { ServerEvents, WebService } from '@hydrooj/framework';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
 import type { CheckService } from './service/check';
 import type { } from './service/migration';
-import type { ConnectionHandler, Handler } from './service/server';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
+// TODO: this is an broken declaration
+export { EventMap as Events };
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
@@ -30,8 +29,7 @@ export type EffectScope = cordis.EffectScope<Context>;
 export { Disposable, Plugin, ScopeStatus } from '@cordisjs/core';
 
 export interface Context extends cordis.Context {
-    // @ts-ignore
-    [Context.events]: Events<this> & ServerEvents<this>;
+    [Context.events]: EventMap & cordis.Events<Context>;
     loader: Loader;
     check: CheckService;
     setImmediate: typeof setImmediate;
@@ -53,7 +51,7 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         });
     };
 
-export class ApiMixin extends cordis.Service {
+export class ApiMixin extends cordis.Service<Context> {
     addScript = T(addScript);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
