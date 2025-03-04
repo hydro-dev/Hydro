@@ -128,7 +128,7 @@ bus.on('record/judge', async (rdoc, updated, pdoc) => {
         await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
     } catch (e) {
         next({
-            rid: rdoc._id,
+            rid: rdoc._id.toString(),
             domainId: rdoc.domainId,
             key: 'next',
             message: { message: 'Unable to apply hack: {0}', params: [e.message] },

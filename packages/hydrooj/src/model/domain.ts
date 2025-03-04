@@ -1,6 +1,7 @@
 import { Dictionary, escapeRegExp } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Filter } from 'mongodb';
+import { Context } from '../context';
 import { DomainDoc } from '../interface';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -285,24 +286,26 @@ class DomainModel {
     }
 }
 
-bus.on('ready', () => Promise.all([
-    db.ensureIndexes(
-        coll,
-        { key: { lower: 1 }, name: 'lower', unique: true },
-    ),
-    db.ensureIndexes(
-        collUser,
-        { key: { domainId: 1, uid: 1 }, name: 'uid', unique: true },
-        { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
-    ),
-]));
-bus.on('domain/delete-cache', async (domainId: string) => {
-    const ddoc = await DomainModel.get(domainId);
-    if (!ddoc) return;
-    for (const host of ddoc.hosts || []) {
-        cache.delete(`host::${host}`);
-    }
-    cache.delete(`id::${domainId}`);
-});
+export async function apply(ctx: Context) {
+    ctx.on('domain/delete-cache', async (domainId: string) => {
+        const ddoc = await DomainModel.get(domainId);
+        if (!ddoc) return;
+        for (const host of ddoc.hosts || []) {
+            cache.delete(`host::${host}`);
+        }
+        cache.delete(`id::${domainId}`);
+    });
+    await Promise.all([
+        db.ensureIndexes(
+            coll,
+            { key: { lower: 1 }, name: 'lower', unique: true },
+        ),
+        db.ensureIndexes(
+            collUser,
+            { key: { domainId: 1, uid: 1 }, name: 'uid', unique: true },
+            { key: { domainId: 1, rp: -1, uid: 1 }, name: 'rp', sparse: true },
+        ),
+    ]);
+}
 export default DomainModel;
 global.Hydro.model.domain = DomainModel;
