@@ -465,22 +465,24 @@ class UserModel {
     }
 }
 
-bus.on('ready', () => Promise.all([
-    db.ensureIndexes(
-        coll,
-        { key: { unameLower: 1 }, name: 'uname', unique: true },
-        { key: { mailLower: 1 }, name: 'mail', unique: true },
-    ),
-    db.ensureIndexes(
-        collV,
-        { key: { unameLower: 1 }, name: 'uname', unique: true },
-        { key: { mailLower: 1 }, name: 'mail', unique: true },
-    ),
-    db.ensureIndexes(
-        collGroup,
-        { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
-        { key: { domainId: 1, uids: 1 }, name: 'uid' },
-    ),
-]));
+export async function apply() {
+    await Promise.all([
+        db.ensureIndexes(
+            coll,
+            { key: { unameLower: 1 }, name: 'uname', unique: true },
+            { key: { mailLower: 1 }, name: 'mail', unique: true },
+        ),
+        db.ensureIndexes(
+            collV,
+            { key: { unameLower: 1 }, name: 'uname', unique: true },
+            { key: { mailLower: 1 }, name: 'mail', unique: true },
+        ),
+        db.ensureIndexes(
+            collGroup,
+            { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
+            { key: { domainId: 1, uids: 1 }, name: 'uid' },
+        ),
+    ]);
+}
 export default UserModel;
 global.Hydro.model.user = UserModel;

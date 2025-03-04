@@ -197,7 +197,7 @@ export class HandlerCommon<C> {
     }
 }
 
-export class Handler<C> extends HandlerCommon<C> {
+export class Handler<C = CordisContext> extends HandlerCommon<C> {
     loginMethods: any;
     noCheckPermView = false;
     notUsage = false;

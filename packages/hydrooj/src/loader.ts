@@ -147,7 +147,7 @@ async function preload() {
                 resolve(ctx);
             });
         });
-    })
+    });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
         try {
             // Is a npm package
