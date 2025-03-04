@@ -138,9 +138,16 @@ export class Loader extends Service {
 }
 
 app.plugin(I18n);
-app.plugin(Loader);
 
-function preload() {
+async function preload() {
+    global.app = await new Promise((resolve) => {
+        app.inject(['timer', 'i18n', 'logger'], (c) => {
+            c.plugin(Loader);
+            c.inject(['loader'], (ctx) => {
+                resolve(ctx);
+            });
+        });
+    })
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
         try {
             // Is a npm package
@@ -160,7 +167,7 @@ function preload() {
 }
 
 export async function load() {
-    preload();
+    await preload();
     Error.stackTraceLimit = 50;
     try {
         const { simpleGit } = require('simple-git') as typeof import('simple-git');
@@ -199,7 +206,7 @@ export async function load() {
 
 export async function loadCli() {
     process.env.HYDRO_CLI = 'true';
-    preload();
+    await preload();
     await require('./entry/cli').load(app);
     setTimeout(() => process.exit(0), 300);
 }

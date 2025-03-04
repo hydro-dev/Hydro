@@ -5,7 +5,9 @@ import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
-    ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
+    ConnectionHandler as ConnectionHandlerOriginal,
+    Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
+    WebService,
 } from '@hydrooj/framework';
 import { errorMessage, Time } from '@hydrooj/utils';
 import { Context } from '../context';
@@ -130,7 +132,7 @@ export class ConnectionHandler extends ConnectionHandlerOriginal<Context> {
 }
 
 export async function apply(ctx: Context) {
-    ctx.plugin(require('@hydrooj/framework'), {
+    ctx.plugin(WebService, {
         keys: system.get('session.keys'),
         proxy: !!system.get('server.xproxy') || !!system.get('server.xff'),
         cors: system.get('server.cors') || '',
