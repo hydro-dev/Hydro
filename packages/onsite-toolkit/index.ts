@@ -5,6 +5,7 @@ import {
     ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
 } from 'hydrooj';
+import type { } from 'hydrooj/src/handler/contest';
 import { ResolverInput } from './interface';
 
 interface IpLoginInfo {

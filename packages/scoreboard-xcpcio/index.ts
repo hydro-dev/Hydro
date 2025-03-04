@@ -2,6 +2,7 @@ import path from 'path';
 import {
     ContestModel, Context, fs, Handler, ObjectId, PERM, Schema, STATUS, Types, UserModel,
 } from 'hydrooj';
+import type { } from 'hydrooj/src/handler/contest';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
 const indexJs = file.match(/index-([A-Za-z0-9_-]+)\.js"/)?.[1];

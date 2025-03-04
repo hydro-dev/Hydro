@@ -148,7 +148,7 @@ export default class HMR extends Service {
         this.analyzeChanges();
 
         /** plugins pending classification */
-        const pending = new Map<string, Plugin.Runtime<Context>>();
+        const pending = new Map<string, Plugin>();
 
         /** plugins that should be reloaded */
         const reloads = new Map<Plugin, { filename: string, runtime: Plugin.Runtime<Context> }>();
@@ -161,15 +161,16 @@ export default class HMR extends Service {
             if (typeof plugin !== 'object' || !plugin || !('apply' in plugin)) continue;
             const runtime = this.ctx.registry.get(plugin);
             if (!runtime || this.declined.has(filename)) continue;
-            pending.set(filename, runtime);
+            pending.set(filename, plugin);
             if (!plugin || !('sideEffect' in plugin) || !plugin['sideEffect']) this.declined.add(filename);
         }
 
-        for (const [filename, runtime] of pending) {
+        for (const [filename, plugin] of pending) {
             // check if it is a dependent of the changed file
             this.declined.delete(filename);
             const dependencies = [...loadDependencies(filename, this.declined)];
-            if (!runtime.plugin['sideEffect']) this.declined.add(filename);
+            const runtime = this.ctx.registry.get(plugin);
+            if (!plugin['sideEffect']) this.declined.add(filename);
 
             // we only detect reloads at plugin level
             // a plugin will be reloaded if any of its dependencies are accepted
@@ -177,7 +178,7 @@ export default class HMR extends Service {
             for (const dep of dependencies) this.accepted.add(dep);
 
             // prepare for reload
-            reloads.set(runtime.plugin, {
+            reloads.set(plugin, {
                 filename,
                 runtime,
             });

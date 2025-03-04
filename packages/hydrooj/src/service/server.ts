@@ -28,7 +28,7 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 const logger = new Logger('server');
 
 declare module '@hydrooj/framework' {
-    export interface HandlerCommon<C> {
+    export interface HandlerCommon<C> { // eslint-disable-line @typescript-eslint/no-unused-vars
         domain: DomainDoc;
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
@@ -277,6 +277,8 @@ export async function apply(ctx: Context) {
             h.ctx = h.ctx.extend({
                 domain: h.domain,
             });
+        });
+        on('handler/create/http', async (h) => {
             if (!argv.options.benchmark && !h.notUsage) await h.limitRate('global', 5, 100);
             h.loginMethods = Object.keys(global.Hydro.module.oauth)
                 .map((key) => ({
@@ -293,6 +295,9 @@ export async function apply(ctx: Context) {
                 }
                 h.checkPerm(PERM.PERM_VIEW);
             }
+            if (h.context.pendingError) throw h.context.pendingError;
+        });
+        on('handler/create/ws', async (h) => {
             if (h.context.pendingError) throw h.context.pendingError;
         });
 

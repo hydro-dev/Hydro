@@ -125,8 +125,8 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon<C extends CordisContext> { }
-export class HandlerCommon<C extends CordisContext> {
+export interface HandlerCommon<C> { } // eslint-disable-line @typescript-eslint/no-unused-vars
+export class HandlerCommon<C> {
     static [kHandler]: string | boolean = true;
     session: Record<string, any>;
     args: Record<string, any>;
@@ -143,7 +143,7 @@ export class HandlerCommon<C extends CordisContext> {
         this.request = context.HydroContext.request;
         this.response = context.HydroContext.response;
         this.UiContext = context.HydroContext.UiContext;
-        this.ctx = ctx.extend({});
+        this.ctx = (ctx as any).extend({});
     }
 
     checkPerm(..._: bigint[]) {
@@ -184,7 +184,8 @@ export class HandlerCommon<C extends CordisContext> {
     }
 
     renderHTML(templateName: string, args: Record<string, any>) {
-        const renderers = Object.values(this.ctx.server.renderers).filter((r) => r.accept.includes(templateName) || r.asFallback);
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
+            .filter((r) => r.accept.includes(templateName) || r.asFallback);
         const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
         const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
         return engine(templateName, args, {
@@ -196,7 +197,7 @@ export class HandlerCommon<C extends CordisContext> {
     }
 }
 
-export class Handler<C extends CordisContext> extends HandlerCommon<C> {
+export class Handler<C> extends HandlerCommon<C> {
     loginMethods: any;
     noCheckPermView = false;
     notUsage = false;
@@ -242,7 +243,7 @@ export class Handler<C extends CordisContext> extends HandlerCommon<C> {
     }
 }
 
-export class ConnectionHandler<C extends CordisContext> extends HandlerCommon<C> {
+export class ConnectionHandler<C> extends HandlerCommon<C> {
     conn: WebSocket;
     compression: Shorty;
     counter = 0;
@@ -279,7 +280,7 @@ export class ConnectionHandler<C extends CordisContext> extends HandlerCommon<C>
     }
 }
 
-class NotFoundHandler extends Handler<CordisContext> {
+export class NotFoundHandler extends Handler<CordisContext> {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
@@ -477,7 +478,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
                 : '';
 
-            await this.ctx.parallel('handler/create', h, 'http');
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('handler/create', h, 'http');
+            await (this.ctx.parallel as any)('handler/create/http', h);
 
             if (checker) checker.call(h);
             if (method === 'post') {
@@ -513,8 +516,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 const step = steps[current];
                 let control;
                 if (step.startsWith('log/')) h.args[step.slice(4)] = Date.now();
-                // eslint-disable-next-line no-await-in-loop
-                else if (step.startsWith('handler/')) control = await this.ctx.serial(step as any, h);
+                // @ts-ignore
+                else if (step.startsWith('handler/')) control = await this.ctx.serial(step, h); // eslint-disable-line no-await-in-loop
                 // eslint-disable-next-line no-await-in-loop
                 else if (typeof h[step] === 'function') control = await h[step](args);
                 if (control) {
@@ -528,8 +531,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             try {
-                await this.ctx.serial(`handler/error/${name}`, h, e);
-                await this.ctx.serial('handler/error', h, e);
+                // FIXME: should pass type check
+                await (this.ctx.serial as any)(`handler/error/${name}`, h, e);
+                await (this.ctx.serial as any)('handler/error', h, e);
                 await h.onerror(e);
             } catch (err) {
                 logger.error(err);
@@ -543,7 +547,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer?) {
         const { args } = ctx.HydroContext;
         const h = new HandlerClass(ctx, this.ctx);
-        await this.ctx.parallel('connection/create', h);
+        // FIXME: should pass type check
+        await (this.ctx.parallel as any)('connection/create', h);
         const stream = new PassThrough();
         if (!conn) {
             // By HTTP
@@ -571,7 +576,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         h.conn = conn;
         const disposables = [];
         try {
-            await this.ctx.parallel('handler/create', h, 'ws');
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('handler/create', h, 'ws');
+            await (this.ctx.parallel as any)('handler/create/ws', h);
             checker.call(h);
             if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
@@ -583,7 +590,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             const clean = () => {
                 if (closed) return;
                 closed = true;
-                this.ctx.emit('connection/close', h);
+                // FIXME: should pass type check
+                (this.ctx.emit as any)('connection/close', h);
                 if (layer) layer.clients.delete(conn);
                 if (interval) clearInterval(interval);
                 for (const d of disposables) d();
@@ -621,7 +629,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     }
                 };
             } else ctx.body = stream;
-            await this.ctx.parallel('connection/active', h);
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('connection/active', h as any);
             if (layer) {
                 if (conn.readyState === conn.OPEN) {
                     conn.on('close', clean);
@@ -643,11 +652,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
 
-        const Checker = (permPrivChecker) => {
+        const Checker = (args) => {
             let perm: bigint;
             let priv: number;
             let checker = () => { };
-            for (const item of permPrivChecker) {
+            for (const item of args) {
                 if (typeof item === 'object') {
                     if (typeof item.call !== 'undefined') {
                         checker = item;
@@ -692,7 +701,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
     ) {
         if (this.registry[name]) callback(this.registry[name]);
-        this.ctx.on(`handler/register/${name}`, callback);
+        // FIXME: should pass type check
+        this.ctx.on(`handler/register/${name}`, callback as any);
     }
 
     // FIXME: should be typeof Handler<Context> instead of any

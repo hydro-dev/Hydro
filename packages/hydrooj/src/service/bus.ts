@@ -2,11 +2,9 @@
 import {
     BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
-import type { Handler, ServerEvents } from '@hydrooj/framework';
+import type { Handler } from '@hydrooj/framework';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import { Context } from '../context';
-import type { ProblemSolutionHandler } from '../handler/problem';
-import type { UserRegisterHandler } from '../handler/user';
 import type {
     BaseUserDict, ContestBalloonDoc, DiscussionDoc, DomainDoc, FileInfo,
     MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
@@ -16,14 +14,8 @@ import type { DocType } from '../model/document';
 
 export type Disposable = () => void;
 export type VoidReturn = Promise<any> | any;
-type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
-type MapHandlerEvents<N extends string, H extends Handler<Context>> = Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>;
-type KnownHandlerEvents =
-    MapHandlerEvents<'UserRegister', UserRegisterHandler>
-    & MapHandlerEvents<'ProblemSolution', ProblemSolutionHandler>;
 
-/* eslint-disable @typescript-eslint/naming-convention */
-export interface EventMap extends KnownHandlerEvents {
+export interface EventMap {
     'app/listen': () => void
     'app/started': () => void
     'app/ready': () => VoidReturn
@@ -38,7 +30,7 @@ export interface EventMap extends KnownHandlerEvents {
     'database/config': () => VoidReturn
 
     'system/setting': (args: Record<string, any>) => VoidReturn
-    'bus/broadcast': (event: keyof EventMap | keyof ServerEvents<Context>, payload: any, trace?: string) => VoidReturn
+    'bus/broadcast': (event: keyof EventMap, payload: any, trace?: string) => VoidReturn
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn
     'monitor/collect': (info: any) => VoidReturn
     'api/update': () => void;
@@ -100,11 +92,6 @@ export interface EventMap extends KnownHandlerEvents {
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
     'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc) => VoidReturn
-}
-/* eslint-enable @typescript-eslint/naming-convention */
-
-declare module '@cordisjs/core' {
-    interface Events extends EventMap { }
 }
 
 export function apply(ctx: Context) {
