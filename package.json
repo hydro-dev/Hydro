@@ -36,7 +36,7 @@
         "@types/autocannon": "^7.12.6",
         "@types/chai": "^5.0.1",
         "@types/cross-spawn": "^6.0.6",
-        "@types/node": "22.13.4",
+        "@types/node": "22.13.8",
         "@types/semver": "^7.5.8",
         "autocannon": "^8.0.0",
         "cac": "^6.7.14",
@@ -45,7 +45,7 @@
         "cross-spawn": "^7.0.6",
         "esbuild": "0.25.0",
         "eslint": "^8.57.1",
-        "eslint-import-resolver-typescript": "^3.8.2",
+        "eslint-import-resolver-typescript": "^3.8.3",
         "eslint-import-resolver-webpack": "^0.13.10",
         "fs-extra": "^11.3.0",
         "globby": "~14.0.2",
@@ -58,7 +58,7 @@
         "simple-git": "^3.27.0",
         "supertest": "^7.0.0",
         "supports-hyperlinks": "^3.2.0",
-        "typescript": "5.7.3",
+        "typescript": "5.8.2",
         "wtfnode": "^0.10.0"
     }
 }

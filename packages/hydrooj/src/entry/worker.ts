@@ -39,7 +39,7 @@ export async function apply(ctx: Context) {
     await modelSystem.runConfig();
     const storage = require('../service/storage');
     await storage.loadStorageService();
-    ctx.plugin(require('../service/hmr').default, { watch: argv.options.watch });
+    await ctx.plugin(require('../service/hmr').default, { watch: argv.options.watch });
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
     ctx = await new Promise((resolve) => {

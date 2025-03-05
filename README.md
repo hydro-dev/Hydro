@@ -122,7 +122,16 @@ Hydro 用户群：1085853538
 - core: 基于相对时间计算一血而非绝对时间
 - ui&judge: 添加栈空间回显
 - install: 在树莓派中自动启用 cgroup.memory
+- install: 添加 shm 空间大小警告
 - vjudge: 使用 vjudge.mount 表替代 domain.mount
+- core: 升级到 cordis@4
+- framework: 支持同时启用多个 renderer
+- core: 分离 HMR 和 Watcher 组件
+- core: i18n: 添加 interface 选项
+- judge: 添加 kattis checker 支持
+- core: 移除旧版本 bus 调用
+- migrate: 修复 hustoj 自动运行
+- core: 强制要求使用 inject 声明插件依赖
 
 ## Hydro 4.19.0 / UI 4.57.0
 
