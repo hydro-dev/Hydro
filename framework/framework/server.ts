@@ -717,12 +717,12 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
-        this[name].push(layer);
-        const dispose = () => {
-            this[name] = this[name].filter((i) => i !== layer);
-        };
-        this[CordisContext.origin]?.on('dispose', dispose);
-        return dispose;
+        this.ctx.effect(() => {
+            this[name].push(layer);
+            return () => {
+                this[name] = this[name].filter((i) => i !== layer);
+            };
+        });
     }
 
     public addServerLayer(name: string, func: any) {
@@ -747,9 +747,50 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     public handlerMixin(MixinClass: Partial<HandlerCommon<C>>) {
-        for (const val of Object.getOwnPropertyNames(MixinClass)) {
-            HandlerCommon.prototype[val] = MixinClass[val];
-        }
+        this.ctx.effect(() => {
+            for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                if (HandlerCommon.prototype[val]) {
+                    logger.warn('HandlerCommon.prototype[%s] already exists.', val);
+                }
+                HandlerCommon.prototype[val] = MixinClass[val];
+            }
+            return () => {
+                for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                    delete HandlerCommon.prototype[val];
+                }
+            };
+        });
+    }
+
+    public httpHandlerMixin(MixinClass: Partial<Handler<C>>) {
+        this.ctx.effect(() => {
+            for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                if (Handler.prototype[val]) {
+                    logger.warn('Handler.prototype[%s] already exists.', val);
+                }
+                Handler.prototype[val] = MixinClass[val];
+            }
+            return () => {
+                for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                    delete Handler.prototype[val];
+                }
+            };
+        });
+    }
+
+    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>>) {
+        this.ctx.effect(() => {
+            for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                if (ConnectionHandler.prototype[val]) {
+                    logger.warn('ConnectionHandler.prototype[%s] already exists.', val);
+                }
+            }
+            return () => {
+                for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                    delete ConnectionHandler.prototype[val];
+                }
+            };
+        });
     }
 
     public registerRenderer(name: string, func: Renderer) {
