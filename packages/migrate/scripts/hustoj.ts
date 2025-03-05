@@ -288,10 +288,11 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         lint_error	int		N	？？？
         judger	char(16)		N	判题机
     */
-    const [{ 'count(*)': rcount }] = await query('SELECT count(*) FROM `solution`');
-    const rpageCount = Math.ceil(Number(rcount) / step);
-    for (let pageId = 0; pageId < rpageCount; pageId++) {
-        const rdocs = await query(`SELECT * FROM \`solution\` LIMIT ${pageId * step}, ${step}`);
+    const [{ 'count(*)': _rcount }] = await query('SELECT count(*) FROM `solution`');
+    const rcount = BigInt(_rcount);
+    const rpageCount = rcount / BigInt(step) + (rcount % BigInt(step) === 0n ? 0n : 1n);
+    for (let pageId = 0n; pageId < rpageCount; pageId++) {
+        const rdocs = await query(`SELECT * FROM \`solution\` LIMIT ${pageId * BigInt(step)}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
                 status: statusMap[rdoc.result] || 0,
@@ -328,7 +329,12 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
-        if (pageId % 10 === 0) report({ message: `record finished ${pageId * step} / ${rcount} (${Math.round(((pageId * step) / rcount) * 100)}%)` });
+        if (pageId % 10n === 0n) {
+            const progress = Math.round(((Number(pageId) * step) / Number(rcount)) * 100);
+            report({
+                message: `record finished ${Number(pageId * BigInt(step))} / ${Number(rcount)} (${progress}%)`,
+            });
+        }
     }
     report({ message: 'record finished' });
 
