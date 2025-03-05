@@ -8,10 +8,10 @@ import {
 const RE_MD5 = /^[\da-f]{32}$/;
 
 function checkLock(innerCall) {
-    return async (args) => {
+    return async (...args) => {
         const cur = await SystemModel.get('migrate.lock');
         if (cur) throw new SystemError(`migrate lock already exists: ${cur}, possible another migration is running`);
-        return innerCall(args);
+        return innerCall(...args);
     };
 }
 
