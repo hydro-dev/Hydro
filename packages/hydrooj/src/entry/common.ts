@@ -42,7 +42,7 @@ const getLoader = (type: LoadTask, filename: string, dontLoad = false) => async 
             try {
                 if (dontLoad) throw new Error(`deprecated ${name} in %s will not be load: ${i}`);
                 const m = unwrapExports(require(p));
-                if (m.apply) ctx.loader.reloadPlugin(ctx, p, {});
+                if (m.apply) ctx.loader.reloadPlugin(p, {});
                 else logger.info(`${name} init: %s`, i);
             } catch (e) {
                 fail.push(i);
@@ -69,7 +69,7 @@ export async function builtinModel(ctx: Context) {
     const models = await fs.readdir(modelDir);
     for (const t of models.filter((i) => i.endsWith('.ts'))) {
         const q = path.resolve(modelDir, t);
-        if ('apply' in require(q)) ctx.loader.reloadPlugin(ctx, q, {}, `hydrooj/model/${t.split('.')[0]}`);
+        if ('apply' in require(q)) ctx.loader.reloadPlugin(q, {}, `hydrooj/model/${t.split('.')[0]}`);
     }
 }
 

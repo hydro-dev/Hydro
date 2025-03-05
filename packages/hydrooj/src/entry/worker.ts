@@ -61,14 +61,14 @@ export async function apply(ctx: Context) {
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
     for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
     }
     ctx.plugin(require('../service/migration').default);
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
     await ctx.parallel('app/started');

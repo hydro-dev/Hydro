@@ -123,10 +123,15 @@ export async function load(ctx: Context) {
     await model(pending, fail, ctx);
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/server'));
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['server'], (c) => {
+            resolve(c);
+        });
+    });
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
     await cli();

@@ -103,7 +103,7 @@ export class Loader extends Service {
         }
     }
 
-    async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
+    async reloadPlugin(key: string, config: any, asName = '') {
         let fork = this.state[key];
         if (fork) {
             logger.info('reload plugin %c', key.split('node_modules').pop());
@@ -115,7 +115,7 @@ export class Loader extends Service {
             resolveConfig(plugin, config);
             if (asName) plugin.name = asName;
             // fork = parent.plugin(plugin, this.interpolate(config));
-            fork = parent.plugin(plugin, config);
+            fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
             this.state[key] = fork;
         }
