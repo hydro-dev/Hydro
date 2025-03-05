@@ -73,62 +73,11 @@ export function requireSudo(target: any, funcName: string, obj: any) {
     return obj;
 }
 
-export interface Handler {
-    domain: DomainDoc;
-}
 export class Handler extends HandlerOriginal<Context> {
-    constructor(_, ctx) {
-        super(_, ctx);
-        this.ctx = ctx.extend({ domain: this.domain });
-        this.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
-            const s = name.split('.');
-            let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
-            if (!global.Hydro.ui.template[templateName]) templateName = name;
-            return orig(templateName, args);
-        })(this.renderHTML).bind(this);
-    }
-
-    async onerror(error: HydroError) {
-        error.msg ||= () => error.message;
-        if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
-        if (!(error instanceof NotFoundError) && !('nolog' in error)) {
-            // eslint-disable-next-line max-len
-            logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
-            if (error.stack) logger.error(error.stack);
-        }
-        if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.url('user_login', {
-                query: {
-                    redirect: (this.context.originalPath || this.request.path) + this.context.search,
-                },
-            });
-        } else {
-            this.response.status = error instanceof UserFacingError ? error.code : 500;
-            this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-            this.response.body = {
-                UserFacingError,
-                error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
-            };
-        }
-    }
-}
-
-export interface ConnectionHandler {
     domain: DomainDoc;
 }
 export class ConnectionHandler extends ConnectionHandlerOriginal<Context> {
-    constructor(_, ctx) {
-        super(_, ctx);
-        this.ctx = ctx.extend({ domain: this.domain });
-    }
-
-    onerror(err: HydroError) {
-        if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
-            logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
-            logger.error(err);
-        }
-        super.onerror(err);
-    }
+    domain: DomainDoc;
 }
 
 export async function apply(ctx: Context) {
@@ -270,15 +219,53 @@ export async function apply(ctx: Context) {
                 return `${this.translate(str)} - ${name}`;
             },
         });
+        server.httpHandlerMixin({
+            async onerror(error: HydroError) {
+                error.msg ||= () => error.message;
+                if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
+                if (!(error instanceof NotFoundError) && !('nolog' in error)) {
+                    // eslint-disable-next-line max-len
+                    logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
+                    if (error.stack) logger.error(error.stack);
+                }
+                if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
+                    this.response.redirect = this.url('user_login', {
+                        query: {
+                            redirect: (this.context.originalPath || this.request.path) + this.context.search,
+                        },
+                    });
+                } else {
+                    this.response.status = error instanceof UserFacingError ? error.code : 500;
+                    this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
+                    this.response.body = {
+                        UserFacingError,
+                        error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
+                    };
+                }
+            },
+        });
+        server.wsHandlerMixin({
+            async onerror(err: HydroError) {
+                if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
+                    logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
+                    logger.error(err);
+                }
+                await super.onerror(err);
+            },
+        });
 
         on('handler/create', async (h) => {
             h.user = h.context.HydroContext.user as any;
             h.domain = h.context.HydroContext.domain as any;
             h.translate = h.translate.bind(h);
             h.url = h.url.bind(h);
-            h.ctx = h.ctx.extend({
-                domain: h.domain,
-            });
+            h.ctx = h.ctx.extend({ domain: h.domain });
+            h.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
+                const s = name.split('.');
+                let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
+                if (!global.Hydro.ui.template[templateName]) templateName = name;
+                return orig(templateName, args);
+            })(h.renderHTML).bind(h);
         });
         on('handler/create/http', async (h) => {
             if (!argv.options.benchmark && !h.notUsage) await h.limitRate('global', 5, 100);
