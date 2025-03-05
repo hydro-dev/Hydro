@@ -59,12 +59,12 @@ export class Loader extends Service {
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
 
-    constructor(private app: Context) {
-        super(app, 'loader');
+    constructor(ctx: Context) {
+        super(ctx, 'loader');
     }
 
     [Service.setup]() {
-        this.app.on('app/started', () => {
+        this.ctx.on('app/started', () => {
             this.ctx.setInterval(async () => {
                 const pending = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.PENDING);
                 if (pending.length) {
