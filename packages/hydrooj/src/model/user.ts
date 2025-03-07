@@ -209,6 +209,9 @@ class UserModel {
         loginip: '127.0.0.1',
     };
 
+    static _handleMailLower = handleMailLower;
+    static _deleteUserCache = deleteUserCache;
+
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User> {
         if (cache.has(`id/${_id}/${domainId}`)) return cache.get(`id/${_id}/${domainId}`) || null;

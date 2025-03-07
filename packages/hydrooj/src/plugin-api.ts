@@ -41,6 +41,7 @@ export { Handler, ConnectionHandler, requireSudo } from './service/server';
 export { Service, Context } from './context';
 export { buildContent } from './lib/content';
 export { default as mime } from './lib/mime';
+export { default as difficultyAlgorithm } from './lib/difficulty';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 /** @deprecated use Handler.paginate instead */
