@@ -19,6 +19,7 @@ import {
     CsrfTokenError, HydroError, InvalidOperationError,
     MethodNotAllowedError, NotFoundError, UserFacingError,
 } from './error';
+import type { KnownHandlers } from './interface';
 import { Router } from './router';
 import serializer from './serializer';
 
@@ -127,7 +128,7 @@ export interface UserModel {
 
 export interface HandlerCommon<C> { } // eslint-disable-line @typescript-eslint/no-unused-vars
 export class HandlerCommon<C> {
-    static [kHandler]: string | boolean = true;
+    static [kHandler]: string | boolean = 'HandlerCommon';
     session: Record<string, any>;
     args: Record<string, any>;
     request: HydroRequest;
@@ -198,6 +199,8 @@ export class HandlerCommon<C> {
 }
 
 export class Handler<C = CordisContext> extends HandlerCommon<C> {
+    static [kHandler] = 'Handler';
+
     loginMethods: any;
     noCheckPermView = false;
     notUsage = false;
@@ -244,6 +247,8 @@ export class Handler<C = CordisContext> extends HandlerCommon<C> {
 }
 
 export class ConnectionHandler<C> extends HandlerCommon<C> {
+    static [kHandler] = 'ConnectionHandler';
+
     conn: WebSocket;
     compression: Shorty;
     counter = 0;
@@ -472,7 +477,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const h = new HandlerClass(ctx, this.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
-        const name = (typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
+        const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
+            ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
         try {
             const operation = (method === 'post' && ctx.request.body?.operation)
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
@@ -645,7 +651,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
         if (!HandlerClass?.[kHandler] || !isClass(HandlerClass)) throw new Error('Invalid registration.');
-        const name = typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name;
+        const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
+            ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
             logger.warn('Route with name %s already exists.', name);
         }
@@ -746,51 +753,46 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.captureAllRoutes[prefix] = cb;
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon<C>>) {
+    private _applyMixin(Target: any, MixinClass: Partial<any>) {
+        if (!('prototype' in Target)) throw new Error('Target must be a class.');
         this.ctx.effect(() => {
+            let oldValue = null;
             for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                if (HandlerCommon.prototype[val]) {
-                    logger.warn('HandlerCommon.prototype[%s] already exists.', val);
+                if (Target.prototype[val]) {
+                    logger.warn(`${Target.name}.prototype[${val}] already exists.`);
+                    oldValue = Target.prototype[val];
                 }
-                HandlerCommon.prototype[val] = MixinClass[val];
+                Target.prototype[val] = MixinClass[val];
             }
             return () => {
                 for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                    delete HandlerCommon.prototype[val];
+                    if (Target.prototype[val] !== MixinClass[val]) {
+                        logger.warn(`Failed to unload mixin ${Target.name}.prototype[${val}]: not the same as the original value.`);
+                    } else {
+                        delete Target.prototype[val];
+                        if (oldValue) Target.prototype[val] = oldValue;
+                    }
                 }
             };
         });
+    }
+
+    public applyMixin<T extends keyof KnownHandlers>(name: T, MixinClass: any) {
+        this.withHandlerClass(name, (HandlerClass) => {
+            this._applyMixin(HandlerClass, MixinClass);
+        });
+    }
+
+    public handlerMixin(MixinClass: Partial<HandlerCommon<C>>) {
+        return this._applyMixin(HandlerCommon, MixinClass);
     }
 
     public httpHandlerMixin(MixinClass: Partial<Handler<C>>) {
-        this.ctx.effect(() => {
-            for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                if (Handler.prototype[val]) {
-                    logger.warn('Handler.prototype[%s] already exists.', val);
-                }
-                Handler.prototype[val] = MixinClass[val];
-            }
-            return () => {
-                for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                    delete Handler.prototype[val];
-                }
-            };
-        });
+        return this._applyMixin(Handler, MixinClass);
     }
 
     public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>>) {
-        this.ctx.effect(() => {
-            for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                if (ConnectionHandler.prototype[val]) {
-                    logger.warn('ConnectionHandler.prototype[%s] already exists.', val);
-                }
-            }
-            return () => {
-                for (const val of Object.getOwnPropertyNames(MixinClass)) {
-                    delete ConnectionHandler.prototype[val];
-                }
-            };
-        });
+        return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
     public registerRenderer(name: string, func: Renderer) {
