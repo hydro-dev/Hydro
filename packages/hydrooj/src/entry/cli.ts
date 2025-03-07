@@ -111,7 +111,7 @@ export async function load(ctx: Context) {
     require('../service/bus').apply(ctx);
     const pending = global.addons;
     const fail = [];
-    await ctx.plugin(MongoService, loadOptions());
+    await ctx.plugin(MongoService, loadOptions() || {});
     await ctx.plugin(ConfigService);
     await require('../model/system').runConfig();
     ctx = await new Promise((resolve) => {
