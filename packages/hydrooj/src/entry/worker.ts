@@ -34,7 +34,7 @@ export async function apply(ctx: Context) {
         locale(pending, fail),
         template(pending, fail),
     ]);
-    await ctx.plugin(MongoService, load());
+    await ctx.plugin(MongoService, load() || {});
     await ctx.plugin(ConfigService);
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
