@@ -15,7 +15,7 @@ const withoutTypes = (data) => ({
 
 /** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
-    target: 'es2020',
+    target: 'es2022',
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',
