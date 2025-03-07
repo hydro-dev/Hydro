@@ -17,7 +17,6 @@ import { check } from '../service/check';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
-import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
 
 const logger = new Logger('manage');
@@ -184,27 +183,26 @@ class SystemConfigHandler extends SystemHandler {
     @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
-        let value = configSource;
+        let value = this.ctx.config.configSource;
         try {
-            value = yaml.dump(Schema.intersect(SystemSettings)(yaml.load(configSource)));
+            value = yaml.dump(Schema.intersect(this.ctx.config.settings)(yaml.load(value)));
         } catch (e) { }
         this.response.body = {
-            schema: Schema.intersect(SystemSettings).toJSON(),
+            schema: Schema.intersect(this.ctx.config.settings).toJSON(),
             value,
         };
     }
 
     @requireSudo
     @param('value', Types.String)
-    async post(domainId: string, value: string) {
+    async post({ }, value: string) {
         let config;
         try {
             config = yaml.load(value);
-            Schema.intersect(SystemSettings)(config);
         } catch (e) {
             throw new ValidationError('value');
         }
-        await saveConfig(config);
+        await this.ctx.config.saveConfig(config);
     }
 }
 

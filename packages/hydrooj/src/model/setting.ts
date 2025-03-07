@@ -4,6 +4,7 @@ import * as cordis from '@cordisjs/core';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
+import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
 import { retry } from '@hydrooj/utils';
 import { Context, Service } from '../context';
@@ -70,7 +71,55 @@ export const Setting = (
     };
 };
 
-export const PreferenceSetting = (...settings: _Setting[]) => {
+declare global {
+    namespace Schemastery {
+        interface Meta<T> { // eslint-disable-line @typescript-eslint/no-unused-vars
+            family: string;
+        }
+    }
+}
+
+function schemaToSettings(schema: Schema<any>) {
+    const result: _Setting[] = [];
+    const processNode = (key: string, s: Schema<number> | Schema<string> | Schema<boolean>, defaultFamily = 'setting_basic') => {
+        if (s.dict) throw new Error('Dict is not supported here');
+        let flag = (s.meta?.hidden ? FLAG_HIDDEN : 0)
+            | (s.meta?.disabled ? FLAG_DISABLED : 0);
+        const type = s.type === 'number' ? 'number'
+            : s.type === 'boolean' ? 'checkbox'
+                : s.meta?.role === 'textarea' ? 'textarea' : 'text';
+        if (s.meta?.role === 'password') flag |= FLAG_SECRET;
+        const options = {};
+        for (const item of s.list || []) {
+            if (item.type !== 'const') throw new Error('List item must be a constant');
+            options[item.value] = item.meta?.description || item.value;
+        }
+        return {
+            family: s.meta?.family || defaultFamily,
+            key,
+            value: s.meta?.default,
+            name: key,
+            desc: s.meta?.description,
+            flag,
+            subType: '',
+            type: s.list ? 'select' : type,
+            range: s.list ? options : null,
+        } as _Setting;
+    };
+    if (!schema.dict) return [];
+    for (const key in schema.dict) {
+        const value = schema.dict[key];
+        if (value.dict) {
+            for (const subkey in value.dict) {
+                result.push(processNode(`${key}.${subkey}`, value.dict[subkey], value.meta?.family));
+            }
+        } else result.push(processNode(key, value));
+    }
+    return result;
+}
+
+export const PreferenceSetting = (...settings: _Setting[] | Schema<any>[]) => {
+    settings = settings.flatMap((s) => (s instanceof Schema ? schemaToSettings(s) : s) as _Setting[]);
     for (const setting of settings) {
         if (PREFERENCE_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         PREFERENCE_SETTINGS.push(setting);
@@ -89,7 +138,8 @@ export const PreferenceSetting = (...settings: _Setting[]) => {
         }
     };
 };
-export const AccountSetting = (...settings: _Setting[]) => {
+export const AccountSetting = (...settings: _Setting[] | Schema<any>[]) => {
+    settings = settings.flatMap((s) => (s instanceof Schema ? schemaToSettings(s) : s) as _Setting[]);
     for (const setting of settings) {
         if (ACCOUNT_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         ACCOUNT_SETTINGS.push(setting);
@@ -108,7 +158,8 @@ export const AccountSetting = (...settings: _Setting[]) => {
         }
     };
 };
-export const DomainUserSetting = (...settings: _Setting[]) => {
+export const DomainUserSetting = (...settings: _Setting[] | Schema<any>[]) => {
+    settings = settings.flatMap((s) => (s instanceof Schema ? schemaToSettings(s) : s) as _Setting[]);
     for (const setting of settings) {
         if (DOMAIN_USER_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         DOMAIN_USER_SETTINGS.push(setting);
@@ -123,7 +174,8 @@ export const DomainUserSetting = (...settings: _Setting[]) => {
         }
     };
 };
-export const DomainSetting = (...settings: _Setting[]) => {
+export const DomainSetting = (...settings: _Setting[] | Schema<any>[]) => {
+    settings = settings.flatMap((s) => (s instanceof Schema ? schemaToSettings(s) : s) as _Setting[]);
     for (const setting of settings) {
         if (DOMAIN_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         DOMAIN_SETTINGS.push(setting);
@@ -138,7 +190,8 @@ export const DomainSetting = (...settings: _Setting[]) => {
         }
     };
 };
-export const SystemSetting = (...settings: _Setting[]) => {
+export const SystemSetting = (...settings: _Setting[] | Schema<any>[]) => {
+    settings = settings.flatMap((s) => (s instanceof Schema ? schemaToSettings(s) : s) as _Setting[]);
     for (const setting of settings) {
         if (SYSTEM_SETTINGS.find((s) => s.key === setting.key)) logger.warn(`Duplicate setting key: ${setting.key}`);
         SYSTEM_SETTINGS.push(setting);
@@ -324,6 +377,7 @@ export class SettingService extends Service {
     }
 }
 
+export const inject = ['db'];
 export async function apply(ctx: Context) {
     ctx.provide('setting', undefined, true);
     ctx.plugin(SettingService);
@@ -331,7 +385,7 @@ export async function apply(ctx: Context) {
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
         if (!setting.value) continue;
-        const current = await global.Hydro.service.db.collection('system').findOne({ _id: setting.key });
+        const current = await ctx.db.collection('system').findOne({ _id: setting.key });
         if (!current || current.value == null || current.value === '') {
             await retry(system.set, setting.key, setting.value);
         }
@@ -355,6 +409,8 @@ export async function apply(ctx: Context) {
 
 global.Hydro.model.setting = {
     apply,
+    inject,
+
     SettingService,
     Setting,
     PreferenceSetting,

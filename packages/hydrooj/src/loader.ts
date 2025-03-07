@@ -14,11 +14,14 @@ import './ui';
 import * as I18n from './lib/i18n';
 
 import { Logger } from './logger';
-import { Context, Service, ScopeStatus } from './context';
+import {
+    Context, Service, ScopeStatus, EffectScope,
+} from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
+import Schema from 'schemastery';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -43,29 +46,20 @@ if (process.env.NIX_PROFILES) {
     }
 }
 
-export function resolveConfig(plugin: any, config: any) {
-    if (config === false) return;
-    if (config === true) config = undefined;
-    config ??= {};
-    const schema = plugin['Config'] || plugin['schema'];
-    if (schema && plugin['schema'] !== false) config = schema(config);
-    return config;
-}
-
 export class Loader extends Service {
-    public state: Record<string, any> = Object.create(null);
+    public state: Record<string, EffectScope> = Object.create(null);
     public config: {};
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
 
+    static inject = ['config', 'timer', 'i18n', 'logger'];
+
     constructor(ctx: Context) {
         super(ctx, 'loader');
-    }
 
-    [Service.setup]() {
-        this.ctx.on('app/started', () => {
-            this.ctx.setInterval(async () => {
+        ctx.on('app/started', () => {
+            ctx.setInterval(async () => {
                 const pending = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.PENDING);
                 if (pending.length) {
                     logger.warn('Plugins are still pending: %s', pending.map((v) => v[0]).join(', '));
@@ -103,18 +97,27 @@ export class Loader extends Service {
         }
     }
 
-    async reloadPlugin(key: string, config: any, asName = '') {
+    resolveConfig(plugin: any, configScope: string) {
+        const schema = plugin['Config'] || plugin['schema'];
+        if (!schema) return {};
+        const schemaRequest = configScope ? Schema.object({
+            [configScope]: schema,
+        }) : schema;
+        const res = this.ctx.config.requestConfig(schemaRequest);
+        return configScope ? res[configScope] : res;
+    }
+
+    async reloadPlugin(key: string, configScope: string, asName = '') {
+        const plugin = await this.resolvePlugin(key);
+        if (!plugin) return;
+        const config = this.resolveConfig(plugin, configScope);
+        if (asName) plugin.name = asName;
         let fork = this.state[key];
         if (fork) {
             logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
             logger.info('apply plugin %c', key.split('node_modules').pop());
-            const plugin = await this.resolvePlugin(key);
-            if (!plugin) return;
-            resolveConfig(plugin, config);
-            if (asName) plugin.name = asName;
-            // fork = parent.plugin(plugin, this.interpolate(config));
             fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
             this.state[key] = fork;
@@ -129,7 +132,8 @@ export class Loader extends Service {
             try {
                 this.cache[name] ||= require.resolve(name, { paths: HYDROPATH });
             } catch (e) {
-                logger.error(err.message);
+                logger.error('Failed to resolve plugin %s', name);
+                logger.error(err);
                 return;
             }
         }
@@ -138,14 +142,12 @@ export class Loader extends Service {
 }
 
 app.plugin(I18n);
+app.plugin(Loader);
 
 async function preload() {
     global.app = await new Promise((resolve) => {
-        app.inject(['timer', 'i18n', 'logger'], (c) => {
-            c.plugin(Loader);
-            c.inject(['loader'], (ctx) => {
-                resolve(ctx);
-            });
+        app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
+            resolve(c);
         });
     });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {

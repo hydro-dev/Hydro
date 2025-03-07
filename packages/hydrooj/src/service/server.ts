@@ -1,7 +1,6 @@
 import { resolve } from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
-import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
@@ -18,7 +17,6 @@ import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
-import { builtinConfig } from '../settings';
 import db from './db';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
@@ -93,26 +91,6 @@ export async function apply(ctx: Context) {
     });
     if (process.env.HYDRO_CLI) return;
     ctx.inject(['server'], ({ server, on }) => {
-        let endpoint = builtinConfig.file.endPoint;
-        if (builtinConfig.file.type === 's3' && !builtinConfig.file.pathStyle) {
-            try {
-                const parsed = new URL(builtinConfig.file.endPoint);
-                parsed.hostname = `${builtinConfig.file.bucket}.${parsed.hostname}`;
-                endpoint = parsed.toString();
-            } catch (e) {
-                logger.warn('Failed to parse file endpoint');
-            }
-        }
-        const proxyMiddleware = proxy('/fs', {
-            target: endpoint,
-            changeOrigin: true,
-            rewrite: (p) => p.replace('/fs', ''),
-        });
-        server.addCaptureRoute('/fs/', async (c, next) => {
-            if (c.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(c, next);
-            c.request.path = c.path = c.path.split('/fs')[1];
-            return await next();
-        });
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {

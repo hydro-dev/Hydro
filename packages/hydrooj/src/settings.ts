@@ -1,110 +1,120 @@
 import yaml from 'js-yaml';
-import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
+import { Context, Service } from './context';
 import { Logger } from './logger';
-import { Flatten } from './typeutils';
 
-const defaultPath = process.env.CI ? '/tmp/file'
-    : process.env.DEFAULT_STORE_PATH || '/data/file/hydro';
-const FileSetting = Schema.intersect([
-    Schema.object({
-        type: Schema.union([
-            Schema.const('file').description('local file provider'),
-            Schema.const('s3').description('s3 provider'),
-        ] as const).description('provider type'),
-        endPointForUser: Schema.string().default('/fs/'),
-        endPointForJudge: Schema.string().default('/fs/'),
-    }).description('setting_file'),
-    Schema.union([
-        Schema.object({
-            type: Schema.const('file').required(),
-            path: Schema.string().default(defaultPath).description('Storage path'),
-            secret: Schema.string().description('Download file sign secret').default(nanoid()),
-        }),
-        Schema.object({
-            type: Schema.const('s3').required(),
-            endPoint: Schema.string(),
-            accessKey: Schema.string().description('access key'),
-            secretKey: Schema.string().description('secret key').role('secret'),
-            bucket: Schema.string().default('hydro'),
-            region: Schema.string().default('us-east-1'),
-            pathStyle: Schema.boolean().default(true),
-        }),
-    ] as const),
-] as const).default({
-    type: 'file',
-    path: defaultPath,
-    endPointForUser: '/fs/',
-    endPointForJudge: '/fs/',
-    secret: nanoid(),
-});
-
-const builtinSettings = Schema.object({
-    file: FileSetting,
-});
-export const SystemSettings: Schema[] = [builtinSettings];
-export let configSource = ''; // eslint-disable-line import/no-mutable-exports
-export let systemConfig: any = {}; // eslint-disable-line import/no-mutable-exports
 const logger = new Logger('settings');
-const update = [];
 
-export async function loadConfig() {
-    const config = await global.Hydro.service.db.collection('system').findOne({ _id: 'config' });
-    try {
-        configSource = config?.value || '{}';
-        systemConfig = yaml.load(configSource);
-        logger.info('Successfully loaded config');
-        for (const u of update) u();
-    } catch (e) {
-        logger.error('Failed to load config', e.message);
+declare module './context' {
+    interface Context {
+        config: ConfigService;
     }
 }
-export async function saveConfig(config: any) {
-    Schema.intersect(SystemSettings)(config);
-    const value = yaml.dump(config);
-    await global.Hydro.service.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
-    loadConfig();
-}
-export async function setConfig(key: string, value: any) {
-    const path = key.split('.');
-    if (path.filter((i) => ['__proto__', 'prototype'].includes(i)).length) throw new Error('Invalid key');
-    const t = path.pop();
-    let cursor = systemConfig;
-    for (const p of path) {
-        cursor[p] ||= {};
-        cursor = cursor[p];
-    }
-    cursor[t] = value;
-    await saveConfig(systemConfig);
-}
 
-export function requestConfig<T, S>(s: Schema<T, S>): {
-    config: ReturnType<Schema<T, S>>,
-    setConfig: (key: keyof Flatten<ReturnType<Schema<T, S>>> & string, value: any) => Promise<void>,
-} {
-    SystemSettings.push(s);
-    let curValue = s(systemConfig);
-    update.push(() => {
+export class ConfigService extends Service {
+    static inject = ['db'];
+
+    settings: Schema[] = [];
+    systemConfig: any = {};
+    configSource: string = '';
+
+    constructor(ctx: Context) {
+        super(ctx, 'config');
+    }
+
+    async [Service.setup]() {
+        return await this.loadConfig();
+    }
+
+    async loadConfig() {
+        const config = await this.ctx.db.collection('system').findOne({ _id: 'config' });
         try {
-            curValue = s(systemConfig);
+            this.configSource = config?.value || '{}';
+            this.systemConfig = yaml.load(this.configSource);
+            this.ctx.emit('system/setting', { config: this.configSource });
+            logger.info('Successfully loaded config');
         } catch (e) {
-            logger.warn('Cannot read config: ', e.message);
-            curValue = null;
+            logger.error('Failed to load config', e.message);
         }
-    });
-    return {
-        config: new Proxy(curValue as any, {
-            get(self, key: string) {
-                return curValue?.[key];
-            },
-            set(self) {
-                throw new Error(`Not allowed to set setting ${self.p.join('.')}`);
-            },
-        }),
-        setConfig,
-    };
-}
+    }
 
-const builtin = requestConfig(builtinSettings);
-export const builtinConfig = builtin.config;
-export const setBuiltinConfig = builtin.setConfig;
+    applyDelta(source: any, key: string, value: any) {
+        const path = key.split('.');
+        if (path.filter((i) => ['__proto__', 'prototype'].includes(i)).length) return false;
+        const t = path.pop();
+        const root = JSON.parse(JSON.stringify(source));
+        let cursor = root;
+        for (const p of path) {
+            cursor[p] ||= {};
+            cursor = cursor[p];
+        }
+        cursor[t] = value;
+        return root;
+    }
+
+    isPatchValid(key: string, value: any) {
+        const root = this.applyDelta(this.systemConfig, key, value);
+        try {
+            Schema.intersect(this.settings)(root);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    async saveConfig(config: any) {
+        Schema.intersect(this.settings)(config);
+        const value = yaml.dump(config);
+        await this.ctx.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
+        await this.loadConfig();
+    }
+
+    async setConfig(key: string, value: any) {
+        const newConfig = this.applyDelta(this.systemConfig, key, value);
+        await this.saveConfig(newConfig);
+    }
+
+    get(path: string) {
+        let root = this.systemConfig;
+        for (const p of path.split('.')) {
+            root = root[p];
+        }
+        return root;
+    }
+
+    requestConfig<T, S>(s: Schema<T, S>): ReturnType<Schema<T, S>> {
+        this.ctx.effect(() => {
+            this.settings.push(s);
+            return () => {
+                this.settings = this.settings.filter((v) => v !== s);
+            };
+        });
+        let curValue = s(this.systemConfig);
+        this.ctx.on('system/setting', () => {
+            try {
+                curValue = s(this.systemConfig);
+            } catch (e) {
+                logger.warn('Cannot read config: ', e.message);
+                curValue = null;
+            }
+        });
+        const that = this;
+        const getAccess = (path: (string | symbol)[]) => {
+            let currentValue = curValue;
+            for (const p of path) {
+                currentValue = currentValue[p];
+            }
+            if (typeof currentValue !== 'object') return curValue;
+            return new Proxy(currentValue, {
+                get(self, key: string) {
+                    return getAccess(path.concat(key));
+                },
+                set(self, p: string | symbol, newValue: any) {
+                    that.setConfig(path.concat(p).join(','), newValue);
+                    return true;
+                },
+            });
+        };
+        return getAccess([]);
+    }
+}

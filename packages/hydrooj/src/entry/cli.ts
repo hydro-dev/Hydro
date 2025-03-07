@@ -6,7 +6,9 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { ObjectId } from 'mongodb';
 import { Context } from '../context';
-import db from '../service/db';
+import { load as loadOptions } from '../options';
+import { MongoService } from '../service/db';
+import { ConfigService } from '../settings';
 import {
     addon, builtinModel, lib, model, script, service, setting,
 } from './common';
@@ -109,10 +111,15 @@ export async function load(ctx: Context) {
     require('../service/bus').apply(ctx);
     const pending = global.addons;
     const fail = [];
-    await db.start();
-    await require('../settings').loadConfig();
+    await ctx.plugin(MongoService, loadOptions());
+    await ctx.plugin(ConfigService);
     await require('../model/system').runConfig();
-    await require('../service/storage').loadStorageService();
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['loader'], (c) => {
+            resolve(c);
+        });
+    });
+    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file', 'hydrooj/service/storage');
     require('../lib/index');
     await Promise.all([
         lib(pending, fail, ctx),
@@ -131,7 +138,7 @@ export async function load(ctx: Context) {
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '', `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
     await cli();
