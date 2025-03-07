@@ -111,7 +111,7 @@ function block(state, start, end, silent) {
 }
 
 export default function plugin(md) {
-  const options = { throwOnError: false, strict: 'ignore', displayMode: false };
+  const options = { throwOnError: false, strict: 'ignore' as 'ignore', displayMode: false };
   const render = (latex: string, displayMode = false) => {
     options.displayMode = displayMode;
     try {
