@@ -16,6 +16,7 @@ const withoutTypes = (data) => ({
 /** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
     target: 'es2022',
+    lib: ['es2022'],
     module: 'commonjs',
     esModuleInterop: true,
     moduleResolution: 'node',
@@ -73,24 +74,44 @@ for (const name of ['plugins', 'modules']) {
 const modules = [
     'packages/hydrooj',
     ...['packages', 'framework'].flatMap((i) => fs.readdirSync(path.resolve(process.cwd(), i)).map((j) => `${i}/${j}`)),
-].filter((i) => !i.includes('/.') && !i.includes('ui-default')).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
+].filter((i) => !['/.', 'ui-default', 'ui-next'].some((t) => i.includes(t))).filter((i) => fs.statSync(path.resolve(process.cwd(), i)).isDirectory());
 
 const UIConfig = {
     exclude: [
         'packages/ui-default/public',
+        'packages/ui-default/index.ts',
+        'packages/ui-default/backendlib/builder.ts',
+        'packages/ui-default/backendlib/misc.ts',
+        'packages/ui-default/backendlib/template.ts',
+        'packages/ui-default/backendlib/markdown.js',
         '**/node_modules',
     ],
     include: ['ts', 'tsx', 'vue', 'json']
         .flatMap((ext) => ['plugins']
             .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
-            .concat(`packages/ui-default/**/*.${ext}`)),
+            .concat(`packages/ui-default/**/*.${ext}`)
+            .concat(`packages/ui-next/src/**/*.${ext}`)),
     compilerOptions: {
         ...compilerOptionsBase,
         module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
         baseUrl: '.',
+        jsx: 'react-jsx',
         outDir: path.join(baseOutDir, 'ui'),
+
+        useDefineForClassFields: true,
+        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+
+        /* Bundler mode */
+        moduleResolution: 'bundler',
+        moduleDetection: 'force',
+        noEmit: true,
+
+        /* Linting */
+        noFallthroughCasesInSwitch: true,
+        noUncheckedSideEffectImports: true,
+
         paths: {
             'vj/*': [
                 './packages/ui-default/*',
@@ -119,6 +140,7 @@ const pluginsConfig = {
         rootDir: '.',
         baseUrl: '.',
         outDir: path.join(baseOutDir, 'plugins'),
+        skipLibCheck: true,
         paths: {
             'vj/*': [
                 '../packages/ui-default/*',
