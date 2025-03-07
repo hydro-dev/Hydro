@@ -28,7 +28,6 @@ import {
 } from './pipelineUtils';
 import db from './service/db';
 import { MigrationScript } from './service/migration';
-import { setBuiltinConfig } from './settings';
 import welcome from './welcome';
 
 const logger = new Logger('upgrade');
@@ -423,7 +422,7 @@ export const coreScripts: MigrationScript[] = [
             'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
         ] as any[]) as any;
         if ((endPoint && accessKey) || process.env.MINIO_ACCESS_KEY) {
-            await setBuiltinConfig('file', {
+            await app.get('config').setConfig('file', {
                 type: 's3',
                 endPoint: process.env.MINIO_ACCESS_KEY ? 'http://127.0.0.1:9000/' : endPoint,
                 accessKey: process.env.MINIO_ACCESS_KEY || accessKey,
@@ -702,4 +701,5 @@ export const coreScripts: MigrationScript[] = [
             } catch { }
         });
     },
+    // Start Hydro v5
 ];

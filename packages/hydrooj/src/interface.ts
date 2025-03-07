@@ -599,9 +599,6 @@ export interface Model {
 export interface HydroService {
     /** @deprecated */
     bus: Context,
-    db: typeof import('./service/db').default,
-    server: typeof import('./service/server'),
-    storage: typeof import('./service/storage').default,
 }
 
 export interface GeoIP {

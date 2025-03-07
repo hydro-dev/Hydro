@@ -15,7 +15,6 @@ import {
     Handler, param, post, requireSudo, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
-import { builtinConfig } from '../settings';
 import { md5, sortFiles } from '../utils';
 
 class SwitchLanguageHandler extends Handler {
@@ -110,7 +109,7 @@ export class StorageHandler extends Handler {
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
     async get(domainId: string, target: string, filename = '', expire: number, secret: string) {
-        const expected = md5(`${target}/${expire}/${builtinConfig.file.secret}`);
+        const expected = md5(`${target}/${expire}/${this.ctx.config.get('file.secret')}`);
         if (expire < Date.now()) throw new AccessDeniedError();
         if (secret !== expected) throw new AccessDeniedError();
         this.response.body = await storage.get(target);

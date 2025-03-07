@@ -1,7 +1,7 @@
 /* eslint-disable global-require */
 import {
   ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, Types, UserModel,
+  SettingModel, SystemModel, Types, UserModel,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
@@ -74,7 +74,7 @@ class MarkdownHandler extends Handler {
 
 class SystemConfigSchemaHandler extends Handler {
   async get() {
-    const schema = convert(Schema.intersect(SystemSettings) as any, true);
+    const schema = convert(Schema.intersect(this.ctx.config.settings) as any, true);
     this.response.body = schema;
   }
 }

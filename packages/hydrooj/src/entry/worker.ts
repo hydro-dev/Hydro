@@ -7,7 +7,8 @@ import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import { load } from '../options';
-import db from '../service/db';
+import { MongoService } from '../service/db';
+import { ConfigService } from '../settings';
 import {
     addon, builtinModel, handler, lib, locale, model,
     script, service, setting, template,
@@ -22,8 +23,8 @@ export async function apply(ctx: Context) {
     require('../utils');
     require('../error');
     require('../service/bus').apply(ctx);
-    const config = load();
-    if (!process.env.CI && !config) {
+    const url = await MongoService.getUrl();
+    if (!url) {
         logger.info('Starting setup');
         await require('./setup').load(ctx);
     }
@@ -33,12 +34,16 @@ export async function apply(ctx: Context) {
         locale(pending, fail),
         template(pending, fail),
     ]);
-    await db.start();
-    await require('../settings').loadConfig();
+    await ctx.plugin(MongoService, load());
+    await ctx.plugin(ConfigService);
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
-    const storage = require('../service/storage');
-    await storage.loadStorageService();
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['loader'], (c) => {
+            resolve(c);
+        });
+    });
+    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file', 'hydrooj/service/storage');
     await ctx.plugin(require('../service/hmr').default, { watch: argv.options.watch });
     await require('../service/worker').apply(ctx);
     await require('../service/server').apply(ctx);
@@ -61,14 +66,14 @@ export async function apply(ctx: Context) {
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
     for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
-        ctx.loader.reloadPlugin(path.resolve(handlerDir, h), {}, `hydrooj/handler/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(handlerDir, h), '', `hydrooj/handler/${h.split('.')[0]}`);
     }
     ctx.plugin(require('../service/migration').default);
     await handler(pending, fail, ctx);
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '', `hydrooj/script/${h.split('.')[0]}`);
     }
     await script(pending, fail, ctx);
     await ctx.parallel('app/started');

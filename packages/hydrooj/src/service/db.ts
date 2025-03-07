@@ -4,6 +4,7 @@ import {
 } from 'mongodb';
 import mongoUri from 'mongodb-uri';
 import { Time } from '@hydrooj/utils';
+import { Context, Service } from '../context';
 import { ValidationError } from '../error';
 import { Logger } from '../logger';
 import { load } from '../options';
@@ -25,12 +26,28 @@ interface MongoConfig {
     collectionMap?: Record<string, string>,
 }
 
-class MongoService {
+declare module '../context' {
+    interface Context {
+        db: MongoService;
+    }
+}
+
+export class MongoService extends Service {
     public client: MongoClient;
     public db: Db;
-    private opts: MongoConfig;
 
-    static buildUrl(opts: MongoConfig) {
+    constructor(ctx: Context, private config: MongoConfig = {}) {
+        super(ctx, 'db');
+    }
+
+    static async getUrl() {
+        if (process.env.CI) {
+            const { MongoMemoryServer } = require('mongodb-memory-server');
+            const mongod = await MongoMemoryServer.create();
+            return mongod.getUri();
+        }
+        const opts = load();
+        if (!opts) return null;
         let mongourl = `${opts.protocol || 'mongodb'}://`;
         if (opts.username) mongourl += `${opts.username}:${encodeURIComponent(opts.password)}@`;
         mongourl += `${opts.host}:${opts.port}/${opts.name}`;
@@ -38,25 +55,18 @@ class MongoService {
         return mongourl;
     }
 
-    async start() {
-        const opts = load() || {};
-        let mongourl = MongoService.buildUrl(opts);
+    async [Service.setup]() {
+        const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
-        if (process.env.CI) {
-            const { MongoMemoryServer } = require('mongodb-memory-server');
-            const mongod = await MongoMemoryServer.create();
-            mongourl = mongod.getUri();
-        }
-        this.opts = opts;
         this.client = await MongoClient.connect(mongourl);
         this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
-        setInterval(() => this.fixExpireAfter(), Time.hour);
+        this.ctx.setInterval(() => this.fixExpireAfter(), Time.hour);
     }
 
     public collection<K extends keyof Collections>(c: K) {
-        let coll = this.opts.prefix ? `${this.opts.prefix}.${c}` : c;
-        if (this.opts.collectionMap?.[coll]) coll = this.opts.collectionMap[coll];
+        let coll = this.config.prefix ? `${this.config.prefix}.${c}` : c;
+        if (this.config.collectionMap?.[coll]) coll = this.config.collectionMap[coll];
         return this.db.collection<Collections[K]>(coll);
     }
 
@@ -173,7 +183,11 @@ class MongoService {
     }
 }
 
-const service = new MongoService();
-global.Hydro.service.db = service;
-export default service;
-export const collection = service.collection.bind(service);
+/** @deprecated use ctx.db instead */
+const db = new Proxy({} as MongoService, {
+    get(target, prop) {
+        return app.get('db')?.[prop];
+    },
+});
+
+export default db;

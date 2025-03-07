@@ -132,6 +132,10 @@ Hydro 用户群：1085853538
 - core: 移除旧版本 bus 调用
 - migrate: 修复 hustoj 自动运行
 - core: 强制要求使用 inject 声明插件依赖
+- core: 移除 global.Hydro.service.db
+- core: 移除 global.Hydro.service.service
+- core: 移除 global.Hydro.service.storage
+- core: Settings: 支持使用 Schemastery
 
 ## Hydro 4.19.0 / UI 4.57.0
 
