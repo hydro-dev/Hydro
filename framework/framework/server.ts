@@ -113,7 +113,7 @@ export const router = new Router();
 export const httpServer = http.createServer(koa.callback());
 export const wsServer = new WebSocketServer({ server: httpServer });
 koa.on('error', (error) => {
-    if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
+    if (!['ECONNRESET', 'EPIPE', 'ECONNABORTED'].includes(error.code) && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
     }
 });
