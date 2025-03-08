@@ -40,12 +40,12 @@ export class ConfigService extends Service {
 
     applyDelta(source: any, key: string, value: any) {
         const path = key.split('.');
-        if (path.filter((i) => ['__proto__', 'prototype'].includes(i)).length) return false;
+        if (path.filter((i) => ['__proto__', 'prototype', 'constructor'].includes(i)).length) return false;
         const t = path.pop();
         const root = JSON.parse(JSON.stringify(source));
         let cursor = root;
         for (const p of path) {
-            cursor[p] ||= {};
+            cursor[p] ??= {};
             cursor = cursor[p];
         }
         cursor[t] = value;

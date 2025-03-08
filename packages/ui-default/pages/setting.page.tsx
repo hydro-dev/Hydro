@@ -25,13 +25,14 @@ const page = new NamedPage('manage_config', async () => {
   const { monaco, registerAction, renderMarkdown } = await load(['yaml']);
   const KForm = applyVueInReact(form.Form) as any;
 
-  function MarkdownContainer(props) {
+  function MarkdownContainer({ source }) {
     const rendered = React.useMemo(() => {
-      const res = renderMarkdown({ value: props.source });
+      const res = renderMarkdown({ value: source });
       const value = res.element.innerHTML;
       res.dispose();
       return value;
-    }, [props.source]);
+    }, [source]);
+    // Markdown snippet come from trusted backend code, no need to sanitize here
     return <div dangerouslySetInnerHTML={{ __html: rendered }} />;
   }
   const [, ReactMissVue] = createReactMissVue({
@@ -62,8 +63,8 @@ const page = new NamedPage('manage_config', async () => {
         if (!editor) return;
         editor.layout();
       };
-      document.addEventListener('resize', listener);
-      return () => document.removeEventListener('resize', listener);
+      window.addEventListener('resize', listener);
+      return () => window.removeEventListener('resize', listener);
     }, [editor]);
     React.useEffect(() => {
       if (!editorRef.current || loading) return;
