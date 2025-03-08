@@ -3,12 +3,10 @@ import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 import react from '@vitejs/plugin-react-swc';
 import c2k from 'koa2-connect';
 import _ from 'lodash';
+import fs from 'fs';
 import { createServer } from 'vite';
 import { } from '@hydrooj/framework';
-import {
-    BadRequestError, Context, db, DocumentModel, Handler, ObjectId, param, ProblemModel, RecordModel, SettingModel,
-    StorageModel,
-} from 'hydrooj';
+import { Context } from 'hydrooj';
 
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
@@ -45,8 +43,7 @@ export async function apply(ctx: Context) {
     for (const route of capture) {
         ctx.server.addCaptureRoute(route, middleware);
     }
-    const html = require('fs').readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
-    console.log(html);
+    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
     ctx.server.registerRenderer('next', {
         name: 'next',
         accept: ['main.html'],

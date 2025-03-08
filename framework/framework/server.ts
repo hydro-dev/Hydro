@@ -712,14 +712,13 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.ctx.on(`handler/register/${name}`, callback as any);
     }
 
-    // FIXME: should be typeof Handler<Context> instead of any
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Route(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
+    public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Connection(name: string, path: string, RouteHandler: any, ...permPrivChecker) {
+    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler<C>, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
