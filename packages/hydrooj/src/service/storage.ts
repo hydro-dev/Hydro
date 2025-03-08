@@ -65,23 +65,23 @@ const defaultPath = process.env.CI ? '/tmp/file'
 const FileSetting = Schema.intersect([
     Schema.object({
         type: Schema.union([
-            Schema.const('file').description('local file provider'),
-            Schema.const('s3').description('s3 provider'),
-        ] as const).description('provider type'),
+            Schema.const('file').i18n({ en: 'Local Directory', zh: '本地目录' }),
+            Schema.const('s3').description('S3'),
+        ] as const).i18n({ en: 'Storage Provider Type', zh: '存储提供商类型' }),
         endPointForUser: Schema.string().default('/fs/'),
         endPointForJudge: Schema.string().default('/fs/'),
-    }).description('setting_file'),
+    }).i18n({ en: 'File Storage Setting', zh: '文件存储设置' }),
     Schema.union([
         Schema.object({
             type: Schema.const('file').required(),
-            path: Schema.string().default(defaultPath).description('Storage path'),
-            secret: Schema.string().description('Download file sign secret').default(nanoid()),
+            path: Schema.string().default(defaultPath).i18n({ en: 'Storage path', zh: '存储路径' }),
+            secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
         }),
         Schema.object({
             type: Schema.const('s3').required(),
             endPoint: Schema.string(),
-            accessKey: Schema.string().description('access key'),
-            secretKey: Schema.string().description('secret key').role('secret'),
+            accessKey: Schema.string(),
+            secretKey: Schema.string().role('secret'),
             bucket: Schema.string().default('hydro'),
             region: Schema.string().default('us-east-1'),
             pathStyle: Schema.boolean().default(true),
