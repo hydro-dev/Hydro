@@ -22,7 +22,7 @@ class WikiAboutHandler extends Handler {
     // TODO template engine
     raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || SystemModel.get('server.name')).trim();
     const lines = raw.split('\n');
-    const sections = [];
+    const sections: { id: string, title: string, content: string }[] = [];
     for (const line of lines) {
       if (line.startsWith('# ')) {
         const id = line.split(' ')[1];
@@ -53,7 +53,7 @@ class LegacyModeHandler extends Handler {
 
   @param('legacy', Types.Boolean)
   @param('nohint', Types.Boolean)
-  async get(domainId: string, legacy = false, nohint = false) {
+  async get({ }, legacy = false, nohint = false) {
     this.session.legacy = legacy;
     this.session.nohint = nohint;
     this.back();
@@ -74,7 +74,7 @@ class MarkdownHandler extends Handler {
 
 class SystemConfigSchemaHandler extends Handler {
   async get() {
-    const schema = convert(Schema.intersect(this.ctx.get('config')!.settings) as any, true);
+    const schema = convert(Schema.intersect(this.ctx.config.settings) as any, true);
     this.response.body = schema;
   }
 }
@@ -116,7 +116,7 @@ class RichMediaHandler extends Handler {
   }
 
   async post({ domainId, items }) {
-    const res = [];
+    const res: any[] = [];
     for (const item of items || []) {
       if (item.domainId && item.domainId === domainId) delete item.domainId;
       if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));

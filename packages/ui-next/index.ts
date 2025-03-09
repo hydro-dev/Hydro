@@ -2,7 +2,6 @@ import path from 'path';
 import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 import react from '@vitejs/plugin-react-swc';
 import c2k from 'koa2-connect';
-import _ from 'lodash';
 import fs from 'fs';
 import { createServer } from 'vite';
 import { } from '@hydrooj/framework';
