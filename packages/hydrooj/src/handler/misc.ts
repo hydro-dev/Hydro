@@ -15,7 +15,7 @@ import {
     Handler, param, post, requireSudo, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
-import { md5, sortFiles } from '../utils';
+import { sortFiles } from '../utils';
 
 class SwitchLanguageHandler extends Handler {
     noCheckPermView = true;
@@ -108,10 +108,9 @@ export class StorageHandler extends Handler {
     @param('filename', Types.Filename, true)
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
-    async get(domainId: string, target: string, filename = '', expire: number, secret: string) {
-        const expected = md5(`${target}/${expire}/${this.ctx.config.get('file.secret')}`);
+    async get({ }, target: string, filename = '', expire: number, secret: string) {
         if (expire < Date.now()) throw new AccessDeniedError();
-        if (secret !== expected) throw new AccessDeniedError();
+        if (!(await this.ctx.get('storage')?.isLinkValid?.(`${target}/${expire}/${secret}`))) throw new AccessDeniedError();
         this.response.body = await storage.get(target);
         this.response.type = (target.endsWith('.out') || target.endsWith('.ans'))
             ? 'text/plain'
@@ -123,7 +122,7 @@ export class StorageHandler extends Handler {
 export class SwitchAccountHandler extends Handler {
     @requireSudo
     @param('uid', Types.Int)
-    async get(domainId: string, uid: number) {
+    async get({ }, uid: number) {
         this.session.sudoUid = this.user._id;
         this.session.uid = uid;
         this.back();
