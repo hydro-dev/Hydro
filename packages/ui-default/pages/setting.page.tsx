@@ -1,11 +1,9 @@
-import 'element-plus/dist/index.css';
-import '@undefined-moe/schemastery-vue/lib/schemastery-vue.css';
+import 'schemastery-react/lib/schemastery-react.css';
 
 import yaml from 'js-yaml';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import Schema from 'schemastery';
-import { applyPureReactInVue, applyVueInReact, createReactMissVue } from 'veaury';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request } from 'vj/utils';
@@ -16,39 +14,26 @@ const locales = {
 };
 
 const page = new NamedPage('manage_config', async () => {
-  const [{ default: form }, { createI18n }, ElementPlus, { load }] = await Promise.all([
-    import('@undefined-moe/schemastery-vue/lib/schemastery-vue.esm') as Promise<typeof import('@undefined-moe/schemastery-vue/src/index.ts')>,
-    import('vue-i18n'),
-    import('element-plus'),
+  const [{ createSchemasteryReact }, { load }] = await Promise.all([
+    import('schemastery-react'),
     import('vj/components/monaco/loader'),
   ]);
   const { monaco, registerAction, renderMarkdown } = await load(['yaml']);
-  const KForm = applyVueInReact(form.Form) as any;
 
-  function MarkdownContainer({ source }) {
-    const rendered = React.useMemo(() => {
-      const res = renderMarkdown({ value: source });
-      const value = res.element.innerHTML;
-      res.dispose();
-      return value;
-    }, [source]);
-    // Markdown snippet come from trusted backend code, no need to sanitize here
-    return <div dangerouslySetInnerHTML={{ __html: rendered }} />;
-  }
-  const [, ReactMissVue] = createReactMissVue({
-    useVueInjection() {
-      return {};
-    },
-    beforeVueAppMount(app: any) {
-      app.use(form);
-      app.use(createI18n({
-        legacy: false,
-        locale: locales[i18n('__id')] || 'en-US',
-      }));
-      app.use(ElementPlus);
-      app.component('k-markdown', applyPureReactInVue(MarkdownContainer));
+  const Form = createSchemasteryReact({
+    locale: locales[i18n('__id')] || 'en-US',
+    Markdown({ source }) {
+      const rendered = React.useMemo(() => {
+        const res = renderMarkdown({ value: source });
+        const value = res.element.innerHTML;
+        res.dispose();
+        return value;
+      }, [source]);
+      // Markdown snippet come from trusted backend code, no need to sanitize here
+      return <div dangerouslySetInnerHTML={{ __html: rendered }} />;
     },
   });
+
   const initialConfigString = UiContext.config;
   const schema = new Schema(UiContext.schema);
   const initial = yaml.load(UiContext.config);
@@ -121,20 +106,18 @@ const page = new NamedPage('manage_config', async () => {
     const updateFromForm = React.useCallback((v) => {
       const newDump = yaml.dump(v);
       if (newDump === stringConfig) return;
-      console.log('update.form', newDump);
       setStringConfig(newDump);
       setValue(v);
     }, [stringConfig]);
     const updateFromMonaco = React.useCallback((v) => {
       if (v === stringConfig) return;
-      console.log('update.monaco', v);
       setStringConfig(v);
       setValue(yaml.load(v));
     }, [stringConfig]);
 
-    return <ReactMissVue>
+    return (<>
       <div className="row">
-        <KForm className="medium-7 columns" schema={schema} initial={initial} v-model={[value, updateFromForm]} />
+        <Form className="medium-7 columns" schema={schema} initial={initial} value={value} onChange={updateFromForm} />
         <div className="medium-4 columns">
           <MonacoContainer config={stringConfig} setValue={updateFromMonaco} setError={setInfo} />
           <pre className="help-text">{info}</pre>
@@ -151,7 +134,7 @@ const page = new NamedPage('manage_config', async () => {
           }} className="rounded primary button">{i18n('Save All Changes')}</button>
         </div>
       </div>
-    </ReactMissVue>;
+    </>);
   }
 
   ReactDOM.createRoot(document.getElementById('app')!).render(<App />);
