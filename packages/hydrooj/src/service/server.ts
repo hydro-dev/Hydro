@@ -261,9 +261,5 @@ export async function apply(ctx: Context) {
         on('handler/create/ws', async (h) => {
             if (h.context.pendingError) throw h.context.pendingError;
         });
-
-        on('app/listen', () => {
-            server.listen();
-        });
     });
 }

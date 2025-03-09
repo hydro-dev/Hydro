@@ -11,7 +11,7 @@ import { MongoService } from '../service/db';
 import { ConfigService } from '../settings';
 import {
     addon, builtinModel, handler, lib, locale, model,
-    script, service, setting, template,
+    script, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -95,9 +95,12 @@ export async function apply(ctx: Context) {
         // eslint-disable-next-line no-await-in-loop
         if (await fs.pathExists(dir)) await fs.copy(dir, path.join(os.homedir(), '.hydro/static'));
     }
-    await ctx.parallel('app/listen');
-    logger.success('Server started');
-    process.send?.('ready');
-    await ctx.parallel('app/ready');
+    ctx.inject(['server'], async ({ server }) => {
+        await server.listen();
+        await ctx.parallel('app/listen');
+        logger.success('Server started');
+        process.send?.('ready');
+        await ctx.parallel('app/ready');
+    });
     return { fail };
 }
