@@ -17,9 +17,9 @@ const withoutTypes = (data) => ({
 const compilerOptionsBase = {
     target: 'es2022',
     lib: ['es2022'],
-    module: 'commonjs',
+    module: 'preserve',
     esModuleInterop: true,
-    moduleResolution: 'node',
+    moduleResolution: 'bundler',
     jsx: 'react',
     sourceMap: false,
     composite: true,

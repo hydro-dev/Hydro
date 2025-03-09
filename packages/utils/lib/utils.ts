@@ -7,20 +7,31 @@ import type AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import Logger from 'reggol';
+import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
-Logger.levels.base = process.env.DEV ? 3 : 2;
-Logger.targets[0].showTime = 'dd hh:mm:ss';
-Logger.targets[0].label = {
-    align: 'right',
-    width: 9,
-    margin: 1,
-};
+const factory = new Factory();
 
-export { Logger, moment };
+factory.addExporter(new Exporter.Console({
+    showDiff: false,
+    showTime: 'dd hh:mm:ss',
+    label: {
+        align: 'right',
+        width: 9,
+        margin: 1,
+    },
+    timestamp: Date.now(),
+}));
+
+function createLogger(name: string) {
+    return factory.createLogger(name);
+}
+
+export type Logger = Reggol & { new(name: string): Reggol & Logger };
+export const Logger = createLogger as any as Logger;
+export { moment };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
