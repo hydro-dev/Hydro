@@ -262,6 +262,10 @@ class RemoteStorageService {
         return url;
     }
 
+    async isLinkValid(_: string) {
+        return false;
+    }
+
     async signUpload(target: string, size: number) {
         const client = this.alternatives.user || this.client;
         const { url, fields } = await createPresignedPost(client, {
@@ -365,6 +369,12 @@ class LocalStorageService {
         return `/${url.toString().split('localhost/')[1]}`;
     }
 
+    async isLinkValid(link: string) {
+        const [target, expire, secret] = link.split('/');
+        const expected = md5(`${target}/${expire}/${this.config.secret}`);
+        return expected === secret;
+    }
+
     async signUpload() {
         throw new Error('Not implemented');
     }
@@ -414,6 +424,12 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
         });
     });
     ctx.set('storage', service);
+}
+
+declare module '../context' {
+    interface Context {
+        storage: RemoteStorageService | LocalStorageService;
+    }
 }
 
 /** @deprecated use ctx.storage instead */

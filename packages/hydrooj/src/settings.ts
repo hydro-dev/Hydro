@@ -15,7 +15,7 @@ export class ConfigService extends Service {
     static inject = ['db'];
 
     settings: Schema[] = [];
-    systemConfig: any = {};
+    private systemConfig: any = {};
     configSource: string = '';
 
     constructor(ctx: Context) {
@@ -74,30 +74,26 @@ export class ConfigService extends Service {
         await this.saveConfig(newConfig);
     }
 
-    get(path: string) {
-        let root = this.systemConfig;
-        for (const p of path.split('.')) {
-            root = root[p];
+    requestConfig<T, S>(s: Schema<T, S>, dynamic = true): ReturnType<Schema<T, S>> {
+        if (dynamic) {
+            this.ctx.effect(() => {
+                this.settings.push(s);
+                return () => {
+                    this.settings = this.settings.filter((v) => v !== s);
+                };
+            });
         }
-        return root;
-    }
-
-    requestConfig<T, S>(s: Schema<T, S>): ReturnType<Schema<T, S>> {
-        this.ctx.effect(() => {
-            this.settings.push(s);
-            return () => {
-                this.settings = this.settings.filter((v) => v !== s);
-            };
-        });
         let curValue = s(this.systemConfig);
-        this.ctx.on('system/setting', () => {
-            try {
-                curValue = s(this.systemConfig);
-            } catch (e) {
-                logger.warn('Cannot read config: ', e.message);
-                curValue = null;
-            }
-        });
+        if (dynamic) {
+            this.ctx.on('system/setting', () => {
+                try {
+                    curValue = s(this.systemConfig);
+                } catch (e) {
+                    logger.warn('Cannot read config: ', e.message);
+                    curValue = null;
+                }
+            });
+        }
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
             let currentValue = curValue;
