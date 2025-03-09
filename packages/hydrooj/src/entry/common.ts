@@ -14,17 +14,6 @@ import { unwrapExports } from '../utils';
 
 const logger = new Logger('common');
 
-async function getFiles(folder: string, base = ''): Promise<string[]> {
-    const files = [];
-    const f = await fs.readdir(folder);
-    for (const i of f) {
-        if ((await fs.stat(path.join(folder, i))).isDirectory()) {
-            files.push(...await getFiles(path.join(folder, i), path.join(base, i)));
-        } else files.push(path.join(base, i));
-    }
-    return files.map((item) => item.replace(/\\/gmi, '/'));
-}
-
 function locateFile(basePath: string, filenames: string[]) {
     for (const i of filenames) {
         const p = path.resolve(basePath, i);
@@ -131,29 +120,6 @@ export async function setting(pending: string[], fail: string[], modelSetting: t
             } catch (e) {
                 app.injectUI('Notification', 'Config load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
                 logger.error('Config Load Fail: %s', i);
-                logger.error(e);
-            }
-        }
-    }
-}
-
-export async function template(pending: string[], fail: string[]) {
-    for (const i of pending) {
-        const p = locateFile(i, ['template', 'templates']);
-        if (p && (await fs.stat(p)).isDirectory() && !fail.includes(i)) {
-            try {
-                const files = await getFiles(p);
-                for (const file of files) {
-                    const l = path.resolve(p, file);
-                    if (file.endsWith('.tsx')) global.Hydro.ui.template[file] = require(l);
-                    global.Hydro.ui.template[file] = await fs.readFile(l, 'utf-8');
-                    if (process.env.DEV) global.Hydro.ui.template[`${file}.source`] = l;
-                }
-                logger.info('Template init: %s', i);
-            } catch (e) {
-                fail.push(i);
-                app.injectUI('Notification', 'Template load fail: {0}', { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION);
-                logger.error('Template Load Fail: %s', i);
                 logger.error(e);
             }
         }
