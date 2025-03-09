@@ -25,8 +25,6 @@ import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
 class RecordListHandler extends ContestDetailBaseHandler {
-    tdoc?: Tdoc;
-
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.ProblemId, true)
     @param('tid', Types.ObjectId, true)
@@ -131,7 +129,6 @@ class RecordListHandler extends ContestDetailBaseHandler {
 
 class RecordDetailHandler extends ContestDetailBaseHandler {
     rdoc: RecordDoc;
-    tdoc?: Tdoc;
 
     @param('rid', Types.ObjectId)
     async prepare(domainId: string, rid: ObjectId) {

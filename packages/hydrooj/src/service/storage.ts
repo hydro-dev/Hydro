@@ -370,8 +370,10 @@ class LocalStorageService {
     }
 
     async isLinkValid(link: string) {
-        const [target, expire, secret] = link.split('/');
-        const expected = md5(`${target}/${expire}/${this.config.secret}`);
+        const parts = link.split('/');
+        const secret = parts.pop();
+        parts.push(this.config.secret);
+        const expected = md5(parts.join('/'));
         return expected === secret;
     }
 
