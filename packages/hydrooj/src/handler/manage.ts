@@ -183,12 +183,12 @@ class SystemConfigHandler extends SystemHandler {
     @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
-        let value = this.ctx.get('config').configSource;
+        let value = this.ctx.config.configSource;
         try {
-            value = yaml.dump(Schema.intersect(this.ctx.get('config').settings)(yaml.load(value)));
+            value = yaml.dump(Schema.intersect(this.ctx.config.settings)(yaml.load(value)));
         } catch (e) { }
         this.response.body = {
-            schema: Schema.intersect(this.ctx.get('config').settings).toJSON(),
+            schema: Schema.intersect(this.ctx.config.settings).toJSON(),
             value,
         };
     }
@@ -202,7 +202,7 @@ class SystemConfigHandler extends SystemHandler {
         } catch (e) {
             throw new ValidationError('value');
         }
-        await this.ctx.get('config').saveConfig(config);
+        await this.ctx.config.saveConfig(config);
     }
 }
 

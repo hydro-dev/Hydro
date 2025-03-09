@@ -39,14 +39,16 @@ export async function apply(ctx: Context) {
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader'], (c) => {
+        ctx.inject(['loader', 'config'], (c) => {
             resolve(c);
         });
     });
-    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file', 'hydrooj/service/storage');
     await ctx.plugin(require('../service/hmr').default, { watch: argv.options.watch });
-    await require('../service/worker').apply(ctx);
-    await require('../service/server').apply(ctx);
+    await Promise.all([
+        ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file', 'hydrooj/service/storage'),
+        ctx.loader.reloadPlugin(require.resolve('../service/worker'), 'worker', 'hydrooj/service/worker'),
+        ctx.loader.reloadPlugin(require.resolve('../service/server'), 'server', 'hydrooj/service/server'),
+    ]);
     ctx = await new Promise((resolve) => {
         ctx.inject(['server'], (c) => {
             resolve(c);

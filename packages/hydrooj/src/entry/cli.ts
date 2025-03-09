@@ -115,7 +115,7 @@ export async function load(ctx: Context) {
     await ctx.plugin(ConfigService);
     await require('../model/system').runConfig();
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader'], (c) => {
+        ctx.inject(['loader', 'config'], (c) => {
             resolve(c);
         });
     });
