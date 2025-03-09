@@ -5,6 +5,7 @@ import {
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
+import { TemplateService } from './backendlib/template';
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -164,6 +165,6 @@ export function apply(ctx: Context) {
       domains: SystemModel.get('ui-default.domains') || [],
     };
   });
-  ctx.plugin(require('./backendlib/template'));
+  ctx.plugin(TemplateService);
   ctx.plugin(require('./backendlib/builder'));
 }

@@ -9,8 +9,6 @@ if (!global.Hydro) {
             hydrooj: require('hydrooj/package.json').version,
         },
         // @ts-ignore
-        service: {},
-        // @ts-ignore
         model: {},
         script: {},
         // @ts-ignore
@@ -22,9 +20,7 @@ if (!global.Hydro) {
             },
         }),
         // @ts-ignore
-        ui: {
-            template: {},
-        },
+        ui: {},
         // @ts-ignore
         error: {},
         locales: {},

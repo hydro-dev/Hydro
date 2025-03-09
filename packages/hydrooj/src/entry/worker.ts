@@ -30,10 +30,7 @@ export async function apply(ctx: Context) {
     }
     const pending = global.addons;
     const fail = [];
-    await Promise.all([
-        locale(pending, fail),
-        template(pending, fail),
-    ]);
+    await locale(pending, fail);
     await ctx.plugin(MongoService, load() || {});
     await ctx.plugin(ConfigService);
     const modelSystem = require('../model/system');

@@ -115,5 +115,4 @@ export function apply(ctx: Context) {
 
 export default app;
 
-global.Hydro.service.bus = app as any;
 global.bus = app;

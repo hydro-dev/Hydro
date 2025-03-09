@@ -238,12 +238,6 @@ export async function apply(ctx: Context) {
             h.translate = h.translate.bind(h);
             h.url = h.url.bind(h);
             h.ctx = h.ctx.extend({ domain: h.domain });
-            h.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
-                const s = name.split('.');
-                let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
-                if (!global.Hydro.ui.template[templateName]) templateName = name;
-                return orig(templateName, args);
-            })(h.renderHTML).bind(h);
         });
         on('handler/create/http', async (h) => {
             if (!argv.options.benchmark && !h.notUsage) await h.limitRate('global', 5, 100);

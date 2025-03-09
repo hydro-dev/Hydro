@@ -596,11 +596,6 @@ export interface Model {
     rp: typeof import('./script/rating').RpTypes,
 }
 
-export interface HydroService {
-    /** @deprecated */
-    bus: Context,
-}
-
 export interface GeoIP {
     provider: string,
     lookup: (ip: string, locale?: string) => any,
@@ -629,7 +624,6 @@ export interface Lib extends Record<string, any> {
 
 export type UIInjectableFields = 'ProblemAdd' | 'Notification' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel';
 export interface UI {
-    template: Record<string, string>,
     nodes: Record<UIInjectableFields, any[]>,
     getNodes: typeof import('./lib/ui').getNodes,
     inject: typeof import('./lib/ui').inject,
@@ -650,7 +644,6 @@ export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
     script: Record<string, Script>;
-    service: HydroService;
     lib: Lib;
     module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
     ui: UI;
