@@ -181,6 +181,7 @@ export class HomeHandler extends Handler {
 class HomeSecurityHandler extends Handler {
     @requireSudo
     async get() {
+        const geoip = this.ctx.get('geoip');
         // TODO(iceboy): pagination? or limit session count for uid?
         const sessions = await token.getSessionListByUid(this.user._id);
         for (const session of sessions) {
@@ -188,7 +189,7 @@ class HomeSecurityHandler extends Handler {
             session._id = md5(session._id);
             const ua = session.updateUa || session.createUa;
             if (ua) session.updateUaInfo = UAParser(ua);
-            session.updateGeoip = this.ctx.geoip?.lookup?.(
+            session.updateGeoip = geoip?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
             );
@@ -201,7 +202,7 @@ class HomeSecurityHandler extends Handler {
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
-            geoipProvider: this.ctx?.geoip?.provider,
+            geoipProvider: geoip?.provider,
         };
     }
 
@@ -603,7 +604,6 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export const inject = { geoip: { required: false } };
 export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
