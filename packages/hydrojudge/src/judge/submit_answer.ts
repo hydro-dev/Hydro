@@ -46,6 +46,7 @@ function judgeCase(c: NormalizedCase) {
                 output: { src: c.output },
                 user_stdout: file,
                 user_stderr: { content: '' },
+                code: ctx.code,
                 score: c.score,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },

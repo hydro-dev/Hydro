@@ -10,6 +10,7 @@ export interface CheckConfig {
     output: CopyInFile;
     user_stdout: CopyInFile;
     user_stderr: CopyInFile;
+    code: CopyInFile;
     copyIn: Record<string, CopyInFile>;
     score: number;
     detail: boolean;
@@ -176,7 +177,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * input：输入
      * user_out：选手输出
      * answer：标准输出
-     * code：选手代码 (not impl)
+     * code：选手代码
      * stdout：输出最终得分
      * stderr：输出错误报告
      */
@@ -187,7 +188,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 input: config.input,
                 user_out: config.user_stdout,
                 answer: config.output,
-                code: { content: '' },
+                code: config.code,
                 ...config.copyIn,
             },
         });
@@ -203,6 +204,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 in: config.input,
                 user_out: config.user_stdout,
                 answer: config.output,
+                user_code: config.code,
                 ...config.copyIn,
             },
             env: config.env,

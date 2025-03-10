@@ -62,6 +62,7 @@ export async function judge(ctx: Context) {
                 output: { content: '' },
                 user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
                 user_stderr: { fileId: res.fileIds.stderr },
+                code: ctx.code,
                 score: 100,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: '0' },
