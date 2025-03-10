@@ -16,7 +16,7 @@ export function createRegistry(ctx: Context) {
     function createMetric<Q extends string, T extends (new (a: any) => Metric<Q>)>(
         C: T, name: string, help: string, extra?: T extends new (a: infer R) => any ? Partial<R> : never,
     ): T extends (new (a) => Gauge<Q>) ? Gauge<Q> : T extends (new (a) => Counter<Q>) ? Counter<Q> : Metric<Q> {
-        const metric = new C({ name, help, ...(extra || {}) });
+        const metric = new C({ name, help, ...extra });
         registry.registerMetric(metric);
         return metric as any;
     }

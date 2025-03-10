@@ -101,7 +101,7 @@ export const PERM = {
     PERM_NEVER: 1n << 60n,
 };
 
-export const Permission = (family: string, key: BigInt, desc: string) => ({ family, key, desc });
+export const Permission = (family: string, key: bigint, desc: string) => ({ family, key, desc });
 
 export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW, 'View this domain'),

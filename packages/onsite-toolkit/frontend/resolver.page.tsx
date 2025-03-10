@@ -259,28 +259,27 @@ export function start(data: ResolverInput, options: DisplaySettings) {
               background: 'transparent',
             }),
           }}
-          children={<>
-            <div className="rank">{team.rank === -1 ? '⭐' : team.rank}</div>
-            {props.showAvatar && <img className="avatar" src={`${teamInfo?.avatar}`} />}
-            <div className="content">
-              <div className="name">
-                {props.showSchool ? `${teamInfo.institution} - ` : ''}{teamInfo.name}
-              </div>
-              <div className="problems">
-                {data.problems.map((v) => {
-                  const uncover = team.id === selectedTeam && selectedProblem === v.id;
-                  const problemStatus = team.problems.find((idx) => idx.id === v.id);
-                  if (!problemStatus) return <span key={v.id} className="item">ERR</span>;
-                  return <span key={v.id} className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
-                    {submissions(problemStatus)}
-                  </span>;
-                })}
-              </div>
+        >
+          <div className="rank">{team.rank === -1 ? '⭐' : team.rank}</div>
+          {props.showAvatar && <img className="avatar" src={`${teamInfo?.avatar}`} />}
+          <div className="content">
+            <div className="name">
+              {props.showSchool ? `${teamInfo.institution} - ` : ''}{teamInfo.name}
             </div>
-            <div className="solved">{team.score}</div>
-            <div className="penalty">{team.penalty}</div>
-          </>}
-        />;
+            <div className="problems">
+              {data.problems.map((v) => {
+                const uncover = team.id === selectedTeam && selectedProblem === v.id;
+                const problemStatus = team.problems.find((idx) => idx.id === v.id);
+                if (!problemStatus) return <span key={v.id} className="item">ERR</span>;
+                return <span key={v.id} className={`${status(problemStatus)} ${uncover ? 'uncover' : ''} item`}>
+                  {submissions(problemStatus)}
+                </span>;
+              })}
+            </div>
+          </div>
+          <div className="solved">{team.score}</div>
+          <div className="penalty">{team.penalty}</div>
+        </animated.div>;
       })}
     </>);
   }

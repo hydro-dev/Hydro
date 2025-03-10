@@ -58,4 +58,4 @@ export { EventMap } from './service/bus';
 export { db, pwsh };
 
 // to load ctx.scoreboard
-export { } from './handler/contest';
+export { } from './handler/contest'; // eslint-disable-line @typescript-eslint/no-useless-empty-export

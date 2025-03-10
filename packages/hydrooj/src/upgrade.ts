@@ -51,7 +51,7 @@ export const coreScripts: MigrationScript[] = [
         return true;
     },
     // Init
-    ...new Array(28).fill(unsupportedUpgrade),
+    ...new Array(28).fill(unsupportedUpgrade), // oxlint-disable-line no-new-array
     async function _29_30() {
         return await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
     },

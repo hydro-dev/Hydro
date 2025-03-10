@@ -15,22 +15,22 @@ import { ArrayKeys, MaybeArray, NumberKeys, Projection } from '../typeutils';
 import { buildProjection } from '../utils';
 
 type DocID = ObjectId | string | number;
-type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, Symbol>;
+type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, symbol>;
 
 export const coll = db.collection('document');
 export const collStatus = db.collection('document.status');
 
-export const TYPE_PROBLEM: 10 = 10;
-export const TYPE_PROBLEM_SOLUTION: 11 = 11;
-export const TYPE_PROBLEM_LIST: 12 = 12;
-export const TYPE_DISCUSSION_NODE: 20 = 20;
-export const TYPE_DISCUSSION: 21 = 21;
-export const TYPE_DISCUSSION_REPLY: 22 = 22;
-export const TYPE_CONTEST: 30 = 30;
-export const TYPE_CONTEST_CLARIFICATION: 31 = 31;
-export const TYPE_TRAINING: 40 = 40;
+export const TYPE_PROBLEM = 10 as const;
+export const TYPE_PROBLEM_SOLUTION = 11 as const;
+export const TYPE_PROBLEM_LIST = 12 as const;
+export const TYPE_DISCUSSION_NODE = 20 as const;
+export const TYPE_DISCUSSION = 21 as const;
+export const TYPE_DISCUSSION_REPLY = 22 as const;
+export const TYPE_CONTEST = 30 as const;
+export const TYPE_CONTEST_CLARIFICATION = 31 as const;
+export const TYPE_TRAINING = 40 as const;
 /** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
-export const TYPE_HOMEWORK: 60 = 60;
+export const TYPE_HOMEWORK = 60 as const;
 
 export interface DocType {
     [TYPE_PROBLEM]: ProblemDoc;
