@@ -38,6 +38,7 @@ function judgeCase(c: NormalizedCase) {
                 ({ status, score, message } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
+                    code: ctx.code,
                     input: { src: c.input },
                     output: { src: c.output },
                     user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
