@@ -242,6 +242,7 @@ export default class HMR extends Service {
             for (const [plugin, { filename, runtime }] of reloads) {
                 try {
                     this.ctx.registry.delete(attempts[filename]);
+                    // eslint-disable-next-line no-await-in-loop
                     await reload(plugin, runtime);
                 } catch (err) {
                     logger.warn(err);

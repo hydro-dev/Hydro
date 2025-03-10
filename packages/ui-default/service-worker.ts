@@ -160,12 +160,12 @@ async function get(request: Request) {
         method: request.method,
         credentials: isResource ? 'same-origin' : 'include',
         headers: request.headers,
-        body: request.body,
         redirect: request.redirect,
         keepalive: request.keepalive,
         referrer: request.referrer,
         referrerPolicy: request.referrerPolicy,
         signal: request.signal,
+        ...(request.method.toLowerCase() === 'get' ? {} : { body: request.body }),
       });
       if (r.ok) {
         console.log('Load success from ', source.toString());

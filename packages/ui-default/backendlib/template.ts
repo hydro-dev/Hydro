@@ -2,7 +2,7 @@ import * as status from '@hydrooj/common/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
 import { convert } from 'html-to-text';
 import {
-  avatar, Context, fs, PERM, PRIV, Service, STATUS, yaml,
+  avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
@@ -134,6 +134,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
     this.addGlobal('model', global.Hydro.model);
+    this.addGlobal('lib', { difficulty: difficultyAlgorithm });
     this.addGlobal('ui', global.Hydro.ui);
     this.addGlobal('isIE', (str) => {
       if (!str) return false;

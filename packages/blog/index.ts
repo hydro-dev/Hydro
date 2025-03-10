@@ -4,7 +4,7 @@ import {
     param, PRIV, Types, UserModel,
 } from 'hydrooj';
 
-export const TYPE_BLOG: 70 = 70;
+export const TYPE_BLOG = 70 as const;
 export interface BlogDoc {
     docType: 70;
     docId: ObjectId;
