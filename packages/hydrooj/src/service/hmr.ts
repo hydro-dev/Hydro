@@ -144,7 +144,7 @@ export default class HMR extends Service {
         }
     }
 
-    private triggerLocalReload() {
+    private async triggerLocalReload() {
         this.analyzeChanges();
 
         /** plugins pending classification */
@@ -207,10 +207,11 @@ export default class HMR extends Service {
             return rollback();
         }
 
-        const reload = (plugin: any, runtime?: Plugin.Runtime) => {
+        const reload = async (plugin: any, runtime?: Plugin.Runtime) => {
             if (!runtime) return;
             for (const oldFiber of runtime.scopes) {
-                oldFiber.parent.plugin(plugin, oldFiber.config);
+                // eslint-disable-next-line no-await-in-loop
+                await oldFiber.parent.plugin(plugin, oldFiber.config);
             }
         };
 
@@ -226,7 +227,8 @@ export default class HMR extends Service {
                 }
 
                 try {
-                    reload(attempts[filename], runtime);
+                    // eslint-disable-next-line no-await-in-loop
+                    await reload(attempts[filename], runtime);
                     logger.info('reload plugin at %c', path);
                 } catch (err) {
                     logger.warn('failed to reload plugin at %c', path);
@@ -240,7 +242,7 @@ export default class HMR extends Service {
             for (const [plugin, { filename, runtime }] of reloads) {
                 try {
                     this.ctx.registry.delete(attempts[filename]);
-                    reload(plugin, runtime);
+                    await reload(plugin, runtime);
                 } catch (err) {
                     logger.warn(err);
                 }

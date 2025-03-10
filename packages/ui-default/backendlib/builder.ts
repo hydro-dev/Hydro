@@ -3,7 +3,6 @@ import {
   Context, fs, Handler, Logger, NotFoundError, param, SettingModel, sha1,
   size, SystemModel, Types, UiContextBase,
 } from 'hydrooj';
-import { debounce } from 'lodash';
 import { tmpdir } from 'os';
 import {
   basename, join, relative, resolve,
@@ -118,6 +117,7 @@ export async function buildUI() {
   }
   for (const lang in global.Hydro.locales) {
     if (!/^[a-zA-Z_]+$/.test(lang)) continue;
+    if (!global.Hydro.locales[lang].__interface) continue;
     const str = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
     addFile(`lang-${lang}.js`, str);
   }
@@ -160,7 +160,7 @@ export async function apply(ctx: Context) {
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
   ctx.Route('constant', '/resource/:version/:name', UiConstantsHandler);
   ctx.on('app/started', buildUI);
-  const debouncedBuildUI = debounce(buildUI, 2000, { trailing: true });
+  const debouncedBuildUI = ctx.debounce(buildUI, 2000);
   const triggerHotUpdate = (path?: string) => {
     if (path && !path.includes('/ui-default/') && !path.includes('/public/') && !path.includes('/frontend/')) return;
     debouncedBuildUI();

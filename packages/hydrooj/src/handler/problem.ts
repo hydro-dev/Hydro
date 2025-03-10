@@ -109,7 +109,7 @@ export class ProblemMainHandler extends Handler {
         // eslint-disable-next-line @typescript-eslint/no-shadow
         const query = this.queryContext.query;
         const psdict = {};
-        const search = global.Hydro.lib.problemSearch || defaultSearch;
+        const search = Object.values(global.Hydro.module.problemSearch)[0] || defaultSearch;
         const parsed = parser.parse(q, {
             keywords: ['category', 'difficulty', 'namespace'],
             offsets: false,

@@ -133,7 +133,6 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('utils', { status });
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
-    this.addGlobal('lib', global.Hydro.lib);
     this.addGlobal('model', global.Hydro.model);
     this.addGlobal('ui', global.Hydro.ui);
     this.addGlobal('isIE', (str) => {

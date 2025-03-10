@@ -19,7 +19,7 @@ const processDocument = (doc: Partial<ProblemDoc>) => {
     return _.omit(doc, indexOmit);
 };
 
-global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
+async function problemSearch(domainId, q, opts) {
     const allowedSize = SystemModel.get('elasic-search.indexSize') || 10000;
     const size = opts?.limit || SystemModel.get('pagination.problem');
     const from = Math.min(allowedSize - size, opts?.skip || 0);
@@ -56,7 +56,7 @@ global.Hydro.lib.problemSearch = async (domainId, q, opts) => {
         total: typeof res.hits.total === 'number' ? res.hits.total : res.hits.total.value,
         hits: Array.from(new Set(hits)),
     };
-};
+}
 
 async function run({ domainId }, report) {
     try {
@@ -109,4 +109,5 @@ export const apply = (ctx: Context) => {
         }),
         run,
     );
+    ctx.provideModule('problemSearch', 'elastic', problemSearch);
 };

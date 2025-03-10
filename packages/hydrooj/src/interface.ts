@@ -613,15 +613,6 @@ export interface ProblemSearchOptions {
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
-export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty').default;
-    buildContent: typeof import('./lib/content').buildContent;
-    mail: typeof import('./lib/mail');
-    rating: typeof import('./lib/rating').default;
-    testdataConfig: typeof import('./lib/testdataConfig');
-    problemSearch: ProblemSearch;
-}
-
 export type UIInjectableFields = 'ProblemAdd' | 'Notification' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel';
 export interface UI {
     nodes: Record<UIInjectableFields, any[]>,
@@ -638,13 +629,13 @@ export interface ModuleInterfaces {
         lockUsername?: boolean;
     };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
+    problemSearch: ProblemSearch;
 }
 
 export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
     script: Record<string, Script>;
-    lib: Lib;
     module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
     ui: UI;
     error: typeof import('./error');

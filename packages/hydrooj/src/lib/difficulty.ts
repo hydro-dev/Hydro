@@ -43,4 +43,3 @@ function difficultyAlgorithm(nSubmit: number, nAccept: number) {
 }
 
 export default difficultyAlgorithm;
-global.Hydro.lib.difficulty = difficultyAlgorithm;

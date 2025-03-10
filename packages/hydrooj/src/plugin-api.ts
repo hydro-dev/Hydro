@@ -44,6 +44,8 @@ export { default as mime } from './lib/mime';
 export { default as difficultyAlgorithm } from './lib/difficulty';
 export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
+export { parseConfig as testdataConfig } from './lib/testdataConfig';
+export { sendMail } from './lib/mail';
 /** @deprecated use Handler.paginate instead */
 export const paginate = db.paginate.bind(db);
 /** @deprecated use db.ranked instead */
