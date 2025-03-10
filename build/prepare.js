@@ -150,18 +150,18 @@ const pluginsConfig = {
 };
 fs.writeFileSync(path.resolve(process.cwd(), 'plugins', 'tsconfig.json'), JSON.stringify(pluginsConfig));
 
-for (const package of modules) {
-    const basedir = path.resolve(process.cwd(), package);
+for (const pkg of modules) {
+    const basedir = path.resolve(process.cwd(), pkg);
     const files = fs.readdirSync(basedir);
     try {
         // eslint-disable-next-line import/no-dynamic-require
         const name = require(path.join(basedir, 'package.json')).name;
         fs.symlinkSync(basedir, path.join(nm, name), 'dir');
     } catch (e) { }
-    if (!files.includes('src') && !files.filter((i) => i.endsWith('.ts')).length && package !== 'packages/utils') continue;
-    config.references.push({ path: package });
-    const origConfig = (files.includes('src') ? configSrc : configFlat)(package);
-    const expectedConfig = JSON.stringify(package.startsWith('modules/') ? withoutTypes(origConfig) : origConfig);
+    if (!files.includes('src') && !files.filter((i) => i.endsWith('.ts')).length && pkg !== 'packages/utils') continue;
+    config.references.push({ path: pkg });
+    const origConfig = (files.includes('src') ? configSrc : configFlat)(pkg);
+    const expectedConfig = JSON.stringify(pkg.startsWith('modules/') ? withoutTypes(origConfig) : origConfig);
     const configPath = path.resolve(basedir, 'tsconfig.json');
     const currentConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf-8') : '';
     if (expectedConfig !== currentConfig) fs.writeFileSync(configPath, expectedConfig);

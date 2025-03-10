@@ -10,14 +10,12 @@ const base = yaml.load(fs.readFileSync('base.yaml', 'utf8')) as any;
 const react = yaml.load(fs.readFileSync('react.yaml', 'utf8')) as any;
 
 function sort<T>(obj: Record<string, T>): Record<string, T> {
-    const clone = { ...obj };
-    Object.keys(clone).sort().reduce(
+    return Object.keys(obj).sort().reduce(
         (acc, key) => {
-            acc[key] = clone[key];
+            acc[key] = obj[key];
             return acc;
         },
-    );
-    return clone;
+    ) as any;
 }
 
 // NOTE: oxlint doesn't support most stylistic rules
