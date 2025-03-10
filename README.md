@@ -113,7 +113,6 @@ Hydro 用户群：1085853538
 
 ## Unreleased
 
-- judge: breaking: 不再支持在 checker 等的编译阶段读取选手代码
 - judge: 添加 checker 编译缓存
 - ui: 优化题目详情页面 OGP 信息
 - core&ui: 升级 simplewebauthn
@@ -123,19 +122,25 @@ Hydro 用户群：1085853538
 - ui&judge: 添加栈空间回显
 - install: 在树莓派中自动启用 cgroup.memory
 - install: 添加 shm 空间大小警告
-- vjudge: 使用 vjudge.mount 表替代 domain.mount
 - core: 升级到 cordis@4
 - framework: 支持同时启用多个 renderer
 - core: 分离 HMR 和 Watcher 组件
 - core: i18n: 添加 interface 选项
 - judge: 添加 kattis checker 支持
-- core: 移除旧版本 bus 调用
 - migrate: 修复 hustoj 自动运行
-- core: 强制要求使用 inject 声明插件依赖
-- core: 移除 global.Hydro.service.db
-- core: 移除 global.Hydro.service.service
-- core: 移除 global.Hydro.service.storage
 - core: Settings: 支持使用 Schemastery
+- ui: 更新系统设置页面样式
+- import-qduoj: 修复 spj=null
+
+### Breaking API Changes
+
+- vjudge: 使用 vjudge.mount 表替代 domain.mount
+- judge: breaking: 不再支持在 checker 等的编译阶段读取选手代码
+- core: 强制要求使用 inject 声明插件依赖
+- core: 移除旧版本 bus 调用
+- core: 移除 global.Hydro.service
+- core: 移除 global.Hydro.ui.template
+- core: 移除 global.Hydro.lib
 
 ## Hydro 4.19.0 / UI 4.57.0
 

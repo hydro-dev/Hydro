@@ -37,5 +37,3 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
     if (cfg.filename && result.type === 'default') result.subType = cfg.filename;
     return result;
 }
-
-global.Hydro.lib.testdataConfig = { parseConfig };

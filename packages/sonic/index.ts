@@ -10,7 +10,7 @@ export const inject = { 'sonic': { required: false } };
 export function apply(ctx: Context) {
     ctx.plugin(SonicService);
 
-    global.Hydro.lib.problemSearch = async (domainId, query, opts) => {
+    ctx.provideModule('problemSearch', 'sonic', async (domainId, query, opts) => {
         const limit = opts?.limit || SystemModel.get('pagination.problem');
         let hits = await ctx.sonic.query('problem', `${domainId}@title`, query, { limit });
         if (!opts.skip) {
@@ -29,7 +29,7 @@ export function apply(ctx: Context) {
             total: hits.length,
             hits,
         };
-    };
+    });
 
     async function run({ domainId }, report) {
         if (domainId) await ctx.sonic.flushb('problem', domainId);

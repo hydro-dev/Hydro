@@ -59,6 +59,6 @@ function renderInline(text) {
   return md.renderInline(text);
 }
 
-global.Hydro.lib.markdown = module.exports = {
+module.exports = {
   md, plugin, render, renderInline,
 };
