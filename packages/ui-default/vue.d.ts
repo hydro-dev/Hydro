@@ -1,3 +1,3 @@
 declare module '*.vue' {
-    export default {} as any;
+  export default {} as any;
 }

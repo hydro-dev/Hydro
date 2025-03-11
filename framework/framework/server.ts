@@ -528,7 +528,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 else if (typeof h[step] === 'function') control = await h[step](args);
                 if (control) {
                     const index = steps.findIndex((i) => control === i);
-                    if (index === -1) throw new Error(`Invalid control: ${control}`);
+                    if (index === -1) throw new Error(`Invalid control: ${control} (after step ${step})`);
                     if (index <= current) {
                         logger.warn('Returning to previous step is not recommended:', step, '->', control);
                     }
