@@ -36,6 +36,6 @@ export default class GeoIPService extends Service {
     }
 }
 
-export async function apply(ctx: Context) {
-    ctx.set('geoip', new GeoIPService(ctx));
+export function apply(ctx: Context) {
+    ctx.plugin(GeoIPService);
 }

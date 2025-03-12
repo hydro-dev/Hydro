@@ -1,7 +1,7 @@
 import { hostname } from 'os';
 import { AggregatorRegistry, Metric } from 'prom-client';
 import {
-    Context, Handler, superagent, SystemModel,
+    Context, Handler, Schema, superagent, SystemModel,
 } from 'hydrooj';
 import { createRegistry } from './metrics';
 
@@ -43,6 +43,14 @@ class MetricsHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
+    ctx.setting.SystemSetting(Schema.object({
+        'prom-client': Schema.object({
+            name: Schema.string().description('basic auth username while requesting metrics').default('admin'),
+            password: Schema.string().role('password').description('basic auth password while requesting metrics').default('admin'),
+            gateway: Schema.string().role('gateway').description('Leave blank to disable push gateway').default(''),
+            collect_rate: Schema.number().role('collect_rate').default(1).description('Collect rate'),
+        }),
+    }));
     if (process.env.HYDRO_CLI) return;
     const registry = createRegistry(ctx);
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
