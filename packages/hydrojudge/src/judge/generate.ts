@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
+import { STATUS } from '@hydrooj/common';
+import fs from 'fs-extra';
 import { tmpdir } from 'os';
 import path from 'path';
-import fs from 'fs-extra';
-import { STATUS } from '@hydrooj/common';
 import { SystemError } from '../error';
 import { CopyInFile, runQueued } from '../sandbox';
 import client from '../sandbox/client';
@@ -27,7 +27,7 @@ export const judge = async (ctx: JudgeTask) => {
     let totalStatus = 0;
 
     async function runGenerator(i: number) {
-        const res = await runQueued(
+        const { res, cleanup } = await runQueued(
             `${executeGenerator.execute} ${i}`,
             {
                 stdin: { content: ctx.input || '' },
@@ -41,9 +41,9 @@ export const judge = async (ctx: JudgeTask) => {
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.in`);
-        ctx.clean.push(() => {
+        ctx.clean.push(async () => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
+            await cleanup();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,
@@ -66,6 +66,7 @@ export const judge = async (ctx: JudgeTask) => {
             await client.getFile(fileIds['stdout'], tmp);
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.in`, tmp);
         }
+        await cleanup();
         ctx.next({
             case: {
                 id: i,
@@ -80,7 +81,7 @@ export const judge = async (ctx: JudgeTask) => {
         return status === STATUS.STATUS_ACCEPTED ? tmp : null;
     }
     async function runStd(i: number, stdin: CopyInFile) {
-        const res = await runQueued(
+        const { res, cleanup } = await runQueued(
             `${executeStd.execute} ${i}`,
             {
                 stdin,
@@ -94,9 +95,9 @@ export const judge = async (ctx: JudgeTask) => {
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.out`);
-        ctx.clean.push(() => {
+        ctx.clean.push(async () => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
+            await cleanup();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,
@@ -119,6 +120,7 @@ export const judge = async (ctx: JudgeTask) => {
             await client.getFile(fileIds['stdout'], tmp);
             await ctx.session.postFile(ctx.request.rid.toString(), `${i}.out`, tmp);
         }
+        await cleanup();
         ctx.next({
             case: {
                 id: i,

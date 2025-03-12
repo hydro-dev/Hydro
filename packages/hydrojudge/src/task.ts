@@ -1,8 +1,8 @@
-import { basename, join } from 'path';
 import {
     CompilableSource, FileInfo, JudgeMeta, JudgeResultBody, STATUS, TestCase,
 } from '@hydrooj/common';
 import { findFileSync, fs } from '@hydrooj/utils';
+import { basename, join } from 'path';
 import readCases from './cases';
 import checkers from './checkers';
 import compile from './compile';
@@ -244,7 +244,7 @@ export class JudgeTask {
         const langConfig = this.session.getLang(this.lang);
         if (!langConfig.analysis) return;
         try {
-            const r = await runQueued(langConfig.analysis, {
+            const { res: r } = await runQueued(langConfig.analysis, {
                 copyIn: {
                     ...execute.copyIn,
                     input,

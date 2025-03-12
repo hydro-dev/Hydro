@@ -55,7 +55,7 @@ function parseDiffMsg(msg: string) {
 
 const checkers: Record<string, Checker> = new Proxy({
     async default(config) {
-        const { stdout } = await runQueued('/usr/bin/diff -BZ usrout answer', {
+        const { res: { stdout } } = await runQueued('/usr/bin/diff -BZ usrout answer', {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -77,7 +77,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async strict(config) {
-        const { stdout } = await runQueued('/usr/bin/diff usrout answer', {
+        const { res: { stdout } } = await runQueued('/usr/bin/diff usrout answer', {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -99,7 +99,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * exit code：返回判断结果
      */
     async hustoj(config) {
-        const { code, stdout } = await runQueued(`${config.execute} input answer usrout`, {
+        const { res: { code, stdout } } = await runQueued(`${config.execute} input answer usrout`, {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -124,7 +124,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * argv[6]：输出错误报告的文件
      */
     async lemon(config) {
-        const { files, code } = await runQueued(`${config.execute} input usrout answer ${config.score} score message`, {
+        const { res: { files, code } } = await runQueued(`${config.execute} input usrout answer ${config.score} score message`, {
             copyIn: {
                 usrout: config.user_stdout,
                 answer: config.output,
@@ -157,7 +157,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * exit code：返回判断结果
      */
     async qduoj(config) {
-        const { status, stdout } = await runQueued(`${config.execute} input usrout`, {
+        const { res: { status, stdout } } = await runQueued(`${config.execute} input usrout`, {
             copyIn: {
                 usrout: config.user_stdout,
                 input: config.input,
@@ -183,7 +183,7 @@ const checkers: Record<string, Checker> = new Proxy({
      */
     async syzoj(config) {
         // eslint-disable-next-line prefer-const
-        let { status, stdout, stderr } = await runQueued(config.execute, {
+        let { res: { status, stdout, stderr } } = await runQueued(config.execute, {
             copyIn: {
                 input: config.input,
                 user_out: config.user_stdout,
@@ -199,7 +199,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status, code } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { res: { stderr, status, code } } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -233,7 +233,7 @@ const checkers: Record<string, Checker> = new Proxy({
 
     // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
     async kattis(config) {
-        const { files, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
+        const { res: { files, code } } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
             copyIn: {
                 input: config.input,
                 answer_file: config.output,

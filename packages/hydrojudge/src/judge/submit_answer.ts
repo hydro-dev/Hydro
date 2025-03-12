@@ -2,7 +2,7 @@ import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { fs } from '@hydrooj/utils';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { del, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import { Context } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -15,9 +15,9 @@ function judgeCase(c: NormalizedCase) {
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
-        const fileIds = [];
+        let clean = async () => { };
         if (ctx.config.subType === 'multi') {
-            const res = await runQueued(
+            const { res, cleanup } = await runQueued(
                 '/usr/bin/unzip foo.zip',
                 {
                     stdin: null,
@@ -28,6 +28,7 @@ function judgeCase(c: NormalizedCase) {
                     cacheStdoutAndStderr: true,
                 },
             );
+            clean = cleanup;
             if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
@@ -36,7 +37,6 @@ function judgeCase(c: NormalizedCase) {
                 status = STATUS.STATUS_WRONG_ANSWER;
             }
             file = { fileId: res.fileIds[name] };
-            fileIds.push(...Object.values(res.fileIds));
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({ status, score, message } = await checkers[ctx.config.checker_type]({
@@ -52,7 +52,7 @@ function judgeCase(c: NormalizedCase) {
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             }));
         }
-        await Promise.allSettled(fileIds.map(del));
+        await clean();
         return {
             id: c.id,
             status,

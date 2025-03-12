@@ -10,7 +10,7 @@ export const judge = async (ctx: JudgeTask) => {
     const execute = await ctx.compile(ctx.lang, ctx.code);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-    const res = await runQueued(
+    const { res } = await runQueued(
         execute.execute,
         {
             stdin: { content: ctx.input },
