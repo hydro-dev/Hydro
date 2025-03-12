@@ -1,8 +1,8 @@
+import { basename, join } from 'path';
 import {
     CompilableSource, FileInfo, JudgeMeta, JudgeResultBody, STATUS, TestCase,
 } from '@hydrooj/common';
 import { findFileSync, fs } from '@hydrooj/utils';
-import { basename, join } from 'path';
 import readCases from './cases';
 import checkers from './checkers';
 import compile from './compile';

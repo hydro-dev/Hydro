@@ -1,9 +1,9 @@
-import { STATUS } from '@hydrooj/common';
-import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import cac from 'cac';
 import PQueue from 'p-queue';
 import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
+import { STATUS } from '@hydrooj/common';
+import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
@@ -147,6 +147,10 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     return ret;
 }
 
+export async function del(fileId: string) {
+    await client.deleteFile(fileId);
+}
+
 export async function runPiped(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[], params: Parameter = {}, trace: string = '',
 ): Promise<{ res: SandboxAdaptedResult[], cleanup: () => Promise<any> }> {
@@ -186,10 +190,6 @@ export async function runPiped(
     };
 }
 
-export async function del(fileId: string) {
-    await client.deleteFile(fileId);
-}
-
 export async function get(fileId: string, dest?: string) {
     return await client.getFile(fileId, dest);
 }
@@ -200,7 +200,8 @@ export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
 ): Promise<{ res: SandboxAdaptedResult[], cleanup: () => Promise<any> }>;
-export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number): Promise<{ res: SandboxAdaptedResult, cleanup: () => Promise<any> }>;
+export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
+): Promise<{ res: SandboxAdaptedResult, cleanup: () => Promise<any> }>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
     arg2?: string | Parameter, arg3?: string | number, arg4?: number,
