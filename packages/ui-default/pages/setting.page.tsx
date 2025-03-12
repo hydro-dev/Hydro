@@ -1,5 +1,6 @@
 import 'schemastery-react/lib/schemastery-react.css';
 
+import { diffLines } from 'diff';
 import yaml from 'js-yaml';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -34,6 +35,10 @@ const page = new NamedPage('manage_config', async () => {
     },
   });
 
+  setInterval(() => {
+    monaco.editor.remeasureFonts();
+  }, 1000);
+
   const initialConfigString = UiContext.config;
   const schema = new Schema(UiContext.schema);
   const initial = yaml.load(UiContext.config);
@@ -42,6 +47,7 @@ const page = new NamedPage('manage_config', async () => {
     const editorRef = React.useRef<HTMLDivElement>(null);
     const [loading, setLoading] = React.useState(false);
     const [editor, setEditor] = React.useState<any>(null);
+    const [model, setModel] = React.useState<any>(null);
 
     React.useEffect(() => {
       const listener = () => {
@@ -52,9 +58,26 @@ const page = new NamedPage('manage_config', async () => {
       return () => window.removeEventListener('resize', listener);
     }, [editor]);
     React.useEffect(() => {
+      if (!editor) return;
+      const disposable = editor.onDidChangeModelContent(() => {
+        const val = editor.getValue({ lineEnding: '\n', preserveBOM: false });
+        try {
+          const loaded = yaml.load(val);
+          schema(loaded);
+          setValue(val);
+          setError('');
+        } catch (err) {
+          setError(err.message);
+        }
+      });
+      return () => disposable.dispose(); // eslint-disable-line
+    }, [editor, setValue, setError]);
+    React.useEffect(() => {
       if (!editorRef.current || loading) return;
       setLoading(true);
+      // eslint-disable-next-line
       const model = monaco.editor.createModel(config, 'yaml', monaco.Uri.parse('hydro://system/setting.yaml'));
+      setModel(model);
       const e = monaco.editor.create(editorRef.current, {
         theme: 'vs-light',
         lineNumbers: 'off',
@@ -72,23 +95,29 @@ const page = new NamedPage('manage_config', async () => {
         },
       });
       registerAction(e, model, editorRef.current);
-      e.onDidChangeModelContent(() => {
-        const val = e.getValue({ lineEnding: '\n', preserveBOM: false });
-        try {
-          const loaded = yaml.load(val);
-          schema(loaded);
-          setValue(val);
-          setError('');
-        } catch (err) {
-          setError(err.message);
-        }
-      });
       setEditor(e);
     }, [editorRef.current]);
     React.useEffect(() => {
       if (!editor) return;
       const current = editor.getValue({ lineEnding: '\n', preserveBOM: false });
-      if (current !== config) editor.setValue(config);
+      const diff = diffLines(current, config);
+      const ops = [];
+      let cursor = 1;
+      for (const line of diff) {
+        if (line.added) {
+          let range = model.getFullModelRange();
+          range = range.setStartPosition(cursor, 0);
+          range = range.setEndPosition(cursor, 0);
+          ops.push({ range, text: line.value });
+        } else if (line.removed) {
+          let range = model.getFullModelRange();
+          range = range.setStartPosition(cursor, 0);
+          cursor += line.count;
+          range = range.setEndPosition(cursor, 0);
+          ops.push({ range, text: '' });
+        } else cursor += line.count;
+      }
+      model.pushEditOperations([], ops, undefined);
     }, [editor, config]);
     return (
       <div ref={editorRef} style={{
@@ -117,19 +146,21 @@ const page = new NamedPage('manage_config', async () => {
 
     return (<>
       <div className="row">
-        <Form className="medium-7 columns" schema={schema} initial={initial} value={value} onChange={updateFromForm} />
-        <div className="medium-4 columns">
+        <div className="medium-5 columns">
           <MonacoContainer config={stringConfig} setValue={updateFromMonaco} setError={setInfo} />
           <pre className="help-text">{info}</pre>
+        </div>
+        <div className="medium-7 columns">
+          <Form schema={schema} initial={initial} value={value} onChange={updateFromForm} />
         </div>
       </div>
       <div className="row" style={{ marginTop: '20px' }}>
         <div className="medium-10 columns">
           <button onClick={() => {
             request.post('', { value: stringConfig }).then(() => {
-              Notification.success('保存成功');
+              Notification.success(i18n('Changes saved successfully'));
             }).catch((e) => {
-              Notification.error('保存失败:', e.message);
+              Notification.error(i18n('Failed to save changes:'), e.message);
             });
           }} className="rounded primary button">{i18n('Save All Changes')}</button>
         </div>
