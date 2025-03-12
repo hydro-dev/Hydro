@@ -33,6 +33,14 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
         let meta;
         try {
             meta = require(`../${name}/package.json`);
+            if (tag === 'dev') {
+                try {
+                    const result = await packageJson(meta.name, { version: meta.version });
+                    if (typeof result?.version === meta.version) return progress++; // no change on dev version
+                } catch (e) {
+                    // expected
+                }
+            }
             if (!meta.private && /^[0-9.]+$/.test(meta.version)) {
                 try {
                     const { version } = await packageJson(meta.name, { version: tag });
@@ -41,6 +49,9 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
                     if (e.name === 'VersionNotFoundError') bumpMap[name] = meta.version;
                     else throw e;
                 }
+            } else {
+                // x.x.x-alpha.x
+                bumpMap[name] = meta.version;
             }
         } catch (e) {
             console.error(e);
