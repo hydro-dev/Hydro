@@ -40,7 +40,7 @@ export class ConfigService extends Service {
 
     applyDelta(source: any, key: string, value: any) {
         const path = key.split('.');
-        if (path.filter((i) => ['__proto__', 'prototype', 'constructor'].includes(i)).length) return false;
+        if (path.some((i) => ['__proto__', 'prototype', 'constructor'].includes(i))) return false;
         const t = path.pop();
         const root = JSON.parse(JSON.stringify(source));
         let cursor = root;
@@ -96,11 +96,12 @@ export class ConfigService extends Service {
         }
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
+            if (path.some((p) => ['__proto__', 'prototype', 'constructor'].includes(String(p)))) throw new Error('Invalid path');
             let currentValue = curValue;
             for (const p of path) {
                 currentValue = currentValue[p];
             }
-            if (typeof currentValue !== 'object') return curValue;
+            if (typeof currentValue !== 'object' || !currentValue) return currentValue;
             return new Proxy(currentValue, {
                 get(self, key: string) {
                     return getAccess(path.concat(key));

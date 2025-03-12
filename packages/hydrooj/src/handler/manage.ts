@@ -184,23 +184,53 @@ class SystemConfigHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_config.html';
         let value = this.ctx.config.configSource;
+
+        const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (['union', 'intersect'].includes(schema.type)) {
+                for (const item of schema.list) processNode(node, item, parent, accessKey);
+            }
+            if (parent && (schema.meta.secret === true || schema.meta.role === 'secret')) {
+                if (schema.type === 'string') parent[accessKey] = '[hidden]';
+                // TODO support more types
+            }
+            if (schema.type === 'object') {
+                for (const key in schema.dict) processNode(node[key], schema.dict[key], node, key);
+            }
+        };
+
         try {
-            value = yaml.dump(Schema.intersect(this.ctx.config.settings)(yaml.load(value)));
+            value = Schema.intersect(this.ctx.config.settings)(yaml.load(value));
+            for (const schema of this.ctx.config.settings) processNode(value, schema);
         } catch (e) { }
         this.response.body = {
             schema: Schema.intersect(this.ctx.config.settings).toJSON(),
-            value,
+            value: yaml.dump(value),
         };
     }
 
     @requireSudo
     @param('value', Types.String)
     async post({ }, value: string) {
+        const oldConfig = yaml.load(this.ctx.config.configSource);
         let config;
+        const processNode = (node: any, old: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (['union', 'intersect'].includes(schema.type)) {
+                for (const item of schema.list) processNode(node, old, item, parent, accessKey);
+            }
+            if (parent && (schema.meta.secret === true || schema.meta.role === 'secret')) {
+                if (node === '[hidden]') parent[accessKey] = old[accessKey];
+                // TODO support more types
+            }
+            if (schema.type === 'object') {
+                for (const key in schema.dict) processNode(node[key] || {}, old[key] || {}, schema.dict[key], node, key);
+            }
+        };
+
         try {
             config = yaml.load(value);
+            for (const schema of this.ctx.config.settings) processNode(config, oldConfig, schema, null, '');
         } catch (e) {
-            throw new ValidationError('value');
+            throw new ValidationError('value', '', e.message);
         }
         await this.ctx.config.saveConfig(config);
     }
