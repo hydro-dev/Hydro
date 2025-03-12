@@ -151,7 +151,7 @@ export class StorageModel {
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(dst));
         await StorageModel.coll.insertOne({
-            ...value, _id, path: dst, link: value._id, lastModified: new Date(), owner: value.owner || 1,
+            ...value, _id, path: dst, link: value.link || value._id, lastModified: new Date(), owner: value.owner || 1,
         });
         return _id;
     }
