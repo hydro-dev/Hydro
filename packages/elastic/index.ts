@@ -82,6 +82,13 @@ async function run({ domainId }, report) {
 }
 
 export const apply = (ctx: Context) => {
+    ctx.setting.SystemSetting(Schema.object({
+        'elastic-search': Schema.object({
+            url: Schema.string().role('url').default('http://127.0.0.1:9200'),
+            indexSize: Schema.number().role('indexSize').default(10000).min(0).step(1),
+        }),
+    }));
+
     ctx.on('problem/add', async (doc, docId) => {
         await client.index({
             index: 'problem',
