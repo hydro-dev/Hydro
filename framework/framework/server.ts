@@ -752,8 +752,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.captureAllRoutes[prefix] = cb;
     }
 
-    private _applyMixin(Target: any, MixinClass: Partial<any>) {
+    private _applyMixin(Target: any, MixinClass: Partial<any> | ((t: Partial<any>) => Partial<any>)) {
         if (!('prototype' in Target)) throw new Error('Target must be a class.');
+        if (typeof MixinClass === 'function') MixinClass = MixinClass(Target.prototype);
         this.ctx.effect(() => {
             let oldValue = null;
             for (const val of Object.getOwnPropertyNames(MixinClass)) {
@@ -782,15 +783,15 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon<C>>) {
+    public handlerMixin(MixinClass: Partial<HandlerCommon<C>> | ((s: HandlerCommon<C>) => Partial<HandlerCommon<C>>)) {
         return this._applyMixin(HandlerCommon, MixinClass);
     }
 
-    public httpHandlerMixin(MixinClass: Partial<Handler<C>>) {
+    public httpHandlerMixin(MixinClass: Partial<Handler<C>> | ((s: Handler<C>) => Partial<Handler<C>>)) {
         return this._applyMixin(Handler, MixinClass);
     }
 
-    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>>) {
+    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>> | ((s: ConnectionHandler<C>) => Partial<ConnectionHandler<C>>)) {
         return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
