@@ -3,7 +3,7 @@ import { CompileError } from './error';
 import { Execute } from './interface';
 import {
     CopyIn, CopyInFile,
-    runQueued
+    runQueued,
 } from './sandbox';
 import { compilerText } from './utils';
 
@@ -14,9 +14,11 @@ export default async function compile(
     const execute = copyIn['execute.sh'] ? '/bin/bash execute.sh' : lang.execute;
     const command = copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile;
     if (command) {
-        const { res: {
-            status, stdout, stderr, fileIds,
-        }, cleanup } = await runQueued(
+        const {
+            res: {
+                status, stdout, stderr, fileIds,
+            }, cleanup,
+        } = await runQueued(
             command,
             {
                 copyIn: { ...copyIn, [lang.code_file]: code },

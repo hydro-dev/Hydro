@@ -8,9 +8,11 @@ import { Context, ContextSubTask } from './interface';
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-        const { res: [{
-            code, signalled, time, memory,
-        }, resInteractor] } = await runPiped([
+        const {
+            res: [{
+                code, signalled, time, memory,
+            }, resInteractor],
+        } = await runPiped([
             {
                 execute: ctx.executeUser.execute,
                 copyIn: ctx.executeUser.copyIn,

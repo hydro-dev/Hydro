@@ -179,11 +179,11 @@ export async function runPiped(
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    const fileIds = res.flatMap(r => r.fileIds ? Object.values(r.fileIds) : []);
+    const fileIds = res.flatMap((r) => (r.fileIds ? Object.values(r.fileIds) : []));
     return {
         res: res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[],
         cleanup: async () => Promise.allSettled(fileIds.map(del)),
-    }
+    };
 }
 
 export async function del(fileId: string) {
