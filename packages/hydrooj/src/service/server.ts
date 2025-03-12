@@ -222,15 +222,15 @@ export async function apply(ctx: Context) {
                 }
             },
         });
-        server.wsHandlerMixin({
+        server.wsHandlerMixin((s) => ({
             async onerror(err: HydroError) {
                 if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
                     logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
                     logger.error(err);
                 }
-                await super.onerror(err);
+                await s.onerror(err);
             },
-        });
+        }));
 
         on('handler/create', async (h) => {
             h.user = h.context.HydroContext.user as any;

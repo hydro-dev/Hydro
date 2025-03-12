@@ -74,7 +74,7 @@ export class ConfigService extends Service {
         await this.saveConfig(newConfig);
     }
 
-    requestConfig<T, S>(s: Schema<T, S>, dynamic = true): ReturnType<Schema<T, S>> {
+    requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
         if (dynamic) {
             this.ctx.effect(() => {
                 this.settings.push(s);
