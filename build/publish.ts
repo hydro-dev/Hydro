@@ -53,10 +53,11 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
         for (const name in bumpMap) {
             console.log(`publishing ${name}@${bumpMap[name]} ...`);
             if (tag === 'dev') {
-                const pkg = require(`${name}/package.json`);
+                const location = require.resolve(`../${name}/package.json`);
+                const pkg = require(location);
                 if (!prerelease(pkg.version)) {
                     pkg.version += '-dev';
-                    writeFileSync(path.resolve(`${name}/package.json`), JSON.stringify(pkg));
+                    writeFileSync(location, JSON.stringify(pkg));
                 }
             }
             await spawnAsync(
