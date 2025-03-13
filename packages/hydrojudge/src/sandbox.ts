@@ -153,7 +153,7 @@ export async function del(fileId: string) {
 
 export async function runPiped(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[], params: Parameter = {}, trace: string = '',
-): Promise<{ res: SandboxAdaptedResult[], cleanup: () => Promise<any> }> {
+): Promise<SandboxAdaptedResult[]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
@@ -183,11 +183,7 @@ export async function runPiped(
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    const fileIds = res.flatMap((r) => (r.fileIds ? Object.values(r.fileIds) : []));
-    return {
-        res: res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[],
-        cleanup: async () => Promise.allSettled(fileIds.map(del)),
-    };
+    return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
 }
 
 export async function get(fileId: string, dest?: string) {
@@ -199,20 +195,22 @@ const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('p
 export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
-): Promise<{ res: SandboxAdaptedResult[], cleanup: () => Promise<any> }>;
+): Promise<SandboxAdaptedResult[] & { cleanup: () => Promise<any> }>;
 export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
-): Promise<{ res: SandboxAdaptedResult, cleanup: () => Promise<any> }>;
+): Promise<SandboxAdaptedResult & { cleanup: () => Promise<any> }>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
     arg2?: string | Parameter, arg3?: string | number, arg4?: number,
-): Promise<void | { res: SandboxAdaptedResult[] | SandboxAdaptedResult, cleanup: () => Promise<any> }> {
+) {
     const single = !Array.isArray(arg0);
     const [execute, pipeMapping, params, trace, priority] = single
         ? [[{ execute: arg0 }], [], arg1 || {}, arg2 || '', arg3 || 0] as any
         : [arg0, arg1, arg2 || {}, arg3 || '', arg4 || 0];
     return queue.add(async () => {
-        const { res, cleanup } = await runPiped(execute, pipeMapping, params, trace);
-        return single ? { res: res[0], cleanup } : { res, cleanup };
+        const res = await runPiped(execute, pipeMapping, params, trace);
+        const ret = single ? res[0] : res;
+        (ret as any).cleanup = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        return ret;
     }, { priority });
 }
 

@@ -2,8 +2,7 @@ import { LangConfig, STATUS } from '@hydrooj/common';
 import { CompileError } from './error';
 import { Execute } from './interface';
 import {
-    CopyIn, CopyInFile,
-    runQueued,
+    CopyIn, CopyInFile, runQueued,
 } from './sandbox';
 import { compilerText } from './utils';
 
@@ -15,9 +14,7 @@ export default async function compile(
     const command = copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile;
     if (command) {
         const {
-            res: {
-                status, stdout, stderr, fileIds,
-            }, cleanup,
+            status, stdout, stderr, fileIds, cleanup,
         } = await runQueued(
             command,
             {

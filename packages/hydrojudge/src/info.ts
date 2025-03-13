@@ -7,7 +7,7 @@ export async function compilerVersions(langs: Record<string, LangConfig>) {
         const version = langs[lang].version;
         if (!version) continue;
         // eslint-disable-next-line no-await-in-loop
-        const { res } = await runQueued(version, {
+        const res = await runQueued(version, {
             copyIn: {},
             time: 10000,
             memory: 256,
@@ -18,7 +18,7 @@ export async function compilerVersions(langs: Record<string, LangConfig>) {
 }
 
 export async function stackSize() {
-    const { res } = await runQueued('/bin/bash -c "ulimit -s"', {
+    const res = await runQueued('/bin/bash -c "ulimit -s"', {
         copyIn: {},
         time: 10000,
         memory: 256,

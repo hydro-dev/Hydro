@@ -39,7 +39,7 @@ function judgeCase(c: NormalizedCase) {
             });
         }
         execute[0].execute += managerArgs;
-        const { res } = await runPiped(execute, pipeMapping);
+        const res = await runPiped(execute, pipeMapping);
         const resManager = res[0];
         let time = 0;
         let memory = 0;

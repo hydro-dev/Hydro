@@ -177,7 +177,7 @@ export class JudgeTask {
     }
 
     async pushClean(f: () => Promise<any>) {
-        if (this.finished) await f();
+        if (this.finished) await f().catch(() => null);
         else this.clean.push(f);
     }
 
@@ -254,7 +254,7 @@ export class JudgeTask {
         const langConfig = this.session.getLang(this.lang);
         if (!langConfig.analysis) return;
         try {
-            const { res: r } = await runQueued(langConfig.analysis, {
+            const r = await runQueued(langConfig.analysis, {
                 copyIn: {
                     ...execute.copyIn,
                     input,
