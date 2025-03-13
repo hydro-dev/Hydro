@@ -131,6 +131,7 @@ Hydro 用户群：1085853538
 - core: Settings: 支持使用 Schemastery
 - ui: 更新系统设置页面样式
 - import-qduoj: 修复 spj=null
+- core: 修复文件复制
 
 ### Breaking API Changes
 
@@ -141,6 +142,7 @@ Hydro 用户群：1085853538
 - core: 移除 global.Hydro.service
 - core: 移除 global.Hydro.ui.template
 - core: 移除 global.Hydro.lib
+- core: 移除 String.prototype.translate (使用 app.i18n.translate)
 
 ## Hydro 4.19.0 / UI 4.57.0
 
