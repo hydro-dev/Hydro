@@ -12,11 +12,6 @@ declare module '../service/bus' {
         'app/i18n/update': (lang: string) => void;
     }
 }
-declare global {
-    interface String {
-        translate: (...languages: string[]) => string;
-    }
-}
 
 class I18nService extends Service {
     constructor(ctx: Context) {
@@ -47,14 +42,14 @@ class I18nService extends Service {
         if (languages[0]?.startsWith('en')) {
             // For most use cases, source text equals to translated text in English.
             // So if it doesn't exist, we should use the original text instead of fallback.
-            return app.i18n.get(str, languages[0]) || app.i18n.get(str, 'en') || this.toString();
+            return this.get(str, languages[0]) || this.get(str, 'en') || this.toString();
         }
         for (const language of languages.filter(Boolean)) {
-            const curr = app.i18n.get(str, language) || app.i18n.get(str, language.split('_')[0])
-                || app.i18n.get(str, language.split('-')[0]);
+            const curr = this.get(str, language) || this.get(str, language.split('_')[0])
+                || this.get(str, language.split('-')[0]);
             if (curr) return curr;
         }
-        return this.toString();
+        return str.toString();
     }
 }
 
@@ -63,20 +58,6 @@ export function apply(ctx: Context) {
     ctx.provide('i18n', undefined, true);
     ctx.i18n = new I18nService(ctx);
 }
-
-String.prototype.translate = function translate(...languages: string[]) {
-    if (languages[0]?.startsWith('en')) {
-        // For most use cases, source text equals to translated text in English.
-        // So if it doesn't exist, we should use the original text instead of fallback.
-        return app.i18n.get(this, languages[0]) || app.i18n.get(this, 'en') || this.toString();
-    }
-    for (const language of languages.filter(Boolean)) {
-        const curr = app.i18n.get(this, language) || app.i18n.get(this, language.split('_')[0])
-            || app.i18n.get(this, language.split('-')[0]);
-        if (curr) return curr;
-    }
-    return this.toString();
-};
 
 function collect(lang: string) {
     const s = translations[lang];

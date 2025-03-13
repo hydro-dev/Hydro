@@ -160,8 +160,8 @@ export async function apply(ctx: Context) {
                 if (!str) return '';
                 const lang = this.user?.viewLang || this.session?.viewLang;
                 const res = lang
-                    ? str.toString().translate(lang, ...this.context.acceptsLanguages())
-                    : str.toString().translate(...this.context.acceptsLanguages(), system.get('server.language'));
+                    ? ctx.i18n.translate(str.toString(), [lang, ...this.context.acceptsLanguages()])
+                    : ctx.i18n.translate(str.toString(), [...this.context.acceptsLanguages(), system.get('server.language')]);
                 return res;
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string | number) {
