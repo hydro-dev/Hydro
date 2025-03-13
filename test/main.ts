@@ -61,8 +61,8 @@ describe('App', () => {
 
     // TODO add more tests
 
+    const results: Record<string, autocannon.Result> = {};
     if (process.env.BENCHMARK) {
-        const results: Record<string, autocannon.Result> = {};
         routes.forEach((route) => it(`Performance test ${route}`, { timeout: 60000 }, async () => {
             await global.Hydro.model.system.set('limit.global', 99999);
             const result = await autocannon({ url: `http://localhost:8888${route}` });
@@ -73,7 +73,7 @@ describe('App', () => {
 
     after(() => {
         if (process.env.BENCHMARK) {
-            const metrics = Object.entries(([k, v]) => ({
+            const metrics = Object.entries(results).map(([k, v]) => ({
                 name: `Benchmark - ${k} - Req/sec`,
                 unit: 'Req/sec',
                 value: v.requests.average,
