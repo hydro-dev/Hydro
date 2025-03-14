@@ -15,26 +15,30 @@ function judgeCase(c: NormalizedCase) {
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
+        await using cleanup = {
+            clean: async () => { },
+            async [Symbol.asyncDispose]() { await this.clean(); },
+        };
         if (ctx.config.subType === 'multi') {
-            await using res = await runQueued(
-                '/usr/bin/unzip foo.zip',
+            const res = await runQueued(
+                `/usr/bin/unzip -p foo.zip ${name}`,
                 {
                     stdin: null,
                     copyIn: { 'foo.zip': ctx.code },
-                    copyOutCached: [`${name}?`],
                     time: 1000,
                     memory: 128,
                     cacheStdoutAndStderr: true,
                 },
             );
-            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
+            cleanup.clean = async () => await res[Symbol.asyncDispose]();
+            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code !== 11) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
-            } else if (!res.fileIds[name]) {
+            } else if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code === 11) {
                 message = { message: 'File not found.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
             }
-            file = { fileId: res.fileIds[name] };
+            file = { fileId: res.fileIds['stdout'] };
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({ status, score, message } = await checkers[ctx.config.checker_type]({
