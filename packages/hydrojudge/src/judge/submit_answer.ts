@@ -38,21 +38,24 @@ function judgeCase(c: NormalizedCase) {
             }
             file = { fileId: res.fileIds[name] };
         }
-        if (status === STATUS.STATUS_ACCEPTED) {
-            ({ status, score, message } = await checkers[ctx.config.checker_type]({
-                execute: ctx.checker.execute,
-                copyIn: ctx.checker.copyIn || {},
-                input: { src: c.input },
-                output: { src: c.output },
-                user_stdout: file,
-                user_stderr: { content: '' },
-                code: ctx.code,
-                score: c.score,
-                detail: ctx.config.detail ?? true,
-                env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
-            }));
+        try {
+            if (status === STATUS.STATUS_ACCEPTED) {
+                ({ status, score, message } = await checkers[ctx.config.checker_type]({
+                    execute: ctx.checker.execute,
+                    copyIn: ctx.checker.copyIn || {},
+                    input: { src: c.input },
+                    output: { src: c.output },
+                    user_stdout: file,
+                    user_stderr: { content: '' },
+                    code: ctx.code,
+                    score: c.score,
+                    detail: ctx.config.detail ?? true,
+                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
+                }));
+            }
+        } finally {
+            await clean();
         }
-        await clean();
         return {
             id: c.id,
             status,
