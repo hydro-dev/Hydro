@@ -21,25 +21,24 @@ function judgeCase(c: NormalizedCase) {
         };
         if (ctx.config.subType === 'multi') {
             const res = await runQueued(
-                '/usr/bin/unzip foo.zip',
+                `/usr/bin/unzip -p foo.zip ${name}`,
                 {
                     stdin: null,
                     copyIn: { 'foo.zip': ctx.code },
-                    copyOutCached: [`${name}?`],
                     time: 1000,
                     memory: 128,
                     cacheStdoutAndStderr: true,
                 },
             );
             cleanup.clean = async () => await res[Symbol.asyncDispose]();
-            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
+            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code !== 11) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
-            } else if (!res.fileIds[name]) {
+            } else if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code === 11) {
                 message = { message: 'File not found.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
             }
-            file = { fileId: res.fileIds[name] };
+            file = { fileId: res.fileIds['stdout'] };
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({ status, score, message } = await checkers[ctx.config.checker_type]({
