@@ -94,9 +94,9 @@ export class JudgeTask {
                 });
             }
         } finally {
+            this.finished = true;
             // eslint-disable-next-line no-await-in-loop
             for (const clean of this.clean) await clean()?.catch(() => null);
-            this.finished = true;
         }
     }
 

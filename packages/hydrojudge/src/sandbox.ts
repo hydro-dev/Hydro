@@ -147,10 +147,6 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     return ret;
 }
 
-export async function del(fileId: string) {
-    await client.deleteFile(fileId);
-}
-
 export async function runPiped(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[], params: Parameter = {}, trace: string = '',
 ): Promise<SandboxAdaptedResult[]> {
@@ -184,6 +180,10 @@ export async function runPiped(
         throw new SystemError('Sandbox Error', [e]);
     }
     return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
+}
+
+export async function del(fileId: string) {
+    await client.deleteFile(fileId);
 }
 
 export async function get(fileId: string, dest?: string) {

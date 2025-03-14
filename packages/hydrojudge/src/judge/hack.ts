@@ -52,7 +52,6 @@ export async function judge(ctx: Context) {
     } = res;
     let { status } = res;
     let message: any = '';
-
     if (status === STATUS.STATUS_ACCEPTED) {
         if (time > ctx.config.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
