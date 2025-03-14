@@ -274,6 +274,3 @@ export class TemplateService extends Service {
     }
   }
 }
-
-export async function apply(ctx: Context) {
-}

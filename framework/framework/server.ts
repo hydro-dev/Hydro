@@ -465,7 +465,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
         await new Promise((r) => {
             httpServer.listen(this.config.port, this.config.host || '127.0.0.1', () => {
-                logger.success('Server listening at: %d', this.config.port);
+                logger.success('Server listening at: %c', `${this.config.host || '127.0.0.1'}:${this.config.port}`);
                 r(true);
             });
         });
@@ -685,6 +685,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             };
         };
 
+        // if (name === 'ContestScoreboard') {
+        //     console.log('-------------', this.ctx, this.ctx.scoreboard);
+        // }
+
         if (type === 'route') {
             router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
         } else {
@@ -707,6 +711,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     public withHandlerClass<T extends string>(
         name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
     ) {
+        name = name.replace(/Handler$/, '') as any;
         if (this.registry[name]) callback(this.registry[name]);
         // FIXME: should pass type check
         this.ctx.on(`handler/register/${name}`, callback as any);
@@ -714,6 +719,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
     public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
+        // if (name === 'contest_scoreboard') {
+        //     console.log('+++', this.ctx);
+        //     console.log(this.ctx.scoreboard);
+        // }
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 

@@ -30,7 +30,10 @@ describe('App', () => {
     }, { timeout: 30000 });
 
     const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
-    routes.forEach((route) => it(`GET ${route}`, () => agent.get(route).expect(200)));
+    for (const route of routes) {
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        it(`GET ${route}`, () => agent.get(route).expect(200));
+    }
 
     it('API user', async () => {
         await agent.get('/api?{user(id:1){uname}}').expect({ data: { user: { uname: 'Hydro' } } });
@@ -63,12 +66,13 @@ describe('App', () => {
 
     const results: Record<string, autocannon.Result> = {};
     if (process.env.BENCHMARK) {
-        routes.forEach((route) => it(`Performance test ${route}`, { timeout: 60000 }, async () => {
-            await global.Hydro.model.system.set('limit.global', 99999);
-            const result = await autocannon({ url: `http://localhost:8888${route}` });
-            assert(result.errors === 0, `test ${route} returns errors`);
-            results[route] = result;
-        }));
+        for (const route of routes) {
+            it(`Performance test ${route}`, { timeout: 60000 }, async () => {
+                const result = await autocannon({ url: `http://localhost:8888${route}` });
+                assert(result.errors === 0, `test ${route} returns errors`);
+                results[route] = result;
+            });
+        }
     }
 
     after(() => {

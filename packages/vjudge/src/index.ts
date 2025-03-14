@@ -155,7 +155,9 @@ class AccountService {
         this.syncing = false;
     }
 
-    async stop() { } // eslint-disable-line @typescript-eslint/no-empty-function
+    async stop() {
+        return this.api?.stop?.();
+    }
 
     async main() {
         const res = await this.login();

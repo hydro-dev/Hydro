@@ -388,7 +388,7 @@ const oi = buildContestRule({
                     score: tsddict[pid]?.score,
                 };
             if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED) {
-                if (tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt.getTime() || tdoc.beginAt.getTime())) {
+                if (tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime() === meta?.first?.[pid]) {
                     node.style = 'background-color: rgb(217, 240, 199);';
                 }
             }
@@ -403,9 +403,9 @@ const oi = buildContestRule({
         const psdict = {};
         const first = {};
         for (const [, tsdoc] of rankedTsdocs) {
-            for (const [pid, detail] of Object.entries(tsdoc.detail)) {
+            for (const [pid, detail] of Object.entries(tsdoc.detail || {})) {
                 if (detail.status !== STATUS.STATUS_ACCEPTED) continue;
-                const time = detail.rid.getTimestamp().getTime() - (tsdoc.startAt.getTime() || tdoc.beginAt.getTime());
+                const time = detail.rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime();
                 if (!first[pid] || first[pid] > time) first[pid] = time;
             }
         }

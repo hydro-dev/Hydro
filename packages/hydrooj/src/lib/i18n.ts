@@ -42,7 +42,7 @@ class I18nService extends Service {
         if (languages[0]?.startsWith('en')) {
             // For most use cases, source text equals to translated text in English.
             // So if it doesn't exist, we should use the original text instead of fallback.
-            return this.get(str, languages[0]) || this.get(str, 'en') || this.toString();
+            return this.get(str, languages[0]) || this.get(str, 'en') || str.toString();
         }
         for (const language of languages.filter(Boolean)) {
             const curr = this.get(str, language) || this.get(str, language.split('_')[0])
