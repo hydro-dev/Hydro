@@ -4,7 +4,7 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type {
-    FileInfo, RecordPayload,
+    FileInfo, RecordJudgeInfo, RecordPayload,
 } from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { DocStatusType } from './model/document';
@@ -223,6 +223,11 @@ export type RecordDoc = {
 } & {
     _id: ObjectId;
 };
+
+export interface RecordHistoryDoc extends RecordJudgeInfo {
+    _id: ObjectId;
+    rid: ObjectId;
+}
 
 export interface RecordStatDoc {
     _id: ObjectId;
@@ -545,6 +550,7 @@ declare module './service/db' {
         'domain.user': any;
         'record': RecordDoc;
         'record.stat': RecordStatDoc;
+        'record.history': RecordHistoryDoc;
         'document': any;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
