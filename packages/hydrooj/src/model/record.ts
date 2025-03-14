@@ -1,5 +1,5 @@
 /* eslint-disable object-curly-newline */
-import { sum } from 'lodash';
+import { pick, sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
     Filter, FindOptions, MatchKeysAndValues,
@@ -20,6 +20,7 @@ import task from './task';
 export default class RecordModel {
     static coll = db.collection('record');
     static collStat = db.collection('record.stat');
+    static collHistory = db.collection('record.history');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -233,6 +234,7 @@ export default class RecordModel {
     }
 
     static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
+        const rids = rid instanceof Array ? rid : [rid];
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -246,8 +248,19 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
-        await RecordModel.collStat.deleteMany(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
-        await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
+        const [rdocs] = await Promise.all([
+            RecordModel.coll.find({ _id: { $in: rids } }).toArray(),
+            RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
+            task.deleteMany({ rid: { $in: rids } }),
+        ]);
+        await RecordModel.collHistory.insertMany(rdocs.map((rdoc) => ({
+            ...pick(rdoc, [
+                'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+            ]),
+            rid: rdoc._id,
+            _id: new ObjectId(),
+        })));
         return RecordModel.update(domainId, rid, upd);
     }
 
