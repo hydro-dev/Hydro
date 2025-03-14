@@ -128,8 +128,8 @@ class DomainModel {
     }
 
     static async countUser(domainId: string, role?: string) {
-        if (role) return await collUser.countDocuments({ domainId, role });
-        return await collUser.countDocuments({ domainId });
+        if (role) return await collUser.countDocuments({ domainId, role, join: true });
+        return await collUser.countDocuments({ domainId, join: true });
     }
 
     @ArgMethod
@@ -166,10 +166,8 @@ class DomainModel {
             }
         }
         if (count) {
-            await Promise.all(roles.map(async (role) => {
-                if (['default', 'guest'].includes(role._id)) return role;
+            await Promise.all(roles.filter((i) => i._id !== 'guest').map(async (role) => {
                 role.count = await DomainModel.countUser(ddoc._id, role._id);
-                return role;
             }));
         }
         return roles;
@@ -207,7 +205,7 @@ class DomainModel {
         let dudoc = await collUser.findOne({ domainId, uid: udoc._id });
         dudoc ||= { domainId, uid: udoc._id };
         if (!(udoc.priv & PRIV.PRIV_USER_PROFILE)) dudoc.role = 'guest';
-        if (!dudoc.join) dudoc.role = 'guest';
+        if (!dudoc.join && !(udoc.priv & PRIV.PRIV_VIEW_ALL_DOMAIN)) dudoc.role = 'guest';
         if (udoc.priv & PRIV.PRIV_MANAGE_ALL_DOMAIN) dudoc.role = 'root';
         dudoc.role ||= 'default';
         const ddoc = await DomainModel.get(domainId);

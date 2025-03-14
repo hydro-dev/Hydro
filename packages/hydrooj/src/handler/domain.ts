@@ -282,13 +282,16 @@ class DomainJoinHandler extends Handler {
     async prepare({ domainId }, target: string = domainId) {
         const [ddoc, dudoc] = await Promise.all([
             domain.get(target),
-            domain.getDomainUser(target, this.user),
+            domain.collUser.findOne({ domainId, uid: this.user._id }),
         ]);
-        if (dudoc.join) throw new DomainJoinAlreadyMemberError(target, this.user._id);
+        const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
+            ? 'root'
+            : dudoc?.role;
+        if (dudoc?.join) throw new DomainJoinAlreadyMemberError(target, this.user._id);
         const r = await domain.getRoles(ddoc);
         const roles = r.map((role) => role._id);
         this.joinSettings = domain.getJoinSettings(ddoc, roles);
-        if (dudoc.role !== 'default') delete this.joinSettings;
+        if (assignedRole !== 'default') delete this.joinSettings;
         else if (!this.joinSettings) throw new DomainJoinForbiddenError(target);
     }
 
