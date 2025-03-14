@@ -31,6 +31,7 @@ export class JudgeTask {
     lang: string;
     code: CopyInFile;
     input?: string;
+    finished: boolean = false;
     clean: (() => Promise<any>)[] = [];
     data: FileInfo[];
     folder: string;
@@ -93,6 +94,7 @@ export class JudgeTask {
                 });
             }
         } finally {
+            this.finished = true;
             // eslint-disable-next-line no-await-in-loop
             for (const clean of this.clean) await clean()?.catch(() => null);
         }
@@ -174,12 +176,17 @@ export class JudgeTask {
         await judge[type].judge(this);
     }
 
+    async pushClean(f: () => any | Promise<any>) {
+        if (this.finished) await f().catch(() => null);
+        else this.clean.push(f);
+    }
+
     async compile(lang: string, code: CopyInFile) {
         const copyIn = Object.fromEntries(
             (this.config.user_extra_files || []).map((i) => [basename(i), { src: i }]),
         ) as CopyIn;
         const result = await compile(this.session.getLang(lang), code, copyIn, this.next);
-        this.clean.push(result.clean);
+        await this.pushClean(result.clean);
         return result;
     }
 
@@ -218,8 +225,10 @@ export class JudgeTask {
         if (!lang) throw new FormatError(`Unknown ${type} language.`);
         // TODO cache compiled binary
         const result = await compile(lang, { src: file }, copyIn);
-        this.clean.push(result.clean);
-        if (!result._cacheable) return result;
+        if (!result._cacheable) {
+            await this.pushClean(result.clean);
+            return result;
+        }
         await Lock.acquire(this.folder);
         try {
             const loc = join(this.folder, `_${type}.cache`);
@@ -235,6 +244,7 @@ export class JudgeTask {
             const currEtag = await fs.readFile(join(this.folder, 'etags'), 'utf-8');
             await fs.writeFile(join(this.folder, 'etags'), JSON.stringify({ ...JSON.parse(currEtag), '*cache': this.compileCache }));
         } finally {
+            await this.pushClean(result.clean);
             Lock.release(this.folder);
         }
         return result;
