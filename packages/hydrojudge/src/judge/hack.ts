@@ -2,7 +2,7 @@
 import { STATUS } from '@hydrooj/common';
 import { fs, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import checkers from '../checkers';
-import { del, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import signals from '../signals';
 import { Context } from './interface';
 
@@ -12,9 +12,12 @@ export async function judge(ctx: Context) {
         ctx.compile(ctx.lang, ctx.code),
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ctx.compileLocalFile('validator', ctx.config.validator),
-        ctx.session.fetchFile(null, { [ctx.files.hack]: '' }),
+        (async () => {
+            const f = await ctx.session.fetchFile(null, { [ctx.files.hack]: '' });
+            ctx.pushClean(() => fs.unlink(f));
+            return f;
+        })(),
     ]);
-    ctx.clean.push(() => fs.unlink(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const validateResult = await runQueued(
         validator.execute,
@@ -31,7 +34,7 @@ export async function judge(ctx: Context) {
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-    const res = await runQueued(
+    await using res = await runQueued(
         execute.execute,
         {
             stdin: { src: input },
@@ -72,8 +75,6 @@ export async function judge(ctx: Context) {
         if (code < 32 && signalled) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     }
-    await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
-
     if (message) ctx.next({ message });
 
     return ctx.end({

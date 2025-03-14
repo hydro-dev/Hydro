@@ -27,7 +27,7 @@ export const judge = async (ctx: JudgeTask) => {
     let totalStatus = 0;
 
     async function runGenerator(i: number) {
-        const res = await runQueued(
+        await using res = await runQueued(
             `${executeGenerator.execute} ${i}`,
             {
                 stdin: { content: ctx.input || '' },
@@ -41,9 +41,8 @@ export const judge = async (ctx: JudgeTask) => {
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.in`);
-        ctx.clean.push(() => {
+        ctx.pushClean(() => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,
@@ -80,7 +79,7 @@ export const judge = async (ctx: JudgeTask) => {
         return status === STATUS.STATUS_ACCEPTED ? tmp : null;
     }
     async function runStd(i: number, stdin: CopyInFile) {
-        const res = await runQueued(
+        await using res = await runQueued(
             `${executeStd.execute} ${i}`,
             {
                 stdin,
@@ -94,9 +93,8 @@ export const judge = async (ctx: JudgeTask) => {
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.out`);
-        ctx.clean.push(() => {
+        ctx.pushClean(() => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,
