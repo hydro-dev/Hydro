@@ -15,8 +15,12 @@ function judgeCase(c: NormalizedCase) {
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
+        await using cleanup = {
+            clean: async () => { },
+            async [Symbol.asyncDispose]() { await this.clean(); },
+        };
         if (ctx.config.subType === 'multi') {
-            await using res = await runQueued(
+            const res = await runQueued(
                 '/usr/bin/unzip foo.zip',
                 {
                     stdin: null,
@@ -27,6 +31,7 @@ function judgeCase(c: NormalizedCase) {
                     cacheStdoutAndStderr: true,
                 },
             );
+            cleanup.clean = async () => await res[Symbol.asyncDispose]();
             if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
