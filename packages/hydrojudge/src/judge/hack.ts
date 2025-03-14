@@ -34,7 +34,7 @@ export async function judge(ctx: Context) {
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-    const res = await runQueued(
+    await using res = await runQueued(
         execute.execute,
         {
             stdin: { src: input },
@@ -52,32 +52,29 @@ export async function judge(ctx: Context) {
     } = res;
     let { status } = res;
     let message: any = '';
-    try {
-        if (status === STATUS.STATUS_ACCEPTED) {
-            if (time > ctx.config.time) {
-                status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-            } else if (memory > ctx.config.memory * 1024) {
-                status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-            } else {
-                ({ status, message } = await checkers[ctx.config.checker_type]({
-                    execute: checker.execute,
-                    copyIn: checker.copyIn || {},
-                    input: { src: input },
-                    output: { content: '' },
-                    user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
-                    user_stderr: { fileId: res.fileIds.stderr },
-                    code: ctx.code,
-                    score: 100,
-                    detail: ctx.config.detail ?? true,
-                    env: { ...ctx.env, HYDRO_TESTCASE: '0' },
-                }));
-            }
-        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-            if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [code] };
+
+    if (status === STATUS.STATUS_ACCEPTED) {
+        if (time > ctx.config.time) {
+            status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
+        } else if (memory > ctx.config.memory * 1024) {
+            status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
+        } else {
+            ({ status, message } = await checkers[ctx.config.checker_type]({
+                execute: checker.execute,
+                copyIn: checker.copyIn || {},
+                input: { src: input },
+                output: { content: '' },
+                user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
+                user_stderr: { fileId: res.fileIds.stderr },
+                code: ctx.code,
+                score: 100,
+                detail: ctx.config.detail ?? true,
+                env: { ...ctx.env, HYDRO_TESTCASE: '0' },
+            }));
         }
-    } finally {
-        await res.cleanup();
+    } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
+        if (code < 32 && signalled) message = signals[code];
+        else message = { message: 'Your program returned {0}.', params: [code] };
     }
     if (message) ctx.next({ message });
 

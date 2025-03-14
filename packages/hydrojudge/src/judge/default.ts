@@ -8,7 +8,7 @@ import { Context, ContextSubTask } from './interface';
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-        const res = await runQueued(
+        await using res = await runQueued(
             ctx.execute.execute,
             {
                 stdin: { src: c.input },
@@ -57,7 +57,6 @@ function judgeCase(c: NormalizedCase) {
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
-        await res.cleanup();
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             return await runner(ctx, ctxSubtask);

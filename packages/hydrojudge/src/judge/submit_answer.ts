@@ -15,9 +15,8 @@ function judgeCase(c: NormalizedCase) {
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
-        let clean = async () => { };
         if (ctx.config.subType === 'multi') {
-            const res = await runQueued(
+            await using res = await runQueued(
                 '/usr/bin/unzip foo.zip',
                 {
                     stdin: null,
@@ -28,7 +27,6 @@ function judgeCase(c: NormalizedCase) {
                     cacheStdoutAndStderr: true,
                 },
             );
-            clean = res.cleanup;
             if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
@@ -38,23 +36,19 @@ function judgeCase(c: NormalizedCase) {
             }
             file = { fileId: res.fileIds[name] };
         }
-        try {
-            if (status === STATUS.STATUS_ACCEPTED) {
-                ({ status, score, message } = await checkers[ctx.config.checker_type]({
-                    execute: ctx.checker.execute,
-                    copyIn: ctx.checker.copyIn || {},
-                    input: { src: c.input },
-                    output: { src: c.output },
-                    user_stdout: file,
-                    user_stderr: { content: '' },
-                    code: ctx.code,
-                    score: c.score,
-                    detail: ctx.config.detail ?? true,
-                    env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
-                }));
-            }
-        } finally {
-            await clean();
+        if (status === STATUS.STATUS_ACCEPTED) {
+            ({ status, score, message } = await checkers[ctx.config.checker_type]({
+                execute: ctx.checker.execute,
+                copyIn: ctx.checker.copyIn || {},
+                input: { src: c.input },
+                output: { src: c.output },
+                user_stdout: file,
+                user_stderr: { content: '' },
+                code: ctx.code,
+                score: c.score,
+                detail: ctx.config.detail ?? true,
+                env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
+            }));
         }
         return {
             id: c.id,

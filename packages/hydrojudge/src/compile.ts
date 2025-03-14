@@ -14,7 +14,7 @@ export default async function compile(
     const command = copyIn['compile.sh'] ? '/bin/bash compile.sh' : lang.compile;
     if (command) {
         const {
-            status, stdout, stderr, fileIds, cleanup,
+            status, stdout, stderr, fileIds, [Symbol.asyncDispose]: cleanup,
         } = await runQueued(
             command,
             {
@@ -36,7 +36,7 @@ export default async function compile(
         return {
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
-            clean: cleanup,
+            clean: async () => await cleanup(),
             _cacheable: target,
         };
     }

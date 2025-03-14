@@ -195,9 +195,9 @@ const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('p
 export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
-): Promise<SandboxAdaptedResult[] & { cleanup: () => Promise<any> }>;
+): Promise<SandboxAdaptedResult[] & AsyncDisposable>;
 export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
-): Promise<SandboxAdaptedResult & { cleanup: () => Promise<any> }>;
+): Promise<SandboxAdaptedResult & AsyncDisposable>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
     arg2?: string | Parameter, arg3?: string | number, arg4?: number,
@@ -209,7 +209,7 @@ export function runQueued(
     return queue.add(async () => {
         const res = await runPiped(execute, pipeMapping, params, trace);
         const ret = single ? res[0] : res;
-        (ret as any).cleanup = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
         return ret;
     }, { priority });
 }

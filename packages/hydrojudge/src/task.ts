@@ -176,7 +176,7 @@ export class JudgeTask {
         await judge[type].judge(this);
     }
 
-    async pushClean(f: () => Promise<any>) {
+    async pushClean(f: () => any | Promise<any>) {
         if (this.finished) await f().catch(() => null);
         else this.clean.push(f);
     }
