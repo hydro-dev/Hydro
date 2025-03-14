@@ -100,7 +100,8 @@
             {{ rudoc._id }}
           </td>
           <td class="col--user">
-            {{ user.render_inline(udict[rudoc._id], badge=false) }}
+            {{ user.render_inline(rudoc, badge=false) }}
+            {% if not joined[rudoc._id] %}<span class="text-orange">({{ _('Not joined yet') }})</span>{% endif %}
           </td>
           <td class="col--role">
             {{ form.select({

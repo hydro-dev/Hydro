@@ -114,12 +114,11 @@ class DomainUserHandler extends ManageHandler {
         // TODO: switch to getListForRender for better performance
         const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
         const users = dudocs.filter((dudoc) => udict[dudoc.uid].priv & PRIV.PRIV_USER_PROFILE);
-        for (const role of roles) {
-            rudocs[role._id] = users.filter((dudoc) => dudoc.role === role._id).map((i) => udict[i.uid]);
-        }
+        const joined = Object.fromEntries(dudocs.map((dudoc) => [dudoc.uid, dudoc.join]));
+        for (const role of roles) rudocs[role._id] = users.filter((udoc) => udoc.role === role._id);
         this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
-            roles, rudocs, udict, domain: this.domain,
+            roles, rudocs, domain: this.domain, joined,
         };
     }
 
@@ -215,7 +214,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     async get() {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id).sort();
-        this.response.body.rolesWithText = roles.filter((i) => !['default', 'guest'].includes(i)).map((role) => [role, role]);
+        this.response.body.rolesWithText = roles.filter((i) => i !== 'guest').map((role) => [role, role]);
         this.response.body.joinSettings = domain.getJoinSettings(this.domain, roles);
         this.response.body.expirations = { ...domain.JOIN_EXPIRATION_RANGE };
         if (!this.response.body.joinSettings) {
@@ -279,33 +278,58 @@ class DomainJoinHandler extends Handler {
     joinSettings: any;
     noCheckPermView = true;
 
-    async prepare() {
-        const r = await domain.getRoles(this.domain);
+    @param('target', Types.DomainId, true)
+    async prepare({ domainId }, target: string = domainId) {
+        const [ddoc, dudoc] = await Promise.all([
+            domain.get(target),
+            domain.getDomainUser(target, this.user),
+        ]);
+        if (dudoc.join) throw new DomainJoinAlreadyMemberError(target, this.user._id);
+        const r = await domain.getRoles(ddoc);
         const roles = r.map((role) => role._id);
-        this.joinSettings = domain.getJoinSettings(this.domain, roles);
-        if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
-        if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
+        this.joinSettings = domain.getJoinSettings(ddoc, roles);
+        if (dudoc.role !== 'default') delete this.joinSettings;
+        else if (!this.joinSettings) throw new DomainJoinForbiddenError(target);
     }
 
     @param('code', Types.Content, true)
-    async get(domainId: string, code: string) {
+    @param('target', Types.DomainId, true)
+    @param('redirect', Types.Content, true)
+    async get({ domainId }, code: string, target: string = domainId, redirect: string = '') {
         this.response.template = 'domain_join.html';
-        this.response.body.joinSettings = this.joinSettings;
-        this.response.body.code = code;
+        const ddoc = await domain.get(target);
+        const domainInfo = {
+            name: ddoc.name,
+            owner: await user.getById(domainId, ddoc.owner),
+            avatar: ddoc.avatar,
+            bulletin: ddoc.showBulletin ? ddoc.bulletin : '',
+        };
+        this.response.body = {
+            joinSettings: this.joinSettings,
+            code,
+            redirect,
+            target,
+            domainInfo,
+        };
     }
 
     @param('code', Types.Content, true)
-    async post(domainId: string, code: string) {
-        if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
+    @param('target', Types.DomainId, true)
+    @param('redirect', Types.Content, true)
+    async post({ domainId }, code: string, target: string = domainId, redirect: string = '') {
+        if (this.joinSettings?.method === domain.JOIN_METHOD_CODE) {
             if (this.joinSettings.code !== code) {
-                throw new InvalidJoinInvitationCodeError(this.domain._id);
+                throw new InvalidJoinInvitationCodeError(target);
             }
         }
         await Promise.all([
-            domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role),
+            domain.setUserInDomain(target, this.user._id, {
+                join: true,
+                ...(this.joinSettings ? { role: this.joinSettings.role } : {}),
+            }),
             oplog.log(this, 'domain.join', {}),
         ]);
-        this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
+        this.response.redirect = redirect || this.url('homepage', { domainId: target, query: { notification: 'Successfully joined domain.' } });
     }
 }
 

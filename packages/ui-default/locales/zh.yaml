@@ -489,6 +489,8 @@ IOI(Strict): IOI(严格)
 Is rated: 计入排名
 It works!: 它成了！
 Italic: 斜体
+Join Domain to Create a Discussion: 加入域后创建讨论
+Join Domain to Submit: 加入域后递交
 Join: 加入
 Judge Config: 评测设置
 Judge Status: 评测状态
@@ -603,6 +605,7 @@ Not Attended: 未参加
 Not available: 不可用
 Not Claimed: 未认领
 Not Enrolled: 未参加
+Not joined yet: 暂未加入
 Not started with a number: 不以数字开头
 Not wrapped with space: 两侧不含空格
 Numeric PID: 数字题号
@@ -698,9 +701,9 @@ problem_import: 导入题目
 problem_main: 题库
 problem_solution: 题解
 problem_submit: 递交代码
+problem_type.communication: 通信题
 problem_type.default: 传统题
 problem_type.interactive: 交互题
-problem_type.communication: 通信题
 problem_type.objective: 客观题
 problem_type.remote_judge: 远端评测题
 problem_type.submit_answer: 提交答案题

@@ -25,14 +25,6 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('Settings') }}</h1>
   </div>
-  {% if rolesWithText.length == 1 %}
-    <div class="section__body typo">
-      <blockquote class="warn">
-        <p>{{ _("The 'default' role applies to ALL REGISTERED USER.")|safe }}</p>
-        <p>{{ _("You may want to create a new role in 'Manage Role' page.")|safe }}</p>
-      </blockquote>
-    </div>
-  {% endif %}
   <div class="section__body">
     <form method="POST">
       {{ form.form_select({
