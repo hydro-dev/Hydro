@@ -212,6 +212,14 @@ export async function apply(ctx: Context) {
                             redirect: (this.context.originalPath || this.request.path) + this.context.search,
                         },
                     });
+                } else if (!this.user._dudoc.join && error instanceof PermissionError) {
+                    this.response.redirect = this.url('domain_join', {
+                        domainId: 'system',
+                        query: {
+                            redirect: (this.context.originalPath || this.request.path) + this.context.search,
+                            target: this.domain._id,
+                        },
+                    });
                 } else {
                     this.response.status = error instanceof UserFacingError ? error.code : 500;
                     this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
