@@ -52,31 +52,33 @@ export async function judge(ctx: Context) {
     } = res;
     let { status } = res;
     let message: any = '';
-    if (status === STATUS.STATUS_ACCEPTED) {
-        if (time > ctx.config.time) {
-            status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-        } else if (memory > ctx.config.memory * 1024) {
-            status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-        } else {
-            ({ status, message } = await checkers[ctx.config.checker_type]({
-                execute: checker.execute,
-                copyIn: checker.copyIn || {},
-                input: { src: input },
-                output: { content: '' },
-                user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
-                user_stderr: { fileId: res.fileIds.stderr },
-                code: ctx.code,
-                score: 100,
-                detail: ctx.config.detail ?? true,
-                env: { ...ctx.env, HYDRO_TESTCASE: '0' },
-            }));
+    try {
+        if (status === STATUS.STATUS_ACCEPTED) {
+            if (time > ctx.config.time) {
+                status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
+            } else if (memory > ctx.config.memory * 1024) {
+                status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
+            } else {
+                ({ status, message } = await checkers[ctx.config.checker_type]({
+                    execute: checker.execute,
+                    copyIn: checker.copyIn || {},
+                    input: { src: input },
+                    output: { content: '' },
+                    user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
+                    user_stderr: { fileId: res.fileIds.stderr },
+                    code: ctx.code,
+                    score: 100,
+                    detail: ctx.config.detail ?? true,
+                    env: { ...ctx.env, HYDRO_TESTCASE: '0' },
+                }));
+            }
+        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
+            if (code < 32 && signalled) message = signals[code];
+            else message = { message: 'Your program returned {0}.', params: [code] };
         }
-    } else if (status === STATUS.STATUS_RUNTIME_ERROR && code) {
-        if (code < 32 && signalled) message = signals[code];
-        else message = { message: 'Your program returned {0}.', params: [code] };
+    } finally {
+        await res.cleanup();
     }
-    await res.cleanup();
-
     if (message) ctx.next({ message });
 
     return ctx.end({
