@@ -158,11 +158,11 @@ export default class HMR extends Service {
         for (const filename in require.cache) {
             const module = require.cache[filename];
             const plugin = unwrapExports(module.exports);
-            if (typeof plugin !== 'object' || !plugin || !('apply' in plugin)) continue;
+            if (!plugin) continue;
             const runtime = this.ctx.registry.get(plugin);
             if (!runtime || this.declined.has(filename)) continue;
             pending.set(filename, plugin);
-            if (!plugin || !('sideEffect' in plugin) || !plugin['sideEffect']) this.declined.add(filename);
+            if (!plugin?.sideEffect) this.declined.add(filename);
         }
 
         for (const [filename, plugin] of pending) {

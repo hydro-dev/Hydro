@@ -550,7 +550,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer?) {
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?) {
         const { args } = ctx.HydroContext;
         const h = new HandlerClass(ctx, this.ctx);
         // FIXME: should pass type check
@@ -581,6 +581,23 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         ctx.handler = h;
         h.conn = conn;
         const disposables = [];
+        let interval: NodeJS.Timeout;
+        let closed = false;
+
+        const clean = async (err?: Error) => {
+            if (closed) return;
+            closed = true;
+            if (err) await h.onerror(err);
+            // FIXME: should pass type check
+            else (this.ctx.emit as any)('connection/close', h);
+            h.active = false;
+            for (const d of disposables) d();
+            if (layer) layer.clients.delete(conn);
+            if (err && !layer) ctx.status = 500;
+            if (interval) clearInterval(interval);
+            h.cleanup?.(args);
+        };
+
         try {
             // FIXME: should pass type check
             await (this.ctx.parallel as any)('handler/create', h, 'ws');
@@ -591,18 +608,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             if (h.prepare) await h.prepare(args);
             // eslint-disable-next-line @typescript-eslint/no-shadow
             for (const { name, target } of h.__subscribe || []) disposables.push(this.ctx.on(name, target.bind(h)));
-            let closed = false;
-            let interval: NodeJS.Timeout;
-            const clean = () => {
-                if (closed) return;
-                closed = true;
-                // FIXME: should pass type check
-                (this.ctx.emit as any)('connection/close', h);
-                if (layer) layer.clients.delete(conn);
-                if (interval) clearInterval(interval);
-                for (const d of disposables) d();
-                h.cleanup?.(args);
-            };
             if (layer) {
                 let lastHeartbeat = Date.now();
                 interval = setInterval(() => {
@@ -615,7 +620,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 conn.on('pong', () => {
                     lastHeartbeat = Date.now();
                 });
-                conn.onmessage = (e) => {
+                conn.onmessage = async (e) => {
                     lastHeartbeat = Date.now();
                     if (e.data === 'pong') return;
                     if (e.data === 'ping') {
@@ -629,7 +634,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                         conn.close();
                     }
                     try {
-                        h.message?.(payload);
+                        await h.message?.(payload);
                     } catch (err) {
                         logger.error(e);
                     }
@@ -637,15 +642,20 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             } else ctx.body = stream;
             // FIXME: should pass type check
             await (this.ctx.parallel as any)('connection/active', h as any);
+            h.active = true;
             if (layer) {
                 if (conn.readyState === conn.OPEN) {
-                    conn.on('close', clean);
+                    conn.on('close', () => clean());
+                    conn.on('error', (err) => clean(err));
                     conn.resume();
                 } else clean();
-            } else stream.on('close', clean);
+            } else {
+                stream.on('close', () => clean());
+                stream.on('error', (err) => clean(err));
+            }
         } catch (e) {
-            await h.onerror(e);
-            if (!layer) ctx.status = 500;
+            // error during initialization (prepare, hooks)
+            await clean(e);
         }
     }
 
