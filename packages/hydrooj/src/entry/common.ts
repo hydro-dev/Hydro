@@ -22,35 +22,31 @@ function locateFile(basePath: string, filenames: string[]) {
     return null;
 }
 
-type LoadTask = 'handler' | 'model' | 'addon' | 'lib' | 'script' | 'service';
-const getLoader = (type: LoadTask, filename: string, dontLoad = false) => async function loader(pending: string[], fail: string[], ctx: Context) {
-    for (const i of pending) {
+type LoadTask = 'model' | 'addon' | 'service';
+const getLoader = (type: LoadTask, filename: string) => async function loader(pending: Record<string, string>, fail: string[], ctx: Context) {
+    for (const [name, i] of Object.entries(pending)) {
         const p = locateFile(i, [`${filename}.ts`, `${filename}.js`]);
         if (p && !fail.includes(i)) {
-            const name = type.replace(/^(.)/, (t) => t.toUpperCase());
+            const loadType = type.replace(/^(.)/, (t) => t.toUpperCase());
             try {
-                if (dontLoad) throw new Error(`deprecated ${name} in %s will not be load: ${i}`);
                 const m = unwrapExports(require(p));
-                if (m.apply) ctx.loader.reloadPlugin(p, '');
-                else logger.info(`${name} init: %s`, i);
+                if (m.apply) ctx.loader.reloadPlugin(p, name);
+                else logger.info(`${loadType} init: %s`, i);
             } catch (e) {
                 fail.push(i);
                 app.injectUI(
-                    'Notification', `${name} load fail: {0}`,
+                    'Notification', `${loadType} load fail: {0}`,
                     { args: [i], type: 'warn' }, PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION,
                 );
-                logger.info(`${name} load fail: %s`, i);
+                logger.info(`${loadType} load fail: %s`, i);
                 logger.error(e);
             }
         }
     }
 };
 
-export const handler = getLoader('handler', 'handler', true);
 export const addon = getLoader('addon', 'index');
 export const model = getLoader('model', 'model');
-export const lib = getLoader('lib', 'lib', true);
-export const script = getLoader('script', 'script', true);
 export const service = getLoader('service', 'service');
 
 export async function builtinModel(ctx: Context) {
@@ -58,12 +54,12 @@ export async function builtinModel(ctx: Context) {
     const models = await fs.readdir(modelDir);
     for (const t of models.filter((i) => i.endsWith('.ts'))) {
         const q = path.resolve(modelDir, t);
-        if ('apply' in require(q)) ctx.loader.reloadPlugin(q, '', `hydrooj/model/${t.split('.')[0]}`);
+        if ('apply' in require(q)) ctx.loader.reloadPlugin(q, '');
     }
 }
 
-export async function locale(pending: string[], fail: string[]) {
-    for (const i of pending) {
+export async function locale(pending: Record<string, string>, fail: string[]) {
+    for (const i of Object.values(pending)) {
         const p = locateFile(i, ['locale', 'locales']);
         if (p && (await fs.stat(p)).isDirectory() && !fail.includes(i)) {
             try {
@@ -85,14 +81,14 @@ export async function locale(pending: string[], fail: string[]) {
     }
 }
 
-export async function setting(pending: string[], fail: string[], modelSetting: typeof import('../model/setting')) {
+export async function setting(pending: Record<string, string>, fail: string[], modelSetting: typeof import('../model/setting')) {
     const map = {
         system: modelSetting.SystemSetting,
         account: modelSetting.AccountSetting,
         preference: modelSetting.PreferenceSetting,
         domain: modelSetting.DomainSetting,
     };
-    for (const i of pending) {
+    for (const i of Object.values(pending)) {
         let p = path.resolve(i, 'setting.yaml');
         const t = i.split(path.sep);
         // TODO: change this name setting to package name

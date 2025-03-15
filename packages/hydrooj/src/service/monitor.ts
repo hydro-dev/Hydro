@@ -39,7 +39,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         problemCount,
         discussionCount,
         recordCount,
-        addons: global.addons,
+        addons: Object.values(global.addons),
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,

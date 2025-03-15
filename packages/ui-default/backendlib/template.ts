@@ -252,7 +252,7 @@ export class TemplateService extends Service {
   }
 
   async [Service.setup]() {
-    const pending = global.addons;
+    const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {
       const p = locateFile(i, ['template', 'templates']);

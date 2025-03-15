@@ -97,27 +97,29 @@ export class Loader extends Service {
         }
     }
 
-    resolveConfig(plugin: any, configScope: string) {
+    async resolveConfig(plugin: any, configScope: string) {
         const schema = plugin['Config'] || plugin['schema'];
         if (!schema) return {};
         const schemaRequest = configScope ? Schema.object({
             [configScope]: schema,
         }) : schema;
+        await this.ctx.config._tryMigrateConfig(schemaRequest);
         const res = this.ctx.config.requestConfig(schemaRequest);
         return configScope ? res[configScope] : res;
     }
 
-    async reloadPlugin(key: string, configScope: string, asName = '') {
-        const plugin = await this.resolvePlugin(key);
+    async reloadPlugin(key: string, configScope: string) {
+        const plugin = this.resolvePlugin(key);
         if (!plugin) return;
-        const config = this.resolveConfig(plugin, configScope);
-        if (asName) plugin.name = asName;
+        const config = await this.resolveConfig(plugin, configScope);
         let fork = this.state[key];
+        logger.info(
+            `%s plugin %c${configScope ? ' with scope %c' : ''}`,
+            fork ? 'reload' : 'apply', key.split('node_modules').pop(), configScope,
+        );
         if (fork) {
-            logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
-            logger.info('apply plugin %c', key.split('node_modules').pop());
             fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
             this.state[key] = fork;
@@ -125,7 +127,7 @@ export class Loader extends Service {
         return fork;
     }
 
-    async resolvePlugin(name: string) {
+    resolvePlugin(name: string) {
         try {
             this.cache[name] ||= require.resolve(name);
         } catch (err) {
@@ -159,7 +161,7 @@ async function preload() {
             const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
             global.Hydro.version[name] = payload.version;
             const modulePath = path.dirname(packagejson);
-            global.addons.push(modulePath);
+            global.addons[name] = modulePath;
         } catch (e) {
             logger.error(`Addon not found: ${a}`);
             logger.error(e);

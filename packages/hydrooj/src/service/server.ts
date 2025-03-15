@@ -106,7 +106,7 @@ export async function apply(ctx: Context) {
             }
         });
 
-        for (const addon of [...global.addons].reverse()) {
+        for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');
             if (!fs.existsSync(dir)) continue;
             server.addServerLayer(`${addon}_public`, cache(dir, {

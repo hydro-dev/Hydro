@@ -23,7 +23,7 @@ if (!global.Hydro) {
         error: {},
         locales: {},
     };
-    global.addons = [];
+    global.addons = {};
 }
 global.app = new (require('./context').Context)();
 process.on('exit', () => {

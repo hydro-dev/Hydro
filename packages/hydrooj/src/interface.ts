@@ -655,5 +655,5 @@ declare global {
     var bus: Context; // eslint-disable-line
     var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
-    var addons: string[]; // eslint-disable-line
+    var addons: Record<string, string>; // eslint-disable-line
 }

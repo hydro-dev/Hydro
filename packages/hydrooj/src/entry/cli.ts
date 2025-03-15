@@ -119,7 +119,7 @@ export async function load(ctx: Context) {
             resolve(c);
         });
     });
-    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file', 'hydrooj/service/storage');
+    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file');
     require('../lib/index');
     await Promise.all([
         lib(pending, fail, ctx),
@@ -138,7 +138,7 @@ export async function load(ctx: Context) {
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
     for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '', `hydrooj/script/${h.split('.')[0]}`);
+        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '');
     }
     await script(pending, fail, ctx);
     await cli();

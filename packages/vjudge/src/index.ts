@@ -189,6 +189,8 @@ class VJudgeService extends Service {
     private providers: Record<string, any> = {};
     private pool: Record<string, AccountService> = {};
     async [Service.setup]() {
+        if (process.env.NODE_APP_INSTANCE !== '0') return;
+        if (process.env.HYDRO_CLI) return;
         this.accounts = await coll.find().toArray();
         this.ctx.setInterval(this.sync.bind(this), Time.week);
     }
@@ -258,9 +260,9 @@ export * from './interface';
 
 export const name = 'vjudge';
 export async function apply(ctx: Context) {
+    ctx.plugin(VJudgeService);
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (process.env.HYDRO_CLI) return;
-    ctx.plugin(VJudgeService);
     ctx.inject(['migration'], async (c) => {
         c.migration.registerChannel('vjudge', [
             async function init() { }, // eslint-disable-line
