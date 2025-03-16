@@ -676,7 +676,6 @@ class ScoreboardService extends Service {
     views: Record<string, ScoreboardView<any>> = {};
     constructor(ctx: Context) {
         super(ctx, 'scoreboard');
-        ctx.set('scoreboard', this);
     }
 
     addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }>(

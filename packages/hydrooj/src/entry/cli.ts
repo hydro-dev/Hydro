@@ -10,7 +10,7 @@ import { load as loadOptions } from '../options';
 import { MongoService } from '../service/db';
 import { ConfigService } from '../settings';
 import {
-    addon, builtinModel, lib, model, script, service, setting,
+    addon, builtinModel, model, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -122,7 +122,6 @@ export async function load(ctx: Context) {
     await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file');
     require('../lib/index');
     await Promise.all([
-        lib(pending, fail, ctx),
         service(pending, fail, ctx),
     ]);
     ctx.plugin(require('../service/worker'));
@@ -140,6 +139,5 @@ export async function load(ctx: Context) {
     for (const h of await fs.readdir(scriptDir)) {
         ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '');
     }
-    await script(pending, fail, ctx);
     await cli();
 }

@@ -24,6 +24,7 @@ factory.addExporter(new Exporter.Console({
     },
     timestamp: Date.now(),
 }));
+factory.exporters.get(1).levels = { default: process.env.DEV ? 3 : 2 };
 
 function createLogger(name: string) {
     return factory.createLogger(name);

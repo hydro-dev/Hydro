@@ -437,7 +437,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             ...this.handlerLayers,
             {
                 name: '404',
-                func: (t) => this.handleHttp(t, NotFoundHandler, () => true),
+                func: (t) => this.handleHttp(t, NotFoundHandler, () => true, this.ctx),
             },
         ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
@@ -471,10 +471,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, this.ctx);
+        const h = new HandlerClass(ctx, savedContext);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
         const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
@@ -550,9 +550,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?) {
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, this.ctx);
+        const h = new HandlerClass(ctx, savedContext);
         // FIXME: should pass type check
         await (this.ctx.parallel as any)('connection/create', h);
         const stream = new PassThrough();
@@ -695,18 +695,19 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             };
         };
 
-        // if (name === 'ContestScoreboard') {
-        //     console.log('-------------', this.ctx, this.ctx.scoreboard);
-        // }
-
+        // We hope to use parent context for handler (the context that calls register)
+        // So that handler can use services injected before calling register
+        const savedContext = Object.hasOwn(this.ctx, Symbol.for('cordis.shadow'))
+            ? Object.getPrototypeOf(this.ctx)
+            : this.ctx;
         if (type === 'route') {
-            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
+            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker), savedContext));
         } else {
             const checker = Checker(permPrivChecker);
             const layer = router.ws(path, async (conn, _req, ctx) => {
-                await this.handleWS(ctx as any, HandlerClass, checker, conn, layer);
+                await this.handleWS(ctx as any, HandlerClass, checker, conn, layer, savedContext);
             });
-            router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null));
+            router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
         }
         const dispose = router.disposeLastOp;
         // @ts-ignore

@@ -10,7 +10,7 @@ import { load } from '../options';
 import { MongoService } from '../service/db';
 import { ConfigService } from '../settings';
 import {
-    addon, builtinModel, locale, model, service,
+    addon, builtinModel, locale, model, service, setting,
 } from './common';
 
 const argv = cac().parse();
@@ -58,6 +58,7 @@ export async function apply(ctx: Context) {
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
+    await setting(pending, fail, require('../model/setting'));
 
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);

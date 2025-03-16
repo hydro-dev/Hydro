@@ -119,8 +119,8 @@ export default class ElasticSearchService extends Service {
             Schema.object({
                 domainId: Schema.string(),
             }),
-            this.run,
+            this.run.bind(this),
         );
-        this.ctx.provideModule('problemSearch', 'elastic', this.problemSearch);
+        this.ctx.provideModule('problemSearch', 'elastic', this.problemSearch.bind(this));
     }
 }
