@@ -322,6 +322,7 @@ export interface WebServiceConfig {
     host?: string;
     xff?: string;
     xhost?: string;
+    enableSSE?: boolean;
 }
 
 export class WebService<C extends CordisContext = CordisContext> extends Service<C> {
@@ -707,7 +708,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             const layer = router.ws(path, async (conn, _req, ctx) => {
                 await this.handleWS(ctx as any, HandlerClass, checker, conn, layer, savedContext);
             });
-            router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
+            if (this.config.enableSSE) router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
         }
         const dispose = router.disposeLastOp;
         // @ts-ignore
