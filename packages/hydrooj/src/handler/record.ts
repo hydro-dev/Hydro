@@ -157,8 +157,9 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     // eslint-disable-next-line consistent-return
     async get(domainId: string, rid: ObjectId, download = false, rev?: ObjectId) {
         let rdoc = this.rdoc;
-        const allRev: ObjectId[] = (await record.collHistory.find({ rid }).project({ _id: 1 }).toArray()).map((i) => i._id);
-        if (rev && allRev.some((i) => i.equals(rev))) {
+        const allRev = await record.collHistory.find({ rid }).project({ _id: 1, judgeAt: 1 }).sort({ _id: -1 }).toArray();
+        const allRevs: Record<string, Date> = Object.fromEntries(allRev.map((i) => [i._id.toString(), i.judgeAt]));
+        if (rev && allRevs[rev.toString()]) {
             rdoc = { ...rdoc, ...omit(await record.collHistory.findOne({ _id: rev }), ['_id']) };
         }
         let canViewDetail = true;
@@ -203,7 +204,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         } else if (download) return await this.download();
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc, rev, allRev,
+            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc, rev, allRevs,
         };
     }
 
