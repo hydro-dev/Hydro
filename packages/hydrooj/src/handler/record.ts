@@ -153,9 +153,14 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
 
     @param('rid', Types.ObjectId)
     @param('download', Types.Boolean)
+    @param('rev', Types.ObjectId, true)
     // eslint-disable-next-line consistent-return
-    async get(domainId: string, rid: ObjectId, download = false) {
-        const rdoc = this.rdoc;
+    async get(domainId: string, rid: ObjectId, download = false, rev?: ObjectId) {
+        let rdoc = this.rdoc;
+        const allRev: ObjectId[] = (await record.collHistory.find({ rid }).project({ _id: 1 }).toArray()).map((i) => i._id);
+        if (rev && allRev.some((i) => i.equals(rev))) {
+            rdoc = { ...rdoc, ...omit(await record.collHistory.findOne({ _id: rev }), ['_id']) };
+        }
         let canViewDetail = true;
         if (rdoc.contest?.toString().startsWith('0'.repeat(23))) {
             if (rdoc.uid !== this.user._id) throw new PermissionError(PERM.PERM_READ_RECORD_CODE);
@@ -198,7 +203,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
         } else if (download) return await this.download();
         this.response.template = 'record_detail.html';
         this.response.body = {
-            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc,
+            udoc, rdoc: canViewDetail ? rdoc : pick(rdoc, ['_id', 'lang', 'code']), pdoc, tdoc: this.tdoc, rev, allRev,
         };
     }
 
