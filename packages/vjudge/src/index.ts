@@ -185,7 +185,7 @@ class VJudgeService extends Service {
         super(ctx, 'vjudge');
     }
 
-    accounts: RemoteAccount[];
+    accounts: RemoteAccount[] = [];
     private providers: Record<string, any> = {};
     private pool: Record<string, AccountService> = {};
     async [Service.setup]() {

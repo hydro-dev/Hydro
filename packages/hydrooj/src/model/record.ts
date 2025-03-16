@@ -234,7 +234,7 @@ export default class RecordModel {
     }
 
     static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
-        const rids = rid instanceof Array ? rid : [rid];
+        const rids = Array.isArray(rid) ? rid : [rid];
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -281,7 +281,7 @@ export default class RecordModel {
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     // Mark problem as deleted
     ctx.on('problem/delete', (domainId, docId) => Promise.all([
         RecordModel.coll.deleteMany({ domainId, pid: docId }),
@@ -305,7 +305,7 @@ export function apply(ctx: Context) {
             }, { upsert: true });
         }
     });
-    ctx.on('ready', () => Promise.all([
+    await Promise.all([
         db.ensureIndexes(
             RecordModel.coll,
             { key: { domainId: 1, pid: 1 }, name: 'delete' },
@@ -322,6 +322,10 @@ export function apply(ctx: Context) {
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
             { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
         ),
-    ]) as any);
+        db.ensureIndexes(
+            RecordModel.collHistory,
+            { key: { rid: 1, _id: -1 }, name: 'basic' },
+        ),
+    ]);
 }
 global.Hydro.model.record = RecordModel;

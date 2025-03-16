@@ -7,13 +7,13 @@ import { Context, Service } from '../context';
 import { PERM, PRIV } from '../model/builtin';
 import { Handler } from './server';
 
-const types: Record<string, Record<string, string>> = {};
-const unions: Record<string, string> = {};
-const descriptions: Record<string, Record<string, string>> = {};
+const types: Record<string, Record<string, string>> = Object.create(null);
+const unions: Record<string, string> = Object.create(null);
+const descriptions: Record<string, Record<string, string>> = Object.create(null);
 const handlers: Record<string, Record<string, any>> = {
-    Query: {},
+    Query: Object.create(null),
 };
-let root: Record<string, any> = {};
+let root: Record<string, any> = Object.create(null);
 
 interface ApiContext extends ApiHandler {
     [key: string]: any;

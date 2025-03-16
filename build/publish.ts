@@ -36,11 +36,11 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
             if (tag === 'dev') {
                 try {
                     const result = await packageJson(meta.name, { version: meta.version });
-                    if (typeof result?.version === meta.version) return progress++; // no change on dev version
+                    if (result?.version === meta.version) return progress++; // no change on dev version
                 } catch (e) {
                     // expected
                 }
-            }
+            } else if (prerelease(meta.version)) return progress++; // Refuse to publish prerelease as 'latest' tag
             if (!meta.private && /^[0-9.]+$/.test(meta.version)) {
                 try {
                     const { version } = await packageJson(meta.name, { version: tag });
@@ -57,6 +57,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
             console.error(e);
         }
         spinner.text = `Loading workspaces (${++progress}/${folders.length})`;
+        return progress;
     }));
     spinner.succeed();
 

@@ -132,6 +132,7 @@ Hydro 用户群：1085853538
 - ui: 更新系统设置页面样式
 - import-qduoj: 修复 spj=null
 - core: 修复文件复制
+- core: 支持存储并显示提交记录重测历史
 
 ### Breaking API Changes
 
