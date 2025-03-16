@@ -106,7 +106,7 @@
         {% endif %}
       </div>
     </div>
-    {% if allRev|length %}
+    {% if allRevs|length %}
       <div class="section side">
         <div class="section__header">
           <h1 class="section__title">{{ _('History') }}</h1>
@@ -118,10 +118,10 @@
                 {{ _('Latest Version') }}
               </a>
             </li>
-            {% for r in allRev %}
+            {% for r, rtime in allRevs %}
             <li class="menu__item">
               <a href="?rev={{ r }}" {% if rev and rev.equals(r) %}style="border-color: #4690d0;"{% endif %} class="menu__link">
-                {{ _('Version') }} {{ loop.index }}
+                {{ datetimeSpan(rtime, false)|safe }}
               </a>
             </li>
             {% endfor %}
