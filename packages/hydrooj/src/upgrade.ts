@@ -702,4 +702,12 @@ export const coreScripts: MigrationScript[] = [
         });
     },
     // Start Hydro v5
+    async function _91_92() {
+        await db.collection('domain.user').updateMany({}, { $set: { join: true } });
+        const ddocs = await domain.coll.updateMany(
+            { _join: { $or: [{ $exists: false }, { $eq: null }] } },
+            { $set: { _join: { method: domain.JOIN_METHOD_ALL, role: 'default', expire: null }, _migratedJoin: true } },
+        );
+        return true;
+    },
 ];
