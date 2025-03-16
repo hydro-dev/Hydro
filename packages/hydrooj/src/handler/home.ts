@@ -468,36 +468,33 @@ class UserChangemailWithCodeHandler extends Handler {
 
 class HomeDomainHandler extends Handler {
     @query('all', Types.Boolean)
-    async get(domainId: string, all: boolean) {
-        let res: DomainDoc[] = [];
-        let dudict: Record<string, any> = {};
+    async get({ }, all: boolean) {
+        let ddocs: DomainDoc[] = [];
+        const role: Record<string, string> = {};
         if (!all) {
-            dudict = await domain.getDictUserByDomainId(this.user._id);
+            const dudict = await domain.getDictUserByDomainId(this.user._id);
             const dids = Object.keys(dudict);
-            res = await domain.getMulti({ _id: { $in: dids } }).toArray();
+            ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
         } else {
             this.checkPriv(PRIV.PRIV_VIEW_ALL_DOMAIN);
-            res = await domain.getMulti().toArray();
-            await Promise.all(res.map(async (ddoc) => {
-                dudict[ddoc._id] = await user.getById(domainId, this.user._id);
-            }));
+            ddocs = await domain.getMulti().toArray();
         }
         const canManage = {};
-        const ddocs = [];
-        for (const ddoc of res) {
-            // eslint-disable-next-line no-await-in-loop
-            const udoc = (await user.getById(ddoc._id, this.user._id))!;
-            const dudoc = dudict[ddoc._id];
-            if (['default', 'guest'].includes(dudoc.role) && this.domain._id !== ddoc._id) {
-                delete dudict[ddoc._id];
-                continue;
+        if (this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) {
+            for (const ddoc of ddocs) {
+                canManage[ddoc._id] = true;
+                role[ddoc._id] = 'root';
             }
-            ddocs.push(ddoc);
-            canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)
-                || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+        } else {
+            for (const ddoc of ddocs) {
+                // eslint-disable-next-line no-await-in-loop
+                const udoc = (await user.getById(ddoc._id, this.user._id))!;
+                canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN);
+                role[ddoc._id] = udoc.role;
+            }
         }
         this.response.template = 'home_domain.html';
-        this.response.body = { ddocs, dudict, canManage };
+        this.response.body = { ddocs, canManage, role };
     }
 
     @param('id', Types.String)

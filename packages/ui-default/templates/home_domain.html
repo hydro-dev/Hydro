@@ -37,7 +37,7 @@
             {{ ddoc['name'] }} ({{ ddoc['_id'] }})
           </td>
           <td class="col--role">
-            {{ dudict[ddoc._id].role|default('default') }}
+            {{ role[ddoc._id]|default('default') }}
           </td>
           <td class="col--action">
             <a class="typo-a" href="{{ url('homepage', domainId=ddoc['_id']) }}">{{ _('Visit') }}</a>
