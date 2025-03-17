@@ -4,6 +4,7 @@ extends:
 plugins:
 - react
 - react-refresh
+- react-hooks
 - jsx-a11y
 rules:
   react-hooks/exhaustive-deps: 0

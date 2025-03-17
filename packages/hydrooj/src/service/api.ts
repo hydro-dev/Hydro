@@ -13,7 +13,7 @@ const descriptions: Record<string, Record<string, string>> = Object.create(null)
 const handlers: Record<string, Record<string, any>> = {
     Query: Object.create(null),
 };
-let root: Record<string, any> = Object.create(null);
+const root: Record<string, any> = handlers.Query;
 
 interface ApiContext extends ApiHandler {
     [key: string]: any;
@@ -31,7 +31,6 @@ function setDescription(desc: string) {
 
 let schema: GraphQLSchema;
 let schemaStr = '';
-root = handlers.Query;
 
 const applyAuthDirective = (s) => mapSchema(s, {
     // eslint-disable-next-line consistent-return

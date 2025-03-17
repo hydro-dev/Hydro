@@ -46,7 +46,7 @@
         "cross-spawn": "^7.0.6",
         "esbuild": "0.25.0",
         "eslint": "^8.57.1",
-        "eslint-import-resolver-typescript": "^3.9.1",
+        "eslint-import-resolver-typescript": "^4.1.1",
         "eslint-import-resolver-webpack": "^0.13.10",
         "fs-extra": "^11.3.0",
         "globby": "~14.0.2",

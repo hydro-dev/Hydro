@@ -34,6 +34,7 @@ const config = {
     compilerOptions: compilerOptionsBase,
     references: [
         { path: 'tsconfig.ui.json' },
+        { path: 'tsconfig.ui-next.json' },
         { path: 'plugins/tsconfig.json' },
     ],
     files: [],
@@ -89,8 +90,7 @@ const UIConfig = {
     include: ['ts', 'tsx', 'vue', 'json']
         .flatMap((ext) => ['plugins']
             .flatMap((name) => [`${name}/**/public/**/*.${ext}`, `${name}/**/frontend/**/*.${ext}`])
-            .concat(`packages/ui-default/**/*.${ext}`)
-            .concat(`packages/ui-next/src/**/*.${ext}`)),
+            .concat(`packages/ui-default/**/*.${ext}`)),
     compilerOptions: {
         ...compilerOptionsBase,
         module: 'ESNext',
@@ -118,6 +118,48 @@ const UIConfig = {
             ],
         },
     },
+};
+
+const UINextConfig = {
+    exclude: [
+        '**/node_modules',
+    ],
+    include: ['ts', 'tsx', 'vue', 'json'].map((ext) => `packages/ui-next/src/**/*.${ext}`),
+    compilerOptions: {
+        ...compilerOptionsBase,
+        module: 'ESNext',
+        skipLibCheck: true,
+        allowSyntheticDefaultImports: true,
+        baseUrl: '.',
+        jsx: 'react-jsx',
+        outDir: path.join(baseOutDir, 'ui-next'),
+
+        strict: true,
+
+        useDefineForClassFields: true,
+        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+
+        /* Bundler mode */
+        moduleResolution: 'bundler',
+        moduleDetection: 'force',
+        noEmit: true,
+
+        /* Linting */
+        noFallthroughCasesInSwitch: true,
+        noUncheckedSideEffectImports: true,
+
+        paths: {
+            '@/*': [
+                './packages/ui-next/*',
+            ],
+        },
+    },
+};
+
+const tryUpdate = (location, content) => {
+    const current = fs.existsSync(location) ? fs.readFileSync(location, 'utf-8') : '';
+    const expected = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+    if (expected !== current) fs.writeFileSync(location, expected);
 };
 
 const nm = path.resolve(__dirname, '../node_modules');
@@ -148,7 +190,7 @@ const pluginsConfig = {
         },
     },
 };
-fs.writeFileSync(path.resolve(process.cwd(), 'plugins', 'tsconfig.json'), JSON.stringify(pluginsConfig));
+tryUpdate(path.resolve(process.cwd(), 'plugins', 'tsconfig.json'), pluginsConfig);
 
 for (const pkg of modules) {
     const basedir = path.resolve(process.cwd(), pkg);
@@ -162,9 +204,7 @@ for (const pkg of modules) {
     config.references.push({ path: pkg });
     const origConfig = (files.includes('src') ? configSrc : configFlat)(pkg);
     const expectedConfig = JSON.stringify(pkg.startsWith('modules/') ? withoutTypes(origConfig) : origConfig);
-    const configPath = path.resolve(basedir, 'tsconfig.json');
-    const currentConfig = fs.existsSync(configPath) ? fs.readFileSync(configPath, 'utf-8') : '';
-    if (expectedConfig !== currentConfig) fs.writeFileSync(configPath, expectedConfig);
+    tryUpdate(path.resolve(basedir, 'tsconfig.json'), expectedConfig);
     if (!files.includes('src')) continue;
     // Create mapping entry
     for (const file of fs.readdirSync(path.resolve(basedir, 'src'))) {
@@ -172,9 +212,10 @@ for (const pkg of modules) {
         const name = file.split('.')[0];
         const filePath = path.resolve(basedir, `${name}.js`);
         if (name === 'index' && !fs.existsSync(filePath)) {
-            fs.writeFileSync(filePath, 'module.exports = require("./src/index");\n');
+            tryUpdate(filePath, 'module.exports = require("./src/index");\n');
         }
     }
 }
-fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.ui.json'), JSON.stringify(UIConfig));
-fs.writeFileSync(path.resolve(process.cwd(), 'tsconfig.json'), JSON.stringify(config));
+tryUpdate(path.resolve(process.cwd(), 'tsconfig.ui.json'), UIConfig);
+tryUpdate(path.resolve(process.cwd(), 'tsconfig.ui-next.json'), UINextConfig);
+tryUpdate(path.resolve(process.cwd(), 'tsconfig.json'), config);

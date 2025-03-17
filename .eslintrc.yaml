@@ -4,6 +4,9 @@ extends:
 ignorePatterns:
   - public/**/*.js
   - packages/ui-default
+  - dist
+  - '*.d.ts'
+  - node_modules
 overrides:
   - files: 
       - '**/{public,frontend}/**/*.{ts,tsx,page.js}'
@@ -24,6 +27,15 @@ overrides:
       externalModules: true
       LOCALES: true
       LANGS: true
+  - files:
+      - 'packages/ui-next/src/**/*.{ts,tsx}'
+    rules:
+      '@stylistic/indent':
+        - warn
+        - 2
+    env:
+      browser: true
+      es6: true
 rules:
   '@typescript-eslint/no-invalid-this': 1
   simple-import-sort/imports:
@@ -42,9 +54,13 @@ settings:
       - .ts
       - .js
       - .jsx
+      - .tsx
   import/resolver:
-    typescript:
-      alwaysTryTypes: true
+    webpack:
+      config:
+        resolve:
+          extensions: ['.js', '.jsx', '.ts', '.tsx', '.vue']
+
 parserOptions:
   sourceType: module
 #   project:

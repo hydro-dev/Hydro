@@ -16,7 +16,7 @@
         "@aws-sdk/lib-storage": "3.726.1",
         "@aws-sdk/s3-presigned-post": "3.726.1",
         "@aws-sdk/s3-request-presigner": "3.726.1",
-        "@cordisjs/core": "4.0.0-alpha.5",
+        "@cordisjs/core": "4.0.0-alpha.6",
         "@cordisjs/logger": "1.0.0-alpha.3",
         "@cordisjs/plugin-timer": "1.0.0-alpha.0",
         "@graphql-tools/schema": "^10.0.23",

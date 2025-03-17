@@ -90,7 +90,7 @@ declare module '../../api' {
 
 export async function downloadProblemSet(pids, name = 'Export') {
   Notification.info(i18n('Downloading...'));
-  const targets = [];
+  const targets: { filename: string; url?: string; content?: string }[] = [];
   try {
     await ctx.serial('problemset/download', pids, name, targets);
     for (const pid of pids) {
