@@ -36,6 +36,8 @@ const unsupportedUpgrade = async function _26_27() {
 Please use hydrooj@3 to perform these upgrades before upgrading to v4');
 };
 
+const onPrimary = { readPreference: 'primary' } as const;
+
 export const coreScripts: MigrationScript[] = [
     // Mark as used
     async function init() {
@@ -703,10 +705,19 @@ export const coreScripts: MigrationScript[] = [
     },
     // Start Hydro v5
     async function _91_92() {
-        await db.collection('domain.user').updateMany({}, { $set: { join: true } });
-        const ddocs = await domain.coll.updateMany(
+        await domain.collUser.updateMany({}, { $set: { join: true } });
+        await domain.coll.updateMany(
             { _join: { $or: [{ $exists: false }, { $eq: null }] } },
             { $set: { _join: { method: domain.JOIN_METHOD_ALL, role: 'default', expire: null }, _migratedJoin: true } },
+        );
+        const domainUser = await domain.coll.find({ domainId: 'system', join: true }, onPrimary)
+            .project({ uid: 1 }).toArray();
+        const otherUsers = await user.coll.find({ _id: { $gt: 1, $nin: domainUser.map((u) => u.uid) } }, onPrimary)
+            .project({ _id: 1 }).toArray();
+        await domain.collUser.updateMany(
+            { uid: { $in: otherUsers.map((u) => u._id) }, domainId: 'system' },
+            { $set: { join: true } },
+            { upsert: true },
         );
         return true;
     },

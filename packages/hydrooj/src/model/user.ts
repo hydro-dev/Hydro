@@ -336,6 +336,12 @@ class UserModel {
                     priv,
                     avatar: `gravatar:${mail}`,
                 });
+                // eslint-disable-next-line no-await-in-loop
+                await domain.collUser.updateOne(
+                    { uid, domainId: 'system' },
+                    { $set: { join: true } },
+                    { upsert: true },
+                );
                 return uid;
             } catch (e) {
                 if (e?.code === 11000) {

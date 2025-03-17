@@ -276,6 +276,7 @@ DomainUserSetting(
     Setting('setting_storage', 'rpdelta', 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
     Setting('setting_storage', 'rank', 0, 'number', 'Rank', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
+    Setting('setting_storage', 'join', 0, 'number', 'join', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
 const ignoreUA = [
