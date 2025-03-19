@@ -541,11 +541,24 @@ export async function apply(ctx: Context) {
             return c.user;
         }, `Get a user by id, uname, or mail.
 Returns current user if no argument is provided.`);
-        api.resolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
-            if (arg.ids?.length) {
-                const res = await user.getList(c.args.domainId, arg.ids);
-                for (const i in res) res[i].avatarUrl = avatar(res[i].avatar);
-                return Object.keys(res).map((id) => res[+id]);
+        api.resolver('Query', 'users(ids: [Int], auto: [String], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
+            const auto = arg.ids || arg.auto || [];
+            if (auto.length) {
+                const maybeId = auto.filter((i) => !Number.isNaN(+i));
+                const result = [];
+                if (maybeId.length) {
+                    const udocs = await user.getList(c.args.domainId, maybeId.map((i) => +i));
+                    for (const i in udocs) udocs[i].avatarUrl = avatar(udocs[i].avatar);
+                    result.push(...Object.values(udocs));
+                }
+                const notFound = auto.filter((i) => !result.find((j) => j._id === +i));
+                if (notFound.length > 50) return result; // reject if too many
+                for (const i of notFound) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const udoc = await user.getByUname(c.args.domainId, i) || await user.getByEmail(c.args.domainId, i);
+                    if (udoc) result.push(udoc);
+                }
+                return result;
             }
             if (!arg.search) return [];
             const udoc = await user.getById(c.args.domainId, +arg.search)

@@ -307,10 +307,10 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               e.preventDefault();
               const ids = text.replace(/，/g, ',').split(',').filter((v) => v?.trim().length && !selectedKeys.includes(v));
               if (!ids.length) return;
-              const fetched = await props.fetchItems(ids.filter((v) => !valueCache[v]));
+              const fetched = await props.fetchItems(ids);
               for (const item of fetched) valueCache[itemKey(item)] = item;
-              setSelected([...selected, ...ids.map((id) => valueCache[id])]);
-              setSelectedKeys([...selectedKeys, ...ids.map((id) => itemKey(valueCache[id]))]);
+              setSelected([...selected, ...fetched]);
+              setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
             }}
             placeholder={props.placeholder}
             onBlur={() => setFocused(false)}

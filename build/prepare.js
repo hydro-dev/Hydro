@@ -135,6 +135,7 @@ const UINextConfig = {
         outDir: path.join(baseOutDir, 'ui-next'),
 
         strict: true,
+        noImplicitAny: false,
 
         useDefineForClassFields: true,
         lib: ['es2022', 'DOM', 'DOM.Iterable'],
@@ -150,7 +151,10 @@ const UINextConfig = {
 
         paths: {
             '@/*': [
-                './packages/ui-next/*',
+                './packages/ui-next/src/*',
+            ],
+            'vj/*': [
+                './packages/ui-default/*',
             ],
         },
     },

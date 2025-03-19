@@ -19,7 +19,7 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
       }
     `, ['data', 'users'])}
     fetchItems={(ids) => api(gql`
-      users(ids: ${ids.map((i) => +i)}) {
+      users(auto: ${ids}) {
         _id
         uname
         displayName
