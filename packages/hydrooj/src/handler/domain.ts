@@ -101,24 +101,68 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('format', Types.Range(['default', 'raw']), true)
     async get({ domainId }, format = 'default') {
-        const rudocs = {};
         const [dudocs, roles] = await Promise.all([
-            domain.getMultiUserInDomain(domainId, {
-                $and: [
-                    { role: { $nin: ['default', 'guest'] } },
-                    { role: { $ne: null } },
-                ],
-            }).toArray(),
+            domain.collUser.aggregate([
+                {
+                    $match: {
+                        $or: [{
+                            join: true,
+                        }, {
+                            role: {
+                                $nin: ['default', 'guest'],
+                                $ne: null,
+                            },
+                        }],
+                        domainId,
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'user',
+                        let: { uid: '$uid' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$_id', '$$uid'] },
+                                    priv: { $bitsAllSet: PRIV.PRIV_USER_PROFILE },
+                                },
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    uname: 1,
+                                    avatar: 1,
+                                },
+                            },
+                        ],
+                        as: 'user',
+                    },
+                },
+                { $unwind: '$user' },
+                {
+                    $project: {
+                        user: 1,
+                        role: 1,
+                        join: 1,
+                        displayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                    },
+                },
+            ]).toArray(),
             domain.getRoles(domainId),
         ]);
-        // TODO: switch to getListForRender for better performance
-        const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
-        const users = dudocs.filter((dudoc) => udict[dudoc.uid].priv & PRIV.PRIV_USER_PROFILE);
-        const joined = Object.fromEntries(dudocs.map((dudoc) => [dudoc.uid, dudoc.join]));
+        const users = dudocs.map((dudoc) => {
+            const u = {
+                ...dudoc,
+                ...dudoc.user,
+            };
+            delete u.user;
+            return u;
+        });
+        const rudocs = {};
         for (const role of roles) rudocs[role._id] = users.filter((udoc) => udoc.role === role._id);
         this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
-            roles, rudocs, domain: this.domain, joined,
+            roles, rudocs, domain: this.domain,
         };
     }
 
@@ -286,7 +330,7 @@ class DomainJoinHandler extends Handler {
         ]);
         const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
             ? 'root'
-            : dudoc?.role;
+            : dudoc?.role || 'default';
         if (dudoc?.join) throw new DomainJoinAlreadyMemberError(target, this.user._id);
         const r = await domain.getRoles(ddoc);
         const roles = r.map((role) => role._id);

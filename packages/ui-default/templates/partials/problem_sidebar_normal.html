@@ -21,6 +21,7 @@
         <li class="menu__item"><a class="menu__link" href="javascript:joinDomain();">
         <span class="icon icon-add"></span> {{ _('Join Domain to Create a Discussion') }}</a></li>
       {% else %}
+        <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
         <span class="icon icon-add"></span> {{ _('No Permission to Create a Discussion') }}</a></li>
       {% endif %}
     {% endif %}
