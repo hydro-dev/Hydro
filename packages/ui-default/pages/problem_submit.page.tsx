@@ -25,7 +25,9 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   }
   for (const key in availableLangs) {
     if (config.langs && !config.langs.filter((i) => i === key || i.startsWith(`${key}.`)).length) continue;
-    if (window.LANGS[key].pretest?.split('.')[0] === preferences[0].split('.')[0]) preferences.push(key);
+    if (typeof window.LANGS[key]?.pretest === 'string' && window.LANGS[key].pretest.split('.')[0] === preferences[0].split('.')[0]) {
+      preferences.push(key);
+    }
   }
 
   renderLanguageSelect(

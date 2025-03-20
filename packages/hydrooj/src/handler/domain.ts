@@ -326,7 +326,7 @@ class DomainJoinHandler extends Handler {
     async prepare({ domainId }, target: string = domainId) {
         const [ddoc, dudoc] = await Promise.all([
             domain.get(target),
-            domain.collUser.findOne({ domainId, uid: this.user._id }),
+            domain.collUser.findOne({ domainId: target, uid: this.user._id }),
         ]);
         const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
             ? 'root'
