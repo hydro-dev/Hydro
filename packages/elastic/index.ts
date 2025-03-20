@@ -92,7 +92,7 @@ export default class ElasticSearchService extends Service {
         return true;
     }
 
-    async [Service.setup]() {
+    async [Context.init]() {
         await this.client.nodes.stats();
         this.ctx.on('problem/add', async (doc, docId) => {
             await this.client.index({

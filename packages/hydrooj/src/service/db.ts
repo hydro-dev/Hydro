@@ -55,10 +55,11 @@ export class MongoService extends Service {
         return mongourl;
     }
 
-    async [Service.setup]() {
+    async *[Context.init]() {
         const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
         this.client = await MongoClient.connect(mongourl);
+        yield () => { this.client.close(); }
         this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
         this.ctx.setInterval(() => this.fixExpireAfter(), Time.hour);
@@ -175,11 +176,6 @@ export class MongoService extends Service {
             results.push([r, doc]);
         }
         return results;
-    }
-
-    public async apply(ctx) {
-        await this.start();
-        ctx.on('dispose', () => this.client.close());
     }
 }
 

@@ -59,7 +59,11 @@ export async function apply(ctx: Context) {
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     await setting(pending, fail, require('../model/setting'));
-
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['worker', 'setting'], (c) => {
+            resolve(c);
+        });
+    });
     const handlerDir = path.resolve(__dirname, '..', 'handler');
     const handlers = await fs.readdir(handlerDir);
     for (const h of handlers.filter((i) => i.endsWith('.ts'))) {

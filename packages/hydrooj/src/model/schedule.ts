@@ -4,7 +4,7 @@ import { Context } from '../context';
 import { Schedule } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
-import type { WorkerService } from '../service/worker';
+import type WorkerService from '../service/worker';
 import RecordModel from './record';
 
 const logger = new Logger('model/schedule');

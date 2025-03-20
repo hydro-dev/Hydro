@@ -41,6 +41,16 @@ export function encodeRFC5987ValueChars(str: string) {
     );
 }
 
+async function forkContextWithScope<C extends CordisContext>(ctx: C) {
+    const scope = ctx.plugin(() => { });
+    await scope;
+    return {
+        scope,
+        ctx: scope.ctx,
+        [Symbol.asyncDispose]: () => scope.dispose(),
+    };
+}
+
 export interface HydroRequest {
     method: string;
     host: string;
@@ -144,7 +154,6 @@ export class HandlerCommon<C> {
         this.request = context.HydroContext.request;
         this.response = context.HydroContext.response;
         this.UiContext = context.HydroContext.UiContext;
-        this.ctx = (ctx as any).extend({});
     }
 
     checkPerm(..._: bigint[]) {
@@ -472,10 +481,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext) {
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: C) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, savedContext);
+        await using sub = await forkContextWithScope(savedContext);
+        const h = new HandlerClass(ctx, sub.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
         const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
@@ -553,7 +563,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, savedContext);
+        const sub = await forkContextWithScope(savedContext);
+        const h = new HandlerClass(ctx, sub.ctx);
         // FIXME: should pass type check
         await (this.ctx.parallel as any)('connection/create', h);
         const stream = new PassThrough();
@@ -596,7 +607,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             if (layer) layer.clients.delete(conn);
             if (err && !layer) ctx.status = 500;
             if (interval) clearInterval(interval);
-            h.cleanup?.(args);
+            await h.cleanup?.(args);
+            await sub.scope.dispose();
         };
 
         try {

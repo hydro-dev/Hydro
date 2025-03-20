@@ -9,7 +9,7 @@ declare module '../context' {
     }
 }
 
-export class WorkerService extends Service {
+export default class WorkerService extends Service {
     private handlers: Record<string, Function> = {};
     consuming = true;
     running = null;
@@ -84,9 +84,4 @@ export class WorkerService extends Service {
         this.consuming = false;
         await this.promise;
     }
-}
-
-export async function apply(ctx: Context) {
-    ctx.provide('worker', undefined, true);
-    ctx.worker = new WorkerService(ctx);
 }

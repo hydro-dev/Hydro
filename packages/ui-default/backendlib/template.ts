@@ -251,7 +251,7 @@ export class TemplateService extends Service {
     });
   }
 
-  async [Service.setup]() {
+  async [Context.init]() {
     const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {

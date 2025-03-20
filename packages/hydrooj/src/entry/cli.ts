@@ -130,7 +130,7 @@ export async function load(ctx: Context) {
     await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/server'));
     ctx = await new Promise((resolve) => {
-        ctx.inject(['server'], (c) => {
+        ctx.inject(['server', 'setting', 'worker'], (c) => {
             resolve(c);
         });
     });
