@@ -105,14 +105,11 @@ class DomainUserHandler extends ManageHandler {
             domain.collUser.aggregate([
                 {
                     $match: {
-                        $or: [{
-                            join: true,
-                        }, {
-                            role: {
-                                $nin: ['default', 'guest'],
-                                $ne: null,
-                            },
-                        }],
+                        // TODO: add a page to display users who joined but with default role
+                        role: {
+                            $nin: ['default', 'guest'],
+                            $ne: null,
+                        },
                         domainId,
                     },
                 },
