@@ -82,7 +82,9 @@
               {%- for udoc in udocs -%}
                 {% set is_disabled=(rudoc._id == handler.user._id) %}
                 <input type="checkbox" data-uid="{{udoc._id}}" data-checkbox-group="user" {% if is_disabled %}disabled{% else %}data-checkbox-range{% endif %}>
-                [{{udoc._id}}]{{ user.render_inline(udoc, avatar=false, badge=false) }}&nbsp;&nbsp;&nbsp;
+                [{{udoc._id}}]{{ user.render_inline(udoc, avatar=false, badge=false) }}{% if not udoc.join %}
+                  <span class="text-orange">({{ _('Not joined yet') }})</span>
+                {% endif %}&nbsp;&nbsp;&nbsp;
               {%- endfor -%}
             </div></td>
             <td>{{ role }}</td>
@@ -101,7 +103,7 @@
           </td>
           <td class="col--user">
             {{ user.render_inline(rudoc, badge=false) }}
-            {% if not joined[rudoc._id] %}<span class="text-orange">({{ _('Not joined yet') }})</span>{% endif %}
+            {% if not rudoc.join %}<span class="text-orange">({{ _('Not joined yet') }})</span>{% endif %}
           </td>
           <td class="col--role">
             {{ form.select({

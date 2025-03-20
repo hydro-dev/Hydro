@@ -59,7 +59,7 @@ class DomainModel {
         };
         await bus.parallel('domain/create', ddoc);
         await coll.insertOne(ddoc);
-        await DomainModel.setUserRole(domainId, owner, 'root');
+        await DomainModel.setUserRole(domainId, owner, 'root', true);
         return domainId;
     }
 
@@ -133,9 +133,10 @@ class DomainModel {
     }
 
     @ArgMethod
-    static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string) {
+    static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string, autojoin = false) {
+        const update = { $set: { role, ...(autojoin ? { join: true } : {}) } };
         if (!(uid instanceof Array)) {
-            const res = await collUser.findOneAndUpdate({ domainId, uid }, { $set: { role } }, { upsert: true, returnDocument: 'after' });
+            const res = await collUser.findOneAndUpdate({ domainId, uid }, update, { upsert: true, returnDocument: 'after' });
             const udoc = await UserModel.getById(domainId, uid);
             deleteUserCache(udoc);
             return res;
@@ -144,7 +145,7 @@ class DomainModel {
             .project<{ _id: number, mail: string, uname: string }>({ mail: 1, uname: 1 })
             .toArray();
         for (const udoc of affected) deleteUserCache(udoc);
-        return await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { role } }, { upsert: true });
+        return await collUser.updateMany({ domainId, uid: { $in: uid } }, update, { upsert: true });
     }
 
     static async getRoles(domainId: string, count?: boolean): Promise<any[]>;

@@ -906,6 +906,7 @@ Testdata: 测试数据
 Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
+The domain owner: 域所有者：
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
 The invitation code you provided is invalid.: 您提供的邀请码无效。
@@ -1057,6 +1058,7 @@ Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 Year: 年
 You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.: 您当前处于兼容模式。某些功能在此模式下不可用。我们强烈建议在现代浏览器上切换为标准模式以获得更好的体验。
+You are invited to join {0}: '您被邀请加入 {0}'
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以将头像上传到 <a href="https://gravatar.com/">Gravatar</a>，本站的头像将自动更新。
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。
