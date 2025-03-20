@@ -35,7 +35,7 @@ export class StorageModel {
     }
 
     static async get(path: string, savePath?: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
@@ -101,7 +101,7 @@ export class StorageModel {
     }
 
     static async getMeta(path: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
@@ -120,7 +120,7 @@ export class StorageModel {
             { path: target, autoDelete: null },
             { $set: { lastUsage: new Date() } },
         );
-        return await storage.signDownloadLink(res.value?.link || res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
+        return await storage.signDownloadLink(res?.link || res?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 
     static async move(src: string, dst: string) {
@@ -128,7 +128,7 @@ export class StorageModel {
             { path: src, autoDelete: null },
             { $set: { path: dst } },
         );
-        return !!res.value;
+        return !!res;
     }
 
     static async exists(path: string) {
@@ -137,7 +137,7 @@ export class StorageModel {
     }
 
     static async copy(src: string, dst: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path: src, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
@@ -170,9 +170,9 @@ async function cleanFiles() {
     }
     if (system.get('server.keepFiles')) return;
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
-    while (res.value) {
+    while (res) {
         // eslint-disable-next-line no-await-in-loop
-        if (!res.value.link) await storage.del(res.value._id);
+        if (!res.link) await storage.del(res._id);
         // eslint-disable-next-line no-await-in-loop
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }

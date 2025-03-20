@@ -19,9 +19,9 @@ async function getFirst(query: Filter<Task>) {
     try {
         const q = { ...query };
         const res = await coll.findOneAndDelete(q, { sort: { priority: -1 } });
-        if (res.value) {
-            logger.debug('%o', res.value);
-            return res.value;
+        if (res) {
+            logger.debug('%o', res);
+            return res;
         }
         return null;
     } catch (e) {
@@ -182,9 +182,9 @@ export async function apply(ctx: Context) {
                 logger.error(e);
                 continue;
             }
-            if (argv.options.showEvent) logger.info('Event: %o', res.value);
+            if (argv.options.showEvent) logger.info('Event: %o', res);
             // eslint-disable-next-line no-await-in-loop
-            await (res.value ? handleEvent(res.value) : sleep(500));
+            await (res ? handleEvent(res) : sleep(500));
         }
     });
     await db.ensureIndexes(collEvent, { name: 'expire', key: { expire: 1 }, expireAfterSeconds: 0 });

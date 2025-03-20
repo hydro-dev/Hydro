@@ -55,12 +55,11 @@ class MessageModel {
     }
 
     static async setFlag(messageId: ObjectId, flag: number) {
-        const result = await MessageModel.coll.findOneAndUpdate(
+        return await MessageModel.coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
             { returnDocument: 'after' },
         );
-        return result.value || null;
     }
 
     static async del(_id: ObjectId) {

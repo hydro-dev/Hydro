@@ -13,7 +13,7 @@ export async function inc(op: string, ident: string, periodSecs: number, maxOper
             expireAt,
             opcount: { $lt: maxOperations },
         }, { $inc: { opcount: 1 } }, { upsert: true, returnDocument: 'after' });
-        return res.value.opcount;
+        return res.opcount;
     } catch (e) {
         if (e.message.includes('duplicate')) throw new OpcountExceededError(op, periodSecs, maxOperations);
         throw e;

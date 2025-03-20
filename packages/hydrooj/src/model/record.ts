@@ -209,12 +209,11 @@ export default class RecordModel {
             return null;
         }
         if (Object.keys($update).length) {
-            const res = await RecordModel.coll.findOneAndUpdate(
+            return await RecordModel.coll.findOneAndUpdate(
                 { _id, domainId },
                 $update,
                 { returnDocument: 'after' },
             );
-            return res.value || null;
         }
         return await RecordModel.coll.findOne({ _id }, { readPreference: 'primary' });
     }

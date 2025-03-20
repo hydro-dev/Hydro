@@ -67,7 +67,7 @@ class TokenModel {
             },
             { returnDocument: 'after' },
         );
-        return res.value;
+        return res;
     }
 
     @ArgMethod

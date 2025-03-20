@@ -45,8 +45,8 @@ export async function set(_id: string, value: any, broadcast = true) {
         { $set: { value } },
         { upsert: true, returnDocument: 'after' },
     );
-    cache[_id] = res.value.value;
-    return res.value.value;
+    cache[_id] = res.value;
+    return res.value;
 }
 
 export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
@@ -55,8 +55,8 @@ export async function inc<K extends NumberKeys<SystemKeys>>(_id: K) {
         { $inc: { value: 1 } as any },
         { upsert: true, returnDocument: 'after' },
     );
-    cache[_id] = res.value.value;
-    return res.value.value;
+    cache[_id] = res.value;
+    return res.value;
 }
 
 export async function runConfig() {

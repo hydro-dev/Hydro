@@ -101,23 +101,23 @@ class DomainModel {
         domainId = domainId.toLowerCase();
         await bus.parallel('domain/before-update', domainId, $set);
         const result = await coll.findOneAndUpdate({ lower: domainId }, { $set }, { returnDocument: 'after' });
-        if (result.value) {
-            await bus.parallel('domain/update', domainId, $set, result.value);
+        if (result) {
+            await bus.parallel('domain/update', domainId, $set, result);
             bus.broadcast('domain/delete-cache', domainId);
         }
-        return result.value;
+        return result;
     }
 
     @ArgMethod
     static async inc(domainId: string, field: NumberKeys<DomainDoc>, n: number): Promise<number | null> {
         domainId = domainId.toLowerCase();
-        const res = await coll.findOneAndUpdate(
+        const value = await coll.findOneAndUpdate(
             { _id: domainId },
             { $inc: { [field]: n } as any },
             { returnDocument: 'after' },
         );
         bus.broadcast('domain/delete-cache', domainId);
-        return res.value?.[field];
+        return value?.[field];
     }
 
     @ArgMethod
@@ -136,7 +136,7 @@ class DomainModel {
     static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string, autojoin = false) {
         const update = { $set: { role, ...(autojoin ? { join: true } : {}) } };
         if (!(uid instanceof Array)) {
-            const res = await collUser.findOneAndUpdate({ domainId, uid }, update, { upsert: true, returnDocument: 'after' });
+            const res = await collUser.findOneAndUpdate({ domainId, uid }, update, { upsert: true, returnDocument: 'after', includeResultMetadata: true });
             const udoc = await UserModel.getById(domainId, uid);
             deleteUserCache(udoc);
             return res;

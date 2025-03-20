@@ -13,12 +13,11 @@ class BlackListModel {
         else if (typeof expire === 'number') expireAt = moment().add(expire, 'months').toDate();
         else if (expire instanceof Date) expireAt = expire;
         else expireAt = new Date(new Date().getTime() + 365 * 24 * 60 * 60 * 1000);
-        const res = await coll.findOneAndUpdate(
+        return await coll.findOneAndUpdate(
             { _id: id },
             { $set: { expireAt } },
             { upsert: true, returnDocument: 'after' },
         );
-        return res.value;
     }
 
     @ArgMethod

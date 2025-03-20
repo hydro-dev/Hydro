@@ -268,7 +268,7 @@ class UserModel {
             deleteUserCache(udoc);
         }
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
-        deleteUserCache(res.value);
+        deleteUserCache(res);
         return res;
     }
 
@@ -290,8 +290,8 @@ class UserModel {
             { $set: { salt, hash: await pwhash(password, salt), hashType: 'hydro' } },
             { returnDocument: 'after' },
         );
-        deleteUserCache(res.value);
-        return res.value;
+        deleteUserCache(res);
+        return res;
     }
 
     @ArgMethod
@@ -427,8 +427,8 @@ class UserModel {
             { $set: { priv } },
             { returnDocument: 'after' },
         );
-        deleteUserCache(res.value);
-        return res.value;
+        deleteUserCache(res);
+        return res;
     }
 
     @ArgMethod
