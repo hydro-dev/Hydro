@@ -216,7 +216,7 @@ for (const pkg of modules) {
         const name = file.split('.')[0];
         const filePath = path.resolve(basedir, `${name}.js`);
         if (name === 'index' && !fs.existsSync(filePath)) {
-            tryUpdate(filePath, 'module.exports = require("./src/index");\n');
+            tryUpdate(filePath, "module.exports = require('./src/index');\n");
         }
     }
 }
