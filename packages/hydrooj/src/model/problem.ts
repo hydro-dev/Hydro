@@ -385,7 +385,6 @@ export class ProblemModel {
         }
         for (const pdoc of pdocs) {
             try {
-                // eslint-disable-next-line no-await-in-loop
                 pdoc.config = await parseConfig(pdoc.config as string);
             } catch (e) {
                 pdoc.config = `Cannot parse: ${e.message}`;

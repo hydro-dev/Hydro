@@ -80,7 +80,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
   };
 }
 
-self.onconnect = function (e) { // eslint-disable-line no-undef
+self.onconnect = function (e) {
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {

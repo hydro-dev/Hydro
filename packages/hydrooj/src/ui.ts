@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-shadow */
 import { Logger } from './logger';
 import bus from './service/bus';
 

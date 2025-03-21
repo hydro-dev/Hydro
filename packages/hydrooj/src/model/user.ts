@@ -316,7 +316,7 @@ class UserModel {
             autoAlloc = true;
         }
         const salt = String.random();
-        while (true) { // eslint-disable-line no-constant-condition
+        while (true) {
             try {
                 // eslint-disable-next-line no-await-in-loop
                 await coll.insertOne({

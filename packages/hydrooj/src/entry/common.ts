@@ -1,6 +1,5 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-eval */
 import '../lib/index';
 
 import os from 'os';

@@ -249,7 +249,7 @@ export default class VJ4 implements Session {
         }
     }
 
-    async processData(folder: string) { // eslint-disable-line class-methods-use-this
+    async processData(folder: string) {
         let files = await fs.readdir(folder);
         if (files.length <= 2) {
             if (files.length === 2) files.splice(files.indexOf('version'), 1);

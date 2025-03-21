@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import path from 'path';
 import {
     convertIniConfig, LangConfig, normalizeSubtasks, ProblemConfigFile, readSubtasksFromFiles,

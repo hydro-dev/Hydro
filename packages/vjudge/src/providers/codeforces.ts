@@ -318,7 +318,6 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
     async waitForSubmission(id: string, next, end) {
         let i = 1;
         const start = Date.now();
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
             const contestId = id.includes('#') ? id.split('#')[0] : null;

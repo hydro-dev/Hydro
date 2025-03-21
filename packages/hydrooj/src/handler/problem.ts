@@ -142,7 +142,6 @@ export class ProblemMainHandler extends Handler {
         }
         const sort = this.queryContext.sort;
         await this.ctx.parallel('problem/list', query, this, sort);
-        // eslint-disable-next-line prefer-const
         let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
             : await this.paginate(

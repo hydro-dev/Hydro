@@ -1,9 +1,9 @@
+import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import {
   Button, ControlGroup,
   Dialog, DialogBody, DialogFooter,
   Icon, InputGroup, Tag,
 } from '@blueprintjs/core';
-import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import { isEqual } from 'lodash';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';

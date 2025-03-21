@@ -1,12 +1,12 @@
+import path from 'path';
 import * as status from '@hydrooj/common/status';
 import { findFileSync } from '@hydrooj/utils/lib/utils';
-import { convert } from 'html-to-text';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
+import { convert } from 'html-to-text';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
-import path from 'path';
 import markdown from './markdown';
 import { ensureTag, xss } from './markdown-it-xss';
 import * as misc from './misc';

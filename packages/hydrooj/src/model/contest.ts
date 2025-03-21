@@ -91,7 +91,6 @@ const acm = buildContestRule({
     submitAfterAccept: false,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,
     showSelfRecord: () => true,
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     stat(tdoc, journal: AcmJournal[]) {
         const naccept = Counter<number>();
@@ -100,7 +99,6 @@ const acm = buildContestRule({
         const detail: Record<number, AcmDetail> = {};
         let accept = 0;
         let time = 0;
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal) {
             if (!tdoc.pids.includes(j.pid)) continue;
@@ -281,7 +279,7 @@ const oi = buildContestRule({
         const detail = {};
         const display = {};
         let score = 0;
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal.filter((i) => tdoc.pids.includes(i.pid))) {
             if (lockAt && j.rid.getTimestamp() > lockAt) {
@@ -362,7 +360,7 @@ const oi = buildContestRule({
         const tsddict = ((config.lockAt && isLocked(tdoc, new Date())) ? tsdoc.display : tsdoc.detail) || {};
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+
             const node: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
                 && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()
@@ -408,7 +406,7 @@ const oi = buildContestRule({
                 if (!first[pid] || first[pid] > time) first[pid] = time;
             }
         }
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+
         if (isDone(tdoc)) {
             const psdocs = await Promise.all(
                 tdoc.pids.map((pid) => problem.getMultiStatus(tdoc.domainId, { docId: pid, uid: { $in: uids } }).toArray()),
@@ -450,7 +448,7 @@ const oi = buildContestRule({
 const ioi = buildContestRule({
     TEXT: 'IOI',
     submitAfterAccept: false,
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+
     showRecord: (tdoc, now) => now > tdoc.endAt && !isLocked(tdoc),
     showSelfRecord: () => true,
     showScoreboard: (tdoc, now) => now > tdoc.beginAt,

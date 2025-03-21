@@ -1,5 +1,3 @@
-/* eslint-disable import/no-dynamic-require */
-/* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
 import cac from 'cac';

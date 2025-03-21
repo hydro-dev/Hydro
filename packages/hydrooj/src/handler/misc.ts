@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import { Context } from '../context';

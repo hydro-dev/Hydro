@@ -108,7 +108,6 @@ langs: ${JSON.stringify(langs)}`),
 
     async waitForSubmission(id: string, next, end) {
         logger.debug('Waiting for %s', id);
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
             const { text } = await this.get(`/status/ns=${id}`);

@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import Schema from 'schemastery';
 import { STATUS } from '../model/builtin';
 import storage from '../model/storage';

@@ -169,7 +169,6 @@ export async function apply(ctx: Context) {
     stream.on('error', async () => {
         // The $changeStream stage is only supported on replica sets
         logger.info('No replica set found.');
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             let res;
             try {

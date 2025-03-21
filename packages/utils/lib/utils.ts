@@ -39,7 +39,6 @@ export const sha1 = (content: string) => encrypt('sha1', content);
 export const md5 = (content: string) => encrypt('md5', content);
 
 export function folderSize(folderPath: string) {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     let size = 0;
     const _next = function a(p: string) {
         if (p) {

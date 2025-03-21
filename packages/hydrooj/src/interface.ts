@@ -172,7 +172,6 @@ export interface Document {
 }
 
 declare module './model/problem' {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     interface ProblemDoc {
         docType: document['TYPE_PROBLEM'];
         docId: number;

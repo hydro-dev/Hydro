@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import { diffLines } from 'diff';
 import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
+import { diffLines } from 'diff';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import { isEqual } from 'lodash';

@@ -18,7 +18,6 @@ export default function DataInputComponent(props) {
           wrap="off"
           spellCheck="false"
         >
-          {/* eslint-disable-next-line react/no-danger */}
           <pre dangerouslySetInnerHTML={{ __html: value }} contentEditable />
         </div>
       ) : (

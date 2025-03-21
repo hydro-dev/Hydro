@@ -382,14 +382,12 @@ export async function revPushStatus<T extends keyof DocStatusType>(
         { $set: { [`${key}.$`]: value }, $inc: { rev: 1 } },
         { returnDocument: 'after' },
     );
-    if (!res) {
-        res = await collStatus.findOneAndUpdate(
-            { domainId, docType, docId, uid },
-            // @ts-ignore
-            { $push: { [key]: value }, $inc: { rev: 1 } },
-            { upsert: true, returnDocument: 'after' },
-        );
-    }
+    res ||= await collStatus.findOneAndUpdate(
+        { domainId, docType, docId, uid },
+        // @ts-ignore
+        { $push: { [key]: value }, $inc: { rev: 1 } },
+        { upsert: true, returnDocument: 'after' },
+    );
     return res;
 }
 

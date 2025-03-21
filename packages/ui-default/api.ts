@@ -1,4 +1,3 @@
-/* eslint-disable import/order */
 /* eslint-disable import/first */
 export * from './utils';
 export { default as Notification } from './components/notification';

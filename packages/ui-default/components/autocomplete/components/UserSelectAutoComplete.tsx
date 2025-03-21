@@ -4,7 +4,6 @@ import React, { forwardRef } from 'react';
 import { api, gql } from 'vj/utils';
 import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
-// eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
   <AutoComplete<Udoc>
     ref={ref as any}

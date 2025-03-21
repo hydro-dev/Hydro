@@ -619,7 +619,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
-            // eslint-disable-next-line @typescript-eslint/no-shadow
             for (const { name, target } of h.__subscribe || []) disposables.push(this.ctx.on(name, target.bind(h)));
             if (layer) {
                 let lastHeartbeat = Date.now();

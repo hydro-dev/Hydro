@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import {
     BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';

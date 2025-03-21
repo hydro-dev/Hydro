@@ -1,8 +1,8 @@
+import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/common';
+import { TestCaseConfig } from 'hydrooj';
 import {
   Button, Classes, Icon, Popover, TreeNode,
 } from '@blueprintjs/core';
-import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/common';
-import { TestCaseConfig } from 'hydrooj';
 import { isEqual } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrop } from 'react-dnd';

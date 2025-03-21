@@ -1,8 +1,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable consistent-return */
 /* eslint-disable simple-import-sort/imports */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-eval */
 import './init';
 import './interface';
 import path from 'path';
@@ -156,7 +154,6 @@ async function preload() {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${a}/package.json`);
-            // eslint-disable-next-line import/no-dynamic-require
             const payload = require(packagejson);
             const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
             global.Hydro.version[name] = payload.version;

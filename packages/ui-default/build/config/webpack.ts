@@ -1,16 +1,15 @@
-/* eslint-disable global-require */
+import fs from 'fs';
+import { dirname } from 'path';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { version as coreJsVersion } from 'core-js/package.json';
 import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
-import fs from 'fs';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import packageJson from 'package-json';
-import { dirname } from 'path';
 import { gt } from 'semver';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';

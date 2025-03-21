@@ -1,4 +1,3 @@
-/* eslint-disable no-sequences */
 import { STATUS } from '@hydrooj/common';
 import { fs, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import checkers from '../checkers';

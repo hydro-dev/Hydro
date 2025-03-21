@@ -136,7 +136,11 @@ class DomainModel {
     static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string, autojoin = false) {
         const update = { $set: { role, ...(autojoin ? { join: true } : {}) } };
         if (!(uid instanceof Array)) {
-            const res = await collUser.findOneAndUpdate({ domainId, uid }, update, { upsert: true, returnDocument: 'after', includeResultMetadata: true });
+            const res = await collUser.findOneAndUpdate(
+                { domainId, uid },
+                update,
+                { upsert: true, returnDocument: 'after', includeResultMetadata: true },
+            );
             const udoc = await UserModel.getById(domainId, uid);
             deleteUserCache(udoc);
             return res;

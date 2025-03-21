@@ -1,9 +1,8 @@
-/* eslint-disable no-await-in-loop */
-import { animated, easings, useSprings } from '@react-spring/web';
-import useKey from 'react-use/lib/useKey';
 import {
   addPage, NamedPage, React, ReactDOM,
 } from '@hydrooj/ui-default';
+import { animated, easings, useSprings } from '@react-spring/web';
+import useKey from 'react-use/lib/useKey';
 import { ResolverInput } from '../interface';
 
 async function scrollTo(offset) {

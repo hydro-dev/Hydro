@@ -59,7 +59,7 @@ export class MongoService extends Service {
         const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
         this.client = await MongoClient.connect(mongourl);
-        yield () => { this.client.close(); }
+        yield () => { this.client.close(); };
         this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
         this.ctx.setInterval(() => this.fixExpireAfter(), Time.hour);

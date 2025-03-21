@@ -1,4 +1,3 @@
-/* eslint-disable global-require */
 import {
   ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
   SettingModel, SystemModel, Types, UserModel,

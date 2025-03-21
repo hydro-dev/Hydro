@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import path from 'path';
 import PQueue from 'p-queue';
 import superagent from 'superagent';

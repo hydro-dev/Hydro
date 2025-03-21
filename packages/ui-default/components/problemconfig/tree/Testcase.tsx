@@ -1,7 +1,7 @@
+import { TestCaseConfig } from 'hydrooj';
 import {
   ContextMenu, Menu, MenuItem, TreeNode,
 } from '@blueprintjs/core';
-import { TestCaseConfig } from 'hydrooj';
 import { omit } from 'lodash';
 import React from 'react';
 import { useDrag } from 'react-dnd';

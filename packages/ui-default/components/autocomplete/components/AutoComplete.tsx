@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/role-supports-aria-props */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 import { debounce, uniqueId } from 'lodash';
 import React, {
   forwardRef, useEffect,
@@ -83,7 +81,7 @@ function DraggableSelection({
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const {
     multi = false, width = '100%', height = 'auto',
-    freeSolo = false, allowEmptyQuery = false, listStyle = {},
+    freeSolo = false, allowEmptyQuery = false, listStyle = {}, // eslint-disable-line @eslint-react/no-unstable-default-props
     disabled = false, disabledHint = '', draggable = multi,
   } = props;
   const queryItems = props.queryItems ?? (() => []);
@@ -333,7 +331,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               key={itemKey(item)}
               onClick={() => toggleItem(item)}
               onMouseMove={() => setCurrentItem(idx)}
-              aria-selected={selectedKeys.includes(itemKey(item))}
+              data-selected={selectedKeys.includes(itemKey(item))}
               data-focus={idx === currentItem}
             >
               <div>{renderItem(item)}</div>

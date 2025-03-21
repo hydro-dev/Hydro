@@ -13,7 +13,6 @@ import { hydroPath } from '../options';
 const logger = new Logger('install');
 let yarnVersion = 0;
 try {
-    // eslint-disable-next-line no-unsafe-optional-chaining
     yarnVersion = +child.execSync('yarn --version', { cwd: os.tmpdir() }).toString().split('v').pop()!.split('.')[0];
 } catch (e) {
     // yarn 2 does not support global dir
