@@ -7,9 +7,6 @@
   "types": "api.ts",
   "repository": "https://github.com/hydro-dev/Hydro.git",
   "preferUnplugged": true,
-  "scripts": {
-    "lint": "eslint"
-  },
   "hydro": {
     "cli": false
   },
@@ -25,7 +22,7 @@
     "@fontsource/source-code-pro": "^5.2.5",
     "@fontsource/ubuntu-mono": "^5.2.5",
     "@hydrooj/utils": "workspace:^",
-    "@sentry/browser": "^9.7.0",
+    "@sentry/browser": "^9.8.0",
     "@sentry/webpack-plugin": "^3.2.2",
     "@simplewebauthn/browser": "13.1.0",
     "@svgr/webpack": "^8.1.0",
@@ -70,7 +67,7 @@
     "jquery.easing": "^1.4.1",
     "jquery.transit": "^0.9.12",
     "matchmedia-polyfill": "^0.3.2",
-    "md-editor-rt": "^5.4.2",
+    "md-editor-rt": "^5.4.3",
     "mini-css-extract-plugin": "^2.9.2",
     "moment": "^2.30.1",
     "monaco-editor": "0.52.2",

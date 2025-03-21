@@ -220,7 +220,7 @@ export async function deleteSub<T extends keyof DocType, K extends ArrayKeys<Doc
     domainId: string, docType: T, docId: DocType[T]['docId'],
     key: K, subId: MaybeArray<DocType[T][K][0]['_id']>,
 ): Promise<DocType[T]> {
-    subId = (subId instanceof Array) ? subId : [subId];
+    subId = Array.isArray(subId) ? subId : [subId];
     return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         // @ts-ignore
@@ -416,6 +416,7 @@ export async function apply(ctx: Context) {
         collStatus.deleteMany({ domainId }),
     ]));
     await db.clearIndexes(coll, ['tag', 'hidden']);
+    const onlyFor = (docType: number) => ({ partialFilterExpression: { docType } });
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
@@ -426,8 +427,8 @@ export async function apply(ctx: Context) {
         // For problem solution
         { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
         // For discussion
-        { key: { domainId: 1, docType: 1, pin: -1, docId: -1 }, name: 'discussionSort', sparse: true },
-        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, pin: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
+        { key: { docType: 1, domainId: 1, hidden: 1, pin: -1, docId: -1 }, name: 'discussionSort', ...onlyFor(TYPE_DISCUSSION) },
+        { key: { docType: 1, domainId: 1, hidden: 1, parentType: 1, parentId: 1, pin: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
         // Hidden doc
         { key: { domainId: 1, docType: 1, hidden: 1, docId: -1 }, name: 'hiddenDoc', sparse: true },
         // For contest

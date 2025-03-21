@@ -72,7 +72,7 @@ class DiscussionMainHandler extends Handler {
         const parentType = { $in: Object.keys(typeMapper).map((i) => typeMapper[i]) };
         all &&= this.user.hasPerm(PERM.PERM_MOD_BADGE);
         const [ddocs, dpcount] = await this.paginate(
-            discussion.getMulti(domainId, { parentType, ...all ? {} : { hidden: false } }),
+            discussion.getMulti(domainId, { parentType, ...all ? {} : { hidden: false } }).hint('discussionSort'),
             page,
             'discussion',
         );

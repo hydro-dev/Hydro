@@ -507,6 +507,8 @@ class HomeDomainHandler extends Handler {
 
     @param('id', Types.String)
     async postLeave({ }, id: string) {
+        const ddoc = await domain.get(id);
+        if (!ddoc) throw new NotFoundError(id);
         await domain.setJoin(id, this.user._id, false);
         this.back();
     }

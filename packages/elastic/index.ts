@@ -31,7 +31,7 @@ export default class ElasticSearchService extends Service {
         this.client = new Client({ node: config.url });
     }
 
-    async problemSearch(domainId: string, q: string, opts): ReturnType<ProblemSearch> {
+    async problemSearch(domainId: string, q: string, opts: Parameters<ProblemSearch>[2] = {}): ReturnType<ProblemSearch> {
         const size = opts?.limit || SystemModel.get('pagination.problem');
         const from = Math.min(this.config.indexSize - size, opts?.skip || 0);
         const res = await this.client.search({

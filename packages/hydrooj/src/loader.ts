@@ -46,7 +46,6 @@ if (process.env.NIX_PROFILES) {
 
 export class Loader extends Service {
     public state: Record<string, EffectScope> = Object.create(null);
-    public config: {};
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
