@@ -135,7 +135,7 @@ class DomainModel {
     @ArgMethod
     static async setUserRole(domainId: string, uid: MaybeArray<number>, role: string, autojoin = false) {
         const update = { $set: { role, ...(autojoin ? { join: true } : {}) } };
-        if (!(uid instanceof Array)) {
+        if (!(Array.isArray(uid))) {
             const res = await collUser.findOneAndUpdate(
                 { domainId, uid },
                 update,
@@ -150,6 +150,15 @@ class DomainModel {
             .toArray();
         for (const udoc of affected) deleteUserCache(udoc);
         return await collUser.updateMany({ domainId, uid: { $in: uid } }, update, { upsert: true });
+    }
+
+    static async setJoin(domainId: string, uid: MaybeArray<number>, join: boolean) {
+        if (!(Array.isArray(uid))) {
+            await DomainModel.updateUserInDomain(domainId, uid, { $set: { join } });
+            return;
+        }
+        await collUser.updateMany({ domainId, uid: { $in: uid } }, { $set: { join } });
+        deleteUserCache(domainId);
     }
 
     static async getRoles(domainId: string, count?: boolean): Promise<any[]>;

@@ -488,7 +488,7 @@ class HomeDomainHandler extends Handler {
         } else {
             for (const ddoc of ddocs) {
                 // eslint-disable-next-line no-await-in-loop
-                const udoc = (await user.getById(ddoc._id, this.user._id))!;
+                const udoc = await user.getById(ddoc._id, this.user._id);
                 canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN);
                 role[ddoc._id] = udoc.role;
             }
@@ -503,6 +503,12 @@ class HomeDomainHandler extends Handler {
         if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
         else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
         this.back({ star });
+    }
+
+    @param('id', Types.String)
+    async postLeave({ }, id: string) {
+        await domain.setJoin(id, this.user._id, false);
+        this.back();
     }
 }
 

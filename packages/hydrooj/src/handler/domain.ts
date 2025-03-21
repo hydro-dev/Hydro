@@ -11,6 +11,7 @@ import avatar from '../lib/avatar';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import MessageModel from '../model/message';
 import * as oplog from '../model/oplog';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
@@ -163,11 +164,15 @@ class DomainUserHandler extends ManageHandler {
         };
     }
 
+    @param('uids', Types.NumericArray)
+    async post({ }, uids: number[]) {
+        if (uids.includes(this.domain.owner)) throw new ForbiddenError();
+    }
+
     @requireSudo
-    @post('uid', Types.Int)
-    @post('role', Types.Role)
-    async postSetUser(domainId: string, uid: number, role: string) {
-        if (uid === this.domain.owner) throw new ForbiddenError();
+    @param('uids', Types.NumericArray)
+    @param('role', Types.Role)
+    async postSetUsers(domainId: string, uid: number[], role: string) {
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
@@ -176,14 +181,20 @@ class DomainUserHandler extends ManageHandler {
     }
 
     @requireSudo
-    @param('uid', Types.NumericArray)
-    @param('role', Types.Role)
-    async postSetUsers(domainId: string, uid: number[], role: string) {
-        if (uid.includes(this.domain.owner)) throw new ForbiddenError();
+    @param('uids', Types.NumericArray)
+    async postKick({ domainId }, uids: number[]) {
+        const original = await domain.getMultiUserInDomain(domainId, { uid: { $in: uids } }).toArray();
+        const needUpdate = uids.filter((uid) => original.find((i) => i.uid === uid)?.join);
+        if (!needUpdate.length) return;
         await Promise.all([
-            domain.setUserRole(domainId, uid, role),
-            oplog.log(this, 'domain.setRole', { uid, role }),
+            domain.setJoin(domainId, needUpdate.length > 1 ? needUpdate : needUpdate[0], false),
+            oplog.log(this, 'domain.kick', { uids: needUpdate }),
         ]);
+        const msg = JSON.stringify({
+            message: 'You have been kicked from domain {0} by {1}.',
+            params: [this.domain.name, this.user.uname],
+        });
+        await Promise.all(needUpdate.map((i) => MessageModel.send(1, i, msg, MessageModel.FLAG_RICHTEXT | MessageModel.FLAG_UNREAD)));
         this.back();
     }
 }

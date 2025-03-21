@@ -133,6 +133,8 @@ Hydro 用户群：1085853538
 - import-qduoj: 修复 spj=null
 - core: 修复文件复制
 - core: 支持存储并显示提交记录重测历史
+- core: 新的加域逻辑
+- ui: UserSelect.Multi: 支持批量粘贴用户名
 
 ### Breaking API Changes
 
@@ -144,6 +146,7 @@ Hydro 用户群：1085853538
 - core: 移除 global.Hydro.ui.template
 - core: 移除 global.Hydro.lib
 - core: 移除 String.prototype.translate (使用 app.i18n.translate)
+- core: 升级至 Mongo Driver 6
 
 ## Hydro 4.19.0 / UI 4.57.0
 

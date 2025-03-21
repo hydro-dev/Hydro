@@ -463,7 +463,6 @@ Technical Information: 技術資訊
 Temporary session: 臨時會話
 Text: 文字
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
-Their account will not be deleted and they will be with the default role.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問。
 There are no contests...: 沒有比賽…
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
@@ -551,6 +550,7 @@ You cannot submit for this problem because the homework's deadline is due.: 功�
 You don't have the required permission ({0}) in this domain.: 您在該域中無相應許可權 ({0})。
 You don't have the required privilege.: 您沒有相應的特權。
 You don't own any domain and don't have privilege to create domain.: 您不擁有任何域也沒有創建域的特權。
+You have been kicked from domain {0} by {1}.: 您已被 {1} 從域 {0} 中移除。
 You have not submitted any solutions for this problem: 您在該題下沒有遞交過任何解答
 You have permission to create problems for this domain.: 您有許可權為此域創建題目。
 You haven't attended this contest yet.: 您還沒有參加本次比賽。

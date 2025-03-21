@@ -512,6 +512,7 @@ LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
 Leave empty for default: 留空以使用默认
+Leave: 离开
 Ledo: 乐多
 Legacy mode: 兼容模式
 Light: 亮色
@@ -916,7 +917,7 @@ The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the
 The uploaded file is too long.: 上传的文件太长。
 The user is already a member of the domain.: 该用户已是域的成员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)
-Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他们的账号不会被删除，并且之后将以 guest 角色访问，直到他们重新加入域。
 Theme: 主题
 There are no contests...: 没有比赛…
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯

@@ -60,8 +60,8 @@ const page = new NamedPage('domain_user', () => {
     const role = addUserDialog.$dom.find('[name="role"]').val();
     try {
       await request.post('', {
-        operation: 'set_user',
-        uid: user._id,
+        operation: 'set_users',
+        uids: [user._id],
         role,
       });
       window.location.reload();
@@ -91,15 +91,14 @@ const page = new NamedPage('domain_user', () => {
       $body: tpl`
         <div class="typo">
           <p>${i18n('Confirm removing the selected users?')}</p>
-          <p>${i18n('Their account will not be deleted and they will be with the default role.')}</p>
+          <p>${i18n('Their account will not be deleted and they will be with the guest role until they re-join the domain.')}</p>
         </div>`,
     }).open();
     if (action !== 'yes') return;
     try {
       await request.post('', {
-        operation: 'set_users',
-        uid: selectedUsers,
-        role: 'default',
+        operation: 'kick',
+        uids: selectedUsers,
       });
       Notification.success(i18n('Selected users have been removed from the domain.'));
       await delay(2000);
@@ -122,7 +121,7 @@ const page = new NamedPage('domain_user', () => {
     try {
       await request.post('', {
         operation: 'set_users',
-        uid: selectedUsers,
+        uids: selectedUsers,
         role,
       });
       Notification.success(i18n('Role has been updated to {0} for selected users.', role));
@@ -138,8 +137,8 @@ const page = new NamedPage('domain_user', () => {
     const role = $(ev.currentTarget).val();
     try {
       await request.post('', {
-        operation: 'set_user',
-        uid: row.attr('data-uid'),
+        operation: 'set_users',
+        uids: [row.attr('data-uid')],
         role,
       });
       Notification.success(i18n('Role has been updated to {0}.', role));

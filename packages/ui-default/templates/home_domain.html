@@ -44,6 +44,11 @@
           {% if canManage[ddoc['_id']] %}
             · <a class="typo-a" href="{{ url('domain_dashboard', domainId=ddoc['_id']) }}">{{ _('Manage') }}</a>
           {% endif %}
+            · <form class="form--inline" method="post">
+              <input type="hidden" name="operation" value="leave">
+              <input type="hidden" name="id" value="{{ ddoc['_id'] }}">
+              <button class="typo-a" type="submit">{{ _('Leave') }}</button>
+            </form>
           </td>
         </tr>
       {%- endfor -%}

@@ -238,6 +238,7 @@ Last Submit At: 最後遞交於
 Last Update At: 最後活動時間
 LaTeX Expressions: LaTeX 表示式
 Learn More: 瞭解更多
+Leave: 離開
 Links: 連結
 List View: 列表視圖
 Live: 正在進行
@@ -462,7 +463,7 @@ Technical Information: 技術資訊
 Temporary session: 臨時會話
 Text: 文字
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
-Their account will not be deleted and they will be with the default role.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問。
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他們的賬號不會被刪除，並且之後將以 guest 角色訪問，直到他們重新加入域。
 There are no contests...: 沒有比賽…
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。

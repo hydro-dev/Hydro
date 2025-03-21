@@ -680,6 +680,7 @@ Terms of Service: 이용 약관
 Test data comes from: Testdata 출처
 Testdata Config: Testdata 설정
 Text: 본문
+Leave: 나가기
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 추가 접수 중입니다. 제출할 수 있지만 감점될 수 있습니다.
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 초대 코드는 64글자 미만입니다.
 The invitation code you provided is invalid.: 잘못된 초대 코드
@@ -688,7 +689,7 @@ The role to assign when user joining the domain.: 사용자가 그룹에 참여�
 The uploaded file is too long.: 업로드한 파일이 너무 깁니다.
 The user is already a member of the domain.: 이미 그룹에 속한 사용자입니다.
 The user is too lazy to leave something here...: 설명이 없습니다... (´・ω・｀)
-Their account will not be deleted and they will be with the default role.: 계정은 삭제되지 않을 것이고, default 역할을 가질 것입니다.
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 계정은 삭제되지 않을 것이고, guest 역할을 가질 것입니다. 그룹에 다시 참여할 때까지 말이죠.
 There are no contests...: 대회 없음
 There is no homework so far ╰(*°▽°*)╯: 과제 없음 ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
