@@ -7,7 +7,7 @@ import { Binary, ObjectId } from 'mongodb';
 import { UAParser } from 'ua-parser-js';
 import { Context } from '../context';
 import {
-    AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -507,6 +507,7 @@ class HomeDomainHandler extends Handler {
 
     @param('id', Types.String)
     async postLeave({ }, id: string) {
+        if (id === 'system') throw new BadRequestError();
         const ddoc = await domain.get(id);
         if (!ddoc) throw new NotFoundError(id);
         await domain.setJoin(id, this.user._id, false);

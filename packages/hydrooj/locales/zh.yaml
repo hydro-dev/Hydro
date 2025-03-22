@@ -787,6 +787,7 @@ The discussion is locked, you can not reply anymore.: 此讨论已经锁定，�
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
 The invitation code you provided is invalid.: 您提供的邀请码无效。
+The link is either invalid or expired.: 加域链接无效或已过期。
 The link will be expired at {0}: 链接将于 {0} 过期
 The role to assign when user joining the domain.: 用户加入此域时分配的角色。
 The uploaded file is too long.: 上传的文件太长。
@@ -925,7 +926,8 @@ Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 WYSIWYG: 所见即所得
 Year: 年
-You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
+You are banned by the domain moderator.: 您被该域的管理员封禁。
+You are not allowed to join domain {0}. {1}: 您无法加入 {0}。{1}
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。
 You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 该比赛已结束，您无法在比赛模式下递交该题目。您可以点击“在题库中打开”以普通模式查看和递交本题。
 You cannot submit for this problem because the homework's deadline is due.: 作业已超过截止时间，您无法递交本题目。

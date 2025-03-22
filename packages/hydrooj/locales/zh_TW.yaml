@@ -463,6 +463,7 @@ Technical Information: 技術資訊
 Temporary session: 臨時會話
 Text: 文字
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
+The link is either invalid or expired.: 加域鏈接無效或已過期。
 There are no contests...: 沒有比賽…
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
@@ -545,6 +546,8 @@ Will be used as the domain icon.: 將被用作圖示。
 Without slashes or backslashes: 不含斜槓和反斜槓
 Write Your Comment: 發表您的評論
 Write Your Solution: 發表您的題解
+You are banned by the domain moderator.: 您被該域的管理員封禁。
+You are not allowed to join domain {0}. {1}: 您無法加入 {0}。{1}
 You can create your own training plans and share them with others.: 您可以創建您自己的訓練計劃並且與他人分享。
 You cannot submit for this problem because the homework's deadline is due.: 功課已到達截止時間，您無法遞交了。
 You don't have the required permission ({0}) in this domain.: 您在該域中無相應許可權 ({0})。

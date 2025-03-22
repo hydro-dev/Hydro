@@ -707,7 +707,7 @@ export const coreScripts: MigrationScript[] = [
     async function _91_92() {
         await domain.collUser.updateMany({}, { $set: { join: true } });
         await domain.coll.updateMany(
-            { $or: [{ _join: { $exists: false } }, { _join: { $eq: null } }] },
+            { $or: [{ _join: { $exists: false } }, { _join: { $eq: null } }, { '_join.method': domain.JOIN_METHOD_NONE }] },
             { $set: { _join: { method: domain.JOIN_METHOD_ALL, role: 'default', expire: null }, _migratedJoin: true } },
         );
         const domainUser = await domain.coll.find({ domainId: 'system', join: true }, onPrimary)

@@ -201,7 +201,7 @@ export async function push(
         { $push: { [key]: v } },
         { returnDocument: 'after' },
     );
-    return [doc.value, _id];
+    return [doc, _id];
 }
 
 export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[K]>>(

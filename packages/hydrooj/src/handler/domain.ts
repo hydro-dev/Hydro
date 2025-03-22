@@ -345,7 +345,8 @@ class DomainJoinHandler extends Handler {
         const roles = r.map((role) => role._id);
         this.joinSettings = domain.getJoinSettings(ddoc, roles);
         if (assignedRole !== 'default') delete this.joinSettings;
-        else if (!this.joinSettings) throw new DomainJoinForbiddenError(target);
+        else if (!this.joinSettings) throw new DomainJoinForbiddenError(target, 'The link is either invalid or expired.');
+        if (assignedRole === 'guest') throw new DomainJoinForbiddenError(target, 'You are banned by the domain moderator.');
     }
 
     @param('code', Types.Content, true)
