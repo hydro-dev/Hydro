@@ -40,6 +40,12 @@
         help_text:'The role to assign when user joining the domain.',
         value:joinSettings['role']|default('')
       }) }}
+      {{ form.form_text({
+        label:'Group Assignment (Optional)',
+        name:'group',
+        help_text:'The group to join when user joining the domain.',
+        value:joinSettings['group']|default('')
+      }) }}
       {{ form.form_select({
         options:expirations,
         label:'Expire',

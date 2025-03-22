@@ -280,9 +280,10 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     @requireSudo
     @post('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
     @post('role', Types.Role, true)
+    @post('group', Types.Name, true)
     @post('expire', Types.Int, true)
     @post('invitationCode', Types.Content, true)
-    async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
+    async post(domainId: string, method: number, role: string, group = '', expire: number, invitationCode = '') {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((rl) => rl._id);
         const current = domain.getJoinSettings(this.domain, roles);
@@ -291,7 +292,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         else {
             if (!roles.includes(role)) throw new ValidationError('role');
             if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
-            joinSettings = { method, role };
+            joinSettings = { method, role, group };
             if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) joinSettings.expire = current.expire;
             else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
             else if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
@@ -376,6 +377,12 @@ class DomainJoinHandler extends Handler {
             if (this.joinSettings.code !== code) {
                 throw new InvalidJoinInvitationCodeError(target);
             }
+        }
+        if (this.joinSettings?.group) {
+            const groups = await user.listGroup(target);
+            const entry = groups.find((i) => i.name === this.joinSettings.group);
+            if (!entry) throw new ValidationError('group');
+            await user.updateGroup(target, entry.name, entry.uids.concat(this.user._id));
         }
         await Promise.all([
             domain.setUserInDomain(target, this.user._id, {

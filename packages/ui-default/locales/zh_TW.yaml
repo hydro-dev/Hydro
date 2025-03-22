@@ -193,6 +193,7 @@ Forgot password or username?: 忘記密碼或者使用者名？
 Formula blocks: 公式區塊
 Gender Visibility: 性別可見性
 Gender: 性別
+Group Assignment (Optional): 小組分配 (選填)
 Hard Deadline: 最終截止時間
 Have ALL PERMISSIONS in this domain: 在此域中擁有全部許可權
 Help: 幫助
@@ -462,6 +463,7 @@ Support: 支援
 Technical Information: 技術資訊
 Temporary session: 臨時會話
 Text: 文字
+The group to join when user joining the domain.: 加入域時自動加入的小組。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
 Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他們的賬號不會被刪除，並且之後將以 guest 角色訪問，直到他們重新加入域。
 There are no contests...: 沒有比賽…

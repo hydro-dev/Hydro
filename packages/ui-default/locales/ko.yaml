@@ -312,6 +312,7 @@ Formula blocks: 공식 블록
 fs_upload: 업로드
 Gender Visibility: 성별 공개
 Gender: 성
+Group Assignment (Optional): 그룹 할당 (선택)
 Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한
@@ -387,6 +388,7 @@ Last Update At: '마지막 활동'
 LaTeX Expressions: LaTeX 표현
 Learn More: 더 알아보기
 Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
+Leave: 나가기
 Limitations: 제한
 Links: 링크
 List View: 목록 보기
@@ -680,7 +682,7 @@ Terms of Service: 이용 약관
 Test data comes from: Testdata 출처
 Testdata Config: Testdata 설정
 Text: 본문
-Leave: 나가기
+The group to join when user joining the domain.: 사용자가 그룹에 참여할 때 자동으로 참여할 그룹
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 추가 접수 중입니다. 제출할 수 있지만 감점될 수 있습니다.
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 초대 코드는 64글자 미만입니다.
 The invitation code you provided is invalid.: 잘못된 초대 코드
