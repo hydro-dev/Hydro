@@ -67,7 +67,7 @@
     "jquery.easing": "^1.4.1",
     "jquery.transit": "^0.9.12",
     "matchmedia-polyfill": "^0.3.2",
-    "md-editor-rt": "^5.4.3",
+    "md-editor-rt": "^5.4.4",
     "mini-css-extract-plugin": "^2.9.2",
     "moment": "^2.30.1",
     "monaco-editor": "0.52.2",

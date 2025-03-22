@@ -44,10 +44,12 @@ export function encodeRFC5987ValueChars(str: string) {
 async function forkContextWithScope<C extends CordisContext>(ctx: C) {
     const scope = ctx.plugin(() => { });
     await scope;
+    const dispose = () => scope.dispose();
     return {
         scope,
         ctx: scope.ctx,
-        [Symbol.asyncDispose]: () => scope.dispose(),
+        dispose,
+        [Symbol.asyncDispose]: dispose,
     };
 }
 
@@ -565,11 +567,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const { args } = ctx.HydroContext;
         const sub = await forkContextWithScope(savedContext);
         const h = new HandlerClass(ctx, sub.ctx);
-        // FIXME: should pass type check
-        await (this.ctx.parallel as any)('connection/create', h);
-        const stream = new PassThrough();
+        let stream: PassThrough;
         if (!conn) {
             // By HTTP
+            stream = new PassThrough();
             ctx.request.socket.setTimeout(0);
             ctx.req.socket.setNoDelay(true);
             ctx.req.socket.setKeepAlive(true);
@@ -592,23 +593,25 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         ctx.handler = h;
         h.conn = conn;
-        const disposables = [];
-        let interval: NodeJS.Timeout;
         let closed = false;
 
         const clean = async (err?: Error) => {
             if (closed) return;
             closed = true;
-            if (err) await h.onerror(err);
-            // FIXME: should pass type check
-            else (this.ctx.emit as any)('connection/close', h);
-            h.active = false;
-            for (const d of disposables) d();
-            if (layer) layer.clients.delete(conn);
-            if (err && !layer) ctx.status = 500;
-            if (interval) clearInterval(interval);
-            await h.cleanup?.(args);
-            await sub.scope.dispose();
+            try {
+                try {
+                    if (err) await h.onerror(err);
+                    // FIXME: should pass type check
+                    else (this.ctx.emit as any)('connection/close', h);
+                } finally {
+                    h.active = false;
+                    if (layer) layer.clients.delete(conn);
+                    if (err && !layer) ctx.status = 500;
+                    await h.cleanup?.(args);
+                }
+            } finally {
+                await sub.dispose();
+            }
         };
 
         try {
@@ -619,10 +622,10 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
-            for (const { name, target } of h.__subscribe || []) disposables.push(this.ctx.on(name, target.bind(h)));
+            for (const { name, target } of h.__subscribe || []) sub.ctx.on(name, target.bind(h));
             if (layer) {
                 let lastHeartbeat = Date.now();
-                interval = setInterval(() => {
+                sub.ctx.setInterval(() => {
                     if (Date.now() - lastHeartbeat > 80000) {
                         clean();
                         conn.terminate();
@@ -642,8 +645,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     let payload;
                     try {
                         payload = JSON.parse(e.data.toString());
-                    } catch {
-                        conn.close();
+                    } catch (err) {
+                        await clean(err);
                     }
                     try {
                         await h.message?.(payload);
@@ -667,6 +670,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             // error during initialization (prepare, hooks)
+            logger.error(e);
             await clean(e);
         }
     }

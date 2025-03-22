@@ -710,7 +710,7 @@ export const coreScripts: MigrationScript[] = [
             { $or: [{ _join: { $exists: false } }, { _join: { $eq: null } }, { '_join.method': domain.JOIN_METHOD_NONE }] },
             { $set: { _join: { method: domain.JOIN_METHOD_ALL, role: 'default', expire: null }, _migratedJoin: true } },
         );
-        const domainUser = await domain.coll.find({ domainId: 'system', join: true }, onPrimary)
+        const domainUser = await domain.collUser.find({ domainId: 'system', join: true }, onPrimary)
             .project({ uid: 1 }).toArray();
         const otherUsers = await user.coll.find({ _id: { $gt: 1, $nin: domainUser.map((u) => u.uid) } }, onPrimary)
             .project({ _id: 1 }).toArray();

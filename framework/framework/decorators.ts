@@ -14,6 +14,8 @@ export interface ParamOption<T> {
     validate?: Validator,
 }
 
+const mergeValidator = (L: Validator, R: Validator) => (v: any) => L(v) && R(v);
+
 function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type<any> | boolean | Validator | Converter<any>>) {
     let cursor = 0;
     const v: ParamOption<any> = { name, source };
@@ -27,7 +29,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
             if (type[2]) v.isOptional = type[2];
         } else if (typeof current === 'boolean') v.isOptional = current;
         else if (isValidate) {
-            if (current !== null) v.validate = current;
+            if (current !== null) v.validate = mergeValidator(v.validate, current);
             isValidate = false;
         } else v.convert = current;
         cursor++;

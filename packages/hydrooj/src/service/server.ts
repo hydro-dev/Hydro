@@ -119,6 +119,8 @@ export async function apply(ctx: Context) {
         server.addLayer('base', baseLayer);
         server.addLayer('user', userLayer);
 
+        let cachedTranslate = null;
+
         server.handlerMixin({
             url(name: string, ...kwargsList: Record<string, any>[]) {
                 if (name === '#') return '#';
@@ -159,10 +161,11 @@ export async function apply(ctx: Context) {
             translate(str: string) {
                 if (!str) return '';
                 const lang = this.user?.viewLang || this.session?.viewLang;
-                const res = lang
-                    ? ctx.i18n.translate(str.toString(), [lang, ...this.context.acceptsLanguages()])
-                    : ctx.i18n.translate(str.toString(), [...this.context.acceptsLanguages(), system.get('server.language')]);
-                return res;
+                const langs = lang
+                    ? [lang, ...this.context.acceptsLanguages()]
+                    : [...this.context.acceptsLanguages(), system.get('server.language')];
+                cachedTranslate ||= ctx.i18n.translate;
+                return cachedTranslate(str.toString(), langs);
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string | number) {
                 return db.paginate(cursor, page, typeof key === 'number' ? key : (this.ctx.setting.get(`pagination.${key}`) || 20));

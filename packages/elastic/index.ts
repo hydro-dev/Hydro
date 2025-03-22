@@ -26,7 +26,6 @@ export default class ElasticSearchService extends Service {
     client: Client;
 
     constructor(ctx: Context, private config: ReturnType<typeof ElasticSearchService.Config>) {
-        console.log('elastic-search', config);
         super(ctx, 'elastic-search');
         this.client = new Client({ node: config.url });
     }
