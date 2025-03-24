@@ -64,14 +64,11 @@ export default class GoogleOAuthService extends Service {
                 };
             },
             get: async function get(this: Handler) {
-                const [appid, url, [state]] = await Promise.all([
-                    config.id,
-                    config.proxy,
-                    TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer }),
-                ]);
+                const [state] = await TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer });
+                const url = SystemModel.get('server.url');
                 const scope = encodeURIComponent('https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile');
                 // eslint-disable-next-line max-len
-                this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${appid}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=${scope}&state=${state}`;
+                this.response.redirect = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${config.id}&response_type=code&redirect_uri=${url}oauth/google/callback&scope=${scope}&state=${state}`;
             },
         });
         ctx.i18n.load('zh', {

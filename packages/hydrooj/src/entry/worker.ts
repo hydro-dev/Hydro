@@ -9,7 +9,7 @@ import { load } from '../options';
 import { MongoService } from '../service/db';
 import { ConfigService } from '../settings';
 import {
-    addon, builtinModel, locale, model, service, setting,
+    addon, builtinModel, locale, model, service,
 } from './common';
 
 const argv = cac().parse();
@@ -53,11 +53,10 @@ export async function apply(ctx: Context) {
     require('../lib/index');
 
     ctx.plugin(require('../service/monitor'));
-    ctx.plugin(require('../service/check'));
+    ctx.plugin(require('../service/check').default);
     await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
-    await setting(pending, fail, require('../model/setting'));
     ctx = await new Promise((resolve) => {
         ctx.inject(['worker', 'setting'], (c) => {
             resolve(c);

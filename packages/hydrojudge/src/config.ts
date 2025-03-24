@@ -30,7 +30,7 @@ export const JudgeSettings = Schema.object({
     rate: Schema.number().default(1),
     env: Schema.string().default(defaultEnv),
     host: Schema.any(),
-    secret: Schema.string().description('Judge Token Secret').default('Hydro-Judge-Secret'),
+    secret: Schema.string().description('Judge Token Secret').default(String.random(32)),
     disable: Schema.boolean().description('Disable builtin judge').default(false),
     detail: Schema.boolean().description('Show diff detail').default(true),
     performance: Schema.boolean().description('Performance mode').default(false),

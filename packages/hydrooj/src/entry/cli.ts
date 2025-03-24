@@ -8,7 +8,7 @@ import { load as loadOptions } from '../options';
 import { MongoService } from '../service/db';
 import { ConfigService } from '../settings';
 import {
-    addon, builtinModel, model, service, setting,
+    addon, builtinModel, model, service,
 } from './common';
 
 const argv = cac().parse();
@@ -125,7 +125,6 @@ export async function load(ctx: Context) {
     ctx.plugin(require('../service/worker'));
     await builtinModel(ctx);
     await model(pending, fail, ctx);
-    await setting(pending, fail, require('../model/setting'));
     ctx.plugin(require('../service/server'));
     ctx = await new Promise((resolve) => {
         ctx.inject(['server', 'setting', 'worker'], (c) => {

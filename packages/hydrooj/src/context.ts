@@ -9,7 +9,6 @@ import type { EventMap } from './service/bus';
 import type CheckService from './service/check';
 import type { } from './service/migration';
 
-// TODO: this is an broken declaration
 export { EventMap as Events };
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {

@@ -1,7 +1,7 @@
 // TODO check more
 
 import os from 'os';
-import { Dictionary } from 'lodash';
+import { DisposableList } from '@cordisjs/core';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
 import db from './db';
@@ -11,7 +11,7 @@ type ReportFunction = (message: string, ...args: any[]) => Promise<void>;
 type CheckItem = (context: any, log: ReportFunction, warn: ReportFunction, error: ReportFunction) => Promise<void>;
 
 export default class CheckService extends Service {
-    checkers: Dictionary<CheckItem> = {};
+    checkers = new DisposableList<CheckItem>();
     c = {};
 
     constructor(ctx: Context) {
@@ -51,24 +51,19 @@ export default class CheckService extends Service {
     }
 
     addChecker(type: string, checkFunc: CheckItem) {
-        this.ctx.effect(() => {
-            this.checkers[`check${type}`] = checkFunc;
-            return () => {
-                delete this.checkers[`check${type}`];
-            };
-        });
+        this.checkers.push(checkFunc);
     }
 
     async run(ctx, log, warn, error, cb: (id: string) => void) {
         const id = String.random(6);
         cb(id);
-        for (const name in this.checkers) {
+        for (const check of this.checkers) {
             if (this.c[id]) {
                 delete this.c[id];
                 return;
             }
             // eslint-disable-next-line no-await-in-loop
-            await this.checkers[name](ctx, log, warn, error);
+            await check(ctx, log, warn, error);
         }
     }
 

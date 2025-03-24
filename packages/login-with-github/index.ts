@@ -15,9 +15,9 @@ export default class LoginWithGithubService extends Service {
         ctx.provideModule('oauth', 'github', {
             text: 'Login with Github',
             callback: async function callback({ state, code }) {
-                const url = await SystemModel.get('server.url');
                 const s = await TokenModel.get(state, TokenModel.TYPE_OAUTH);
                 if (!s) throw new ValidationError('token');
+                const url = SystemModel.get('server.url');
                 const res = await superagent.post(`${config.endpoint || 'https://github.com'}/login/oauth/access_token`)
                     .send({
                         client_id: config.id,
@@ -59,8 +59,7 @@ export default class LoginWithGithubService extends Service {
             },
             get: async function get(this: Handler) {
                 const [state] = await TokenModel.add(TokenModel.TYPE_OAUTH, 600, { redirect: this.request.referer });
-                // eslint-disable-next-line max-len
-                this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${config.appid}&state=${state}&scope=read:user,user:email`;
+                this.response.redirect = `https://github.com/login/oauth/authorize?client_id=${config.id}&state=${state}&scope=read:user,user:email`;
             },
         });
         ctx.i18n.load('zh', {

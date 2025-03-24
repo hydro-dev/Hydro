@@ -253,7 +253,7 @@ parallelism: ${Math.max(1, Math.floor(cpus().length / 4))}
 singleTaskParallelism: 2
 rate: 1.00
 rerun: 2
-secret: Hydro-Judge-Secret
+secret: ${String.random(32)}
 env: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
@@ -711,7 +711,7 @@ async function main() {
                     while (res.code && op[1].ignore !== true) {
                         if (op[1].retry && retry < 30) {
                             log.warn('Retry in 3 secs... (%s)', op[0]);
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
                             res = exec(op[0], { stdio: 'inherit' });
                             retry++;
@@ -723,9 +723,9 @@ async function main() {
                     while (res === 'retry') {
                         if (retry < 30) {
                             log.warn('Retry in 3 secs...');
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
-                            // eslint-disable-next-line no-await-in-loop
+
                             res = await op[0](op[1]);
                             retry++;
                         } else log.fatal('Error installing');

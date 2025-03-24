@@ -22,7 +22,7 @@
     "@fontsource/source-code-pro": "^5.2.5",
     "@fontsource/ubuntu-mono": "^5.2.5",
     "@hydrooj/utils": "workspace:^",
-    "@sentry/browser": "^9.8.0",
+    "@sentry/browser": "^9.9.0",
     "@sentry/webpack-plugin": "^3.2.2",
     "@simplewebauthn/browser": "13.1.0",
     "@svgr/webpack": "^8.1.0",

@@ -40,7 +40,7 @@
         "lodash": "^4.17.21",
         "lru-cache": "^10.4.3",
         "mime-types": "^2.1.35",
-        "moment-timezone": "^0.5.47",
+        "moment-timezone": "^0.5.48",
         "mongodb": "^6.15.0",
         "mongodb-uri": "^0.9.7",
         "nanoid": "^5.1.5",
