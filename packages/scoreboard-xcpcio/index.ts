@@ -100,7 +100,7 @@ export async function apply(ctx: Context) {
                             },
                         },
                         submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
-                            const submit = new ObjectId(j.rid).getTimestamp().getTime();
+                            const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
                             const curStatus = status[j.status] || 'SYSTEM_ERROR';
                             return {
                                 problem_id: tdoc.pids.indexOf(j.pid),

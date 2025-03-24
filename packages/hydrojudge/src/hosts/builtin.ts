@@ -4,7 +4,7 @@ import path from 'path';
 import { fs } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
-    db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
+    Context as HydroContext, db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
     SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
@@ -59,10 +59,11 @@ const session: Session = {
     },
 };
 
-export async function postInit(ctx) {
-    if (SystemModel.get('hydrojudge.disable')) return;
+export async function* apply(ctx: HydroContext) {
     ctx.inject(['check'], (c) => {
-        c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+        c.check.addChecker('Judge', async (_ctx, log, warn, error) => {
+            await versionCheck(warn, error);
+        });
     });
     await fs.ensureDir(getConfig('tmp_dir'));
     const info = await sysinfo.get();
@@ -76,6 +77,7 @@ export async function postInit(ctx) {
     };
     const parallelism = Math.max(getConfig('parallelism'), 2);
     const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    yield () => taskConsumer.destroy();
     async function collectInfo() {
         const coll = db.collection('status');
         const compilers = await compilerVersions(langs);
@@ -91,11 +93,11 @@ export async function postInit(ctx) {
             { upsert: true },
         );
     }
-    ctx.on('system/setting', () => {
+    yield ctx.on('system/setting', () => {
         taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
         collectInfo();
     });
     collectInfo();
-    TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
-    TaskModel.consume({ type: 'generate' }, handle);
+    const generateConsumer = TaskModel.consume({ type: 'generate' }, handle);
+    yield () => generateConsumer.destroy();
 }

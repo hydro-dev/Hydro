@@ -13,7 +13,6 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
-import { check } from '../service/check';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
@@ -70,11 +69,11 @@ class SystemCheckConnHandler extends ConnectionHandler {
         const log = (payload: any) => this.send({ type: 'log', payload });
         const warn = (payload: any) => this.send({ type: 'warn', payload });
         const error = (payload: any) => this.send({ type: 'error', payload });
-        await check.run(this, log, warn, error, (id) => { this.id = id; });
+        await this.ctx.check.run(this, log, warn, error, (id) => { this.id = id; });
     }
 
     async cleanup() {
-        check.cancel(this.id);
+        this.ctx.check.cancel(this.id);
     }
 }
 
@@ -351,7 +350,7 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
-export const inject = ['config'];
+export const inject = ['config', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);

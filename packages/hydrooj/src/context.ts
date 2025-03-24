@@ -6,7 +6,7 @@ import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
-import type { CheckService } from './service/check';
+import type CheckService from './service/check';
 import type { } from './service/migration';
 
 // TODO: this is an broken declaration
