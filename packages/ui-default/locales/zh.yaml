@@ -42,6 +42,7 @@ __langname: 简体中文
 'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
+'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
@@ -908,7 +909,6 @@ Testdata: 测试数据
 Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
-The domain owner: 域所有者：
 The group to join when user joining the domain.: 加入域时自动加入的小组。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。

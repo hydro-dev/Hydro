@@ -121,6 +121,8 @@ class UserSudoHandler extends Handler {
 }
 
 class UserTFAHandler extends Handler {
+    noCheckPermView = true;
+
     @param('q', Types.String)
     async get({ }, q: string) {
         let udoc = await user.getByUname('system', q);

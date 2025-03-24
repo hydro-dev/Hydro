@@ -16,8 +16,7 @@
         <p>{{ _('By clicking the button, you will become a member of the domain {0}.').format(domainInfo['name']) }}</p>
       </div>
       <div class="section__body typo">
-        <p>{{ _('The domain owner:') }}</p>
-        {{ user.render_inline(domainInfo['owner']) }}
+        <p>{{ _('The domain owner:') }} {{ user.render_inline(domainInfo['owner']) }}</p>
       </div>
       {% if domainInfo['bulletin'] %}
         <div class="section__body typo">
