@@ -74,7 +74,9 @@ export class MongoService extends Service {
     public async fixExpireAfter() {
         // Sometimes mongo's expireAfterSeconds is not working in non-replica set mode;
         const collections = await this.db.listCollections().toArray();
+        const ignore = ['system.profile', 'system.users', 'system.version', 'system.views'];
         for (const c of collections) {
+            if (ignore.includes(c.name)) continue;
             const coll = this.db.collection(c.name);
             const indexes = await coll.listIndexes().toArray();
             for (const i of indexes) {
