@@ -1,10 +1,6 @@
 {% extends "manage_base.html" %}
 {% block manage_content %}
-</div>
-<div class="medium-12 columns">
 {{ set(UiContext, 'schema', schema) }}
 {{ set(UiContext, 'config', value) }}
-<div class="section">
-  <div class="section__body" id="app"></div>
-</div>
+<div id="app"></div>
 {% endblock %}

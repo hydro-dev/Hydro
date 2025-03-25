@@ -1,8 +1,8 @@
+import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/components';
 import type { Udoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { api, gql } from 'vj/utils';
-import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
 const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
   <AutoComplete<Udoc>

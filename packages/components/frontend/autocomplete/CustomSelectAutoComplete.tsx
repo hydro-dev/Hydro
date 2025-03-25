@@ -1,3 +1,4 @@
+import { defaults } from 'lodash';
 import PropTypes from 'prop-types';
 import React from 'react';
 import AutoComplete from './AutoComplete';
@@ -7,18 +8,27 @@ type DefaultProps = {
   name: string;
 } & string;
 
-const CustomSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
-  <AutoComplete<DefaultProps>
+const CustomSelectAutoComplete = React.forwardRef<any, any>((props, ref) => {
+  const def = defaults(props, {
+    width: '100%',
+    height: 'auto',
+    listStyle: {},
+    multi: false,
+    selectedKeys: [],
+    freeSolo: false,
+    freeSoloConverter: (input) => input,
+  });
+  return <AutoComplete<DefaultProps>
     ref={ref as any}
-    fetchItems={(keys) => props.data.filter((i) => (i._id ? keys.includes(i._id) : keys.includes(i)))}
-    queryItems={(query) => props.data.filter((i) => (i.name || i).toString().toLowerCase().includes(query.toLowerCase()))}
+    fetchItems={(keys) => def.data.filter((i) => (i._id ? keys.includes(i._id) : keys.includes(i)))}
+    queryItems={(query) => def.data.filter((i) => (i.name || i).toString().toLowerCase().includes(query.toLowerCase()))}
     itemText={(item) => `${item.name || item}`}
     itemKey={(item) => `${item._id?.toString() || item.name || item}`}
     renderItem={(item) => `${item.name || item}`}
     allowEmptyQuery
-    {...props}
-  />
-));
+    {...def}
+  />;
+});
 
 CustomSelectAutoComplete.propTypes = {
   width: PropTypes.string,
@@ -34,15 +44,5 @@ CustomSelectAutoComplete.propTypes = {
 };
 
 CustomSelectAutoComplete.displayName = 'CustomSelectAutoComplete';
-
-CustomSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
-};
 
 export default CustomSelectAutoComplete;

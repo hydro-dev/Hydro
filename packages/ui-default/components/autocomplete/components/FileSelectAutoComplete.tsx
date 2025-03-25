@@ -1,6 +1,6 @@
+import { AutoComplete } from '@hydrooj/components';
 import PropTypes from 'prop-types';
 import React from 'react';
-import AutoComplete from './AutoComplete';
 
 type DefaultProps = {
   _id: string;

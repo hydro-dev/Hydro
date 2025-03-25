@@ -1,3 +1,4 @@
+import { CustomSelectAutoComplete } from '@hydrooj/components';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import {
   Button, ControlGroup,
@@ -8,7 +9,6 @@ import { isEqual } from 'lodash';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
-import CustomSelectAutoComplete from '../../autocomplete/components/CustomSelectAutoComplete';
 import { RootState } from '../reducer';
 
 interface SubtaskSettingsProps {

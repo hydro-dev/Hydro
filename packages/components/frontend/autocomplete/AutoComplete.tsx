@@ -1,3 +1,5 @@
+import './autocomplete.scss';
+
 import { debounce, uniqueId } from 'lodash';
 import React, {
   forwardRef, useEffect,
@@ -5,7 +7,7 @@ import React, {
 } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Icon from 'vj/components/react/IconComponent';
+import Icon from '../Icon';
 
 export interface AutoCompleteProps<Item> {
   width?: string;

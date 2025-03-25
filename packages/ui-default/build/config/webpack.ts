@@ -88,6 +88,14 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     };
   }
 
+  function scssLoader() {
+    return {
+      loader: 'sass-loader',
+      options: {
+      },
+    };
+  }
+
   const config: import('webpack').Configuration = {
     // bail: !env.production,
     mode: (env.production || env.measure) ? 'production' : 'development',
@@ -199,6 +207,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         {
           test: /\.styl$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader(), stylusLoader()],
+        },
+        {
+          test: /\.scss$/,
+          use: [extractCssLoader(), cssLoader(), postcssLoader(), scssLoader()],
         },
         {
           test: /\.css$/,

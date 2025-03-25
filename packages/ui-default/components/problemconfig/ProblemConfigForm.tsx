@@ -1,3 +1,4 @@
+import { CustomSelectAutoComplete } from '@hydrooj/components';
 import {
   Card, InputGroup, Tag,
 } from '@blueprintjs/core';
@@ -5,7 +6,6 @@ import { isEqual } from 'lodash';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
-import CustomSelectAutoComplete from '../autocomplete/components/CustomSelectAutoComplete';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
 import { FormItem } from './BasicForm';
 import ProblemType from './ProblemType';
