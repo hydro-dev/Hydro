@@ -59,7 +59,7 @@ const session: Session = {
     },
 };
 
-export async function* apply(ctx: HydroContext) {
+export async function apply(ctx: HydroContext) {
     ctx.inject(['check'], (c) => {
         c.check.addChecker('Judge', async (_ctx, log, warn, error) => {
             await versionCheck(warn, error);
@@ -75,9 +75,7 @@ export async function* apply(ctx: HydroContext) {
         }
         await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
-    const parallelism = Math.max(getConfig('parallelism'), 2);
-    const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
-    yield () => taskConsumer.destroy();
+    const parallelism = getConfig('parallelism');
     async function collectInfo() {
         const coll = db.collection('status');
         const compilers = await compilerVersions(langs);
@@ -93,11 +91,20 @@ export async function* apply(ctx: HydroContext) {
             { upsert: true },
         );
     }
-    yield ctx.on('system/setting', () => {
-        taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
-        collectInfo();
+    ctx.effect(() => {
+        const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+        const dispose = ctx.on('system/setting', () => {
+            taskConsumer.setConcurrency(getConfig('parallelism'));
+            collectInfo();
+        });
+        return () => {
+            taskConsumer.destroy();
+            dispose();
+        };
+    });
+    ctx.effect(() => {
+        const generateConsumer = TaskModel.consume({ type: 'generate' }, handle);
+        return () => generateConsumer.destroy();
     });
     collectInfo();
-    const generateConsumer = TaskModel.consume({ type: 'generate' }, handle);
-    yield () => generateConsumer.destroy();
 }

@@ -2,7 +2,6 @@
 /* eslint-disable no-await-in-loop */
 import '../lib/index';
 
-import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';

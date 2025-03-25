@@ -670,7 +670,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             // error during initialization (prepare, hooks)
-            logger.error(e);
             await clean(e);
         }
     }

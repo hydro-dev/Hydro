@@ -16,6 +16,7 @@ declare module '../service/bus' {
 class I18nService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'i18n');
+        this.translate = this.translate.bind(this);
         this.load('ja', { __flag: '🇯🇵', __id: 'ja', __langname: '日本語' });
     }
 
