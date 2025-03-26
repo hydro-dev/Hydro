@@ -484,7 +484,6 @@ export class ProblemModel {
             } else {
                 problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
             }
-            problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
         } catch (e) {
             if (options.delSource) await fs.remove(tmpdir);
         }
