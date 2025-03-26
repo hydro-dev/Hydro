@@ -584,7 +584,7 @@ export class ProblemModel {
                     }
                 }
                 for (const [f, loc] of await getFiles('output_validators')) {
-                    if (!f.isFile()) continue;
+                    if (f.isFile()) continue;
                     const sub = await fs.readdir(loc);
                     for (const file of sub) {
                         if (file === 'testlib.h') continue;
