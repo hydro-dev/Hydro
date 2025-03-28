@@ -26,6 +26,9 @@
       {% if not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
         <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
+      {% elif not handler.user._dudoc.join %}
+        <li class="menu__item"><a class="menu__link" href="/domain/join?target={{ pdoc.domainId }}">
+        <span class="icon icon-add"></span> {{ _('Join Domain to Create a Discussion') }}</a></li>
       {% else %}
         <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
         <span class="icon icon-add"></span> {{ _('No Permission to Create a Discussion') }}</a></li>
@@ -51,6 +54,9 @@
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}
         </a>
+    {% elif not handler.user._dudoc.join %}
+        <li class="menu__item"><a class="menu__link" href="/domain/join?target={{ pdoc.domainId }}">
+        <span class="icon icon-add"></span> {{ _('Join Domain to Attend Contest') }}</a></li>
     {% else %}
         <a class="menu__link disabled" href="javascript:;">
           <span class="icon icon-add"></span> {{ _('No Permission to Attend Contest') }}

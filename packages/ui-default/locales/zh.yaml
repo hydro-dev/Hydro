@@ -38,6 +38,7 @@ __langname: 简体中文
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
+'Or use the following link:': 或使用以下链接：
 'Packages have new version: {0}': '以下组件有新版本： {0}'
 'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
@@ -943,6 +944,7 @@ Timezone: 时区
 title: 标题
 Title: 标题
 To get a better editing experience, with code highlighting and test runs, please go back to the problem detail page and use 'Open Scratchpad' button.: 为了获得更好的编辑体验，包括代码高亮和测试运行功能，请返回题目详情页面并点击“进入在线编程模式”按钮。
+To join the domain, users can click the "Join Domain" button on "My Domain" page.: 要加入域，用户可以点击“我的域”页面中的“加入域”按钮。
 Toggle Pretest Panel: 切换自测面板
 Toggle Preview: 切换预览
 Toggle Records Panel: 切换评测记录面板
@@ -1009,6 +1011,7 @@ User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID
 Username: 用户名
+Users will have to manually join the domain first before selected roles can be applied.: 用户需要先手动加入域才能应用此角色分配。
 Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此域中移除。
 Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户

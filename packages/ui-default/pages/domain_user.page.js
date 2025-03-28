@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, ConfirmDialog, InfoDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -9,6 +9,20 @@ import {
 } from 'vj/utils';
 
 const page = new NamedPage('domain_user', () => {
+  $('.not-joined').data('tooltip', i18n('Click to view detailed instructions.'));
+  $('.not-joined').addClass('text-orange');
+  $(document).on('click', '.not-joined', () => {
+    new InfoDialog({
+      $body: tpl`
+        <div class="typo">
+          <p>${i18n('Users will have to manually join the domain first before selected roles can be applied.')}</p>
+          <p>${i18n('To join the domain, users can click the "Join Domain" button on "My Domain" page.')}</p>
+          <p>${i18n('Or use the following link:')}</p>
+          <p><a href="/domain/join?target=${UiContext.domain._id}">/domain/join?target=${UiContext.domain._id}</a></p>
+        </div>`,
+    }).open();
+  });
+
   const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));
   const addUserDialog = new ActionDialog({
     $body: $('.dialog__body--add-user > div'),

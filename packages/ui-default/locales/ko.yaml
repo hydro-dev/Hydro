@@ -32,6 +32,7 @@ __langname: 한국어
 'Join {0}': '참여 {0}'
 'No': 아니오
 'Note: Problem title may not be hidden.': '주의: 문제 제목은 숨길 수 없습니다.'
+'Or use the following link:': '또는 다음 링크를 사용하세요:'
 'Role {1} already exists in domain {0}.': '역할 {1}이(가) 이미 {0}에 존재합니다.'
 'Solved {0} problems, RP: {1} (No. {2})': '총 {0} 문제 해결.RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 의 값 `{1}` 이 이미 존재합니다.'
@@ -42,9 +43,6 @@ __langname: 한국어
 (All Problems): (전체 문제)
 (None): (N/A)
 (Not changed): 수정되지 않음
-#Sample Input: Sample Input
-#Sample Output: Sample Output
-#Star: Star
 Aborted: 중지됨
 About {0}: '{0}에 대하여'
 About Markdown: Markdown에 대하여
@@ -758,6 +756,7 @@ User-defined role: 사용자 지정 역할
 User: 사용자
 Username / UID: 아이디
 Username: 아이디
+Users will have to manually join the domain first before selected roles can be applied.: 사용자는 먼저 도메인에 수동으로 참여해야 선택된 역할을 적용할 수 있습니다.
 Users with those roles will be removed from the domain.: 이 역할을 가진 사용자들이 그룹에서 제거될 것입니다.
 Users: 사용자
 Using your {0} universal account: '{0} 공용 계정을 사용'
