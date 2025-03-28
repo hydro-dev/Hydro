@@ -336,7 +336,7 @@ export interface WebServiceConfig {
     enableSSE?: boolean;
 }
 
-export class WebService<C extends CordisContext = CordisContext> extends Service<C> {
+export class WebService<C extends CordisContext = CordisContext> extends Service<never, C> {
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];

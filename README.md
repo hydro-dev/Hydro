@@ -145,8 +145,10 @@ Hydro 用户群：1085853538
 - core: 移除 global.Hydro.service
 - core: 移除 global.Hydro.ui.template
 - core: 移除 global.Hydro.lib
-- core: 移除 String.prototype.translate (使用 app.i18n.translate)
+- core: 移除 String.prototype.translate (使用 ctx.i18n.translate)
 - core: 升级至 Mongo Driver 6
+- core: 移除 registerResolver, registerValue, registerUnion (使用 ctx.api.resolver/...)
+- core: 移除 paginate, rank (使用 ctx.db.paginate, ctx.db.ranked)
 
 ## Hydro 4.19.0 / UI 4.57.0
 

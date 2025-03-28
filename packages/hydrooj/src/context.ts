@@ -39,7 +39,7 @@ export interface Context extends cordis.Context {
     geoip?: GeoIP;
 }
 
-export abstract class Service extends cordis.Service<Context> {
+export abstract class Service<T = never> extends cordis.Service<T, Context> {
 }
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
@@ -50,7 +50,7 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         });
     };
 
-export class ApiMixin extends cordis.Service<Context> {
+export class ApiMixin extends cordis.Service<never, Context> {
     addScript = T(addScript);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);

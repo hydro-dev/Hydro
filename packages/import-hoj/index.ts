@@ -19,7 +19,7 @@ class ImportHojHandler extends Handler {
         }
         const tmp = path.resolve(tmpdir, String.random(32));
         await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
+            zip.extractAllToAsync(tmp, true, false, (err) => (err ? reject(err) : resolve(null)));
         });
         let cnt = 0;
         try {

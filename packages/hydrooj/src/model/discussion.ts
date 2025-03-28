@@ -37,7 +37,6 @@ export const typeDisplay = {
     [document.TYPE_CONTEST]: 'contest',
     [document.TYPE_DISCUSSION_NODE]: 'node',
     [document.TYPE_TRAINING]: 'training',
-    [document.TYPE_HOMEWORK]: 'homework',
 };
 
 export const coll = db.collection('discussion.history');

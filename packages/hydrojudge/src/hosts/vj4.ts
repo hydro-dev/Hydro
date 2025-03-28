@@ -158,7 +158,7 @@ export default class VJ4 implements Session {
             if (entries.length > 512) throw new FormatError('Too many files');
             if (Math.sum(entries.map((i) => i.header.size)) > 256 * 1024 * 1024) throw new FormatError('File too large');
             await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(savePath, true, (e) => {
+                zip.extractAllToAsync(savePath, true, false, (e) => {
                     if (e) reject(e);
                     else resolve(null);
                 });
@@ -183,7 +183,7 @@ export default class VJ4 implements Session {
         const entries = zip.getEntries();
         if (entries.length > 512) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(savePath, true, (e) => {
+            zip.extractAllToAsync(savePath, true, false, (e) => {
                 if (e) reject(e);
                 else resolve(null);
             });

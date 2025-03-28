@@ -8,7 +8,7 @@ import sanitize from 'sanitize-filename';
 import { JudgeResultBody, ProblemConfigFile, TestCase } from '@hydrooj/common';
 import { Context } from '../context';
 import {
-    FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
+    BadRequestError, FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
 } from '../error';
 import { RecordDoc, Task } from '../interface';
 import { Logger } from '../logger';
@@ -102,40 +102,6 @@ export async function postJudge(rdoc: RecordDoc) {
     await bus.parallel('record/judge', rdoc, updated, pdoc);
 }
 
-bus.on('record/judge', async (rdoc, updated, pdoc) => {
-    if (!pdoc || rdoc.status !== STATUS.STATUS_HACK_SUCCESSFUL) return;
-    if (rdoc.contest) return;
-    try {
-        const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
-        assert(config.subtasks instanceof Array);
-        const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
-        assert(file);
-        const hackSubtask = config.subtasks[config.subtasks.length - 1];
-        hackSubtask.cases ||= [];
-        const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
-        hackSubtask.cases.push({ input, output: '/dev/null' });
-        await Promise.all([
-            problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
-            problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
-        ]);
-        // trigger rejudge
-        const rdocs = await record.getMulti(rdoc.domainId, {
-            pid: rdoc.pid,
-            status: STATUS.STATUS_ACCEPTED,
-            contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
-        }).project({ _id: 1, contest: 1 }).toArray();
-        const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
-        await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
-    } catch (e) {
-        next({
-            rid: rdoc._id.toString(),
-            domainId: rdoc.domainId,
-            key: 'next',
-            message: { message: 'Unable to apply hack: {0}', params: [e.message] },
-        });
-    }
-});
-
 export async function end(body: Partial<JudgeResultBody>) {
     const { $set, $push } = processPayload(body);
     const $unset: any = { progress: '' };
@@ -219,7 +185,6 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     query: any = { type: { $in: ['judge', 'generate'] } };
     concurrency = 1;
     consumer: Consumer = null;
-    startTimeout: NodeJS.Timeout = null;
     tasks: Record<string, {
         resolve: (_: any) => void,
         queue: PQueue,
@@ -230,10 +195,6 @@ export class JudgeConnectionHandler extends ConnectionHandler {
     async prepare() {
         logger.info('Judge daemon connected from ', this.request.ip);
         this.sendLanguageConfig();
-        // TODO deprecated, just for compatibility
-        this.startTimeout = setTimeout(() => {
-            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
-        }, 15000);
     }
 
     @subscribe('system/setting')
@@ -274,10 +235,6 @@ export class JudgeConnectionHandler extends ConnectionHandler {
             }
         } else if (msg.key === 'status') {
             await updateJudge(msg.info);
-        } else if (msg.key === 'prio' && typeof msg.prio === 'number') {
-            // TODO deprecated, use config instead
-            this.query.priority = { $gt: msg.prio };
-            this.consumer?.setQuery(this.query);
         } else if (msg.key === 'config') {
             if (Number.isSafeInteger(msg.prio)) {
                 this.query.priority = { $gt: msg.prio };
@@ -296,14 +253,13 @@ export class JudgeConnectionHandler extends ConnectionHandler {
                 this.consumer?.setQuery(this.query);
             }
         } else if (msg.key === 'start') {
-            clearTimeout(this.startTimeout);
-            this.consumer ||= task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
+            if (this.consumer) throw new BadRequestError('Judge daemon already started');
+            this.consumer = task.consume(this.query, this.newTask.bind(this), true, this.concurrency);
             logger.info('Judge daemon started');
         }
     }
 
     async cleanup() {
-        clearTimeout(this.startTimeout);
         this.consumer?.destroy();
         logger.info('Judge daemon disconnected from ', this.request.ip);
         await Promise.all(Object.values(this.tasks).map(async ({ t }) => {
@@ -318,6 +274,39 @@ export async function apply(ctx: Context) {
     ctx.Route('judge_files_download', '/judge/files', JudgeFilesDownloadHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Route('judge_files_upload', '/judge/upload', JudgeFileUpdateHandler, builtin.PRIV.PRIV_JUDGE);
     ctx.Connection('judge_conn', '/judge/conn', JudgeConnectionHandler, builtin.PRIV.PRIV_JUDGE);
+    ctx.on('record/judge', async (rdoc, updated, pdoc) => {
+        if (!pdoc || rdoc.status !== STATUS.STATUS_HACK_SUCCESSFUL) return;
+        if (rdoc.contest) return;
+        try {
+            const config = yaml.load(pdoc.config as string) as ProblemConfigFile;
+            assert(Array.isArray(config.subtasks));
+            const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
+            assert(file);
+            const hackSubtask = config.subtasks[config.subtasks.length - 1];
+            hackSubtask.cases ||= [];
+            const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
+            hackSubtask.cases.push({ input, output: '/dev/null' });
+            await Promise.all([
+                problem.addTestdata(rdoc.domainId, rdoc.pid, input, file),
+                problem.addTestdata(rdoc.domainId, rdoc.pid, 'config.yaml', Buffer.from(yaml.dump(config))),
+            ]);
+            // trigger rejudge
+            const rdocs = await record.getMulti(rdoc.domainId, {
+                pid: rdoc.pid,
+                status: STATUS.STATUS_ACCEPTED,
+                contest: { $nin: [record.RECORD_GENERATE, record.RECORD_PRETEST] },
+            }).project({ _id: 1, contest: 1 }).toArray();
+            const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
+            await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
+        } catch (e) {
+            next({
+                rid: rdoc._id.toString(),
+                domainId: rdoc.domainId,
+                key: 'next',
+                message: { message: 'Unable to apply hack: {0}', params: [e.message] },
+            });
+        }
+    });
 }
 
 apply.next = next;

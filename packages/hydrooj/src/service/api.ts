@@ -99,24 +99,6 @@ class ApiHandler extends Handler {
     }
 }
 
-/** @deprecated use ctx.api.value() instead */
-export function registerValue(...args: any[]) {
-    // @ts-ignore
-    return app.api.value(...args);
-}
-
-/** @deprecated use ctx.api.resolver() instead */
-export function registerResolver(...args: any[]) {
-    // @ts-ignore
-    return app.api.resolver(...args);
-}
-
-/** @deprecated use ctx.api.union() instead */
-export function registerUnion(...args: any[]) {
-    // @ts-ignore
-    return app.api.resolver(...args);
-}
-
 // TODO support dispose
 class ApiService extends Service {
     constructor(ctx: Context) {
@@ -212,7 +194,7 @@ class ApiService extends Service {
 }
 
 export const sideEffect = true;
-export const using = ['server'];
+export const inject = ['server'];
 
 export function apply(ctx: Context) {
     ctx.plugin(ApiService);

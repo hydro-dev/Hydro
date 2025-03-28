@@ -34,7 +34,6 @@ export { default as StorageModel } from './model/storage';
 export { default as TaskModel } from './model/task';
 export * from './model/builtin';
 export * as JudgeHandler from './handler/judge';
-export { registerResolver, registerValue, registerUnion } from './service/api';
 export { postJudge } from './handler/judge';
 export { Collections } from './service/db';
 export { Handler, ConnectionHandler, requireSudo } from './service/server';
@@ -46,10 +45,6 @@ export { default as rating } from './lib/rating';
 export { default as avatar } from './lib/avatar';
 export { parseConfig as testdataConfig } from './lib/testdataConfig';
 export { sendMail } from './lib/mail';
-/** @deprecated use Handler.paginate instead */
-export const paginate = db.paginate.bind(db);
-/** @deprecated use db.ranked instead */
-export const rank = db.ranked.bind(db);
 export { UiContextBase } from './service/layers/base';
 export * from '@hydrooj/framework/decorators';
 export * from '@hydrooj/framework/validator';
@@ -57,5 +52,6 @@ export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export { db, pwsh };
 
-// to load ctx.scoreboard
+// to load services into to context
 export { } from './handler/contest';
+export { } from './service/api';

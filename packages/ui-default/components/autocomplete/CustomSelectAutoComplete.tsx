@@ -1,6 +1,5 @@
 import { CustomSelectAutoComplete as CustomSelectAutoCompleteFC } from '@hydrooj/components';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
 import AutoComplete, { AutoCompleteOptions } from '.';
 
 interface CustomSelectOptions {

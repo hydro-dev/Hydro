@@ -32,8 +32,8 @@ import welcome from './welcome';
 
 const logger = new Logger('upgrade');
 const unsupportedUpgrade = async function _26_27() {
-    throw new Error('This upgrade was no longer supported in hydrooj@4. \
-Please use hydrooj@3 to perform these upgrades before upgrading to v4');
+    throw new Error('This upgrade was no longer supported in hydrooj@5. \
+Please use hydrooj@4 to perform these upgrades before upgrading to v5');
 };
 
 const onPrimary = { readPreference: 'primary' } as const;
@@ -53,141 +53,7 @@ export const coreScripts: MigrationScript[] = [
         return true;
     },
     // Init
-    ...new Array(28).fill(unsupportedUpgrade), // oxlint-disable-line no-new-array
-    async function _29_30() {
-        return await iterateAllDomain((ddoc) => RecordModel.coll.updateMany({ domainId: ddoc._id }, { $set: { pdomain: ddoc._id } }));
-    },
-    // Add send_message priv to user
-    async function _30_31() {
-        return await iterateAllUser((udoc) => user.setPriv(udoc._id, udoc.priv | PRIV.PRIV_SEND_MESSAGE));
-    },
-    null,
-    // Write builtin users to database
-    async function _32_33() {
-        if (!await user.getById('system', 0)) {
-            await user.create('Guest@hydro.local', 'Guest', String.random(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
-        }
-        if (!await user.getById('system', 1)) {
-            await user.create('Hydro@hydro.local', 'Hydro', String.random(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
-        }
-        return true;
-    },
-    async function _33_34() {
-        return await iterateAllProblem(['content'], async (pdoc) => {
-            if (typeof pdoc.content !== 'string') return;
-            await problem.edit(pdoc.domainId, pdoc.docId, { content: pdoc.content.replace(/%file%:\/\//g, 'file://') });
-        });
-    },
-    async function _34_35() {
-        return await iterateAllDomain((ddoc) => domain.edit(ddoc._id, { lower: ddoc._id.toLowerCase() }));
-    },
-    async function _35_36() {
-        await RecordModel.coll.updateMany({}, { $unset: { effective: '' } });
-        return true;
-    },
-    async function _36_37() {
-        for await (const doc of document.collStatus.find()) {
-            await document.collStatus.deleteMany({
-                ...pick(doc, ['docId', 'domainId', 'uid', 'docType']),
-                _id: { $gt: doc._id },
-            });
-        }
-        return true;
-    },
-    async function _37_38() {
-        return await iterateAllProblem(['docId', 'domainId', 'config'], async (pdoc) => {
-            logger.info('%s/%s', pdoc.domainId, pdoc.docId);
-            if (typeof pdoc.config !== 'string') return;
-            if (!pdoc.config.includes('type: subjective')) return;
-            await problem.addTestdata(
-                pdoc.domainId, pdoc.docId, 'config.yaml',
-                Buffer.from(pdoc.config.replace('type: subjective', 'type: objective')),
-            );
-        });
-    },
-    async function _38_39() {
-        return await iterateAllDomain(async (ddoc) => {
-            ddoc.roles.root = '-1';
-            await domain.setRoles(ddoc._id, ddoc.roles);
-        });
-    },
-    async function _39_40() {
-        return await iterateAllDomain(async ({ _id }) => {
-            const ddocs = await discussion.getMulti(_id, { parentType: document.TYPE_PROBLEM }).toArray();
-            for (const ddoc of ddocs) {
-                const pdoc = await problem.get(_id, ddoc.parentId as any);
-                await document.set(_id, document.TYPE_DISCUSSION, ddoc.docId, { parentId: pdoc.docId });
-            }
-        });
-    },
-    async function _40_41() {
-        // Ignore drop index failure
-        await db.collection('storage').dropIndex('path_1').catch(() => { });
-        await db.collection('storage').updateMany(
-            { autoDelete: { $gte: moment().add(5, 'days').toDate() } },
-            { $unset: { autoDelete: '' } },
-        );
-        return true;
-    },
-    async function _41_42() {
-        return await iterateAllDomain(async (ddoc) => {
-            const cursor = discussion.getMulti(ddoc._id, { parentType: document.TYPE_CONTEST });
-            while (await cursor.hasNext()) {
-                const doc = await cursor.next();
-                const tdoc = await document.coll.findOne({ docType: doc.parentType, docId: doc.parentId });
-                if (!tdoc) await discussion.del(ddoc._id, doc.docId);
-            }
-        });
-    },
-    null,
-    async function _43_44() {
-        const processer = (i) => {
-            i.status = i.accept ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
-            return i;
-        };
-        return await iterateAllDomain(async (ddoc) => {
-            const tdocs = await contest.getMulti(ddoc._id, { rule: { $ne: 'acm' } }).toArray();
-            for (const tdoc of tdocs) {
-                const tsdocs = await contest.getMultiStatus(ddoc._id, { docId: tdoc.docId }).toArray();
-                for (const tsdoc of tsdocs) {
-                    const $set: any = {};
-                    if (tsdoc.journal?.length) $set.journal = tsdoc.journal.map(processer);
-                    if (tsdoc.detail?.length) $set.detail = tsdoc.detail.map(processer);
-                    if (Object.keys($set).length) {
-                        await contest.setStatus(ddoc._id, tdoc.docId, tsdoc.uid, $set);
-                    }
-                }
-            }
-        });
-    },
-    async function _44_45() {
-        return await iterateAllUser((udoc) => user.setById(udoc._id, { ip: [udoc.regip] }, { regip: '' }));
-    },
-    async function _45_46() {
-        return await iterateAllDomain(async (ddoc) => {
-            const ddocs = await discussion.getMulti(ddoc._id, {
-                docType: document.TYPE_DISCUSSION,
-                parentType: { $in: [document.TYPE_CONTEST, 60, document.TYPE_TRAINING] },
-                parentId: { $type: 'string' },
-            }).toArray();
-            for (const doc of ddocs) {
-                if (ObjectId.isValid(doc.parentId)) {
-                    await document.set(ddoc._id, document.TYPE_DISCUSSION, doc.docId, { parentId: new ObjectId(doc.parentId) });
-                }
-            }
-        });
-    },
-    null,
-    async function _47_48() {
-        await document.coll.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
-        await document.collStatus.updateMany({ docType: document.TYPE_HOMEWORK }, { $set: { docType: document.TYPE_CONTEST } });
-        await RecordModel.coll.deleteMany({ 'contest.tid': { $ne: null }, hidden: true });
-        await RecordModel.coll.updateMany({}, { $unset: { hidden: '' } });
-        await RecordModel.coll.updateMany({ 'contest.tid': { $exists: true } }, { $rename: { 'contest.tid': 'contest1' } });
-        await RecordModel.coll.updateMany({ contest1: { $exists: true } }, { $rename: { contest1: 'contest' } });
-        await RecordModel.coll.updateMany({ contest: null }, { $unset: { contest: '' } });
-        return true;
-    },
+    ...new Array(47).fill(unsupportedUpgrade), // oxlint-disable-line no-new-array
     async function _48_49() {
         await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectId('000000000000000000000000') } });
         return true;
