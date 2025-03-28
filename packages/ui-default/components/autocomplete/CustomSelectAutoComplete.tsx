@@ -41,7 +41,7 @@ export default class CustomSelectAutoComplete<Multi extends boolean> extends Aut
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.createRoot(this.container).render(
+    this.component.render(
       <Component
         ref={(ref) => { this.ref = ref; }}
         data={this.options.data}

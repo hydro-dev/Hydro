@@ -31,7 +31,7 @@ export default class ProblemSelectAutoComplete extends AutoComplete {
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.createRoot(this.container).render(
+    this.component.render(
       <Component
         ref={(ref) => { this.ref = ref; }}
         value={value}

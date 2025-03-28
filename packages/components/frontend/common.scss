@@ -3,7 +3,7 @@
 @use "sass:math";
 
 @function toRem($value) {
-    $remValue: math.div($value, 16) + rem; 
+    $remValue: calc($value / 16px) * 1rem;
     @return $remValue;
 }
 @function rem($values) {
@@ -63,7 +63,7 @@ $section-gap-v: 15px;
 $section-gap-h: $grid-padding;
 $section-list-v: 25px;
 $section-margin: 30px;
-$section-shadow: 0 rem(6px) rem(22px) rgba(#AFC2C9, 0.5);
+$section-shadow: rem(0 6px 22px) rgba(#AFC2C9, 0.5);
 $section-bg-color: $content-bg-color;
 $section-title-color: $header-2-color;
 $section-toolbtn-color: #AAA;
@@ -74,13 +74,13 @@ $userselect-uid-color: #BBB;
 
 $editor-border-color: $border-1-color;
 
-$datepicker-shadow: 0 rem(2px) rem(7px) rgba(#000, 0.3);
+$datepicker-shadow: rem(0 2px 7px) rgba(#000, 0.3);
 $datapicker-list-item-bg-color-hover: #F0F0F0;
 
 $dialog-layer-bg-color: rgba(#F0F0F0, 0.6);
 $dialog-bg-color: $content-bg-color;
 $dialog-border-color: $border-1-color;
-$dialog-shadow: 0 rem(2px) rem(10px) rgba(#000, 0.2);
+$dialog-shadow: rem(0 2px 10px) rgba(#000, 0.2);
 $dialog-title-color: $header-2-color;
 
 $comment-placeholder-color: #AAA;
@@ -88,10 +88,10 @@ $comment-op-color: lighten($text-1-color, 30%);
 $comment-op-link-color: lighten($text-1-color, 50%);
 
 $menu-item-bg-color-hover: #F4F4F4;
-$menu-drop-shadow: 0 rem(2px) rem(7px) rgba(#000, 0.3);
+$menu-drop-shadow: rem(0 2px 7px) rgba(#000, 0.3);
 $menu-drop-bg-color: $content-bg-color;
 $menu-drop-triangle-size: 4px;
-$menu-drop-triangle-shadow: rem(-2px) rem(-2px) rem(2px) rgba(#000, 0.15);
+$menu-drop-triangle-shadow: rem(-2px -2px 2px) rgba(#000, 0.15);
 
 $nav-item-height: 45px;
 $nav-item-hover-color: $primary-color;
