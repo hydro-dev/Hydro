@@ -59,7 +59,7 @@
     },
     "devDependencies": {
         "@babel/code-frame": "^7.26.2",
-        "@types/adm-zip": "^0.4.34",
+        "@types/adm-zip": "^0.5.7",
         "@types/babel__code-frame": "^7.0.6",
         "@types/fs-extra": "^11.0.4",
         "@types/js-yaml": "^4.0.9",
@@ -70,7 +70,7 @@
         "@types/nodemailer": "^6.4.17",
         "@types/notp": "^2.0.5",
         "@types/saslprep": "^1.0.3",
-        "@types/semver": "^7.5.8",
+        "@types/semver": "^7.7.0",
         "@types/superagent": "^8.1.9",
         "chokidar": "^4.0.3",
         "moment": "^2.30.1"

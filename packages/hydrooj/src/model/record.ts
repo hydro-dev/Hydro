@@ -252,7 +252,7 @@ export default class RecordModel {
             RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
             task.deleteMany({ rid: { $in: rids } }),
         ]);
-        await RecordModel.collHistory.insertMany(rdocs.map((rdoc) => ({
+        await RecordModel.collHistory.insertMany(rdocs.filter((rdoc) => rdoc.judgeAt).map((rdoc) => ({
             ...pick(rdoc, [
                 'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
                 'score', 'time', 'memory', 'status', 'judgeAt', 'judger',

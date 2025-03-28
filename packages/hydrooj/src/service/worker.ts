@@ -18,7 +18,14 @@ export default class WorkerService extends Service {
 
     constructor(ctx: Context) {
         super(ctx, 'worker');
+    }
+
+    async *[Context.init]() {
         this.consume();
+        yield () => {
+            this.consuming = false;
+            return this.promise;
+        };
     }
 
     async getFirst() {
@@ -78,10 +85,5 @@ export default class WorkerService extends Service {
                 delete this.handlers[type];
             };
         });
-    }
-
-    public async stop() {
-        this.consuming = false;
-        await this.promise;
     }
 }

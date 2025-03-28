@@ -42,9 +42,16 @@ function MonacoContainer({
     editor.layout();
   }, [size]);
   React.useEffect(() => {
-    if (!editor) return;
+    if (!editor || !model) return;
+    const decoration = editor.createDecorationsCollection();
+    const updateDecoration = () => {
+      const found = model.findMatches("'[hidden]'", true, false, true, '', true).map((i) => i.range);
+      decoration.set(found.map((range) => ({ range, options: { inlineClassName: 'decoration-hide' } })));
+    };
+    updateDecoration();
     const disposable = editor.onDidChangeModelContent(() => {
       const val = editor.getValue({ lineEnding: '\n', preserveBOM: false });
+      updateDecoration();
       try {
         const loaded = yaml.load(val);
         schema(loaded);
@@ -55,7 +62,7 @@ function MonacoContainer({
       }
     });
     return () => disposable.dispose(); // eslint-disable-line
-  }, [editor, setValue, setError]);
+  }, [editor, model, setValue, setError]);
   React.useEffect(() => {
     if (!editorRef.current || loading) return;
     setLoading(true);

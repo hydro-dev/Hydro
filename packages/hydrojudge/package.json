@@ -20,7 +20,7 @@
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
-        "@types/adm-zip": "^0.4.34",
+        "@types/adm-zip": "^0.5.7",
         "@types/shell-quote": "^1.7.5",
         "@types/ws": "^8.18.0"
     }

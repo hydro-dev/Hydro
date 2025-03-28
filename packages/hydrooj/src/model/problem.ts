@@ -5,7 +5,7 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import { pick } from 'lodash';
+import { keyBy, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
 import { ProblemConfigFile, ProblemType } from '@hydrooj/common';
@@ -409,12 +409,7 @@ export class ProblemModel {
         const psdocs = await ProblemModel.getMultiStatus(
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
         ).toArray();
-        const r: Record<string, ProblemStatusDoc> = {};
-        for (const psdoc of psdocs) {
-            r[psdoc.docId] = psdoc;
-            r[`${psdoc.domainId}#${psdoc.docId}`] = psdoc;
-        }
-        return r;
+        return keyBy(psdocs, 'docId');
     }
 
     static async updateStatus(
@@ -468,7 +463,7 @@ export class ProblemModel {
                     throw new ValidationError('zip', null, e.message);
                 }
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(tmpdir, true, (err) => {
+                    zip.extractAllToAsync(tmpdir, true, false, (err) => {
                         if (err) reject(err);
                         resolve(null);
                     });

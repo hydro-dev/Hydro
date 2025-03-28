@@ -178,7 +178,7 @@ async function cleanFiles() {
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     ctx.inject(['worker'], (c) => {
         c.worker.addHandler('storage.prune', cleanFiles);
     });
@@ -190,24 +190,21 @@ export function apply(ctx: Context) {
         ]);
         await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
     });
-
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    ctx.on('ready', async () => {
-        await db.ensureIndexes(
-            StorageModel.coll,
-            { key: { path: 1 }, name: 'path' },
-            { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
-            { key: { link: 1 }, sparse: true, name: 'link' },
-        );
-        if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
-            await ScheduleModel.add({
-                type: 'schedule',
-                subType: 'storage.prune',
-                executeAfter: moment().startOf('hour').toDate(),
-                interval: [1, 'hour'],
-            });
-        }
-    });
+    await db.ensureIndexes(
+        StorageModel.coll,
+        { key: { path: 1 }, name: 'path' },
+        { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+        { key: { link: 1 }, sparse: true, name: 'link' },
+    );
+    if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+        await ScheduleModel.add({
+            type: 'schedule',
+            subType: 'storage.prune',
+            executeAfter: moment().startOf('hour').toDate(),
+            interval: [1, 'hour'],
+        });
+    }
 }
 
 global.Hydro.model.storage = StorageModel;

@@ -117,15 +117,17 @@ export async function load(ctx: Context) {
             resolve(c);
         });
     });
-    await ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file');
+    await Promise.all([
+        ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file'),
+        ctx.loader.reloadPlugin(require.resolve('../service/worker'), 'worker'),
+        ctx.loader.reloadPlugin(require.resolve('../service/server'), 'server'),
+    ]);
     require('../lib/index');
     await Promise.all([
         service(pending, fail, ctx),
     ]);
-    ctx.plugin(require('../service/worker'));
     await builtinModel(ctx);
     await model(pending, fail, ctx);
-    ctx.plugin(require('../service/server'));
     ctx = await new Promise((resolve) => {
         ctx.inject(['server', 'setting', 'worker'], (c) => {
             resolve(c);

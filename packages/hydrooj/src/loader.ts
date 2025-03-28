@@ -110,9 +110,12 @@ export class Loader extends Service {
         if (!plugin) return;
         const config = await this.resolveConfig(plugin, configScope);
         let fork = this.state[key];
+        const displayPath = key.includes('node_modules')
+            ? key.split('node_modules').pop()
+            : path.relative(process.cwd(), key);
         logger.info(
             `%s plugin %c${configScope ? ' with scope %c' : ''}`,
-            fork ? 'reload' : 'apply', key.split('node_modules').pop(), configScope,
+            fork ? 'reload' : 'apply', displayPath, configScope,
         );
         if (fork) {
             fork.update(config);

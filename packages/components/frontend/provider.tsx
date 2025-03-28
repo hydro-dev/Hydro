@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToastContainer } from 'react-toastify';
+import { Slide, ToastContainer } from 'react-toastify';
 
 interface C {
   i18n: (key: string, ...args: any[]) => string;
@@ -19,14 +19,15 @@ export default function ComponentsProvider(props: { children: React.ReactNode } 
     <ToastContainer
       position="bottom-left"
       autoClose={5000}
-      hideProgressBar={false}
+      hideProgressBar
       newestOnTop={false}
       closeOnClick={false}
       rtl={false}
       pauseOnFocusLoss
       draggable
       pauseOnHover
-      theme={props.theme}
+      theme="colored"
+      transition={Slide}
     />
     {props.children}
   </ComponentsContext.Provider>;
