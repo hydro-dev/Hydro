@@ -252,14 +252,17 @@ export default class RecordModel {
             RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
             task.deleteMany({ rid: { $in: rids } }),
         ]);
-        await RecordModel.collHistory.insertMany(rdocs.filter((rdoc) => rdoc.judgeAt).map((rdoc) => ({
-            ...pick(rdoc, [
-                'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
-                'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
-            ]),
-            rid: rdoc._id,
-            _id: new ObjectId(),
-        })));
+        const history = rdocs.filter((rdoc) => rdoc.judgeAt);
+        if (history.length) {
+            await RecordModel.collHistory.insertMany(history.map((rdoc) => ({
+                ...pick(rdoc, [
+                    'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                    'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+                ]),
+                rid: rdoc._id,
+                _id: new ObjectId(),
+            })));
+        }
         return RecordModel.update(domainId, rid, upd);
     }
 
