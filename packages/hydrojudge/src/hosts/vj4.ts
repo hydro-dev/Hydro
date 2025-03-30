@@ -79,18 +79,16 @@ export default class VJ4 implements Session {
         this.ws.send(JSON.stringify({ ...data, tag, key }));
     }
 
-    getNext(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+    getReporter(t: JudgeTask) {
+        const next = (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
             this.send((t.request as any).tag, 'next', data);
         };
-    }
-
-    getEnd(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+        const end = (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
             this.send((t.request as any).tag, 'end', data);
         };
+        return { next, end };
     }
 
     get(url: string) {

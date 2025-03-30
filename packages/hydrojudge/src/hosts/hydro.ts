@@ -106,8 +106,8 @@ export default class Hydro implements Session {
         this.ws.send(JSON.stringify({ ...data, rid, key }));
     }
 
-    getNext(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+    getReporter(t: JudgeTask) {
+        const next = (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
             const performanceMode = getConfig('performance') || t.meta.rejudge || t.meta.hackRejudge;
             if (performanceMode && data.case && !data.compilerText && !data.message) {
@@ -119,14 +119,12 @@ export default class Hydro implements Session {
                 this.send(t.request.rid, 'next', data);
             }
         };
-    }
-
-    getEnd(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+        const end = (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
             if (t.callbackCache) data.cases = t.callbackCache;
             this.send(t.request.rid, 'end', data);
         };
+        return { next, end };
     }
 
     async consume(queue: PQueue) {

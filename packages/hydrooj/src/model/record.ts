@@ -248,13 +248,12 @@ export default class RecordModel {
         };
         if (isRejudge) upd.rejudged = true;
         const [rdocs] = await Promise.all([
-            RecordModel.coll.find({ _id: { $in: rids } }).toArray(),
+            RecordModel.coll.find({ _id: { $in: rids }, judgeAt: { $exists: true, $ne: null } }).toArray(),
             RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
             task.deleteMany({ rid: { $in: rids } }),
         ]);
-        const history = rdocs.filter((rdoc) => rdoc.judgeAt);
-        if (history.length) {
-            await RecordModel.collHistory.insertMany(history.map((rdoc) => ({
+        if (rdocs.length) {
+            await RecordModel.collHistory.insertMany(rdocs.map((rdoc) => ({
                 ...pick(rdoc, [
                     'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
                     'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
