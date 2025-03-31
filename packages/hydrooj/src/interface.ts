@@ -8,6 +8,7 @@ import type {
 } from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { DocStatusType } from './model/document';
+import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
