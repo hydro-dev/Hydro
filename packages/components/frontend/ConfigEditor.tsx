@@ -15,10 +15,9 @@ const locales = {
 function MonacoContainer({
   config, setValue, setError, monaco, schema, editorCallback, size,
 }) {
-  const editorRef = React.useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = React.useState(false);
   const [editor, setEditor] = React.useState<any>(null);
   const [model, setModel] = React.useState<any>(null);
+  const [initialized, setInitialized] = React.useState(false);
   const { codeFontFamily } = React.useContext(ComponentsContext);
 
   React.useEffect(() => {
@@ -62,14 +61,14 @@ function MonacoContainer({
       }
     });
     return () => disposable.dispose(); // eslint-disable-line
-  }, [editor, model, setValue, setError]);
-  React.useEffect(() => {
-    if (!editorRef.current || loading) return;
-    setLoading(true);
+  }, [editor, model, setValue, setError, schema]);
+  const initializeEditor = React.useCallback((element) => {
+    if (!element || initialized) return;
+    setInitialized(true);
     // eslint-disable-next-line
     const model = monaco.editor.createModel(config, 'yaml', monaco.Uri.parse('hydro://system/setting.yaml'));
     setModel(model);
-    const e = monaco.editor.create(editorRef.current, {
+    const e = monaco.editor.create(element, {
       theme: 'vs-light',
       lineNumbers: 'off',
       glyphMargin: true,
@@ -85,9 +84,9 @@ function MonacoContainer({
         ambiguousCharacters: true,
       },
     });
-    editorCallback(e, model, editorRef.current);
+    editorCallback(e, model, element);
     setEditor(e);
-  }, [editorRef.current]);
+  }, [config, monaco, editorCallback, codeFontFamily, initialized]);
   React.useEffect(() => {
     if (!editor) return;
     const current = editor.getValue({ lineEnding: '\n', preserveBOM: false });
@@ -111,7 +110,7 @@ function MonacoContainer({
     model.pushEditOperations([], ops, undefined);
   }, [editor, config]);
   return (
-    <div ref={editorRef} style={{
+    <div ref={initializeEditor} style={{
       width: '100%', height: '500px',
     }} />
   );
@@ -120,10 +119,17 @@ function MonacoContainer({
 export default function ConfigEditor({
   schema, config, monaco, Markdown, onSave, registerAction, sidebar,
 }) {
-  const [value, setValue] = React.useState(yaml.load(config));
+  const getValue = () => {
+    try {
+      return yaml.load(config);
+    } catch (e) {
+      return {};
+    }
+  };
+  const [value, setValue] = React.useState(getValue);
   const [info, setInfo] = React.useState('');
   const [stringConfig, setStringConfig] = React.useState(config);
-  const initial = React.useMemo(() => yaml.load(config), []);
+  const initial = React.useMemo(getValue, []);
   const { i18n } = React.useContext(ComponentsContext);
 
   const Form = React.useMemo(() => createSchemasteryReact({

@@ -198,7 +198,11 @@ class SystemConfigHandler extends SystemHandler {
         };
 
         try {
-            value = Schema.intersect(this.ctx.config.settings)(yaml.load(this.ctx.config.configSource));
+            try {
+                value = Schema.intersect(this.ctx.config.settings)(yaml.load(this.ctx.config.configSource));
+            } catch (e) {
+                value = yaml.load(this.ctx.config.configSource);
+            }
             for (const schema of this.ctx.config.settings) processNode(value, schema);
         } catch (e) { }
         this.response.body = {

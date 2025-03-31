@@ -4,7 +4,7 @@ import moment from 'moment-timezone';
 import type { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
-    InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
+    InvalidJoinInvitationCodeError, NotFoundError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
@@ -337,6 +337,7 @@ class DomainJoinHandler extends Handler {
             domain.get(target),
             domain.collUser.findOne({ domainId: target, uid: this.user._id }),
         ]);
+        if (!dudoc) throw new NotFoundError(target);
         const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
             ? 'root'
             : dudoc?.role || 'default';

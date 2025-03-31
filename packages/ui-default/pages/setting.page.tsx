@@ -46,7 +46,7 @@ const page = new NamedPage('manage_config', async () => {
           overflow: hidden;
         }
         .footer {
-          display: hidden;
+          visibility: hidden;
         }
         .omnibar-toggle {
           display: none;

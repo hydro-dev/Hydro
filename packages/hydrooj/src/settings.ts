@@ -139,16 +139,15 @@ export class ConfigService extends Service {
             });
         }
         let curValue = s(this.systemConfig);
-        if (dynamic) {
-            this.ctx.on('system/setting', () => {
-                try {
-                    curValue = s(this.systemConfig);
-                } catch (e) {
-                    logger.warn('Cannot read config: ', e.message);
-                    curValue = null;
-                }
-            });
-        }
+        if (!dynamic) return curValue;
+        this.ctx.on('system/setting', () => {
+            try {
+                curValue = s(this.systemConfig);
+            } catch (e) {
+                logger.warn('Cannot read config: ', e.message);
+                curValue = null;
+            }
+        });
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
             if (path.some((p) => ConfigService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
