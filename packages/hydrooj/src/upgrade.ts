@@ -587,4 +587,17 @@ export const coreScripts: MigrationScript[] = [
         );
         return true;
     },
+    async function _92_93(ctx) {
+        await ctx.inject(['oauth'], async (c) => {
+            await iterateAllUser(async (udoc) => {
+                if (udoc.mailLower.endsWith('.local')) return;
+                await c.oauth.set('mail', udoc.mailLower, udoc._id);
+            });
+            const old = await c.oauth.coll.find({ _id: { $type: 'string' } }).toArray();
+            for (const r of old) {
+                if ((r._id as any).endsWith('@github.local')) await c.oauth.set('github', (r._id as any).split('@')[0], r.uid);
+            }
+        });
+        return true;
+    },
 ];

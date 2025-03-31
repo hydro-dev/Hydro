@@ -11,6 +11,59 @@ import {
 
 const t = (s) => escape(i18n(s));
 
+async function changeMail() {
+  const changeMailDialog = new ActionDialog({
+    $body: tpl`
+      <div class="typo">
+        <p>${i18n('Please enter your current password and new email address:')}</p>
+        <label>${i18n('Current Password')}
+          <div class="textbox-container">
+            <input class="textbox" type="password" name="password" data-autofocus required></input>
+          </div>
+        </label>
+        <label>${i18n('Current Email')}
+          <div class="textbox-container">
+            <input class="textbox" type="text" name="currentEmail" value="${UserContext.mail}" disabled></input>
+          </div>
+        </label>
+        <label>${i18n('New Email')}
+          <div class="textbox-container">
+            <input class="textbox" type="text" name="mail" required></input>
+          </div>
+        </label>
+      </div>
+    `,
+    onDispatch(action) {
+      if (action === 'ok') {
+        const $password = $('[name="password"]');
+        const $mail = $('[name="mail"]');
+        if (!$password.val() || !$mail.val()) {
+          if (!$password.val()) $password.focus();
+          else $mail.focus();
+          return false;
+        }
+      }
+      return true;
+    },
+  }).open();
+  const action = await changeMailDialog;
+  if (action !== 'ok') return;
+  try {
+    await request.post('', {
+      operation: 'change_mail',
+      password: $('[name="password"]').val(),
+      mail: $('[name="mail"]').val(),
+    });
+  } catch (err) {
+    Notification.error(err.message);
+    console.error(err);
+    return;
+  }
+  Notification.success(i18n('Successfully changed.'));
+  await delay(2000);
+  window.location.reload();
+}
+
 async function enableTfa() {
   const enableTFA = new ActionDialog({
     $body: tpl`
@@ -142,5 +195,10 @@ export default new NamedPage('home_security', () => {
     if (!action || action === 'cancel') return;
     if (action === 'tfa') enableTfa();
     else enableAuthn(action);
+  });
+
+  $(document).on('click', '[data-operation="change_mail"]', async (ev) => {
+    ev.preventDefault();
+    await changeMail();
   });
 });

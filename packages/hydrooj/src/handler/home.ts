@@ -193,6 +193,7 @@ class HomeSecurityHandler extends Handler {
                 this.translate('geoip_locale'),
             );
         }
+        const relations = await this.ctx.oauth.list(this.user._id);
         this.response.template = 'home_security.html';
         this.response.body = {
             sudoUid: this.session.sudoUid || null,
@@ -202,6 +203,7 @@ class HomeSecurityHandler extends Handler {
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
             geoipProvider: this.ctx.geoip?.provider,
+            relations,
         };
     }
 
@@ -248,6 +250,13 @@ class HomeSecurityHandler extends Handler {
         });
         await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m.toString());
         this.response.template = 'user_changemail_mail_sent.html';
+    }
+
+    @param('platform', Types.String)
+    async postLinkAccount({ }, platform: string) {
+        if (!global.Hydro.module.oauth[platform]) throw new ValidationError('platform');
+        this.session.oauthBind = platform;
+        await global.Hydro.module.oauth[platform].get.call(this);
     }
 
     @param('tokenDigest', Types.String)
@@ -609,7 +618,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export const inject = { geoip: { required: false } };
+export const inject = { geoip: { required: false }, oauth: {} };
 export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);
