@@ -4,7 +4,7 @@ import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
 import type { Context } from '../context';
 import {
-    AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -439,9 +439,13 @@ class OauthCallbackHandler extends Handler {
         if (!global.Hydro.module.oauth[args.type]) throw new UserFacingError('Oauth type');
         const r = await global.Hydro.module.oauth[args.type].callback.call(this, args);
         if (this.session.oauthBind === args.type) {
-            await this.ctx.oauth.set(args.type, r._id, this.user._id);
-            this.response.redirect = '/home/security';
             delete this.session.oauthBind;
+            const existing = await this.ctx.oauth.get(args.type, r._id);
+            if (existing && existing !== this.user._id) {
+                throw new BadRequestError('Already binded to another account');
+            }
+            this.response.redirect = '/home/security';
+            if (existing !== this.user._id) await this.ctx.oauth.set(args.type, r._id, this.user._id);
             return;
         }
 
