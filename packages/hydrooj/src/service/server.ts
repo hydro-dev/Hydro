@@ -90,7 +90,7 @@ export async function apply(ctx: Context) {
         xhost: system.get('server.xhost'),
     });
     if (process.env.HYDRO_CLI) return;
-    ctx.inject(['server'], ({ server, on }) => {
+    ctx.inject(['server', 'oauth'], ({ server, on, oauth }) => {
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {
@@ -119,7 +119,7 @@ export async function apply(ctx: Context) {
         server.addLayer('base', baseLayer);
         server.addLayer('user', userLayer);
 
-        let cachedTranslate = null;
+        const cachedTranslate = ctx.i18n.translate;
 
         server.handlerMixin({
             url(name: string, ...kwargsList: Record<string, any>[]) {
@@ -164,7 +164,6 @@ export async function apply(ctx: Context) {
                 const langs = lang
                     ? [lang, ...this.context.acceptsLanguages()]
                     : [...this.context.acceptsLanguages(), system.get('server.language')];
-                cachedTranslate ||= ctx.i18n.translate;
                 return cachedTranslate(str.toString(), langs);
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string | number) {
@@ -259,12 +258,13 @@ export async function apply(ctx: Context) {
         });
         on('handler/create/http', async (h) => {
             if (!argv.options.benchmark && !h.notUsage) await h.limitRate('global', 5, 100);
-            h.loginMethods = Object.keys(global.Hydro.module.oauth)
-                .map((key) => ({
-                    id: key,
-                    icon: global.Hydro.module.oauth[key].icon,
-                    text: global.Hydro.module.oauth[key].text,
-                    name: global.Hydro.module.oauth[key].name,
+            h.loginMethods = Object.entries(oauth.providers)
+                .filter(([_, v]) => !v.hidden)
+                .map(([k, v]) => ({
+                    id: k,
+                    icon: v.icon,
+                    text: v.text,
+                    name: v.name,
                 }));
             if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
             if (h.context.pendingError) throw h.context.pendingError;

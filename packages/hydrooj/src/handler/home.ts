@@ -254,9 +254,9 @@ class HomeSecurityHandler extends Handler {
 
     @param('platform', Types.String)
     async postLinkAccount({ }, platform: string) {
-        if (!global.Hydro.module.oauth[platform]) throw new ValidationError('platform');
+        if (!this.ctx.oauth.providers[platform]) throw new ValidationError('platform');
         this.session.oauthBind = platform;
-        await global.Hydro.module.oauth[platform].get.call(this);
+        await this.ctx.oauth.providers[platform].get.call(this);
     }
 
     @param('tokenDigest', Types.String)

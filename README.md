@@ -135,6 +135,11 @@ Hydro 用户群：1085853538
 - core: 支持存储并显示提交记录重测历史
 - core: 新的加域逻辑
 - ui: UserSelect.Multi: 支持批量粘贴用户名
+- core: oauth: 支持绑定/解绑三方平台账户 (#971)
+- ui: 修复暗色模式表格边框 (#968)
+- core: 优化 icpc 题目包导入 (#966)
+- judge: 弃用 diff (#965)
+- core: 支持设置加域时自动加入小组
 
 ### Breaking API Changes
 

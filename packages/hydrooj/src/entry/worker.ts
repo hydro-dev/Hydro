@@ -49,7 +49,7 @@ export async function apply(ctx: Context) {
             resolve(c);
         });
     });
-    await require('../service/api').apply(ctx);
+    await ctx.plugin(require('../service/api'));
     require('../lib/index');
 
     ctx.plugin(require('../service/monitor'));
@@ -62,17 +62,12 @@ export async function apply(ctx: Context) {
             resolve(c);
         });
     });
-    const handlerDir = path.resolve(__dirname, '..', 'handler');
-    const handlers = await fs.readdir(handlerDir);
-    for (const h of handlers.filter((i) => i.endsWith('.ts'))) {
-        ctx.loader.reloadPlugin(path.resolve(handlerDir, h), '');
-    }
-    ctx.plugin(require('../service/migration').default);
+    const loadDir = async (dir: string) => Promise.all((await fs.readdir(dir)).filter((i) => i.endsWith('.ts'))
+        .map((h) => ctx.loader.reloadPlugin(path.resolve(dir, h), '')));
+    await loadDir(path.resolve(__dirname, '..', 'handler'));
+    await ctx.plugin(require('../service/migration').default);
     await addon(pending, fail, ctx);
-    const scriptDir = path.resolve(__dirname, '..', 'script');
-    for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '');
-    }
+    await loadDir(path.resolve(__dirname, '..', 'script'));
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
         await new Promise((resolve, reject) => {

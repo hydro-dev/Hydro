@@ -461,7 +461,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 } catch (e) { }
             });
             socket.pause();
-            const c: any = koa.createContext(request, {} as any);
+            const c: any = koa.createContext(request, {} as any); // eslint-disable-line
             await executeMiddlewareStack(c, this.wsLayers);
             for (const manager of router.wsStack) {
                 if (manager.accept(socket, request, c)) return;

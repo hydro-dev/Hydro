@@ -29,6 +29,6 @@
         "@types/koa-router": "^7.4.8",
         "@types/lodash": "^4.17.16",
         "@types/saslprep": "^1.0.3",
-        "@types/ws": "^8.18.0"
+        "@types/ws": "^8.18.1"
     }
 }

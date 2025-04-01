@@ -10,7 +10,6 @@ import type { Context } from './context';
 import type { DocStatusType } from './model/document';
 import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
-import type { Handler } from './service/server';
 
 export * from '@hydrooj/common/types';
 
@@ -54,17 +53,6 @@ export interface Setting {
     name: string,
     desc: string,
     flag: number,
-}
-
-export interface OAuthUserResponse {
-    _id: string;
-    email: string;
-    avatar?: string;
-    bio?: string;
-    uname?: string[];
-    viewLang?: string;
-    set?: Record<string, any>;
-    setInDomain?: Record<string, any>;
 }
 
 export interface Authenticator {
@@ -506,7 +494,7 @@ export interface OpCountDoc {
     opcount: number;
 }
 
-export type { OauthMap } from './model/oauth';
+export type { OauthMap, OAuthProvider, OAuthUserResponse } from './model/oauth';
 
 export interface DiscussionHistoryDoc {
     title?: string;
@@ -622,14 +610,6 @@ export interface UI {
 }
 
 export interface ModuleInterfaces {
-    oauth: {
-        text: string;
-        name: string;
-        icon?: string;
-        get: (this: Handler) => Promise<void>;
-        callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
-        lockUsername?: boolean;
-    };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
     problemSearch: ProblemSearch;
 }

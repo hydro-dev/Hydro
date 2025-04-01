@@ -4,7 +4,8 @@ import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
 import type { Context } from '../context';
 import {
-    AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError,
+    ForbiddenError, InvalidTokenError, NotFoundError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -279,9 +280,9 @@ class UserRegisterWithCodeHandler extends Handler {
         domainId: string, password: string, verify: string,
         uname = '', code: string,
     ) {
-        if (global.Hydro.module.oauth[this.tdoc.identity.provider].lockUsername) {
-            uname = this.tdoc.identity.username;
-        }
+        const provider = this.ctx.oauth.providers[this.tdoc.identity.provider];
+        if (!provider) throw new SystemError(`OAuth provider ${this.tdoc.identity.provider} not found`);
+        if (provider.lockUsername) uname = this.tdoc.identity.username;
         if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
         const randomEmail = `${String.random(12)}@invalid.local`; // some random email to remove in the future
@@ -428,7 +429,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.Key)
     async get(domainId: string, type: string) {
-        await global.Hydro.module.oauth[type]?.get.call(this);
+        await this.ctx.oauth.providers[type]?.get.call(this);
     }
 }
 
@@ -436,8 +437,8 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        if (!global.Hydro.module.oauth[args.type]) throw new UserFacingError('Oauth type');
-        const r = await global.Hydro.module.oauth[args.type].callback.call(this, args);
+        if (!this.ctx.oauth.providers[args.type]) throw new UserFacingError('Oauth type');
+        const r = await this.ctx.oauth.providers[args.type].callback.call(this, args);
         if (this.session.oauthBind === args.type) {
             delete this.session.oauthBind;
             const existing = await this.ctx.oauth.get(args.type, r._id);
@@ -529,6 +530,17 @@ export async function apply(ctx: Context) {
     if (system.get('server.contestmode')) {
         ctx.Route('contest_mode', '/contestmode', ContestModeHandler, PRIV.PRIV_EDIT_SYSTEM);
     }
+    ctx.oauth.provide('mail', {
+        text: 'Mail',
+        name: 'mail',
+        hidden: true,
+        async get() {
+            throw new NotFoundError();
+        },
+        async callback() {
+            throw new NotFoundError();
+        },
+    });
     ctx.inject(['api'], ({ api }) => {
         api.value('User', [
             ['_id', 'Int!'],

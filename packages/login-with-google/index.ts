@@ -26,6 +26,7 @@ function decodeJWT(idToken: string) {
 }
 
 export default class GoogleOAuthService extends Service {
+    static inject = ['oauth'];
     static Config = Schema.object({
         id: Schema.string().description('Google OAuth AppID').required(),
         secret: Schema.string().description('Google OAuth Secret').role('secret').required(),
@@ -34,7 +35,7 @@ export default class GoogleOAuthService extends Service {
 
     constructor(ctx: Context, config: ReturnType<typeof GoogleOAuthService.Config>) {
         super(ctx, 'oauth.google');
-        ctx.provideModule('oauth', 'google', {
+        ctx.oauth.provide('google', {
             text: 'Login with Google',
             name: 'Google',
             callback: async function callback(this: Handler, {
@@ -57,10 +58,9 @@ export default class GoogleOAuthService extends Service {
                 await TokenModel.del(state, TokenModel.TYPE_OAUTH);
                 this.response.redirect = s.redirect;
                 return {
-                    // TODO use openid
-                    _id: payload.email,
+                    _id: payload.sub,
                     email: payload.email,
-                    uname: [payload.given_name, payload.name, payload.family_name],
+                    uname: [`${payload.given_name} ${payload.family_name}`, payload.name],
                     viewLang: payload.locale.replace('-', '_'),
                 };
             },

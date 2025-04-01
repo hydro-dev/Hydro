@@ -1,5 +1,6 @@
 import { Collection } from 'mongodb';
 import { Context, Service } from '../context';
+import type { Handler } from '../service/server';
 
 export interface OauthMap {
     platform: string;
@@ -15,9 +16,31 @@ declare module '../context' {
     }
 }
 
+export interface OAuthUserResponse {
+    _id: string;
+    email: string;
+    avatar?: string;
+    bio?: string;
+    uname?: string[];
+    viewLang?: string;
+    set?: Record<string, any>;
+    setInDomain?: Record<string, any>;
+}
+
+export interface OAuthProvider {
+    text: string;
+    name: string;
+    icon?: string;
+    hidden?: boolean;
+    get: (this: Handler) => Promise<void>;
+    callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+    lockUsername?: boolean;
+}
+
 export default class OauthModel extends Service {
     static inject = ['db'];
     coll: Collection<OauthMap>;
+    providers: Record<string, OAuthProvider> = Object.create(null);
 
     constructor(ctx: Context) {
         super(ctx, 'oauth');
@@ -29,7 +52,6 @@ export default class OauthModel extends Service {
             // { key: { platform: 1, id: 1 }, name: 'platform_id', unique: true },
             { key: { uid: 1, platform: 1 }, name: 'uid_platform' },
         );
-        console.log('oauth init');
     }
 
     async get(platform: string, id: string) {
@@ -53,5 +75,15 @@ export default class OauthModel extends Service {
 
     async list(uid: number) {
         return this.coll.find({ uid }).toArray();
+    }
+
+    async provide(name: string, provider: OAuthProvider) {
+        if (this.providers[name]) throw new Error(`OAuth provider ${name} already exists`);
+        this.ctx.effect(() => {
+            this.providers[name] = provider;
+            return () => {
+                delete this.providers[name];
+            };
+        });
     }
 }

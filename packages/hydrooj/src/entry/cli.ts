@@ -123,9 +123,7 @@ export async function load(ctx: Context) {
         ctx.loader.reloadPlugin(require.resolve('../service/server'), 'server'),
     ]);
     require('../lib/index');
-    await Promise.all([
-        service(pending, fail, ctx),
-    ]);
+    await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     ctx = await new Promise((resolve) => {
@@ -135,8 +133,7 @@ export async function load(ctx: Context) {
     });
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
-    for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '');
-    }
+    await Promise.all((await fs.readdir(scriptDir))
+        .map((h) => ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '')));
     await cli();
 }

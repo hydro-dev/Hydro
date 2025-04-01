@@ -194,7 +194,7 @@ class ApiService extends Service {
 }
 
 export const sideEffect = true;
-export const inject = ['server'];
+export const inject = ['server', 'setting'];
 
 export function apply(ctx: Context) {
     ctx.plugin(ApiService);

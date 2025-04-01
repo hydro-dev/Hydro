@@ -29,7 +29,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
             if (type[2]) v.isOptional = type[2];
         } else if (typeof current === 'boolean') v.isOptional = current;
         else if (isValidate) {
-            if (current !== null) v.validate = mergeValidator(v.validate, current);
+            if (current !== null) v.validate = v.validate ? mergeValidator(v.validate, current) : current;
             isValidate = false;
         } else v.convert = current;
         cursor++;

@@ -15,6 +15,6 @@
         "@types/diff": "^7.0.2",
         "@types/js-yaml": "^4.0.9",
         "@types/lodash": "^4.17.16",
-        "sass": "^1.86.0"
+        "sass": "^1.86.1"
     }
 }

@@ -99,7 +99,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
   const [rerender, setRerender] = useState(false);
-  const [draggableId] = useState(uniqueId());
+  const [draggableId] = useState(() => uniqueId());
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);

@@ -90,7 +90,7 @@ export interface EventMap {
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void
-    'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc: ProblemDoc, updater: any) => VoidReturn
+    'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc, updater?: any) => VoidReturn
 }
 
 export function apply(ctx: Context) {

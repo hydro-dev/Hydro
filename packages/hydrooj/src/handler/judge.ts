@@ -115,7 +115,7 @@ export class JudgeResultCallbackContext {
         return this.operationPromise;
     }
 
-    static async postJudge(rdoc: RecordDoc) {
+    static async postJudge(rdoc: RecordDoc, context?: JudgeResultCallbackContext) {
         if (rdoc.contest?.toString().startsWith('0'.repeat(23))) return;
         const accept = rdoc.status === builtin.STATUS.STATUS_ACCEPTED;
         const updated = await problem.updateStatus(rdoc.domainId, rdoc.pid, rdoc.uid, rdoc._id, rdoc.status, rdoc.score);
@@ -134,7 +134,7 @@ export class JudgeResultCallbackContext {
                 problem.inc(pdoc.domainId, pdoc.docId, `stats.s${Math.floor(rdoc.score)}`, 1),
             ]);
         }
-        await app.parallel('record/judge', rdoc, updated, pdoc, this);
+        await app.parallel('record/judge', rdoc, updated, pdoc, context);
     }
 
     async _end(body: Partial<JudgeResultBody>) {
@@ -155,7 +155,7 @@ export class JudgeResultCallbackContext {
 
         const rdoc = await record.update(this.task.domainId, new ObjectId(this.task.rid as string), $set, $push, $unset);
         if (rdoc) bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
-        await JudgeResultCallbackContext.postJudge(rdoc);
+        await JudgeResultCallbackContext.postJudge(rdoc, this);
         this.resolve(rdoc);
     }
 
@@ -357,7 +357,7 @@ export async function apply(ctx: Context) {
             const priority = await record.submissionPriority(rdoc.uid, -5000 - rdocs.length * 5 - 50);
             await record.judge(rdoc.domainId, rdocs.map((r) => r._id), priority, {}, { hackRejudge: input });
         } catch (e) {
-            t.next({
+            t?.next?.({
                 rid: rdoc._id.toString(),
                 domainId: rdoc.domainId,
                 key: 'next',
