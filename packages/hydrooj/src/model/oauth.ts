@@ -9,6 +9,12 @@ export interface OauthMap {
     uid: number;
 }
 
+declare module '../context' {
+    interface Context {
+        oauth: OauthModel;
+    }
+}
+
 export default class OauthModel extends Service {
     static inject = ['db'];
     coll: Collection<OauthMap>;
