@@ -2,7 +2,7 @@
 import os from 'os';
 import { LangConfig, STATUS } from '@hydrooj/common';
 import {
-    Context, db, DomainModel, JudgeHandler, Logger,
+    Context, db, DomainModel, JudgeResultCallbackContext, Logger,
     ProblemModel, RecordModel, Service, SettingModel,
     sleep, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
@@ -23,7 +23,7 @@ class AccountService {
     working = false;
     error = '';
 
-    constructor(public Provider: BasicProvider, public account: RemoteAccount) {
+    constructor(public Provider: BasicProvider, public account: RemoteAccount, public ctx: Context) {
         this.api = new Provider(account, async (data) => {
             await coll.updateOne({ _id: account._id }, { $set: data });
         });
@@ -45,8 +45,9 @@ class AccountService {
     }
 
     async judge(task) {
-        const next = (payload) => JudgeHandler.next({ ...payload, rid: task.rid, domainId: task.domainId });
-        const end = (payload) => JudgeHandler.end({ ...payload, rid: task.rid, domainId: task.domainId });
+        const context = new JudgeResultCallbackContext(this.ctx, task);
+        const next = (payload) => context.next(payload);
+        const end = (payload) => context.end(payload);
         await next({ status: STATUS.STATUS_FETCHED });
         try {
             const langConfig = SettingModel.langs[task.lang];
@@ -203,7 +204,7 @@ class VJudgeService extends Service {
             const services = [];
             for (const account of this.accounts.filter((a) => a.type === type)) {
                 if (account.enableOn && !account.enableOn.includes(os.hostname())) continue;
-                const service = new AccountService(provider, account);
+                const service = new AccountService(provider, account, this.ctx);
                 services.push(service);
                 this.pool[`${account.type}/${account.handle}`] = service;
             }

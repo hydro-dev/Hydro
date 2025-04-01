@@ -4,8 +4,8 @@ import path from 'path';
 import { fs } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
-    Context as HydroContext, db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
-    SettingModel, StorageModel, SystemModel, TaskModel,
+    Context as HydroContext, db, JudgeHandler, JudgeResultCallbackContext,
+    ObjectId, RecordModel, SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
 import { getConfig } from '../config';
@@ -32,20 +32,11 @@ const session: Session = {
         }
         return null;
     },
-    getNext(t: Context) {
-        t._callbackAwait ||= Promise.resolve();
-        return (data: Partial<JudgeResultBody>) => {
-            logger.debug('Next: %o', data);
-            if (data.case) data.case.message ||= '';
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, rid: t.rid, domainId: t.request.domainId }));
-        };
-    },
-    getEnd(t: Context) {
-        t._callbackAwait ||= Promise.resolve();
-        return (data: Partial<JudgeResultBody>) => {
-            data.key = 'end';
-            logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, rid: t.rid, domainId: t.request.domainId }));
+    getReporter(t: Context) {
+        const reporter = new JudgeResultCallbackContext(app, t.request);
+        return {
+            next: (a) => reporter.next(a),
+            end: (a) => reporter.end(a),
         };
     },
     getLang(lang: string, doThrow = true) {

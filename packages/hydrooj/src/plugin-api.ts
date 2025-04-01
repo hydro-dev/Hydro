@@ -33,8 +33,9 @@ export { default as DomainModel } from './model/domain';
 export { default as StorageModel } from './model/storage';
 export { default as TaskModel } from './model/task';
 export * from './model/builtin';
+/** @deprecated */
 export * as JudgeHandler from './handler/judge';
-export { postJudge } from './handler/judge';
+export { postJudge, JudgeResultCallbackContext } from './handler/judge';
 export { Collections } from './service/db';
 export { Handler, ConnectionHandler, requireSudo } from './service/server';
 export { Service, Context } from './context';

@@ -76,7 +76,7 @@ export interface FileInfo {
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
-    rejudge?: boolean;
+    rejudge?: boolean | 'controlled';
     // FIXME stricter types
     type?: string;
 }
