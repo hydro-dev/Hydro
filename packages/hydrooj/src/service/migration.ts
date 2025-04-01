@@ -3,7 +3,7 @@ import { Logger } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
 
-export type MigrationScript = null | (() => Promise<boolean | void>);
+export type MigrationScript = null | ((ctx: Context) => Promise<boolean | void>);
 const logger = new Logger('migration');
 
 declare module '../context' {
@@ -39,7 +39,7 @@ export default class MigrationService extends Service {
             const isFresh = !dbVer;
             const expected = scripts.length;
             if (isFresh) {
-                await scripts[0]?.();
+                await scripts[0]?.(this.ctx);
                 await system.set(name, expected);
                 continue;
             }
@@ -53,11 +53,11 @@ export default class MigrationService extends Service {
                 if ('dontWait' in func) {
                     logger.info('[Background Task]');
                     // For those scripts we don't really care if they fail
-                    func().then(() => {
+                    func(this.ctx).then(() => {
                         logger.info('Background Task Completed [%s]: from %d to %d', channel, func.dontWait, expected);
                     }).catch(logger.error);
                 } else {
-                    const result = await func();
+                    const result = await func(this.ctx);
                     if (!result) break;
                 }
                 dbVer++;

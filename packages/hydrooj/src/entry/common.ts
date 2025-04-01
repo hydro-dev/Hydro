@@ -8,7 +8,7 @@ import yaml from 'js-yaml';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import { PRIV } from '../model/builtin';
-import { unwrapExports } from '../utils';
+import { isClass, unwrapExports } from '../utils';
 
 const logger = new Logger('common');
 
@@ -52,7 +52,8 @@ export async function builtinModel(ctx: Context) {
     const models = await fs.readdir(modelDir);
     for (const t of models.filter((i) => i.endsWith('.ts'))) {
         const q = path.resolve(modelDir, t);
-        if ('apply' in require(q)) ctx.loader.reloadPlugin(q, '');
+        const module = require(q);
+        if ('apply' in module || isClass(unwrapExports(module))) ctx.loader.reloadPlugin(q, '');
     }
 }
 

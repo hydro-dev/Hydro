@@ -36,6 +36,7 @@ export default class GoogleOAuthService extends Service {
         super(ctx, 'oauth.google');
         ctx.provideModule('oauth', 'google', {
             text: 'Login with Google',
+            name: 'Google',
             callback: async function callback(this: Handler, {
                 state, code, error,
             }) {

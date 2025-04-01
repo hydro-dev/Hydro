@@ -8,6 +8,7 @@ import type {
 } from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { DocStatusType } from './model/document';
+import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
 import type { Handler } from './service/server';
 
@@ -505,12 +506,7 @@ export interface OpCountDoc {
     opcount: number;
 }
 
-export interface OauthMap {
-    /** source openId */
-    _id: string;
-    /** target uid */
-    uid: number;
-}
+export type { OauthMap } from './model/oauth';
 
 export interface DiscussionHistoryDoc {
     title?: string;
@@ -628,6 +624,7 @@ export interface UI {
 export interface ModuleInterfaces {
     oauth: {
         text: string;
+        name: string;
         icon?: string;
         get: (this: Handler) => Promise<void>;
         callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;

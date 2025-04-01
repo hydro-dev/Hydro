@@ -264,6 +264,7 @@ export async function apply(ctx: Context) {
                     id: key,
                     icon: global.Hydro.module.oauth[key].icon,
                     text: global.Hydro.module.oauth[key].text,
+                    name: global.Hydro.module.oauth[key].name,
                 }));
             if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
             if (h.context.pendingError) throw h.context.pendingError;
