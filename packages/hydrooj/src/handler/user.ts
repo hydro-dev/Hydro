@@ -293,7 +293,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (Object.keys(this.tdoc.setInDomain || {}).length) await domain.setUserInDomain(domainId, uid, this.tdoc.setInDomain);
-        await this.ctx.oauth.set(this.tdoc.identity.platform, this.tdoc.oauth.identity.id, uid);
+        await this.ctx.oauth.set(this.tdoc.identity.platform, this.tdoc.identity.id, uid);
         await successfulAuth.call(this, await user.getById(domainId, uid));
         this.response.redirect = this.tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
