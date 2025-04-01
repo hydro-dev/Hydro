@@ -70,8 +70,7 @@ export class JudgeTask {
                 HYDRO_USER: (this.request.uid || 0).toString(),
                 HYDRO_CONTEST: tid,
             };
-            this.next = this.session.getNext(this);
-            this.end = this.session.getEnd(this);
+            Object.assign(this, this.session.getReporter(this));
             logger.info('Submission: %s/%s/%s', host, this.source, this.rid);
             await this.doSubmission();
         } catch (e) {
