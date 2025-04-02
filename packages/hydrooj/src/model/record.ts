@@ -1,5 +1,5 @@
 /* eslint-disable object-curly-newline */
-import { sum } from 'lodash';
+import { pick, sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
     Filter, FindOptions, MatchKeysAndValues,
@@ -20,6 +20,7 @@ import task from './task';
 export default class RecordModel {
     static coll = db.collection('record');
     static collStat = db.collection('record.stat');
+    static collHistory = db.collection('record.history');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -208,12 +209,11 @@ export default class RecordModel {
             return null;
         }
         if (Object.keys($update).length) {
-            const res = await RecordModel.coll.findOneAndUpdate(
+            return await RecordModel.coll.findOneAndUpdate(
                 { _id, domainId },
                 $update,
                 { returnDocument: 'after' },
             );
-            return res.value || null;
         }
         return await RecordModel.coll.findOne({ _id }, { readPreference: 'primary' });
     }
@@ -233,6 +233,7 @@ export default class RecordModel {
     }
 
     static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
+        const rids = Array.isArray(rid) ? rid : [rid];
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -246,8 +247,21 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
-        await RecordModel.collStat.deleteMany(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
-        await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
+        const [rdocs] = await Promise.all([
+            RecordModel.coll.find({ _id: { $in: rids }, judgeAt: { $exists: true, $ne: null } }).toArray(),
+            RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
+            task.deleteMany({ rid: { $in: rids } }),
+        ]);
+        if (rdocs.length) {
+            await RecordModel.collHistory.insertMany(rdocs.map((rdoc) => ({
+                ...pick(rdoc, [
+                    'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                    'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+                ]),
+                rid: rdoc._id,
+                _id: new ObjectId(),
+            })));
+        }
         return RecordModel.update(domainId, rid, upd);
     }
 
@@ -268,7 +282,7 @@ export default class RecordModel {
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     // Mark problem as deleted
     ctx.on('problem/delete', (domainId, docId) => Promise.all([
         RecordModel.coll.deleteMany({ domainId, pid: docId }),
@@ -292,7 +306,7 @@ export function apply(ctx: Context) {
             }, { upsert: true });
         }
     });
-    ctx.on('ready', () => Promise.all([
+    await Promise.all([
         db.ensureIndexes(
             RecordModel.coll,
             { key: { domainId: 1, pid: 1 }, name: 'delete' },
@@ -309,6 +323,10 @@ export function apply(ctx: Context) {
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
             { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
         ),
-    ]) as any);
+        db.ensureIndexes(
+            RecordModel.collHistory,
+            { key: { rid: 1, _id: -1 }, name: 'basic' },
+        ),
+    ]);
 }
 global.Hydro.model.record = RecordModel;

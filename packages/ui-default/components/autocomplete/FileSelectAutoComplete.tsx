@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
 import AutoComplete, { AutoCompleteOptions } from '.';
 import FileSelectAutoCompleteFC from './components/FileSelectAutoComplete';
 
@@ -44,7 +43,7 @@ export default class FileSelectAutoComplete<Multi extends boolean> extends AutoC
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.createRoot(this.container).render(
+    this.component.render(
       <Component
         ref={(ref) => { this.ref = ref; }}
         data={this.options.data}

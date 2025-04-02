@@ -1,14 +1,14 @@
-/* eslint-disable import/no-dynamic-require */
-/* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
 import { ObjectId } from 'mongodb';
 import { Context } from '../context';
-import db from '../service/db';
+import { load as loadOptions } from '../options';
+import { MongoService } from '../service/db';
+import { ConfigService } from '../settings';
 import {
-    addon, builtinModel, lib, model, script, service, setting,
+    addon, builtinModel, model, service,
 } from './common';
 
 const argv = cac().parse();
@@ -109,25 +109,31 @@ export async function load(ctx: Context) {
     require('../service/bus').apply(ctx);
     const pending = global.addons;
     const fail = [];
-    await db.start();
-    await require('../settings').loadConfig();
+    await ctx.plugin(MongoService, loadOptions() || {});
+    await ctx.plugin(ConfigService);
     await require('../model/system').runConfig();
-    await require('../service/storage').loadStorageService();
-    require('../lib/index');
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['loader', 'config', 'db'], (c) => {
+            resolve(c);
+        });
+    });
     await Promise.all([
-        lib(pending, fail, ctx),
-        service(pending, fail, ctx),
+        ctx.loader.reloadPlugin(require.resolve('../service/storage'), 'file'),
+        ctx.loader.reloadPlugin(require.resolve('../service/worker'), 'worker'),
+        ctx.loader.reloadPlugin(require.resolve('../service/server'), 'server'),
     ]);
-    ctx.plugin(require('../service/worker'));
+    require('../lib/index');
+    await service(pending, fail, ctx);
     await builtinModel(ctx);
     await model(pending, fail, ctx);
-    await setting(pending, fail, require('../model/setting'));
-    ctx.plugin(require('../service/server'));
+    ctx = await new Promise((resolve) => {
+        ctx.inject(['server', 'setting', 'worker'], (c) => {
+            resolve(c);
+        });
+    });
     await addon(pending, fail, ctx);
     const scriptDir = path.resolve(__dirname, '..', 'script');
-    for (const h of await fs.readdir(scriptDir)) {
-        ctx.loader.reloadPlugin(ctx, path.resolve(scriptDir, h), {}, `hydrooj/script/${h.split('.')[0]}`);
-    }
-    await script(pending, fail, ctx);
+    await Promise.all((await fs.readdir(scriptDir))
+        .map((h) => ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '')));
     await cli();
 }

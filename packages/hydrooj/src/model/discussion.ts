@@ -5,7 +5,7 @@ import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import {
     DiscussionHistoryDoc, DiscussionReplyDoc, DiscussionTailReplyDoc, Document,
 } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { NumberKeys } from '../typeutils';
 import { buildProjection } from '../utils';
@@ -37,7 +37,6 @@ export const typeDisplay = {
     [document.TYPE_CONTEST]: 'contest',
     [document.TYPE_DISCUSSION_NODE]: 'node',
     [document.TYPE_TRAINING]: 'training',
-    [document.TYPE_HOMEWORK]: 'homework',
 };
 
 export const coll = db.collection('discussion.history');

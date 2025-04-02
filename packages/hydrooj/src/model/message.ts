@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from 'mongodb';
 import { MessageDoc } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 import { PRIV } from './builtin';
@@ -55,12 +55,11 @@ class MessageModel {
     }
 
     static async setFlag(messageId: ObjectId, flag: number) {
-        const result = await MessageModel.coll.findOneAndUpdate(
+        return await MessageModel.coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
             { returnDocument: 'after' },
         );
-        return result.value || null;
     }
 
     static async del(_id: ObjectId) {
@@ -80,7 +79,7 @@ class MessageModel {
         const targets = await user.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } })
             .project({ _id: 1, viewLang: 1 }).toArray();
         return Promise.all(targets.map(({ _id, viewLang }) => {
-            const msg = message.translate(viewLang || system.get('server.language')).format(...args);
+            const msg = app.i18n.translate(message, [viewLang || system.get('server.language')]).format(...args);
             return MessageModel.send(1, _id, msg, MessageModel.FLAG_RICHTEXT);
         }));
     }

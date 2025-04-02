@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import { debounce } from 'lodash';
 import { nanoid } from 'nanoid';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -156,8 +157,12 @@ export default class Editor extends DOMAttachedObject {
     const { onChange } = this.options;
     const { MdEditor } = await import('./mdeditor');
 
+    const debouncedTrigger = debounce(() => {
+      $(document.querySelector('.md-editor-preview')).trigger('vjContentNew');
+    }, 500, { trailing: true });
     const renderCallback = (ref) => {
       this.markdownEditor = ref;
+      setTimeout(debouncedTrigger, 200);
     };
 
     function EditorComponent() {
@@ -169,10 +174,12 @@ export default class Editor extends DOMAttachedObject {
         codeTheme='github'
         codeStyleReverse={false}
         ref={renderCallback}
-        modelValue={val}
+        value={val}
         theme={getTheme()}
         noMermaid
         noPrettier
+        noKatex
+        noHighlight
         autoDetectCode
         toolbarsExclude={[
           // 'bold',
@@ -214,6 +221,7 @@ export default class Editor extends DOMAttachedObject {
           $dom.val(v);
           $dom.text(v);
           onChange?.(v);
+          setTimeout(debouncedTrigger, 100);
         }}
         onUploadImg={async (files, callback) => {
           let ext: string;

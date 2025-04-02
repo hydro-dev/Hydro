@@ -7,13 +7,13 @@ import { Context, Service } from '../context';
 import { PERM, PRIV } from '../model/builtin';
 import { Handler } from './server';
 
-const types: Record<string, Record<string, string>> = {};
-const unions: Record<string, string> = {};
-const descriptions: Record<string, Record<string, string>> = {};
+const types: Record<string, Record<string, string>> = Object.create(null);
+const unions: Record<string, string> = Object.create(null);
+const descriptions: Record<string, Record<string, string>> = Object.create(null);
 const handlers: Record<string, Record<string, any>> = {
-    Query: {},
+    Query: Object.create(null),
 };
-let root: Record<string, any> = {};
+const root: Record<string, any> = handlers.Query;
 
 interface ApiContext extends ApiHandler {
     [key: string]: any;
@@ -31,7 +31,6 @@ function setDescription(desc: string) {
 
 let schema: GraphQLSchema;
 let schemaStr = '';
-root = handlers.Query;
 
 const applyAuthDirective = (s) => mapSchema(s, {
     // eslint-disable-next-line consistent-return
@@ -100,30 +99,12 @@ class ApiHandler extends Handler {
     }
 }
 
-/** @deprecated use ctx.api.value() instead */
-export function registerValue(...args: any[]) {
-    // @ts-ignore
-    return app.api.value(...args);
-}
-
-/** @deprecated use ctx.api.resolver() instead */
-export function registerResolver(...args: any[]) {
-    // @ts-ignore
-    return app.api.resolver(...args);
-}
-
-/** @deprecated use ctx.api.union() instead */
-export function registerUnion(...args: any[]) {
-    // @ts-ignore
-    return app.api.resolver(...args);
-}
-
 // TODO support dispose
 class ApiService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'api');
         this.rebuild = debounce(this.rebuild.bind(this), 500, { trailing: true });
-        ctx.on('ready', this.rebuild);
+        this.rebuild();
     }
 
     private rebuild() {
@@ -213,7 +194,7 @@ class ApiService extends Service {
 }
 
 export const sideEffect = true;
-export const using = ['server'];
+export const inject = ['server', 'setting'];
 
 export function apply(ctx: Context) {
     ctx.plugin(ApiService);

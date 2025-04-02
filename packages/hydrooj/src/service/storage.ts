@@ -12,9 +12,12 @@ import {
     copyFile, createReadStream, createWriteStream, ensureDir,
     existsSync, remove, stat, writeFile,
 } from 'fs-extra';
+import proxy from 'koa-proxies';
 import { lookup } from 'mime-types';
+import { nanoid } from 'nanoid';
+import Schema from 'schemastery';
+import { Context } from '../context';
 import { Logger } from '../logger';
-import { builtinConfig } from '../settings';
 import { MaybeArray } from '../typeutils';
 import { md5, streamToBuffer } from '../utils';
 
@@ -57,6 +60,43 @@ const convertPath = (p: string) => {
     return p;
 };
 
+const defaultPath = process.env.CI ? '/tmp/file'
+    : process.env.DEFAULT_STORE_PATH || '/data/file/hydro';
+const FileSetting = Schema.intersect([
+    Schema.object({
+        type: Schema.union([
+            Schema.const('file').i18n({ en: 'Local Directory', zh: '本地目录' }),
+            Schema.const('s3').description('S3'),
+        ] as const).i18n({ en: 'Storage Provider Type', zh: '存储提供商类型' }),
+        endPointForUser: Schema.string().default('/fs/'),
+        endPointForJudge: Schema.string().default('/fs/'),
+    }).i18n({ en: 'File Storage Setting', zh: '文件存储设置' }),
+    Schema.union([
+        Schema.object({
+            type: Schema.const('file').required(),
+            path: Schema.string().default(defaultPath).i18n({ en: 'Storage path', zh: '存储路径' }),
+            secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
+        }),
+        Schema.object({
+            type: Schema.const('s3').required(),
+            endPoint: Schema.string(),
+            accessKey: Schema.string(),
+            secretKey: Schema.string().role('secret'),
+            bucket: Schema.string().default('hydro'),
+            region: Schema.string().default('us-east-1'),
+            pathStyle: Schema.boolean().default(true),
+        }),
+    ] as const),
+] as const).default({
+    type: 'file',
+    path: defaultPath,
+    endPointForUser: '/fs/',
+    endPointForJudge: '/fs/',
+    secret: nanoid(),
+});
+
+export const Config = FileSetting;
+
 class RemoteStorageService {
     public client: S3Client;
     public error = '';
@@ -67,9 +107,12 @@ class RemoteStorageService {
         judge: null,
     };
 
+    constructor(private config: ReturnType<typeof FileSetting>) {
+    }
+
     async start() {
         try {
-            logger.info('Starting storage service with endpoint:', builtinConfig.file.endPoint);
+            logger.info('Starting storage service with endpoint:', this.config.endPoint);
             const {
                 endPoint,
                 accessKey,
@@ -79,7 +122,7 @@ class RemoteStorageService {
                 pathStyle,
                 endPointForUser,
                 endPointForJudge,
-            } = builtinConfig.file;
+            } = this.config;
             this.bucket = bucket;
             const base = {
                 region,
@@ -219,6 +262,10 @@ class RemoteStorageService {
         return url;
     }
 
+    async isLinkValid(_: string) {
+        return false;
+    }
+
     async signUpload(target: string, size: number) {
         const client = this.alternatives.user || this.client;
         const { url, fields } = await createPresignedPost(client, {
@@ -261,13 +308,16 @@ class LocalStorageService {
     opts: null;
     private replaceWithAlternativeUrlFor: Record<'user' | 'judge', (originalUrl: string) => string>;
 
+    constructor(private config: ReturnType<typeof FileSetting>) {
+    }
+
     async start() {
-        logger.debug('Loading local storage service with path:', builtinConfig.file.path);
-        await ensureDir(builtinConfig.file.path);
-        this.dir = builtinConfig.file.path;
+        logger.debug('Loading local storage service with path:', this.config.path);
+        await ensureDir(this.config.path);
+        this.dir = this.config.path;
         this.replaceWithAlternativeUrlFor = {
-            user: parseAlternativeEndpointUrl(builtinConfig.file.endPointForUser),
-            judge: parseAlternativeEndpointUrl(builtinConfig.file.endPointForJudge),
+            user: parseAlternativeEndpointUrl(this.config.endPointForUser),
+            judge: parseAlternativeEndpointUrl(this.config.endPointForJudge),
         };
     }
 
@@ -314,9 +364,17 @@ class LocalStorageService {
         if (filename) url.searchParams.set('filename', filename);
         const expire = (Date.now() + (noExpire ? 7 * 24 * 3600 : 600) * 1000).toString();
         url.searchParams.set('expire', expire);
-        url.searchParams.set('secret', md5(`${target}/${expire}/${builtinConfig.file.secret}`));
+        url.searchParams.set('secret', md5(`${target}/${expire}/${this.config.secret}`));
         if (useAlternativeEndpointFor) return this.replaceWithAlternativeUrlFor[useAlternativeEndpointFor](url.toString());
         return `/${url.toString().split('localhost/')[1]}`;
+    }
+
+    async isLinkValid(link: string) {
+        const parts = link.split('/');
+        const secret = parts.pop();
+        parts.push(this.config.secret);
+        const expected = md5(parts.join('/'));
+        return expected === secret;
     }
 
     async signUpload() {
@@ -333,16 +391,53 @@ class LocalStorageService {
     }
 }
 
-let service; // eslint-disable-line import/no-mutable-exports
+let service;
 
-export async function loadStorageService() {
-    service = builtinConfig.file.type === 's3' ? new RemoteStorageService() : new LocalStorageService();
-    global.Hydro.service.storage = service;
+export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>) {
+    if (config.type === 's3') {
+        service = new RemoteStorageService(config);
+    } else {
+        service = new LocalStorageService(config);
+    }
     await service.start();
+    ctx.inject(['server'], ({ server }) => {
+        let endpoint = config.endPoint;
+        if (config.type === 's3' && !config.pathStyle) {
+            try {
+                const parsed = new URL(config.endPoint);
+                parsed.hostname = `${config.bucket}.${parsed.hostname}`;
+                endpoint = parsed.toString();
+            } catch (e) {
+                logger.warn('Failed to parse file endpoint');
+            }
+        }
+        const proxyMiddleware = proxy('/fs', {
+            target: endpoint,
+            changeOrigin: true,
+            rewrite: (p) => p.replace('/fs', ''),
+        });
+        server.addCaptureRoute('/fs/', async (c, next) => {
+            if (c.request.search.toLowerCase().includes('x-amz-credential')) {
+                c.nolog = true;
+                return await proxyMiddleware(c, next);
+            }
+            c.request.path = c.path = c.path.split('/fs')[1];
+            return await next();
+        });
+    });
+    ctx.set('storage', service);
 }
 
-export default new Proxy({}, {
+declare module '../context' {
+    interface Context {
+        storage: RemoteStorageService | LocalStorageService;
+    }
+}
+
+/** @deprecated use ctx.storage instead */
+const serviceProxy = new Proxy({}, {
     get(self, key) {
         return service[key];
     },
 }) as RemoteStorageService | LocalStorageService;
+export default serviceProxy;

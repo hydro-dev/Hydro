@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.3.3",
+    "version": "1.4.0-beta.0",
     "main": "index.ts",
     "repository": "git@github.com:hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",

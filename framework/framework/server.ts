@@ -2,7 +2,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { PassThrough } from 'stream';
-import { Context, Service } from 'cordis';
+import { Context as CordisContext, Service } from '@cordisjs/core';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
@@ -19,6 +19,7 @@ import {
     CsrfTokenError, HydroError, InvalidOperationError,
     MethodNotAllowedError, NotFoundError, UserFacingError,
 } from './error';
+import type { KnownHandlers } from './interface';
 import { Router } from './router';
 import serializer from './serializer';
 
@@ -38,6 +39,18 @@ export function encodeRFC5987ValueChars(str: string) {
             // so we can allow for a little better readability over the wire: |`^
             .replace(/%(?:7C|60|5E)/g, unescape)
     );
+}
+
+async function forkContextWithScope<C extends CordisContext>(ctx: C) {
+    const scope = ctx.plugin(() => { });
+    await scope;
+    const dispose = () => scope.dispose();
+    return {
+        scope,
+        ctx: scope.ctx,
+        dispose,
+        [Symbol.asyncDispose]: dispose,
+    };
 }
 
 export interface HydroRequest {
@@ -113,7 +126,7 @@ export const router = new Router();
 export const httpServer = http.createServer(koa.callback());
 export const wsServer = new WebSocketServer({ server: httpServer });
 koa.on('error', (error) => {
-    if (error.code !== 'EPIPE' && error.code !== 'ECONNRESET' && !error.message.includes('Parse Error')) {
+    if (!['ECONNRESET', 'EPIPE', 'ECONNABORTED'].includes(error.code) && !error.message.includes('Parse Error')) {
         logger.error('Koa app-level error', { error });
     }
 });
@@ -125,9 +138,9 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon { }
-export class HandlerCommon {
-    static [kHandler]: string | boolean = true;
+export interface HandlerCommon<C> { } // eslint-disable-line @typescript-eslint/no-unused-vars
+export class HandlerCommon<C> {
+    static [kHandler]: string | boolean = 'HandlerCommon';
     session: Record<string, any>;
     args: Record<string, any>;
     request: HydroRequest;
@@ -135,7 +148,7 @@ export class HandlerCommon {
     UiContext: Record<string, any>;
     user: UserModel;
 
-    constructor(public context: KoaContext, public ctx: Context) {
+    constructor(public context: KoaContext, public ctx: C) {
         this.renderHTML = this.renderHTML.bind(this);
         this.url = this.url.bind(this);
         this.session = context.session;
@@ -143,7 +156,6 @@ export class HandlerCommon {
         this.request = context.HydroContext.request;
         this.response = context.HydroContext.response;
         this.UiContext = context.HydroContext.UiContext;
-        this.ctx = ctx.extend({});
     }
 
     checkPerm(..._: bigint[]) {
@@ -184,7 +196,8 @@ export class HandlerCommon {
     }
 
     renderHTML(templateName: string, args: Record<string, any>) {
-        const renderers = Object.values(this.ctx.server.renderers).filter((r) => r.accept.includes(templateName) || r.asFallback);
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
+            .filter((r) => r.accept.includes(templateName) || r.asFallback);
         const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
         const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
         return engine(templateName, args, {
@@ -196,7 +209,9 @@ export class HandlerCommon {
     }
 }
 
-export class Handler extends HandlerCommon {
+export class Handler<C = CordisContext> extends HandlerCommon<C> {
+    static [kHandler] = 'Handler';
+
     loginMethods: any;
     noCheckPermView = false;
     notUsage = false;
@@ -242,33 +257,9 @@ export class Handler extends HandlerCommon {
     }
 }
 
-const Checker = (permPrivChecker) => {
-    let perm: bigint;
-    let priv: number;
-    let checker = () => { };
-    for (const item of permPrivChecker) {
-        if (typeof item === 'object') {
-            if (typeof item.call !== 'undefined') {
-                checker = item;
-            } else if (typeof item[0] === 'number') {
-                priv = item;
-            } else if (typeof item[0] === 'bigint') {
-                perm = item;
-            }
-        } else if (typeof item === 'number') {
-            priv = item;
-        } else if (typeof item === 'bigint') {
-            perm = item;
-        }
-    }
-    return function check(this: Handler) {
-        checker();
-        if (perm) this.checkPerm(perm);
-        if (priv) this.checkPriv(priv);
-    };
-};
+export class ConnectionHandler<C> extends HandlerCommon<C> {
+    static [kHandler] = 'ConnectionHandler';
 
-export class ConnectionHandler extends HandlerCommon {
     conn: WebSocket;
     compression: Shorty;
     counter = 0;
@@ -305,7 +296,7 @@ export class ConnectionHandler extends HandlerCommon {
     }
 }
 
-class NotFoundHandler extends Handler {
+export class NotFoundHandler extends Handler<CordisContext> {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
@@ -342,9 +333,10 @@ export interface WebServiceConfig {
     host?: string;
     xff?: string;
     xhost?: string;
+    enableSSE?: boolean;
 }
 
-export class WebService extends Service {
+export class WebService<C extends CordisContext = CordisContext> extends Service<never, C> {
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];
@@ -359,7 +351,7 @@ export class WebService extends Service {
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: Context, public config: WebServiceConfig) {
+    constructor(ctx: C, public config: WebServiceConfig) {
         super(ctx, 'server');
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
@@ -432,7 +424,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     }
                 }
             });
-            this.ctx.on('dispose', () => {
+            this.ctx.effect(() => () => {
                 fs.emptyDirSync(uploadDir);
             });
             // if killed by ctrl-c, on('dispose') will not be called
@@ -457,7 +449,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             ...this.handlerLayers,
             {
                 name: '404',
-                func: (t) => this.handleHttp(t, NotFoundHandler, () => true),
+                func: (t) => this.handleHttp(t, NotFoundHandler, () => true, this.ctx),
             },
         ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
@@ -469,41 +461,45 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 } catch (e) { }
             });
             socket.pause();
-            const c: any = koa.createContext(request, {} as any);
-            await executeMiddlewareStack(c, this.wsLayers);
+            const KoaContext: any = koa.createContext(request, {} as any);
+            await executeMiddlewareStack(KoaContext, this.wsLayers);
             for (const manager of router.wsStack) {
-                if (manager.accept(socket, request, c)) return;
+                if (manager.accept(socket, request, KoaContext)) return;
             }
             socket.close();
         });
     }
 
     async listen() {
-        this.ctx.on('dispose', () => {
+        this.ctx.effect(() => () => {
             httpServer.close();
             wsServer.close();
         });
         await new Promise((r) => {
             httpServer.listen(this.config.port, this.config.host || '127.0.0.1', () => {
-                logger.success('Server listening at: %d', this.config.port);
+                logger.success('Server listening at: %c', `${this.config.host || '127.0.0.1'}:${this.config.port}`);
                 r(true);
             });
         });
     }
 
-    private async handleHttp(ctx: KoaContext, HandlerClass, checker) {
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: C) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
-        const h = new HandlerClass(ctx, this.ctx);
+        await using sub = await forkContextWithScope(savedContext);
+        const h = new HandlerClass(ctx, sub.ctx);
         ctx.handler = h;
         const method = ctx.method.toLowerCase();
-        const name = (typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
+        const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
+            ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
         try {
             const operation = (method === 'post' && ctx.request.body?.operation)
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
                 : '';
 
-            await this.ctx.parallel('handler/create', h, 'http');
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('handler/create', h, 'http');
+            await (this.ctx.parallel as any)('handler/create/http', h);
 
             if (checker) checker.call(h);
             if (method === 'post') {
@@ -539,13 +535,13 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 const step = steps[current];
                 let control;
                 if (step.startsWith('log/')) h.args[step.slice(4)] = Date.now();
-                // eslint-disable-next-line no-await-in-loop
-                else if (step.startsWith('handler/')) control = await this.ctx.serial(step as any, h);
+                // @ts-ignore
+                else if (step.startsWith('handler/')) control = await this.ctx.serial(step, h); // eslint-disable-line no-await-in-loop
                 // eslint-disable-next-line no-await-in-loop
                 else if (typeof h[step] === 'function') control = await h[step](args);
                 if (control) {
                     const index = steps.findIndex((i) => control === i);
-                    if (index === -1) throw new Error(`Invalid control: ${control}`);
+                    if (index === -1) throw new Error(`Invalid control: ${control} (after step ${step})`);
                     if (index <= current) {
                         logger.warn('Returning to previous step is not recommended:', step, '->', control);
                     }
@@ -554,8 +550,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         } catch (e) {
             try {
-                await this.ctx.serial(`handler/error/${name}`, h, e);
-                await this.ctx.serial('handler/error', h, e);
+                // FIXME: should pass type check
+                await (this.ctx.serial as any)(`handler/error/${name}`, h, e);
+                await (this.ctx.serial as any)('handler/error', h, e);
                 await h.onerror(e);
             } catch (err) {
                 logger.error(err);
@@ -566,13 +563,14 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn, layer?) {
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?) {
         const { args } = ctx.HydroContext;
-        const h = new HandlerClass(ctx, this.ctx);
-        await this.ctx.parallel('connection/create', h);
-        const stream = new PassThrough();
+        const sub = await forkContextWithScope(savedContext);
+        const h = new HandlerClass(ctx, sub.ctx);
+        let stream: PassThrough;
         if (!conn) {
             // By HTTP
+            stream = new PassThrough();
             ctx.request.socket.setTimeout(0);
             ctx.req.socket.setNoDelay(true);
             ctx.req.socket.setKeepAlive(true);
@@ -595,29 +593,39 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         ctx.handler = h;
         h.conn = conn;
-        const disposables = [];
+        let closed = false;
+
+        const clean = async (err?: Error) => {
+            if (closed) return;
+            closed = true;
+            try {
+                try {
+                    if (err) await h.onerror(err);
+                    // FIXME: should pass type check
+                    else (this.ctx.emit as any)('connection/close', h);
+                } finally {
+                    h.active = false;
+                    if (layer) layer.clients.delete(conn);
+                    if (err && !layer) ctx.status = 500;
+                    await h.cleanup?.(args);
+                }
+            } finally {
+                await sub.dispose();
+            }
+        };
+
         try {
-            await this.ctx.parallel('handler/create', h, 'ws');
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('handler/create', h, 'ws');
+            await (this.ctx.parallel as any)('handler/create/ws', h);
             checker.call(h);
             if (args.shorty) h.resetCompression();
             if (h._prepare) await h._prepare(args);
             if (h.prepare) await h.prepare(args);
-            // eslint-disable-next-line @typescript-eslint/no-shadow
-            for (const { name, target } of h.__subscribe || []) disposables.push(this.ctx.on(name, target.bind(h)));
-            let closed = false;
-            let interval: NodeJS.Timeout;
-            const clean = () => {
-                if (closed) return;
-                closed = true;
-                this.ctx.emit('connection/close', h);
-                if (layer) layer.clients.delete(conn);
-                if (interval) clearInterval(interval);
-                for (const d of disposables) d();
-                h.cleanup?.(args);
-            };
+            for (const { name, target } of h.__subscribe || []) sub.ctx.on(name, target.bind(h));
             if (layer) {
                 let lastHeartbeat = Date.now();
-                interval = setInterval(() => {
+                sub.ctx.setInterval(() => {
                     if (Date.now() - lastHeartbeat > 80000) {
                         clean();
                         conn.terminate();
@@ -627,7 +635,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 conn.on('pong', () => {
                     lastHeartbeat = Date.now();
                 });
-                conn.onmessage = (e) => {
+                conn.onmessage = async (e) => {
                     lastHeartbeat = Date.now();
                     if (e.data === 'pong') return;
                     if (e.data === 'ping') {
@@ -637,50 +645,89 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     let payload;
                     try {
                         payload = JSON.parse(e.data.toString());
-                    } catch {
-                        conn.close();
+                    } catch (err) {
+                        await clean(err);
                     }
                     try {
-                        h.message?.(payload);
+                        await h.message?.(payload);
                     } catch (err) {
                         logger.error(e);
                     }
                 };
             } else ctx.body = stream;
-            await this.ctx.parallel('connection/active', h);
+            // FIXME: should pass type check
+            await (this.ctx.parallel as any)('connection/active', h as any);
+            h.active = true;
             if (layer) {
                 if (conn.readyState === conn.OPEN) {
-                    conn.on('close', clean);
+                    conn.on('close', () => clean());
+                    conn.on('error', (err) => clean(err));
                     conn.resume();
                 } else clean();
-            } else stream.on('close', clean);
+            } else {
+                stream.on('close', () => clean());
+                stream.on('error', (err) => clean(err));
+            }
         } catch (e) {
-            await h.onerror(e);
-            if (!layer) ctx.status = 500;
+            // error during initialization (prepare, hooks)
+            await clean(e);
         }
     }
 
     private register(type: 'route' | 'conn', routeName: string, path: string, HandlerClass: any, ...permPrivChecker) {
         if (!HandlerClass?.[kHandler] || !isClass(HandlerClass)) throw new Error('Invalid registration.');
-        const name = typeof HandlerClass[kHandler] === 'string' ? HandlerClass[kHandler] : HandlerClass.name;
+        const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
+            ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
         if (this.registrationCount[name] && this.registry[name] !== HandlerClass) {
             logger.warn('Route with name %s already exists.', name);
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
+
+        const Checker = (args) => {
+            let perm: bigint;
+            let priv: number;
+            let checker = () => { };
+            for (const item of args) {
+                if (typeof item === 'object') {
+                    if (typeof item.call !== 'undefined') {
+                        checker = item;
+                    } else if (typeof item[0] === 'number') {
+                        priv = item;
+                    } else if (typeof item[0] === 'bigint') {
+                        perm = item;
+                    }
+                } else if (typeof item === 'number') {
+                    priv = item;
+                } else if (typeof item === 'bigint') {
+                    perm = item;
+                }
+            }
+            return function check(this: Handler<C>) {
+                checker();
+                if (perm) this.checkPerm(perm);
+                if (priv) this.checkPriv(priv);
+            };
+        };
+
+        // We hope to use parent context for handler (the context that calls register)
+        // So that handler can use services injected before calling register
+        const savedContext = Object.hasOwn(this.ctx, Symbol.for('cordis.shadow'))
+            ? Object.getPrototypeOf(this.ctx)
+            : this.ctx;
         if (type === 'route') {
-            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker)));
+            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker), savedContext));
         } else {
             const checker = Checker(permPrivChecker);
             const layer = router.ws(path, async (conn, _req, ctx) => {
-                await this.handleWS(ctx as any, HandlerClass, checker, conn, layer);
+                await this.handleWS(ctx as any, HandlerClass, checker, conn, layer, savedContext);
             });
-            router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null));
+            if (this.config.enableSSE) router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
         }
         const dispose = router.disposeLastOp;
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this.ctx.on('dispose', () => {
+        this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();
@@ -688,33 +735,35 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     public withHandlerClass<T extends string>(
-        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any,
+        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
     ) {
+        name = name.replace(/Handler$/, '') as any;
         if (this.registry[name]) callback(this.registry[name]);
-        // @ts-ignore
-        const dispose = this.ctx.on(`handler/register/${name}`, callback);
-        this[Context.current]?.on('dispose', () => {
-            dispose();
-        });
+        // FIXME: should pass type check
+        this.ctx.on(`handler/register/${name}`, callback as any);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
+    public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
+        // if (name === 'contest_scoreboard') {
+        //     console.log('+++', this.ctx);
+        //     console.log(this.ctx.scoreboard);
+        // }
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler, ...permPrivChecker) {
+    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler<C>, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
     private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
-        this[name].push(layer);
-        const dispose = () => {
-            this[name] = this[name].filter((i) => i !== layer);
-        };
-        this[Context.origin]?.on('dispose', dispose);
-        return dispose;
+        this.ctx.effect(() => {
+            this[name].push(layer);
+            return () => {
+                this[name] = this[name].filter((i) => i !== layer);
+            };
+        });
     }
 
     public addServerLayer(name: string, func: any) {
@@ -738,10 +787,47 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.captureAllRoutes[prefix] = cb;
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon>) {
-        for (const val of Object.getOwnPropertyNames(MixinClass)) {
-            HandlerCommon.prototype[val] = MixinClass[val];
-        }
+    private _applyMixin(Target: any, MixinClass: Partial<any> | ((t: Partial<any>) => Partial<any>)) {
+        if (!('prototype' in Target)) throw new Error('Target must be a class.');
+        if (typeof MixinClass === 'function') MixinClass = MixinClass(Target.prototype);
+        this.ctx.effect(() => {
+            let oldValue = null;
+            for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                if (Target.prototype[val]) {
+                    logger.warn(`${Target.name}.prototype[${val}] already exists.`);
+                    oldValue = Target.prototype[val];
+                }
+                Target.prototype[val] = MixinClass[val];
+            }
+            return () => {
+                for (const val of Object.getOwnPropertyNames(MixinClass)) {
+                    if (Target.prototype[val] !== MixinClass[val]) {
+                        logger.warn(`Failed to unload mixin ${Target.name}.prototype[${val}]: not the same as the original value.`);
+                    } else {
+                        delete Target.prototype[val];
+                        if (oldValue) Target.prototype[val] = oldValue;
+                    }
+                }
+            };
+        });
+    }
+
+    public applyMixin<T extends keyof KnownHandlers>(name: T, MixinClass: any) {
+        this.withHandlerClass(name, (HandlerClass) => {
+            this._applyMixin(HandlerClass, MixinClass);
+        });
+    }
+
+    public handlerMixin(MixinClass: Partial<HandlerCommon<C>> | ((s: HandlerCommon<C>) => Partial<HandlerCommon<C>>)) {
+        return this._applyMixin(HandlerCommon, MixinClass);
+    }
+
+    public httpHandlerMixin(MixinClass: Partial<Handler<C>> | ((s: Handler<C>) => Partial<Handler<C>>)) {
+        return this._applyMixin(Handler, MixinClass);
+    }
+
+    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>> | ((s: ConnectionHandler<C>) => Partial<ConnectionHandler<C>>)) {
+        return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
     public registerRenderer(name: string, func: Renderer) {
@@ -755,16 +841,11 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 }
 
-declare module 'cordis' {
+declare module '@cordisjs/core' {
     interface Context {
-        server: WebService;
-        Route: WebService['Route'];
-        Connection: WebService['Connection'];
-        withHandlerClass: WebService['withHandlerClass'];
+        server: WebService<this>;
+        Route: WebService<this>['Route'];
+        Connection: WebService<this>['Connection'];
+        withHandlerClass: WebService<this>['withHandlerClass'];
     }
-}
-
-export async function apply(ctx: Context, config: WebServiceConfig) {
-    ctx.provide('server', undefined, true);
-    ctx.server = new WebService(ctx, config);
 }

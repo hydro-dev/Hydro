@@ -195,6 +195,7 @@ const Caddyfile = `\
 # 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
 # 填写完整域名，注意区分有无 www （www.hydro.ac 和 hydro.ac 不同，请检查 DNS 设置）
 # 请注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
+# 其他需求清参照 https://caddyserver.com/docs/ 说明进行设置。
 # For more information, refer to caddy v2 documentation.
 :80 {
   encode zstd gzip
@@ -242,6 +243,7 @@ hosts:
     uname: judge
     password: examplepassword
     detail: true
+    concurrency: 2
 tmpfs_size: 512m
 stdio_size: 256m
 memoryMax: ${Math.min(1024, os.totalmem() / 4)}m
@@ -253,7 +255,7 @@ parallelism: ${Math.max(1, Math.floor(cpus().length / 4))}
 singleTaskParallelism: 2
 rate: 1.00
 rerun: 2
-secret: Hydro-Judge-Secret
+secret: ${crypto.randomBytes(32).toString('hex')}
 env: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
@@ -409,8 +411,8 @@ ${nixConfBase}`);
                     const docker = !exec('docker -v').code;
                     if (!docker) return;
                     const containers = exec('docker ps -a --format json').output?.split('\n')
-                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
-                    const uoj = containers?.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running');
+                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i)) || [];
+                    const uoj = containers.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
@@ -711,7 +713,7 @@ async function main() {
                     while (res.code && op[1].ignore !== true) {
                         if (op[1].retry && retry < 30) {
                             log.warn('Retry in 3 secs... (%s)', op[0]);
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
                             res = exec(op[0], { stdio: 'inherit' });
                             retry++;
@@ -723,9 +725,9 @@ async function main() {
                     while (res === 'retry') {
                         if (retry < 30) {
                             log.warn('Retry in 3 secs...');
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
-                            // eslint-disable-next-line no-await-in-loop
+
                             res = await op[0](op[1]);
                             retry++;
                         } else log.fatal('Error installing');

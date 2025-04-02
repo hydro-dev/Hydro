@@ -1,6 +1,6 @@
 import { Filter } from 'mongodb';
+import { Context } from '../context';
 import { TokenDoc } from '../interface';
-import * as bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 
@@ -67,7 +67,7 @@ class TokenModel {
             },
             { returnDocument: 'after' },
         );
-        return res.value;
+        return res;
     }
 
     @ArgMethod
@@ -107,10 +107,12 @@ class TokenModel {
     }
 }
 
-bus.on('ready', () => db.ensureIndexes(
-    TokenModel.coll,
-    { key: { uid: 1, tokenType: 1, updateAt: -1 }, name: 'basic', sparse: true },
-    { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
-));
+export async function apply(ctx: Context) {
+    await ctx.db.ensureIndexes(
+        TokenModel.coll,
+        { key: { uid: 1, tokenType: 1, updateAt: -1 }, name: 'basic', sparse: true },
+        { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
+    );
+}
 export default TokenModel;
 global.Hydro.model.token = TokenModel;

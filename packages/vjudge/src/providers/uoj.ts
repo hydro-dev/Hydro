@@ -161,7 +161,6 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
     async waitForSubmission(id: string, next, end) {
         let i = 1;
         let count = 0;
-        // eslint-disable-next-line no-constant-condition
         while (count < 120) {
             count++;
             await sleep(3000);

@@ -7,27 +7,40 @@ import type AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import Logger from 'reggol';
+import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
-Logger.levels.base = process.env.DEV ? 3 : 2;
-Logger.targets[0].showTime = 'dd hh:mm:ss';
-Logger.targets[0].label = {
-    align: 'right',
-    width: 9,
-    margin: 1,
-};
+Factory.formatters['d'] = (value, exporter) => Reggol.color(exporter, 3, value);
 
-export { Logger, moment };
+const factory = new Factory();
+
+factory.addExporter(new Exporter.Console({
+    showDiff: false,
+    showTime: 'dd hh:mm:ss',
+    label: {
+        align: 'right',
+        width: 9,
+        margin: 1,
+    },
+    timestamp: Date.now(),
+}));
+factory.exporters.get(1).levels = { default: process.env.DEV ? 3 : 2 };
+
+function createLogger(name: string) {
+    return factory.createLogger(name);
+}
+
+export type Logger = Reggol & { new(name: string): Reggol & Logger };
+export const Logger = createLogger as any as Logger;
+export { moment };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
 export const md5 = (content: string) => encrypt('md5', content);
 
 export function folderSize(folderPath: string) {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     let size = 0;
     const _next = function a(p: string) {
         if (p) {

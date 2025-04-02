@@ -8,17 +8,16 @@ import superagent from 'superagent';
 import tar from 'tar';
 import { extractZip, Logger } from '@hydrooj/utils';
 import { version } from 'hydrooj/package.json';
+import { hydroPath } from '../options';
 
 const logger = new Logger('install');
 let yarnVersion = 0;
 try {
-    // eslint-disable-next-line no-unsafe-optional-chaining
     yarnVersion = +child.execSync('yarn --version', { cwd: os.tmpdir() }).toString().split('v').pop()!.split('.')[0];
 } catch (e) {
     // yarn 2 does not support global dir
 }
 
-const hydroPath = path.resolve(os.homedir(), '.hydro');
 const addonDir = path.join(hydroPath, 'addons');
 
 function downloadAndExtractTgz(url: string, dest: string) {

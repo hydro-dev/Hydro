@@ -1,22 +1,11 @@
 import path from 'path';
 import {
-    ContestModel, Context, fs, Handler, ObjectId, PERM, Schema, STATUS, Types, UserModel,
+    ContestModel, Context, fs, ObjectId, PERM, Schema, STATUS, Types, UserModel,
 } from 'hydrooj';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
 const indexJs = file.match(/index-([A-Za-z0-9_-]+)\.js"/)?.[1];
 const indexCss = file.match(/index-([A-Za-z0-9_-]+)\.css"/)?.[1];
-
-class XcpcioHandler extends Handler {
-    async get() {
-        this.response.body = {
-            js: indexJs,
-            css: indexCss,
-        };
-        this.response.template = 'xcpcio_board.html';
-    }
-}
-
 const status = {
     [STATUS.STATUS_WRONG_ANSWER]: 'WRONG_ANSWER',
     [STATUS.STATUS_ACCEPTED]: 'CORRECT',
@@ -35,7 +24,6 @@ const status = {
 };
 
 export async function apply(ctx: Context) {
-    ctx.Route('board_xcpcio', '/board', XcpcioHandler);
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('xcpcio', 'XCPCIO', {
             tdoc: 'tdoc',
@@ -112,7 +100,7 @@ export async function apply(ctx: Context) {
                             },
                         },
                         submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
-                            const submit = new ObjectId(j.rid).getTimestamp().getTime();
+                            const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
                             const curStatus = status[j.status] || 'SYSTEM_ERROR';
                             return {
                                 problem_id: tdoc.pids.indexOf(j.pid),

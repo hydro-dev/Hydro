@@ -1,11 +1,12 @@
 import { resolve } from 'path';
 import cac from 'cac';
 import fs from 'fs-extra';
-import proxy from 'koa-proxies';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
-    ConnectionHandler as ConnectionHandlerOriginal, Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
+    ConnectionHandler as ConnectionHandlerOriginal,
+    Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
+    WebService,
 } from '@hydrooj/framework';
 import { errorMessage, Time } from '@hydrooj/utils';
 import { Context } from '../context';
@@ -16,7 +17,6 @@ import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
 import * as system from '../model/system';
-import { builtinConfig } from '../settings';
 import db from './db';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';
@@ -28,7 +28,7 @@ const ignoredLimit = `,${argv.options.ignoredLimit},`;
 const logger = new Logger('server');
 
 declare module '@hydrooj/framework' {
-    export interface HandlerCommon {
+    export interface HandlerCommon<C> { // eslint-disable-line @typescript-eslint/no-unused-vars
         domain: DomainDoc;
 
         paginate<T>(cursor: FindCursor<T>, page: number, key: string): Promise<[docs: T[], numPages: number, count: number]>;
@@ -71,68 +71,15 @@ export function requireSudo(target: any, funcName: string, obj: any) {
     return obj;
 }
 
-export interface Handler {
+export class Handler extends HandlerOriginal<Context> {
     domain: DomainDoc;
-    ctx: Context;
 }
-export class Handler extends HandlerOriginal {
-    constructor(_, ctx: Context) {
-        super(_, ctx);
-        this.ctx = ctx.extend({ domain: this.domain });
-        this.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
-            const s = name.split('.');
-            let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
-            if (!global.Hydro.ui.template[templateName]) templateName = name;
-            return orig(templateName, args);
-        })(this.renderHTML).bind(this);
-    }
-
-    async onerror(error: HydroError) {
-        error.msg ||= () => error.message;
-        if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
-        if (!(error instanceof NotFoundError) && !('nolog' in error)) {
-            // eslint-disable-next-line max-len
-            logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
-            if (error.stack) logger.error(error.stack);
-        }
-        if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
-            this.response.redirect = this.url('user_login', {
-                query: {
-                    redirect: (this.context.originalPath || this.request.path) + this.context.search,
-                },
-            });
-        } else {
-            this.response.status = error instanceof UserFacingError ? error.code : 500;
-            this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
-            this.response.body = {
-                UserFacingError,
-                error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
-            };
-        }
-    }
-}
-
-export interface ConnectionHandler {
+export class ConnectionHandler extends ConnectionHandlerOriginal<Context> {
     domain: DomainDoc;
-    ctx: Context;
-}
-export class ConnectionHandler extends ConnectionHandlerOriginal {
-    constructor(_, ctx: Context) {
-        super(_, ctx);
-        this.ctx = ctx.extend({ domain: this.domain });
-    }
-
-    onerror(err: HydroError) {
-        if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
-            logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
-            logger.error(err);
-        }
-        super.onerror(err);
-    }
 }
 
 export async function apply(ctx: Context) {
-    ctx.plugin(require('@hydrooj/framework'), {
+    ctx.plugin(WebService, {
         keys: system.get('session.keys'),
         proxy: !!system.get('server.xproxy') || !!system.get('server.xff'),
         cors: system.get('server.cors') || '',
@@ -143,27 +90,7 @@ export async function apply(ctx: Context) {
         xhost: system.get('server.xhost'),
     });
     if (process.env.HYDRO_CLI) return;
-    ctx.inject(['server'], ({ server, on }) => {
-        let endpoint = builtinConfig.file.endPoint;
-        if (builtinConfig.file.type === 's3' && !builtinConfig.file.pathStyle) {
-            try {
-                const parsed = new URL(builtinConfig.file.endPoint);
-                parsed.hostname = `${builtinConfig.file.bucket}.${parsed.hostname}`;
-                endpoint = parsed.toString();
-            } catch (e) {
-                logger.warn('Failed to parse file endpoint');
-            }
-        }
-        const proxyMiddleware = proxy('/fs', {
-            target: endpoint,
-            changeOrigin: true,
-            rewrite: (p) => p.replace('/fs', ''),
-        });
-        server.addCaptureRoute('/fs/', async (c, next) => {
-            if (c.request.search.toLowerCase().includes('x-amz-credential')) return await proxyMiddleware(c, next);
-            c.request.path = c.path = c.path.split('/fs')[1];
-            return await next();
-        });
+    ctx.inject(['server', 'oauth'], ({ server, on, oauth }) => {
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {
@@ -179,7 +106,7 @@ export async function apply(ctx: Context) {
             }
         });
 
-        for (const addon of [...global.addons].reverse()) {
+        for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');
             if (!fs.existsSync(dir)) continue;
             server.addServerLayer(`${addon}_public`, cache(dir, {
@@ -191,6 +118,8 @@ export async function apply(ctx: Context) {
         server.addWSLayer('domain', domainLayer);
         server.addLayer('base', baseLayer);
         server.addLayer('user', userLayer);
+
+        const cachedTranslate = ctx.i18n.translate;
 
         server.handlerMixin({
             url(name: string, ...kwargsList: Record<string, any>[]) {
@@ -219,7 +148,7 @@ export async function apply(ctx: Context) {
                             ? (!host.includes(this.request.host))
                             : this.request.host !== host)
                     )) withDomainId ||= domainId;
-                    res = ctx.server.router.url.call(ctx.server.router, name, args, { query }).toString();
+                    res = server.router.url.call(server.router, name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
                     if (withDomainId) res = `/d/${withDomainId}${res}`;
                 } catch (e) {
@@ -232,10 +161,10 @@ export async function apply(ctx: Context) {
             translate(str: string) {
                 if (!str) return '';
                 const lang = this.user?.viewLang || this.session?.viewLang;
-                const res = lang
-                    ? str.toString().translate(lang, ...this.context.acceptsLanguages())
-                    : str.toString().translate(...this.context.acceptsLanguages(), system.get('server.language'));
-                return res;
+                const langs = lang
+                    ? [lang, ...this.context.acceptsLanguages()]
+                    : [...this.context.acceptsLanguages(), system.get('server.language')];
+                return cachedTranslate(str.toString(), langs);
             },
             paginate<T>(cursor: FindCursor<T>, page: number, key: string | number) {
                 return db.paginate(cursor, page, typeof key === 'number' ? key : (this.ctx.setting.get(`pagination.${key}`) || 20));
@@ -270,28 +199,78 @@ export async function apply(ctx: Context) {
                 return `${this.translate(str)} - ${name}`;
             },
         });
+        server.httpHandlerMixin({
+            async onerror(error: HydroError) {
+                error.msg ||= () => error.message;
+                if (error instanceof UserFacingError && !process.env.DEV) error.stack = '';
+                if (!(error instanceof NotFoundError) && !('nolog' in error)) {
+                    // eslint-disable-next-line max-len
+                    logger.error(`User: ${this.user._id}(${this.user.uname}) ${this.request.method}: /d/${this.domain._id}${this.request.path}`, error.msg(), error.params);
+                    if (error.stack) logger.error(error.stack);
+                }
+                if (this.user?._id === 0 && (error instanceof PermissionError || error instanceof PrivilegeError)) {
+                    this.response.redirect = this.url('user_login', {
+                        query: {
+                            redirect: (this.context.originalPath || this.request.path) + this.context.search,
+                        },
+                    });
+                } else if (!this.user._dudoc.join && error instanceof PermissionError) {
+                    this.response.redirect = this.url('domain_join', {
+                        domainId: 'system',
+                        query: {
+                            redirect: (this.context.originalPath || this.request.path) + this.context.search,
+                            target: this.domain._id,
+                        },
+                    });
+                } else {
+                    this.response.status = error instanceof UserFacingError ? error.code : 500;
+                    this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
+                    this.response.body = {
+                        UserFacingError,
+                        error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
+                    };
+                }
+            },
+        });
+        server.wsHandlerMixin({
+            async onerror(err: HydroError) {
+                if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
+                    logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
+                    logger.error(err);
+                }
+                if (err instanceof UserFacingError) err.stack = this.request.path;
+                this.send({
+                    error: {
+                        name: err.name,
+                        params: err.params || [],
+                    },
+                });
+                this.close(4000, err.toString());
+            },
+        });
 
         on('handler/create', async (h) => {
             h.user = h.context.HydroContext.user as any;
             h.domain = h.context.HydroContext.domain as any;
             h.translate = h.translate.bind(h);
             h.url = h.url.bind(h);
-            h.ctx = h.ctx.extend({
-                domain: h.domain,
-            });
+            h.ctx = h.ctx.extend({ domain: h.domain });
+        });
+        on('handler/create/http', async (h) => {
             if (!argv.options.benchmark && !h.notUsage) await h.limitRate('global', 5, 100);
-            h.loginMethods = Object.keys(global.Hydro.module.oauth)
-                .map((key) => ({
-                    id: key,
-                    icon: global.Hydro.module.oauth[key].icon,
-                    text: global.Hydro.module.oauth[key].text,
+            h.loginMethods = Object.entries(oauth.providers)
+                .filter(([_, v]) => !v.hidden)
+                .map(([k, v]) => ({
+                    id: k,
+                    icon: v.icon,
+                    text: v.text,
+                    name: v.name,
                 }));
             if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
             if (h.context.pendingError) throw h.context.pendingError;
         });
-
-        on('app/listen', () => {
-            server.listen();
+        on('handler/create/ws', async (h) => {
+            if (h.context.pendingError) throw h.context.pendingError;
         });
     });
 }

@@ -242,7 +242,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     function ProblemNavigation() {
       [, setUpdate] = React.useState(0);
       return <div className="contest-problems" style={{ margin: '1em' }}>
-        {pids.map((i) => <a href={`#p${i}`} className={ans[i] ? 'pending ' : ''}>
+        {pids.map((i) => <a href={`#p${i}`} key={i} className={ans[i] ? 'pending ' : ''}>
           <span className="id">{i}</span>
         </a>)}
       </div>;

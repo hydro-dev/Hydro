@@ -76,29 +76,33 @@ export interface FileInfo {
 export interface JudgeMeta {
     problemOwner: number;
     hackRejudge?: string;
-    rejudge?: boolean;
+    rejudge?: boolean | 'controlled';
     // FIXME stricter types
     type?: string;
 }
 
-export interface RecordPayload {
-    domainId: string;
-    pid: number;
-    uid: number;
-    lang: string;
-    code: string;
+export interface RecordJudgeInfo {
     score: number;
     memory: number;
     time: number;
     judgeTexts: (string | JudgeMessage)[];
     compilerTexts: string[];
     testCases: Required<TestCase>[];
-    rejudged: boolean;
-    source?: string;
     /** judge uid */
     judger: number;
     judgeAt: Date;
     status: number;
+    subtasks?: Record<number, SubtaskResult>;
+}
+
+export interface RecordPayload extends RecordJudgeInfo {
+    domainId: string;
+    pid: number;
+    uid: number;
+    lang: string;
+    code: string;
+    rejudged: boolean;
+    source?: string;
     progress?: number;
     /** pretest */
     input?: string;
@@ -108,7 +112,6 @@ export interface RecordPayload {
     contest?: string;
 
     files?: Record<string, string>
-    subtasks?: Record<number, SubtaskResult>;
 }
 
 export interface JudgeRequest extends Omit<RecordPayload, 'testCases'> {

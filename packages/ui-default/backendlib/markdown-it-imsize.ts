@@ -232,4 +232,4 @@ export default function plugin(md) {
     state.posMax = max;
     return true;
   });
-};
+}

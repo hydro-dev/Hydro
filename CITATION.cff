@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: Hydro
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Yi
+    family-names: Huang
+    email: i@undefined.moe
+  - given-names: Haojun
+    family-names: Pan
+    email: panda@hydro.ac
+  - name: All Hydro Project Developers
+repository-code: 'https://github.com/hydro-dev/Hydro'
+url: 'https://hydro.js.org'
+keywords:
+  - Online Judge
+  - ICPC
+  - OI
+  - Competitive Programming
+license: AGPL-3.0-or-later

@@ -1,8 +1,5 @@
 // https://github.com/waylonflinn/markdown-it-katex/blob/master/index.js
-import { Logger } from 'hydrooj';
 import katex from 'katex';
-
-const logger = new Logger('katex');
 
 function isValidDelim(state, pos) {
   const max = state.posMax;
@@ -111,14 +108,14 @@ function block(state, start, end, silent) {
 }
 
 export default function plugin(md) {
-  const options = { throwOnError: false, strict: 'ignore', displayMode: false };
+  const options = { throwOnError: false, strict: 'ignore' as 'ignore', displayMode: false };
   const render = (latex: string, displayMode = false) => {
     options.displayMode = displayMode;
     try {
       latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
       return katex.renderToString(latex, options);
     } catch (error) {
-      if (options.throwOnError) logger.error(error);
+      if (options.throwOnError) console.error(error);
       return `<p class='${displayMode ? 'katex-block ' : ''}katex-error' title='${escapeHtml(error.toString())}'>${escapeHtml(latex)}</p>`;
     }
   };

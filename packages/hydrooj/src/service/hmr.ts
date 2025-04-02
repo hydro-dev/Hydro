@@ -144,11 +144,11 @@ export default class HMR extends Service {
         }
     }
 
-    private triggerLocalReload() {
+    private async triggerLocalReload() {
         this.analyzeChanges();
 
         /** plugins pending classification */
-        const pending = new Map<string, Plugin.Runtime<Context>>();
+        const pending = new Map<string, Plugin>();
 
         /** plugins that should be reloaded */
         const reloads = new Map<Plugin, { filename: string, runtime: Plugin.Runtime<Context> }>();
@@ -158,18 +158,19 @@ export default class HMR extends Service {
         for (const filename in require.cache) {
             const module = require.cache[filename];
             const plugin = unwrapExports(module.exports);
-            if (typeof plugin !== 'object' || !plugin || !('apply' in plugin)) continue;
+            if (!plugin) continue;
             const runtime = this.ctx.registry.get(plugin);
             if (!runtime || this.declined.has(filename)) continue;
-            pending.set(filename, runtime);
-            if (!plugin || !('sideEffect' in plugin) || !plugin['sideEffect']) this.declined.add(filename);
+            pending.set(filename, plugin);
+            if (!plugin?.sideEffect) this.declined.add(filename);
         }
 
-        for (const [filename, runtime] of pending) {
+        for (const [filename, plugin] of pending) {
             // check if it is a dependent of the changed file
             this.declined.delete(filename);
             const dependencies = [...loadDependencies(filename, this.declined)];
-            if (!runtime.plugin['sideEffect']) this.declined.add(filename);
+            const runtime = this.ctx.registry.get(plugin);
+            if (!plugin['sideEffect']) this.declined.add(filename);
 
             // we only detect reloads at plugin level
             // a plugin will be reloaded if any of its dependencies are accepted
@@ -177,7 +178,7 @@ export default class HMR extends Service {
             for (const dep of dependencies) this.accepted.add(dep);
 
             // prepare for reload
-            reloads.set(runtime.plugin, {
+            reloads.set(plugin, {
                 filename,
                 runtime,
             });
@@ -206,10 +207,11 @@ export default class HMR extends Service {
             return rollback();
         }
 
-        const reload = (plugin: any, runtime?: Plugin.Runtime) => {
+        const reload = async (plugin: any, runtime?: Plugin.Runtime) => {
             if (!runtime) return;
             for (const oldFiber of runtime.scopes) {
-                oldFiber.parent.plugin(plugin, oldFiber.config);
+                // eslint-disable-next-line no-await-in-loop
+                await oldFiber.parent.plugin(plugin, oldFiber.config);
             }
         };
 
@@ -225,7 +227,8 @@ export default class HMR extends Service {
                 }
 
                 try {
-                    reload(attempts[filename], runtime);
+                    // eslint-disable-next-line no-await-in-loop
+                    await reload(attempts[filename], runtime);
                     logger.info('reload plugin at %c', path);
                 } catch (err) {
                     logger.warn('failed to reload plugin at %c', path);
@@ -239,7 +242,8 @@ export default class HMR extends Service {
             for (const [plugin, { filename, runtime }] of reloads) {
                 try {
                     this.ctx.registry.delete(attempts[filename]);
-                    reload(plugin, runtime);
+                    // eslint-disable-next-line no-await-in-loop
+                    await reload(plugin, runtime);
                 } catch (err) {
                     logger.warn(err);
                 }

@@ -14,43 +14,6 @@
   <div class="medium-6 columns">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title" id="email" data-heading>{{ _('Change Email') }}</h1>
-      </div>
-      <div class="section__body">
-        <form method="post">
-          {{ form.form_text({
-               type:'password',
-               label:"SuperUser's Password" if sudoUid else 'Current Password',
-               columns:10,
-               name:'password',
-               required:true
-             }) }}
-          {{ form.form_text({
-               type:'text',
-               label:'Current Email',
-               columns:10,
-               name:'currentEmail',
-               value:handler.user.mail,
-               disabled:true
-             }) }}
-          {{ form.form_text({
-               type:'text',
-               label:'New Email',
-               columns:10,
-               name:'mail',
-               required:true
-             }) }}
-          <div class="row"><div class="columns">
-            <input type="hidden" name="operation" value="change_mail">
-            <input type="submit" class="rounded primary button" value="{{ _('Change Email') }}">
-          </div></div>
-        </form>
-      </div>
-    </div>
-  </div>
-  <div class="medium-6 columns">
-    <div class="section">
-      <div class="section__header">
         <h1 class="section__title" id="password" data-heading>{{ _('Change Password') }}</h1>
       </div>
       <div class="section__body">
@@ -81,6 +44,69 @@
             <input type="submit" class="rounded primary button" value="{{ _('Change Password') }}">
           </div></div>
         </form>
+      </div>
+    </div>
+  </div>
+  <div class="medium-6 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title" id="linked-accounts" data-heading>{{ _('Linked Accounts') }}</h1>
+      </div>
+      <div class="section__body">
+        <ul class="platform-list">
+          <li class="platform-list__item">
+            <div class="media">
+              <div class="media__left medium">
+                <span class="autherlist__icon icon icon-mail"></span>
+              </div>
+              <div class="media__body medium typo">
+                <p>{{ _('Email Account') }}: {{ handler.user.mail }}</p>
+              </div>
+              <div class="media__right medium">
+                <button type="button" class="rounded button" data-operation="change_mail">{{ _('Change') }}</button>
+              </div>
+            </div>
+          </li>
+          <form method="post">
+            <input type="hidden" name="operation" value="unlink_account">
+            {%- for relation in relations -%}{% if relation.platform != 'mail' %}
+            {% set platform = handler.loginMethods.find(eval("r => r.id === '" + relation.platform + "'")) %}
+            <li class="platform-list__item">
+              <div class="media">
+                {% if platform.icon %}
+                  <div class="media__left medium">{{ platform.icon|safe }}</div>
+                {% endif %}
+                <div class="media__body medium typo">
+                  <p>{{ platform.name }}: {{ relation.id }}</p>
+                </div>
+                <div class="media__right medium">
+                  <button type="submit" name="platform" value="{{ relation.platform }}" class="rounded button">{{ _('Unlink') }}</button>
+                </div>
+              </div>
+            </li>
+            {%- endif -%}{%- endfor -%}
+          </form>
+          <form method="post">
+            <input type="hidden" name="operation" value="link_account">
+            {%- for method in handler.loginMethods -%}
+              {%- if not relations.some(eval("r => r.platform === '" + method.id + "'")) -%}
+              <li class="platform-list__item">
+                <div class="media">
+                  {% if method.icon %}
+                    <div class="media__left medium">{{ method.icon|safe }}</div>
+                  {% endif %}
+                  <div class="media__body">
+                    <p>{{ method.name }}</p>
+                  </div>
+                  <div class="media__right">
+                    <button type="submit" name="platform" value="{{ method.id }}" class="rounded button">{{ _('Link') }}</button>
+                  </div>
+                  </div>
+                </li>
+              {%- endif -%}
+            {%- endfor -%}
+          </form>
+        </ul>
       </div>
     </div>
   </div>

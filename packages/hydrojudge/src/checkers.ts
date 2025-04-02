@@ -1,4 +1,3 @@
-/* eslint-disable no-template-curly-in-string */
 import { STATUS } from '@hydrooj/common';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
@@ -10,6 +9,7 @@ export interface CheckConfig {
     output: CopyInFile;
     user_stdout: CopyInFile;
     user_stderr: CopyInFile;
+    code: CopyInFile;
     copyIn: Record<string, CopyInFile>;
     score: number;
     detail: boolean;
@@ -23,18 +23,15 @@ type Checker = (config: CheckConfig) => Promise<{
 }>;
 
 function parseDiffMsg(msg: string) {
+    msg = msg.trim();
     try {
-        // Note: we only handle first diff
-        const desc = msg.split('\n')[0];
-        if (desc.includes('d')) return 'User output longer than standard answer.';
-        if (desc.includes('a')) return 'Standard answer longer than user output.';
-        const pt = msg.split('---');
-        // Get the first different line
-        const u = pt[0].split('\n')[1];
-        const t = pt[1].split('\n')[1];
+        if (!msg) return '';
+        if (!msg.startsWith('L=')) throw new Error();
+        const [meta, u, t] = msg.split('\n');
+        const lineNum = +meta.split('L=')[1];
         // Split by token
-        const usr = u.substring(2).trim().split(' ');
-        const std = t.substring(2).trim().split(' ');
+        const usr = u.trim().split(' ');
+        const std = t.trim().split(' ');
         if (std.every((x) => !Number.isNaN(+x))) {
             // Number mode, report length not match
             if (usr.length > std.length) return 'User output longer than standard answer.';
@@ -44,7 +41,7 @@ function parseDiffMsg(msg: string) {
             if (usr[i] === std[i]) continue;
             const usrString = usr[i].length > 20 ? `${usr[i].substring(0, 16)}...` : usr[i];
             const stdString = std[i].length > 20 ? `${std[i].substring(0, 16)}...` : std[i];
-            return { message: 'Read {0}, expect {1}.', params: [usrString, stdString] };
+            return { message: 'On line {0}: Read {1}, expect {2}.', params: [lineNum, usrString, stdString] };
         }
         throw new Error();
     } catch (e) {
@@ -52,44 +49,53 @@ function parseDiffMsg(msg: string) {
     }
 }
 
-const checkers: Record<string, Checker> = new Proxy({
-    async default(config) {
-        const { stdout } = await runQueued('/usr/bin/diff -BZ usrout answer', {
-            copyIn: {
-                usrout: config.user_stdout,
-                answer: config.output,
-                ...config.copyIn,
-            },
-        });
-        let status: number;
-        let message: any = '';
-        if (stdout) {
-            status = STATUS.STATUS_WRONG_ANSWER;
-            if (config.detail) message = parseDiffMsg(stdout);
-        } else status = STATUS.STATUS_ACCEPTED;
-        if (message.length > 1024000) message = '';
-        return {
-            score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
-            status,
-            message,
-        };
-    },
+const compareSh = `#!/bin/bash
+set -e
+usrout=usrout
+answer=answer
+if [ "$1" = "BZ" ]; then
+  cat $usrout | awk '{sub(/[ \\t]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >usrout.processed
+  usrout=usrout.processed
+  cat $answer | awk '{sub(/[ \\t]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >answer.processed
+  answer=answer.processed
+fi
+linenum=$(cmp $usrout $answer | awk '{print $NF}')
+if [ -n "$linenum" ]; then
+  echo "L=$linenum"
+  awk "NR==$linenum" $usrout
+  awk "NR==$linenum" $answer
+fi
+`;
 
-    async strict(config) {
-        const { stdout } = await runQueued('/usr/bin/diff usrout answer', {
-            copyIn: {
-                usrout: config.user_stdout,
-                answer: config.output,
-                ...config.copyIn,
-            },
-        });
-        const status = stdout ? STATUS.STATUS_WRONG_ANSWER : STATUS.STATUS_ACCEPTED;
-        return {
-            score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
-            status,
-            message: '',
-        };
-    },
+const getDefaultChecker = (strict: boolean) => async (config) => {
+    const { code, stdout } = await runQueued(`/bin/bash compare.sh${strict ? '' : ' BZ'}`, {
+        copyIn: {
+            usrout: config.user_stdout,
+            answer: config.output,
+            ...config.copyIn,
+            'compare.sh': { content: compareSh },
+        },
+    });
+    let status: number;
+    let message: any = '';
+    if (code) {
+        status = STATUS.STATUS_SYSTEM_ERROR;
+        message = `Checker returned with status ${code}`;
+    } else if (stdout) {
+        status = STATUS.STATUS_WRONG_ANSWER;
+        if (config.detail && !strict) message = parseDiffMsg(stdout);
+    } else status = STATUS.STATUS_ACCEPTED;
+    if (message.length > 1024000) message = '';
+    return {
+        score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
+        status,
+        message,
+    };
+};
+
+const checkers: Record<string, Checker> = new Proxy({
+    default: getDefaultChecker(false),
+    strict: getDefaultChecker(true),
 
     /*
      * argv[1]：输入
@@ -176,7 +182,7 @@ const checkers: Record<string, Checker> = new Proxy({
      * input：输入
      * user_out：选手输出
      * answer：标准输出
-     * code：选手代码 (not impl)
+     * code：选手代码
      * stdout：输出最终得分
      * stderr：输出错误报告
      */
@@ -187,7 +193,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 input: config.input,
                 user_out: config.user_stdout,
                 answer: config.output,
-                code: { content: '' },
+                code: config.code,
                 ...config.copyIn,
             },
         });
@@ -203,6 +209,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 in: config.input,
                 user_out: config.user_stdout,
                 answer: config.output,
+                user_code: config.code,
                 ...config.copyIn,
             },
             env: config.env,

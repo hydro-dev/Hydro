@@ -48,8 +48,8 @@
     <script>
       var _htmlNode = document.documentElement;
       _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
-      var UiContext = '{{ UiContext|json|jsesc|safe }}';
-      var UserContext = '{{ UserContext|json|jsesc|safe }}';
+      window.UiContext = '{{ UiContext|json|jsesc|safe }}';
+      window.UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
   {% endif %}
   {% set UiContext = Object.create(UiContext) %}
@@ -65,8 +65,8 @@
   {% block script %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
     <script>
-      var UiContextNew = '{{ UiContext|json|jsesc|safe }}';
-      var UserContextNew = '{{ UserContext|json|jsesc|safe }}';
+      window.UiContextNew = '{{ UiContext|json|jsesc|safe }}';
+      window.UserContextNew = '{{ UserContext|json|jsesc|safe }}';
     </script>
   {% endif %}
 </body>

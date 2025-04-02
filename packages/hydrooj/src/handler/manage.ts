@@ -13,11 +13,9 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
-import { check } from '../service/check';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
-import { configSource, saveConfig, SystemSettings } from '../settings';
 import * as judge from './judge';
 
 const logger = new Logger('manage');
@@ -71,11 +69,11 @@ class SystemCheckConnHandler extends ConnectionHandler {
         const log = (payload: any) => this.send({ type: 'log', payload });
         const warn = (payload: any) => this.send({ type: 'warn', payload });
         const error = (payload: any) => this.send({ type: 'error', payload });
-        await check.run(this, log, warn, error, (id) => { this.id = id; });
+        await this.ctx.check.run(this, log, warn, error, (id) => { this.id = id; });
     }
 
     async cleanup() {
-        check.cancel(this.id);
+        this.ctx.check.cancel(this.id);
     }
 }
 
@@ -184,27 +182,60 @@ class SystemConfigHandler extends SystemHandler {
     @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
-        let value = configSource;
+        let value;
+
+        const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (['union', 'intersect'].includes(schema.type)) {
+                for (const item of schema.list) processNode(node, item, parent, accessKey);
+            }
+            if (parent && (schema.meta.secret === true || schema.meta.role === 'secret')) {
+                if (schema.type === 'string') parent[accessKey] = '[hidden]';
+                // TODO support more types
+            }
+            if (schema.type === 'object') {
+                for (const key in schema.dict) processNode(node[key], schema.dict[key], node, key);
+            }
+        };
+
         try {
-            value = yaml.dump(Schema.intersect(SystemSettings)(yaml.load(configSource)));
+            try {
+                value = Schema.intersect(this.ctx.config.settings)(yaml.load(this.ctx.config.configSource));
+            } catch (e) {
+                value = yaml.load(this.ctx.config.configSource);
+            }
+            for (const schema of this.ctx.config.settings) processNode(value, schema);
         } catch (e) { }
         this.response.body = {
-            schema: Schema.intersect(SystemSettings).toJSON(),
-            value,
+            schema: Schema.intersect(this.ctx.config.settings).toJSON(),
+            value: yaml.dump(value),
         };
     }
 
     @requireSudo
     @param('value', Types.String)
-    async post(domainId: string, value: string) {
+    async post({ }, value: string) {
+        const oldConfig = yaml.load(this.ctx.config.configSource);
         let config;
+        const processNode = (node: any, old: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (['union', 'intersect'].includes(schema.type)) {
+                for (const item of schema.list) processNode(node, old, item, parent, accessKey);
+            }
+            if (parent && (schema.meta.secret === true || schema.meta.role === 'secret')) {
+                if (node === '[hidden]') parent[accessKey] = old;
+                // TODO support more types
+            }
+            if (schema.type === 'object') {
+                for (const key in schema.dict) processNode(node[key] || {}, old[key] || {}, schema.dict[key], node, key);
+            }
+        };
+
         try {
             config = yaml.load(value);
-            Schema.intersect(SystemSettings)(config);
+            for (const schema of this.ctx.config.settings) processNode(config, oldConfig, schema, null, '');
         } catch (e) {
-            throw new ValidationError('value');
+            throw new ValidationError('value', '', e.message);
         }
-        await saveConfig(config);
+        await this.ctx.config.saveConfig(config);
     }
 }
 
@@ -323,6 +354,7 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+export const inject = ['config', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);

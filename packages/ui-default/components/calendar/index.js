@@ -1,3 +1,4 @@
+/* eslint-disable no-lone-blocks */
 import $ from 'jquery';
 import _ from 'lodash';
 import moment from 'moment';
@@ -208,7 +209,7 @@ export default class Calendar {
 
     const now = moment();
     days.forEach((day) => {
-      day.current = day.date.isSame(now, 'day'); // eslint-disable-line no-param-reassign
+      day.current = day.date.isSame(now, 'day');
     });
 
     const daysByWeek = _.chunk(days, 7);

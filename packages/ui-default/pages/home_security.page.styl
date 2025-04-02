@@ -20,7 +20,7 @@
     line-height: rem($form-control-height)
     color: green
 
-  .autherlist
+  .autherlist, .platform-list
     font-size: rem($font-size-secondary)
 
   .autherlist__icon
@@ -33,13 +33,34 @@
     padding: rem(10px 0)
 
     &:not(:last-child)
-    border-bottom: 1px solid #DDD
+      border-bottom: 1px solid #DDD
 
     input
       margin: 0
 
+  .platform-list__item
+    margin: rem(6px 0)
+    padding: rem(6px 0)
+
+    &:not(:first-child)
+      border-top: 1px solid #DDD
+    
+    .button
+      margin: 0
+
+    .media__left
+      width: rem(48px)
+      text-align: center
+
+      svg
+        width: rem(30px)
+        height: rem(30px)
+        color: #888
+        fill: #888
+        margin: rem(0 20px)
+
   +mobile()
-    .sessionlist__item
+    .sessionlist__item, .platform-list__item
       .media__left
         display: none
 

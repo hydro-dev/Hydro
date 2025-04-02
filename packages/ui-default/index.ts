@@ -1,10 +1,12 @@
-/* eslint-disable global-require */
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import {
   ContestModel, Context, Handler, ObjectId, param, PERM, PRIV, ProblemModel, Schema,
-  SettingModel, SystemModel, SystemSettings, Types, UserModel,
+  SettingModel, SystemModel, Types, UserModel, yaml,
 } from 'hydrooj';
 import convert from 'schemastery-jsonschema';
 import markdown from './backendlib/markdown';
+import { TemplateService } from './backendlib/template';
 
 class WikiHelpHandler extends Handler {
   noCheckPermView = true;
@@ -22,7 +24,7 @@ class WikiAboutHandler extends Handler {
     // TODO template engine
     raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || SystemModel.get('server.name')).trim();
     const lines = raw.split('\n');
-    const sections = [];
+    const sections: { id: string, title: string, content: string }[] = [];
     for (const line of lines) {
       if (line.startsWith('# ')) {
         const id = line.split(' ')[1];
@@ -53,7 +55,7 @@ class LegacyModeHandler extends Handler {
 
   @param('legacy', Types.Boolean)
   @param('nohint', Types.Boolean)
-  async get(domainId: string, legacy = false, nohint = false) {
+  async get({ }, legacy = false, nohint = false) {
     this.session.legacy = legacy;
     this.session.nohint = nohint;
     this.back();
@@ -74,7 +76,7 @@ class MarkdownHandler extends Handler {
 
 class SystemConfigSchemaHandler extends Handler {
   async get() {
-    const schema = convert(Schema.intersect(SystemSettings) as any, true);
+    const schema = convert(Schema.intersect(this.ctx.config.settings) as any, true);
     this.response.body = schema;
   }
 }
@@ -116,7 +118,7 @@ class RichMediaHandler extends Handler {
   }
 
   async post({ domainId, items }) {
-    const res = [];
+    const res: any[] = [];
     for (const item of items || []) {
       if (item.domainId && item.domainId === domainId) delete item.domainId;
       if (item.type === 'user') res.push(this.renderUser(domainId, item).catch(() => ''));
@@ -129,13 +131,58 @@ class RichMediaHandler extends Handler {
   }
 }
 
+const fontRange = {
+  'Open Sans': 'Open Sans',
+  'Seravek': 'Seravek',
+  'Segoe UI': 'Segoe UI',
+  'Verdana': 'Verdana',
+  'PingFang SC': 'PingFang SC',
+  'Hiragino Sans GB': 'Hiragino Sans GB',
+  'Microsoft Yahei': 'Microsoft Yahei',
+  'WenQuanYi Micro Hei': 'WenQuanYi Micro Hei',
+  'sans': 'sans',
+  'XiaoLai SC': '小赖 SC',
+};
+const codeFontRange = {
+  'monaco': 'Monaco',
+  'Source Code Pro': 'Source Code Pro',
+  'Consolas': 'Consolas',
+  'Lucida Console': 'Lucida Console',
+  'Fira Code': 'Fira Code',
+  'Roboto Mono': 'Roboto Mono',
+  'Inconsolata': 'Inconsolata',
+  'Hack': 'Hack',
+  'Jetbrains Mono': 'Jetbrains Mono',
+  'DM Mono': 'DM Mono',
+  'Ubuntu Mono': 'Ubuntu Mono',
+  'PT Mono': 'PT Mono',
+  'SF Mono': 'SF Mono',
+};
+
+const defaultAbout = (yaml.load(readFileSync(join(__dirname, 'setting.yaml'), 'utf-8')) as any).about.value;
+
 export function apply(ctx: Context) {
   ctx.inject(['setting'], (c) => {
     c.setting.PreferenceSetting(
       SettingModel.Setting('setting_display', 'rounded', false, 'boolean', 'Rounded Corners'),
       SettingModel.Setting('setting_display', 'skipAnimate', false, 'boolean', 'Skip Animation'),
       SettingModel.Setting('setting_display', 'showTimeAgo', true, 'boolean', 'Enable Time Ago'),
+      SettingModel.Setting('setting_display', 'fontFamily', 'Open Sans', fontRange, 'Font Family'),
+      SettingModel.Setting('setting_display', 'codeFontFamily', 'Source Code Pro', codeFontRange, 'Code Font Family'),
+      SettingModel.Setting('setting_display', 'theme', 'light', { light: 'Light', dark: 'Dark' }, 'Theme'),
+      SettingModel.Setting('setting_markdown', 'preferredEditorType', 'sv', { sv: 'Split View', monaco: 'Monaco Editor' }, 'Preferred Editor Type'),
+      SettingModel.Setting('setting_highlight', 'showInvisibleChar', false, 'boolean', 'Show Invisible Characters'),
+      SettingModel.Setting('setting_highlight', 'formatCode', true, 'boolean', 'Auto Format Code'),
     );
+    c.setting.SystemSetting(Schema.object({
+      'ui-default': Schema.object({
+        footer_extra_html: Schema.string().default(''),
+        nav_logo_dark: Schema.string().default('/components/navigation/nav-logo-small_dark.png'),
+        preload: Schema.string().default(''),
+        domainNavigation: Schema.boolean().default(true).description('Show Domain Navigation'),
+        about: Schema.string().role('markdown').default(defaultAbout),
+      }),
+    }));
   });
   if (process.env.HYDRO_CLI) return;
   ctx.Route('wiki_help', '/wiki/help', WikiHelpHandler);
@@ -164,6 +211,6 @@ export function apply(ctx: Context) {
       domains: SystemModel.get('ui-default.domains') || [],
     };
   });
-  ctx.plugin(require('./backendlib/template'));
+  ctx.plugin(TemplateService);
   ctx.plugin(require('./backendlib/builder'));
 }

@@ -5,12 +5,24 @@
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">
-          {{ _('Join {0}').format(handler.domain['name']) }}
+          {% if joinSettings %}
+            {{ _('Join {0}').format(domainInfo['name']) }}
+          {% else %}
+            {{ _('You are invited to join {0}').format(domainInfo['name']) }}
+          {% endif %}
         </h1>
       </div>
       <div class="section__body typo">
-        <p>{{ _('By clicking the button, you will become a member of the domain {0}.').format(handler.domain['name']) }}</p>
+        <p>{{ _('By clicking the button, you will become a member of the domain {0}.').format(domainInfo['name']) }}</p>
       </div>
+      <div class="section__body typo">
+        <p>{{ _('The domain owner:') }} {{ user.render_inline(domainInfo['owner']) }}</p>
+      </div>
+      {% if domainInfo['bulletin'] %}
+        <div class="section__body typo">
+          {{ domainInfo['bulletin']|markdown }}
+        </div>
+      {% endif %}
       <div class="section__body typo">
         <form method="post">
         {% if joinSettings['method'] == model.domain.JOIN_METHOD_CODE %}
@@ -24,6 +36,8 @@
                autofocus:true
           }) }}
         {% endif %}
+          <input type="hidden" name="target" value="{{ target }}">
+          <input type="hidden" name="redirect" value="{{ redirect }}">
           <button type="submit" class="primary rounded button">{{ _('Join') }}</button>
         </form>
       </div>

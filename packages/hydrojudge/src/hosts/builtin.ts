@@ -4,8 +4,8 @@ import path from 'path';
 import { fs } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
-    db, JudgeHandler, JudgeResultBody, ObjectId, RecordModel,
-    SettingModel, StorageModel, SystemModel, TaskModel,
+    Context as HydroContext, db, JudgeHandler, JudgeResultCallbackContext,
+    ObjectId, RecordModel, SettingModel, StorageModel, SystemModel, TaskModel,
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
 import { getConfig } from '../config';
@@ -32,20 +32,11 @@ const session: Session = {
         }
         return null;
     },
-    getNext(t: Context) {
-        t._callbackAwait ||= Promise.resolve();
-        return (data: Partial<JudgeResultBody>) => {
-            logger.debug('Next: %o', data);
-            if (data.case) data.case.message ||= '';
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.next({ ...data, rid: t.rid, domainId: t.request.domainId }));
-        };
-    },
-    getEnd(t: Context) {
-        t._callbackAwait ||= Promise.resolve();
-        return (data: Partial<JudgeResultBody>) => {
-            data.key = 'end';
-            logger.info('End: status=%d score=%d time=%dms memory=%dkb', data.status, data.score, data.time, data.memory);
-            t._callbackAwait = t._callbackAwait.then(() => JudgeHandler.end({ ...data, rid: t.rid, domainId: t.request.domainId }));
+    getReporter(t: Context) {
+        const reporter = new JudgeResultCallbackContext(app, t.request);
+        return {
+            next: (a) => reporter.next(a),
+            end: (a) => reporter.end(a),
         };
     },
     getLang(lang: string, doThrow = true) {
@@ -59,10 +50,11 @@ const session: Session = {
     },
 };
 
-export async function postInit(ctx) {
-    if (SystemModel.get('hydrojudge.disable')) return;
+export async function apply(ctx: HydroContext) {
     ctx.inject(['check'], (c) => {
-        c.check.addChecker('Judge', (_ctx, log, warn, error) => versionCheck(warn, error));
+        c.check.addChecker('Judge', async (_ctx, log, warn, error) => {
+            await versionCheck(warn, error);
+        });
     });
     await fs.ensureDir(getConfig('tmp_dir'));
     const info = await sysinfo.get();
@@ -74,8 +66,7 @@ export async function postInit(ctx) {
         }
         await (new JudgeTask(session, JSON.parse(JSON.stringify(Object.assign(rdoc, t))))).handle().catch(logger.error);
     };
-    const parallelism = Math.max(getConfig('parallelism'), 2);
-    const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+    const parallelism = getConfig('parallelism');
     async function collectInfo() {
         const coll = db.collection('status');
         const compilers = await compilerVersions(langs);
@@ -91,11 +82,20 @@ export async function postInit(ctx) {
             { upsert: true },
         );
     }
-    ctx.on('system/setting', () => {
-        taskConsumer.setConcurrency(Math.max(getConfig('parallelism'), 2));
-        collectInfo();
+    ctx.effect(() => {
+        const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+        const dispose = ctx.on('system/setting', () => {
+            taskConsumer.setConcurrency(getConfig('parallelism'));
+            collectInfo();
+        });
+        return () => {
+            taskConsumer.destroy();
+            dispose();
+        };
+    });
+    ctx.effect(() => {
+        const generateConsumer = TaskModel.consume({ type: 'generate' }, handle);
+        return () => generateConsumer.destroy();
     });
     collectInfo();
-    TaskModel.consume({ type: 'judge', priority: { $gt: -50 } }, handle);
-    TaskModel.consume({ type: 'generate' }, handle);
 }

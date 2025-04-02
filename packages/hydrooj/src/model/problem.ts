@@ -5,10 +5,10 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
-import { pick } from 'lodash';
+import { keyBy, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import type { Readable } from 'stream';
-import { ProblemConfigFile } from '@hydrooj/common';
+import { ProblemConfigFile, ProblemType } from '@hydrooj/common';
 import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
@@ -16,7 +16,7 @@ import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
 import { parseConfig } from '../lib/testdataConfig';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import {
     ArrayKeys, MaybeArray, NumberKeys, Projection,
@@ -41,6 +41,7 @@ function sortable(source: string, namespaces: Record<string, string>) {
 }
 
 function findOverrideContent(dir: string, base: string) {
+    if (!fs.existsSync(dir)) return null;
     let files = fs.readdirSync(dir);
     if (files.includes(`${base}.md`)) return fs.readFileSync(path.join(dir, `${base}.md`), 'utf8');
     if (files.includes(`${base}.pdf`)) return `@[PDF](file://${base}.pdf)`;
@@ -385,7 +386,6 @@ export class ProblemModel {
         }
         for (const pdoc of pdocs) {
             try {
-                // eslint-disable-next-line no-await-in-loop
                 pdoc.config = await parseConfig(pdoc.config as string);
             } catch (e) {
                 pdoc.config = `Cannot parse: ${e.message}`;
@@ -409,12 +409,7 @@ export class ProblemModel {
         const psdocs = await ProblemModel.getMultiStatus(
             domainId, { uid, docId: { $in: Array.from(new Set(pids)) } },
         ).toArray();
-        const r: Record<string, ProblemStatusDoc> = {};
-        for (const psdoc of psdocs) {
-            r[psdoc.docId] = psdoc;
-            r[`${psdoc.domainId}#${psdoc.docId}`] = psdoc;
-        }
-        return r;
+        return keyBy(psdocs, 'docId');
     }
 
     static async updateStatus(
@@ -468,7 +463,7 @@ export class ProblemModel {
                     throw new ValidationError('zip', null, e.message);
                 }
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(tmpdir, true, (err) => {
+                    zip.extractAllToAsync(tmpdir, true, false, (err) => {
                         if (err) reject(err);
                         resolve(null);
                     });
@@ -479,7 +474,11 @@ export class ProblemModel {
                 throw new ValidationError('file', null, 'Invalid file');
             }
             const files = await fs.readdir(tmpdir, { withFileTypes: true });
-            problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
+            if (files.find((f) => f.name === 'problem.yaml')) {
+                problems = ['.']; // special case for ICPC problem package
+            } else {
+                problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
+            }
         } catch (e) {
             if (options.delSource) await fs.remove(tmpdir);
         }
@@ -550,6 +549,7 @@ export class ProblemModel {
                 if ((pdoc as any).limits) {
                     config.time = (pdoc as any).limits.time_limit;
                     config.memory = (pdoc as any).limits.memory;
+                    configChanged = true;
                 }
                 const docId = overridePid
                     ? (await ProblemModel.edit(domainId, overridePid, {
@@ -576,6 +576,22 @@ export class ProblemModel {
                         await (f.name === 'sample' ? ProblemModel.addAdditionalFile
                             : f.name === 'secret' ? ProblemModel.addTestdata
                                 : null)?.(domainId, docId, file, path.join(loc, file));
+                    }
+                }
+                for (const [f, loc] of await getFiles('output_validators')) {
+                    if (f.isFile()) continue;
+                    const sub = await fs.readdir(loc);
+                    for (const file of sub) {
+                        if (file === 'testlib.h') continue;
+                        await ProblemModel.addTestdata(domainId, docId, file, path.join(loc, file));
+                        if (file === 'checker') {
+                            config.checker_type = 'testlib';
+                            config.checker = file;
+                        } else if (file === 'interactor') {
+                            config.type = ProblemType.Interactive;
+                            config.interactor = file;
+                        }
+                        configChanged = true;
                     }
                 }
                 for (const [f, loc] of await getFiles('additional_file', 'attachments', 'statement', 'problem_statement')) {

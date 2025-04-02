@@ -1,5 +1,4 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
 import AutoComplete from '.';
 import DomainSelectAutoCompleteFC from './components/DomainSelectAutoComplete';
 
@@ -31,7 +30,7 @@ export default class DomainSelectAutoComplete extends AutoComplete {
 
   attach() {
     const value = this.$dom.val();
-    ReactDOM.createRoot(this.container).render(<Component
+    this.component.render(<Component
       ref={(ref) => { this.ref = ref; }}
       value={value}
       onChange={this.onChange}

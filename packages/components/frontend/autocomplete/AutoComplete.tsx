@@ -1,5 +1,5 @@
-/* eslint-disable jsx-a11y/role-supports-aria-props */
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+import './autocomplete.scss';
+
 import { debounce, uniqueId } from 'lodash';
 import React, {
   forwardRef, useEffect,
@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Icon from 'vj/components/react/IconComponent';
+import Icon from '../Icon';
 
 export interface AutoCompleteProps<Item> {
   width?: string;
@@ -83,7 +83,7 @@ function DraggableSelection({
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const {
     multi = false, width = '100%', height = 'auto',
-    freeSolo = false, allowEmptyQuery = false, listStyle = {},
+    freeSolo = false, allowEmptyQuery = false, listStyle = {}, // eslint-disable-line @eslint-react/no-unstable-default-props
     disabled = false, disabledHint = '', draggable = multi,
   } = props;
   const queryItems = props.queryItems ?? (() => []);
@@ -99,7 +99,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
   const [rerender, setRerender] = useState(false);
-  const [draggableId] = useState(uniqueId());
+  const [draggableId] = useState(() => uniqueId());
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -307,10 +307,10 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               e.preventDefault();
               const ids = text.replace(/，/g, ',').split(',').filter((v) => v?.trim().length && !selectedKeys.includes(v));
               if (!ids.length) return;
-              const fetched = await props.fetchItems(ids.filter((v) => !valueCache[v]));
+              const fetched = await props.fetchItems(ids);
               for (const item of fetched) valueCache[itemKey(item)] = item;
-              setSelected([...selected, ...ids.map((id) => valueCache[id])]);
-              setSelectedKeys([...selectedKeys, ...ids.map((id) => itemKey(valueCache[id]))]);
+              setSelected([...selected, ...fetched]);
+              setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
             }}
             placeholder={props.placeholder}
             onBlur={() => setFocused(false)}
@@ -333,7 +333,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               key={itemKey(item)}
               onClick={() => toggleItem(item)}
               onMouseMove={() => setCurrentItem(idx)}
-              aria-selected={selectedKeys.includes(itemKey(item))}
+              data-selected={selectedKeys.includes(itemKey(item))}
               data-focus={idx === currentItem}
             >
               <div>{renderItem(item)}</div>

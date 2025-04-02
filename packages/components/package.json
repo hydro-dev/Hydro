@@ -1,0 +1,20 @@
+{
+    "name": "@hydrooj/components",
+    "version": "1.0.0-beta.0",
+    "main": "./frontend/index.ts",
+    "dependencies": {
+        "diff": "^7.0.0",
+        "js-yaml": "^4.1.0",
+        "lodash": "^4.17.21",
+        "react-dnd": "^16.0.1",
+        "react-dnd-html5-backend": "^16.0.1",
+        "react-toastify": "^11.0.5",
+        "schemastery-react": "^0.1.2"
+    },
+    "devDependencies": {
+        "@types/diff": "^7.0.2",
+        "@types/js-yaml": "^4.0.9",
+        "@types/lodash": "^4.17.16",
+        "sass": "^1.86.1"
+    }
+}

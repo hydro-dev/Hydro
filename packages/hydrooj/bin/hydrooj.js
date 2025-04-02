@@ -6,13 +6,19 @@ const { homedir } = require('os');
 const { default: hook } = require('@undefined-moe/require-resolve-hook');
 const { bypass } = hook(/^(hydrooj|@hydrooj|cordis|lodash|js-yaml)($|\/)/, (id) => {
     if (id.startsWith('hydrooj/src')) {
-        console.log('module require via %s is deprecated.', id);
         if (process.env.DEV) {
-            console.log(
-                new Error().stack.split('\n')
-                    .filter((i) => !i.includes('node:internal') && i.startsWith(' '))
-                    .join('\n'),
-            );
+            const error = new Error(`module require via ${id} is deprecated.`);
+            const filter = [
+                'node:diagnostics', 'node:internal',
+                '_resolveFilename', 'ignoreModuleNotFoundError',
+                'framework/register', '@hydrooj/register',
+            ];
+            error.stack = error.stack.split('\n')
+                .filter((i) => !filter.some((f) => i.includes(f)))
+                .join('\n');
+            console.error(error);
+        } else {
+            console.warn('Module require via %s is deprecated.', id);
         }
     }
     if (id.startsWith('hydrooj')) {

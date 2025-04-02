@@ -1,110 +1,171 @@
 import yaml from 'js-yaml';
-import { nanoid } from 'nanoid';
 import Schema from 'schemastery';
+import { Context, Service } from './context';
 import { Logger } from './logger';
-import { Flatten } from './typeutils';
 
-const defaultPath = process.env.CI ? '/tmp/file'
-    : process.env.DEFAULT_STORE_PATH || '/data/file/hydro';
-const FileSetting = Schema.intersect([
-    Schema.object({
-        type: Schema.union([
-            Schema.const('file').description('local file provider'),
-            Schema.const('s3').description('s3 provider'),
-        ] as const).description('provider type'),
-        endPointForUser: Schema.string().default('/fs/'),
-        endPointForJudge: Schema.string().default('/fs/'),
-    }).description('setting_file'),
-    Schema.union([
-        Schema.object({
-            type: Schema.const('file').required(),
-            path: Schema.string().default(defaultPath).description('Storage path'),
-            secret: Schema.string().description('Download file sign secret').default(nanoid()),
-        }),
-        Schema.object({
-            type: Schema.const('s3').required(),
-            endPoint: Schema.string(),
-            accessKey: Schema.string().description('access key'),
-            secretKey: Schema.string().description('secret key').role('secret'),
-            bucket: Schema.string().default('hydro'),
-            region: Schema.string().default('us-east-1'),
-            pathStyle: Schema.boolean().default(true),
-        }),
-    ] as const),
-] as const).default({
-    type: 'file',
-    path: defaultPath,
-    endPointForUser: '/fs/',
-    endPointForJudge: '/fs/',
-    secret: nanoid(),
-});
-
-const builtinSettings = Schema.object({
-    file: FileSetting,
-});
-export const SystemSettings: Schema[] = [builtinSettings];
-export let configSource = ''; // eslint-disable-line import/no-mutable-exports
-export let systemConfig: any = {}; // eslint-disable-line import/no-mutable-exports
 const logger = new Logger('settings');
-const update = [];
 
-export async function loadConfig() {
-    const config = await global.Hydro.service.db.collection('system').findOne({ _id: 'config' });
-    try {
-        configSource = config?.value || '{}';
-        systemConfig = yaml.load(configSource);
-        logger.info('Successfully loaded config');
-        for (const u of update) u();
-    } catch (e) {
-        logger.error('Failed to load config', e.message);
+declare module './context' {
+    interface Context {
+        config: ConfigService;
     }
 }
-export async function saveConfig(config: any) {
-    Schema.intersect(SystemSettings)(config);
-    const value = yaml.dump(config);
-    await global.Hydro.service.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
-    loadConfig();
-}
-export async function setConfig(key: string, value: any) {
-    const path = key.split('.');
-    if (path.filter((i) => ['__proto__', 'prototype'].includes(i)).length) throw new Error('Invalid key');
-    const t = path.pop();
-    let cursor = systemConfig;
-    for (const p of path) {
-        cursor[p] ||= {};
-        cursor = cursor[p];
-    }
-    cursor[t] = value;
-    await saveConfig(systemConfig);
-}
 
-export function requestConfig<T, S>(s: Schema<T, S>): {
-    config: ReturnType<Schema<T, S>>,
-    setConfig: (key: keyof Flatten<ReturnType<Schema<T, S>>> & string, value: any) => Promise<void>,
-} {
-    SystemSettings.push(s);
-    let curValue = s(systemConfig);
-    update.push(() => {
+export class ConfigService extends Service {
+    static inject = ['db'];
+    static name = 'config';
+    static blacklist = ['__proto__', 'prototype', 'constructor'];
+
+    settings: Schema[] = [];
+    private systemConfig: any = {};
+    configSource: string = '';
+    private applied: any = {};
+    private initialValues = {};
+    private _lastMigrate = Promise.resolve();
+
+    constructor(ctx: Context) {
+        super(ctx, 'config');
+    }
+
+    async [Context.init]() {
+        const payload = await this.ctx.db.collection('system').find({}).toArray();
+        this.initialValues = Object.fromEntries(payload.map((v) => [v._id, v.value]));
+        return await this.loadConfig();
+    }
+
+    _applySchema() {
+        this.applied = this.settings.length ? Schema.intersect(this.settings)(this.systemConfig) : this.systemConfig;
+    }
+
+    async loadConfig() {
+        const config = await this.ctx.db.collection('system').findOne({ _id: 'config' }, {
+            readPreference: 'primary', readConcern: 'majority',
+        });
         try {
-            curValue = s(systemConfig);
+            this.configSource = config?.value || '{}';
+            this.systemConfig = yaml.load(this.configSource);
+            this._applySchema();
+            this.ctx.emit('system/setting', { config: this.configSource });
+            logger.info('Successfully loaded config');
         } catch (e) {
-            logger.warn('Cannot read config: ', e.message);
-            curValue = null;
+            logger.error('Failed to load config', e.message);
         }
-    });
-    return {
-        config: new Proxy(curValue as any, {
-            get(self, key: string) {
-                return curValue?.[key];
-            },
-            set(self) {
-                throw new Error(`Not allowed to set setting ${self.p.join('.')}`);
-            },
-        }),
-        setConfig,
-    };
-}
+    }
 
-const builtin = requestConfig(builtinSettings);
-export const builtinConfig = builtin.config;
-export const setBuiltinConfig = builtin.setConfig;
+    applyDelta(source: any, key: string, value: any) {
+        const path = key.split('.');
+        if (path.some((i) => ConfigService.blacklist.includes(i))) return false;
+        const t = path.pop();
+        const root = JSON.parse(JSON.stringify(source));
+        let cursor = root;
+        for (const p of path) {
+            cursor[p] ??= {};
+            cursor = cursor[p];
+        }
+        cursor[t] = value;
+        return root;
+    }
+
+    isPatchValid(key: string, value: any) {
+        const root = this.applyDelta(this.systemConfig, key, value);
+        try {
+            Schema.intersect(this.settings)(root);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
+    async saveConfig(config: any) {
+        Schema.intersect(this.settings)(config);
+        const value = yaml.dump(config);
+        await this.ctx.db.collection('system').updateOne({ _id: 'config' }, { $set: { value } }, { upsert: true });
+        await this.loadConfig();
+    }
+
+    async _actualMigrate(schema: Schema<any>) {
+        const processNode = async (path: string[], node: Schema<any, any>) => {
+            for (const item of node.list || []) await processNode(path, item); // eslint-disable-line no-await-in-loop
+            for (const key in node.dict || {}) await processNode(path.concat(key), node.dict[key]); // eslint-disable-line no-await-in-loop
+            if (['string', 'number', 'boolean'].includes(node.type)) {
+                const value = this.initialValues[path.join('.')];
+                const migrated = this.initialValues[`${path.join('.')}__migrated`];
+                if (migrated || !Object.hasOwn(this.initialValues, path.join('.'))) return;
+                let parsed;
+                try {
+                    if (node.type === 'string') parsed = value;
+                    if (node.type === 'number') parsed = +value;
+                    if (node.type === 'boolean') parsed = !!value && !['off', '0', 'false'].includes(value);
+                } catch (e) { }
+                if (parsed === undefined) return;
+                await this.ctx.db.collection('system').updateOne({ _id: `${path.join('.')}__migrated` }, { $set: { value: true } }, { upsert: true });
+                this.ctx.logger.info('Migrating %s: %o', path.join('.'), parsed);
+                await this.saveConfig(this.applyDelta(this.systemConfig, path.join('.'), parsed));
+            }
+        };
+        await processNode([], schema);
+    }
+
+    async _tryMigrateConfig(schema: Schema<any>) {
+        this._lastMigrate = this._lastMigrate.then(() => this._actualMigrate(schema));
+        await this._lastMigrate;
+    }
+
+    get(key: string) {
+        const parts = key.split('.');
+        if (parts.some((p) => ConfigService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+        let currentValue = this.applied;
+        for (const p of parts) {
+            if (!currentValue) return undefined;
+            currentValue = currentValue[p];
+        }
+        return currentValue;
+    }
+
+    async setConfig(key: string, value: any) {
+        const newConfig = this.applyDelta(this.systemConfig, key, value);
+        await this.saveConfig(newConfig);
+    }
+
+    requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
+        if (dynamic) {
+            this.ctx.effect(() => {
+                this.settings.push(s);
+                this._applySchema();
+                return () => {
+                    this.settings = this.settings.filter((v) => v !== s);
+                    this._applySchema();
+                };
+            });
+        }
+        let curValue = s(this.systemConfig);
+        if (!dynamic) return curValue;
+        this.ctx.on('system/setting', () => {
+            try {
+                curValue = s(this.systemConfig);
+            } catch (e) {
+                logger.warn('Cannot read config: ', e.message);
+                curValue = null;
+            }
+        });
+        const that = this;
+        const getAccess = (path: (string | symbol)[]) => {
+            if (path.some((p) => ConfigService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+            let currentValue = curValue;
+            for (const p of path) {
+                currentValue = currentValue[p];
+            }
+            if (typeof currentValue !== 'object' || !currentValue) return currentValue;
+            return new Proxy(currentValue, {
+                get(self, key: string) {
+                    return getAccess(path.concat(key));
+                },
+                set(self, p: string | symbol, newValue: any) {
+                    that.setConfig(path.concat(p).join(','), newValue);
+                    return true;
+                },
+            });
+        };
+        return getAccess([]);
+    }
+}

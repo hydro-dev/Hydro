@@ -4,10 +4,11 @@ import {
 } from 'mongodb';
 import mongoUri from 'mongodb-uri';
 import { Time } from '@hydrooj/utils';
+import { Context, Service } from '../context';
 import { ValidationError } from '../error';
 import { Logger } from '../logger';
 import { load } from '../options';
-import * as bus from './bus';
+import bus from './bus';
 
 const logger = new Logger('mongo');
 export interface Collections { }
@@ -25,12 +26,28 @@ interface MongoConfig {
     collectionMap?: Record<string, string>,
 }
 
-class MongoService {
+declare module '../context' {
+    interface Context {
+        db: MongoService;
+    }
+}
+
+export class MongoService extends Service {
     public client: MongoClient;
     public db: Db;
-    private opts: MongoConfig;
 
-    static buildUrl(opts: MongoConfig) {
+    constructor(ctx: Context, private config: MongoConfig = {}) {
+        super(ctx, 'db');
+    }
+
+    static async getUrl() {
+        if (process.env.CI) {
+            const { MongoMemoryServer } = require('mongodb-memory-server');
+            const mongod = await MongoMemoryServer.create();
+            return mongod.getUri();
+        }
+        const opts = load();
+        if (!opts) return null;
         let mongourl = `${opts.protocol || 'mongodb'}://`;
         if (opts.username) mongourl += `${opts.username}:${encodeURIComponent(opts.password)}@`;
         mongourl += `${opts.host}:${opts.port}/${opts.name}`;
@@ -38,32 +55,28 @@ class MongoService {
         return mongourl;
     }
 
-    async start() {
-        const opts = load() || {};
-        let mongourl = MongoService.buildUrl(opts);
+    async *[Context.init]() {
+        const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
-        if (process.env.CI) {
-            const { MongoMemoryServer } = require('mongodb-memory-server');
-            const mongod = await MongoMemoryServer.create();
-            mongourl = mongod.getUri();
-        }
-        this.opts = opts;
         this.client = await MongoClient.connect(mongourl);
+        yield () => { this.client.close(); };
         this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
-        setInterval(() => this.fixExpireAfter(), Time.hour);
+        yield this.ctx.setInterval(() => this.fixExpireAfter(), Time.hour);
     }
 
     public collection<K extends keyof Collections>(c: K) {
-        let coll = this.opts.prefix ? `${this.opts.prefix}.${c}` : c;
-        if (this.opts.collectionMap?.[coll]) coll = this.opts.collectionMap[coll];
+        let coll = this.config.prefix ? `${this.config.prefix}.${c}` : c;
+        if (this.config.collectionMap?.[coll]) coll = this.config.collectionMap[coll];
         return this.db.collection<Collections[K]>(coll);
     }
 
     public async fixExpireAfter() {
         // Sometimes mongo's expireAfterSeconds is not working in non-replica set mode;
         const collections = await this.db.listCollections().toArray();
+        const ignore = ['system.profile', 'system.users', 'system.version', 'system.views'];
         for (const c of collections) {
+            if (ignore.includes(c.name)) continue;
             const coll = this.db.collection(c.name);
             const indexes = await coll.listIndexes().toArray();
             for (const i of indexes) {
@@ -133,12 +146,8 @@ class MongoService {
         cursor: FindCursor<T>, page: number, pageSize: number,
     ): Promise<[docs: T[], numPages: number, count: number]> {
         if (page <= 0) throw new ValidationError('page');
-        let filter = {};
-        for (const key of Object.getOwnPropertySymbols(cursor)) {
-            if (key.toString() !== 'Symbol(filter)') continue;
-            filter = cursor[key];
-            break;
-        }
+        // this is for mongodb driver v6
+        const filter = (cursor as any).cursorFilter;
         const coll = this.db.collection(cursor.namespace.collection as any);
         const [count, pageDocs] = await Promise.all([
             Object.keys(filter).length ? coll.count(filter) : coll.countDocuments(filter),
@@ -166,14 +175,13 @@ class MongoService {
         }
         return results;
     }
-
-    public async apply(ctx) {
-        await this.start();
-        ctx.on('dispose', () => this.client.close());
-    }
 }
 
-const service = new MongoService();
-global.Hydro.service.db = service;
-export default service;
-export const collection = service.collection.bind(service);
+/** @deprecated use ctx.db instead */
+const deprecatedDb = new Proxy({} as MongoService, {
+    get(target, prop) {
+        return app.get('db')?.[prop];
+    },
+});
+
+export default deprecatedDb;

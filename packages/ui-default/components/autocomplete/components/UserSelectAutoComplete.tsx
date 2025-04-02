@@ -1,10 +1,9 @@
+import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/components';
 import type { Udoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import { api, gql } from 'vj/utils';
-import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
-// eslint-disable-next-line prefer-arrow-callback
 const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
   <AutoComplete<Udoc>
     ref={ref as any}
@@ -19,7 +18,7 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
       }
     `, ['data', 'users'])}
     fetchItems={(ids) => api(gql`
-      users(ids: ${ids.map((i) => +i)}) {
+      users(auto: ${ids}) {
         _id
         uname
         displayName

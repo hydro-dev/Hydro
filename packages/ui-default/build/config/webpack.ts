@@ -1,16 +1,15 @@
-/* eslint-disable global-require */
+import fs from 'fs';
+import { dirname } from 'path';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { version as coreJsVersion } from 'core-js/package.json';
 import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
-import fs from 'fs';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import packageJson from 'package-json';
-import { dirname } from 'path';
 import { gt } from 'semver';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
@@ -85,6 +84,14 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           use: [require('rupture')()],
           import: ['~vj/common/common.inc.styl'],
         },
+      },
+    };
+  }
+
+  function scssLoader() {
+    return {
+      loader: 'sass-loader',
+      options: {
       },
     };
   }
@@ -202,6 +209,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           use: [extractCssLoader(), cssLoader(), postcssLoader(), stylusLoader()],
         },
         {
+          test: /\.scss$/,
+          use: [extractCssLoader(), cssLoader(), postcssLoader(), scssLoader()],
+        },
+        {
           test: /\.css$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader()],
         },
@@ -305,6 +316,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
+      new webpack.NormalModuleReplacementPlugin(/^highlightjs[$/]/, root('../../modules/nop.ts')),
       new webpack.NormalModuleReplacementPlugin(/core-js\/stable/, root('__core-js.js')),
       new MonacoWebpackPlugin({
         filename: '[name].[hash:6].worker.js',

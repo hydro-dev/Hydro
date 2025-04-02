@@ -1,15 +1,15 @@
 import type { AttestationFormat, CredentialDeviceType } from '@simplewebauthn/server';
-import type { AuthenticationExtensionsAuthenticatorOutputs } from '@simplewebauthn/server/esm/helpers/decodeAuthenticatorExtensions';
+import type { ParsedAuthenticatorData } from '@simplewebauthn/server/helpers';
 import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type {
-    FileInfo, RecordPayload,
+    FileInfo, RecordJudgeInfo, RecordPayload,
 } from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { DocStatusType } from './model/document';
+import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
-import type { Handler } from './service/server';
 
 export * from '@hydrooj/common/types';
 
@@ -55,17 +55,6 @@ export interface Setting {
     flag: number,
 }
 
-export interface OAuthUserResponse {
-    _id: string;
-    email: string;
-    avatar?: string;
-    bio?: string;
-    uname?: string[];
-    viewLang?: string;
-    set?: Record<string, any>;
-    setInDomain?: Record<string, any>;
-}
-
 export interface Authenticator {
     name: string;
     regat: number;
@@ -80,7 +69,7 @@ export interface Authenticator {
     userVerified: boolean;
     credentialDeviceType: CredentialDeviceType;
     credentialBackedUp: boolean;
-    authenticatorExtensionResults?: AuthenticationExtensionsAuthenticatorOutputs;
+    authenticatorExtensionResults?: ParsedAuthenticatorData['extensionsData'];
     authenticatorAttachment: 'platform' | 'cross-platform';
 }
 
@@ -172,7 +161,6 @@ export interface Document {
 }
 
 declare module './model/problem' {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     interface ProblemDoc {
         docType: document['TYPE_PROBLEM'];
         docId: number;
@@ -223,6 +211,11 @@ export type RecordDoc = {
 } & {
     _id: ObjectId;
 };
+
+export interface RecordHistoryDoc extends RecordJudgeInfo {
+    _id: ObjectId;
+    rid: ObjectId;
+}
 
 export interface RecordStatDoc {
     _id: ObjectId;
@@ -501,12 +494,7 @@ export interface OpCountDoc {
     opcount: number;
 }
 
-export interface OauthMap {
-    /** source openId */
-    _id: string;
-    /** target uid */
-    uid: number;
-}
+export type { OauthMap, OAuthProvider, OAuthUserResponse } from './model/oauth';
 
 export interface DiscussionHistoryDoc {
     title?: string;
@@ -545,6 +533,7 @@ declare module './service/db' {
         'domain.user': any;
         'record': RecordDoc;
         'record.stat': RecordStatDoc;
+        'record.history': RecordHistoryDoc;
         'document': any;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
@@ -596,14 +585,6 @@ export interface Model {
     rp: typeof import('./script/rating').RpTypes,
 }
 
-export interface HydroService {
-    /** @deprecated */
-    bus: Context,
-    db: typeof import('./service/db').default,
-    server: typeof import('./service/server'),
-    storage: typeof import('./service/storage').default,
-}
-
 export interface GeoIP {
     provider: string,
     lookup: (ip: string, locale?: string) => any,
@@ -621,40 +602,22 @@ export interface ProblemSearchOptions {
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
-export interface Lib extends Record<string, any> {
-    difficulty: typeof import('./lib/difficulty').default;
-    buildContent: typeof import('./lib/content').buildContent;
-    mail: typeof import('./lib/mail');
-    rating: typeof import('./lib/rating').default;
-    testdataConfig: typeof import('./lib/testdataConfig');
-    problemSearch: ProblemSearch;
-}
-
 export type UIInjectableFields = 'ProblemAdd' | 'Notification' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel';
 export interface UI {
-    template: Record<string, string>,
     nodes: Record<UIInjectableFields, any[]>,
     getNodes: typeof import('./lib/ui').getNodes,
     inject: typeof import('./lib/ui').inject,
 }
 
 export interface ModuleInterfaces {
-    oauth: {
-        text: string;
-        icon?: string;
-        get: (this: Handler) => Promise<void>;
-        callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
-        lockUsername?: boolean;
-    };
     hash: (password: string, salt: string, user: User) => boolean | string | Promise<string>;
+    problemSearch: ProblemSearch;
 }
 
 export interface HydroGlobal {
     version: Record<string, string>;
     model: Model;
     script: Record<string, Script>;
-    service: HydroService;
-    lib: Lib;
     module: { [K in keyof ModuleInterfaces]: Record<string, ModuleInterfaces[K]> };
     ui: UI;
     error: typeof import('./error');
@@ -674,5 +637,5 @@ declare global {
     var bus: Context; // eslint-disable-line
     var app: Context; // eslint-disable-line
     var Hydro: HydroGlobal; // eslint-disable-line
-    var addons: string[]; // eslint-disable-line
+    var addons: Record<string, string>; // eslint-disable-line
 }

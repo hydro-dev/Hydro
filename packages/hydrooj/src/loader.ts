@@ -1,8 +1,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable consistent-return */
 /* eslint-disable simple-import-sort/imports */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-eval */
 import './init';
 import './interface';
 import path from 'path';
@@ -14,11 +12,14 @@ import './ui';
 import * as I18n from './lib/i18n';
 
 import { Logger } from './logger';
-import { Context, Service, ScopeStatus } from './context';
+import {
+    Context, Service, ScopeStatus, EffectScope,
+} from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
+import Schema from 'schemastery';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -43,29 +44,19 @@ if (process.env.NIX_PROFILES) {
     }
 }
 
-export function resolveConfig(plugin: any, config: any) {
-    if (config === false) return;
-    if (config === true) config = undefined;
-    config ??= {};
-    const schema = plugin['Config'] || plugin['schema'];
-    if (schema && plugin['schema'] !== false) config = schema(config);
-    return config;
-}
-
 export class Loader extends Service {
-    public state: Record<string, any> = Object.create(null);
-    public config: {};
+    public state: Record<string, EffectScope> = Object.create(null);
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
 
-    constructor(private app: Context) {
-        super(app, 'loader');
-    }
+    static inject = ['config', 'timer', 'i18n', 'logger'];
 
-    [Service.setup]() {
-        this.app.on('app/started', () => {
-            this.ctx.setInterval(async () => {
+    constructor(ctx: Context) {
+        super(ctx, 'loader');
+
+        ctx.on('app/started', () => {
+            ctx.setInterval(async () => {
                 const pending = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.PENDING);
                 if (pending.length) {
                     logger.warn('Plugins are still pending: %s', pending.map((v) => v[0]).join(', '));
@@ -103,33 +94,48 @@ export class Loader extends Service {
         }
     }
 
-    async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
+    async resolveConfig(plugin: any, configScope: string) {
+        const schema = plugin['Config'] || plugin['schema'];
+        if (!schema) return {};
+        const schemaRequest = configScope ? Schema.object({
+            [configScope]: schema,
+        }) : schema;
+        await this.ctx.config._tryMigrateConfig(schemaRequest);
+        const res = this.ctx.config.requestConfig(schemaRequest);
+        return configScope ? res[configScope] : res;
+    }
+
+    async reloadPlugin(key: string, configScope: string) {
+        const plugin = this.resolvePlugin(key);
+        if (!plugin) return;
+        const config = await this.resolveConfig(plugin, configScope);
         let fork = this.state[key];
+        const displayPath = key.includes('node_modules')
+            ? key.split('node_modules').pop()
+            : path.relative(process.cwd(), key);
+        logger.info(
+            `%s plugin %c${configScope ? ' with scope %c' : ''}`,
+            fork ? 'reload' : 'apply', displayPath, configScope,
+        );
         if (fork) {
-            logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
-            logger.info('apply plugin %c', key.split('node_modules').pop());
-            const plugin = await this.resolvePlugin(key);
-            if (!plugin) return;
-            resolveConfig(plugin, config);
-            if (asName) plugin.name = asName;
-            // fork = parent.plugin(plugin, this.interpolate(config));
-            fork = parent.plugin(plugin, config);
+            fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
             this.state[key] = fork;
         }
         return fork;
     }
 
-    async resolvePlugin(name: string) {
+    resolvePlugin(name: string) {
         try {
             this.cache[name] ||= require.resolve(name);
         } catch (err) {
             try {
                 this.cache[name] ||= require.resolve(name, { paths: HYDROPATH });
             } catch (e) {
-                logger.error(err.message);
+                logger.error('Failed to resolve plugin %s', name);
+                logger.error(err);
                 return;
             }
         }
@@ -140,17 +146,21 @@ export class Loader extends Service {
 app.plugin(I18n);
 app.plugin(Loader);
 
-function preload() {
+async function preload() {
+    global.app = await new Promise((resolve) => {
+        app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
+            resolve(c);
+        });
+    });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${a}/package.json`);
-            // eslint-disable-next-line import/no-dynamic-require
             const payload = require(packagejson);
             const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
             global.Hydro.version[name] = payload.version;
             const modulePath = path.dirname(packagejson);
-            global.addons.push(modulePath);
+            global.addons[name] = modulePath;
         } catch (e) {
             logger.error(`Addon not found: ${a}`);
             logger.error(e);
@@ -160,7 +170,7 @@ function preload() {
 }
 
 export async function load() {
-    preload();
+    await preload();
     Error.stackTraceLimit = 50;
     try {
         const { simpleGit } = require('simple-git') as typeof import('simple-git');
@@ -199,7 +209,7 @@ export async function load() {
 
 export async function loadCli() {
     process.env.HYDRO_CLI = 'true';
-    preload();
+    await preload();
     await require('./entry/cli').load(app);
     setTimeout(() => process.exit(0), 300);
 }

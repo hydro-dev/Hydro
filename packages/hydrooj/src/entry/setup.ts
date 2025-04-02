@@ -13,7 +13,6 @@ export async function load() {
         console.error('{"url":"mongodb://localhost:27017/hydro"}');
         process.exit(1);
     }
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         console.error('Please type your MongoDB connection string below:');
         console.error('Example: mongodb://localhost:27017/hydro');

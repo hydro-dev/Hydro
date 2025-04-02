@@ -324,7 +324,6 @@ export class ContestEditHandler extends Handler {
         await ScheduleModel.deleteMany(task);
         const operation = [];
         if (Date.now() <= endAt.getTime() && autoHide) {
-            // eslint-disable-next-line no-await-in-loop
             await Promise.all(pids.map((pid) => problem.edit(domainId, pid, { hidden: true })));
             operation.push('unhide');
         }
@@ -676,7 +675,6 @@ class ScoreboardService extends Service {
     views: Record<string, ScoreboardView<any>> = {};
     constructor(ctx: Context) {
         super(ctx, 'scoreboard');
-        ctx.set('scoreboard', this);
     }
 
     addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }>(

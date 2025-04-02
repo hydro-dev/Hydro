@@ -32,6 +32,7 @@ __langname: 한국어
 'Join {0}': '참여 {0}'
 'No': 아니오
 'Note: Problem title may not be hidden.': '주의: 문제 제목은 숨길 수 없습니다.'
+'Or use the following link:': '또는 다음 링크를 사용하세요:'
 'Role {1} already exists in domain {0}.': '역할 {1}이(가) 이미 {0}에 존재합니다.'
 'Solved {0} problems, RP: {1} (No. {2})': '총 {0} 문제 해결.RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 의 값 `{1}` 이 이미 존재합니다.'
@@ -42,9 +43,6 @@ __langname: 한국어
 (All Problems): (전체 문제)
 (None): (N/A)
 (Not changed): 수정되지 않음
-#Sample Input: Sample Input
-#Sample Output: Sample Output
-#Star: Star
 Aborted: 중지됨
 About {0}: '{0}에 대하여'
 About Markdown: Markdown에 대하여
@@ -312,6 +310,7 @@ Formula blocks: 공식 블록
 fs_upload: 업로드
 Gender Visibility: 성별 공개
 Gender: 성
+Group Assignment (Optional): 그룹 할당 (선택)
 Hard Deadline: 마감일
 Hash: 해시
 Have ALL PERMISSIONS in this domain: 이 그룹에 대한 모든 권한
@@ -387,6 +386,7 @@ Last Update At: '마지막 활동'
 LaTeX Expressions: LaTeX 표현
 Learn More: 더 알아보기
 Leave blank to use numeric pid.: 공란으로 둘 시 자동 배정
+Leave: 나가기
 Limitations: 제한
 Links: 링크
 List View: 목록 보기
@@ -680,6 +680,7 @@ Terms of Service: 이용 약관
 Test data comes from: Testdata 출처
 Testdata Config: Testdata 설정
 Text: 본문
+The group to join when user joining the domain.: 사용자가 그룹에 참여할 때 자동으로 참여할 그룹
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 추가 접수 중입니다. 제출할 수 있지만 감점될 수 있습니다.
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 초대 코드는 64글자 미만입니다.
 The invitation code you provided is invalid.: 잘못된 초대 코드
@@ -688,7 +689,7 @@ The role to assign when user joining the domain.: 사용자가 그룹에 참여�
 The uploaded file is too long.: 업로드한 파일이 너무 깁니다.
 The user is already a member of the domain.: 이미 그룹에 속한 사용자입니다.
 The user is too lazy to leave something here...: 설명이 없습니다... (´・ω・｀)
-Their account will not be deleted and they will be with the default role.: 계정은 삭제되지 않을 것이고, default 역할을 가질 것입니다.
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 계정은 삭제되지 않을 것이고, guest 역할을 가질 것입니다. 그룹에 다시 참여할 때까지 말이죠.
 There are no contests...: 대회 없음
 There is no homework so far ╰(*°▽°*)╯: 과제 없음 ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
@@ -755,6 +756,7 @@ User-defined role: 사용자 지정 역할
 User: 사용자
 Username / UID: 아이디
 Username: 아이디
+Users will have to manually join the domain first before selected roles can be applied.: 사용자는 먼저 도메인에 수동으로 참여해야 선택된 역할을 적용할 수 있습니다.
 Users with those roles will be removed from the domain.: 이 역할을 가진 사용자들이 그룹에서 제거될 것입니다.
 Users: 사용자
 Using your {0} universal account: '{0} 공용 계정을 사용'

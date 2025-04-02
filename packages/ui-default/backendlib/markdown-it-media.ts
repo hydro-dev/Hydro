@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-/* eslint-disable prefer-destructuring */
 
 import type MarkdownIt from 'markdown-it';
 import { v4 as uuid } from 'uuid';

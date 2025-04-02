@@ -76,5 +76,3 @@ export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 
             ...source.source ? [`## ${_('Source')}`, '', source.source, ''] : [],
         ].join('\n');
 }
-
-global.Hydro.lib.buildContent = buildContent;

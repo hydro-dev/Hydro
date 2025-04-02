@@ -1,15 +1,15 @@
-import * as cordis from 'cordis';
+import * as cordis from '@cordisjs/core';
+import LoggerService from '@cordisjs/logger';
+import { TimerService } from '@cordisjs/plugin-timer';
 import Schema from 'schemastery';
-import type { ServerEvents, WebService } from '@hydrooj/framework';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
 import { Loader } from './loader';
 import type { EventMap } from './service/bus';
-import type { CheckService } from './service/check';
+import type CheckService from './service/check';
 import type { } from './service/migration';
-import type { ConnectionHandler, Handler } from './service/server';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap, ServerEvents<Handler, ConnectionHandler> { }
+export { EventMap as Events };
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
     if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
@@ -25,11 +25,10 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
 
 export type EffectScope = cordis.EffectScope<Context>;
 
-export { Disposable, Plugin, ScopeStatus } from 'cordis';
+export { Disposable, Plugin, ScopeStatus } from '@cordisjs/core';
 
-export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Connection' | 'withHandlerClass'> {
-    // @ts-ignore
-    [Context.events]: Events<this>;
+export interface Context extends cordis.Context {
+    [Context.events]: EventMap & cordis.Events<Context>;
     loader: Loader;
     check: CheckService;
     setImmediate: typeof setImmediate;
@@ -38,15 +37,9 @@ export interface Context extends cordis.Context, Pick<WebService, 'Route' | 'Con
     injectUI: typeof inject;
     broadcast: Context['emit'];
     geoip?: GeoIP;
-    // TODO: move to @cordisjs/plugin-timer
-    setTimeout(callback: () => void, delay: number): () => void
-    setInterval(callback: () => void, delay: number): () => void
-    sleep(delay: number): Promise<void>
-    throttle<F extends (...args: any[]) => void>(callback: F, delay: number, noTrailing?: boolean): WithDispose<F>
-    debounce<F extends (...args: any[]) => void>(callback: F, delay: number): WithDispose<F>
 }
 
-export abstract class Service extends cordis.Service<Context> {
+export abstract class Service<T = never> extends cordis.Service<T, Context> {
 }
 
 const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
@@ -57,7 +50,7 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         });
     };
 
-export class ApiMixin extends cordis.Service {
+export class ApiMixin extends cordis.Service<never, Context> {
     addScript = T(addScript);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
@@ -71,92 +64,6 @@ export class ApiMixin extends cordis.Service {
     }
 }
 
-type WithDispose<T> = T & { dispose: () => void };
-
-class TimerService extends Service {
-    constructor(ctx) {
-        super(ctx, '$timer');
-        ctx.mixin('$timer', ['setTimeout', 'setInterval', 'sleep', 'throttle', 'debounce']);
-    }
-
-    setTimeout(callback: () => void, delay: number) {
-        const dispose = this.ctx.effect(() => {
-            const timer = setTimeout(() => {
-                dispose();
-                callback();
-            }, delay);
-            return () => clearTimeout(timer);
-        });
-        return dispose;
-    }
-
-    setInterval(callback: () => void, delay: number) {
-        return this.ctx.effect(() => {
-            const timer = setInterval(callback, delay);
-            return () => clearInterval(timer);
-        });
-    }
-
-    sleep(delay: number) {
-        const caller = this.ctx;
-        return new Promise<void>((resolve, reject) => {
-            const dispose1 = this.setTimeout(() => {
-                dispose1();
-                dispose2(); // eslint-disable-line @typescript-eslint/no-use-before-define
-                resolve();
-            }, delay);
-            const dispose2 = caller.on('dispose', () => {
-                dispose1();
-                dispose2();
-                reject(new Error('Context has been disposed'));
-            });
-        });
-    }
-
-    private createWrapper(callback: (args: any[], check: () => boolean) => any, isDisposed = false) {
-        this.ctx.scope.assertActive();
-
-        let timer: number | NodeJS.Timeout | undefined;
-        const dispose = () => {
-            isDisposed = true;
-            remove(); // eslint-disable-line @typescript-eslint/no-use-before-define
-            clearTimeout(timer);
-        };
-
-        const wrapper: any = (...args: any[]) => {
-            clearTimeout(timer);
-            timer = callback(args, () => !isDisposed && this.ctx.scope.active);
-        };
-        wrapper.dispose = dispose;
-        const remove = this.ctx.scope.disposables.push(dispose);
-        return wrapper;
-    }
-
-    throttle<F extends (...args: any[]) => void>(callback: F, delay: number, noTrailing?: boolean): WithDispose<F> {
-        let lastCall = -Infinity;
-        const execute = (...args: any[]) => {
-            lastCall = Date.now();
-            callback(...args);
-        };
-        return this.createWrapper((args, isActive) => { // eslint-disable-line consistent-return
-            const now = Date.now();
-            const remaining = delay - (now - lastCall);
-            if (remaining <= 0) {
-                execute(...args);
-            } else if (isActive()) {
-                return setTimeout(execute, remaining, ...args);
-            }
-        }, noTrailing);
-    }
-
-    debounce<F extends (...args: any[]) => void>(callback: F, delay: number): WithDispose<F> {
-        return this.createWrapper((args, isActive) => {
-            if (!isActive()) return;
-            return setTimeout(callback, delay, ...args); // eslint-disable-line consistent-return
-        });
-    }
-}
-
 export class Context extends cordis.Context {
     domain?: DomainDoc;
 
@@ -164,6 +71,7 @@ export class Context extends cordis.Context {
         super();
         this.plugin(ApiMixin);
         this.plugin(TimerService);
+        this.plugin(LoggerService);
     }
 }
 

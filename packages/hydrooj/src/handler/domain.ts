@@ -4,13 +4,14 @@ import moment from 'moment-timezone';
 import type { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
-    InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
+    InvalidJoinInvitationCodeError, NotFoundError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
 import { PERM, PERMS_BY_FAMILY, PRIV } from '../model/builtin';
 import * as discussion from '../model/discussion';
 import domain from '../model/domain';
+import MessageModel from '../model/message';
 import * as oplog from '../model/oplog';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
@@ -101,33 +102,77 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('format', Types.Range(['default', 'raw']), true)
     async get({ domainId }, format = 'default') {
-        const rudocs = {};
         const [dudocs, roles] = await Promise.all([
-            domain.getMultiUserInDomain(domainId, {
-                $and: [
-                    { role: { $nin: ['default', 'guest'] } },
-                    { role: { $ne: null } },
-                ],
-            }).toArray(),
+            domain.collUser.aggregate([
+                {
+                    $match: {
+                        // TODO: add a page to display users who joined but with default role
+                        role: {
+                            $nin: ['default', 'guest'],
+                            $ne: null,
+                        },
+                        domainId,
+                    },
+                },
+                {
+                    $lookup: {
+                        from: 'user',
+                        let: { uid: '$uid' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$_id', '$$uid'] },
+                                    priv: { $bitsAllSet: PRIV.PRIV_USER_PROFILE },
+                                },
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    uname: 1,
+                                    avatar: 1,
+                                },
+                            },
+                        ],
+                        as: 'user',
+                    },
+                },
+                { $unwind: '$user' },
+                {
+                    $project: {
+                        user: 1,
+                        role: 1,
+                        join: 1,
+                        displayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                    },
+                },
+            ]).toArray(),
             domain.getRoles(domainId),
         ]);
-        // TODO: switch to getListForRender for better performance
-        const udict = await user.getList(domainId, dudocs.map((dudoc) => dudoc.uid));
-        const users = dudocs.filter((dudoc) => udict[dudoc.uid].priv & PRIV.PRIV_USER_PROFILE);
-        for (const role of roles) {
-            rudocs[role._id] = users.filter((dudoc) => dudoc.role === role._id).map((i) => udict[i.uid]);
-        }
+        const users = dudocs.map((dudoc) => {
+            const u = {
+                ...dudoc,
+                ...dudoc.user,
+            };
+            delete u.user;
+            return u;
+        });
+        const rudocs = {};
+        for (const role of roles) rudocs[role._id] = users.filter((udoc) => udoc.role === role._id);
         this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
-            roles, rudocs, udict, domain: this.domain,
+            roles, rudocs, domain: this.domain,
         };
     }
 
+    @param('uids', Types.NumericArray)
+    async post({ }, uids: number[]) {
+        if (uids.includes(this.domain.owner)) throw new ForbiddenError();
+    }
+
     @requireSudo
-    @post('uid', Types.Int)
-    @post('role', Types.Role)
-    async postSetUser(domainId: string, uid: number, role: string) {
-        if (uid === this.domain.owner) throw new ForbiddenError();
+    @param('uids', Types.NumericArray)
+    @param('role', Types.Role)
+    async postSetUsers(domainId: string, uid: number[], role: string) {
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role }),
@@ -136,14 +181,20 @@ class DomainUserHandler extends ManageHandler {
     }
 
     @requireSudo
-    @param('uid', Types.NumericArray)
-    @param('role', Types.Role)
-    async postSetUsers(domainId: string, uid: number[], role: string) {
-        if (uid.includes(this.domain.owner)) throw new ForbiddenError();
+    @param('uids', Types.NumericArray)
+    async postKick({ domainId }, uids: number[]) {
+        const original = await domain.getMultiUserInDomain(domainId, { uid: { $in: uids } }).toArray();
+        const needUpdate = uids.filter((uid) => original.find((i) => i.uid === uid)?.join);
+        if (!needUpdate.length) return;
         await Promise.all([
-            domain.setUserRole(domainId, uid, role),
-            oplog.log(this, 'domain.setRole', { uid, role }),
+            domain.setJoin(domainId, needUpdate.length > 1 ? needUpdate : needUpdate[0], false),
+            oplog.log(this, 'domain.kick', { uids: needUpdate }),
         ]);
+        const msg = JSON.stringify({
+            message: 'You have been kicked from domain {0} by {1}.',
+            params: [this.domain.name, this.user.uname],
+        });
+        await Promise.all(needUpdate.map((i) => MessageModel.send(1, i, msg, MessageModel.FLAG_RICHTEXT | MessageModel.FLAG_UNREAD)));
         this.back();
     }
 }
@@ -215,7 +266,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     async get() {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((role) => role._id).sort();
-        this.response.body.rolesWithText = roles.filter((i) => !['default', 'guest'].includes(i)).map((role) => [role, role]);
+        this.response.body.rolesWithText = roles.filter((i) => i !== 'guest').map((role) => [role, role]);
         this.response.body.joinSettings = domain.getJoinSettings(this.domain, roles);
         this.response.body.expirations = { ...domain.JOIN_EXPIRATION_RANGE };
         if (!this.response.body.joinSettings) {
@@ -229,9 +280,10 @@ class DomainJoinApplicationsHandler extends ManageHandler {
     @requireSudo
     @post('method', Types.Range([domain.JOIN_METHOD_NONE, domain.JOIN_METHOD_ALL, domain.JOIN_METHOD_CODE]))
     @post('role', Types.Role, true)
+    @post('group', Types.Name, true)
     @post('expire', Types.Int, true)
     @post('invitationCode', Types.Content, true)
-    async post(domainId: string, method: number, role: string, expire: number, invitationCode = '') {
+    async post(domainId: string, method: number, role: string, group = '', expire: number, invitationCode = '') {
         const r = await domain.getRoles(this.domain);
         const roles = r.map((rl) => rl._id);
         const current = domain.getJoinSettings(this.domain, roles);
@@ -240,7 +292,7 @@ class DomainJoinApplicationsHandler extends ManageHandler {
         else {
             if (!roles.includes(role)) throw new ValidationError('role');
             if (!current && expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) throw new ValidationError('expire');
-            joinSettings = { method, role };
+            joinSettings = { method, role, group };
             if (expire === domain.JOIN_EXPIRATION_KEEP_CURRENT) joinSettings.expire = current.expire;
             else if (expire === domain.JOIN_EXPIRATION_UNLIMITED) joinSettings.expire = null;
             else if (!domain.JOIN_EXPIRATION_RANGE[expire]) throw new ValidationError('expire');
@@ -279,33 +331,69 @@ class DomainJoinHandler extends Handler {
     joinSettings: any;
     noCheckPermView = true;
 
-    async prepare() {
-        const r = await domain.getRoles(this.domain);
+    @param('target', Types.DomainId, true)
+    async prepare({ domainId }, target: string = domainId) {
+        const [ddoc, dudoc] = await Promise.all([
+            domain.get(target),
+            domain.collUser.findOne({ domainId: target, uid: this.user._id }),
+        ]);
+        if (!dudoc) throw new NotFoundError(target);
+        const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
+            ? 'root'
+            : dudoc?.role || 'default';
+        if (dudoc?.join) throw new DomainJoinAlreadyMemberError(target, this.user._id);
+        const r = await domain.getRoles(ddoc);
         const roles = r.map((role) => role._id);
-        this.joinSettings = domain.getJoinSettings(this.domain, roles);
-        if (!this.joinSettings) throw new DomainJoinForbiddenError(this.domain._id);
-        if (this.user.role !== 'default') throw new DomainJoinAlreadyMemberError(this.domain._id, this.user._id);
+        this.joinSettings = domain.getJoinSettings(ddoc, roles);
+        if (assignedRole !== 'default') delete this.joinSettings;
+        else if (!this.joinSettings) throw new DomainJoinForbiddenError(target, 'The link is either invalid or expired.');
+        if (assignedRole === 'guest') throw new DomainJoinForbiddenError(target, 'You are banned by the domain moderator.');
     }
 
     @param('code', Types.Content, true)
-    async get(domainId: string, code: string) {
+    @param('target', Types.DomainId, true)
+    @param('redirect', Types.Content, true)
+    async get({ domainId }, code: string, target: string = domainId, redirect: string = '') {
         this.response.template = 'domain_join.html';
-        this.response.body.joinSettings = this.joinSettings;
-        this.response.body.code = code;
+        const ddoc = await domain.get(target);
+        const domainInfo = {
+            name: ddoc.name,
+            owner: await user.getById(domainId, ddoc.owner),
+            avatar: ddoc.avatar,
+            bulletin: ddoc.showBulletin ? ddoc.bulletin : '',
+        };
+        this.response.body = {
+            joinSettings: this.joinSettings,
+            code,
+            redirect,
+            target,
+            domainInfo,
+        };
     }
 
     @param('code', Types.Content, true)
-    async post(domainId: string, code: string) {
-        if (this.joinSettings.method === domain.JOIN_METHOD_CODE) {
+    @param('target', Types.DomainId, true)
+    @param('redirect', Types.Content, true)
+    async post({ domainId }, code: string, target: string = domainId, redirect: string = '') {
+        if (this.joinSettings?.method === domain.JOIN_METHOD_CODE) {
             if (this.joinSettings.code !== code) {
-                throw new InvalidJoinInvitationCodeError(this.domain._id);
+                throw new InvalidJoinInvitationCodeError(target);
             }
         }
+        if (this.joinSettings?.group) {
+            const groups = await user.listGroup(target);
+            const entry = groups.find((i) => i.name === this.joinSettings.group);
+            if (!entry) throw new ValidationError('group');
+            await user.updateGroup(target, entry.name, entry.uids.concat(this.user._id));
+        }
         await Promise.all([
-            domain.setUserRole(this.domain._id, this.user._id, this.joinSettings.role),
+            domain.setUserInDomain(target, this.user._id, {
+                join: true,
+                ...(this.joinSettings ? { role: this.joinSettings.role } : {}),
+            }),
             oplog.log(this, 'domain.join', {}),
         ]);
-        this.response.redirect = this.url('homepage', { query: { notification: 'Successfully joined domain.' } });
+        this.response.redirect = redirect || this.url('homepage', { domainId: target, query: { notification: 'Successfully joined domain.' } });
     }
 }
 

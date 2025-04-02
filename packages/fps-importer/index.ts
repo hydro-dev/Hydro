@@ -3,7 +3,7 @@ import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
     _, AdmZip, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler,
-    PERM, ProblemConfigFile, ProblemModel, ProblemType, SettingModel, SolutionModel, SystemModel, ValidationError, yaml,
+    PERM, ProblemConfigFile, ProblemModel, ProblemType, Schema, SolutionModel, SystemModel, ValidationError, yaml,
 } from 'hydrooj';
 
 const knownRemoteMapping = {
@@ -115,6 +115,10 @@ class FpsProblemImportHandler extends Handler {
     }
 }
 
+export const Config = Schema.object({
+    limit: Schema.number().role('limit').default(64 * 1024 * 1024).min(1).description('Maximum file size for FPS problemset import'),
+}).description('FPS Importer');
+
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.injectUI('ProblemAdd', 'problem_import_fps', { icon: 'copy', text: 'From FPS File' });
@@ -132,10 +136,5 @@ we strongly recommend that you use tools such as EasyFPSViewer to split it or re
 Importing a large problem set on a machine with insufficient memory may cause a crash or freeze.',
         'problem.import.fps.hint3': 'If you really need it, this limit can be changed in the system settings. \
 We strongly recommend that you use the zip format to store or exchange problemsets.',
-    });
-    ctx.inject(['setting'], (c) => {
-        c.setting.SystemSetting(
-            SettingModel.Setting('setting_limits', 'import-fps.limit', 64 * 1024 * 1024, 'text', 'Maximum file size for FPS problemset import'),
-        );
     });
 }

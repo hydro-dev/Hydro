@@ -28,10 +28,13 @@ const ProblemSchema = Schema.object({
     display_id: Schema.string(),
     time_limit: Schema.union([Schema.number(), Schema.string()]).required(),
     memory_limit: Schema.union([Schema.number(), Schema.string()]).required(),
-    spj: Schema.object({
-        language: Schema.string().required(),
-        code: Schema.string().required(),
-    }),
+    spj: Schema.union([
+        Schema.never(),
+        Schema.object({
+            language: Schema.string().required(),
+            code: Schema.string().required(),
+        }),
+    ]),
     test_case_score: Schema.array(Schema.object({
         input_name: Schema.string().required(),
         output_name: Schema.string().required(),
@@ -49,7 +52,7 @@ class ImportQduojHandler extends Handler {
         }
         const tmp = path.resolve(tmpdir, String.random(32));
         await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
+            zip.extractAllToAsync(tmp, true, false, (err) => (err ? reject(err) : resolve(null)));
         });
         let cnt = 0;
         try {

@@ -85,7 +85,7 @@ function proc(params: Parameter): Cmd {
         copyOutCached.push('stdout', 'stderr');
         if (params.filename) copyOutCached.push(`${params.filename}.out?`);
     } else if (params.filename) copyOut.push(`${params.filename}.out${supportOptional ? '?' : ''}`);
-    const copyIn = { ...(params.copyIn || {}) };
+    const copyIn = { ...params.copyIn };
     const stdin = params.stdin || { content: '' };
     if (params.filename) copyIn[`${params.filename}.in`] = stdin;
     const time = params.time || 16000;
@@ -195,8 +195,9 @@ const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('p
 export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
-): Promise<SandboxAdaptedResult[]>;
-export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number): Promise<SandboxAdaptedResult>;
+): Promise<SandboxAdaptedResult[] & AsyncDisposable>;
+export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
+): Promise<SandboxAdaptedResult & AsyncDisposable>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
     arg2?: string | Parameter, arg3?: string | number, arg4?: number,
@@ -207,7 +208,9 @@ export function runQueued(
         : [arg0, arg1, arg2 || {}, arg3 || '', arg4 || 0];
     return queue.add(async () => {
         const res = await runPiped(execute, pipeMapping, params, trace);
-        return single ? res[0] : res;
+        const ret = single ? res[0] : res;
+        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        return ret;
     }, { priority });
 }
 
@@ -228,7 +231,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     }
     const { osinfo } = await sysinfo.get();
     if (sandboxCgroup === 2) {
-        const kernelVersion = osinfo.kernel.split('-')[0];
+        const kernelVersion = osinfo.kernel.match(/^\d+\.\d+\.\d+/)[0];
         if (!gte(kernelVersion, '5.19.0') || !gte(sandboxVersion, '1.6.10')) {
             reportWarn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
         }

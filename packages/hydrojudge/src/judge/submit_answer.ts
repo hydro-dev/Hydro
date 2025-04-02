@@ -2,7 +2,7 @@ import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { fs } from '@hydrooj/utils';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { del, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import { Context } from './interface';
 
 function judgeCase(c: NormalizedCase) {
@@ -15,28 +15,30 @@ function judgeCase(c: NormalizedCase) {
         let status = STATUS.STATUS_ACCEPTED;
         let message: any = '';
         let score = 0;
-        const fileIds = [];
+        await using cleanup = {
+            clean: async () => { },
+            async [Symbol.asyncDispose]() { await this.clean(); },
+        };
         if (ctx.config.subType === 'multi') {
             const res = await runQueued(
-                '/usr/bin/unzip foo.zip',
+                `/usr/bin/unzip -p foo.zip ${name}`,
                 {
                     stdin: null,
                     copyIn: { 'foo.zip': ctx.code },
-                    copyOutCached: [`${name}?`],
                     time: 1000,
                     memory: 128,
                     cacheStdoutAndStderr: true,
                 },
             );
-            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code) {
+            cleanup.clean = async () => await res[Symbol.asyncDispose]();
+            if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code !== 11) {
                 message = { message: 'Unzip failed.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
-            } else if (!res.fileIds[name]) {
+            } else if (res.status === STATUS.STATUS_RUNTIME_ERROR && res.code && res.code === 11) {
                 message = { message: 'File not found.' };
                 status = STATUS.STATUS_WRONG_ANSWER;
             }
-            file = { fileId: res.fileIds[name] };
-            fileIds.push(...Object.values(res.fileIds));
+            file = { fileId: res.fileIds['stdout'] };
         }
         if (status === STATUS.STATUS_ACCEPTED) {
             ({ status, score, message } = await checkers[ctx.config.checker_type]({
@@ -46,12 +48,12 @@ function judgeCase(c: NormalizedCase) {
                 output: { src: c.output },
                 user_stdout: file,
                 user_stderr: { content: '' },
+                code: ctx.code,
                 score: c.score,
                 detail: ctx.config.detail ?? true,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             }));
         }
-        await Promise.allSettled(fileIds.map(del));
         return {
             id: c.id,
             status,

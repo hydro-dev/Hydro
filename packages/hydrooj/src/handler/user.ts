@@ -4,7 +4,8 @@ import moment from 'moment-timezone';
 import type { Binary } from 'mongodb';
 import type { Context } from '../context';
 import {
-    AuthOperationError, BlacklistedError, BuiltinLoginError, ForbiddenError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError,
+    ForbiddenError, InvalidTokenError, NotFoundError,
     SystemError, UserAlreadyExistError, UserFacingError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -16,7 +17,6 @@ import BlackListModel from '../model/blacklist';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as ContestModel from '../model/contest';
 import domain from '../model/domain';
-import oauth from '../model/oauth';
 import * as oplog from '../model/oplog';
 import problem, { ProblemDoc } from '../model/problem';
 import ScheduleModel from '../model/schedule';
@@ -27,6 +27,18 @@ import user, { deleteUserCache } from '../model/user';
 import {
     Handler, param, post, Types,
 } from '../service/server';
+
+async function successfulAuth(this: Handler, udoc: User) {
+    await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
+    this.context.HydroContext.user = udoc;
+    this.session.viewLang = '';
+    this.session.uid = udoc._id;
+    this.session.sudo = null;
+    this.session.sudoUid = null;
+    this.session.scope = PERM.PERM_ALL.toString();
+    this.session.oauthBind = null;
+    this.session.recreate = true;
+}
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
@@ -74,15 +86,9 @@ class UserLoginHandler extends Handler {
             } else throw new ValidationError('2FA', 'Authn');
         }
         await udoc.checkPassword(password);
-        await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
-        this.context.HydroContext.user = udoc;
-        this.session.viewLang = '';
-        this.session.uid = udoc._id;
-        this.session.sudo = null;
-        this.session.scope = PERM.PERM_ALL.toString();
+        await successfulAuth.call(this, udoc);
         this.session.save = rememberme;
-        this.session.recreate = true;
         this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
             ? this.url('homepage') : this.request.referer);
     }
@@ -121,6 +127,8 @@ class UserSudoHandler extends Handler {
 }
 
 class UserTFAHandler extends Handler {
+    noCheckPermView = true;
+
     @param('q', Types.String)
     async get({ }, q: string) {
         let udoc = await user.getByUname('system', q);
@@ -191,15 +199,12 @@ class UserLogoutHandler extends Handler {
     }
 
     async post({ domainId }) {
-        this.context.HydroContext.user = await user.getById(domainId, 0);
-        this.session.uid = 0;
-        this.session.sudo = null;
-        this.session.sudoUid = null;
-        this.session.scope = PERM.PERM_ALL.toString();
+        await successfulAuth.call(this, await user.getById(domainId, 0));
         this.response.redirect = '/';
     }
 }
 
+// rename to RegisterSendMailHandler
 export class UserRegisterHandler extends Handler {
     noCheckPermView = true;
     async prepare() {
@@ -223,7 +228,15 @@ export class UserRegisterHandler extends Handler {
         const t = await token.add(
             token.TYPE_REGISTRATION,
             system.get('session.unsaved_expire_seconds'),
-            { mail, redirect: this.domain.registerRedirect },
+            {
+                mail,
+                redirect: this.domain.registerRedirect,
+                identity: {
+                    provider: 'mail',
+                    platform: 'mail',
+                    id: mail,
+                },
+            },
         );
         const prefix = this.domain.host
             ? `${this.domain.host instanceof Array ? this.domain.host[0] : this.domain.host}`
@@ -247,7 +260,7 @@ class UserRegisterWithCodeHandler extends Handler {
     @param('code', Types.String)
     async prepare({ }, code: string) {
         this.tdoc = await token.get(code, token.TYPE_REGISTRATION);
-        if (!this.tdoc || (!this.tdoc.mail && !this.tdoc.phone)) {
+        if (!this.tdoc?.identity) {
             // prevent brute forcing tokens
             await this.limitRate('user_register_with_code', 60, 5);
             throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_REGISTRATION], code);
@@ -267,28 +280,22 @@ class UserRegisterWithCodeHandler extends Handler {
         domainId: string, password: string, verify: string,
         uname = '', code: string,
     ) {
-        if (this.tdoc.oauth?.[0] && global.Hydro.module.oauth[this.tdoc.oauth[0]].lockUsername) {
-            uname = this.tdoc.username;
-        }
+        const provider = this.ctx.oauth.providers[this.tdoc.identity.provider];
+        if (!provider) throw new SystemError(`OAuth provider ${this.tdoc.identity.provider} not found`);
+        if (provider.lockUsername) uname = this.tdoc.identity.username;
         if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
-        if (this.tdoc.phone) this.tdoc.mail = `${String.random(12)}@hydro.local`;
-        const uid = await user.create(this.tdoc.mail, uname, password, undefined, this.request.ip);
+        const randomEmail = `${String.random(12)}@invalid.local`; // some random email to remove in the future
+        const uid = await user.create(this.tdoc.mail || randomEmail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = this.tdoc.mail.split('@');
         const $set: any = this.tdoc.set || {};
-        if (this.tdoc.phone) $set.phone = this.tdoc.phone;
         if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (Object.keys(this.tdoc.setInDomain || {}).length) await domain.setUserInDomain(domainId, uid, this.tdoc.setInDomain);
-        if (this.tdoc.oauth) await oauth.set(this.tdoc.oauth[1], uid);
-        this.context.HydroContext.user = await user.getById(domainId, uid);
-        this.session.viewLang = '';
-        this.session.uid = uid;
-        this.session.sudoUid = null;
-        this.session.scope = PERM.PERM_ALL.toString();
-        this.session.recreate = true;
+        await this.ctx.oauth.set(this.tdoc.identity.platform, this.tdoc.identity.id, uid);
+        await successfulAuth.call(this, await user.getById(domainId, uid));
         this.response.redirect = this.tdoc.redirect || this.url('home_settings', { category: 'preference' });
     }
 }
@@ -422,7 +429,7 @@ class OauthHandler extends Handler {
 
     @param('type', Types.Key)
     async get(domainId: string, type: string) {
-        await global.Hydro.module.oauth[type]?.get.call(this);
+        await this.ctx.oauth.providers[type]?.get.call(this);
     }
 }
 
@@ -430,58 +437,61 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        if (!global.Hydro.module.oauth[args.type]) throw new UserFacingError('Oauth type');
-        const r = await global.Hydro.module.oauth[args.type].callback.call(this, args);
-        const uid = await oauth.get(r._id);
-        if (uid) {
-            await user.setById(uid, { loginat: new Date(), loginip: this.request.ip });
-            this.session.uid = uid;
-            this.session.scope = PERM.PERM_ALL.toString();
-            this.response.redirect = '/';
-        } else {
-            if (r.email) {
-                const udoc = await user.getByEmail('system', r.email);
-                if (udoc) {
-                    await oauth.set(r._id, udoc._id);
-                    await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
-                    this.session.uid = udoc._id;
-                    this.session.scope = PERM.PERM_ALL.toString();
-                    this.session.recreate = true;
-                    this.response.redirect = '/';
-                    return;
-                }
+        const provider = this.ctx.oauth.providers[args.type];
+        if (!provider) throw new UserFacingError('Oauth type');
+        const r = await provider.callback.call(this, args);
+        if (this.session.oauthBind === args.type) {
+            delete this.session.oauthBind;
+            const existing = await this.ctx.oauth.get(args.type, r._id);
+            if (existing && existing !== this.user._id) {
+                throw new BadRequestError('Already binded to another account');
             }
-            this.checkPriv(PRIV.PRIV_REGISTER_USER);
-            let username = '';
-            r.uname ||= [];
-            const mailDomain = r.email.split('@')[1];
-            if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
-            for (const uname of r.uname) {
-                // eslint-disable-next-line no-await-in-loop
-                const nudoc = await user.getByUname('system', uname);
-                if (!nudoc) {
-                    username = uname;
-                    break;
-                }
-            }
-            const set: Partial<Udoc> = { ...(r.set || {}), oauth: args.type };
-            if (r.bio) set.bio = r.bio;
-            if (r.viewLang) set.viewLang = r.viewLang;
-            if (r.avatar) set.avatar = r.avatar;
-            const [t] = await token.add(
-                token.TYPE_REGISTRATION,
-                system.get('session.unsaved_expire_seconds'),
-                {
-                    mail: r.email,
-                    username,
-                    redirect: this.domain.registerRedirect,
-                    set,
-                    setInDomain: r.setInDomain,
-                    oauth: [args.type, r._id],
-                },
-            );
-            this.response.redirect = this.url('user_register_with_code', { code: t });
+            this.response.redirect = '/home/security';
+            if (existing !== this.user._id) await this.ctx.oauth.set(args.type, r._id, this.user._id);
+            return;
         }
+
+        const uid = await this.ctx.oauth.get(args.type, r._id) || await this.ctx.oauth.get('mail', r.email);
+        if (uid) {
+            await successfulAuth.call(this, await user.getById('system', uid));
+            this.response.redirect = '/';
+            return;
+        }
+        if (!provider.canRegister) throw new ForbiddenError('No binded account found');
+        this.checkPriv(PRIV.PRIV_REGISTER_USER);
+        let username = '';
+        r.uname ||= [];
+        const mailDomain = r.email.split('@')[1];
+        if (await BlackListModel.get(`mail::${mailDomain}`)) throw new BlacklistedError(mailDomain);
+        for (const uname of r.uname) {
+            // eslint-disable-next-line no-await-in-loop
+            const nudoc = await user.getByUname('system', uname);
+            if (!nudoc) {
+                username = uname;
+                break;
+            }
+        }
+        const set: Partial<Udoc> = { ...r.set };
+        if (r.bio) set.bio = r.bio;
+        if (r.viewLang) set.viewLang = r.viewLang;
+        if (r.avatar) set.avatar = r.avatar;
+        const [t] = await token.add(
+            token.TYPE_REGISTRATION,
+            system.get('session.unsaved_expire_seconds'),
+            {
+                mail: r.email,
+                username,
+                redirect: this.domain.registerRedirect,
+                set,
+                setInDomain: r.setInDomain,
+                identity: {
+                    provider: args.type,
+                    platform: args.type,
+                    id: r._id,
+                },
+            },
+        );
+        this.response.redirect = this.url('user_register_with_code', { code: t });
     }
 }
 
@@ -503,6 +513,8 @@ class ContestModeHandler extends Handler {
     }
 }
 
+export const inject = ['oauth'];
+
 export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
@@ -520,6 +532,17 @@ export async function apply(ctx: Context) {
     if (system.get('server.contestmode')) {
         ctx.Route('contest_mode', '/contestmode', ContestModeHandler, PRIV.PRIV_EDIT_SYSTEM);
     }
+    ctx.oauth.provide('mail', {
+        text: 'Mail',
+        name: 'mail',
+        hidden: true,
+        async get() {
+            throw new NotFoundError();
+        },
+        async callback() {
+            throw new NotFoundError();
+        },
+    });
     ctx.inject(['api'], ({ api }) => {
         api.value('User', [
             ['_id', 'Int!'],
@@ -541,11 +564,24 @@ export async function apply(ctx: Context) {
             return c.user;
         }, `Get a user by id, uname, or mail.
 Returns current user if no argument is provided.`);
-        api.resolver('Query', 'users(ids: [Int], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
-            if (arg.ids?.length) {
-                const res = await user.getList(c.args.domainId, arg.ids);
-                for (const i in res) res[i].avatarUrl = avatar(res[i].avatar);
-                return Object.keys(res).map((id) => res[+id]);
+        api.resolver('Query', 'users(ids: [Int], auto: [String], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
+            const auto = arg.ids || arg.auto || [];
+            if (auto.length) {
+                const maybeId = auto.filter((i) => !Number.isNaN(+i));
+                const result = [];
+                if (maybeId.length) {
+                    const udocs = await user.getList(c.args.domainId, maybeId.map((i) => +i));
+                    for (const i in udocs) udocs[i].avatarUrl = avatar(udocs[i].avatar);
+                    result.push(...Object.values(udocs));
+                }
+                const notFound = auto.filter((i) => !result.find((j) => j._id === +i));
+                if (notFound.length > 50) return result; // reject if too many
+                for (const i of notFound) {
+                    // eslint-disable-next-line no-await-in-loop
+                    const udoc = await user.getByUname(c.args.domainId, i) || await user.getByEmail(c.args.domainId, i);
+                    if (udoc) result.push(udoc);
+                }
+                return result;
             }
             if (!arg.search) return [];
             const udoc = await user.getById(c.args.domainId, +arg.search)

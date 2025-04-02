@@ -7,7 +7,7 @@ import { Binary, ObjectId } from 'mongodb';
 import { UAParser } from 'ua-parser-js';
 import { Context } from '../context';
 import {
-    AuthOperationError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
+    AuthOperationError, BadRequestError, BlacklistedError, DomainAlreadyExistsError, InvalidTokenError,
     NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
@@ -193,6 +193,7 @@ class HomeSecurityHandler extends Handler {
                 this.translate('geoip_locale'),
             );
         }
+        const relations = await this.ctx.oauth.list(this.user._id);
         this.response.template = 'home_security.html';
         this.response.body = {
             sudoUid: this.session.sudoUid || null,
@@ -201,7 +202,8 @@ class HomeSecurityHandler extends Handler {
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
-            geoipProvider: this.ctx?.geoip?.provider,
+            geoipProvider: this.ctx.geoip?.provider,
+            relations,
         };
     }
 
@@ -248,6 +250,13 @@ class HomeSecurityHandler extends Handler {
         });
         await mail.sendMail(email, 'Change Email', 'user_changemail_mail', m.toString());
         this.response.template = 'user_changemail_mail_sent.html';
+    }
+
+    @param('platform', Types.String)
+    async postLinkAccount({ }, platform: string) {
+        if (!this.ctx.oauth.providers[platform]) throw new ValidationError('platform');
+        this.session.oauthBind = platform;
+        await this.ctx.oauth.providers[platform].get.call(this);
     }
 
     @param('tokenDigest', Types.String)
@@ -467,36 +476,33 @@ class UserChangemailWithCodeHandler extends Handler {
 
 class HomeDomainHandler extends Handler {
     @query('all', Types.Boolean)
-    async get(domainId: string, all: boolean) {
-        let res: DomainDoc[] = [];
-        let dudict: Record<string, any> = {};
+    async get({ }, all: boolean) {
+        let ddocs: DomainDoc[] = [];
+        const role: Record<string, string> = {};
         if (!all) {
-            dudict = await domain.getDictUserByDomainId(this.user._id);
+            const dudict = await domain.getDictUserByDomainId(this.user._id);
             const dids = Object.keys(dudict);
-            res = await domain.getMulti({ _id: { $in: dids } }).toArray();
+            ddocs = await domain.getMulti({ _id: { $in: dids } }).toArray();
         } else {
             this.checkPriv(PRIV.PRIV_VIEW_ALL_DOMAIN);
-            res = await domain.getMulti().toArray();
-            await Promise.all(res.map(async (ddoc) => {
-                dudict[ddoc._id] = await user.getById(domainId, this.user._id);
-            }));
+            ddocs = await domain.getMulti().toArray();
         }
         const canManage = {};
-        const ddocs = [];
-        for (const ddoc of res) {
-            // eslint-disable-next-line no-await-in-loop
-            const udoc = (await user.getById(ddoc._id, this.user._id))!;
-            const dudoc = dudict[ddoc._id];
-            if (['default', 'guest'].includes(dudoc.role) && this.domain._id !== ddoc._id) {
-                delete dudict[ddoc._id];
-                continue;
+        if (this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) {
+            for (const ddoc of ddocs) {
+                canManage[ddoc._id] = true;
+                role[ddoc._id] = 'root';
             }
-            ddocs.push(ddoc);
-            canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)
-                || udoc.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+        } else {
+            for (const ddoc of ddocs) {
+                // eslint-disable-next-line no-await-in-loop
+                const udoc = await user.getById(ddoc._id, this.user._id);
+                canManage[ddoc._id] = udoc.hasPerm(PERM.PERM_EDIT_DOMAIN);
+                role[ddoc._id] = udoc.role;
+            }
         }
         this.response.template = 'home_domain.html';
-        this.response.body = { ddocs, dudict, canManage };
+        this.response.body = { ddocs, canManage, role };
     }
 
     @param('id', Types.String)
@@ -505,6 +511,15 @@ class HomeDomainHandler extends Handler {
         if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
         else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
         this.back({ star });
+    }
+
+    @param('id', Types.String)
+    async postLeave({ }, id: string) {
+        if (id === 'system') throw new BadRequestError();
+        const ddoc = await domain.get(id);
+        if (!ddoc) throw new NotFoundError(id);
+        await domain.setJoin(id, this.user._id, false);
+        this.back();
     }
 }
 
@@ -603,7 +618,7 @@ class HomeMessagesConnectionHandler extends ConnectionHandler {
     }
 }
 
-export const inject = { geoip: { required: false } };
+export const inject = { geoip: { required: false }, oauth: {} };
 export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);

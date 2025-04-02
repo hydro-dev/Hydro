@@ -17,8 +17,7 @@ export interface LangConfig {
     hidden: boolean;
     isBinary?: boolean;
     analysis?: string;
-    /** @deprecated */
-    remote?: string;
+    remote: boolean;
     validAs?: Record<string, string>;
     /** @deprecated */
     pretest?: string | false;
@@ -51,6 +50,7 @@ export function parseLang(config: string): Record<string, LangConfig> {
         entry.code_file ||= `foo.${key}`;
         entry.execute ||= '/w/foo';
         entry.key = key;
+        entry.remote = !!entry.remote;
         entry.hidden ||= false;
         entry.disabled ||= false;
         entry.isBinary ||= false;

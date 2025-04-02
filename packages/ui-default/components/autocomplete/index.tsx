@@ -1,7 +1,6 @@
-import React from 'react';
+import { AutoComplete as AutoCompleteFC } from '@hydrooj/components';
 import ReactDOM from 'react-dom/client';
 import DOMAttachedObject from 'vj/components/DOMAttachedObject';
-import AutoCompleteFC from './components/AutoComplete';
 
 export interface AutoCompleteOptions<Multi extends boolean = boolean> {
   multi?: Multi;

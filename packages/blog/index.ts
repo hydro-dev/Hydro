@@ -1,10 +1,10 @@
 import {
     _, Context, DiscussionNotFoundError, DocumentModel, Filter,
-    Handler, NumberKeys, ObjectId, OplogModel, paginate,
+    Handler, NumberKeys, ObjectId, OplogModel,
     param, PRIV, Types, UserModel,
 } from 'hydrooj';
 
-export const TYPE_BLOG: 70 = 70;
+export const TYPE_BLOG = 70 as const;
 export interface BlogDoc {
     docType: 70;
     docId: ObjectId;
@@ -116,7 +116,7 @@ class BlogUserHandler extends BlogHandler {
     @param('uid', Types.Int)
     @param('page', Types.PositiveInt, true)
     async get(domainId: string, uid: number, page = 1) {
-        const [ddocs, dpcount] = await paginate(
+        const [ddocs, dpcount] = await this.ctx.db.paginate(
             BlogModel.getMulti({ owner: uid }),
             page,
             10,

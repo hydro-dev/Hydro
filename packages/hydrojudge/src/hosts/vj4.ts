@@ -79,18 +79,16 @@ export default class VJ4 implements Session {
         this.ws.send(JSON.stringify({ ...data, tag, key }));
     }
 
-    getNext(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+    getReporter(t: JudgeTask) {
+        const next = (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
             this.send((t.request as any).tag, 'next', data);
         };
-    }
-
-    getEnd(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+        const end = (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
             this.send((t.request as any).tag, 'end', data);
         };
+        return { next, end };
     }
 
     get(url: string) {
@@ -158,7 +156,7 @@ export default class VJ4 implements Session {
             if (entries.length > 512) throw new FormatError('Too many files');
             if (Math.sum(entries.map((i) => i.header.size)) > 256 * 1024 * 1024) throw new FormatError('File too large');
             await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(savePath, true, (e) => {
+                zip.extractAllToAsync(savePath, true, false, (e) => {
                     if (e) reject(e);
                     else resolve(null);
                 });
@@ -183,7 +181,7 @@ export default class VJ4 implements Session {
         const entries = zip.getEntries();
         if (entries.length > 512) throw new FormatError('Too many files');
         await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(savePath, true, (e) => {
+            zip.extractAllToAsync(savePath, true, false, (e) => {
                 if (e) reject(e);
                 else resolve(null);
             });
@@ -249,7 +247,7 @@ export default class VJ4 implements Session {
         }
     }
 
-    async processData(folder: string) { // eslint-disable-line class-methods-use-this
+    async processData(folder: string) {
         let files = await fs.readdir(folder);
         if (files.length <= 2) {
             if (files.length === 2) files.splice(files.indexOf('version'), 1);

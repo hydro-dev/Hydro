@@ -34,4 +34,3 @@ export function validate(input: string) {
 }
 
 export default avatar;
-global.Hydro.lib.avatar = avatar;

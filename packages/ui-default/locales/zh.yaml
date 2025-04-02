@@ -38,10 +38,12 @@ __langname: 简体中文
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
+'Or use the following link:': 或使用以下链接：
 'Packages have new version: {0}': '以下组件有新版本： {0}'
 'Please use your two factor authentication app to scan the qrcode below:': '请使用你的两步验证APP扫描此二维码:'
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
+'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
@@ -411,6 +413,7 @@ Generate Testdata: 生成测试数据
 Generate: 生成
 Gravatar URL Prefix: Gravatar地址前缀
 Group / UID: 小组或 UID
+Group Assignment (Optional): 小组分配 (可选)
 Group Name: 名称
 Hard Deadline: 最终截止时间
 Hash: 散列
@@ -489,6 +492,8 @@ IOI(Strict): IOI(严格)
 Is rated: 计入排名
 It works!: 它成了！
 Italic: 斜体
+Join Domain to Create a Discussion: 加入域后创建讨论
+Join Domain to Submit: 加入域后递交
 Join: 加入
 Judge Config: 评测设置
 Judge Status: 评测状态
@@ -510,6 +515,7 @@ LaTeX Expressions: LaTeX 表达式
 Learn More: 了解更多
 Leave blank to use numeric pid.: 留空来使用数字题号。
 Leave empty for default: 留空以使用默认
+Leave: 离开
 Ledo: 乐多
 Legacy mode: 兼容模式
 Light: 亮色
@@ -603,6 +609,7 @@ Not Attended: 未参加
 Not available: 不可用
 Not Claimed: 未认领
 Not Enrolled: 未参加
+Not joined yet: 暂未加入
 Not started with a number: 不以数字开头
 Not wrapped with space: 两侧不含空格
 Numeric PID: 数字题号
@@ -698,9 +705,9 @@ problem_import: 导入题目
 problem_main: 题库
 problem_solution: 题解
 problem_submit: 递交代码
+problem_type.communication: 通信题
 problem_type.default: 传统题
 problem_type.interactive: 交互题
-problem_type.communication: 通信题
 problem_type.objective: 客观题
 problem_type.remote_judge: 远端评测题
 problem_type.submit_answer: 提交答案题
@@ -903,6 +910,7 @@ Testdata: 测试数据
 Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
+The group to join when user joining the domain.: 加入域时自动加入的小组。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。
 The invitation code you provided is invalid.: 您提供的邀请码无效。
@@ -912,7 +920,7 @@ The scoreboard was frozen with {0} minutes remaining at {1} - submissions in the
 The uploaded file is too long.: 上传的文件太长。
 The user is already a member of the domain.: 该用户已是域的成员。
 The user is too lazy to leave something here...: 该用户太懒，这里啥也没写 (´・ω・｀)
-Their account will not be deleted and they will be with the default role.: 他们的账号不会被删除，并且之后将以 default 角色访问。
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他们的账号不会被删除，并且之后将以 guest 角色访问，直到他们重新加入域。
 Theme: 主题
 There are no contests...: 没有比赛…
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯
@@ -936,6 +944,7 @@ Timezone: 时区
 title: 标题
 Title: 标题
 To get a better editing experience, with code highlighting and test runs, please go back to the problem detail page and use 'Open Scratchpad' button.: 为了获得更好的编辑体验，包括代码高亮和测试运行功能，请返回题目详情页面并点击“进入在线编程模式”按钮。
+To join the domain, users can click the "Join Domain" button on "My Domain" page.: 要加入域，用户可以点击“我的域”页面中的“加入域”按钮。
 Toggle Pretest Panel: 切换自测面板
 Toggle Preview: 切换预览
 Toggle Records Panel: 切换评测记录面板
@@ -1002,6 +1011,7 @@ User-defined role: 用户定义的角色
 User: 用户
 Username / UID: 用户名或 UID
 Username: 用户名
+Users will have to manually join the domain first before selected roles can be applied.: 用户需要先手动加入域才能应用此角色分配。
 Users with those roles will be removed from the domain.: 拥有这些角色的用户将从此域中移除。
 Users: 用户
 Using your {0} universal account: 使用您的 {0} 通用账户
@@ -1054,6 +1064,7 @@ Write Your Comment: 发表您的评论
 Write Your Solution: 发表您的题解
 Year: 年
 You are currently in legacy mode. Some additional features will be unavailable. We strongly recommend switching to standard mode on a modern browser.: 您当前处于兼容模式。某些功能在此模式下不可用。我们强烈建议在现代浏览器上切换为标准模式以获得更好的体验。
+You are invited to join {0}: '您被邀请加入 {0}'
 You are not allowed to join the domain. The link is either invalid or expired.: 您无法加入该域，链接无效或已过期。
 You can also upload your avatar to Gravatar and it will be automatically updated here.: 你也可以将头像上传到 <a href="https://gravatar.com/">Gravatar</a>，本站的头像将自动更新。
 You can create your own training plans and share them with others.: 您可以创建您自己的训练计划并且与他人分享。

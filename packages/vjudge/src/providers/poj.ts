@@ -190,7 +190,6 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
     // eslint-disable-next-line consistent-return
     async waitForSubmission(id: string, next, end) {
         let count = 0;
-        // eslint-disable-next-line no-constant-condition
         while (count < 60) {
             count++;
             await sleep(3000);

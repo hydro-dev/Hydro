@@ -1,20 +1,11 @@
 import { Context } from 'hydrooj';
+import { JudgeSettings, overrideConfig } from './config';
 
-declare module 'hydrooj' {
-    interface SystemKeys {
-        'hydrojudge.cache_dir': string;
-        'hydrojudge.tmp_dir': string;
-        'hydrojudge.sandbox_host': string;
-        'hydrojudge.memoryMax': string;
-        'hydrojudge.testcases_max': number;
-        'hydrojudge.total_time_limit': number;
-        'hydrojudge.parallelism': number;
-        'hydrojudge.disable': boolean;
-        'hydrojudge.detail': boolean;
-    }
-}
+export const Config = JudgeSettings;
 
-export function apply(ctx: Context) {
+export function apply(ctx: Context, config: ReturnType<typeof Config>) {
+    overrideConfig(config);
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    ctx.once('app/started', () => require('./hosts/builtin').postInit(ctx));
+    // eslint-disable-next-line consistent-return
+    if (!config.disable) return require('./hosts/builtin').apply(ctx);
 }

@@ -1,16 +1,39 @@
-import type { ConnectionHandler, Handler } from './server';
+import type { ConnectionHandler, Handler, NotFoundHandler } from './server';
 
-type HandlerEvents<T extends Handler, C extends ConnectionHandler> =
-    Record<`handler/${HookType}/${string}`, (thisArg: T & Record<string, any>) => VoidReturn>
-    & Record<`handler/${HookType}`, (thisArg: T) => VoidReturn>
-    & Record<`handler/register/${string}`, (HandlerClass: new (...args: any[]) => T) => VoidReturn>
-    & Record<`connection/${'create' | 'active' | 'close'}`, (thisArg: C) => VoidReturn>;
+export interface KnownHandlers {
+    'NotFound': NotFoundHandler;
+}
+
+type MapHandlerEvents<N extends string, H extends Handler<any>> =
+    Record<`handler/${HookType}/${N}`, (thisArg: H) => VoidReturn>
+    & Record<`handler/${HookWithMethod}/${N}/${Methods}`, (thisArg: H) => VoidReturn>;
+
+type KnownHandlerEvents = {
+    [key in keyof KnownHandlers]: MapHandlerEvents<key, KnownHandlers[key]>
+}[keyof KnownHandlers];
+
+type HandlerEvents<C> =
+    Record<`handler/${HookType}`, (thisArg: Handler<C>) => VoidReturn>
+    & Record<`connection/${'create' | 'active' | 'close'}`, (thisArg: any) => VoidReturn>;
 
 export type VoidReturn = Promise<any> | any;
 export type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after' | 'finish';
+export type Methods = 'get' | 'post' | 'put' | 'delete' | 'patch';
+export type HookWithMethod = Exclude<HookType, 'before-operation'>;
 
-export interface ServerEvents<T extends Handler = Handler, C extends ConnectionHandler = ConnectionHandler> extends HandlerEvents<T, C> {
-    'handler/create': (thisArg: Handler, type: 'ws' | 'http') => VoidReturn
-    'handler/init': (thisArg: Handler) => VoidReturn
-    'handler/error': (thisArg: Handler, e: Error) => VoidReturn
+export interface ServerEvents<C> extends KnownHandlerEvents, HandlerEvents<C> {
+    'handler/create': (thisArg: Handler<C> | ConnectionHandler<C>, type: 'ws' | 'http') => VoidReturn
+    'handler/create/http': (thisArg: Handler<C>) => VoidReturn
+    'handler/create/ws': (thisArg: ConnectionHandler<C>) => VoidReturn
+    'handler/init': (thisArg: Handler<C>) => VoidReturn
+    'handler/error': (thisArg: Handler<C> | ConnectionHandler<C>, e: Error) => VoidReturn
+    [k: `handler/${HookType}/${string}`]: (thisArg: any) => VoidReturn
+    [k: `handler/${HookWithMethod}/${string}/${Methods}`]: (thisArg: any) => VoidReturn
+    [k: `handler/register/${string}`]: (HandlerClass: new (...args: any[]) => any) => VoidReturn
+    [k: `handler/error/${string}`]: (thisArg: Handler<C>, e: Error) => VoidReturn
+}
+
+declare module '@cordisjs/core' {
+    interface Events<C> extends ServerEvents<C> {
+    }
 }

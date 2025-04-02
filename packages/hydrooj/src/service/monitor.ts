@@ -4,7 +4,7 @@ import type { StatusUpdate } from '@hydrooj/utils/lib/sysinfo';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { Context } from '../context';
 import { Logger } from '../logger';
-import * as bus from './bus';
+import bus from './bus';
 import db from './db';
 
 const coll = db.collection('status');
@@ -39,7 +39,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         problemCount,
         discussionCount,
         recordCount,
-        addons: global.addons,
+        addons: Object.values(global.addons),
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,
@@ -98,17 +98,14 @@ export async function updateJudge(args) {
     );
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    ctx.on('app/started', async () => {
-        sysinfo.get().then((info) => {
-            coll.updateOne(
-                { mid: info.mid, type: 'server' },
-                { $set: { ...info, updateAt: new Date(), type: 'server' } },
-                { upsert: true },
-            );
-            feedback();
-            setInterval(update, 1800 * 1000);
-        });
-    });
+    const info = await sysinfo.get();
+    coll.updateOne(
+        { mid: info.mid, type: 'server' },
+        { $set: { ...info, updateAt: new Date(), type: 'server' } },
+        { upsert: true },
+    );
+    feedback();
+    return ctx.setInterval(update, 1800 * 1000); // eslint-disable-line
 }

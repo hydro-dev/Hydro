@@ -41,6 +41,7 @@ export interface IBasicProvider {
     submitProblem(id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction): Promise<string | void>;
     waitForSubmission(id: string, next: NextFunction, end: NextFunction): Promise<void>;
     checkStatus?: (onCheckFunc: boolean) => Promise<void>;
+    stop?: () => Promise<void>;
 }
 
 export interface BasicProvider {
