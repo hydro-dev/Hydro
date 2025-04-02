@@ -424,7 +424,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     }
                 }
             });
-            this.ctx.on('dispose', () => {
+            this.ctx.effect(() => () => {
                 fs.emptyDirSync(uploadDir);
             });
             // if killed by ctrl-c, on('dispose') will not be called
@@ -461,17 +461,17 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 } catch (e) { }
             });
             socket.pause();
-            const c: any = koa.createContext(request, {} as any); // eslint-disable-line
-            await executeMiddlewareStack(c, this.wsLayers);
+            const KoaContext: any = koa.createContext(request, {} as any);
+            await executeMiddlewareStack(KoaContext, this.wsLayers);
             for (const manager of router.wsStack) {
-                if (manager.accept(socket, request, c)) return;
+                if (manager.accept(socket, request, KoaContext)) return;
             }
             socket.close();
         });
     }
 
     async listen() {
-        this.ctx.on('dispose', () => {
+        this.ctx.effect(() => () => {
             httpServer.close();
             wsServer.close();
         });
@@ -727,7 +727,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const dispose = router.disposeLastOp;
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
-        this.ctx.on('dispose', () => {
+        this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();

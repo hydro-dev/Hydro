@@ -13,6 +13,7 @@ export default class TelegramService extends Service {
         token: Schema.string().role('secret').required(),
         botLogin: Schema.string().required(),
         endpoint: Schema.string().default('https://api.telegram.org/bot'),
+        canRegister: Schema.boolean().default(false),
     });
 
     constructor(ctx: Context, config: ReturnType<typeof TelegramService.Config>) {
@@ -21,6 +22,7 @@ export default class TelegramService extends Service {
             text: 'Login with Telegram',
             name: 'Telegram',
             icon,
+            canRegister: config.canRegister,
             callback: async function callback({ payload }) {
                 const parsed = JSON.parse(payload);
                 const hash = parsed.hash;

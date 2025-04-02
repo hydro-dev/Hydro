@@ -31,12 +31,12 @@ class BlackListModel {
     }
 }
 
-export function apply(ctx: Context) {
-    coll = db.collection('blacklist');
-    ctx.on('ready', () => db.ensureIndexes(
+export async function apply(ctx: Context) {
+    coll = ctx.db.collection('blacklist');
+    await ctx.db.ensureIndexes(
         coll,
         { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
-    ));
+    );
 }
 export default BlackListModel;
 global.Hydro.model.blacklist = BlackListModel;

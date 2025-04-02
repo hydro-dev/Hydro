@@ -52,7 +52,8 @@ export async function apply(ctx: Context) {
         render: async (name, args, context) => await vite.transformIndexHtml(context.handler.context.req.url, html),
     });
 
-    ctx.on('dispose', async () => {
+    // eslint-disable-next-line consistent-return
+    return async () => {
         await vite.close().catch((e) => console.error(e));
-    });
+    };
 }

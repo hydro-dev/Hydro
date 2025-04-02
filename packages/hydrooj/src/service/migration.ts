@@ -63,6 +63,7 @@ export default class MigrationService extends Service {
                 dbVer++;
                 await system.set(name, dbVer);
             }
+            logger.success('Database upgraded [%s]: current version %d', channel, dbVer);
         }
     }
 }

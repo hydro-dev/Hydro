@@ -13,6 +13,7 @@ export default class LoginWithGithubService extends Service {
         id: Schema.string().description('Github OAuth AppID').required(),
         secret: Schema.string().description('Github OAuth Secret').role('secret').required(),
         endpoint: Schema.string().description('Github Endpoint'),
+        canRegister: Schema.boolean().default(true),
     });
 
     constructor(ctx: Context, config: ReturnType<typeof LoginWithGithubService.Config>) {
@@ -21,6 +22,7 @@ export default class LoginWithGithubService extends Service {
             text: 'Login with Github',
             name: 'Github',
             icon,
+            canRegister: config.canRegister,
             callback: async function callback({ state, code }) {
                 const s = await TokenModel.get(state, TokenModel.TYPE_OAUTH);
                 if (!s) throw new ValidationError('token');

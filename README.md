@@ -111,7 +111,7 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-## Unreleased
+## Hydro 5.0.0-beta.0 / UI 4.58.0-beta.0
 
 - judge: 添加 checker 编译缓存
 - ui: 优化题目详情页面 OGP 信息
@@ -135,6 +135,8 @@ Hydro 用户群：1085853538
 - core: 支持存储并显示提交记录重测历史
 - core: 新的加域逻辑
 - ui: UserSelect.Multi: 支持批量粘贴用户名
+- ui: 修复在线 IDE 右键菜单
+- ui: 修复未登录用户查看题目文件页
 - core: oauth: 支持绑定/解绑三方平台账户 (#971)
 - ui: 修复暗色模式表格边框 (#968)
 - core: 优化 icpc 题目包导入 (#966)
@@ -154,6 +156,9 @@ Hydro 用户群：1085853538
 - core: 升级至 Mongo Driver 6
 - core: 移除 registerResolver, registerValue, registerUnion (使用 ctx.api.resolver/...)
 - core: 移除 paginate, rank (使用 ctx.db.paginate, ctx.db.ranked)
+- core: 移除 setting.yaml
+- core: oauth: 改为使用 ctx.oauth.provide() 注册
+- framework: 移除 ready 与 dispose 事件 (使用 ctx.effect 代替)
 
 ## Hydro 4.19.0 / UI 4.57.0
 

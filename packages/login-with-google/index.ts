@@ -31,6 +31,7 @@ export default class GoogleOAuthService extends Service {
         id: Schema.string().description('Google OAuth AppID').required(),
         secret: Schema.string().description('Google OAuth Secret').role('secret').required(),
         proxy: Schema.string().description('Google OAuth Proxy').role('proxy'),
+        canRegister: Schema.boolean().default(true),
     });
 
     constructor(ctx: Context, config: ReturnType<typeof GoogleOAuthService.Config>) {
@@ -38,6 +39,7 @@ export default class GoogleOAuthService extends Service {
         ctx.oauth.provide('google', {
             text: 'Login with Google',
             name: 'Google',
+            canRegister: config.canRegister,
             callback: async function callback(this: Handler, {
                 state, code, error,
             }) {

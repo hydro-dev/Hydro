@@ -12,6 +12,8 @@ import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
+Factory.formatters['d'] = (value, exporter) => Reggol.color(exporter, 3, value);
+
 const factory = new Factory();
 
 factory.addExporter(new Exporter.Console({

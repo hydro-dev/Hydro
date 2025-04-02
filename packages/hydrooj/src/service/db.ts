@@ -178,10 +178,10 @@ export class MongoService extends Service {
 }
 
 /** @deprecated use ctx.db instead */
-const db = new Proxy({} as MongoService, {
+const deprecatedDb = new Proxy({} as MongoService, {
     get(target, prop) {
         return app.get('db')?.[prop];
     },
 });
 
-export default db;
+export default deprecatedDb;

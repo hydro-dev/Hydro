@@ -34,7 +34,7 @@ export async function apply(ctx: Context) {
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader', 'config'], (c) => {
+        ctx.inject(['loader', 'config', 'db'], (c) => {
             resolve(c);
         });
     });

@@ -437,8 +437,9 @@ class OauthCallbackHandler extends Handler {
     noCheckPermView = true;
 
     async get(args: any) {
-        if (!this.ctx.oauth.providers[args.type]) throw new UserFacingError('Oauth type');
-        const r = await this.ctx.oauth.providers[args.type].callback.call(this, args);
+        const provider = this.ctx.oauth.providers[args.type];
+        if (!provider) throw new UserFacingError('Oauth type');
+        const r = await provider.callback.call(this, args);
         if (this.session.oauthBind === args.type) {
             delete this.session.oauthBind;
             const existing = await this.ctx.oauth.get(args.type, r._id);
@@ -456,6 +457,7 @@ class OauthCallbackHandler extends Handler {
             this.response.redirect = '/';
             return;
         }
+        if (!provider.canRegister) throw new ForbiddenError('No binded account found');
         this.checkPriv(PRIV.PRIV_REGISTER_USER);
         let username = '';
         r.uname ||= [];

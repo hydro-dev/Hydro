@@ -104,7 +104,7 @@ class ApiService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'api');
         this.rebuild = debounce(this.rebuild.bind(this), 500, { trailing: true });
-        ctx.on('ready', this.rebuild);
+        this.rebuild();
     }
 
     private rebuild() {

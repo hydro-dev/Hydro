@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/sonic",
-    "version": "1.4.0-alpha.0",
+    "version": "1.4.0-beta.0",
     "description": "Sonic search service",
     "main": "index.ts",
     "preferUnplugged": true,

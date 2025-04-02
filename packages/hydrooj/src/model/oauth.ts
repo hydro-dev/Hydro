@@ -34,6 +34,7 @@ export interface OAuthProvider {
     hidden?: boolean;
     get: (this: Handler) => Promise<void>;
     callback: (this: Handler, args: Record<string, any>) => Promise<OAuthUserResponse>;
+    canRegister?: boolean;
     lockUsername?: boolean;
 }
 
