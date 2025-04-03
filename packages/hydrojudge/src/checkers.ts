@@ -28,7 +28,14 @@ function parseDiffMsg(msg: string) {
         if (!msg) return '';
         if (!msg.startsWith('L=')) throw new Error();
         const [meta, u, t] = msg.split('\n');
-        const lineNum = +meta.split('L=')[1];
+        const lline = meta.split('L=')[1];
+        if (lline?.trim() === 'EOF') {
+            const next = u.split('EOF on ')[1].split(' ')[0];
+            if (next === 'usrout.processed') return 'Standard answer longer than user output.';
+            if (next === 'answer.processed') return 'User output longer than standard answer.';
+            return `Unable to parse: ${u}`;
+        }
+        const lineNum = +lline;
         // Split by token
         const usr = u.trim().split(' ');
         const std = t.trim().split(' ');
@@ -51,19 +58,30 @@ function parseDiffMsg(msg: string) {
 
 const compareSh = `#!/bin/bash
 set -e
-usrout=usrout
-answer=answer
 if [ "$1" = "BZ" ]; then
-  cat $usrout | awk '{sub(/[ \\t]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >usrout.processed
-  usrout=usrout.processed
-  cat $answer | awk '{sub(/[ \\t]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >answer.processed
-  answer=answer.processed
+  cat usrout | awk '{sub(/[ \\t\\r]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >usrout.processed
+  cat answer | awk '{sub(/[ \\t\\r]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >answer.processed
+else
+  cat usrout | awk '{sub(/[\\r]+$/, ""); print $0;}' >usrout.processed
+  cat answer | awk '{sub(/[\\r]+$/, ""); print $0;}' >answer.processed
 fi
-linenum=$(cmp $usrout $answer | awk '{print $NF}')
+usrsize=$(wc -c < usrout.processed)
+stdsize=$(wc -c < answer.processed)
+if [ "$usrsize" -gt "$stdsize" ]; then
+  echo " (EOF)${' '.repeat(64)}" >>answer.processed
+elif [ "$usrsize" -lt "$stdsize" ]; then
+  echo " (EOF)${' '.repeat(64)}" >>usrout.processed
+fi
+result=$(cmp usrout.processed answer.processed || true)
+linenum=$(echo "$result" | awk '{print $NF}')
 if [ -n "$linenum" ]; then
   echo "L=$linenum"
-  awk "NR==$linenum" $usrout
-  awk "NR==$linenum" $answer
+  awk "NR==$linenum" usrout.processed
+  awk "NR==$linenum" answer.processed
+elif [ -n "$result" ]; then
+  # cmp: EOF on [filename] which is empty
+  echo "L=EOF"
+  echo "$result"
 fi
 `;
 
