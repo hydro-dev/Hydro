@@ -52,6 +52,7 @@ export async function log<T extends Handler>(handler: T, type: string, data: any
         args,
         operator: handler.user?._id,
         operateIp: handler.request.ip,
+        json: handler.request.json,
     });
     return res.insertedId;
 }

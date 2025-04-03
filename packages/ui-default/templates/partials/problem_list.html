@@ -39,7 +39,7 @@
     </thead>
     <tbody>
       {%- for pdoc in pdocs -%}
-      {% set psdoc = psdict[pdoc.domainId + '#' + pdoc.docId] %}
+      {% set psdoc = psdict[pdoc.docId] %}
       <tr data-pid="{{ pdoc.docId }}">
         <td class="col--checkbox display-mode-hide">
           <label class="compact checkbox">

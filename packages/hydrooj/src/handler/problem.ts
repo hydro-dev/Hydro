@@ -156,14 +156,10 @@ export class ProblemMainHandler extends Handler {
         if (sort.length) pdocs = pdocs.sort((a, b) => sort.indexOf(`${a.domainId}/${a.docId}`) - sort.indexOf(`${b.domainId}/${b.docId}`));
         if (text && pcount > pdocs.length) pcount = pdocs.length;
         if (this.user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            const domainIds = Array.from(new Set(pdocs.map((i) => i.domainId)));
-            await Promise.all(
-                domainIds.map((did) =>
-                    problem.getListStatus(
-                        did, this.user._id,
-                        pdocs.filter((i) => i.domainId === did).map((i) => i.docId),
-                    ).then((res) => Object.assign(psdict, res))),
-            );
+            Object.assign(psdict, await problem.getListStatus(
+                domainId, this.user._id,
+                pdocs.map((i) => i.docId),
+            ));
         }
         if (pjax) {
             this.response.body = {
