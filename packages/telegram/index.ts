@@ -24,7 +24,12 @@ export default class TelegramService extends Service {
             icon,
             canRegister: config.canRegister,
             callback: async function callback({ payload }) {
-                const parsed = JSON.parse(payload);
+                let parsed;
+                try {
+                    parsed = JSON.parse(payload);
+                } catch (e) {
+                    throw new ForbiddenError('Invalid payload');
+                }
                 const hash = parsed.hash;
                 delete parsed.hash;
                 const dataCheckString = Object.keys(parsed).sort().map((key) => (`${key}=${parsed[key]}`)).join('\n');
