@@ -9,11 +9,11 @@ import child from 'child_process';
 import './utils';
 import cac from 'cac';
 import './ui';
-import * as I18n from './lib/i18n';
+import { I18nService } from './lib/i18n';
 
 import { Logger } from './logger';
 import {
-    Context, Service, ScopeStatus, EffectScope,
+    Context, Service, FiberState, Fiber,
 } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
@@ -45,7 +45,7 @@ if (process.env.NIX_PROFILES) {
 }
 
 export class Loader extends Service {
-    public state: Record<string, EffectScope> = Object.create(null);
+    public state: Record<string, Fiber> = Object.create(null);
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
@@ -56,8 +56,8 @@ export class Loader extends Service {
         super(ctx, 'loader');
 
         ctx.on('app/started', () => {
-            ctx.setInterval(async () => {
-                const pending = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.PENDING);
+            ctx.interval(async () => {
+                const pending = Object.entries(this.state).filter((v) => v[1].state === FiberState.PENDING);
                 if (pending.length) {
                     logger.warn('Plugins are still pending: %s', pending.map((v) => v[0]).join(', '));
                     for (const [key, value] of pending) {
@@ -65,7 +65,7 @@ export class Loader extends Service {
                         console.log(value);
                     }
                 }
-                const loading = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.LOADING);
+                const loading = Object.entries(this.state).filter((v) => v[1].state === FiberState.LOADING);
                 if (loading.length) {
                     logger.warn('Plugins are still loading: %s', loading.map((v) => v[0]).join(', '));
                     for (const [key, value] of loading) {
@@ -73,7 +73,7 @@ export class Loader extends Service {
                         console.log(value);
                     }
                 }
-                const failed = Object.entries(this.state).filter((v) => v[1].status === ScopeStatus.FAILED);
+                const failed = Object.entries(this.state).filter((v) => v[1].state === FiberState.FAILED);
                 if (failed.length) {
                     logger.warn('Plugins failed to load: %s', failed.map((v) => v[0]).join(', '));
                     for (const [key, value] of failed) {
@@ -143,7 +143,7 @@ export class Loader extends Service {
     }
 }
 
-app.plugin(I18n);
+app.plugin(I18nService);
 app.plugin(Loader);
 
 async function preload() {

@@ -193,7 +193,7 @@ class VJudgeService extends Service {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
         if (process.env.HYDRO_CLI) return;
         this.accounts = await coll.find().toArray();
-        this.ctx.setInterval(this.sync.bind(this), Time.week);
+        this.ctx.interval(this.sync.bind(this), Time.week);
     }
 
     addProvider(type: string, provider: BasicProvider, override = false) {

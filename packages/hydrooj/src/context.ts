@@ -1,4 +1,4 @@
-import * as cordis from '@cordisjs/core';
+import * as cordis from 'cordis';
 import LoggerService from '@cordisjs/logger';
 import { TimerService } from '@cordisjs/plugin-timer';
 import Schema from 'schemastery';
@@ -23,9 +23,9 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
     return () => delete global.Hydro.module[type][id];
 }
 
-export type EffectScope = cordis.EffectScope<Context>;
+export type Fiber = cordis.Fiber<Context>;
 
-export { Disposable, Plugin, ScopeStatus } from '@cordisjs/core';
+export { Disposable, Plugin, FiberState } from 'cordis';
 
 export interface Context extends cordis.Context {
     [Context.events]: EventMap & cordis.Events<Context>;
@@ -74,13 +74,3 @@ export class Context extends cordis.Context {
         this.plugin(LoggerService);
     }
 }
-
-const old = cordis.Registry.prototype.inject;
-// cordis.Registry.prototype.using = old;
-cordis.Registry.prototype.inject = function wrapper(...args) {
-    if (typeof args[0] === 'string') {
-        console.warn('old functionality of ctx.inject is deprecated. please use ctx.injectUI instead.');
-        return T(inject).call(this, ...args as any) as any;
-    }
-    return old.call(this, ...args);
-};

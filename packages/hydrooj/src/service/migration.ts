@@ -1,7 +1,10 @@
 /* eslint-disable no-await-in-loop */
+import cac from 'cac';
 import { Logger } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
+
+const argv = cac().parse();
 
 export type MigrationScript = null | ((ctx: Context) => Promise<boolean | void>);
 const logger = new Logger('migration');
@@ -43,6 +46,18 @@ export default class MigrationService extends Service {
                 await system.set(name, expected);
                 continue;
             }
+            let upgraded = false;
+            if (dbVer > expected) {
+                logger.warn('Current database version for [%s] is %d, expected %d.', channel, dbVer, expected);
+                logger.warn('You are likely trying to apply a downgrade.');
+                logger.warn('This version of Hydro is not compatible with newer data version.');
+                if (!argv.options.ignoreVersion) {
+                    logger.warn('To prevent data corruption, the startup has been aborted.');
+                    logger.warn('If you want to continue, use --ignore-version on startup.');
+                    logger.warn('Do it at your own risk.');
+                    await new Promise(() => { });
+                }
+            }
             while (dbVer < expected) {
                 const func = scripts[dbVer];
                 if (typeof func !== 'function') {
@@ -62,8 +77,9 @@ export default class MigrationService extends Service {
                 }
                 dbVer++;
                 await system.set(name, dbVer);
+                upgraded = true;
             }
-            logger.success('Database upgraded [%s]: current version %d', channel, dbVer);
+            if (upgraded) logger.success('Database upgraded [%s]: current version %d', channel, dbVer);
         }
     }
 }

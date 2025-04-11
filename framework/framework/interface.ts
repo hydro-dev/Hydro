@@ -33,7 +33,7 @@ export interface ServerEvents<C> extends KnownHandlerEvents, HandlerEvents<C> {
     [k: `handler/error/${string}`]: (thisArg: Handler<C>, e: Error) => VoidReturn
 }
 
-declare module '@cordisjs/core' {
+declare module 'cordis' {
     interface Events<C> extends ServerEvents<C> {
     }
 }

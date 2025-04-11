@@ -142,7 +142,7 @@ class DomainUserHandler extends ManageHandler {
                         user: 1,
                         role: 1,
                         join: 1,
-                        displayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                        ...(this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? { displayName: 1 } : {}),
                     },
                 },
             ]).toArray(),

@@ -1,4 +1,3 @@
-import { ZipFS, ZipOpenFS } from '@yarnpkg/libzip';
 import AdmZip from 'adm-zip';
 import _ from 'lodash';
 import { ObjectId as ObjectID } from 'mongodb';
@@ -10,9 +9,8 @@ export { WebSocket, WebSocketServer } from '@hydrooj/framework';
 export * from './utils';
 export * from './interface';
 export * from './typeutils';
-export * as LibZip from '@yarnpkg/libzip';
 export {
-    Schema, AdmZip, superagent, _, ObjectID, ZipFS, ZipOpenFS,
+    Schema, AdmZip, superagent, _, ObjectID,
 };
 export const definePlugin = <T = never>(args: {
     using?: keyof Context[];

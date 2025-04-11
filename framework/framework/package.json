@@ -4,13 +4,13 @@
     "main": "index.ts",
     "license": "MIT",
     "peerDependencies": {
-        "@cordisjs/core": "*"
+        "cordis": "*"
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
         "emoji-regex": "^10.4.0",
         "fs-extra": "^11.3.0",
-        "koa": "^2.16.0",
+        "koa": "^2.16.1",
         "koa-body": "^6.0.1",
         "koa-compress": "^5.1.1",
         "koa-router": "^13.0.1",

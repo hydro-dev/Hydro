@@ -42,9 +42,9 @@
         "chai": "^5.2.0",
         "cross-env": "^7.0.3",
         "cross-spawn": "^7.0.6",
-        "esbuild": "0.25.0",
-        "eslint": "^9.23.0",
-        "eslint-import-resolver-typescript": "^4.3.1",
+        "esbuild": "0.25.2",
+        "eslint": "^9.24.0",
+        "eslint-import-resolver-typescript": "^4.3.2",
         "eslint-import-resolver-webpack": "^0.13.10",
         "fs-extra": "^11.3.0",
         "globals": "^16.0.0",
@@ -53,13 +53,13 @@
         "mongodb-memory-server": "10.1.4",
         "nyc": "^17.1.0",
         "ora": "^8.2.0",
-        "oxlint": "^0.16.4",
+        "oxlint": "^0.16.5",
         "package-json": "^10.0.1",
         "semver": "^7.7.1",
         "simple-git": "^3.27.0",
         "supertest": "^7.1.0",
         "supports-hyperlinks": "^3.2.0",
-        "typescript": "5.8.2",
+        "typescript": "5.8.3",
         "wtfnode": "^0.10.0"
     }
 }

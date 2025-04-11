@@ -11,7 +11,7 @@ async function terminate() {
     }, 1000);
     try {
         await bus.parallel('app/exit');
-        await app.scope.dispose();
+        await app.fiber.dispose();
     } catch (e) {
         hasError = true;
     }

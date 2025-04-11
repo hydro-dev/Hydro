@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
-import * as cordis from '@cordisjs/core';
+import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
@@ -356,7 +356,7 @@ SystemSetting(
 
 export const langs: Record<string, LangConfig> = {};
 
-declare module '@cordisjs/core' {
+declare module 'cordis' {
     interface Context {
         setting: SettingService;
     }

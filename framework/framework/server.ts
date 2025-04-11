@@ -2,7 +2,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { PassThrough } from 'stream';
-import { Context as CordisContext, Service } from '@cordisjs/core';
+import { Context as CordisContext, Service } from 'cordis';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
 import Koa from 'koa';
@@ -625,7 +625,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             for (const { name, target } of h.__subscribe || []) sub.ctx.on(name, target.bind(h));
             if (layer) {
                 let lastHeartbeat = Date.now();
-                sub.ctx.setInterval(() => {
+                sub.ctx.interval(() => {
                     if (Date.now() - lastHeartbeat > 80000) {
                         clean();
                         conn.terminate();
@@ -841,7 +841,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 }
 
-declare module '@cordisjs/core' {
+declare module 'cordis' {
     interface Context {
         server: WebService<this>;
         Route: WebService<this>['Route'];

@@ -13,7 +13,7 @@ declare module '../service/bus' {
     }
 }
 
-class I18nService extends Service {
+export class I18nService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'i18n');
         this.translate = this.translate.bind(this);
@@ -55,10 +55,6 @@ class I18nService extends Service {
 }
 
 export const name = 'i18n';
-export function apply(ctx: Context) {
-    ctx.provide('i18n', undefined, true);
-    ctx.i18n = new I18nService(ctx);
-}
 
 function collect(lang: string) {
     const s = translations[lang];

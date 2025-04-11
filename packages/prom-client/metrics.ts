@@ -75,6 +75,6 @@ export function createRegistry(ctx: Context) {
 
     collectDefaultMetrics({ register: registry });
 
-    ctx.set('metrics', registry);
+    ctx.provide('metrics', registry);
     return registry;
 }

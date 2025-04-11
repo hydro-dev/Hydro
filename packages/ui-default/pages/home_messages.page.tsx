@@ -43,7 +43,7 @@ const page = new NamedPage('home_messages', () => {
 
     reduxStore = store;
     (window as any).store = reduxStore;
-    ctx.set('messagepad', new MessagePadService(store, WebSocket));
+    ctx.provide('messagepad', new MessagePadService(store, WebSocket));
 
     const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
     sock.onmessage = (message) => {

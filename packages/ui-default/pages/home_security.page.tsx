@@ -1,6 +1,5 @@
 import { browserSupportsWebAuthn, platformAuthenticatorIsAvailable, startRegistration } from '@simplewebauthn/browser';
 import $ from 'jquery';
-import { escape } from 'lodash';
 import QRCode from 'qrcode';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
@@ -28,7 +27,7 @@ async function changeMail() {
             <input className="textbox" type="text" name="mail" required></input>
           </div>
         </label>
-      </div>
+      </div>,
     ),
     onDispatch(action) {
       if (action === 'ok') {
@@ -199,7 +198,7 @@ export default new NamedPage('home_security', () => {
             </MenuLink>
           </>)}
         </ol>
-      </div>
+      </div>,
     );
     const action = await new ActionDialog({ $body, $action: [] }).open();
     if (!action || action === 'cancel') return;

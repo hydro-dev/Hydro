@@ -1,7 +1,7 @@
 // TODO check more
 
 import os from 'os';
-import { DisposableList } from '@cordisjs/core';
+import { DisposableList } from 'cordis';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
 import db from './db';

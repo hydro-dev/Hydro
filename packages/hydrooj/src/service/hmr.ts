@@ -209,7 +209,7 @@ export default class HMR extends Service {
 
         const reload = async (plugin: any, runtime?: Plugin.Runtime) => {
             if (!runtime) return;
-            for (const oldFiber of runtime.scopes) {
+            for (const oldFiber of runtime.fibers) {
                 // eslint-disable-next-line no-await-in-loop
                 await oldFiber.parent.plugin(plugin, oldFiber.config);
             }

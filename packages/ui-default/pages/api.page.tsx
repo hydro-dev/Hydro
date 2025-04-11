@@ -21,7 +21,7 @@ export default new NamedPage('api', async () => {
   } as any;
   createRoot(document.getElementById('main')!).render(
     <GraphiQL
-      fetcher={(body, opts = {}) => request.post('/api', body, pick(opts, 'headers'))}
+      fetcher={(body, opts = {}) => request.post(`/d/${UiContext.domain._id}/api`, body, pick(opts, 'headers'))}
       defaultQuery={defaultQuery}
       variables='{"name": "Hydro"}'
     />,

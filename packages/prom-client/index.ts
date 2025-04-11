@@ -55,7 +55,7 @@ export function apply(ctx: Context) {
     const registry = createRegistry(ctx);
     ctx.on('metrics', (id, metrics) => { instances[id] = metrics; });
     let pushError = '';
-    ctx.setInterval(async () => {
+    ctx.interval(async () => {
         try {
             const [gateway, name, pass] = SystemModel.getMany(['prom-client.gateway', 'prom-client.name', 'prom-client.password']);
             if (gateway) {

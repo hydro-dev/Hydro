@@ -62,7 +62,7 @@ export class MongoService extends Service {
         yield () => { this.client.close(); };
         this.db = this.client.db(url.database || 'hydro');
         await bus.parallel('database/connect', this.db);
-        yield this.ctx.setInterval(() => this.fixExpireAfter(), Time.hour);
+        yield this.ctx.interval(() => this.fixExpireAfter(), Time.hour);
     }
 
     public collection<K extends keyof Collections>(c: K) {

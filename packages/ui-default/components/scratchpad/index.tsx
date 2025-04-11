@@ -66,7 +66,7 @@ export default function ScratchpadContainer() {
   const store = useStore();
   if (!scratchpad) {
     scratchpad = new ScratchpadService(store);
-    ctx.set('scratchpad', scratchpad);
+    ctx.provide('scratchpad', scratchpad);
   }
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);

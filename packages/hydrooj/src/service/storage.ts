@@ -425,7 +425,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
             return await next();
         });
     });
-    ctx.set('storage', service);
+    ctx.provide('storage', service);
 }
 
 declare module '../context' {

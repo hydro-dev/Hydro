@@ -1,4 +1,4 @@
-import { Context } from '@cordisjs/core';
+import { Context } from 'cordis';
 import { ValidationError } from './error';
 import type { Handler } from './server';
 import { Converter, Type, Validator } from './validator';
