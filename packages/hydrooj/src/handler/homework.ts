@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { pick } from 'lodash';
+import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
@@ -26,10 +26,12 @@ const convertPenaltyRules = validatePenaltyRules;
 class HomeworkMainHandler extends Handler {
     @param('group', Types.Name, true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, group = '', page = 1) {
+    @param('q', Types.String, true)
+    async get(domainId: string, group = '', page = 1, q = '') {
         const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) ? undefined : this.user._id))
             .map((i) => i.name);
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
+        const escaped = escapeRegExp(q.toLowerCase());
         const cursor = contest.getMulti(domainId, {
             rule: 'homework',
             ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK) && !group
@@ -43,6 +45,7 @@ class HomeworkMainHandler extends Handler {
                     ],
                 },
             ...group ? { assign: { $in: [group] } } : {},
+            ...q ? { title: { $regex: new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi') } } : {},
         }).sort({
             penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
         });
@@ -56,10 +59,11 @@ class HomeworkMainHandler extends Handler {
             } else cal.endAt = tdoc.penaltySince;
             calendar.push(cal);
         }
-        const qs = group ? `group=${group}` : '';
+        let qs = group ? `group=${group}` : '';
+        if (q) qs += `${qs ? '&' : ''}q=${encodeURIComponent(q)}`;
         const groupsFilter = groups.filter((i) => !Number.isSafeInteger(+i));
         this.response.body = {
-            tdocs, calendar, tpcount, page, qs, groups: groupsFilter, group,
+            tdocs, calendar, tpcount, page, qs, groups: groupsFilter, group, q,
         };
         this.response.template = 'homework_main.html';
     }

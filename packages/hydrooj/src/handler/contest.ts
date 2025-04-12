@@ -1,6 +1,6 @@
 import AdmZip from 'adm-zip';
 import { stringify as toCSV } from 'csv-stringify/sync';
-import { pick } from 'lodash';
+import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
@@ -33,14 +33,17 @@ export class ContestListHandler extends Handler {
     @param('rule', Types.Range(contest.RULES), true)
     @param('group', Types.Name, true)
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, rule = '', group = '', page = 1) {
+    @param('q', Types.String, true)
+    async get(domainId: string, rule = '', group = '', page = 1, q = '') {
         if (rule && contest.RULES[rule].hidden) throw new BadRequestError();
         const groups = (await user.listGroup(domainId, this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) ? undefined : this.user._id))
             .map((i) => i.name);
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
-        const q = {
-            ...this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) && !group
+        const escaped = escapeRegExp(q.toLowerCase());
+        const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
+        const filter = {
+            ...(this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) && !group)
                 ? {}
                 : {
                     $or: [
@@ -52,11 +55,13 @@ export class ContestListHandler extends Handler {
                 },
             ...rule ? { rule } : { rule: { $in: rules } },
             ...group ? { assign: { $in: [group] } } : {},
+            ...q ? { title: { $regex } } : {},
         };
-        await this.ctx.parallel('contest/list', q, this);
-        const cursor = contest.getMulti(domainId, q).sort({ endAt: -1, beginAt: -1, _id: -1 });
+        await this.ctx.parallel('contest/list', filter, this);
+        const cursor = contest.getMulti(domainId, filter).sort({ endAt: -1, beginAt: -1, _id: -1 });
         let qs = rule ? `rule=${rule}` : '';
         if (group) qs += qs ? `&group=${group}` : `group=${group}`;
+        if (q) qs += `${qs ? '&' : ''}q=${encodeURIComponent(q)}`;
         const [tdocs, tpcount] = await this.paginate(cursor, page, 'contest');
         const tids = [];
         for (const tdoc of tdocs) tids.push(tdoc.docId);
@@ -64,7 +69,7 @@ export class ContestListHandler extends Handler {
         const groupsFilter = groups.filter((i) => !Number.isSafeInteger(+i));
         this.response.template = 'contest_main.html';
         this.response.body = {
-            page, tpcount, qs, rule, tdocs, tsdict, groups: groupsFilter, group,
+            page, tpcount, qs, rule, tdocs, tsdict, groups: groupsFilter, group, q,
         };
     }
 }

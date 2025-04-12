@@ -783,11 +783,11 @@ export async function add(
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
-    const res = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
+    const docId = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
         ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
-    await bus.parallel('contest/add', data, res);
-    return res;
+    await bus.parallel('contest/add', data, docId);
+    return docId;
 }
 
 export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>) {

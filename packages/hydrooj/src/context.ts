@@ -1,6 +1,6 @@
-import * as cordis from 'cordis';
 import LoggerService from '@cordisjs/logger';
 import { TimerService } from '@cordisjs/plugin-timer';
+import * as cordis from 'cordis';
 import Schema from 'schemastery';
 import type { DomainDoc, GeoIP, ModuleInterfaces } from './interface';
 import { inject } from './lib/ui';
@@ -50,7 +50,7 @@ const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
         });
     };
 
-export class ApiMixin extends cordis.Service<never, Context> {
+export class ApiMixin extends Service {
     addScript = T(addScript);
     setImmediate = T(setImmediate, clearImmediate);
     provideModule = T(provideModule);
