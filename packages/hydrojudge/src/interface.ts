@@ -8,6 +8,7 @@ export interface Execute {
     execute: string;
     clean: () => Promise<any>;
     copyIn: Record<string, CopyInFile>;
+    [Symbol.asyncDispose]: () => Promise<any>;
     _cacheable?: string;
 }
 

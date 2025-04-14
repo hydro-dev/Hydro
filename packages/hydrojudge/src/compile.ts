@@ -37,6 +37,7 @@ export default async function compile(
             execute,
             copyIn: { ...copyIn, [target]: { fileId: fileIds[target] } },
             clean: async () => await cleanup(),
+            [Symbol.asyncDispose]: async () => await cleanup(),
             _cacheable: target,
         };
     }
@@ -44,5 +45,6 @@ export default async function compile(
         execute,
         copyIn: { ...copyIn, [lang.code_file]: code },
         clean: () => Promise.resolve(null),
+        [Symbol.asyncDispose]: () => Promise.resolve(null),
     };
 }

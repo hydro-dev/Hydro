@@ -42,7 +42,7 @@ export class JudgeTask {
     end: (data: Partial<JudgeResultBody>) => void;
     env: Record<string, string>;
     callbackCache?: TestCase[];
-    compileCache: Record<string, Pick<Execute, 'execute' | 'copyIn'>> = {};
+    compileCache: Record<string, Pick<Execute, 'execute' | 'copyIn' | typeof Symbol.asyncDispose>> = {};
 
     constructor(public session: Session, public request: JudgeRequest) {
         this.stat.receive = new Date();
