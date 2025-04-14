@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
+import { Readable } from 'stream';
 import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
-    _, AdmZip, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler,
-    PERM, ProblemConfigFile, ProblemModel, ProblemType, Schema, SolutionModel, SystemModel, ValidationError, yaml,
+    _, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler, PERM, ProblemConfigFile,
+    ProblemModel, ProblemType, Schema, SolutionModel, SystemModel, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const knownRemoteMapping = {
@@ -93,17 +94,17 @@ class FpsProblemImportHandler extends Handler {
         } catch (e) {
             if (e instanceof FileTooLargeError) throw e;
             console.log(e);
-            let zip: AdmZip;
+            const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(file.filepath)));
+            let entries: Zip.Entry[];
             try {
-                zip = new AdmZip(file.filepath);
+                entries = await zip.getEntries();
             } catch (err) {
                 throw new ValidationError('zip', null, err.message);
             }
-            for (const entry of zip.getEntries()) {
+            for (const entry of entries) {
                 try {
-                    const buf = entry.getData();
-                    if (buf.byteLength > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
-                    const content = buf.toString();
+                    if (entry.uncompressedSize > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
+                    const content = entry.getData(new Zip.TextWriter());
                     const result = await xml2js.parseStringPromise(content);
                     tasks.push(result);
                 } catch { }

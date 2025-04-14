@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
 import moment from 'moment';
 import {
-    AdmZip, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
     ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
-    STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel,
+    STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel, Zip,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
 
@@ -248,19 +248,19 @@ export function apply(ctx: Context) {
                         finalized: moment().format('YYYY-MM-DDTHH:mm:ss.SSS+08:00'),
                     }),
                 ];
-                const zip = new AdmZip();
-                zip.addFile('event-feed.ndjson', Buffer.from(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n')));
-                zip.addFile('contest/logo.png', fs.readFileSync(findFileSync('@hydrooj/onsite-toolkit/public/logo.png')));
+                const zip = new Zip.ZipWriter(new Zip.BlobWriter());
+                await zip.add('event-feed.ndjson', new Zip.TextReader(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n')));
+                await zip.add('contest/logo.png', new Zip.BlobReader(new Blob([fs.readFileSync(findFileSync('@hydrooj/onsite-toolkit/public/logo.png'))])));
                 for (const i of ['teams', 'organizations']) {
-                    zip.addFile(`${i}/`, Buffer.alloc(0));
+                    zip.add(`${i}/`, null, { directory: true });
                 }
                 for (const i of teams) {
-                    zip.addFile(`teams/${i.team_id}/photo.download.txt`, Buffer.from(i.avatar));
+                    zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
                 }
                 for (const i of organizations) {
-                    zip.addFile(`organizations/${orgId[i]}/photo.download.txt`, Buffer.from(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
+                    zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
                 }
-                this.binary(zip.toBuffer(), `contest-${tdoc._id}-cdp.zip`);
+                this.binary(await zip.close(), `contest-${tdoc._id}-cdp.zip`);
             },
             supportedRules: ['acm'],
         });

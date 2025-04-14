@@ -1,7 +1,7 @@
 import child from 'child_process';
 import os from 'os';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import { CAC } from 'cac';
 import fs from 'fs-extra';
 import superagent from 'superagent';
@@ -34,7 +34,7 @@ function downloadAndExtractTgz(url: string, dest: string) {
 }
 async function downloadAndExtractZip(url: string, dest: string) {
     const res = await superagent.get(url).responseType('arraybuffer');
-    await extractZip(new AdmZip(res.body), dest, true, true);
+    await extractZip(new ZipReader(new BlobReader(new Blob([res.body]))), dest, { strip: true, overwrite: true });
 }
 const types = {
     '.tgz': downloadAndExtractTgz,

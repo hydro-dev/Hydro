@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
-import { Duplex, PassThrough } from 'stream';
+import { Duplex, PassThrough, Writable } from 'stream';
 import { inspect } from 'util';
-import type AdmZip from 'adm-zip';
+import type { Entry, ZipReader } from '@zip.js/zip.js';
 import fs from 'fs-extra';
 import moment, { isMoment, Moment } from 'moment-timezone';
 import { ObjectId } from 'mongodb';
@@ -319,22 +319,42 @@ export function sanitizePath(pathname: string) {
     return parts.join(path.sep);
 }
 
+export interface ExtractZipConfig {
+    overwrite?: boolean;
+    strip?: boolean;
+    signal?: AbortSignal;
+    parseError?: (err: Error) => Error;
+}
+
 /* eslint-disable no-await-in-loop */
-export async function extractZip(zip: AdmZip, dest: string, overwrite = false, strip = false) {
-    const entries = zip.getEntries();
-    const shouldStrip = strip ? entries.every((i) => i.entryName.startsWith(entries[0].entryName)) : false;
+export async function extractZip<T>(zipOrEntries: ZipReader<T> | Entry[], dest: string, config: ExtractZipConfig = {}) {
+    const { overwrite = false, strip = false, signal } = config;
+    let entries: Entry[];
+    if (Array.isArray(zipOrEntries)) entries = zipOrEntries;
+    else {
+        try {
+            entries = await zipOrEntries.getEntries();
+        } catch (e) {
+            if (config.parseError) throw config.parseError(e);
+            throw e;
+        }
+    }
+    const shouldStrip = strip ? entries.every((i) => i.filename.startsWith(entries[0].filename)) : false;
     for (const entry of entries) {
-        const name = shouldStrip ? entry.entryName.substring(entries[0].entryName.length) : entry.entryName;
+        const name = shouldStrip ? entry.filename.substring(entries[0].filename.length) : entry.filename;
         const d = sanitize(dest, canonical(name));
-        if (entry.isDirectory) {
+        if (entry.directory) {
             await fs.mkdir(d, { recursive: true });
             continue;
         }
-        const content = entry.getData();
+        if (fs.existsSync(d) && !overwrite) continue;
+        const content = await entry.getData(Writable.toWeb(fs.createWriteStream(d)), { signal });
         if (!content) throw new Error('CANT_EXTRACT_FILE');
-        if (!fs.existsSync(d) || overwrite) await fs.writeFile(d, content);
-        await fs.utimes(d, entry.header.time, entry.header.time);
+        await fs.utimes(d, entry.lastModDate, entry.lastModDate);
     }
+    return {
+        [Symbol.asyncDispose]: () => fs.remove(dest),
+    };
 }
 
 export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {

@@ -1,4 +1,6 @@
-import AdmZip from 'adm-zip';
+import { createReadStream } from 'fs';
+import { PassThrough, Readable, Writable } from 'stream';
+import { Entry, ZipReader } from '@zip.js/zip.js';
 import { readFile } from 'fs-extra';
 import {
     escapeRegExp, flattenDeep, intersection, pick,
@@ -709,20 +711,24 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
         filename ||= file.originalFilename || String.random(16);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
-            let zip: AdmZip;
+            const zip = new ZipReader(Readable.toWeb(createReadStream(file.filepath)));
+            let entries: Entry[];
             try {
-                zip = new AdmZip(file.filepath);
+                entries = await zip.getEntries();
             } catch (e) {
                 throw new ValidationError('zip', null, e.message);
             }
-            const entries = zip.getEntries();
             for (const entry of entries) {
-                if (!entry.name || entry.isDirectory) continue;
+                if (!entry.filename || entry.directory) continue;
                 files.push({
                     type,
-                    name: sanitize(entry.name),
-                    size: entry.header.size,
-                    data: () => entry.getData(),
+                    name: sanitize(entry.filename),
+                    size: entry.uncompressedSize,
+                    data: () => {
+                        const pass = new PassThrough();
+                        entry.getData(Writable.toWeb(pass));
+                        return pass;
+                    },
                 });
             }
         } else {

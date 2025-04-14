@@ -2,14 +2,16 @@
 import child from 'child_process';
 import os from 'os';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import { Readable } from 'stream';
+import { Entry, ZipReader } from '@zip.js/zip.js';
 import fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { keyBy, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
-import type { Readable } from 'stream';
 import { ProblemConfigFile, ProblemType } from '@hydrooj/common';
-import { Logger, size, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import {
+    extractZip, Logger, size, streamToBuffer,
+} from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
 import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
@@ -456,18 +458,14 @@ export class ProblemModel {
         try {
             if (filepath.endsWith('.zip')) {
                 tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
-                let zip: AdmZip;
+                const zip = new ZipReader(Readable.toWeb(fs.createReadStream(filepath)));
+                let entries: Entry[];
                 try {
-                    zip = new AdmZip(filepath);
+                    entries = await zip.getEntries();
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
-                await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(tmpdir, true, false, (err) => {
-                        if (err) reject(err);
-                        resolve(null);
-                    });
-                });
+                await extractZip(entries, tmpdir);
             } else if (fs.statSync(filepath).isDirectory()) {
                 tmpdir = filepath;
             } else {

@@ -1,10 +1,11 @@
-import AdmZip from 'adm-zip';
+import { Readable } from 'stream';
+import { BlobWriter, TextReader, ZipWriter } from '@zip.js/zip.js';
 import { stringify as toCSV } from 'csv-stringify/sync';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
-    Counter, sortFiles, streamToBuffer, Time, yaml,
+    Counter, sortFiles, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
@@ -399,7 +400,7 @@ export class ContestCodeHandler extends Handler {
                 }
             }
         }
-        const zip = new AdmZip();
+        const zip = new ZipWriter(new BlobWriter('application/zip'), { bufferedWrite: true });
         const rdocs = await record.getMulti(domainId, {
             _id: { $in: Array.from(Object.keys(rnames)).map((id) => new ObjectId(id)) },
         }).toArray();
@@ -407,15 +408,15 @@ export class ContestCodeHandler extends Handler {
             if (rdoc.files?.code) {
                 const [id, filename] = rdoc.files?.code?.split('#') || [];
                 if (!id) return;
-                zip.addFile(
+                await zip.add(
                     `${rnames[rdoc._id.toHexString()]}.${filename || 'txt'}`,
-                    await streamToBuffer(await storage.get(`submission/${id}`)),
+                    Readable.toWeb(await storage.get(`submission/${id}`)),
                 );
             } else if (rdoc.code) {
-                zip.addFile(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, Buffer.from(rdoc.code));
+                await zip.add(`${rnames[rdoc._id.toHexString()]}.${rdoc.lang}`, new TextReader(rdoc.code));
             }
         }));
-        this.binary(zip.toBuffer(), `${tdoc.title}.zip`);
+        this.binary(await zip.close(), `${tdoc.title}.zip`);
     }
 }
 

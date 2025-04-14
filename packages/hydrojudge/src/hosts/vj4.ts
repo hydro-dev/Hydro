@@ -1,11 +1,15 @@
 /* eslint-disable no-await-in-loop */
+import { createReadStream } from 'fs';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import { Readable } from 'stream';
+import { ZipReader } from '@zip.js/zip.js';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
 import { JudgeResultBody, parseLang, STATUS } from '@hydrooj/common';
-import { findFileSync, fs, noop } from '@hydrooj/utils';
+import {
+    extractZip, findFileSync, fs, noop,
+} from '@hydrooj/utils';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Session } from '../interface';
@@ -151,16 +155,11 @@ export default class VJ4 implements Session {
                 fs.createWriteStream(tmpFilePath),
             );
             fs.ensureDirSync(path.dirname(savePath));
-            const zip = new AdmZip(tmpFilePath);
-            const entries = zip.getEntries();
+            const zip = new ZipReader(Readable.toWeb(createReadStream(tmpFilePath)));
+            const entries = await zip.getEntries();
             if (entries.length > 512) throw new FormatError('Too many files');
-            if (Math.sum(entries.map((i) => i.header.size)) > 256 * 1024 * 1024) throw new FormatError('File too large');
-            await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(savePath, true, false, (e) => {
-                    if (e) reject(e);
-                    else resolve(null);
-                });
-            });
+            if (Math.sum(entries.map((i) => i.uncompressedSize)) > 256 * 1024 * 1024) throw new FormatError('File too large');
+            await extractZip(entries, savePath, { strip: true });
             await fs.unlink(tmpFilePath);
             await this.processData(savePath).catch(noop);
         } catch (e) {
@@ -177,15 +176,10 @@ export default class VJ4 implements Session {
         const w = fs.createWriteStream(tmpFilePath);
         await pipeRequest(this.get(`records/${rid}/data`), w);
         fs.ensureDirSync(path.dirname(savePath));
-        const zip = new AdmZip(tmpFilePath);
-        const entries = zip.getEntries();
+        const zip = new ZipReader(Readable.toWeb(createReadStream(tmpFilePath)));
+        const entries = await zip.getEntries();
         if (entries.length > 512) throw new FormatError('Too many files');
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(savePath, true, false, (e) => {
-                if (e) reject(e);
-                else resolve(null);
-            });
-        });
+        await extractZip(entries, savePath, { strip: true });
         await fs.unlink(tmpFilePath);
         await this.processData(savePath);
         return savePath;

@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
+import { Readable } from 'stream';
 import {
-    AdmZip, buildContent, Context, FileTooLargeError, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, Schema, ValidationError, yaml,
+    buildContent, Context, extractZip, FileTooLargeError, fs, Handler, PERM,
+    ProblemConfigFile, ProblemModel, Schema, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
@@ -44,15 +45,11 @@ const ProblemSchema = Schema.object({
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
-        let zip: AdmZip;
-        try {
-            zip = new AdmZip(zipfile);
-        } catch (e) {
-            throw new ValidationError('zip', null, e.message);
-        }
+        const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(zipfile)));
         const tmp = path.resolve(tmpdir, String.random(32));
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, false, (err) => (err ? reject(err) : resolve(null)));
+        await extractZip(zip, tmp, {
+            strip: true,
+            parseError: (e) => new ValidationError('zip', null, e.message),
         });
         let cnt = 0;
         try {

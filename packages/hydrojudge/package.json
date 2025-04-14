@@ -8,7 +8,7 @@
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "adm-zip": "0.5.16",
+        "@zip.js/zip.js": "^2.7.60",
         "cac": "^6.7.14",
         "p-queue": "^8.1.0",
         "schemastery": "^3.16.1",
@@ -20,7 +20,6 @@
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
     "devDependencies": {
-        "@types/adm-zip": "^0.5.7",
         "@types/shell-quote": "^1.7.5",
         "@types/ws": "^8.18.1"
     }
