@@ -348,6 +348,8 @@ export async function extractZip<T>(zipOrEntries: ZipReader<T> | Entry[], dest: 
             continue;
         }
         if (fs.existsSync(d) && !overwrite) continue;
+        const dir = path.dirname(d);
+        if (!fs.existsSync(dir)) await fs.mkdir(dir, { recursive: true });
         const content = await entry.getData(Writable.toWeb(fs.createWriteStream(d)), { signal });
         if (!content) throw new Error('CANT_EXTRACT_FILE');
         await fs.utimes(d, entry.lastModDate, entry.lastModDate);

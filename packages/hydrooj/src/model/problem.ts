@@ -454,6 +454,7 @@ export class ProblemModel {
         const {
             preferredPrefix, progress, override = false, operator = 1,
         } = options;
+        let delSource = options.delSource;
         let problems: string[];
         try {
             if (filepath.endsWith('.zip')) {
@@ -465,6 +466,7 @@ export class ProblemModel {
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
+                delSource = true;
                 await extractZip(entries, tmpdir);
             } else if (fs.statSync(filepath).isDirectory()) {
                 tmpdir = filepath;
@@ -478,7 +480,8 @@ export class ProblemModel {
                 problems = files.filter((f) => f.isDirectory()).map((i) => i.name);
             }
         } catch (e) {
-            if (options.delSource) await fs.remove(tmpdir);
+            if (delSource) await fs.remove(tmpdir);
+            throw e;
         }
         for (const i of problems) {
             try {
@@ -622,7 +625,7 @@ export class ProblemModel {
                 (process.env.HYDRO_CLI ? logger.info : progress)?.(`Error importing problem ${i}: ${e.message}`);
             }
         }
-        if (options.delSource) await fs.remove(tmpdir);
+        if (delSource) await fs.remove(tmpdir);
     }
 
     static async export(domainId: string, pidFilter = '') {
