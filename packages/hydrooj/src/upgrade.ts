@@ -550,6 +550,9 @@ export const coreScripts: MigrationScript[] = [
             }
         }
         await iterateAllProblem(['domainId', 'docId', 'tag'], async (pdoc) => {
+            if (pdoc.tag && ['string', 'number'].includes(typeof pdoc.tag)) {
+                return { tag: [pdoc.tag.toString().trim()].filter((i) => i) };
+            }
             if (pdoc.tag?.some((i) => typeof i !== 'string')) {
                 return { tag: pdoc.tag.filter((i) => i).map((i) => i.toString()) };
             }

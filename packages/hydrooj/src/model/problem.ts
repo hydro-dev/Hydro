@@ -145,6 +145,7 @@ export class ProblemModel {
         tag: string[] = [], meta: ProblemCreateOptions = {},
     ) {
         const [doc] = await ProblemModel.getMulti(domainId, {})
+            .withReadPreference('primary')
             .sort({ docId: -1 }).limit(1).project({ docId: 1 })
             .toArray();
         const result = await ProblemModel.addWithId(

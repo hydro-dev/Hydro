@@ -20,8 +20,15 @@ import {
 } from '../service/server';
 import { ContestCodeHandler, ContestFileDownloadHandler, ContestScoreboardHandler } from './contest';
 
-const validatePenaltyRules = (input: string) => yaml.load(input);
-const convertPenaltyRules = validatePenaltyRules;
+const validatePenaltyRules = (input: string) => {
+    try {
+        yaml.load(input);
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+const convertPenaltyRules = (input: string) => yaml.load(input);
 
 class HomeworkMainHandler extends Handler {
     @param('group', Types.Name, true)
