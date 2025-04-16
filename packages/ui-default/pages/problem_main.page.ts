@@ -184,23 +184,6 @@ async function handleOperation(operation) {
     }).open();
     if (action !== 'yes') return;
   } else if (operation === 'copy') {
-    $(tpl`
-      <div style="display: none" class="dialog__body--problem-copy">
-        <div class="row"><div class="columns">
-          <h1 name="select_user_hint">${i18n('Copy Problems')}</h1>
-        </div></div>
-        <div class="row">
-          <div class="columns">
-            <label>
-              ${i18n('Target')}
-              <div class="textbox-container">
-                <input name="target" type="text" class="textbox" data-autofocus>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-    `).appendTo(document.body);
     const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
     const copyDialog = await new ActionDialog({
       $body: $('.dialog__body--problem-copy > div'),
@@ -303,6 +286,23 @@ const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
+  $(tpl`
+    <div style="display: none" class="dialog__body--problem-copy">
+      <div class="row"><div class="columns">
+        <h1 name="select_user_hint">${i18n('Copy Problems')}</h1>
+      </div></div>
+      <div class="row">
+        <div class="columns">
+          <label>
+            ${i18n('Target')}
+            <div class="textbox-container">
+              <input name="target" type="text" class="textbox" data-autofocus>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  `).appendTo(document.body);
 
   buildSearchContainer();
   buildLegacyCategoryFilter();
