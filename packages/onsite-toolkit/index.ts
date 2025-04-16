@@ -249,17 +249,18 @@ export function apply(ctx: Context) {
                     }),
                 ];
                 const zip = new Zip.ZipWriter(new Zip.BlobWriter());
-                await zip.add('event-feed.ndjson', new Zip.TextReader(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n')));
-                await zip.add('contest/logo.png', new Zip.BlobReader(new Blob([fs.readFileSync(findFileSync('@hydrooj/onsite-toolkit/public/logo.png'))])));
-                for (const i of ['teams', 'organizations']) {
-                    zip.add(`${i}/`, null, { directory: true });
-                }
-                for (const i of teams) {
-                    zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
-                }
-                for (const i of organizations) {
-                    zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
-                }
+                await Promise.all([
+                    zip.add('event-feed.ndjson', new Zip.TextReader(eventfeed.concat(submissions).concat(endState).map((i) => JSON.stringify(i)).join('\n'))),
+                    zip.add('contest/logo.png', new Zip.BlobReader(new Blob([fs.readFileSync(findFileSync('@hydrooj/onsite-toolkit/public/logo.png'))]))),
+                    zip.add('teams/', null, { directory: true }),
+                    zip.add('organizations/', null, { directory: true }),
+                ]);
+                await Promise.all(teams.map(async (i) => {
+                    await zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
+                }));
+                await Promise.all(organizations.map(async (i) => {
+                    await zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
+                }));
                 this.binary(await zip.close(), `contest-${tdoc._id}-cdp.zip`);
             },
             supportedRules: ['acm'],

@@ -1,4 +1,4 @@
-import LoggerService from '@cordisjs/logger';
+import LoggerService from '@cordisjs/plugin-logger';
 import { TimerService } from '@cordisjs/plugin-timer';
 import * as cordis from 'cordis';
 import Schema from 'schemastery';
@@ -18,7 +18,7 @@ function addScript<K>(name: string, description: string, validate: Schema<K>, ru
 }
 
 function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, module: ModuleInterfaces[T]) {
-    if (global.Hydro.module[type][id]) throw new Error(`duplicate script ${type}/${id} registered.`);
+    if (global.Hydro.module[type][id]) throw new Error(`duplicate module ${type}/${id} registered.`);
     global.Hydro.module[type as any][id] = module;
     return () => delete global.Hydro.module[type][id];
 }

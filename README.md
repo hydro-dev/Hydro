@@ -160,6 +160,7 @@ Hydro 用户群：1085853538
 - core: oauth: 改为使用 ctx.oauth.provide() 注册
 - framework: 移除 ready 与 dispose 事件 (使用 ctx.effect 代替)
 - core: 最低要求 node 22
+- core: 弃用 AdmZip
 
 ## Hydro 4.19.0 / UI 4.57.0
 
