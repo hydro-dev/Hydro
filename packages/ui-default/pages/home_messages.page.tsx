@@ -8,8 +8,13 @@ import { NamedPage } from 'vj/misc/Page';
 import { api, gql, loadReactRedux } from 'vj/utils';
 
 class MessagePadService extends Service {
-  constructor(public store, public WebSocket: typeof import('../components/socket').default) {
-    super(ctx, 'messagepad');
+  WebSocket: typeof import('../components/socket').default;
+  store: any;
+
+  constructor(c, s) {
+    super(c, 'messagepad');
+    this.WebSocket = s.WebSocket;
+    this.store = s.store;
   }
 }
 
@@ -43,7 +48,7 @@ const page = new NamedPage('home_messages', () => {
 
     reduxStore = store;
     (window as any).store = reduxStore;
-    ctx.provide('messagepad', new MessagePadService(store, WebSocket));
+    ctx.plugin(MessagePadService, { store, WebSocket });
 
     const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
     sock.onmessage = (message) => {
