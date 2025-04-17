@@ -239,6 +239,25 @@ export interface RecordStatDoc {
     lang: string;
 }
 
+export interface RecordRejudgeDoc {
+    _id: ObjectId;
+    owner: number;
+    domainId: string;
+    uid?: number;
+    pid?: number;
+    contest?: ObjectId;
+    lang?: string;
+    status?: number;
+    apply: boolean;
+    message: string;
+    finishAt: Date;
+    changes: {
+        rid: ObjectId;
+        old: number;
+        new: number;
+    }[];
+}
+
 export interface ScoreboardNode {
     type: 'string' | 'rank' | 'user' | 'email' | 'record' | 'records' | 'problem' | 'solved' | 'time' | 'total_score';
     value: string; // 显示分数
@@ -625,6 +644,7 @@ declare module './service/db' {
         'record.history': RecordHistoryDoc;
         document: any;
         'problem.statement': import('./model/problem').ProblemStatementDoc;
+        'record.rejudge': RecordRejudgeDoc;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
         }[keyof DocStatusType];

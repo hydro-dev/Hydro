@@ -16,7 +16,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
-import { JudgeResultCallbackContext } from './judge';
+import { JudgeResultCallbackContext, next as judgeNext, end as judgeEnd } from './judge';
 
 const logger = new Logger('manage');
 
@@ -351,6 +351,72 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
+class SystemRejudgeHandler extends SystemHandler {
+    async get() {
+        const rrdocs = await record.getMultiRejudgeTask({});
+        this.response.body.rrdocs = rrdocs;
+        this.response.template = 'manage_rejudge.html';
+    }
+
+    @param('domainId', Types.String, true)
+    @param('pid', Types.Int, true)
+    @param('uid', Types.Int, true)
+    @param('contest', Types.String, true)
+    @param('lang', Types.String, true)
+    @param('status', Types.Int, true)
+    @param('apply', Types.Boolean)
+    async post(domainId: string, pid: number, uid: number, contest: string, lang: string, status: number, _apply = false) {
+        const rid = await record.add(domainId, -1, this.user._id, '-', 'rejudge', false, {
+            input: JSON.stringify({
+                pid, uid, contest, lang, status, apply: _apply,
+            }),
+            type: 'rejudge',
+        });
+        const args = global.Hydro.script['rejudge'].validate({
+            rrid: rid.toHexString(),
+            domainId,
+            uid,
+            pid,
+            contest,
+            lang,
+            status,
+            apply: _apply,
+        });
+        const report = (data) => judgeNext({ domainId, rid, ...data });
+        report({ message: 'Start rejudge', status: STATUS.STATUS_JUDGING });
+        const start = Date.now();
+        // Maybe async?
+        global.Hydro.script['rejudge'].run(args, report)
+            .then((ret: any) => {
+                const time = new Date().getTime() - start;
+                judgeEnd({
+                    domainId,
+                    rid: rid.toHexString(),
+                    status: STATUS.STATUS_ACCEPTED,
+                    message: inspect(ret, false, 10, true),
+                    judger: 1,
+                    time,
+                    memory: 0,
+                });
+            })
+            .catch((err: Error) => {
+                const time = new Date().getTime() - start;
+                logger.error(err);
+                judgeEnd({
+                    domainId,
+                    rid: rid.toHexString(),
+                    status: STATUS.STATUS_SYSTEM_ERROR,
+                    message: `${err.message} \n${(err as any).params || []} \n${err.stack} `,
+                    judger: 1,
+                    time,
+                    memory: 0,
+                });
+            });
+        this.response.body = { rid };
+        this.response.redirect = this.url('record_detail', { rid });
+    }
+}
+
 export const inject = ['setting', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
@@ -360,5 +426,6 @@ export async function apply(ctx) {
     ctx.Route('manage_config', '/manage/config', SystemConfigHandler);
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
+    ctx.Route('manage_rejudge', '/manage/rejudge', SystemRejudgeHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
