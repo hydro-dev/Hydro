@@ -113,7 +113,7 @@ export function apply(ctx: Context) {
                 const groupId = {};
                 let gid = 1;
                 for (const i of relatedGroups) groupId[i] = `group-${gid++}`;
-                const organizations = teams.flatMap((i) => i.organization);
+                const organizations = Array.from(new Set(teams.flatMap((i) => i.organization)));
                 const orgId = {};
                 let oid = 1;
                 for (const i of organizations) orgId[i] = `org-${oid++}`;
