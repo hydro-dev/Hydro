@@ -45,6 +45,7 @@ homework_main: Homework
 homework_scoreboard: Scoreboard
 judge_playground: Judge Playground
 main: Home
+manage_rejudge: Rejudge Management
 manage_config: System Configurations
 manage_dashboard: System
 manage_module: Module Management

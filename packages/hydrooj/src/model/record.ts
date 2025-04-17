@@ -8,7 +8,7 @@ import {
 import { ProblemConfigFile } from '@hydrooj/common';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
-import { JudgeMeta, RecordDoc } from '../interface';
+import { JudgeMeta, RecordDoc, RecordRejudgeDoc } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
@@ -21,6 +21,7 @@ export default class RecordModel {
     static coll = db.collection('record');
     static collStat = db.collection('record.stat');
     static collHistory = db.collection('record.history');
+    static collRejudge = db.collection('record.rejudge');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -279,6 +280,26 @@ export default class RecordModel {
         const rdocs = await cursor.toArray();
         for (const rdoc of rdocs) r[rdoc._id.toHexString()] = rdoc;
         return r;
+    }
+
+    static async getMultiRejudgeTask(query: Filter<RecordRejudgeDoc>) {
+        return RecordModel.collRejudge.find(query).toArray();
+    }
+
+    static async getRejudgeTask(_id: ObjectId) {
+        return RecordModel.collRejudge.findOne({ _id });
+    }
+
+    static async addRejudgeTask(doc: RecordRejudgeDoc) {
+        await RecordModel.collRejudge.insertOne(doc);
+    }
+
+    static async pushRejudgeResult(rrid: ObjectId, result: { rid: ObjectId, old: number, new: number }) {
+        await RecordModel.collRejudge.updateOne({ _id: rrid }, {
+            $push: {
+                changes: result,
+            },
+        });
     }
 }
 
