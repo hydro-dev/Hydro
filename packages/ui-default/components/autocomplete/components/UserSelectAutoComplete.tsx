@@ -8,7 +8,6 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
   <AutoComplete<Udoc>
     ref={ref as any}
     cacheKey="user"
-    {...props}
     queryItems={(query) => api(gql`
       users(search: ${query}) {
         _id
@@ -37,6 +36,17 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
         </div>
       </div>
     )}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: false,
+      selectedKeys: [],
+      allowEmptyQuery: false,
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
   />
 ));
 
@@ -50,17 +60,6 @@ UserSelectAutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
-};
-
-UserSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  allowEmptyQuery: false,
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
 };
 
 UserSelectAutoComplete.displayName = 'UserSelectAutoComplete';

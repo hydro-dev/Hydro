@@ -1,7 +1,7 @@
 import {
     BSON, Db, Filter, ObjectId, OnlyFieldsOfType,
 } from 'mongodb';
-import type { Handler } from '@hydrooj/framework';
+import type { ConnectionHandler, Handler } from '@hydrooj/framework';
 import pm2 from '@hydrooj/utils/lib/locate-pm2';
 import { Context } from '../context';
 import type {
@@ -84,7 +84,7 @@ export interface EventMap {
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn
     'contest/del': (domainId: string, tid: ObjectId) => VoidReturn
 
-    'oplog/log': (type: string, handler: Handler<Context>, args: any, data: any) => VoidReturn;
+    'oplog/log': (type: string, handler: Handler<Context> | ConnectionHandler<Context>, args: any, data: any) => VoidReturn;
 
     'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn

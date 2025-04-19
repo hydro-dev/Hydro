@@ -216,8 +216,8 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             : [Object.fromEntries(psdocs.map((i) => [i.rid, { _id: i.rid }])), []];
         if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             this.response.body.rdocs = this.response.body.rdocs.map((rdoc) => contest.applyProjection(this.tdoc, rdoc, this.user));
-            for (const psdoc of psdocs) {
-                this.response.body.rdict[psdoc.rid] = contest.applyProjection(this.tdoc, this.response.body.rdict[psdoc.rid], this.user);
+            for (const key in this.response.body.rdict) {
+                this.response.body.rdict[key] = contest.applyProjection(this.tdoc, this.response.body.rdict[key], this.user);
             }
             for (const key in this.response.body.psdict) {
                 this.response.body.psdict[key] = contest.applyProjection(this.tdoc, this.response.body.psdict[key], this.user);

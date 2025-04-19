@@ -3,7 +3,7 @@ import { omit } from 'lodash';
 import React from 'react';
 
 export default function DomComponent(props: React.HTMLAttributes<HTMLDivElement> & { childDom: HTMLElement }) {
-  const ref = React.useRef<HTMLDivElement>();
+  const ref = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     ref.current.appendChild(props.childDom);
     return () => {

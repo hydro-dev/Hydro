@@ -193,7 +193,14 @@ export class JudgeTask {
         type: 'interactor' | 'validator' | 'checker' | 'generator' | 'manager' | 'std',
         source: CompilableSource, checkerType?: string,
     ): Promise<Execute> {
-        if (type === 'checker' && ['default', 'strict'].includes(checkerType)) return { execute: '', copyIn: {}, clean: () => Promise.resolve(null) };
+        if (type === 'checker' && ['default', 'strict'].includes(checkerType)) {
+            return {
+                execute: '',
+                copyIn: {},
+                clean: () => Promise.resolve(null),
+                [Symbol.asyncDispose]: () => Promise.resolve(null),
+            };
+        }
         if (type === 'checker' && !checkers[checkerType]) throw new FormatError('Unknown checker type {0}.', [checkerType]);
         if (this.compileCache?.[type]) {
             return {
@@ -238,6 +245,7 @@ export class JudgeTask {
             this.compileCache[type] = {
                 execute: result.execute,
                 copyIn: newCopyIn,
+                [Symbol.asyncDispose]: () => Promise.resolve(null),
             };
             await get((result.copyIn[result._cacheable] as PreparedFile).fileId, loc);
             const currEtag = await fs.readFile(join(this.folder, 'etags'), 'utf-8');
