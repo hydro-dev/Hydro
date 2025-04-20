@@ -194,7 +194,7 @@ export async function apply(ctx: Context) {
                 await opcount.inc(op, id, periodSecs, maxOperations);
             },
             renderTitle(str: string) {
-                const name = this.ctx.setting.get('server.name');
+                const name = this.ctx.get('setting')?.get('server.name') || system.get('server.name');
                 if (this.UiContext.extraTitleContent) return `${this.UiContext.extraTitleContent} - ${this.translate(str)} - ${name}`;
                 return `${this.translate(str)} - ${name}`;
             },

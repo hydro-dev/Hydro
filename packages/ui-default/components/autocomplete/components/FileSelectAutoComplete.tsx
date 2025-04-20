@@ -19,7 +19,16 @@ const FileSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
     itemKey={(item) => `${item._id?.toString() || item.name || item}`}
     renderItem={(item) => item.name || item._id || item} // TODO icon
     allowEmptyQuery
-    {...props}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: false,
+      selectedKeys: [],
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
   />
 ));
 
@@ -37,15 +46,5 @@ FileSelectAutoComplete.propTypes = {
 };
 
 FileSelectAutoComplete.displayName = 'FileSelectAutoComplete';
-
-FileSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
-};
 
 export default FileSelectAutoComplete;

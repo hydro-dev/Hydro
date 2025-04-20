@@ -73,7 +73,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
                 }
             }
             await spawnAsync(
-                `yarn npm publish --access public --tag ${tag} ${CI ? '--provenance' : ''}`,
+                `yarn npm publish --access public --tag ${tag}${CI ? ' --provenance' : ''}`,
                 path.resolve(name),
             );
         }
