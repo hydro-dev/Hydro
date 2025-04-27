@@ -134,7 +134,8 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
-        'graphql-ws': root('../../modules/nop.ts'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+        react: require.resolve('react'),
       },
     },
     module: {
@@ -291,7 +292,6 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/mitm.html`), to: 'streamsaver/mitm.html' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/sw.js`), to: 'streamsaver/sw.js' },
-          { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
       }),

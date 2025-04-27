@@ -1,6 +1,7 @@
 import { load } from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
+import Schema from 'schemastery';
 import type { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
@@ -17,7 +18,7 @@ import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, query, requireSudo, Types,
+    Handler, Mutation, param, post, Query, query, requireSudo, Types,
 } from '../service/server';
 import { log2 } from '../utils';
 
@@ -412,6 +413,42 @@ class DomainSearchHandler extends Handler {
     }
 }
 
+export const DomainApi = {
+    domain: Query(
+        Schema.object({
+            id: Schema.string(),
+        }),
+        async (ctx, args) => {
+            const ddoc = args.id ? await domain.get(args.id) : ctx.domain;
+            if (!ddoc) return null;
+            const udoc = await user.getById(ddoc._id, ctx.user._id);
+            if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
+            return ddoc;
+        },
+    ),
+    'domain.group': Mutation(
+        Schema.object({
+            name: Schema.string().required(),
+            uids: Schema.array(Schema.number()),
+        }),
+        async (ctx, args) => {
+            if (!ctx.user.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
+            if (args.uids) {
+                const res = await user.updateGroup(ctx.domain._id, args.name, args.uids);
+                return res.upsertedCount > 0;
+            }
+            const res = await user.delGroup(ctx.domain._id, args.name);
+            return res.deletedCount > 0;
+        },
+    ),
+} as const;
+
+declare module '@hydrooj/framework' {
+    interface Apis {
+        domain: typeof DomainApi;
+    }
+}
+
 export async function apply(ctx: Context) {
     ctx.Route('ranking', '/ranking', DomainRankHandler, PERM.PERM_VIEW_RANKING);
     ctx.Route('domain_dashboard', '/domain/dashboard', DomainDashboardHandler);
@@ -424,34 +461,6 @@ export async function apply(ctx: Context) {
     ctx.Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
     ctx.inject(['api'], ({ api }) => {
-        api.value('GroupInfo', [
-            ['name', 'String!'],
-            ['uids', '[Int]!'],
-        ]);
-        api.resolver('Query', 'domain(id: String)', 'Domain', async (args, c) => {
-            const ddoc = args.id ? await domain.get(args.id) : c.domain;
-            if (!ddoc) return null;
-            const udoc = await user.getById(ddoc._id, c.user._id);
-            if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
-            c.udoc = udoc;
-            return ddoc;
-        });
-        api.resolver('Domain', 'manage', 'DomainManage', async (args, c) => {
-            if (!c.udoc.hasPerm(PERM.PERM_EDIT_DOMAIN)) throw new PermissionError(PERM.PERM_EDIT_DOMAIN);
-            return c.parent;
-        });
-        api.resolver('DomainManage', 'group', 'DomainGroup', (args, c) => c.parent);
-        api.resolver(
-            'DomainGroup', 'list(uid: Int)', '[GroupInfo]',
-            (args, c) => user.listGroup(c.parent._id, args.uid),
-        );
-        api.resolver(
-            'DomainGroup', 'update(name: String!, uids: [Int]!)', 'Boolean',
-            async (args, c) => !!(await user.updateGroup(c.parent._id, args.name, args.uids)).upsertedCount,
-        );
-        api.resolver(
-            'DomainGroup', 'del(name: String!)', 'Boolean',
-            async (args, c) => !!(await user.delGroup(c.parent._id, args.name)).deletedCount,
-        );
+        api.provide(DomainApi);
     });
 }

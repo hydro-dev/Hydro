@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
-    ConnectionHandler as ConnectionHandlerOriginal,
+    applyApiHandler, ConnectionHandler as ConnectionHandlerOriginal,
     Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
     WebService,
 } from '@hydrooj/framework';
@@ -41,6 +41,7 @@ declare module '@hydrooj/framework' {
 
 export * from '@hydrooj/framework/decorators';
 export * from '@hydrooj/framework/validator';
+export { Query, Mutation } from '@hydrooj/framework/api';
 
 /*
  * For security concern, some API requires sudo privilege to access.
@@ -105,6 +106,8 @@ export async function apply(ctx: Context) {
                 // TODO metrics: calc avg response time
             }
         });
+
+        applyApiHandler(ctx, 'api', '/api/:op');
 
         for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');

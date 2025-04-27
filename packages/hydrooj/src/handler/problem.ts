@@ -8,6 +8,7 @@ import {
 import { Filter, ObjectId } from 'mongodb';
 import { nanoid } from 'nanoid';
 import sanitize from 'sanitize-filename';
+import Schema from 'schemastery';
 import parser from '@hydrooj/utils/lib/search';
 import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import type { Context } from '../context';
@@ -34,7 +35,7 @@ import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
 import {
-    Handler, param, post, query, route, Types,
+    Handler, param, post, Query, query, route, Types,
 } from '../service/server';
 import { ContestDetailBaseHandler } from './contest';
 
@@ -1021,6 +1022,38 @@ export class ProblemCreateHandler extends Handler {
     }
 }
 
+export const ProblemApi = {
+    problem: Query(
+        Schema.object({
+            id: Schema.union([Schema.number().step(1), Schema.string()]).required(),
+            domainId: Schema.string().required(),
+        }),
+        async (ctx, args) => {
+            const pdoc = await problem.get(args.domainId, args.id);
+            if (!pdoc) return null;
+            if (pdoc.hidden) ctx.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            return pdoc;
+        },
+    ),
+    problems: Query(
+        Schema.object({
+            ids: Schema.array(Schema.number().step(1)).required(),
+            domainId: Schema.string().required(),
+        }),
+        async (ctx, args) => {
+            const pdocs = await problem.getList(args.domainId, args.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
+                undefined, undefined, true);
+            return Object.keys(pdocs).map((id) => pdocs[+id]);
+        },
+    ),
+} as const;
+
+declare module '@hydrooj/framework' {
+    interface Apis {
+        problem: typeof ProblemApi;
+    }
+}
+
 export async function apply(ctx: Context) {
     ctx.Route('problem_main', '/p', ProblemMainHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_random', '/problem/random', ProblemRandomHandler, PERM.PERM_VIEW_PROBLEM);
@@ -1038,64 +1071,6 @@ export async function apply(ctx: Context) {
     ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
     ctx.inject(['api'], ({ api }) => {
-        api.value('FileInfo', [
-            ['_id', 'String!'],
-            ['name', 'String!'],
-            ['size', 'Int'],
-            ['lastModified', 'Date'],
-        ]);
-        api.value('Problem', [
-            ['_id', 'ObjectID!'],
-            ['owner', 'Int!'],
-            ['domainId', 'String!'],
-            ['docId', 'Int!'],
-            ['docType', 'Int!'],
-            ['pid', 'String'],
-            ['title', 'String!'],
-            ['content', 'String!'],
-            ['data', '[FileInfo]'],
-            ['additional_file', '[FileInfo]'],
-            ['nSubmit', 'Int'],
-            ['nAccept', 'Int'],
-            ['difficulty', 'Int'],
-            ['tag', '[String]'],
-            ['hidden', 'Boolean'],
-        ]);
-        api.resolver(
-            'Query', 'problem(id: Int, pid: String)', 'Problem',
-            async (arg, c) => {
-                c.checkPerm(PERM.PERM_VIEW);
-                const pdoc = await problem.get(c.args.domainId, arg.pid || arg.id);
-                if (!pdoc) return null;
-                if (pdoc.hidden) c.checkPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN);
-                c.pdoc = pdoc;
-                return pdoc;
-            },
-        );
-        api.resolver('Query', 'problems(ids: [Int])', '[Problem]', async (arg, c) => {
-            c.checkPerm(PERM.PERM_VIEW);
-            const res = await problem.getList(c.args.domainId, arg.ids, c.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || c.user._id,
-                undefined, undefined, true);
-            return Object.keys(res).map((id) => res[+id]);
-        }, 'Get a list of problem by ids');
-        api.resolver(
-            'Problem', 'manage', 'ProblemManage',
-            (arg, c) => {
-                if (!c.user.own(c.pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) c.checkPerm(PERM.PERM_EDIT_PROBLEM);
-                return {};
-            },
-        );
-        api.resolver(
-            'ProblemManage', 'delete', 'Boolean!',
-            async (arg, c) => {
-                const tdocs = await contest.getRelated(c.args.domainId, c.pdoc.docId);
-                if (tdocs.length) throw new ProblemAlreadyUsedByContestError(c.pdoc.docId, tdocs[0]._id);
-                return problem.del(c.pdoc.domainId, c.pdoc.docId);
-            },
-        );
-        api.resolver(
-            'ProblemManage', 'edit(title: String, content: String, tag: [String], hidden: Boolean)', 'Problem!',
-            (arg, c) => problem.edit(c.args.domainId, c.pdoc.docId, arg),
-        );
+        api.provide(ProblemApi);
     });
 }

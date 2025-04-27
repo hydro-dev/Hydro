@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { STATUS_CODES } from 'vj/constant/record';
 import { AutoloadPage } from 'vj/misc/Page';
 import {
-  api, gql, i18n, request,
+  api, i18n, request,
 } from 'vj/utils';
 
 export default new AutoloadPage('omnibar', () => {
@@ -92,14 +92,7 @@ export default new AutoloadPage('omnibar', () => {
     setSearching?.(true);
     [{ pdocs, psdict }, udocs] = await Promise.all([
       request.get(`/d/${UiContext.domainId}/p`, { q: query, limit: 10 }),
-      api(gql`
-        users(search: ${query}) {
-          _id
-          uname
-          displayName
-          avatarUrl
-        }
-      `, ['data', 'users']),
+      api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl']),
     ]);
     setSearching?.(false);
   }

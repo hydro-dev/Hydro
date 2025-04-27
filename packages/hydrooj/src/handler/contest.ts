@@ -742,33 +742,6 @@ export async function apply(ctx: Context) {
         }
         await Promise.all(tasks);
     });
-    ctx.inject(['api'], ({ api }) => {
-        api.value('Contest', [
-            ['_id', 'ObjectID!'],
-            ['domainId', 'String!'],
-            ['docId', 'ObjectID!'],
-            ['owner', 'Int!'],
-            ['beginAt', 'Date!'],
-            ['title', 'String!'],
-            ['content', 'String!'],
-            ['beginAt', 'Date!'],
-            ['endAt', 'Date!'],
-            ['attend', 'Int!'],
-            ['pids', '[Int]!'],
-            ['rated', 'Boolean!'],
-        ]);
-        api.resolver(
-            'Query', 'contest(id: ObjectID!)', 'Contest',
-            async (arg, c) => {
-                c.checkPerm(PERM.PERM_VIEW);
-                arg.id = new ObjectId(arg.id);
-                c.tdoc = await contest.get(c.args.domainId, new ObjectId(arg.id));
-                if (!c.tdoc) throw new ContestNotFoundError(c.args.domainId, arg.id);
-                return c.tdoc;
-            },
-            'Get a contest by ID',
-        );
-    });
     ctx.plugin(ScoreboardService);
     ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
         Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
