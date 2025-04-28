@@ -16,6 +16,7 @@ const mapStateToProps = (state) => ({
     : null,
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
   componentDidMount() {
     $(this.refs.list).scrollLock({ strict: true });

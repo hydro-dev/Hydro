@@ -276,10 +276,16 @@ export async function run({
         const pdocs = tdoc.problems.split('|').map((i) => i.trim());
         const pids = pdocs.map((i) => pidMap[i]).filter((i) => i);
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
+        const startAt = new Date(tdoc.start_time * 1000);
+        let endAt = new Date(tdoc.end_time * 1000);
+        if (startAt >= endAt) {
+            report({ message: `Invalid contest time: ${tdoc.title} ${tdoc.start_time} ${tdoc.end_time}` });
+            endAt = new Date(startAt.getTime() + 5000);
+        }
         const tid = await ContestModel.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
-            admin, contentTypeMap[tdoc.type], new Date(tdoc.start_time * 1000), new Date(tdoc.end_time * 1000),
-            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]) },
+            admin, contentTypeMap[tdoc.type], startAt, endAt,
+            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]), assign: [] },
         );
         tidMap[tdoc.id] = tid.toHexString();
     }
@@ -461,7 +467,7 @@ export async function run({
                     `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.specialJudge.fileName}`);
                 config.checker = `spj.${langMap[syzojConfig.specialJudge.language]}`;
             }
-            if (syzojConfig.subtasks) {
+            if (syzojConfig.subtasks && syzojConfig.inputFile && syzojConfig.outputFile) {
                 config.subtasks = syzojConfig.subtasks.map((subtask, index) => ({
                     score: subtask.score,
                     id: index + 1,

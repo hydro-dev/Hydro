@@ -73,6 +73,7 @@ const mapDispatchToProps = (dispatch) => ({
 const availableLangs = getAvailableLangs(UiContext.pdoc.config.langs);
 const keys = Object.keys(availableLangs);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, mapDispatchToProps)(class ScratchpadToolbarContainer extends React.PureComponent {
   static contextTypes = {
     store: PropTypes.object,

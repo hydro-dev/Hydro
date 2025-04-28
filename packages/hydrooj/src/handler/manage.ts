@@ -321,9 +321,12 @@ const allPriv = Math.sum(Object.values(Priv));
 
 class SystemUserPrivHandler extends SystemHandler {
     @requireSudo
-    async get() {
+    @param('extraIgnore', Types.NumericArray, true)
+    async get({ }, extraIgnore: number[] = []) {
         const defaultPriv = system.get('default.priv');
-        const udocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: { $nin: [0, defaultPriv] } }).limit(1000).sort({ _id: 1 }).toArray();
+        const udocs = await user.getMulti({
+            _id: { $gte: -1000, $ne: 1 }, priv: { $nin: [0, defaultPriv, ...extraIgnore] },
+        }).limit(1000).sort({ _id: 1 }).toArray();
         const banudocs = await user.getMulti({ _id: { $gte: -1000, $ne: 1 }, priv: 0 }).limit(1000).sort({ _id: 1 }).toArray();
         this.response.body = {
             udocs: [...udocs, ...banudocs],

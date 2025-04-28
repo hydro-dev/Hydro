@@ -784,7 +784,7 @@ export async function add(
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const docId = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
+        assign: [], ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, docId);
     return docId;
