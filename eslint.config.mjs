@@ -86,6 +86,9 @@ export default defineConfig([globalIgnores([
     },
 
     settings: {
+        'react-x': {
+            version: '18.3.1',
+        },
         'import/resolver': {
             webpack: {
                 config: {

@@ -5,3 +5,4 @@ export * from './validator';
 export * from './error';
 export * from './router';
 export * from './interface';
+export * from './api';

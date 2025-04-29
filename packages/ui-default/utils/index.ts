@@ -2,30 +2,11 @@ import 'streamsaver/examples/zip-stream';
 
 import { request } from './base';
 
-export async function api(q: string, path: string[] = []) {
-  let query = q.trim();
-  if (!query.startsWith('query')) query = `query{${query}}`;
-  const res = await request.post(`/d/${UiContext.domainId}/api`, { query });
-  if (res.errors) throw new Error(res.errors[0].message);
-  let cursor = res;
-  for (const p of path) {
-    cursor = cursor[p];
-    if (!cursor) return undefined;
-  }
-  return cursor;
-}
-
-export const gql = (
-  pieces: TemplateStringsArray,
-  ...templates: (string | number | string[] | number[])[]
-) => {
-  let res = '';
-  for (let i = 0; i < pieces.length; i++) {
-    res += pieces[i];
-    if (templates[i]) res += JSON.stringify(templates[i]);
-  }
+export async function api(method: string, args: Record<string, any>, projection: any) {
+  const res = await request.post(`/d/${UiContext.domainId}/api/${encodeURIComponent(method)}`, { args, projection });
+  if (res.error) throw new Error(res.error);
   return res;
-};
+}
 
 export function getAvailableLangs(langsList?: string[]) {
   const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));

@@ -1,18 +1,21 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
+import fs from 'fs';
 import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
-import { retry } from '@hydrooj/utils';
+import { findFileSync, retry } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from './builtin';
 
 type SettingDict = Dictionary<_Setting>;
+
+const settingFile = yaml.load(fs.readFileSync(findFileSync('hydrooj/setting.yaml'), 'utf-8')) as any;
 
 const logger = new Logger('model/setting');
 const countries = moment.tz.countries();
@@ -344,6 +347,8 @@ SystemSetting(
     Setting('setting_basic', 'pagination.solution', 20, 'number', 'pagination.solution', 'Solutions per page'),
     Setting('setting_basic', 'pagination.training', 10, 'number', 'pagination.training', 'Trainings per page'),
     Setting('setting_basic', 'pagination.reply', 50, 'number', 'pagination.reply', 'Replies per page'),
+    Setting('setting_basic', 'hydrooj.homepage', settingFile.homepage.default, 'yaml', 'hydrooj.homepage', 'Homepage config'),
+    Setting('setting_basic', 'hydrooj.langs', settingFile.langs.default, 'yaml', 'hydrooj.langs', 'Language config'),
     Setting('setting_session', 'session.keys', [String.random(32)], 'text', 'session.keys', 'session.keys', FLAG_HIDDEN),
     Setting('setting_session', 'session.domain', '', 'text', 'session.domain', 'session.domain', FLAG_HIDDEN),
     Setting('setting_session', 'session.saved_expire_seconds', 3600 * 24 * 30,

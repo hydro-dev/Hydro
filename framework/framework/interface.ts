@@ -1,3 +1,5 @@
+import type { Context } from 'cordis';
+import type { ApiHandler } from './api';
 import type { ConnectionHandler, Handler, NotFoundHandler } from './server';
 
 export interface KnownHandlers {
@@ -21,16 +23,20 @@ export type HookType = 'before-prepare' | 'before' | 'before-operation' | 'after
 export type Methods = 'get' | 'post' | 'put' | 'delete' | 'patch';
 export type HookWithMethod = Exclude<HookType, 'before-operation'>;
 
-export interface ServerEvents<C> extends KnownHandlerEvents, HandlerEvents<C> {
+export interface ServerEvents<C extends Context> extends KnownHandlerEvents, HandlerEvents<C> {
     'handler/create': (thisArg: Handler<C> | ConnectionHandler<C>, type: 'ws' | 'http') => VoidReturn
     'handler/create/http': (thisArg: Handler<C>) => VoidReturn
     'handler/create/ws': (thisArg: ConnectionHandler<C>) => VoidReturn
     'handler/init': (thisArg: Handler<C>) => VoidReturn
     'handler/error': (thisArg: Handler<C> | ConnectionHandler<C>, e: Error) => VoidReturn
+    'handler/api/before': (thisArg: ApiHandler<C>) => VoidReturn
+    'api/before': (args: any) => VoidReturn
     [k: `handler/${HookType}/${string}`]: (thisArg: any) => VoidReturn
     [k: `handler/${HookWithMethod}/${string}/${Methods}`]: (thisArg: any) => VoidReturn
     [k: `handler/register/${string}`]: (HandlerClass: new (...args: any[]) => any) => VoidReturn
     [k: `handler/error/${string}`]: (thisArg: Handler<C>, e: Error) => VoidReturn
+    [k: `handler/api/before/${string}`]: (thisArg: ApiHandler<C>) => VoidReturn
+    [k: `api/before/${string}`]: (args: any) => VoidReturn
 }
 
 declare module 'cordis' {

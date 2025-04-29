@@ -5,22 +5,19 @@ import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  api, delay, gql, i18n, tpl,
+  api, delay, i18n, tpl,
 } from 'vj/utils';
 
-function update(name: string, uids: number[]) {
-  return api(gql`
-    domain { manage { group {
-      update(name: ${name}, uids: ${uids})
-    } } }
-  `);
+function update(name: string, uids: number[] = []) {
+  return api('domain.group', {
+    name,
+    uids,
+  }, []);
 }
 function del(name: string) {
-  return api(gql`
-    domain { manage { group {
-      del(name: ${name})
-    } } }
-  `);
+  return api('domain.group', {
+    name,
+  }, []);
 }
 
 const page = new NamedPage('domain_group', () => {

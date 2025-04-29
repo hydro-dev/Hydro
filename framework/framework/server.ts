@@ -502,16 +502,18 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             await (this.ctx.parallel as any)('handler/create/http', h);
 
             if (checker) checker.call(h);
-            if (method === 'post') {
-                if (operation) {
-                    if (typeof h[`post${operation}`] !== 'function') {
-                        throw new InvalidOperationError(operation);
+            if (typeof h.all !== 'function') {
+                if (method === 'post') {
+                    if (operation) {
+                        if (typeof h[`post${operation}`] !== 'function') {
+                            throw new InvalidOperationError(operation);
+                        }
+                    } else if (typeof h.post !== 'function') {
+                        throw new MethodNotAllowedError(method);
                     }
-                } else if (typeof h.post !== 'function') {
+                } else if (typeof h[method] !== 'function') {
                     throw new MethodNotAllowedError(method);
                 }
-            } else if (typeof h[method] !== 'function' && typeof h.all !== 'function') {
-                throw new MethodNotAllowedError(method);
             }
 
             const steps = [
