@@ -603,4 +603,16 @@ export const coreScripts: MigrationScript[] = [
         });
         return true;
     },
+    async function _93_94(ctx) {
+        await ctx.inject(['oauth'], async (c) => {
+            await c.oauth.coll.deleteMany({ _id: { $type: 'string' } });
+            const docs = await c.oauth.coll.find({ id: { $type: 'number' as any } }).toArray();
+            const op = c.oauth.coll.initializeUnorderedBulkOp();
+            for (const doc of docs) {
+                op.find({ _id: doc._id }).updateOne({ id: doc.id.toString() });
+            }
+            if (op.length) await op.execute();
+        });
+        return true;
+    },
 ];
