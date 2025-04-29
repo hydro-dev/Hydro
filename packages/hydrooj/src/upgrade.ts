@@ -609,7 +609,7 @@ export const coreScripts: MigrationScript[] = [
             const docs = await c.oauth.coll.find({ id: { $type: 'number' as any } }).toArray();
             const op = c.oauth.coll.initializeUnorderedBulkOp();
             for (const doc of docs) {
-                op.find({ _id: doc._id }).updateOne({ id: doc.id.toString() });
+                op.find({ _id: doc._id }).updateOne({ $set: { id: doc.id.toString() } });
             }
             if (op.length) await op.execute();
         });

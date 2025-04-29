@@ -126,7 +126,7 @@ export class ApiService extends Service {
             await emitHook?.(`api/before/${callOrName}`, args);
         }
         const result = await func(context, args as any);
-        return project ? projection(result, project) : result;
+        return (project && typeof result === 'object' && result !== null) ? projection(result, project) : result;
     }
 }
 
