@@ -535,7 +535,7 @@ const UserApi = {
         limit: Schema.number().step(1),
         exact: Schema.boolean(),
     }), async (c, arg) => {
-        const auto = (arg.ids.length && arg.ids) || arg.auto || [];
+        const auto = (arg.ids?.length && arg.ids) || arg.auto || [];
         if (auto.length) {
             const maybeId = auto.filter((i) => !Number.isNaN(+i));
             const result = [];

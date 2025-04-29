@@ -60,20 +60,20 @@ export type FlattenedApis = Apis[keyof Apis];
 type ProjectionSchemaId = 1;
 type MKeyOf<T> = T extends any ? keyof T : never;
 type MId<T> = { [K in MKeyOf<T>]: T[K] } & {};
-
 type ProjectionSchema<T> = T extends Array<infer U>
     ? ProjectionSchema<U>
     : | { [K in keyof T]?: ProjectionSchemaId | ProjectionSchema<T[K]> }
     | Record<keyof any, ProjectionSchemaId | object>;
-
+type AsKeys<T> = T extends Array<infer U extends string> ? Record<U, 1> : T;
 type Projection<T, S> = S extends ProjectionSchemaId
     ? T : T extends Array<infer U> ? Array<MId<Projection<U, S>>> : {
-        [K in keyof T & keyof S]: K extends keyof S ? Projection<T[K], S[K]> : never
+        [K in keyof T & keyof S]: K extends keyof AsKeys<S> ? Projection<T[K], AsKeys<S>[K]> : never
     };
 
 export const projection = <T, S extends ProjectionSchema<T>>(input: T, schema: S): Projection<T, S> => {
     if (typeof input !== 'object' || input === null) throw new Error('Input must be an object.');
     type R = Projection<T, S>;
+    if (Array.isArray(schema)) schema = Object.fromEntries(schema.map((s) => [s, 1])) as S;
     if (Array.isArray(input)) {
         return input.map((item) => projection(item, schema)) as R;
     }
