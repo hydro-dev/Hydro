@@ -307,6 +307,8 @@ class HomeSecurityHandler extends Handler {
                 type: 'public-key',
             })),
             authenticatorSelection: {
+                residentKey: 'required',
+                userVerification: 'preferred',
                 authenticatorAttachment: type,
             },
         });

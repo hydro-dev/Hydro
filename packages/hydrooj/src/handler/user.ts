@@ -1,7 +1,7 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import moment from 'moment-timezone';
-import type { Binary } from 'mongodb';
+import { Binary } from 'mongodb';
 import Schema from 'schemastery';
 import type { Context } from '../context';
 import {
@@ -148,28 +148,41 @@ class UserWebauthnHandler extends Handler {
     }
 
     @param('uname', Types.Username, true)
-    async get(domainId: string, uname: string) {
-        const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
-        if (!udoc._id) throw new UserNotFoundError(uname || 'user');
-        if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = await generateAuthenticationOptions({
-            allowCredentials: udoc._authenticators.map((authenticator) => ({
+    @param('login', Types.Boolean)
+    async get(domainId: string, uname: string, login: boolean) {
+        let allowCredentials = [];
+        let uid = 0;
+        if (!login) {
+            const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
+            if (!udoc._id) throw new UserNotFoundError(uname || 'user');
+            if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
+            allowCredentials = udoc._authenticators.map((authenticator) => ({
                 id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
-            })),
+            }));
+            uid = udoc._id;
+        }
+        const options = await generateAuthenticationOptions({
+            allowCredentials,
             rpID: this.getAuthnHost(),
             userVerification: 'preferred',
         });
-        await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
+        await token.add(token.TYPE_WEBAUTHN, 60, { uid: login ? 'login' : uid }, options.challenge);
         this.session.challenge = options.challenge;
         this.response.body.authOptions = options;
     }
 
-    async post({ domainId, result }) {
+    async post({ domainId, result, redirect }) {
         const challenge = this.session.challenge;
         if (!challenge) throw new ForbiddenError();
         const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
-        const udoc = await user.getById(domainId, tdoc.uid);
+        const udoc = await (tdoc.uid === 'login'
+            ? (async () => {
+                const u = await user.coll.findOne({ 'authenticators.credentialID': Binary.createFromBase64(result.id) });
+                return u ? await user.getById(domainId, u._id) : null;
+            })()
+            : user.getById(domainId, tdoc.uid));
+        if (!udoc) throw new NotFoundError();
         const parseId = (id: Binary) => Buffer.from(id.toString('hex'), 'hex').toString('base64url');
         const authenticator = udoc._authenticators?.find((c) => parseId(c.credentialID) === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
@@ -187,8 +200,15 @@ class UserWebauthnHandler extends Handler {
         if (!verification?.verified) throw new ValidationError('authenticator');
         authenticator.counter = verification.authenticationInfo.newCounter;
         await user.setById(udoc._id, { authenticators: udoc._authenticators });
-        await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
-        this.back();
+        if (tdoc.uid === 'login') {
+            await successfulAuth.call(this, await user.getById(domainId, udoc._id));
+            await token.del(challenge, token.TYPE_WEBAUTHN);
+            this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
+                ? this.url('homepage') : this.request.referer);
+        } else {
+            await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
+            this.back();
+        }
     }
 }
 

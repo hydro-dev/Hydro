@@ -81,7 +81,7 @@ export const projection = <T, S extends ProjectionSchema<T>>(input: T, schema: S
     for (const key of Reflect.ownKeys(input)) {
         const schemaIt = schema[key];
         if (!schemaIt) continue;
-        if (schemaIt === 1) result[key] = input[key];
+        if (schemaIt === 1 || !input[key]) result[key] = input[key];
         else result[key] = projection(input[key], schemaIt);
     }
     return result;
