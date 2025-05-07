@@ -150,8 +150,20 @@ export class ApiHandler<C extends Context> extends Handler<C> {
         await this.ctx.parallel('handler/api/before', this);
         // @ts-ignore
         await this.ctx.parallel(`handler/api/before/${op}`, this);
+        try {
+            if (typeof this.args.args === 'string') {
+                this.args.args = JSON.parse(this.args.args);
+            }
+            if (typeof this.args.projection === 'string') {
+                this.args.projection = '{['.includes(this.args.projection[0])
+                    ? JSON.parse(this.args.projection)
+                    : this.args.projection.split(',').map((i) => i.trim()).filter((i) => i);
+            }
+        } catch (e) {
+            throw new BadRequestError('Invalid arguments');
+        }
         const result = await this.ctx.api.execute(
-            this, op, { domainId: this.args.domainId, ...(this.args.args || {}) },
+            this, op, { domainId: this.args.domainId, ...this.args, ...(this.args.args || {}) },
             (m, args) => (this.ctx.parallel as any)(m, args), this.args.projection,
         );
         if (BinaryResponse.check(result)) {

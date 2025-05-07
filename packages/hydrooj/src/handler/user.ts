@@ -546,7 +546,7 @@ const UserApi = {
         if (arg.id) return user.getById(arg.domainId, arg.id);
         if (arg.mail) return user.getByEmail(arg.domainId, arg.mail);
         if (arg.uname) return user.getByUname(arg.domainId, arg.uname);
-        return c.user;
+        return user.getById(arg.domainId, c.user._id);
     }),
     users: Query(Schema.object({
         ids: Schema.array(Schema.number().step(1)),

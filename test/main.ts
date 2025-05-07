@@ -29,15 +29,15 @@ describe('App', () => {
         console.log('Application inited in %d ms', Date.now() - init);
     }, { timeout: 30000 });
 
-    const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
+    const routes = ['/', '/p', '/contest', '/homework', '/user/1', '/training'];
     for (const route of routes) {
         // eslint-disable-next-line @typescript-eslint/no-loop-func
         it(`GET ${route}`, () => agent.get(route).expect(200));
     }
 
     it('API user', async () => {
-        await agent.get('/api?{user(id:1){uname}}').expect({ data: { user: { uname: 'Hydro' } } });
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: null } });
+        await agent.get('/api/user?args={"id":1}&projection=uname').expect({ uname: 'Hydro' });
+        await agent.get('/api/user?args={"id":2}&projection=uname').expect(null);
     });
 
     it('Create User', async () => {
@@ -59,7 +59,7 @@ describe('App', () => {
     });
 
     it('API registered user', async () => {
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: { uname: 'root' } } });
+        await agent.get('/api/user?args={"id":2}&projection=uname').expect({ uname: 'root' });
     });
 
     // TODO add more tests
