@@ -343,6 +343,7 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     private handlerLayers = [];
     private wsLayers = [];
     private captureAllRoutes = Object.create(null);
+    private customDefaultContext: C;
 
     renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
@@ -449,7 +450,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             ...this.handlerLayers,
             {
                 name: '404',
-                func: (t) => this.handleHttp(t, NotFoundHandler, () => true, this.ctx),
+                func: (t) => this.handleHttp(t, NotFoundHandler, () => true, this.customDefaultContext || this.ctx),
             },
         ]));
         this.addLayer('base', base(logger, this.config.xff, this.config.xhost));
@@ -733,6 +734,21 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();
+        });
+    }
+
+    public setDefaultContext(ctx: C) {
+        try {
+            if (!ctx.server) throw new Error();
+        } catch (e) {
+            throw new Error('Must provide a valid context with server.');
+        }
+        this.ctx.effect(async () => {
+            if (this.customDefaultContext) logger.warn('Default context already set.');
+            this.customDefaultContext = ctx;
+            return () => {
+                this.customDefaultContext = null;
+            };
         });
     }
 

@@ -14,8 +14,8 @@
         "schemastery": "^3.16.1",
         "semver": "^7.7.1",
         "shell-quote": "^1.8.2",
-        "superagent": "^10.2.0",
-        "ws": "^8.18.1"
+        "superagent": "^10.2.1",
+        "ws": "^8.18.2"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",

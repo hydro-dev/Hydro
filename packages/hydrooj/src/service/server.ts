@@ -91,7 +91,8 @@ export async function apply(ctx: Context) {
         xhost: system.get('server.xhost'),
     });
     if (process.env.HYDRO_CLI) return;
-    ctx.inject(['server', 'oauth'], ({ server, on, oauth }) => {
+    ctx.inject(['server', 'oauth', 'setting'], (childContext) => {
+        const { server, on, oauth } = childContext;
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {
@@ -107,7 +108,8 @@ export async function apply(ctx: Context) {
             }
         });
 
-        applyApiHandler(ctx, 'api', '/api/:op');
+        applyApiHandler(childContext, 'api', '/api/:op');
+        server.setDefaultContext(childContext);
 
         for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');

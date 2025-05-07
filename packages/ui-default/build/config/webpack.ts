@@ -243,7 +243,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
               if (packageName === 'monaco-editor-nls') {
-                return `i.monaco.${module.userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
+                return `i.monaco.${(module as any).userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
               }
               return `n.${packageName.replace('@', '')}`;
             },
