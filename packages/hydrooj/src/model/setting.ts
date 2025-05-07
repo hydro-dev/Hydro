@@ -90,7 +90,8 @@ function schemaToSettings(schema: Schema<any>) {
             | (s.meta?.disabled ? FLAG_DISABLED : 0);
         const type = s.type === 'number' ? 'number'
             : s.type === 'boolean' ? 'checkbox'
-                : s.meta?.role === 'textarea' ? 'textarea' : 'text';
+                : s.meta?.role === 'markdown' ? 'markdown'
+                    : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
         const options = {};
         for (const item of s.list || []) {
