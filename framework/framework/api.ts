@@ -3,27 +3,32 @@ import Schema from 'schemastery';
 import { param } from './decorators';
 import { BadRequestError, MethodNotAllowedError, NotFoundError } from './error';
 import { } from './interface';
-import { Handler } from './server';
+import { ConnectionHandler, Handler } from './server';
 import { Types } from './validator';
 
 const BINARY = Symbol.for('hydro.api.response.binary');
 const REDIRECT = Symbol.for('hydro.api.response.redirect');
 
-export type ApiCall<Arg, Res> = {
-    readonly type: 'Query' | 'Mutation';
+type MaybePromise<T> = T | Promise<T>;
+export type ApiType = 'Query' | 'Mutation' | 'Subscription';
+export type ApiCall<Type extends ApiType, Arg, Res, Progress = never> = {
+    readonly type: Type;
     readonly input: Schema<Arg>;
-    readonly func: (context: any, args: Arg) => Promise<Res> | Res;
-    readonly hooks: ApiCall<Arg, void>[];
+    readonly func: (Type extends 'Subscription'
+        ? (context: any, args: Arg, emit: (payload: Res) => void) => (() => MaybePromise<void>)
+        : (context: any, args: Arg) => MaybePromise<Res | AsyncGenerator<Progress, Res, never>>);
+    readonly hooks: ApiCall<'Query', Arg, void>[];
 };
 
-export const _get = (type: 'Query' | 'Mutation') => <Arg, Res>(
+export const _get = <Type extends ApiType>(type: Type) => <Arg, Res, Progress>(
     schema: Schema<Arg>,
-    func: (context: Handler, args: Arg) => Promise<Res> | Res,
-    hooks: ApiCall<any, void>[] = [],
-): ApiCall<Arg, Res> => ({ input: schema, func, hooks, type } as const); // eslint-disable-line
+    func: ApiCall<Type, Arg, Res, Progress>['func'],
+    hooks: ApiCall<'Query', Arg, void, never>[] = [],
+): ApiCall<Type, Arg, Res, Progress> => ({ input: schema, func, hooks, type } as const); // eslint-disable-line
 
 export const Query = _get('Query');
 export const Mutation = _get('Mutation');
+export const Subscription = _get('Subscription');
 
 export class BinaryResponse {
     [BINARY]: true;
@@ -50,9 +55,10 @@ export const APIS = {
 } as const;
 export interface Apis {
     builtin: {
-        'query.batch': ApiCall<{ op: string, args: any }[], { [key: string]: any }>;
-        'mutation.batch': ApiCall<{ op: string, args: any }[], { [key: string]: any }>;
+        'query.batch': ApiCall<'Query', { op: string, args: any }[], { [key: string]: any }>;
+        'mutation.batch': ApiCall<'Mutation', { op: string, args: any }[], { [key: string]: any }>;
     }
+    test: typeof TestApis;
 }
 export type FlattenedApis = Apis[keyof Apis];
 
@@ -90,6 +96,21 @@ export const projection = <T, S extends ProjectionSchema<T>>(input: T, schema: S
 export interface ApiExecutionContext {
 }
 
+function handleArguments(args: any) {
+    try {
+        if (typeof args.args === 'string') {
+            args.args = JSON.parse(args.args);
+        }
+        if (typeof args.projection === 'string') {
+            args.projection = '{['.includes(args.projection[0])
+                ? JSON.parse(args.projection)
+                : args.projection.split(',').map((i) => i.trim()).filter((i) => i);
+        }
+    } catch (e) {
+        throw new BadRequestError('Invalid arguments');
+    }
+}
+
 export class ApiService extends Service {
     constructor(ctx: Context) {
         super(ctx, 'api');
@@ -108,7 +129,10 @@ export class ApiService extends Service {
         });
     }
 
-    async execute(context: ApiExecutionContext, callOrName: ApiCall<any, any> | string, rawArgs: any, emitHook?: any, project?: any) {
+    async execute(
+        context: ApiExecutionContext, callOrName: ApiCall<ApiType, any, any> | string,
+        rawArgs: any, emitHook?: any, project?: any, sendPayload?: (payload: any) => void,
+    ) {
         const call = typeof callOrName === 'string' ? APIS[callOrName] : callOrName;
         if (!call) throw new NotFoundError(callOrName);
         const { input, func, hooks } = call;
@@ -125,7 +149,19 @@ export class ApiService extends Service {
             await emitHook?.('api/before', args);
             await emitHook?.(`api/before/${callOrName}`, args);
         }
-        const result = await func(context, args as any);
+        let result = await func(context, args as any, sendPayload);
+        if (result && 'next' in result) {
+            const it = result as AsyncGenerator<any, any, never>;
+            while (true) {
+                const value = await it.next(); // eslint-disable-line no-await-in-loop
+                if (value.done) {
+                    result = value;
+                    break;
+                } else {
+                    sendPayload?.(value.value);
+                }
+            }
+        }
         return (project && typeof result === 'object' && result !== null) ? projection(result, project) : result;
     }
 }
@@ -143,25 +179,17 @@ export class ApiHandler<C extends Context> extends Handler<C> {
             throw new MethodNotAllowedError(this.request.method);
         }
         if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (APIS[op].type === 'Subscription') {
+            throw new BadRequestError('Subscription operation cannot be called in HTTP handler');
+        }
         if (APIS[op].type === 'Mutation' && this.request.method.toLowerCase() === 'get') {
             throw new BadRequestError('Mutation operation cannot be called with GET method');
         }
+        handleArguments(this.args);
         // @ts-ignore
         await this.ctx.parallel('handler/api/before', this);
         // @ts-ignore
         await this.ctx.parallel(`handler/api/before/${op}`, this);
-        try {
-            if (typeof this.args.args === 'string') {
-                this.args.args = JSON.parse(this.args.args);
-            }
-            if (typeof this.args.projection === 'string') {
-                this.args.projection = '{['.includes(this.args.projection[0])
-                    ? JSON.parse(this.args.projection)
-                    : this.args.projection.split(',').map((i) => i.trim()).filter((i) => i);
-            }
-        } catch (e) {
-            throw new BadRequestError('Invalid arguments');
-        }
         const result = await this.ctx.api.execute(
             this, op, { domainId: this.args.domainId, ...this.args, ...(this.args.args || {}) },
             (m, args) => (this.ctx.parallel as any)(m, args), this.args.projection,
@@ -176,9 +204,104 @@ export class ApiHandler<C extends Context> extends Handler<C> {
     }
 }
 
+export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C> {
+    dispose: () => Promise<void> | void;
+    isRpc: boolean;
+
+    @param('op', Types.String)
+    async prepare({ }, op: string) {
+        if (op === 'rpc') {
+            this.isRpc = true;
+            return;
+        }
+        if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (APIS[op].type !== 'Subscription') {
+            throw new BadRequestError('Only subscription operations are supported');
+        }
+        handleArguments(this.args);
+        // @ts-ignore
+        await this.ctx.parallel('handler/api/before', this);
+        // @ts-ignore
+        await this.ctx.parallel(`handler/api/before/${op}`, this);
+        this.dispose = await this.ctx.api.execute(
+            this, op, { domainId: this.args.domainId, ...this.args, ...(this.args.args || {}) },
+            (m, args) => (this.ctx.parallel as any)(m, args), this.args.projection, (p) => this.send(p),
+        );
+    }
+
+    async message(message) {
+        if (!this.isRpc) throw new BadRequestError('Only RPC operations are supported');
+        if (typeof message === 'string') {
+            try {
+                message = JSON.parse(message);
+            } catch (e) {
+                throw new BadRequestError('Invalid message');
+            }
+        }
+        if (!APIS[message.op]) throw new BadRequestError('Invalid operation');
+        if (APIS[message.op].type !== 'Subscription') {
+            throw new BadRequestError('Only subscription operations are supported');
+        }
+        handleArguments(message);
+        const result = await this.ctx.api.execute(
+            this, message.op, message.args, (m, args) => (this.ctx.parallel as any)(m, args), message.projection,
+        );
+        this.send(result);
+    }
+
+    async cleanup() {
+        await this.dispose?.();
+    }
+}
+
 export function applyApiHandler(ctx: Context, name: string, path: string) {
     ctx.plugin(ApiService);
-    ctx.inject(['server', 'api'], ({ Route }) => {
+    ctx.inject(['server', 'api'], ({ Route, Connection }) => {
         Route(name, path, ApiHandler);
+        Connection(`${name}_conn`, `${path}/conn`, ApiConnectionHandler);
+    });
+}
+
+const TestApis = {
+    'test.query': Query(Schema.object({
+        name: Schema.string(),
+    }), (c, { name }) => ({
+        ok: true,
+        name,
+    })),
+    'test.mutation': Mutation(Schema.object({
+        name: Schema.string().required(),
+    }), (c, { name }) => ({
+        ok: true,
+        name,
+    })),
+    'test.mutation_progress': Mutation(Schema.object({
+        count: Schema.number().step(1).min(1).default(10),
+    }), async function* (c, { count }) {
+        for (let i = 1; i <= count; i++) {
+            yield { progress: i };
+        }
+        return {
+            ok: true,
+            count,
+        };
+    }),
+    'test.subscription': Subscription(Schema.object({
+        initial: Schema.number().step(1).min(0).default(0),
+    }), (c, { initial }, send) => {
+        let count = initial;
+        const interval = setInterval(() => {
+            count++;
+            send({ count });
+        }, 1000);
+        return () => {
+            clearInterval(interval);
+        };
+    }),
+} as const;
+
+export function applyTestApis(ctx: Context) {
+    ctx.inject(['api'], ({ api }) => {
+        api.provide(TestApis);
     });
 }

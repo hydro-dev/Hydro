@@ -1,6 +1,6 @@
 import { IncomingMessage } from 'http';
 import KoaRouter from 'koa-router';
-import { pathToRegexp } from 'path-to-regexp';
+import { Keys, pathToRegexp } from 'path-to-regexp';
 import type WebSocket from 'ws';
 import type { KoaContext } from './server';
 
@@ -13,13 +13,22 @@ function remove<T>(list: T[], item: T) {
 export class WebSocketLayer {
     clients = new Set<WebSocket>();
     regexp: RegExp;
+    keys: Keys;
 
     constructor(path: Parameters<typeof pathToRegexp>[0], public callback?: WebSocketCallback) {
-        this.regexp = pathToRegexp(path).regexp;
+        const r = pathToRegexp(path);
+        this.regexp = r.regexp;
+        this.keys = r.keys;
     }
 
     accept(socket: WebSocket, request: IncomingMessage, ctx: KoaContext) {
-        if (!this.regexp.test(new URL(request.url, `http://${request.headers.host}`).pathname)) return false;
+        const match = this.regexp.exec(new URL(request.url, `http://${request.headers.host}`).pathname);
+        if (!match) return false;
+        ctx.params ||= {};
+        for (let i = 0; i < this.keys.length; i++) {
+            ctx.params[this.keys[i].name] = match[i + 1];
+            ctx.HydroContext.args[this.keys[i].name] = match[i + 1];
+        }
         this.clients.add(socket);
         socket.on('close', () => {
             this.clients.delete(socket);
