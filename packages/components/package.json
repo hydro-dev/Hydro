@@ -19,6 +19,8 @@
         "sass": "^1.87.0"
     },
     "peerDependencies": {
+        "react": "*",
+        "react-dom": "*",
         "schemastery": "*"
     }
 }

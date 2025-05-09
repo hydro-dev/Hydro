@@ -41,7 +41,7 @@
         "mongodb": "^6.16.0",
         "mongodb-uri": "^0.9.7",
         "nanoid": "^5.1.5",
-        "nodemailer": "^7.0.2",
+        "nodemailer": "^7.0.3",
         "notp": "^2.0.3",
         "p-queue": "^8.1.0",
         "sanitize-filename": "^1.6.3",

@@ -32,7 +32,7 @@
     "version": "1.0.0",
     "license": "AGPL-3.0-only",
     "devDependencies": {
-        "@types/autocannon": "^7.12.6",
+        "@types/autocannon": "^7.12.7",
         "@types/chai": "^5.2.2",
         "@types/cross-spawn": "^6.0.6",
         "@types/node": "22.14.1",
