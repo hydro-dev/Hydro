@@ -52,10 +52,10 @@ export default new AutoloadPage('customFont', (pageName) => {
     });
   }
 
-  function FontSelectButton(props: { key: string, label: string, value: string }) {
+  function FontSelectButton(props: { saveKey: string, label: string, value: string }) {
     return <div className="medium-6 columns"><label>
       {i18n(props.label)}
-      <div><button className="button inline" data-show-font-dialog={props.key}>
+      <div><button className="button inline" data-show-font-dialog={props.saveKey}>
         {props.value ? i18n('Using custom font: {0}', props.value) : i18n('Find custom font')}
       </button></div>
     </label></div>;
@@ -63,10 +63,10 @@ export default new AutoloadPage('customFont', (pageName) => {
 
   if (pageName === 'home_preference' && 'queryLocalFonts' in window) {
     $('[name="form_item_fontFamily"]').parent().parent().parent().append($(tpl(
-      <FontSelectButton key="customFont" label="Select Custom Font" value={customFont} />,
+      <FontSelectButton saveKey="customFont" label="Select Custom Font" value={customFont} />,
     )));
     $('[name="form_item_codeFontFamily"]').parent().parent().parent().append($(tpl(
-      <FontSelectButton key="customCodeFont" label="Select Custom Code Font" value={customCodeFont} />,
+      <FontSelectButton saveKey="customCodeFont" label="Select Custom Code Font" value={customCodeFont} />,
     )));
     $(document).on('click', '[data-show-font-dialog]', (ev) => {
       ev.preventDefault();
