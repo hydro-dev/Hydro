@@ -1,4 +1,5 @@
 import { Context } from 'cordis';
+import Schema from 'schemastery';
 import { ValidationError } from './error';
 import type { Handler } from './server';
 import { Converter, Type, Validator } from './validator';
@@ -14,7 +15,12 @@ export interface ParamOption<T> {
     validate?: Validator,
 }
 
+const kSchema = Symbol.for('schemastery');
 const mergeValidator = (L: Validator, R: Validator) => (v: any) => L(v) && R(v);
+
+function isSchema(v: any): v is Schema {
+    return v && typeof v === 'function' && kSchema in v;
+}
 
 function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type<any> | boolean | Validator | Converter<any>>) {
     let cursor = 0;
@@ -22,6 +28,19 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
     let isValidate = true;
     while (cursor < args.length) {
         const current = args[cursor];
+        if (isSchema(current)) {
+            v.validate = (val) => {
+                try {
+                    current(val);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            };
+            v.convert = (val) => current(val);
+            cursor++;
+            continue;
+        }
         if (current instanceof Array) {
             const type = current;
             if (type[0]) v.convert = type[0];
