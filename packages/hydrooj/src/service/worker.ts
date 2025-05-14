@@ -1,3 +1,4 @@
+import cac from 'cac';
 import moment from 'moment-timezone';
 import { sleep } from '@hydrooj/utils';
 import { Context, Service } from '../context';
@@ -8,6 +9,8 @@ declare module '../context' {
         worker: WorkerService;
     }
 }
+
+const argv = cac().parse();
 
 export default class WorkerService extends Service {
     private handlers: Record<string, Function> = {};
@@ -20,7 +23,8 @@ export default class WorkerService extends Service {
         super(ctx, 'worker');
     }
 
-    async *[Context.init]() {
+    *[Service.init]() {
+        if (argv.options.disableWorker) return;
         this.consume();
         yield () => {
             this.consuming = false;
