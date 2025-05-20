@@ -46,6 +46,7 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => ({
   data: stateProps.items[ownProps.id],
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, null, mergeProps)(class ScratchpadRecordsRowContainer extends React.PureComponent {
   handleRowClick(ev, id) {
     const url = substitute(

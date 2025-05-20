@@ -113,7 +113,7 @@ export function apply(ctx: Context) {
                 const groupId = {};
                 let gid = 1;
                 for (const i of relatedGroups) groupId[i] = `group-${gid++}`;
-                const organizations = teams.flatMap((i) => i.organization);
+                const organizations = Array.from(new Set(teams.flatMap((i) => i.organization)));
                 const orgId = {};
                 let oid = 1;
                 for (const i of organizations) orgId[i] = `org-${oid++}`;
@@ -256,9 +256,11 @@ export function apply(ctx: Context) {
                     zip.add('organizations/', null, { directory: true }),
                 ]);
                 await Promise.all(teams.map(async (i) => {
+                    await zip.add(`teams/${i.team_id}/`, null, { directory: true });
                     await zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
                 }));
                 await Promise.all(organizations.map(async (i) => {
+                    await zip.add(`organizations/${orgId[i]}/`, null, { directory: true });
                     await zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
                 }));
                 this.binary(await zip.close(), `contest-${tdoc._id}-cdp.zip`);

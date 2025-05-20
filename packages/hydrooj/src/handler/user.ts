@@ -1,7 +1,8 @@
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import moment from 'moment-timezone';
-import type { Binary } from 'mongodb';
+import { Binary } from 'mongodb';
+import Schema from 'schemastery';
 import type { Context } from '../context';
 import {
     AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError,
@@ -25,7 +26,7 @@ import * as system from '../model/system';
 import token from '../model/token';
 import user, { deleteUserCache } from '../model/user';
 import {
-    Handler, param, post, Types,
+    Handler, param, post, Query, Types,
 } from '../service/server';
 
 async function successfulAuth(this: Handler, udoc: User) {
@@ -147,28 +148,41 @@ class UserWebauthnHandler extends Handler {
     }
 
     @param('uname', Types.Username, true)
-    async get(domainId: string, uname: string) {
-        const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
-        if (!udoc._id) throw new UserNotFoundError(uname || 'user');
-        if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
-        const options = await generateAuthenticationOptions({
-            allowCredentials: udoc._authenticators.map((authenticator) => ({
+    @param('login', Types.Boolean)
+    async get(domainId: string, uname: string, login: boolean) {
+        let allowCredentials = [];
+        let uid = 0;
+        if (!login) {
+            const udoc = this.user._id ? this.user : ((await user.getByEmail(domainId, uname)) || await user.getByUname(domainId, uname));
+            if (!udoc._id) throw new UserNotFoundError(uname || 'user');
+            if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
+            allowCredentials = udoc._authenticators.map((authenticator) => ({
                 id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
-            })),
+            }));
+            uid = udoc._id;
+        }
+        const options = await generateAuthenticationOptions({
+            allowCredentials,
             rpID: this.getAuthnHost(),
             userVerification: 'preferred',
         });
-        await token.add(token.TYPE_WEBAUTHN, 60, { uid: udoc._id }, options.challenge);
+        await token.add(token.TYPE_WEBAUTHN, 60, { uid: login ? 'login' : uid }, options.challenge);
         this.session.challenge = options.challenge;
         this.response.body.authOptions = options;
     }
 
-    async post({ domainId, result }) {
+    async post({ domainId, result, redirect }) {
         const challenge = this.session.challenge;
         if (!challenge) throw new ForbiddenError();
         const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
-        const udoc = await user.getById(domainId, tdoc.uid);
+        const udoc = await (tdoc.uid === 'login'
+            ? (async () => {
+                const u = await user.coll.findOne({ 'authenticators.credentialID': Binary.createFromBase64(result.id) });
+                return u ? await user.getById(domainId, u._id) : null;
+            })()
+            : user.getById(domainId, tdoc.uid));
+        if (!udoc) throw new NotFoundError();
         const parseId = (id: Binary) => Buffer.from(id.toString('hex'), 'hex').toString('base64url');
         const authenticator = udoc._authenticators?.find((c) => parseId(c.credentialID) === result.id);
         if (!authenticator) throw new ValidationError('authenticator');
@@ -186,8 +200,15 @@ class UserWebauthnHandler extends Handler {
         if (!verification?.verified) throw new ValidationError('authenticator');
         authenticator.counter = verification.authenticationInfo.newCounter;
         await user.setById(udoc._id, { authenticators: udoc._authenticators });
-        await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
-        this.back();
+        if (tdoc.uid === 'login') {
+            await successfulAuth.call(this, await user.getById(domainId, udoc._id));
+            await token.del(challenge, token.TYPE_WEBAUTHN);
+            this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
+                ? this.url('homepage') : this.request.referer);
+        } else {
+            await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
+            this.back();
+        }
     }
 }
 
@@ -515,6 +536,67 @@ class ContestModeHandler extends Handler {
 
 export const inject = ['oauth'];
 
+const UserApi = {
+    user: Query(Schema.object({
+        id: Schema.number().step(1),
+        uname: Schema.string(),
+        mail: Schema.string(),
+        domainId: Schema.string().required(),
+    }), (c, arg) => {
+        if (arg.id) return user.getById(arg.domainId, arg.id);
+        if (arg.mail) return user.getByEmail(arg.domainId, arg.mail);
+        if (arg.uname) return user.getByUname(arg.domainId, arg.uname);
+        return user.getById(arg.domainId, c.user._id);
+    }),
+    users: Query(Schema.object({
+        ids: Schema.array(Schema.number().step(1)),
+        auto: Schema.array(Schema.string()),
+        search: Schema.string(),
+        limit: Schema.number().step(1),
+        exact: Schema.boolean(),
+    }), async (c, arg) => {
+        const auto = (arg.ids?.length && arg.ids) || arg.auto || [];
+        if (auto.length) {
+            const maybeId = auto.filter((i) => !Number.isNaN(+i));
+            const result = [];
+            if (maybeId.length) {
+                const udocs = await user.getList(arg.domainId, maybeId.map((i) => +i));
+                for (const i in udocs) udocs[i].avatarUrl = avatar(udocs[i].avatar);
+                result.push(...Object.values(udocs));
+            }
+            const notFound = auto.filter((i) => !result.find((j) => j._id === +i));
+            if (notFound.length > 50) return result; // reject if too many
+            for (const i of notFound) {
+                // eslint-disable-next-line no-await-in-loop
+                const udoc = await user.getByUname(arg.domainId, i.toString()) || await user.getByEmail(arg.domainId, i.toString());
+                if (udoc) result.push(udoc);
+            }
+            return result;
+        }
+        if (!arg.search) return [];
+        const udoc = await user.getById(arg.domainId, +arg.search)
+            || await user.getByUname(arg.domainId, arg.search)
+            || await user.getByEmail(arg.domainId, arg.search);
+        const udocs: User[] = arg.exact
+            ? []
+            : await user.getPrefixList(arg.domainId, arg.search, Math.min(arg.limit || 10, 10));
+        if (udoc && !udocs.find((i) => i._id === udoc._id)) {
+            udocs.pop();
+            udocs.unshift(udoc);
+        }
+        for (const i in udocs) {
+            udocs[i].avatarUrl = avatar(udocs[i].avatar);
+        }
+        return udocs;
+    }),
+} as const;
+
+declare module '@hydrooj/framework' {
+    interface Apis {
+        user: typeof UserApi;
+    }
+}
+
 export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
     ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
@@ -544,60 +626,6 @@ export async function apply(ctx: Context) {
         },
     });
     ctx.inject(['api'], ({ api }) => {
-        api.value('User', [
-            ['_id', 'Int!'],
-            ['uname', 'String!'],
-            ['mail', 'String!'],
-            ['perm', 'String'],
-            ['role', 'String'],
-            ['loginat', 'Date'],
-            ['regat', 'Date!'],
-            ['priv', 'Int!', 'User Privilege'],
-            ['avatarUrl', 'String'],
-            ['displayName', 'String @if(perm: "PERM_VIEW_DISPLAYNAME")'],
-            ['rpInfo', 'JSONObject'],
-        ]);
-        api.resolver('Query', 'user(id: Int, uname: String, mail: String)', 'User', (arg, c) => {
-            if (arg.id) return user.getById(c.args.domainId, arg.id);
-            if (arg.mail) return user.getByEmail(c.args.domainId, arg.mail);
-            if (arg.uname) return user.getByUname(c.args.domainId, arg.uname);
-            return c.user;
-        }, `Get a user by id, uname, or mail.
-Returns current user if no argument is provided.`);
-        api.resolver('Query', 'users(ids: [Int], auto: [String], search: String, limit: Int, exact: Boolean)', '[User]', async (arg, c) => {
-            const auto = arg.ids || arg.auto || [];
-            if (auto.length) {
-                const maybeId = auto.filter((i) => !Number.isNaN(+i));
-                const result = [];
-                if (maybeId.length) {
-                    const udocs = await user.getList(c.args.domainId, maybeId.map((i) => +i));
-                    for (const i in udocs) udocs[i].avatarUrl = avatar(udocs[i].avatar);
-                    result.push(...Object.values(udocs));
-                }
-                const notFound = auto.filter((i) => !result.find((j) => j._id === +i));
-                if (notFound.length > 50) return result; // reject if too many
-                for (const i of notFound) {
-                    // eslint-disable-next-line no-await-in-loop
-                    const udoc = await user.getByUname(c.args.domainId, i) || await user.getByEmail(c.args.domainId, i);
-                    if (udoc) result.push(udoc);
-                }
-                return result;
-            }
-            if (!arg.search) return [];
-            const udoc = await user.getById(c.args.domainId, +arg.search)
-                || await user.getByUname(c.args.domainId, arg.search)
-                || await user.getByEmail(c.args.domainId, arg.search);
-            const udocs: User[] = arg.exact
-                ? []
-                : await user.getPrefixList(c.args.domainId, arg.search, Math.min(arg.limit || 10, 10));
-            if (udoc && !udocs.find((i) => i._id === udoc._id)) {
-                udocs.pop();
-                udocs.unshift(udoc);
-            }
-            for (const i in udocs) {
-                udocs[i].avatarUrl = avatar(udocs[i].avatar);
-            }
-            return udocs;
-        }, 'Get a list of user by ids, or search users with the prefix.');
+        api.provide(UserApi);
     });
 }

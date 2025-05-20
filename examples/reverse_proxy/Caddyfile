@@ -1,3 +1,29 @@
+# 其他需求清参照 https://caddyserver.com/docs/ 说明进行设置。
+# For more information, refer to caddy v2 documentation.
 hydro.ac {
-  reverse_proxy http://localhost:8888
+	encode zstd gzip
+	log {
+		output file /data/access.log {
+			roll_size 1gb
+			roll_keep_for 72h
+		}
+		format json
+	}
+	# Handle static files directly, for better performance.
+	root * /root/.hydro/static
+	@static {
+		file {
+			try_files {path}
+		}
+	}
+	handle @static {
+		file_server
+	}
+	handle {
+		reverse_proxy http://127.0.0.1:8888
+	}
+}
+
+www.hydro.ac {
+	redir * https://hydro.ac{uri}
 }

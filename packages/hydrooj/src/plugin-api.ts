@@ -55,4 +55,3 @@ export { db, pwsh };
 
 // to load services into to context
 export { } from './handler/contest';
-export { } from './service/api';

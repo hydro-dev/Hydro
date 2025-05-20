@@ -176,7 +176,7 @@ export function apply(ctx: Context) {
     );
     c.setting.SystemSetting(Schema.object({
       'ui-default': Schema.object({
-        footer_extra_html: Schema.string().default(''),
+        footer_extra_html: Schema.string().role('textarea').default(''),
         nav_logo_dark: Schema.string().default('/components/navigation/nav-logo-small_dark.png'),
         preload: Schema.string().default(''),
         domainNavigation: Schema.boolean().default(true).description('Show Domain Navigation'),

@@ -2,28 +2,14 @@ import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/co
 import type { Udoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
-import { api, gql } from 'vj/utils';
+import { api } from 'vj/utils';
 
 const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
   <AutoComplete<Udoc>
     ref={ref as any}
     cacheKey="user"
-    {...props}
-    queryItems={(query) => api(gql`
-      users(search: ${query}) {
-        _id
-        uname
-        displayName
-        avatarUrl
-      }
-    `, ['data', 'users'])}
-    fetchItems={(ids) => api(gql`
-      users(auto: ${ids}) {
-        _id
-        uname
-        displayName
-      }
-    `, ['data', 'users'])}
+    queryItems={(query) => api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl'])}
+    fetchItems={(ids) => api('users', { auto: ids }, ['_id', 'uname', 'displayName'])}
     itemText={(user) => user.uname + (user.displayName ? ` (${user.displayName})` : '')}
     itemKey={(user) => ((props.multi || /^[+-]?\d+$/.test(user.uname.trim())) ? user._id.toString() : user.uname)}
     renderItem={(user) => (
@@ -37,6 +23,17 @@ const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoComplete
         </div>
       </div>
     )}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: false,
+      selectedKeys: [],
+      allowEmptyQuery: false,
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
   />
 ));
 
@@ -50,17 +47,6 @@ UserSelectAutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
-};
-
-UserSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  allowEmptyQuery: false,
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
 };
 
 UserSelectAutoComplete.displayName = 'UserSelectAutoComplete';

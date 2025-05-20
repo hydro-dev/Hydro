@@ -8,7 +8,7 @@ import { gt, prerelease } from 'semver';
 import { getWorkspaces, spawnAsync } from './utils';
 
 const {
-    CI, GITHUB_EVENT_NAME, GITHUB_REF,
+    CI, GITHUB_EVENT_NAME, GITHUB_REF, SKIP_PROVENANCE,
 } = process.env;
 
 const tag = GITHUB_REF === 'refs/heads/master' ? 'latest' : GITHUB_REF === 'refs/heads/next' ? 'dev' : undefined;
@@ -73,7 +73,7 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
                 }
             }
             await spawnAsync(
-                `yarn npm publish --access public --tag ${tag}`,
+                `yarn npm publish --access public --tag ${tag}${(CI && !SKIP_PROVENANCE) ? ' --provenance' : ''}`,
                 path.resolve(name),
             );
         }

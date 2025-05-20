@@ -1,8 +1,9 @@
 {
     "name": "@hydrooj/components",
-    "version": "1.0.0-beta.0",
+    "version": "1.0.0-beta.2",
     "main": "./frontend/index.ts",
     "dependencies": {
+        "allotment": "^1.20.3",
         "diff": "^7.0.0",
         "js-yaml": "^4.1.0",
         "lodash": "^4.17.21",
@@ -15,6 +16,11 @@
         "@types/diff": "^7.0.2",
         "@types/js-yaml": "^4.0.9",
         "@types/lodash": "^4.17.16",
-        "sass": "^1.86.3"
+        "sass": "^1.87.0"
+    },
+    "peerDependencies": {
+        "react": "*",
+        "react-dom": "*",
+        "schemastery": "*"
     }
 }

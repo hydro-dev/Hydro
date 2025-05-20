@@ -2,7 +2,7 @@ import keyword from 'emojis-keywords';
 import list from 'emojis-list';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import qface from 'qface';
-import { api, gql } from 'vj/utils';
+import { api } from 'vj/utils';
 
 function emoji(range) {
   return keyword.map((i, index) => ({
@@ -40,12 +40,7 @@ monaco.languages.registerCodeLensProvider('markdown', {
         dispose: () => { },
       };
     }
-    const { data } = await api(gql`
-      users(ids: ${users.map((i) => +i.matches[1])}) {
-        _id
-        uname
-      }
-    `);
+    const data = await api('users', { ids: users.map((i) => +i.matches[1]) }, ['_id', 'uname']);
     return {
       lenses: users.map((i, index) => ({
         range: i.range,
@@ -53,7 +48,7 @@ monaco.languages.registerCodeLensProvider('markdown', {
         command: {
           id: 'hydro.openUserPage',
           arguments: [i.matches[1]],
-          title: `@${data.users.find((doc) => doc._id.toString() === i.matches[1])?.uname || i.matches[1]}`,
+          title: `@${data.find((doc) => doc._id.toString() === i.matches[1])?.uname || i.matches[1]}`,
         },
       })),
       dispose: () => { },
@@ -82,14 +77,7 @@ monaco.languages.registerCompletionItemProvider('markdown', {
       endColumn: word.endColumn,
     };
     if (prefix === '@') {
-      const users = await api(gql`
-        users(search: ${word.word}) {
-          _id
-          uname
-          avatarUrl
-          priv
-        }
-      `, ['data', 'users']);
+      const users = await api('users', { search: word.word }, ['_id', 'uname']);
       return {
         suggestions: users.map((i) => ({
           label: { label: `@${i.uname}`, description: `UID=${i._id}` },

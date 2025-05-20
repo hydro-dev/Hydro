@@ -216,8 +216,8 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             : [Object.fromEntries(psdocs.map((i) => [i.rid, { _id: i.rid }])), []];
         if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             this.response.body.rdocs = this.response.body.rdocs.map((rdoc) => contest.applyProjection(this.tdoc, rdoc, this.user));
-            for (const psdoc of psdocs) {
-                this.response.body.rdict[psdoc.rid] = contest.applyProjection(this.tdoc, this.response.body.rdict[psdoc.rid], this.user);
+            for (const key in this.response.body.rdict) {
+                this.response.body.rdict[key] = contest.applyProjection(this.tdoc, this.response.body.rdict[key], this.user);
             }
             for (const key in this.response.body.psdict) {
                 this.response.body.psdict[key] = contest.applyProjection(this.tdoc, this.response.body.psdict[key], this.user);
@@ -741,33 +741,6 @@ export async function apply(ctx: Context) {
             }
         }
         await Promise.all(tasks);
-    });
-    ctx.inject(['api'], ({ api }) => {
-        api.value('Contest', [
-            ['_id', 'ObjectID!'],
-            ['domainId', 'String!'],
-            ['docId', 'ObjectID!'],
-            ['owner', 'Int!'],
-            ['beginAt', 'Date!'],
-            ['title', 'String!'],
-            ['content', 'String!'],
-            ['beginAt', 'Date!'],
-            ['endAt', 'Date!'],
-            ['attend', 'Int!'],
-            ['pids', '[Int]!'],
-            ['rated', 'Boolean!'],
-        ]);
-        api.resolver(
-            'Query', 'contest(id: ObjectID!)', 'Contest',
-            async (arg, c) => {
-                c.checkPerm(PERM.PERM_VIEW);
-                arg.id = new ObjectId(arg.id);
-                c.tdoc = await contest.get(c.args.domainId, new ObjectId(arg.id));
-                if (!c.tdoc) throw new ContestNotFoundError(c.args.domainId, arg.id);
-                return c.tdoc;
-            },
-            'Get a contest by ID',
-        );
     });
     ctx.plugin(ScoreboardService);
     ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {

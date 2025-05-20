@@ -42,6 +42,7 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadInputContainer extends React.PureComponent {
   static contextTypes = {
     store: PropTypes.object,

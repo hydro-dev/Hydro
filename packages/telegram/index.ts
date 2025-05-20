@@ -40,7 +40,7 @@ export default class TelegramService extends Service {
                     id, first_name, last_name, username, photo_url,
                 } = parsed;
                 const ret = {
-                    _id: id,
+                    _id: id.toString(),
                     email: `${id}@telegram.local`,
                     bio: '',
                     uname: [`${first_name} ${last_name}`, username, `telegram${id.toString()}`].filter((i) => i),

@@ -5,7 +5,7 @@ import VjNotification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { ctx, Service } from 'vj/context';
 import { NamedPage } from 'vj/misc/Page';
-import { api, gql, loadReactRedux } from 'vj/utils';
+import { api, loadReactRedux } from 'vj/utils';
 
 class MessagePadService extends Service {
   WebSocket: typeof import('../components/socket').default;
@@ -91,14 +91,10 @@ const page = new NamedPage('home_messages', () => {
   async function loadSendTarget() {
     const target = new URL(window.location.href).searchParams.get('target');
     if (!target) return;
-    const user = await api(gql`
-      users(search: ${target}, exact: true) {
-        _id
-        uname
-        avatarUrl
-        mail
-      }
-    `, ['data', 'users']);
+    const user = await api(
+      'users', { search: target, exact: true },
+      ['_id', 'uname', 'avatarUrl', 'mail'],
+    );
     if (!user?.length) return;
     createDialog(user[0]);
   }

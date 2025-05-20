@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import cache from 'koa-static-cache';
 import { type FindCursor, ObjectId } from 'mongodb';
 import {
-    ConnectionHandler as ConnectionHandlerOriginal,
+    applyApiHandler, ConnectionHandler as ConnectionHandlerOriginal,
     Handler as HandlerOriginal, HydroError, NotFoundError, UserFacingError,
     WebService,
 } from '@hydrooj/framework';
@@ -41,6 +41,7 @@ declare module '@hydrooj/framework' {
 
 export * from '@hydrooj/framework/decorators';
 export * from '@hydrooj/framework/validator';
+export { Query, Mutation } from '@hydrooj/framework/api';
 
 /*
  * For security concern, some API requires sudo privilege to access.
@@ -90,7 +91,8 @@ export async function apply(ctx: Context) {
         xhost: system.get('server.xhost'),
     });
     if (process.env.HYDRO_CLI) return;
-    ctx.inject(['server', 'oauth'], ({ server, on, oauth }) => {
+    ctx.inject(['server', 'oauth', 'setting'], (childContext) => {
+        const { server, on, oauth } = childContext;
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();
             try {
@@ -105,6 +107,9 @@ export async function apply(ctx: Context) {
                 // TODO metrics: calc avg response time
             }
         });
+
+        applyApiHandler(childContext, 'api', '/api/:op');
+        server.setDefaultContext(childContext);
 
         for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');
@@ -194,7 +199,7 @@ export async function apply(ctx: Context) {
                 await opcount.inc(op, id, periodSecs, maxOperations);
             },
             renderTitle(str: string) {
-                const name = this.ctx.setting.get('server.name');
+                const name = this.ctx.get('setting')?.get('server.name') || system.get('server.name');
                 if (this.UiContext.extraTitleContent) return `${this.UiContext.extraTitleContent} - ${this.translate(str)} - ${name}`;
                 return `${this.translate(str)} - ${name}`;
             },

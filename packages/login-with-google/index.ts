@@ -60,7 +60,7 @@ export default class GoogleOAuthService extends Service {
                 await TokenModel.del(state, TokenModel.TYPE_OAUTH);
                 this.response.redirect = s.redirect;
                 return {
-                    _id: payload.sub,
+                    _id: payload.sub.toString(),
                     email: payload.email,
                     uname: [`${payload.given_name} ${payload.family_name}`, payload.name],
                     viewLang: payload.locale.replace('-', '_'),

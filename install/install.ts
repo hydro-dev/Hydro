@@ -397,7 +397,9 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            `nix-env -iA ${['pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen'].map((i) => `nixpkgs.${i}`).join(' ')}`,
+            `nix-env -iA ${[
+                'pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen', 'gawk',
+            ].map((i) => `nixpkgs.${i}`).join(' ')}`,
             'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);

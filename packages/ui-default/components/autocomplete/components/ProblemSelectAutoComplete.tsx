@@ -2,7 +2,7 @@ import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/co
 import type { ProblemDoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
 import React, { forwardRef } from 'react';
-import { api, gql, request } from 'vj/utils';
+import { api, request } from 'vj/utils';
 
 const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, AutoCompleteProps<ProblemDoc>>((props, ref) => (
   <AutoComplete<ProblemDoc>
@@ -12,13 +12,7 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
       const { pdocs } = await request.get(`/d/${UiContext.domainId}/p`, { q: query, quick: true });
       return pdocs;
     }}
-    fetchItems={(ids) => api(gql`
-      problems(ids: ${ids.map((i) => +i)}) {
-        docId
-        pid
-        title
-      }
-    `, ['data', 'problems'])}
+    fetchItems={(ids) => api('problems', { ids: ids.map((i) => +i) }, ['docId', 'pid', 'title'])}
     itemText={(pdoc) => `${`${pdoc.docId} ${pdoc.title}`}`}
     itemKey={(pdoc) => `${pdoc.docId || pdoc}`}
     renderItem={(pdoc) => (
@@ -29,7 +23,17 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
         </div>
       </div>
     )}
-    {...props}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: false,
+      selectedKeys: [],
+      allowEmptyQuery: false,
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
   />
 ));
 
@@ -43,17 +47,6 @@ ProblemSelectAutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
-};
-
-ProblemSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  allowEmptyQuery: false,
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
 };
 
 ProblemSelectAutoComplete.displayName = 'ProblemSelectAutoComplete';

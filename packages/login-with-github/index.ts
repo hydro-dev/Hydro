@@ -47,7 +47,7 @@ export default class LoginWithGithubService extends Service {
                     .set('Accept', 'application/vnd.github.v3+json')
                     .set('Authorization', `token ${t}`);
                 const ret = {
-                    _id: userInfo.body.id,
+                    _id: userInfo.body.id.toString(),
                     email: userInfo.body.email,
                     bio: userInfo.body.bio,
                     uname: [userInfo.body.name, userInfo.body.login].filter((i) => i),

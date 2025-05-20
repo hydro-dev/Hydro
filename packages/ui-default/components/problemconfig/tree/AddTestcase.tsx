@@ -17,8 +17,8 @@ export function AddTestcase() {
   const [autoOutput, setAutoOutput] = React.useState(true);
   const testdata = useSelector((state: RootState) => state.testdata);
   const store = useStore<RootState>();
-  const refInput = useRef();
-  const refOutput = useRef();
+  const refInput = useRef(null);
+  const refOutput = useRef(null);
 
   useEffect(() => {
     const inputValid = testdata.find((i) => i.name === input);

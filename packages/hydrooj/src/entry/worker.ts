@@ -49,7 +49,6 @@ export async function apply(ctx: Context) {
             resolve(c);
         });
     });
-    await ctx.plugin(require('../service/api'));
     require('../lib/index');
 
     ctx.plugin(require('../service/monitor'));
