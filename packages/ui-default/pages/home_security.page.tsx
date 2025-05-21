@@ -47,8 +47,8 @@ async function changeMail() {
   try {
     await request.post('', {
       operation: 'change_mail',
-      password: $('[name="password"]').val(),
-      mail: $('[name="mail"]').val(),
+      password: $('#change-mail-dialog [name="password"]').val(),
+      mail: $('#change-mail-dialog [name="mail"]').val(),
     });
   } catch (err) {
     Notification.error(err.message);
