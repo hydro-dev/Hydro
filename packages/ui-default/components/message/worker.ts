@@ -28,6 +28,31 @@ const ack = {};
 function broadcastMsg(message: any) {
   for (const p of ports) p.postMessage(message);
 }
+
+function onMessage(payload: any) {
+  broadcastMsg({ type: 'message', payload });
+  let acked = false;
+  ack[payload.mdoc._id] = () => { acked = true; };
+  setTimeout(() => {
+    delete ack[payload.mdoc._id];
+    if (acked) return;
+    if (payload.mdoc.flag & FLAG_INFO) return;
+    if (Notification?.permission !== 'granted') {
+      console.log('Notification permission denied');
+      return;
+    }
+    // eslint-disable-next-line no-new
+    new Notification(
+      payload.udoc.uname || 'Hydro Notification',
+      {
+        tag: `message-${payload.mdoc._id}`,
+        icon: payload.udoc.avatarUrl || '/android-chrome-192x192.png',
+        body: payload.mdoc.content,
+      },
+    );
+  }, 5000);
+}
+
 function initConn(path: string, port: MessagePort, cookie: any) {
   ports.add(port);
   if (cookie !== lcookie) conn?.close();
@@ -55,27 +80,7 @@ function initConn(path: string, port: MessagePort, cookie: any) {
       broadcastMsg({ type: 'close', error: payload.error });
       conn.close();
     } else {
-      broadcastMsg({ type: 'message', payload });
-      let acked = false;
-      ack[payload.mdoc._id] = () => { acked = true; };
-      setTimeout(() => {
-        delete ack[payload.mdoc._id];
-        if (acked) return;
-        if (payload.mdoc.flag & FLAG_INFO) return;
-        if (Notification?.permission !== 'granted') {
-          console.log('Notification permission denied');
-          return;
-        }
-        // eslint-disable-next-line no-new
-        new Notification(
-          payload.udoc.uname || 'Hydro Notification',
-          {
-            tag: `message-${payload.mdoc._id}`,
-            icon: payload.udoc.avatarUrl || '/android-chrome-192x192.png',
-            body: payload.mdoc.content,
-          },
-        );
-      }, 5000);
+      onMessage(payload);
     }
   };
 }

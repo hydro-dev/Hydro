@@ -36,7 +36,7 @@ export interface EventMap {
     'task/daily': () => void;
     'task/daily/finish': (pref: Record<string, number>) => void;
 
-    'user/message': (uid: number, mdoc: MessageDoc) => void
+    'user/message': (uid: number[], mdoc: Omit<MessageDoc, 'to'>) => void
     'user/get': (udoc: User) => void
     'user/delcache': (content: string | true) => void
 
