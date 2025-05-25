@@ -214,6 +214,7 @@ class DomainPermissionHandler extends ManageHandler {
     async post({ domainId }) {
         const roles = {};
         for (const role in this.request.body) {
+            if (role === 'root') continue; // root role is not editable
             const perms = this.request.body[role] instanceof Array
                 ? this.request.body[role]
                 : [this.request.body[role]];
