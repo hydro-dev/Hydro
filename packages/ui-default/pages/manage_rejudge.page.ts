@@ -4,7 +4,7 @@ import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectA
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { NamedPage } from 'vj/misc/Page';
 
-const page = new NamedPage('manage_bulk_rejudge', async () => {
+const page = new NamedPage('manage_rejudge', async () => {
   UserSelectAutoComplete.getOrConstruct($('[name="uidOrName"]'), {
     clearDefaultValue: false,
   });
