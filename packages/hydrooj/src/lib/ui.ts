@@ -63,7 +63,7 @@ inject('ControlPanel', 'manage_dashboard');
 inject('ControlPanel', 'manage_script');
 inject('ControlPanel', 'manage_user_import');
 inject('ControlPanel', 'manage_user_priv');
-inject('ControlPanel', 'manage_bulk_rejudge');
+inject('ControlPanel', 'manage_rejudge');
 inject('ControlPanel', 'manage_setting');
 inject('ControlPanel', 'manage_config');
 inject('DomainManage', 'domain_dashboard', { family: 'Properties', icon: 'info' });

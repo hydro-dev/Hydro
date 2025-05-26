@@ -231,15 +231,10 @@ export interface RecordStatDoc {
 export interface RecordRejudgeDoc {
     _id: ObjectId;
     owner: number;
-    domainId: string;
-    uid?: number;
-    pid?: number;
-    contest?: ObjectId;
-    lang?: string;
-    status?: number;
+    reason: string;
     apply: boolean;
-    message: string;
     finishAt: Date;
+    rids: ObjectId[];
     changes: {
         rid: ObjectId;
         old: number;
