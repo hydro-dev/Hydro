@@ -3,61 +3,146 @@
 {% block manage_content %}
 <div class="section">
   <div class="section__header">
-    <h1 class="section__title" data-heading>{{ _('Bulk Rejudge') }}</h1>
+    <h1 class="section__title">{{ _('Bulk Rejudge') }}</h1>
   </div>
   <div class="section__body">
+    {% if error %}
+    <p class="typo text-red">{{ error.split('\n')|join('<br>') }}</p>
+    {% endif %}
     <form>
       <div class="row">
-        <div class="medium-6 columns">
+        <div class="medium-3 columns">
           <label class="filter-user">
             {{ _('By Username / UID') }}
-            <input name="uidOrName" type="text" class="textbox" value="" autocomplete="off" data-autofocus>
+            <input name="uidOrName" type="text" class="textbox" value="{{ uidOrName|default('') }}" autocomplete="off" data-autofocus>
           </label>
         </div>
-        <div class="medium-6 columns">
+        <div class="medium-3 columns">
           <label>
             {{ _('By Problem') }}
-            <input name="pid" type="text" class="textbox" value="">
+            <input name="pid" type="text" class="textbox" value="{{ pid|default('') }}">
           </label>
         </div>
-      </div>
-      <div class="row">
-        <div class="medium-6 columns">
+        <div class="medium-3 columns">
           <label>
             {{ _('By Contest') }}
-            <input name="tid" type="text" class="textbox" value="">
+            <input name="tid" type="text" class="textbox" value="{{ tid|default('') }}">
           </label>
         </div>
-        <div class="medium-6 columns">
+        <div class="medium-3 columns">
           <label>
             {{ _('By Language') }}
-            <input name="lang" type="text" class="textbox" value="">
+            <input name="lang" type="text" class="textbox" value="{{ lang|default('') }}">
           </label>
         </div>
       </div>
       <div class="row">
-        <div class="medium-6 columns">
+        {{ form.form_text({
+            columns:3,
+            label:'Begin Date',
+            name:'beginAtDate',
+            placeholder:'YYYY-mm-dd',
+            value:dateBeginText,
+            date:true,
+            row:false
+        }) }}
+        {{ form.form_text({
+            columns:2,
+            label:'Begin Time',
+            name:'beginAtTime',
+            placeholder:'HH:MM',
+            value:timeBeginText,
+            time:true,
+            row:false
+        }) }}
+        {{ form.form_text({
+            columns:3,
+            label:'End Date',
+            name:'endAtDate',
+            placeholder:'YYYY-mm-dd',
+            value:dateEndText,
+            date:true,
+            row:false
+        }) }}
+        {{ form.form_text({
+            columns:2,
+            label:'End Time',
+            name:'endAtTime',
+            placeholder:'HH:MM',
+            value:timeEndText,
+            time:true,
+            row:false
+        }) }}
+      </div>
+      <div class="row">
+        <div class="medium-7 columns">
           <label>
             {{ _('By Status') }}
+            <input name="status" type="text" class="textbox" value="{{ status|default('') }}">
           </label>
-          <select class="select" name="status">
-            <option value="" selected>{{ _('All Submissions') }}</option>
-            {%- for k,v in utils.status.STATUS_TEXTS -%}
-            <option value="{{k}}">{{v}}</option>
-            {%- endfor -%}
-          </select>
         </div>
-        <div class="medium-6 columns">
+        <div class="medium-5 columns">
           <label>
-            {{ _('Apply') }}
-            <input name="apply" type="checkbox" class="checkbox" value="1">
+            <label class="checkbox">
+              {{ _('High priority') }}
+              <input name="high_priority" type="checkbox" class="checkbox" {% if high_priority %}checked{% endif %}>
+            </label>
+            <br>
+            <label class="checkbox">
+              {{ _('Apply result after rejudge') }}
+              <input name="apply" type="checkbox" class="checkbox" {% if apply %}checked{% endif %}>
+            </label>
           </label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="medium-3 columns">
+          <button name="operation" value="preview" class="rounded button">{{ _('Preview') }}</button>
+          <button name="operation" value="rejudge" class="rounded primary button">{{ _('Rejudge') }}</button>
         </div>
       </div>
       <div class="row"><div class="columns">
-        <button name="submit" class="rounded primary button">{{ _('Rejudge') }}</button>
       </div></div>
     </form>
+  </div>
+</div>
+<div class="section">
+  <div class="section__header">
+    <h1 class="section__title">{{ _('Bulk Rejudge Result') }}</h1>
+  </div>
+  <div class="section__body no-padding"> 
+    <table class="data-table">
+      <colgroup>
+        <col class="col--count">
+        <col class="col--beginAt">
+        <col class="col--status">
+        <col class="col--action">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>{{ _('Operator') }}</th>
+          <th>{{ _('Count') }}</th>
+          <th>{{ _('Begin At') }}</th>
+          <th>{{ _('Status') }}</th>
+          <th>{{ _('Action') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%- for item in tasks -%}
+        <tr>
+          <td>{{ item._id.toHexString()|truncate(8,True,'') }}</td>
+          <td>{{ user.render_inline(item.operator, badge=false) }}</td>
+          <td>{{ item.count }}</td>
+          <td>{{ item.beginAt }}</td>
+          <td>{{ item.status }}</td>
+          <td>
+            <a class="typo-a" href="{{ url('manage_rejudge_detail', query={id: item._id.toHexString()}) }}">{{ _('View') }}</a>
+          </td>
+        </tr>
+        {%- endfor -%}
+      </tbody>
+    </table>
   </div>
 </div>
 {% endblock %}
