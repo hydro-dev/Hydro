@@ -10,7 +10,7 @@
         "@hydrooj/utils": "workspace:^",
         "emoji-regex": "^10.4.0",
         "fs-extra": "^11.3.0",
-        "koa": "^2.16.1",
+        "koa": "^3.0.0",
         "koa-body": "^6.0.1",
         "koa-compress": "^5.1.1",
         "koa-router": "^13.0.1",
@@ -19,6 +19,7 @@
         "path-to-regexp": "^8.2.0",
         "sanitize-filename": "^1.6.3",
         "saslprep": "^1.0.3",
+        "schemastery": "^3.16.1",
         "shorty.js": "^1.0.1",
         "ws": "^8.18.2"
     },
@@ -27,7 +28,7 @@
         "@types/koa": "^2.15.0",
         "@types/koa-compress": "^4.0.6",
         "@types/koa-router": "^7.4.8",
-        "@types/lodash": "^4.17.16",
+        "@types/lodash": "^4.17.17",
         "@types/saslprep": "^1.0.3",
         "@types/ws": "^8.18.1"
     }

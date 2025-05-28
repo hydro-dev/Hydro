@@ -8,6 +8,7 @@ import fs from 'fs-extra';
 import Koa from 'koa';
 import Body from 'koa-body';
 import Compress from 'koa-compress';
+import Schema from 'schemastery';
 import { Shorty } from 'shorty.js';
 import { WebSocket, WebSocketServer } from 'ws';
 import {
@@ -324,19 +325,19 @@ function executeMiddlewareStack(context: any, middlewares: { name: string, func:
     return dispatch(0);
 }
 
-export interface WebServiceConfig {
-    keys: string[];
-    proxy: boolean;
-    cors?: string;
-    upload?: string;
-    port: number;
-    host?: string;
-    xff?: string;
-    xhost?: string;
-    enableSSE?: boolean;
-}
-
 export class WebService<C extends CordisContext = CordisContext> extends Service<never, C> {
+    static Config = Schema.object({
+        keys: Schema.array(Schema.string()),
+        proxy: Schema.boolean(),
+        cors: Schema.string(),
+        upload: Schema.string(),
+        port: Schema.number(),
+        host: Schema.string(),
+        xff: Schema.string(),
+        xhost: Schema.string(),
+        enableSSE: Schema.boolean(),
+    });
+
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     private serverLayers = [];
@@ -352,7 +353,7 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: C, public config: WebServiceConfig) {
+    constructor(ctx: C, public config: ReturnType<typeof WebService.Config>) {
         super(ctx, 'server');
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
