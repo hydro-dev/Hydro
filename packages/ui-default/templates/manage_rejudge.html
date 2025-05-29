@@ -6,10 +6,7 @@
     <h1 class="section__title">{{ _('Bulk Rejudge') }}</h1>
   </div>
   <div class="section__body">
-    {% if error %}
-    <p class="typo text-red">{{ error.split('\n')|join('<br>') }}</p>
-    {% endif %}
-    <form>
+    <form method="post">
       <div class="row">
         <div class="medium-3 columns">
           <label class="filter-user">
@@ -38,11 +35,11 @@
       </div>
       <div class="row">
         {{ form.form_text({
-            columns:3,
+            columns:4,
             label:'Begin Date',
             name:'beginAtDate',
             placeholder:'YYYY-mm-dd',
-            value:dateBeginText,
+            value:beginAtDate,
             date:true,
             row:false
         }) }}
@@ -51,16 +48,16 @@
             label:'Begin Time',
             name:'beginAtTime',
             placeholder:'HH:MM',
-            value:timeBeginText,
+            value:beginAtTime,
             time:true,
             row:false
         }) }}
         {{ form.form_text({
-            columns:3,
+            columns:4,
             label:'End Date',
             name:'endAtDate',
             placeholder:'YYYY-mm-dd',
-            value:dateEndText,
+            value:endAtDate,
             date:true,
             row:false
         }) }}
@@ -69,7 +66,7 @@
             label:'End Time',
             name:'endAtTime',
             placeholder:'HH:MM',
-            value:timeEndText,
+            value:endAtTime,
             time:true,
             row:false
         }) }}
@@ -95,14 +92,15 @@
           </label>
         </div>
       </div>
+      {% if recordLength %}
+      <p class="typo">{{ _('Will rejudge {0} records').format(recordLength) }}</p>
+      {% endif %}
       <div class="row">
         <div class="medium-3 columns">
-          <button name="operation" value="preview" class="rounded button">{{ _('Preview') }}</button>
-          <button name="operation" value="rejudge" class="rounded primary button">{{ _('Rejudge') }}</button>
+          <button name="type" value="preview" class="rounded button">{{ _('Preview') }}</button>
+          <button name="type" value="rejudge" class="rounded primary button">{{ _('Rejudge') }}</button>
         </div>
       </div>
-      <div class="row"><div class="columns">
-      </div></div>
     </form>
   </div>
 </div>
