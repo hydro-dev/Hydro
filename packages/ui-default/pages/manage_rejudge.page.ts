@@ -17,7 +17,7 @@ const page = new NamedPage('manage_rejudge', async () => {
     { name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display}/` : ''}${window.LANGS[i].display}`, _id: i }
   ));
   CustomSelectAutoComplete.getOrConstruct($('[name=lang]'), { multi: true, data: langs });
-  const statuses = Object.values(STATUS_TEXTS).map((i) => ({ name: i, _id: i }));
+  const statuses = Object.entries(STATUS_TEXTS).map(([i, j]) => ({ name: j, _id: i }));
   CustomSelectAutoComplete.getOrConstruct($('[name=status]'), { multi: true, data: statuses });
 });
 

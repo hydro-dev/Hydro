@@ -2,13 +2,19 @@ import { exec } from 'child_process';
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
 import { omit } from 'lodash';
+import moment from 'moment';
+import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
+import { Time } from '@hydrooj/utils';
 import {
-    CannotEditSuperAdminError, NotLaunchedByPM2Error, UserNotFoundError, ValidationError,
+    CannotEditSuperAdminError, ContestNotFoundError, NotLaunchedByPM2Error, ProblemNotFoundError, RecordNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
+import { RecordDoc } from '../interface';
 import { Logger } from '../logger';
-import { PRIV, STATUS } from '../model/builtin';
+import { NORMAL_STATUS, PRIV, STATUS } from '../model/builtin';
+import * as contest from '../model/contest';
 import domain from '../model/domain';
+import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import * as system from '../model/system';
@@ -359,33 +365,99 @@ class SystemUserPrivHandler extends SystemHandler {
 
 class SystemRejudgeHandler extends SystemHandler {
     async get() {
-        const rrdocs = await record.getMultiRejudgeTask({});
-        this.response.body.rrdocs = rrdocs;
+        this.response.body = {
+            rrdocs: await record.getMultiRejudgeTask({}),
+            apply: true,
+            status: NORMAL_STATUS.filter((i: STATUS) => ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_ACCEPTED].includes(i)).join(','),
+        };
         this.response.template = 'manage_rejudge.html';
     }
 
-    @param('domainId', Types.String, true)
-    @param('pid', Types.Int, true)
-    @param('uid', Types.Int, true)
-    @param('contest', Types.String, true)
-    @param('lang', Types.String, true)
-    @param('status', Types.Int, true)
+    @param('uidOrName', Types.UidOrName, true)
+    @param('pid', Types.ProblemId, true)
+    @param('tid', Types.ObjectId, true)
+    @param('langs', Types.CommaSeperatedArray, true)
+    @param('beginAtDate', Types.Date, true)
+    @param('beginAtTime', Types.Time, true)
+    @param('endAtDate', Types.Date, true)
+    @param('endAtTime', Types.Time, true)
+    @param('status', Types.CommaSeperatedArray, true)
+    @param('type', Types.Range(['preview', 'rejudge']))
+    @param('high_priority', Types.Boolean)
     @param('apply', Types.Boolean)
-    async post(domainId: string, pid: number, uid: number, contest: string, lang: string, status: number, _apply = false) {
+    async post(
+        domainId: string, uidOrName?: string, pid?: string | number, tid?: ObjectId,
+        langs: string[] = [], beginAtDate?: string, beginAtTime?: string, endAtDate?: string,
+        endAtTime?: string, status: string[] = [], _type = 'rejudge', highPriority = false, _apply = false,
+    ) {
+        const q: Filter<RecordDoc> = {};
+        if (uidOrName) {
+            const udoc = await user.getById(domainId, +uidOrName)
+                || await user.getByUname(domainId, uidOrName)
+                || await user.getByEmail(domainId, uidOrName);
+            if (udoc) q.uid = udoc._id;
+            else throw new UserNotFoundError(uidOrName);
+        }
+        if (tid) {
+            const tdoc = await contest.get(domainId, tid);
+            if (!tdoc) throw new ContestNotFoundError(domainId, tid);
+            q.contest = tdoc._id;
+        }
+        if (pid) {
+            const pdoc = await problem.get(domainId, pid);
+            if (pdoc) q.pid = pdoc.docId;
+            else throw new ProblemNotFoundError(domainId, pid);
+        }
+        if (langs.length) q.lang = { $in: langs.filter((i) => setting.langs[i]) };
+        let beginAt = null;
+        let endAt = null;
+        if (beginAtDate) {
+            beginAt = moment(`${beginAtDate} ${beginAtTime || '00:00'}`);
+            if (!beginAt.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
+            q._id ||= {};
+            q._id = { ...q._id, $gte: Time.getObjectID(beginAt) };
+        }
+        if (endAtDate) {
+            endAt = moment(`${endAtDate} ${endAtTime || '23:59'}`);
+            if (!endAt.isValid()) throw new ValidationError('endAtDate', 'endAtTime');
+            q._id ||= {};
+            q._id = { ...q._id, $lte: Time.getObjectID(endAt) };
+        }
+        if (beginAt && endAt && beginAt.isSameOrAfter(endAt)) throw new ValidationError('duration');
+        const rids = await record.getMulti(domainId, q).project({ _id: 1 }).toArray();
+        if (_type === 'preview') {
+            this.response.body = {
+                uidOrName,
+                pid,
+                tid,
+                langs: langs.join(','),
+                beginAtDate,
+                beginAtTime,
+                endAtDate,
+                endAtTime,
+                status: status.join(','),
+                highPriority,
+                apply: _apply,
+                recordLength: rids.length,
+                rrdocs: await record.getMultiRejudgeTask({}),
+            };
+            this.response.template = 'manage_rejudge.html';
+            return;
+        }
         const rid = await record.add(domainId, -1, this.user._id, '-', 'rejudge', false, {
             input: JSON.stringify({
-                pid, uid, contest, lang, status, apply: _apply,
+                domainId,
+                rids: rids.map((i) => i._id.toString()),
+                highPriority,
+                apply: _apply,
             }),
             type: 'rejudge',
         });
         const args = global.Hydro.script['rejudge'].validate({
             rrid: rid.toHexString(),
             domainId,
-            uid,
-            pid,
-            contest,
-            lang,
-            status,
+            rids: rids.map((i) => i._id.toString()),
+            highPriority,
             apply: _apply,
         });
         const report = (data) => judge.next({ domainId, rid, ...data });
@@ -419,7 +491,17 @@ class SystemRejudgeHandler extends SystemHandler {
                 });
             });
         this.response.body = { rid };
-        this.response.redirect = this.url('record_detail', { rid });
+        this.response.redirect = this.url('manage_rejudge_detail', { rid: rid.toHexString() });
+    }
+}
+
+class SystemRejudgeDetailHandler extends SystemHandler {
+    @param('rid', Types.ObjectId)
+    async get(domainId: string, rid: ObjectId) {
+        const rrdoc = await record.getRejudgeTask(rid);
+        if (!rrdoc) throw new RecordNotFoundError(domainId, rid);
+        this.response.body = { rrdoc };
+        this.response.template = 'manage_rejudge_detail.html';
     }
 }
 
@@ -433,5 +515,6 @@ export async function apply(ctx) {
     ctx.Route('manage_user_import', '/manage/userimport', SystemUserImportHandler);
     ctx.Route('manage_user_priv', '/manage/userpriv', SystemUserPrivHandler);
     ctx.Route('manage_rejudge', '/manage/rejudge', SystemRejudgeHandler);
+    ctx.Route('manage_rejudge_detail', '/manage/rejudge/:rid', SystemRejudgeDetailHandler);
     ctx.Connection('manage_check', '/manage/check-conn', SystemCheckConnHandler);
 }
