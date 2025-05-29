@@ -7,7 +7,8 @@ import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import { Time } from '@hydrooj/utils';
 import {
-    CannotEditSuperAdminError, ContestNotFoundError, NotLaunchedByPM2Error, ProblemNotFoundError, RecordNotFoundError, UserNotFoundError, ValidationError,
+    CannotEditSuperAdminError, ContestNotFoundError, NotLaunchedByPM2Error, ProblemNotFoundError,
+    RecordNotFoundError, UserNotFoundError, ValidationError,
 } from '../error';
 import { RecordDoc } from '../interface';
 import { Logger } from '../logger';
@@ -424,7 +425,7 @@ class SystemRejudgeHandler extends SystemHandler {
             q._id = { ...q._id, $lte: Time.getObjectID(endAt) };
         }
         if (beginAt && endAt && beginAt.isSameOrAfter(endAt)) throw new ValidationError('duration');
-        const rids = await record.getMulti(domainId, q).project({ _id: 1 }).toArray();
+        const rdocs = await record.getMulti(domainId, q).project({ _id: 1, contest: 1 }).toArray();
         if (_type === 'preview') {
             this.response.body = {
                 uidOrName,
@@ -438,60 +439,26 @@ class SystemRejudgeHandler extends SystemHandler {
                 status: status.join(','),
                 highPriority,
                 apply: _apply,
-                recordLength: rids.length,
+                recordLength: rdocs.length,
                 rrdocs: await record.getMultiRejudgeTask({}),
             };
             this.response.template = 'manage_rejudge.html';
             return;
         }
-        const rid = await record.add(domainId, -1, this.user._id, '-', 'rejudge', false, {
-            input: JSON.stringify({
-                domainId,
-                rids: rids.map((i) => i._id.toString()),
-                highPriority,
-                apply: _apply,
-            }),
-            type: 'rejudge',
-        });
-        const args = global.Hydro.script['rejudge'].validate({
-            rrid: rid.toHexString(),
-            domainId,
-            rids: rids.map((i) => i._id.toString()),
-            highPriority,
+        const rid = await record.addRejudgeTask(domainId, {
+            owner: this.user._id,
             apply: _apply,
+            rids: rdocs.map((i) => i._id),
         });
-        const report = (data) => judge.next({ domainId, rid, ...data });
-        report({ message: 'Start rejudge', status: STATUS.STATUS_JUDGING });
-        const start = Date.now();
-        // Maybe async?
-        global.Hydro.script['rejudge'].run(args, report)
-            .then((ret: any) => {
-                const time = new Date().getTime() - start;
-                judge.end({
-                    domainId,
-                    rid: rid.toHexString(),
-                    status: STATUS.STATUS_ACCEPTED,
-                    message: inspect(ret, false, 10, true),
-                    judger: 1,
-                    time,
-                    memory: 0,
-                });
-            })
-            .catch((err: Error) => {
-                const time = new Date().getTime() - start;
-                logger.error(err);
-                judge.end({
-                    domainId,
-                    rid: rid.toHexString(),
-                    status: STATUS.STATUS_SYSTEM_ERROR,
-                    message: `${err.message} \n${(err as any).params || []} \n${err.stack} `,
-                    judger: 1,
-                    time,
-                    memory: 0,
-                });
-            });
-        this.response.body = { rid };
-        this.response.redirect = this.url('manage_rejudge_detail', { rid: rid.toHexString() });
+        const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
+        await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+        await Promise.all([
+            record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false },
+                { rejudge: _apply ? true : 'controlled' }),
+            record.judge(domainId, rdocs.filter((i) => !i.contest).map((i) => i._id), priority, {},
+                { rejudge: _apply ? true : 'controlled' }),
+        ]);
+        this.response.redirect = this.url('manage_rejudge_detail', { rid });
     }
 }
 

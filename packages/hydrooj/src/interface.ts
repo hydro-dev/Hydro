@@ -230,12 +230,12 @@ export interface RecordStatDoc {
 
 export interface RecordRejudgeDoc {
     _id: ObjectId;
+    domainId: string;
     owner: number;
-    reason: string;
     apply: boolean;
-    finishAt: Date;
+    finishAt?: Date;
     rids: ObjectId[];
-    changes: {
+    changes?: {
         rid: ObjectId;
         old: number;
         new: number;

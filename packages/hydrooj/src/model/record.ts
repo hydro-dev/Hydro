@@ -290,8 +290,9 @@ export default class RecordModel {
         return RecordModel.collRejudge.findOne({ _id });
     }
 
-    static async addRejudgeTask(doc: RecordRejudgeDoc) {
-        await RecordModel.collRejudge.insertOne(doc);
+    static async addRejudgeTask(domainId: string, doc: Pick<RecordRejudgeDoc, 'owner' | 'apply' | 'rids' | 'changes'>) {
+        const res = await RecordModel.collRejudge.insertOne({ _id: new ObjectId(), domainId, ...doc });
+        return res.insertedId;
     }
 
     static async pushRejudgeResult(rrid: ObjectId, result: { rid: ObjectId, old: number, new: number }) {
