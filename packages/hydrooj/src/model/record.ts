@@ -13,6 +13,7 @@ import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
+import * as document from './document';
 import DomainModel from './domain';
 import problem from './problem';
 import task from './task';
@@ -282,24 +283,27 @@ export default class RecordModel {
         return r;
     }
 
-    static async getMultiRejudgeTask(query: Filter<RecordRejudgeDoc>) {
-        return RecordModel.collRejudge.find(query).toArray();
+    static async getMultiRejudgeTask(domainId: string | undefined, query: Filter<RecordRejudgeDoc>) {
+        return document.getMulti(domainId, document.TYPE_REJUDGE, query).toArray();
     }
 
-    static async getRejudgeTask(_id: ObjectId) {
-        return RecordModel.collRejudge.findOne({ _id });
+    static async getRejudgeTask(domainId: string, _id: ObjectId) {
+        return document.get(domainId, document.TYPE_REJUDGE, _id);
     }
 
-    static async addRejudgeTask(domainId: string, doc: Pick<RecordRejudgeDoc, 'owner' | 'apply' | 'rids' | 'changes'>) {
-        const res = await RecordModel.collRejudge.insertOne({ _id: new ObjectId(), domainId, ...doc });
-        return res.insertedId;
+    static async addRejudgeTask(domainId: string, doc: Partial<RecordRejudgeDoc>) {
+        return await document.add(domainId, '', doc.owner, document.TYPE_REJUDGE, null, null, null, doc);
     }
 
-    static async pushRejudgeResult(rrid: ObjectId, result: { rid: ObjectId, old: number, new: number }) {
+    static async pushRejudgeResult(rrid: ObjectId, newStatus: number, newScore: number, newRev) {
         await RecordModel.collRejudge.updateOne({ _id: rrid }, {
-            $push: {
-                changes: result,
+            $set: {
+                newStatus,
+                newScore,
+                newRev,
             },
+        }, {
+            upsert: true,
         });
     }
 }
@@ -348,6 +352,10 @@ export async function apply(ctx: Context) {
         db.ensureIndexes(
             RecordModel.collHistory,
             { key: { rid: 1, _id: -1 }, name: 'basic' },
+        ),
+        db.ensureIndexes(
+            RecordModel.collRejudge,
+            { key: { domainId: 1, rrid: 1, rid: 1 }, name: 'basic' },
         ),
     ]);
 }

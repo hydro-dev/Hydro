@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { inspect } from 'util';
 import * as yaml from 'js-yaml';
-import { omit } from 'lodash';
+import { omit, pick } from 'lodash';
 import moment from 'moment';
 import { Filter, ObjectId } from 'mongodb';
 import Schema from 'schemastery';
@@ -367,7 +367,7 @@ class SystemUserPrivHandler extends SystemHandler {
 class SystemRejudgeHandler extends SystemHandler {
     async get() {
         this.response.body = {
-            rrdocs: await record.getMultiRejudgeTask({}),
+            rrdocs: await record.getMultiRejudgeTask(undefined, {}),
             apply: true,
             status: NORMAL_STATUS.filter((i: STATUS) => ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_ACCEPTED].includes(i)).join(','),
         };
@@ -440,7 +440,7 @@ class SystemRejudgeHandler extends SystemHandler {
                 highPriority,
                 apply: _apply,
                 recordLength: rdocs.length,
-                rrdocs: await record.getMultiRejudgeTask({}),
+                rrdocs: await record.getMultiRejudgeTask(undefined, {}),
             };
             this.response.template = 'manage_rejudge.html';
             return;
@@ -448,10 +448,19 @@ class SystemRejudgeHandler extends SystemHandler {
         const rid = await record.addRejudgeTask(domainId, {
             owner: this.user._id,
             apply: _apply,
-            rids: rdocs.map((i) => i._id),
         });
-        const priority = await record.submissionPriority(this.user._id, -10000 - rdocs.length * 5 - 50);
-        await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+        const priority = await record.submissionPriority(this.user._id, (highPriority ? 0 : -10000) - rdocs.length * 5 - 50);
+        if (_apply) await record.reset(domainId, rdocs.map((rdoc) => rdoc._id), true);
+        else {
+            await record.collHistory.insertMany(rdocs.map((rdoc) => ({
+                ...pick(rdoc, [
+                    'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                    'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+                ]),
+                rid: rdoc._id,
+                _id: new ObjectId(),
+            })));
+        }
         await Promise.all([
             record.judge(domainId, rdocs.filter((i) => i.contest).map((i) => i._id), priority, { detail: false },
                 { rejudge: _apply ? true : 'controlled' }),
@@ -465,9 +474,10 @@ class SystemRejudgeHandler extends SystemHandler {
 class SystemRejudgeDetailHandler extends SystemHandler {
     @param('rid', Types.ObjectId)
     async get(domainId: string, rid: ObjectId) {
-        const rrdoc = await record.getRejudgeTask(rid);
+        const rrdoc = await record.getRejudgeTask(domainId, rid);
+        const rdocs = await record.getMulti(domainId, { _id: { $in: rrdoc.rids } }).toArray();
         if (!rrdoc) throw new RecordNotFoundError(domainId, rid);
-        this.response.body = { rrdoc };
+        this.response.body = { rrdoc, rdocs };
         this.response.template = 'manage_rejudge_detail.html';
     }
 }

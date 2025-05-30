@@ -228,18 +228,24 @@ export interface RecordStatDoc {
     lang: string;
 }
 
-export interface RecordRejudgeDoc {
-    _id: ObjectId;
-    domainId: string;
-    owner: number;
+export interface RecordRejudgeDoc extends Document {
+    content: string;
+    docId: ObjectId;
+    docType: document['TYPE_REJUDGE'];
     apply: boolean;
     finishAt?: Date;
-    rids: ObjectId[];
-    changes?: {
-        rid: ObjectId;
-        old: number;
-        new: number;
-    }[];
+}
+
+export interface RecordRejudgeResultDoc {
+    _id: ObjectId;
+    rrid: ObjectId;
+    rid: ObjectId;
+    oldRev: ObjectId;
+    newRev: ObjectId;
+    oldStatus: number;
+    newStatus: number;
+    oldScore: number;
+    newScore: number;
 }
 
 export interface ScoreboardNode {
@@ -548,7 +554,7 @@ declare module './service/db' {
         'record': RecordDoc;
         'record.stat': RecordStatDoc;
         'record.history': RecordHistoryDoc;
-        'record.rejudge': RecordRejudgeDoc;
+        'record.rejudge': RecordRejudgeResultDoc;
         'document': any;
         'document.status': StatusDocBase & {
             [K in keyof DocStatusType]: { docType: K } & DocStatusType[K];
