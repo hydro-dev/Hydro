@@ -189,6 +189,7 @@ async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
 
 class UserModel {
     static coll = coll;
+    static collGroup = collGroup;
     static User = User;
     static cache = cache;
     static defaultUser: Udoc = {

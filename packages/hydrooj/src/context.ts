@@ -71,6 +71,17 @@ export class Context extends cordis.Context {
         super();
         this.plugin(ApiMixin);
         this.plugin(TimerService);
-        this.plugin(LoggerService);
+        this.plugin(LoggerService, {
+            console: {
+                showDiff: false,
+                showTime: 'dd hh:mm:ss',
+                label: {
+                    align: 'right',
+                    width: 9,
+                    margin: 1,
+                },
+                levels: { default: process.env.DEV ? 3 : 2 },
+            },
+        });
     }
 }
