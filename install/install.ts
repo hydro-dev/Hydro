@@ -7,15 +7,21 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import os, { cpus } from 'os';
 import { createInterface } from 'readline/promises';
-import { supportsHyperlink } from 'supports-hyperlinks';
+import supportsHyperlink from 'supports-hyperlinks';
 
-const isSupported = supportsHyperlink(process.stdout);
+const isSupported = supportsHyperlink.stdout;
 const OSC = '\u001B]';
 const BEL = '\u0007';
 const SEP = ';';
 export const link = isSupported ? (text: string, url: string) => [
     OSC, '8', SEP, SEP, url, BEL, text, OSC, '8', SEP, SEP, BEL,
 ].join('') : (text: string, url: string) => `${text} < ${url} > `;
+const freemem = os.freemem();
+const smallMemory = (freemem < 1024 * 1024 * 1024);
+
+const nixInstall = (...packages: string[]) => (smallMemory
+    ? packages.map((t) => `nix-env -iA ${t.includes('.') ? t : `nixpkgs.${t}`}`).join(' && ')
+    : `nix-env -iA ${packages.map((t) => (t.includes('.') ? t : `nixpkgs.${t}`)).join(' ')}`);
 
 const warnings: [string, ...any[]][] = [];
 
@@ -46,6 +52,7 @@ const locales = {
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
         'error.osreleaseNotFound': '无法获取系统版本信息（/etc/os-release 文件未找到），请尝试手动安装。',
         'error.unsupportedOS': '不支持的操作系统 %s ，请尝试手动安装，',
+        'error.centos': 'CentOS 及其变种系统因系统内核过低，无法安装 Hydro，强烈建议使用其他系统。若确有需求，请升级 Linux 内核至 4.4+ 后再手动安装 Hydro。',
         'install.preparing': '正在初始化安装...',
         'install.mongodb': '正在安装 mongodb...',
         'install.createDatabaseUser': '正在创建数据库用户...',
@@ -85,6 +92,8 @@ then restart and run the script again.`,
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
         'error.osreleaseNotFound': 'Unable to get system version information (/etc/os-release file not found), please try to install manually.',
         'error.unsupportedOS': 'Unsupported operating system %s, please try to install manually.',
+        'error.centos': `CentOS and its derivatives are not supported due to low system kernel versions.
+It is strongly recommended to use other systems. If you really need it, please upgrade the Linux kernel to 4.4+ and manually install Hydro.`,
         'install.preparing': 'Initializing installation...',
         'install.mongodb': 'Installing mongodb...',
         'install.createDatabaseUser': 'Creating database user...',
@@ -348,6 +357,18 @@ const Steps = () => [
                 }
             },
             async () => {
+                if (process.env.IGNORE_CENTOS) return;
+                const res = exec('yum -h');
+                if (res.code) return;
+                if (!process.argv.includes('--unsupported-centos')) {
+                    log.warn('error.centos');
+                    process.exit(1);
+                } else {
+                    log.warn('warn.centos');
+                    warnings.push(['warn.centos']);
+                }
+            },
+            async () => {
                 if (!avx && !installAsJudge) {
                     log.warn('note.avx');
                     log.info('install.wait', 60);
@@ -397,9 +418,7 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            `nix-env -iA ${[
-                'pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen', 'gawk',
-            ].map((i) => `nixpkgs.${i}`).join(' ')}`,
+            nixInstall('pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen', 'gawk'),
             'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
@@ -450,20 +469,20 @@ ${nixConfBase}`);
         "openssl-1.1.1z"
     ];
 }`),
-            `nix-env -iA hydro.mongodb${avx ? 7 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
+            nixInstall(`hydro.mongodb${avx ? 7 : 4}${CN ? '-cn' : ''}`, 'mongosh', 'mongodb-tools'),
         ],
     },
     {
         init: 'install.compiler',
         operations: [
-            'nix-env -iA nixpkgs.gcc nixpkgs.python3',
+            nixInstall('gcc', 'python3'),
         ],
     },
     {
         init: 'install.sandbox',
         skip: () => !exec('hydro-sandbox --help').code,
         operations: [
-            'nix-env -iA nixpkgs.go-judge',
+            nixInstall('go-judge'),
             'ln -sf $(which go-judge) /usr/local/bin/hydro-sandbox',
         ],
     },
@@ -472,7 +491,7 @@ ${nixConfBase}`);
         skip: () => installAsJudge || noCaddy || existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
-            'nix-env -iA nixpkgs.caddy',
+            nixInstall('caddy'),
             () => writeFileSync(`${process.env.HOME}/.hydro/Caddyfile`, Caddyfile),
         ],
     },
@@ -660,7 +679,7 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
-            'echo "layout=1" >/etc/HYDRO_INSTALLER',
+            'echo "layout=2" >/etc/HYDRO_INSTALLER',
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             // dont retry this as it usually fails
