@@ -115,7 +115,7 @@ export async function run({
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
-        if (randomMail === 'always') delete udoc.email;
+        if (randomMail === 'always' || !udoc.email.includes('@')) delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
         current ||= await UserModel.getByUname(domainId, udoc.username);
         if (current && randomMail === 'needed') {
@@ -147,6 +147,7 @@ export async function run({
                 displayName: udoc.nickname || '',
                 nSubmit: udoc.submit_num,
                 nAccept: udoc.ac_num,
+                join: true,
             });
         }
     }
@@ -359,7 +360,7 @@ export async function run({
                     }
                 }
             }
-            if (rdoc.type) {
+            if (rdoc.type && rdoc.type_info && tidMap[rdoc.type_info]) {
                 data.contest = new ObjectId(tidMap[rdoc.type_info]);
                 await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
