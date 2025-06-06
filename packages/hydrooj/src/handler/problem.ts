@@ -384,10 +384,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            [this.response.body.ctdocs, this.response.body.htdocs] = await Promise.all([
+            [this.response.body.ctdocs, this.response.body.htdocs] = (await Promise.all([
                 contest.getRelated(this.args.domainId, this.pdoc.docId),
                 contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework'),
-            ]);
+            ])).map((tdocs) => tdocs.filter((tdoc) => !tdoc.assign?.length || Set.intersection(tdoc.assign, this.user.group).size));
         }
     }
 
