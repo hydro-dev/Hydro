@@ -3,7 +3,7 @@ __langname: 简体中文
 '[Richtext message]': '[富文本消息]'
 '{0} comments': '{0} 条评论'
 '{0} discussions': '{0} 条讨论'
-'{0} is a moderator of this domain.': '{}是这个域的管理者之一。'
+'{0} is a moderator of this domain.': '{0}是这个域的管理者之一。'
 '{0} is a superuser.': '{0}是超级管理员。'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
 '{0} problems': '{0} 道题'
@@ -541,7 +541,7 @@ Logout All Sessions: 注销所有会话
 Logout This Session: 注销该会话
 Logout: 登出
 Lost Password: 忘记密码
-Lucky: 手气不错
+Lucky: 试试手气
 manage_config: 配置管理
 manage_dashboard: 控制面板
 manage_join_applications: 加域申请
@@ -1007,7 +1007,9 @@ user_extra_files: 用户额外文件
 user_login: 登录
 user_logout: 登出
 user_lostpass: 忘记密码
+'user_lostpass_mail_sent': '密码重置邮件已发送'
 user_register_with_code: 注册
+'user_lostpass_with_code': '重置密码'
 user_register: 注册
 User-defined role: 用户定义的角色
 User: 用户
