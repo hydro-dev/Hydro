@@ -2,18 +2,29 @@ import yaml from 'js-yaml';
 import Schema from 'schemastery';
 import { Context, Service } from './context';
 import { Logger } from './logger';
+import {
+    AccountSetting, DomainSetting, DomainUserSetting, PreferenceSetting, SystemSetting,
+} from './model/setting';
 
 const logger = new Logger('settings');
 
-declare module './context' {
+declare module 'cordis' {
     interface Context {
-        config: ConfigService;
+        setting: SettingService;
     }
 }
 
-export class ConfigService extends Service {
+const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
+    function method(this: Service, ...args: Parameters<F>) {
+        this.ctx.effect(() => {
+            const res = origFunc(...args);
+            return () => (disposeFunc ? disposeFunc(res) : res());
+        });
+    };
+
+export class SettingService extends Service {
     static inject = ['db'];
-    static name = 'config';
+    static name = 'setting';
     static blacklist = ['__proto__', 'prototype', 'constructor'];
 
     settings: Schema[] = [];
@@ -23,8 +34,14 @@ export class ConfigService extends Service {
     private initialValues = {};
     private _lastMigrate = Promise.resolve();
 
+    PreferenceSetting = T(PreferenceSetting);
+    AccountSetting = T(AccountSetting);
+    DomainSetting = T(DomainSetting);
+    DomainUserSetting = T(DomainUserSetting);
+    SystemSetting = T(SystemSetting);
+
     constructor(ctx: Context) {
-        super(ctx, 'config');
+        super(ctx, 'setting');
     }
 
     async [Context.init]() {
@@ -54,7 +71,7 @@ export class ConfigService extends Service {
 
     applyDelta(source: any, key: string, value: any) {
         const path = key.split('.');
-        if (path.some((i) => ConfigService.blacklist.includes(i))) return false;
+        if (path.some((i) => SettingService.blacklist.includes(i))) return false;
         const t = path.pop();
         const root = JSON.parse(JSON.stringify(source));
         let cursor = root;
@@ -111,15 +128,20 @@ export class ConfigService extends Service {
         await this._lastMigrate;
     }
 
-    get(key: string) {
+    _get(key: string) {
         const parts = key.split('.');
-        if (parts.some((p) => ConfigService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+        if (parts.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
         let currentValue = this.applied;
         for (const p of parts) {
             if (!currentValue) return undefined;
             currentValue = currentValue[p];
         }
         return currentValue;
+    }
+
+    get(key: string) {
+        return (this.ctx ? this.ctx.domain?.config?.[key.replace(/\./g, '$')] : null)
+            ?? (this._get(key) || global.Hydro?.model?.system?.get?.(key));
     }
 
     async setConfig(key: string, value: any) {
@@ -150,7 +172,7 @@ export class ConfigService extends Service {
         });
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
-            if (path.some((p) => ConfigService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+            if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
             let currentValue = curValue;
             for (const p of path) {
                 currentValue = currentValue[p];

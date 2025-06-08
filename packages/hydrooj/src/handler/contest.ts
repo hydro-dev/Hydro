@@ -743,7 +743,7 @@ export async function apply(ctx: Context) {
         await Promise.all(tasks);
     });
     ctx.plugin(ScoreboardService);
-    ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
+    await ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
         Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
         Route('contest_scoreboard_view', '/contest/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
         scoreboard.addView('default', 'Default', { tdoc: 'tdoc', groups: 'groups', realtime: Types.Boolean }, {

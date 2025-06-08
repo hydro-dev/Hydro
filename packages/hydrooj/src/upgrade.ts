@@ -290,7 +290,7 @@ export const coreScripts: MigrationScript[] = [
             'file.pathStyle', 'file.endPointForUser', 'file.endPointForJudge',
         ] as any[]) as any;
         if ((endPoint && accessKey) || process.env.MINIO_ACCESS_KEY) {
-            await app.get('config').setConfig('file', {
+            await app.get('setting').setConfig('file', {
                 type: 's3',
                 endPoint: process.env.MINIO_ACCESS_KEY ? 'http://127.0.0.1:9000/' : endPoint,
                 accessKey: process.env.MINIO_ACCESS_KEY || accessKey,

@@ -461,7 +461,7 @@ export async function apply(ctx: Context) {
     ctx.Route('domain_join_applications', '/domain/join_applications', DomainJoinApplicationsHandler);
     ctx.Route('domain_join', '/domain/join', DomainJoinHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('domain_search', '/domain/search', DomainSearchHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.inject(['api'], ({ api }) => {
+    await ctx.inject(['api'], ({ api }) => {
         api.provide(DomainApi);
     });
 }

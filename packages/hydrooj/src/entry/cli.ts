@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { Context } from '../context';
 import { load as loadOptions } from '../options';
 import { MongoService } from '../service/db';
-import { ConfigService } from '../settings';
+import { SettingService } from '../settings';
 import {
     addon, builtinModel, model, service,
 } from './common';
@@ -110,10 +110,10 @@ export async function load(ctx: Context) {
     const pending = global.addons;
     const fail = [];
     await ctx.plugin(MongoService, loadOptions() || {});
-    await ctx.plugin(ConfigService);
+    await ctx.plugin(SettingService);
     await require('../model/system').runConfig();
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader', 'config', 'db'], (c) => {
+        ctx.inject(['loader', 'setting', 'db'], (c) => {
             resolve(c);
         });
     });
@@ -127,7 +127,7 @@ export async function load(ctx: Context) {
     await builtinModel(ctx);
     await model(pending, fail, ctx);
     ctx = await new Promise((resolve) => {
-        ctx.inject(['server', 'setting', 'worker'], (c) => {
+        ctx.inject(['server', 'worker'], (c) => {
             resolve(c);
         });
     });

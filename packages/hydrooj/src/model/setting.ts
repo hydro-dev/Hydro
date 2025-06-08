@@ -1,14 +1,13 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
-import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
 import { findFileSync, retry } from '@hydrooj/utils';
-import { Context, Service } from '../context';
+import { Context } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from './builtin';
@@ -362,38 +361,8 @@ SystemSetting(
 
 export const langs: Record<string, LangConfig> = {};
 
-declare module 'cordis' {
-    interface Context {
-        setting: SettingService;
-    }
-}
-
-const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
-    function method(this: cordis.Service, ...args: Parameters<F>) {
-        this.ctx.effect(() => {
-            const res = origFunc(...args);
-            return () => (disposeFunc ? disposeFunc(res) : res());
-        });
-    };
-
-export class SettingService extends Service {
-    PreferenceSetting = T(PreferenceSetting);
-    AccountSetting = T(AccountSetting);
-    DomainSetting = T(DomainSetting);
-    DomainUserSetting = T(DomainUserSetting);
-    SystemSetting = T(SystemSetting);
-    constructor(ctx: Context) {
-        super(ctx, 'setting');
-    }
-
-    get(key: string) {
-        return (this.ctx ? this.ctx.domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
-    }
-}
-
 export const inject = ['db'];
 export async function apply(ctx: Context) {
-    ctx.plugin(SettingService);
     logger.info('Ensuring settings');
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
@@ -424,7 +393,6 @@ global.Hydro.model.setting = {
     apply,
     inject,
 
-    SettingService,
     Setting,
     PreferenceSetting,
     AccountSetting,
