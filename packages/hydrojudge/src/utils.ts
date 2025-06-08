@@ -27,11 +27,8 @@ export namespace Lock {
     }
 }
 
-export function compilerText(stdout: string, stderr: string) {
-    const ret = [];
-    if (!EMPTY_STR.test(stdout)) ret.push(stdout.substring(0, 1024 * 1024));
-    if (!EMPTY_STR.test(stderr)) ret.push(stderr.substring(0, 1024 * 1024));
-    return ret.join('\n');
+export function compilerText(...messages: string[]) {
+    return messages.filter((i) => !EMPTY_STR.test(i)).map((i) => i.substring(0, 1024 * 1024)).join('\n');
 }
 
 function restrictFile(p: string) {
