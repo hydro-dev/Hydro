@@ -26,11 +26,6 @@ for (const country of countries) {
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
 const langRange: Dictionary<string> = {};
 
-for (const lang in global.Hydro.locales) {
-    if (!global.Hydro.locales[lang].__interface) continue;
-    langRange[lang] = global.Hydro.locales[lang].__langname;
-}
-
 export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
 export const FLAG_SECRET = 4;
@@ -364,6 +359,10 @@ export const langs: Record<string, LangConfig> = {};
 export const inject = ['db'];
 export async function apply(ctx: Context) {
     logger.info('Ensuring settings');
+    for (const lang in global.Hydro.locales) {
+        if (!global.Hydro.locales[lang].__interface) continue;
+        langRange[lang] = global.Hydro.locales[lang].__langname;
+    }
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
         if (!setting.value) continue;

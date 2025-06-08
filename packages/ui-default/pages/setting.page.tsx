@@ -7,6 +7,10 @@ import { NamedPage } from 'vj/misc/Page';
 import { i18n, request } from 'vj/utils';
 
 const page = new NamedPage('manage_config', async () => {
+  if (document.documentElement.className.includes('theme--dark')) {
+    document.documentElement.className += ' dark';
+  }
+
   const [{ ConfigEditor, ComponentsProvider }, { load }] = await Promise.all([
     import('@hydrooj/components'),
     import('vj/components/monaco/loader'),
@@ -35,6 +39,7 @@ const page = new NamedPage('manage_config', async () => {
         onSave={(value) => {
           request.post('', { value }).then(() => {
             Notification.success(i18n('Changes saved successfully'));
+            window.location.reload();
           }).catch((e) => {
             Notification.error(i18n('Failed to save changes:'), e.message);
           });

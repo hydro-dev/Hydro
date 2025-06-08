@@ -182,7 +182,7 @@ class SystemConfigHandler extends SystemHandler {
     @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
-        let value;
+        let value = this.ctx.setting.configSource;
 
         const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
             if (['union', 'intersect'].includes(schema.type)) {
@@ -198,16 +198,13 @@ class SystemConfigHandler extends SystemHandler {
         };
 
         try {
-            try {
-                value = Schema.intersect(this.ctx.setting.settings)(yaml.load(this.ctx.setting.configSource));
-            } catch (e) {
-                value = yaml.load(this.ctx.setting.configSource);
-            }
-            for (const schema of this.ctx.setting.settings) processNode(value, schema);
+            const temp = yaml.load(this.ctx.setting.configSource);
+            for (const schema of this.ctx.setting.settings) processNode(temp, schema);
+            value = yaml.dump(temp);
         } catch (e) { }
         this.response.body = {
             schema: Schema.intersect(this.ctx.setting.settings).toJSON(),
-            value: yaml.dump(value),
+            value,
         };
     }
 
