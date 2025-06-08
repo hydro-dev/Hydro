@@ -5,8 +5,7 @@ import { Duplex, PassThrough, Writable } from 'stream';
 import { inspect } from 'util';
 import type { Entry, ZipReader } from '@zip.js/zip.js';
 import fs from 'fs-extra';
-import moment, { isMoment, Moment } from 'moment-timezone';
-import { ObjectId } from 'mongodb';
+import type { Moment } from 'moment';
 import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
@@ -34,7 +33,6 @@ function createLogger(name: string) {
 
 export type Logger = Reggol & { new(name: string): Reggol & Logger };
 export const Logger = createLogger as any as Logger;
-export { moment };
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
@@ -146,6 +144,18 @@ export namespace Time {
     }
 
     export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
+        let isMoment: (x: any) => x is Moment;
+        let ObjectId: typeof import('bson').ObjectId; // eslint-disable-line
+        try {
+            ({ ObjectId } = require('bson'));
+        } catch (e) {
+            throw new Error('No bson module found');
+        }
+        try {
+            ({ isMoment } = require('moment'));
+        } catch (e) {
+            throw new Error('No moment module found');
+        }
         let _timestamp: number;
         if (typeof timestamp === 'string') _timestamp = new Date(timestamp).getTime();
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();

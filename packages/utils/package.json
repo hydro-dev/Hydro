@@ -7,13 +7,15 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
+    "optionalPeerDependencies": {
+        "bson": "^6.17.0",
+        "moment-timezone": "^0.5.48"
+    },
     "dependencies": {
         "@hydrooj/register": "workspace:^",
         "cac": "^6.7.14",
         "fs-extra": "^11.3.0",
         "js-yaml": "^4.1.0",
-        "moment-timezone": "^0.5.48",
-        "mongodb": "^6.17.0",
         "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
         "systeminformation": "^5.27.1"
