@@ -2,6 +2,7 @@ import pwsh from './lib/hash.hydro';
 import db from './service/db';
 
 export { nanoid } from 'nanoid';
+export { default as moment, isMoment } from 'moment-timezone';
 
 export {
     WebService, Router, HandlerCommon, httpServer,
