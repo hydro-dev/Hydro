@@ -576,7 +576,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
         const bdocs = await contest.getMultiBalloon(domainId, tid, {
             ...todo ? { sent: { $exists: false } } : {},
             ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
-                ? {} : { _id: { $lt: this.tdoc.lockAt } },
+                ? {} : { _id: { $lt: Time.getObjectID(this.tdoc.lockAt) } },
         }).sort({ _id: -1 }).toArray();
         const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => i.sent).map((i) => i.sent));
         this.response.body = {
