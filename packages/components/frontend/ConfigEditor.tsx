@@ -149,6 +149,17 @@ export default function ConfigEditor({
     setValue(yaml.load(v));
   }, [stringConfig]);
 
+  // FIXME: Otherwise first form change will be ignored
+  React.useEffect(() => {
+    setTimeout(() => {
+      updateFromMonaco(`${stringConfig}\n\ndummy: 1`);
+      setTimeout(() => {
+        setStringConfig(stringConfig);
+        setValue(yaml.load(stringConfig));
+      }, 300);
+    }, 300);
+  }, []);
+
   const [size, setSize] = React.useState([50, 50]);
 
   return (<div className="fullscreen-content" style={{ zIndex: 10 }}>
