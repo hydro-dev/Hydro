@@ -88,7 +88,7 @@ function schemaToSettings(schema: Schema<any>) {
         let flag = (s.meta?.hidden ? FLAG_HIDDEN : 0)
             | (s.meta?.disabled ? FLAG_DISABLED : 0);
         const type = s.type === 'number' ? 'number'
-            : s.type === 'boolean' ? 'checkbox'
+            : s.type === 'boolean' ? 'boolean'
                 : s.meta?.role === 'markdown' ? 'markdown'
                     : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
