@@ -13,7 +13,8 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
 
     async prepare() {
         const secret = SystemModel.get('websocket.secret');
-        if (this.request.headers['x-hydro-websocket-gateway'] === secret) {
+        if (secret && this.request.headers['x-hydro-websocket-gateway'] === secret) {
+            this.ctx.logger('connection').info('Gateway websocket connection from %s', this.request.ip);
             this.privileged = true;
             this.ctx.on('user/message', async (uid, mdoc) => {
                 await this.notifyMessage(uid, mdoc);
@@ -31,7 +32,7 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
         });
     }
 
-    async accept(channel: string) {
+    accept(channel: string) {
         if (this.channels.has(channel)) return;
         this.channels.add(channel);
         if (this.privileged) return;
@@ -45,8 +46,8 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     }
 
     async message(payload: any) {
-        const success = [];
-        const failed = [];
+        const accept = [];
+        const reject = [];
         const session = payload?.credential
             ? await TokenModel.get(payload.credential, TokenModel.TYPE_SESSION)
             : null;
@@ -54,27 +55,18 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
         const user = await UserModel.getById('system', session.uid);
         for (const channel of payload.channels) {
             if (channel === 'message' && user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-                success.push(`message:${user._id}`);
-                // eslint-disable-next-line no-await-in-loop
-                await this.accept(`message:${user._id}`);
+                accept.push(`message:${user._id}`);
+                this.accept(`message:${user._id}`);
                 continue;
             }
-            failed.push(channel);
+            reject.push(channel);
         }
-        if (success.length) {
-            this.send({
-                operation: 'accept',
-                channels: success,
-                connection_id: payload.connection_id,
-            });
-        }
-        if (failed.length) {
-            this.send({
-                operation: 'reject',
-                channels: failed,
-                connection_id: payload.connection_id,
-            });
-        }
+        this.send({
+            operation: 'verify',
+            accept,
+            reject,
+            connection_id: payload.connection_id,
+        });
     }
 }
 

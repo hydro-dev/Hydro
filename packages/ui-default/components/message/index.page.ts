@@ -93,7 +93,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
   const endpoint = url.toString().replace('http', 'ws');
   if (window.SharedWorker) {
     try {
-      initWorkerMode(url);
+      initWorkerMode(endpoint);
       return;
     } catch (e) {
       console.error('SharedWorker init fail: ', e.message);
@@ -137,7 +137,9 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     };
     sock.onmessage = async (message) => {
       const payload = JSON.parse(message.data);
-      masterChannel.postMessage({ type: 'message', payload });
+      if (payload.operation === 'event') {
+        masterChannel.postMessage({ type: 'message', payload: payload.payload });
+      }
     };
   }
 
