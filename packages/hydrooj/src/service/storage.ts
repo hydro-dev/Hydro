@@ -387,6 +387,7 @@ class LocalStorageService {
             status: !this.error,
             error: this.error,
             bucket: 'Hydro',
+            dir: this.config.path,
         };
     }
 }

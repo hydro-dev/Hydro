@@ -111,7 +111,9 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-## Hydro 5.0.0-beta.0 / UI 4.58.0-beta.0
+## Hydro 5.0.0-beta.3 / UI 4.58.0-beta.3
+
+### New Features
 
 - judge: 添加 checker 编译缓存
 - ui: 优化题目详情页面 OGP 信息
@@ -127,21 +129,32 @@ Hydro 用户群：1085853538
 - core: 分离 HMR 和 Watcher 组件
 - core: i18n: 添加 interface 选项
 - judge: 添加 kattis checker 支持
-- migrate: 修复 hustoj 自动运行
 - core: Settings: 支持使用 Schemastery
 - ui: 更新系统设置页面样式
-- import-qduoj: 修复 spj=null
-- core: 修复文件复制
 - core: 支持存储并显示提交记录重测历史
 - core: 新的加域逻辑
 - ui: UserSelect.Multi: 支持批量粘贴用户名
-- ui: 修复在线 IDE 右键菜单
-- ui: 修复未登录用户查看题目文件页
 - core: oauth: 支持绑定/解绑三方平台账户 (#971)
-- ui: 修复暗色模式表格边框 (#968)
 - core: 优化 icpc 题目包导入 (#966)
 - judge: 弃用 diff (#965)
 - core: 支持设置加域时自动加入小组
+- core: 添加 `--disable-worker` 启动选项
+- ui: 支持使用自定义字体
+- framework: 添加 Subscription API
+- core: 添加 fixStorage 脚本
+
+### Bug Fixes
+
+- migrate: 修复 hustoj 自动运行
+- import-qduoj: 修复 spj=null
+- core: 修复文件复制
+- ui: 修复在线 IDE 右键菜单
+- ui: 修复未登录用户查看题目文件页
+- ui: 修复暗色模式表格边框 (#968)
+- ui: 修复题解回复编辑权限
+- ui: 修复高亮行号显示
+- core: 修复 `User.serialize()` 参数
+- ui: 修复更换邮箱功能
 
 ### Breaking API Changes
 
