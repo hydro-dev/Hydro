@@ -25,7 +25,7 @@
           <li class="footer__category__item"><a href="https://github.com/hydro-dev/Hydro" target="_blank">{{ _('Open Source') }}</a></li>
         </ul></div>
       </div>
-      <div class="medium-3 large-2 columns footer__category expandable end">
+      <div class="medium-3 large-2 columns footer__category expandable">
         <h1>
           {{ _('Support') }}
           <span class="expand-icon">
@@ -34,7 +34,21 @@
         </h1>
         <div class="footer__category__expander"><ul class="footer__category__list">
           <li class="footer__category__item"><a href="{{ url('wiki_help') }}">{{ _('Help') }}</a></li>
-          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('QQ Group') }}</a></li>
+          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Contact Us') }}</a></li>
+        </ul></div>
+      </div>
+      <div class="medium-3 large-2 columns footer__category expandable end">
+        <h1>
+          {{ _('About') }}
+          <span class="expand-icon">
+            <span class="icon icon-expand_more"></span>
+          </span>
+        </h1>
+        <div class="footer__category__expander"><ul class="footer__category__list">
+          <li class="footer__category__item"><a href="{{ url('wiki_about') }}">{{ _('About') }}</a></li>
+          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='privacy') }}">{{ _('Privacy') }}</a></li>
+          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
+          <li class="footer__category__item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Copyright Complaint') }}</a></li>
         </ul></div>
       </div>
     </div>
@@ -42,11 +56,13 @@
     <div class="footer__extra-link clearfix">
       <div class="footer__extra-left">
         <ol class="clearfix">
+          {% if not show_topics|default(true) %}
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about') }}">{{ _('About') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Contact Us') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='privacy') }}">{{ _('Privacy') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='tos') }}">{{ _('Terms of Service') }}</a></li>
           <li class="footer__extra-link-item"><a href="{{ url('wiki_about', anchor='contact') }}">{{ _('Copyright Complaint') }}</a></li>
+          {% endif %}
           <li class="footer__extra-link-item nojs--hide" data-dropdown-target="#menu-footer-lang">
             <span><span class="icon icon-global"></span> Language <span class="icon icon-expand_less"></span></span>
             <ol class="dropdown-target menu" id="menu-footer-lang">

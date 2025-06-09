@@ -625,7 +625,7 @@ export async function apply(ctx: Context) {
             throw new NotFoundError();
         },
     });
-    ctx.inject(['api'], ({ api }) => {
+    await ctx.inject(['api'], ({ api }) => {
         api.provide(UserApi);
     });
 }

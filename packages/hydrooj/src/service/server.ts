@@ -91,7 +91,7 @@ export async function apply(ctx: Context) {
         xhost: system.get('server.xhost'),
     });
     if (process.env.HYDRO_CLI) return;
-    ctx.inject(['server', 'oauth', 'setting'], (childContext) => {
+    await ctx.inject(['server', 'oauth', 'setting'], (childContext) => {
         const { server, on, oauth } = childContext;
         server.addHandlerLayer('init', async (c, next) => {
             const init = Date.now();

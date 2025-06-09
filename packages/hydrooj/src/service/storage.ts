@@ -387,6 +387,7 @@ class LocalStorageService {
             status: !this.error,
             error: this.error,
             bucket: 'Hydro',
+            dir: this.config.path,
         };
     }
 }
@@ -400,7 +401,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
         service = new LocalStorageService(config);
     }
     await service.start();
-    ctx.inject(['server'], ({ server }) => {
+    await ctx.inject(['server'], ({ server }) => {
         let endpoint = config.endPoint;
         if (config.type === 's3' && !config.pathStyle) {
             try {

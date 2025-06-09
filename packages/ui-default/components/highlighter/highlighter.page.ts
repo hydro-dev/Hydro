@@ -7,10 +7,10 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
     function runHighlight($container) {
       $container.find('pre code').get().forEach((code) => {
         const language = ($(code).attr('class') || '').trim();
+        if (language.includes('line-numbers')) $(code).parent().addClass('line-numbers');
         const m = language.match(/language-([a-z0-9]+)(\|[\d,-]+)/);
         if (m?.[2]) {
           $(code).parent().attr('data-line', m[2].substring(1));
-          if (language.includes('line-numbers')) $(code).parent().addClass('line-numbers');
           $(code).attr('class', `language-${m[1]}`);
         }
       });

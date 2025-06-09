@@ -182,7 +182,7 @@ class SystemConfigHandler extends SystemHandler {
     @requireSudo
     async get() {
         this.response.template = 'manage_config.html';
-        let value;
+        let value = this.ctx.setting.configSource;
 
         const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
             if (['union', 'intersect'].includes(schema.type)) {
@@ -198,23 +198,20 @@ class SystemConfigHandler extends SystemHandler {
         };
 
         try {
-            try {
-                value = Schema.intersect(this.ctx.config.settings)(yaml.load(this.ctx.config.configSource));
-            } catch (e) {
-                value = yaml.load(this.ctx.config.configSource);
-            }
-            for (const schema of this.ctx.config.settings) processNode(value, schema);
+            const temp = yaml.load(this.ctx.setting.configSource);
+            for (const schema of this.ctx.setting.settings) processNode(temp, schema);
+            value = yaml.dump(temp);
         } catch (e) { }
         this.response.body = {
-            schema: Schema.intersect(this.ctx.config.settings).toJSON(),
-            value: yaml.dump(value),
+            schema: Schema.intersect(this.ctx.setting.settings).toJSON(),
+            value,
         };
     }
 
     @requireSudo
     @param('value', Types.String)
     async post({ }, value: string) {
-        const oldConfig = yaml.load(this.ctx.config.configSource);
+        const oldConfig = yaml.load(this.ctx.setting.configSource);
         let config;
         const processNode = (node: any, old: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
             if (['union', 'intersect'].includes(schema.type)) {
@@ -231,11 +228,11 @@ class SystemConfigHandler extends SystemHandler {
 
         try {
             config = yaml.load(value);
-            for (const schema of this.ctx.config.settings) processNode(config, oldConfig, schema, null, '');
+            for (const schema of this.ctx.setting.settings) processNode(config, oldConfig, schema, null, '');
         } catch (e) {
             throw new ValidationError('value', '', e.message);
         }
-        await this.ctx.config.saveConfig(config);
+        await this.ctx.setting.saveConfig(config);
     }
 }
 
@@ -357,7 +354,7 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
-export const inject = ['config', 'check'];
+export const inject = ['setting', 'check'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);

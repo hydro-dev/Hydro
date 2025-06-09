@@ -1,14 +1,13 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
-import * as cordis from 'cordis';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
 import { findFileSync, retry } from '@hydrooj/utils';
-import { Context, Service } from '../context';
+import { Context } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
 import * as builtin from './builtin';
@@ -26,11 +25,6 @@ for (const country of countries) {
 }
 const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
 const langRange: Dictionary<string> = {};
-
-for (const lang in global.Hydro.locales) {
-    if (!global.Hydro.locales[lang].__interface) continue;
-    langRange[lang] = global.Hydro.locales[lang].__langname;
-}
 
 export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
@@ -89,7 +83,7 @@ function schemaToSettings(schema: Schema<any>) {
         let flag = (s.meta?.hidden ? FLAG_HIDDEN : 0)
             | (s.meta?.disabled ? FLAG_DISABLED : 0);
         const type = s.type === 'number' ? 'number'
-            : s.type === 'boolean' ? 'checkbox'
+            : s.type === 'boolean' ? 'boolean'
                 : s.meta?.role === 'markdown' ? 'markdown'
                     : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
@@ -362,39 +356,13 @@ SystemSetting(
 
 export const langs: Record<string, LangConfig> = {};
 
-declare module 'cordis' {
-    interface Context {
-        setting: SettingService;
-    }
-}
-
-const T = <F extends (...args: any[]) => any>(origFunc: F, disposeFunc?) =>
-    function method(this: cordis.Service, ...args: Parameters<F>) {
-        this.ctx.effect(() => {
-            const res = origFunc(...args);
-            return () => (disposeFunc ? disposeFunc(res) : res());
-        });
-    };
-
-export class SettingService extends Service {
-    PreferenceSetting = T(PreferenceSetting);
-    AccountSetting = T(AccountSetting);
-    DomainSetting = T(DomainSetting);
-    DomainUserSetting = T(DomainUserSetting);
-    SystemSetting = T(SystemSetting);
-    constructor(ctx: Context) {
-        super(ctx, 'setting');
-    }
-
-    get(key: string) {
-        return (this.ctx ? this.ctx.domain?.config?.[key.replace(/\./g, '$')] : null) ?? global.Hydro.model.system.get(key);
-    }
-}
-
 export const inject = ['db'];
 export async function apply(ctx: Context) {
-    ctx.plugin(SettingService);
     logger.info('Ensuring settings');
+    for (const lang in global.Hydro.locales) {
+        if (!global.Hydro.locales[lang].__interface) continue;
+        langRange[lang] = global.Hydro.locales[lang].__langname;
+    }
     const system = global.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
         if (!setting.value) continue;
@@ -424,7 +392,6 @@ global.Hydro.model.setting = {
     apply,
     inject,
 
-    SettingService,
     Setting,
     PreferenceSetting,
     AccountSetting,

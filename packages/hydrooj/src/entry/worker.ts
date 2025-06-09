@@ -7,7 +7,7 @@ import { Context } from '../context';
 import { Logger } from '../logger';
 import { load } from '../options';
 import { MongoService } from '../service/db';
-import { ConfigService } from '../settings';
+import { SettingService } from '../settings';
 import {
     addon, builtinModel, locale, model, service,
 } from './common';
@@ -30,11 +30,11 @@ export async function apply(ctx: Context) {
     const fail = [];
     await locale(pending, fail);
     await ctx.plugin(MongoService, load() || {});
-    await ctx.plugin(ConfigService);
+    await ctx.plugin(SettingService);
     const modelSystem = require('../model/system');
     await modelSystem.runConfig();
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader', 'config', 'db'], (c) => {
+        ctx.inject(['loader', 'setting', 'db'], (c) => {
             resolve(c);
         });
     });

@@ -76,7 +76,7 @@ class MarkdownHandler extends Handler {
 
 class SystemConfigSchemaHandler extends Handler {
   async get() {
-    const schema = convert(Schema.intersect(this.ctx.config.settings) as any, true);
+    const schema = convert(Schema.intersect(this.ctx.setting.settings) as any, true);
     this.response.body = schema;
   }
 }

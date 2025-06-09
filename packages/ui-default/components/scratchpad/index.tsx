@@ -64,10 +64,7 @@ let scratchpad: ScratchpadService;
 
 export default function ScratchpadContainer() {
   const store = useStore();
-  if (!scratchpad) {
-    scratchpad = new ScratchpadService(store);
-    ctx.provide('scratchpad', scratchpad);
-  }
+  scratchpad ||= new ScratchpadService(store);
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   React.useEffect(() => {

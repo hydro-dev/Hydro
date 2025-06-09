@@ -93,6 +93,7 @@ const getDefaultChecker = (strict: boolean) => async (config) => {
             ...config.copyIn,
             'compare.sh': { content: compareSh },
         },
+        processLimit: 32,
     });
     let status: number;
     let message: any = '';

@@ -159,7 +159,7 @@ export class User {
         return user;
     }
 
-    serialize(_, h) {
+    serialize(h) {
         if (!this._isPrivate) {
             const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
             if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName');
@@ -189,6 +189,7 @@ async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
 
 class UserModel {
     static coll = coll;
+    static collGroup = collGroup;
     static User = User;
     static cache = cache;
     static defaultUser: Udoc = {

@@ -150,7 +150,7 @@ export class ApiService extends Service {
             await emitHook?.(`api/before/${callOrName}`, args);
         }
         let result = await func(context, args as any, sendPayload);
-        if (result && 'next' in result) {
+        if (result && typeof result === 'object' && 'next' in result) {
             const it = result as AsyncGenerator<any, any, never>;
             while (true) {
                 const value = await it.next(); // eslint-disable-line no-await-in-loop

@@ -26,7 +26,10 @@ const ProblemSchema = Schema.object({
     })),
     hint: StringValue,
     source: Schema.union([StringValue, Schema.string()]),
-    display_id: Schema.string(),
+    display_id: Schema.transform(
+        Schema.union([Schema.number(), Schema.string()]),
+        (value) => (typeof value === 'number' ? `P${value.toString()}` : value),
+    ),
     time_limit: Schema.union([Schema.number(), Schema.string()]).required(),
     memory_limit: Schema.union([Schema.number(), Schema.string()]).required(),
     spj: Schema.union([

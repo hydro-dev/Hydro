@@ -1,7 +1,5 @@
 import assert from 'assert';
 import emojiRegex from 'emoji-regex';
-import { isSafeInteger } from 'lodash';
-import moment from 'moment-timezone';
 import sanitize from 'sanitize-filename';
 import saslprep from 'saslprep';
 import Schema from 'schemastery';
@@ -107,9 +105,9 @@ export const Types = {
     ShortString: basicString(/^.{1,255}$/),
     String: basicString(),
 
-    Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && isSafeInteger(+v)],
-    UnsignedInt: [(v) => +v, (v) => /^(-0|\+?[0-9]+)$/.test(v.toString().trim()) && isSafeInteger(+v)],
-    PositiveInt: [(v) => +v, (v) => /^\+?[1-9][0-9]*$/.test(v.toString().trim()) && isSafeInteger(+v)],
+    Int: [(v) => +v, (v) => /^[+-]?[0-9]+$/.test(v.toString().trim()) && Number.isSafeInteger(+v)],
+    UnsignedInt: [(v) => +v, (v) => /^(-0|\+?[0-9]+)$/.test(v.toString().trim()) && Number.isSafeInteger(+v)],
+    PositiveInt: [(v) => +v, (v) => /^\+?[1-9][0-9]*$/.test(v.toString().trim()) && Number.isSafeInteger(+v)],
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
 
     ObjectId: [() => { throw new Error('mongodb package not found'); }, () => true],
@@ -118,13 +116,15 @@ export const Types = {
         (v) => {
             const d = v.split('-');
             assert(d.length === 3);
+            assert(d[0].length === 4);
             return `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
         },
         (v) => {
             const d = v.toString().split('-');
             if (d.length !== 3) return false;
+            if (d[0].length !== 4) return false;
             const st = `${d[0]}-${d[1].length === 1 ? '0' : ''}${d[1]}-${d[2].length === 1 ? '0' : ''}${d[2]}`;
-            return moment(st).isValid();
+            return Number.isFinite(new Date(st).getTime());
         },
     ],
     Time: [
@@ -136,7 +136,8 @@ export const Types = {
         (v) => {
             const t = v.toString().split(':');
             if (t.length !== 2) return false;
-            return moment(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`).isValid();
+            const d = new Date(`2020-01-01 ${(t[0].length === 1 ? '0' : '') + t[0]}:${t[1].length === 1 ? '0' : ''}${t[1]}`);
+            return Number.isFinite(d.getTime());
         },
     ],
     Range: (range) => [

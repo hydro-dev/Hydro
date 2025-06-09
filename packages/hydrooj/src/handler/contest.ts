@@ -576,7 +576,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
         const bdocs = await contest.getMultiBalloon(domainId, tid, {
             ...todo ? { sent: { $exists: false } } : {},
             ...(!this.tdoc.lockAt || this.user.hasPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD))
-                ? {} : { _id: { $lt: this.tdoc.lockAt } },
+                ? {} : { _id: { $lt: Time.getObjectID(this.tdoc.lockAt) } },
         }).sort({ _id: -1 }).toArray();
         const uids = bdocs.map((i) => i.uid).concat(bdocs.filter((i) => i.sent).map((i) => i.sent));
         this.response.body = {
@@ -743,7 +743,7 @@ export async function apply(ctx: Context) {
         await Promise.all(tasks);
     });
     ctx.plugin(ScoreboardService);
-    ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
+    await ctx.inject(['scoreboard'], ({ Route, scoreboard }) => {
         Route('contest_scoreboard', '/contest/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
         Route('contest_scoreboard_view', '/contest/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_CONTEST_SCOREBOARD);
         scoreboard.addView('default', 'Default', { tdoc: 'tdoc', groups: 'groups', realtime: Types.Boolean }, {

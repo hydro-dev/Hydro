@@ -13,7 +13,7 @@ const locales = {
 };
 
 function MonacoContainer({
-  config, setValue, setError, monaco, schema, editorCallback, size,
+  config, setValue, setError, monaco, schema, editorCallback, size, dark,
 }) {
   const [editor, setEditor] = React.useState<any>(null);
   const [model, setModel] = React.useState<any>(null);
@@ -69,7 +69,7 @@ function MonacoContainer({
     const model = monaco.editor.createModel(config, 'yaml', monaco.Uri.parse('hydro://system/setting.yaml'));
     setModel(model);
     const e = monaco.editor.create(element, {
-      theme: 'vs-light',
+      theme: dark ? 'vs-dark' : 'vs-light',
       lineNumbers: 'off',
       glyphMargin: true,
       lightbulb: { enabled: monaco.editor.ShowLightbulbIconMode.On },
@@ -149,15 +149,27 @@ export default function ConfigEditor({
     setValue(yaml.load(v));
   }, [stringConfig]);
 
+  // FIXME: Otherwise first form change will be ignored
+  React.useEffect(() => {
+    setTimeout(() => {
+      updateFromMonaco(`${stringConfig}\n\ndummy: 1`);
+      setTimeout(() => {
+        setStringConfig(stringConfig);
+        setValue(yaml.load(stringConfig));
+      }, 300);
+    }, 300);
+  }, []);
+
   const [size, setSize] = React.useState([50, 50]);
 
-  return (<div className="fullscreen-content" style={{ backgroundColor: 'white', zIndex: 10 }}>
+  return (<div className="fullscreen-content" style={{ zIndex: 10 }}>
     <Allotment onChange={setSize}>
       <Allotment.Pane>
         <MonacoContainer
           editorCallback={registerAction} schema={schema} monaco={monaco}
           config={stringConfig} setValue={updateFromMonaco} setError={setInfo}
           size={size[0]}
+          dark={document.documentElement.className.includes('theme--dark')}
         />
         <pre className="help-text">{info}</pre>
         <button onClick={() => onSave(stringConfig)} className="rounded primary button">{i18n('Save All Changes')}</button>

@@ -50,7 +50,7 @@ export class Loader extends Service {
     public cache: Record<string, string> = Object.create(null);
     // public warnings: Record<string, string> = Object.create(null);
 
-    static inject = ['config', 'timer', 'i18n', 'logger'];
+    static inject = ['setting', 'timer', 'i18n', 'logger'];
 
     constructor(ctx: Context) {
         super(ctx, 'loader');
@@ -100,8 +100,8 @@ export class Loader extends Service {
         const schemaRequest = configScope ? Schema.object({
             [configScope]: schema,
         }) : schema;
-        await this.ctx.config._tryMigrateConfig(schemaRequest);
-        const res = this.ctx.config.requestConfig(schemaRequest);
+        await this.ctx.setting._tryMigrateConfig(schemaRequest);
+        const res = this.ctx.setting.requestConfig(schemaRequest);
         return configScope ? res[configScope] : res;
     }
 

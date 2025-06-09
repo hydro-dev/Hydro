@@ -384,10 +384,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.psdoc?.rid) {
                 this.response.body.rdoc = await record.get(this.args.domainId, this.psdoc.rid);
             }
-            [this.response.body.ctdocs, this.response.body.htdocs] = await Promise.all([
+            [this.response.body.ctdocs, this.response.body.htdocs] = (await Promise.all([
                 contest.getRelated(this.args.domainId, this.pdoc.docId),
                 contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework'),
-            ]);
+            ])).map((tdocs) => tdocs.filter((tdoc) => !tdoc.assign?.length || Set.intersection(tdoc.assign, this.user.group).size));
         }
     }
 
@@ -1070,7 +1070,7 @@ export async function apply(ctx: Context) {
     ctx.Route('problem_solution_reply_raw', '/p/:pid/solution/:psid/:psrid/raw', ProblemSolutionRawHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_statistics', '/p/:pid/stat', ProblemStatisticsHandler, PERM.PERM_VIEW_PROBLEM);
     ctx.Route('problem_create', '/problem/create', ProblemCreateHandler, PERM.PERM_CREATE_PROBLEM);
-    ctx.inject(['api'], ({ api }) => {
+    await ctx.inject(['api'], ({ api }) => {
         api.provide(ProblemApi);
     });
 }

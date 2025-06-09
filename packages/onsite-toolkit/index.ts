@@ -118,7 +118,7 @@ export function apply(ctx: Context) {
                 let oid = 1;
                 for (const i of organizations) orgId[i] = `org-${oid++}`;
                 const duration = moment(tdoc.endAt).diff(tdoc.beginAt, 'seconds');
-                const lockDuration = tdoc.lockAt ? moment(tdoc.lockAt).diff(tdoc.beginAt, 'seconds') : null;
+                const lockDuration = tdoc.lockAt ? moment(tdoc.endAt).diff(tdoc.lockAt, 'seconds') : null;
                 const eventfeed: Record<string, any>[] = [
                     getFeed('contest', {
                         id: tdoc._id.toHexString(),
