@@ -13,7 +13,6 @@ const ports: Set<MessagePort> = new Set();
 interface RequestInitSharedConnPayload {
   type: 'conn';
   cookie: string;
-  path: string;
 }
 interface RequestAckPayload {
   type: 'ack';
@@ -53,19 +52,22 @@ function onMessage(payload: any) {
   }, 5000);
 }
 
-function initConn(path: string, port: MessagePort, cookie: any) {
+function initConn(port: MessagePort, cookie: any) {
   ports.add(port);
-  if (cookie !== lcookie) conn?.close();
-  else if (conn && conn.readyState === conn.OPEN) return;
-  const url = new URL(path, location.origin);
-  if (cookie) url.searchParams.set('sid', cookie.split('sid=')[1].split(';')[0]);
-  lcookie = cookie;
-  console.log('Init connection for', path);
-  conn?.close();
-  conn = new ReconnectingWebsocket(url.toString());
+  console.log('Init connection');
+  lcookie = cookie.split('sid=')[1].split(';')[0];
+  if (conn) return;
+  const url = new URL('/websocket', location.origin);
+  conn = new ReconnectingWebsocket(url.toString().replace('http', 'ws'));
   conn.onopen = () => {
-    console.log('Connected to', path);
+    console.log('Connected');
     broadcastMsg({ type: 'open' });
+    conn.send(JSON.stringify({
+      'operation': 'subscribe',
+      'request_id': Math.random().toString(16).substring(2),
+      'credential': lcookie,
+      'channels': ['message'],
+    }));
   };
   conn.onerror = () => broadcastMsg({ type: 'error' });
   conn.onclose = (ev) => broadcastMsg({ type: 'close', error: ev.reason });
@@ -79,8 +81,8 @@ function initConn(path: string, port: MessagePort, cookie: any) {
     if (['PermissionError', 'PrivilegeError'].includes(payload.error)) {
       broadcastMsg({ type: 'close', error: payload.error });
       conn.close();
-    } else {
-      onMessage(payload);
+    } else if (payload.operation === 'event') {
+      onMessage(payload.payload);
     }
   };
 }
@@ -89,7 +91,7 @@ self.onconnect = function (e) {
   const port = e.ports[0];
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {
-    if (msg.data.type === 'conn') initConn(msg.data.path, port, msg.data.cookie);
+    if (msg.data.type === 'conn') initConn(port, msg.data.cookie);
     if (msg.data.type === 'ack') ack[msg.data.id]?.();
     if (msg.data.type === 'unload') ports.delete(port);
   });

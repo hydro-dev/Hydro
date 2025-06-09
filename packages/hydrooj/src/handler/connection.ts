@@ -45,12 +45,6 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     }
 
     async message(payload: any) {
-        try {
-            payload = JSON.parse(payload);
-        } catch (e) {
-            console.error('Invalid payload', e);
-            return;
-        }
         const success = [];
         const failed = [];
         const session = payload?.credential
