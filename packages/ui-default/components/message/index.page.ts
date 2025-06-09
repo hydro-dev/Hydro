@@ -59,14 +59,14 @@ const onmessage = (msg) => {
   return true;
 };
 
-const initWorkerMode = () => {
+const initWorkerMode = (endpoint) => {
   console.log('Messages: using SharedWorker');
   const worker = new SharedWorker(new URL('./worker.ts', import.meta.url), { name: 'HydroMessagesWorker' });
   worker.port.start();
   window.addEventListener('beforeunload', () => {
     worker.port.postMessage({ type: 'unload' });
   });
-  worker.port.postMessage({ type: 'conn', cookie: document.cookie });
+  worker.port.postMessage({ type: 'conn', path: endpoint, cookie: document.cookie });
   worker.port.onmessage = async (message) => {
     if (process.env.NODE_ENV !== 'production') console.log('onmessage: ', message);
     const { payload, type } = message.data;
@@ -93,7 +93,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
   const endpoint = url.toString().replace('http', 'ws');
   if (window.SharedWorker) {
     try {
-      initWorkerMode();
+      initWorkerMode(url);
       return;
     } catch (e) {
       console.error('SharedWorker init fail: ', e.message);
