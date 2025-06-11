@@ -26,6 +26,7 @@ class MessageModel {
         const base = {
             _id, from, content, flag,
         };
+        if (!to.length) return base;
         await MessageModel.coll.insertMany(to.map((t) => ({ ...base, to: t })));
         bus.broadcast('user/message', to, base);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
