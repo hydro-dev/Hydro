@@ -104,9 +104,9 @@ export async function set<K extends keyof DocType>(
 ): Promise<DocType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set, $unset);
     const update: UpdateFilter<DocType[K]> = {};
-    if ($set) update.$set = $set;
-    if ($unset) update.$unset = $unset;
-    if ($push) update.$push = $push;
+    if ($set && Object.keys($set).length) update.$set = $set;
+    if ($unset && Object.keys($unset).length) update.$unset = $unset;
+    if ($push && Object.keys($push).length) update.$push = $push;
     return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         update,

@@ -231,14 +231,15 @@ export class ProblemModel {
     static async edit(domainId: string, _id: number, $set: Partial<ProblemDoc>): Promise<ProblemDoc> {
         const delpid = $set.pid === '';
         const ddoc = await DomainModel.get(domainId);
+        const $unset = delpid ? { pid: '' } : {};
         if (delpid) {
             delete $set.pid;
             $set.sort = sortable(`P${_id}`, ddoc.namespaces);
         } else if ($set.pid) {
             $set.sort = sortable($set.pid, ddoc.namespaces);
         }
-        await bus.parallel('problem/before-edit', $set);
-        const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, delpid ? { pid: '' } : undefined);
+        await bus.parallel('problem/before-edit', $set, $unset);
+        const result = await document.set(domainId, document.TYPE_PROBLEM, _id, $set, $unset);
         await bus.emit('problem/edit', result);
         return result;
     }

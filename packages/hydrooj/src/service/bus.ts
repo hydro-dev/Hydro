@@ -62,7 +62,7 @@ export interface EventMap {
 
     'problem/before-add': (domainId: string, content: string, owner: number, docId: number, doc: Partial<ProblemDoc>) => VoidReturn
     'problem/add': (doc: Partial<ProblemDoc>, docId: number) => VoidReturn
-    'problem/before-edit': (doc: Partial<ProblemDoc>) => VoidReturn
+    'problem/before-edit': (doc: Partial<ProblemDoc>, $unset: OnlyFieldsOfType<ProblemDoc, any, true | '' | 1>) => VoidReturn
     'problem/edit': (doc: ProblemDoc) => VoidReturn
     'problem/before-del': (domainId: string, docId: number) => VoidReturn
     'problem/del': (domainId: string, docId: number) => VoidReturn
