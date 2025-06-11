@@ -117,7 +117,7 @@ function MonacoContainer({
 }
 
 export default function ConfigEditor({
-  schema, config, monaco, Markdown, onSave, registerAction, sidebar,
+  schema, config, monaco, Markdown, onSave, registerAction, sidebar, dynamic,
 }) {
   const getValue = () => {
     try {
@@ -178,7 +178,7 @@ export default function ConfigEditor({
         <div style={{
           overflowY: 'scroll', top: 0, bottom: 0, left: 0, right: 0, position: 'absolute', marginLeft: 10,
         }}>
-          <Form schema={schema} initial={initial} value={value} onChange={updateFromForm} />
+          <Form schema={schema} initial={initial} value={value} onChange={updateFromForm} dynamic={dynamic} />
         </div>
       </Allotment.Pane>
       {sidebar && <Allotment.Pane maxSize={220}>{sidebar}</Allotment.Pane>}
