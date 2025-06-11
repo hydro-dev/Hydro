@@ -786,7 +786,7 @@ export async function apply(ctx: Context) {
                 const escape = (i: string) => i.replace(/[",]/g, '');
                 const unknownSchool = this.translate('Unknown School');
                 const statusMap = {
-                    [STATUS.STATUS_ACCEPTED]: 'AC',
+                    [STATUS.STATUS_ACCEPTED]: 'OK',
                     [STATUS.STATUS_WRONG_ANSWER]: 'WA',
                     [STATUS.STATUS_COMPILE_ERROR]: 'CE',
                     [STATUS.STATUS_TIME_LIMIT_EXCEEDED]: 'TL',
@@ -806,14 +806,15 @@ export async function apply(ctx: Context) {
                     `@contest "${escape(tdoc.title)}"`,
                     `@contlen ${Math.floor((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) / Time.minute)}`,
                     `@problems ${tdoc.pids.length}`,
-                    `@teams ${tdoc.attend}`,
+                    `@teams ${tdoc.attend + 100}`,
                     `@submissions ${submissions.length}`,
                 ].concat(
                     tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
                     teams.map((i, idx) => {
-                        const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].uname)}`;
-                        return `@t ${idx + 1},0,1,${teamName}`;
+                        const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].displayName || udict[i.uid].uname)}`;
+                        return `@t ${idx + 1},0,1,"${teamName}"`;
                     }),
+                    Array(100).fill(0).map((_, idx) => `@t ${tdoc.attend + idx + 1},0,1,"Пополнить команду"`),
                     submissions,
                 );
                 this.binary(res.join('\n'), `${this.tdoc.title}.ghost`);
