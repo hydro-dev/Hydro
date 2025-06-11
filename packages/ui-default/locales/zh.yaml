@@ -1006,10 +1006,10 @@ user_detail: 用户
 user_extra_files: 用户额外文件
 user_login: 登录
 user_logout: 登出
+user_lostpass_mail_sent: 密码重置邮件已发送
+user_lostpass_with_code: 重置密码
 user_lostpass: 忘记密码
-'user_lostpass_mail_sent': '密码重置邮件已发送'
 user_register_with_code: 注册
-'user_lostpass_with_code': '重置密码'
 user_register: 注册
 User-defined role: 用户定义的角色
 User: 用户
