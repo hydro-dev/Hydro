@@ -15,6 +15,7 @@ import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
 import DomainModel from './domain';
 import problem from './problem';
+import * as SystemModel from './system';
 import task from './task';
 
 export default class RecordModel {
@@ -291,6 +292,14 @@ export async function apply(ctx: Context) {
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
     ctx.on('record/judge', async (rdoc, updated) => {
         if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
+            if (SystemModel.get('record.statMode') === 'unique') {
+                await RecordModel.collStat.deleteMany({
+                    _id: { $ne: rdoc._id },
+                    uid: rdoc.uid,
+                    pid: rdoc.pid,
+                    domainId: rdoc.domainId,
+                });
+            }
             await RecordModel.collStat.updateOne({
                 _id: rdoc._id,
             }, {

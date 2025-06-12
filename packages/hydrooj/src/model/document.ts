@@ -104,9 +104,9 @@ export async function set<K extends keyof DocType>(
 ): Promise<DocType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set, $unset);
     const update: UpdateFilter<DocType[K]> = {};
-    if ($set) update.$set = $set;
-    if ($unset) update.$unset = $unset;
-    if ($push) update.$push = $push;
+    if ($set && Object.keys($set).length) update.$set = $set;
+    if ($unset && Object.keys($unset).length) update.$unset = $unset;
+    if ($push && Object.keys($push).length) update.$push = $push;
     return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         update,
@@ -317,14 +317,14 @@ export async function setMultiStatus<K extends keyof DocStatusType>(
     );
 }
 
-export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
+export async function setStatusIfCondition<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     filter: Filter<DocStatusType[T]>, args: Partial<DocStatusType[T]> = {},
     returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[T]> {
     try {
         return await collStatus.findOneAndUpdate(
-            { domainId, docType, docId, uid, $nor: [filter] },
+            { domainId, docType, docId, uid, ...filter },
             { $set: args },
             { upsert: true, returnDocument },
         );
@@ -338,8 +338,8 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
     returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[T]> {
-    return await setStatusIfNotCondition(
-        domainId, docType, docId, uid, { [key]: ifNot } as any,
+    return await setStatusIfCondition(
+        domainId, docType, docId, uid, { [key]: { $ne: ifNot } } as any,
         { [key]: value, ...args }, returnDocument,
     );
 }
@@ -474,7 +474,7 @@ global.Hydro.model.document = {
     revSetStatus,
     set,
     setIfNotStatus,
-    setStatusIfNotCondition,
+    setStatusIfCondition,
     setStatus,
     setMultiStatus,
     setSub,

@@ -6,7 +6,7 @@ import DOMServer from 'react-dom/server';
 
 export function substitute(str: string, obj: any) {
   return str.replace(/\{([^{}]+)\}/g, (match, key) => {
-    if (obj[key] !== undefined) return obj[key].toString();
+    if (obj[key] !== undefined && obj[key] !== null) return obj[key].toString();
     return `{${key}}`;
   });
 }

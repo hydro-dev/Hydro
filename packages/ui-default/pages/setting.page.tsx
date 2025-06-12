@@ -45,6 +45,7 @@ const page = new NamedPage('manage_config', async () => {
           });
         }}
         sidebar={<DomComponent childDom={$('.section.side').get(0)} />}
+        dynamic={UiContext.dynamic || {}}
       />
       <style>{`
         body {

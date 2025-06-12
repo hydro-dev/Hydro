@@ -53,7 +53,7 @@
         "mongodb-memory-server": "10.1.4",
         "nyc": "^17.1.0",
         "ora": "^8.2.0",
-        "oxlint": "^0.16.12",
+        "oxlint": "^1.0.0",
         "package-json": "^10.0.1",
         "semver": "^7.7.2",
         "simple-git": "^3.28.0",
