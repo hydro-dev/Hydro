@@ -1,6 +1,9 @@
 import parser, { SearchParserResult } from '@hydrooj/utils/lib/search';
 import $ from 'jquery';
 import _ from 'lodash';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import ProblemSelectAutoComplete from 'vj/components/autocomplete/components/ProblemSelectAutoComplete';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog, ConfirmDialog, Dialog } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
@@ -17,6 +20,9 @@ const filterTags = {};
 const pinned: Record<string, string[]> = { category: [], difficulty: [] };
 const selections = { category: {}, difficulty: {} };
 const selectedTags: Record<string, string[]> = { category: [], difficulty: [] };
+
+let selectedPids: string[] = [];
+let clearSelectionHandler: (() => void) | null = null;
 
 function setDomSelected($dom, selected, icon?) {
   if (selected) {
@@ -163,15 +169,11 @@ function parseCategorySelection() {
 }
 
 function ensureAndGetSelectedPids() {
-  const pids = _.map(
-    $('tbody [data-checkbox-group="problem"]:checked'),
-    (ch) => $(ch).closest('tr').attr('data-pid'),
-  );
-  if (pids.length === 0) {
+  if (selectedPids.length === 0) {
     Notification.error(i18n('Please select at least one problem to perform this operation.'));
     return null;
   }
-  return pids;
+  return selectedPids;
 }
 
 async function handleOperation(operation) {
@@ -204,6 +206,7 @@ async function handleOperation(operation) {
     await request.post('', { operation, pids, ...payload });
     Notification.success(i18n(`Selected problems have been ${operation === 'copy' ? 'copie' : operation}d.`));
     await delay(2000);
+    clearSelectionHandler?.();
     loadQuery();
   } catch (error) {
     Notification.error(error.message);
@@ -282,6 +285,94 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
+function ProblemSelectionDisplay(props) { // eslint-disable-line
+  const [pids, setPids] = React.useState<string[]>([]);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    props.onClear?.(() => {
+      setPids([]);
+    });
+  }, [props.onClear]);
+
+  React.useEffect(() => {
+    $(document).on('click', '[data-checkbox-group="problem"]:checked', (ev) => {
+      const $checkbox = $(ev.currentTarget);
+      const pid = $checkbox.closest('tr').attr('data-pid');
+      setPids((o) => Array.from(new Set([...o, pid])));
+    });
+    $(document).on('click', '[data-checkbox-group="problem"]:not(:checked)', (ev) => {
+      const $checkbox = $(ev.currentTarget);
+      const pid = $checkbox.closest('tr').attr('data-pid');
+      setPids((o) => o.filter((i) => i !== pid));
+    });
+    $(document).on('click', '[data-checkbox-toggle="problem"]:checked', () => {
+      const all = $('[data-checkbox-group="problem"]').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
+      setPids((o) => Array.from(new Set([...o, ...all])));
+    });
+    $(document).on('click', '[data-checkbox-toggle="problem"]:not(:checked)', () => {
+      const all = $('[data-checkbox-group="problem"]').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
+      setPids((o) => o.filter((i) => !all.includes(i)));
+    });
+  }, []);
+
+  const updateCheckboxSelection = React.useCallback(() => {
+    for (const i of $('[data-checkbox-group="problem"]:checked')) {
+      if (!pids.includes(i.closest('tr').dataset.pid)) {
+        $(i).prop('checked', false);
+      }
+    }
+    for (const i of pids) {
+      $(`[data-pid="${i}"]`).find('[data-checkbox-group="problem"]')?.prop('checked', true);
+    }
+  }, [pids]);
+
+  React.useEffect(() => {
+    updateCheckboxSelection();
+    props.onChange(pids);
+    $(document).on('vjContentNew', updateCheckboxSelection);
+    return () => {
+      $(document).off('vjContentNew', updateCheckboxSelection);
+    };
+  }, [pids]);
+
+  return (<>
+    <a href="javascript:;" className="menu__link display-mode-hide" onClick={() => setDialogOpen(true)}>
+      <span className="icon icon-stack"></span>
+      {' '}{i18n('{0} problem(s) selected', pids.length)}
+    </a>
+    <div className="dialog withBg" style={{ display: dialogOpen ? 'flex' : 'none', zIndex: 1000, opacity: 1 }} onClick={() => setDialogOpen(false)}>
+      <div className="dialog__content" style={{ transform: 'scale(1, 1)' }} onClick={(ev) => ev.stopPropagation()}>
+        <div className="dialog__body" style={{ height: 'calc(100% - 45px)' }}>
+          <div className="row">
+            <div className="columns">
+              <h1>Select Problems</h1>
+            </div>
+          </div>
+          <div className="row">
+            <div className="columns">
+              <ProblemSelectAutoComplete
+                multi
+                onChange={(v) => setPids(v.split(',').filter((i) => i.trim()))}
+                selectedKeys={pids}
+              />
+              <style>{'.autocomplete-wrapper { max-height: 50vh; }'}</style>
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="columns clearfix">
+            <div className="float-right dialog__action">
+              <button className="rounded button" onClick={() => setPids([])}>{i18n('Clear')}</button>{' '}
+              <button className="primary rounded button" onClick={() => setDialogOpen(false)}>{i18n('Ok')}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>);
+}
+
 const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
@@ -343,6 +434,12 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $(document).on('vjContentNew', (e) => processElement(e.target));
   processElement(document);
+
+  ReactDOM.createRoot(document.getElementById('problem_selection'))
+    .render(<ProblemSelectionDisplay
+      onChange={(pids) => { selectedPids = pids; }}
+      onClear={(handler) => { clearSelectionHandler = handler; }}
+    />);
 
   addSpeculationRules({
     prerender: [{

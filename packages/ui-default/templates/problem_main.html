@@ -33,6 +33,7 @@
               <span class="icon icon-edit"></span>
               {{ _('Leave Edit Mode') }}
             </a>
+            <div id="problem_selection" class="display-mode-hide"></div>
             {% if handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
               <a href="javascript:;" class="menu__link display-mode-hide" name="hide_selected_problems">
                 <span class="icon icon-close"></span>

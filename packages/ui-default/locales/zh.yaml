@@ -6,6 +6,7 @@ __langname: 简体中文
 '{0} is a moderator of this domain.': '{}是这个域的管理者之一。'
 '{0} is a superuser.': '{0}是超级管理员。'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超过频率限制。限制：{1} 秒内最多 {2} 次操作。'
+'{0} problem(s) selected': '{0} 道题目已选中'
 '{0} problems': '{0} 道题'
 '{0} sections': '{0} 小节'
 '{0} solutions': '{0} 条题解'
