@@ -811,7 +811,8 @@ export async function apply(ctx: Context) {
                 ].concat(
                     tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
                     teams.map((i, idx) => {
-                        const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(udict[i.uid].displayName || udict[i.uid].uname)}`;
+                        const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? (udict[i.uid].displayName || udict[i.uid].uname) : udict[i.uid].uname;
+                        const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(showName)}`;
                         return `@t ${idx + 1},0,1,"${teamName}"`;
                     }),
                     Array(100).fill(0).map((_, idx) => `@t ${tdoc.attend + idx + 1},0,1,"Пополнить команду"`),
