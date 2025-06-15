@@ -238,7 +238,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             message: 'User {0} mentioned you in {1:link}',
             params: [this.user.uname, `/d/${domainId}${this.request.path}`],
         });
-        await Promise.all(uids.map((i) => message.send(1, i, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD)));
+        await message.send(1, uids, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
         const drid = await discussion.addReply(domainId, did, this.user._id, content, this.request.ip);
         this.back({ drid });
     }
@@ -255,7 +255,7 @@ class DiscussionDetailHandler extends DiscussionHandler {
             message: 'User {0} mentioned you in {1:link}',
             params: [this.user.uname, `/d/${domainId}${this.request.path}`],
         });
-        await Promise.all(uids.map((i) => message.send(1, i, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD)));
+        await message.send(1, uids, msg, message.FLAG_RICHTEXT | message.FLAG_UNREAD);
         await discussion.addTailReply(domainId, drid, this.user._id, content, this.request.ip);
         this.back();
     }
