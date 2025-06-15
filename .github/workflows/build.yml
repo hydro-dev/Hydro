@@ -60,9 +60,9 @@ jobs:
           .github/workflows/**
     - name: Build And Lint
       run: |
+        yarn build:ui:iconfont # icon font file needed for types
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
         then
-          yarn build:ui:iconfont
           parallel --tty -j+0 yarn ::: lint:ci build build:ui:production:webpack test
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
