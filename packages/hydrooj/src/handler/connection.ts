@@ -33,24 +33,29 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     }
 
     async message(payload: any) {
+        if (!['resume', 'subscribe'].includes(payload.operation)) return;
         const accept = [];
         const reject = [];
-        const session = payload?.credential
+        const session = payload.credential
             ? await TokenModel.get(payload.credential, TokenModel.TYPE_SESSION)
             : null;
-        if (!session && payload.operation !== 'resume') return;
-        if (payload.operation === 'resume' && !this.privileged) return;
-        const user = payload.operation === 'resume' ? null : await UserModel.getById('system', session.uid);
-        for (const channel of payload.channels) {
+        const op = payload.operation || '';
+        if (!session && op !== 'resume') return;
+        if (op === 'resume' && !this.privileged) return;
+        const user = op === 'resume' ? null : await UserModel.getById('system', session.uid);
+        for (const channel of payload.channels || []) {
             try {
-                const result = payload.operation === 'resume'
+                const result = op === 'resume'
                     ? { ok: true, channel }
                     // eslint-disable-next-line no-await-in-loop
-                    : await this.ctx.bail('subscription/subscribe', channel, user);
-                if (result?.ok) accept.push(result.channel);
-                else reject.push(channel);
+                    : await this.ctx.bail('subscription/subscribe', channel, user, this.privileged ? payload.metadata || {} : {});
+                if (result?.ok) {
+                    // eslint-disable-next-line no-await-in-loop
+                    await this.accept(result.channel);
+                    accept.push(result.channel);
+                } else reject.push(channel);
             } catch (e) {
-                logger.error('Error subscribing to channel %s for user %s: %s', channel, user._id, e);
+                logger.error('Error subscribing to channel %s for user %s: %s', channel, user?._id, e);
                 reject.push(channel);
             }
         }

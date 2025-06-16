@@ -23,7 +23,7 @@ export interface EventMap {
     'app/reload': (entries: Set<string>) => VoidReturn
 
     'subscription/init': (h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn
-    'subscription/subscribe': (channel: string, user: User) => VoidReturn
+    'subscription/subscribe': (channel: string, user: User, metadata: Record<string, string>) => VoidReturn
     'subscription/enable': (channel: string, h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn
 
     'app/watch/change': (path: string) => VoidReturn
