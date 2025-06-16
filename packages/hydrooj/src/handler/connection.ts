@@ -14,6 +14,7 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     category = '#gateway';
     private privileged = false;
     private channels: Set<string> = new Set();
+    private disposables: Map<string, () => void> = new Map();
 
     async prepare() {
         const secret = SystemModel.get('websocket.secret');
@@ -29,11 +30,35 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     async accept(channel: string) {
         if (this.channels.has(channel)) return;
         this.channels.add(channel);
-        await this.ctx.parallel('subscription/enable', channel, this, this.privileged);
+        const d: (() => void)[] = [];
+        const disposeAll = () => {
+            for (const dispose of d) dispose();
+        };
+        this.disposables.set(channel, disposeAll);
+        await this.ctx.parallel('subscription/enable', channel, this, this.privileged, (disposable) => {
+            d.push(disposable);
+        });
     }
 
     async message(payload: any) {
-        if (!['resume', 'subscribe'].includes(payload.operation)) return;
+        if (['resume', 'subscribe'].includes(payload.operation)) await this.subscribe(payload);
+        if (payload.operation === 'unsubscribe') await this.unsubscribe(payload);
+    }
+
+    async unsubscribe(payload: any) {
+        for (const channel of payload.channels || []) {
+            try {
+                if (!this.channels.has(channel)) continue;
+                this.channels.delete(channel);
+                this.disposables.get(channel)?.();
+                this.disposables.delete(channel);
+            } catch (e) {
+                logger.error('Error unsubscribing from channel %s: %s', channel, e);
+            }
+        }
+    }
+
+    async subscribe(payload: any) {
         const accept = [];
         const reject = [];
         const session = payload.credential

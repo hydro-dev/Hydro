@@ -24,7 +24,9 @@ export interface EventMap {
 
     'subscription/init': (h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn
     'subscription/subscribe': (channel: string, user: User, metadata: Record<string, string>) => VoidReturn
-    'subscription/enable': (channel: string, h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn
+    'subscription/enable': (
+        channel: string, h: ConnectionHandler<Context>, privileged: boolean, onDispose: (disposable: () => void) => void
+    ) => VoidReturn
 
     'app/watch/change': (path: string) => VoidReturn
     'app/watch/unlink': (path: string) => VoidReturn
