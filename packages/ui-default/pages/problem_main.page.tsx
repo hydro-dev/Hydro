@@ -315,6 +315,10 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
       setPids((o) => o.filter((i) => !all.includes(i)));
     });
   }, []);
+  React.useEffect(() => {
+    (window as any).__getPids = () => pids;
+    (window as any).__setPids = (newIds: string[]) => setPids(newIds);
+  }, [pids]);
 
   const updateCheckboxSelection = React.useCallback(() => {
     for (const i of $('[data-checkbox-group="problem"]:checked')) {

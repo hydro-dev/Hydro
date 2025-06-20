@@ -11,7 +11,9 @@ import { Logger } from '../utils';
 const logger = new Logger('connection');
 
 class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
+    noCheckPermView = true;
     category = '#gateway';
+    private id = Math.random().toString(16).substring(2);
     private privileged = false;
     private channels: Set<string> = new Set();
     private disposables: Map<string, () => void> = new Map();
@@ -21,7 +23,7 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
         const token = this.request.headers['x-hydro-websocket-gateway'];
         if (token) {
             if (!secret || token !== secret) throw new ForbiddenError('Invalid token');
-            logger.info('Gateway websocket connection from %s', this.request.ip);
+            logger.info('Gateway websocket connection from %s, id=%s', this.request.ip, this.id);
             this.privileged = true;
         }
         await this.ctx.parallel('subscription/init', this, this.privileged);
@@ -41,8 +43,13 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     }
 
     async message(payload: any) {
-        if (['resume', 'subscribe'].includes(payload.operation)) await this.subscribe(payload);
-        if (payload.operation === 'unsubscribe') await this.unsubscribe(payload);
+        console.log(payload);
+        try {
+            if (['resume', 'subscribe'].includes(payload.operation)) await this.subscribe(payload);
+            if (payload.operation === 'unsubscribe') await this.unsubscribe(payload);
+        } catch (e) {
+            logger.error('Failed to process message %o: %o', payload, e);
+        }
     }
 
     async unsubscribe(payload: any) {
@@ -65,9 +72,11 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
             ? await TokenModel.get(payload.credential, TokenModel.TYPE_SESSION)
             : null;
         const op = payload.operation || '';
-        if (!session && op !== 'resume') return;
-        if (op === 'resume' && !this.privileged) return;
-        const user = op === 'resume' ? null : await UserModel.getById('system', session.uid);
+        if (op === 'resume' && !this.privileged) {
+            this.send({ operation: 'resume_failed' });
+            return;
+        }
+        const user = op === 'resume' ? null : await UserModel.getById('system', session?.uid || 0);
         for (const channel of payload.channels || []) {
             try {
                 const result = op === 'resume'
@@ -84,12 +93,20 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
                 reject.push(channel);
             }
         }
-        this.send({
-            operation: 'verify',
-            accept,
-            reject,
-            connection_id: payload.connection_id,
-        });
+        if (op !== 'resume') {
+            this.send({
+                operation: 'verify',
+                accept,
+                reject,
+                subscription_id: payload.subscription_id,
+            });
+        }
+    }
+
+    async cleanup() {
+        if (this.privileged) {
+            logger.info('Gateway websocket disconnected from %s, id=%s', this.request.ip, this.id);
+        }
     }
 }
 
