@@ -271,7 +271,7 @@ export async function apply(ctx: Context) {
                     text: v.text,
                     name: v.name,
                 }));
-            if (!h.noCheckPermView && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
+            if ((!('noCheckPermView' in h) || !h.noCheckPermView) && !h.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) h.checkPerm(PERM.PERM_VIEW);
             if (h.context.pendingError) throw h.context.pendingError;
         });
         on('handler/create/ws', async (h) => {

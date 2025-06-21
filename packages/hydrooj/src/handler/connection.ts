@@ -1,7 +1,5 @@
 import { Context } from '../context';
 import { ForbiddenError } from '../error';
-import avatar from '../lib/avatar';
-import { PRIV } from '../model/builtin';
 import * as SystemModel from '../model/system';
 import TokenModel from '../model/token';
 import UserModel from '../model/user';
@@ -43,7 +41,6 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
     }
 
     async message(payload: any) {
-        console.log(payload);
         try {
             if (['resume', 'subscribe'].includes(payload.operation)) await this.subscribe(payload);
             if (payload.operation === 'unsubscribe') await this.unsubscribe(payload);
@@ -98,6 +95,7 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
                 operation: 'verify',
                 accept,
                 reject,
+                request_id: payload.request_id,
                 subscription_id: payload.subscription_id,
             });
         }
@@ -112,38 +110,4 @@ class WebsocketEventsConnectionManagerHandler extends ConnectionHandler {
 
 export function apply(ctx: Context) {
     ctx.Connection('websocket_gateway', '/websocket', WebsocketEventsConnectionManagerHandler);
-
-    async function notifyMessage(uid: number[], mdoc: any, h) {
-        const udoc = (await UserModel.getById('system', mdoc.from))!;
-        return {
-            operation: 'event',
-            channels: uid.map((u) => `message:${u}`),
-            payload: { udoc: { ...udoc.serialize(h) as any, avatarUrl: avatar(udoc.avatar, 128) }, mdoc },
-        };
-    }
-
-    ctx.on('subscription/init', (h, privileged) => {
-        if (!privileged) return;
-        h.ctx.on('user/message', async (uid, mdoc) => {
-            h.send(await notifyMessage(uid, mdoc, h));
-        });
-    });
-
-    ctx.on('subscription/enable', (channel, h, privileged) => {
-        if (!channel.startsWith('message:') || privileged) return;
-        const uid = +channel.split(':')[1];
-        h.ctx.on('user/message', async (uids, mdoc) => {
-            if (!uids.includes(uid)) return;
-            h.send(await notifyMessage([uid], mdoc, h));
-        });
-    });
-
-    ctx.on('subscription/subscribe', (channel, user) => { // eslint-disable-line consistent-return
-        if (channel === 'message' && user.hasPriv(PRIV.PRIV_USER_PROFILE)) {
-            return {
-                ok: true,
-                channel: `message:${user._id}`,
-            };
-        }
-    });
 }
