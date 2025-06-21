@@ -27,7 +27,7 @@
         <li class="menu__item"><a class="menu__link" href="javascript:showSignInDialog();">
         <span class="icon icon-add"></span> {{ _('Login to Create a Discussion') }}</a></li>
       {% elif not handler.user._dudoc.join %}
-        <li class="menu__item"><a class="menu__link" href="/domain/join?target={{ pdoc.domainId }}">
+        <li class="menu__item"><a class="menu__link" href="/domain/join?target={{ tdoc.domainId }}">
         <span class="icon icon-add"></span> {{ _('Join Domain to Create a Discussion') }}</a></li>
       {% else %}
         <li class="menu__item"><a class="menu__link disabled" href="javascript:;">
@@ -55,7 +55,7 @@
           <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}
         </a>
     {% elif not handler.user._dudoc.join %}
-        <a class="menu__link" href="/domain/join?target={{ pdoc.domainId }}">
+        <a class="menu__link" href="/domain/join?target={{ tdoc.domainId }}">
           <span class="icon icon-add"></span> {{ _('Join Domain to Attend Contest') }}
         </a>
     {% else %}

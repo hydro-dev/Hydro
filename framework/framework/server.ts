@@ -214,7 +214,6 @@ export class Handler<C = CordisContext> extends HandlerCommon<C> {
     static [kHandler] = 'Handler';
 
     loginMethods: any;
-    noCheckPermView = false;
     notUsage = false;
     allowCors = false;
     __param: Record<string, decorators.ParamOption<any>[]>;

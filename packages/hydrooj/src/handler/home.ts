@@ -11,7 +11,7 @@ import {
     NotFoundError, PermissionError, UserAlreadyExistError,
     UserNotFoundError, ValidationError, VerifyPasswordError,
 } from '../error';
-import { DomainDoc, MessageDoc, Setting } from '../interface';
+import { DomainDoc, Setting } from '../interface';
 import avatar, { validate } from '../lib/avatar';
 import * as mail from '../lib/mail';
 import { verifyTFA } from '../lib/verifyTFA';
@@ -29,7 +29,7 @@ import token from '../model/token';
 import * as training from '../model/training';
 import user from '../model/user';
 import {
-    ConnectionHandler, Handler, param, query, requireSudo, subscribe, Types,
+    Handler, param, query, requireSudo, Types,
 } from '../service/server';
 import { camelCase, md5 } from '../utils';
 
@@ -608,18 +608,6 @@ class HomeMessagesHandler extends Handler {
     }
 }
 
-class HomeMessagesConnectionHandler extends ConnectionHandler {
-    category = '#message';
-
-    @subscribe('user/message')
-    async onMessageReceived(uid: number, mdoc: MessageDoc) {
-        if (uid !== this.user._id) return;
-        const udoc = (await user.getById(this.args.domainId, mdoc.from))!;
-        udoc.avatarUrl = avatar(udoc.avatar, 64);
-        this.send({ udoc, mdoc });
-    }
-}
-
 export const inject = { geoip: { required: false }, oauth: {} };
 export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
@@ -630,5 +618,38 @@ export function apply(ctx: Context) {
     ctx.Route('home_domain', '/home/domain', HomeDomainHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('home_domain_create', '/home/domain/create', HomeDomainCreateHandler, PRIV.PRIV_CREATE_DOMAIN);
     ctx.Route('home_messages', '/home/messages', HomeMessagesHandler, PRIV.PRIV_USER_PROFILE);
-    ctx.Connection('home_messages_conn', '/home/messages-conn', HomeMessagesConnectionHandler, PRIV.PRIV_USER_PROFILE);
+
+    async function notifyMessage(uid: number[], mdoc: any, h) {
+        const udoc = (await user.getById('system', mdoc.from))!;
+        return {
+            operation: 'event',
+            channels: uid.map((u) => `message:${u}`),
+            payload: { udoc: { ...udoc.serialize(h) as any, avatarUrl: avatar(udoc.avatar, 128) }, mdoc },
+        };
+    }
+
+    ctx.on('subscription/init', (h, privileged) => {
+        if (!privileged) return;
+        h.ctx.on('user/message', async (uid, mdoc) => {
+            h.send(await notifyMessage(uid, mdoc, h));
+        });
+    });
+
+    ctx.on('subscription/enable', (channel, h, privileged) => {
+        if (!channel.startsWith('message:') || privileged) return;
+        const uid = +channel.split(':')[1];
+        h.ctx.on('user/message', async (uids, mdoc) => {
+            if (!uids.includes(uid)) return;
+            h.send(await notifyMessage([uid], mdoc, h));
+        });
+    });
+
+    ctx.on('subscription/subscribe', (channel, udoc) => { // eslint-disable-line consistent-return
+        if (channel === 'message' && udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) {
+            return {
+                ok: true,
+                channel: `message:${udoc._id}`,
+            };
+        }
+    });
 }

@@ -134,7 +134,7 @@ class BlogUserHandler extends BlogHandler {
 
 class BlogDetailHandler extends BlogHandler {
     @param('did', Types.ObjectId)
-    async get(domainId: string, did: ObjectId) {
+    async get({ domainId }, did: ObjectId) {
         const dsdoc = this.user.hasPriv(PRIV.PRIV_USER_PROFILE)
             ? await BlogModel.getStatus(did, this.user._id)
             : null;
@@ -156,13 +156,13 @@ class BlogDetailHandler extends BlogHandler {
     }
 
     @param('did', Types.ObjectId)
-    async postStar(domainId: string, did: ObjectId) {
+    async postStar({ }, did: ObjectId) {
         await BlogModel.setStar(did, this.user._id, true);
         this.back({ star: true });
     }
 
     @param('did', Types.ObjectId)
-    async postUnstar(domainId: string, did: ObjectId) {
+    async postUnstar({ }, did: ObjectId) {
         await BlogModel.setStar(did, this.user._id, false);
         this.back({ star: false });
     }
@@ -176,7 +176,7 @@ class BlogEditHandler extends BlogHandler {
 
     @param('title', Types.Title)
     @param('content', Types.Content)
-    async postCreate(domainId: string, title: string, content: string) {
+    async postCreate({ }, title: string, content: string) {
         await this.limitRate('add_blog', 3600, 60);
         const did = await BlogModel.add(this.user._id, title, content, this.request.ip);
         this.response.body = { did };
@@ -186,7 +186,7 @@ class BlogEditHandler extends BlogHandler {
     @param('did', Types.ObjectId)
     @param('title', Types.Title)
     @param('content', Types.Content)
-    async postUpdate(domainId: string, did: ObjectId, title: string, content: string) {
+    async postUpdate({ }, did: ObjectId, title: string, content: string) {
         if (!this.user.own(this.ddoc!)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await Promise.all([
             BlogModel.edit(did, title, content),
@@ -197,7 +197,7 @@ class BlogEditHandler extends BlogHandler {
     }
 
     @param('did', Types.ObjectId)
-    async postDelete(domainId: string, did: ObjectId) {
+    async postDelete({ }, did: ObjectId) {
         if (!this.user.own(this.ddoc!)) this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
         await Promise.all([
             BlogModel.del(did),

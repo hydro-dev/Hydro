@@ -234,11 +234,11 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         await this.limitRate('add_discussion', 3600, 60);
         await contest.addClarification(domainId, tid, this.user._id, content, this.request.ip, subject);
         if (!this.user.own(this.tdoc)) {
-            await Promise.all([this.tdoc.owner, ...this.tdoc.maintainer].map((uid) => message.send(1, uid, JSON.stringify({
+            await message.send(1, this.tdoc.maintainer.concat(this.tdoc.owner), JSON.stringify({
                 message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
                 params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
                 url: this.url('contest_manage', { tid }),
-            }), message.FLAG_I18N | message.FLAG_UNREAD)));
+            }), message.FLAG_I18N | message.FLAG_UNREAD);
         }
         this.back();
     }
@@ -462,11 +462,11 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             const flag = contest.isOngoing(this.tdoc) ? message.FLAG_ALERT : message.FLAG_UNREAD;
             await Promise.all([
                 contest.addClarification(domainId, tid, 0, content, this.request.ip, subject),
-                ...uids.map((uid) => message.send(1, uid, JSON.stringify({
+                message.send(1, uids, JSON.stringify({
                     message: 'Broadcast message from contest {0}:\n{1}',
                     params: [this.tdoc.title, content],
                     url: this.url('contest_problemlist', { tid }),
-                }), flag | message.FLAG_I18N)),
+                }), flag | message.FLAG_I18N),
             ]);
         }
         this.back();

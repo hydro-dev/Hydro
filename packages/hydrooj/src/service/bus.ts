@@ -22,6 +22,12 @@ export interface EventMap {
     'app/before-reload': (entries: Set<string>) => VoidReturn
     'app/reload': (entries: Set<string>) => VoidReturn
 
+    'subscription/init': (h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn
+    'subscription/subscribe': (channel: string, user: User, metadata: Record<string, string>) => VoidReturn
+    'subscription/enable': (
+        channel: string, h: ConnectionHandler<Context>, privileged: boolean, onDispose: (disposable: () => void) => void
+    ) => VoidReturn
+
     'app/watch/change': (path: string) => VoidReturn
     'app/watch/unlink': (path: string) => VoidReturn
 
@@ -36,7 +42,7 @@ export interface EventMap {
     'task/daily': () => void;
     'task/daily/finish': (pref: Record<string, number>) => void;
 
-    'user/message': (uid: number, mdoc: MessageDoc) => void
+    'user/message': (uid: number[], mdoc: Omit<MessageDoc, 'to'>) => void
     'user/get': (udoc: User) => void
     'user/delcache': (content: string | true) => void
 
