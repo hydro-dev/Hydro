@@ -38,17 +38,13 @@ export interface AutoCompleteProps<Item> {
 export interface AutoCompleteHandle<Item> {
   getSelectedItems: () => Item[];
   getSelectedItemKeys: () => string[];
-  getSelectedItemsAsString: () => string;
   setSelectedItems: (items: Item[]) => void;
   getQuery: () => string;
   setQuery: (query: string) => void;
   setSelectedKeys: (keys: string[]) => void;
   triggerQuery: () => any;
   closeList: () => void;
-  /** returns comma seperated value text */
   getValue: () => string;
-  /** return value detail */
-  getValueArray: () => Item[];
   clear: () => void;
   focus: () => void;
 }
@@ -94,7 +90,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
 
   const [focused, setFocused] = useState(false); // is focused
-  const [selected, setSelected] = useState([]); // selected items
   const [selectedKeys, setSelectedKeys] = useState(props.selectedKeys || []); // keys of selected items
   const [itemList, setItemList] = useState([]); // items list
   const [currentItem, setCurrentItem] = useState(null); // index of current item (in item list)
@@ -152,24 +147,17 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     if (multi) {
       const idx = selectedKeys.indexOf(key);
       if (idx !== -1) {
-        setSelected((s) => {
-          const newSelected = [...s];
-          newSelected.splice(idx, 1);
-          return newSelected;
-        });
         setSelectedKeys((s) => {
           const newSelectedKeys = [...s];
           newSelectedKeys.splice(idx, 1);
           return newSelectedKeys;
         });
       } else {
-        setSelected((s) => [...s, item]);
         setSelectedKeys((s) => [...s, key]);
       }
       if (!preserve) inputRef.current.value = '';
       inputRef.current.focus();
     } else {
-      setSelected([item]);
       setSelectedKeys([key]);
       inputRef.current.value = key;
     }
@@ -201,7 +189,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     if (key === 'Backspace') {
       if (target.value.length) return;
       if (selectedKeys.length) {
-        setSelected((s) => s.slice(0, -1));
         setSelectedKeys((s) => s.slice(0, -1));
       }
       return;
@@ -229,28 +216,24 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   };
 
   useImperativeHandle(ref, () => ({
-    getSelectedItems: () => selected,
+    getSelectedItems: () => selectedKeys.map((key) => valueCache[key]),
     getSelectedItemKeys: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length),
-    getSelectedItemsAsString: () => [...selectedKeys, inputRef.current?.value].filter((v) => v?.trim().length).join(','),
     setSelectedItems: (items) => {
-      setSelected(items);
       setSelectedKeys(items.map((i) => itemKey(i)));
       if (!multi && inputRef.current) inputRef.current.value = items.map((i) => itemKey(i)).join(',');
     },
+    setSelectedKeys,
     getQuery: () => inputRef.current?.value,
     setQuery: (query) => {
       if (inputRef.current) inputRef.current.value = query;
     },
-    setSelectedKeys: (keys) => setSelectedKeys(keys),
     triggerQuery: () => queryList(inputRef.current?.value),
     closeList: () => {
       setItemList([]);
       setCurrentItem(null);
     },
     getValue: () => (multi ? selectedKeys.join(',') : (inputRef.current.value ?? '')),
-    getValueArray: () => (multi ? selected : [inputRef.current?.value].filter((i) => !!i)),
     clear: () => {
-      setSelected([]);
       setSelectedKeys([]);
       if (inputRef.current) inputRef.current.value = '';
     },
@@ -258,7 +241,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       setFocused(true);
       inputRef.current?.focus();
     },
-  }), [selected, selectedKeys, inputRef, multi]);
+  }), [selectedKeys, inputRef, multi]);
 
   const move = (dragId: string, hoverId: string) => {
     if (dragId === hoverId || !draggable) return;
@@ -309,7 +292,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               if (!ids.length) return;
               const fetched = await props.fetchItems(ids);
               for (const item of fetched) valueCache[itemKey(item)] = item;
-              setSelected([...selected, ...fetched]);
               setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
             }}
             placeholder={props.placeholder}
