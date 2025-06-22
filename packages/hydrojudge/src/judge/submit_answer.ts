@@ -50,7 +50,7 @@ function judgeCase(c: NormalizedCase) {
                 user_stderr: { content: '' },
                 code: ctx.code,
                 score: c.score,
-                detail: ctx.config.detail ?? true,
+                detail: ctx.config.detail,
                 env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
             }));
         }

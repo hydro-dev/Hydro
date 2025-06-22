@@ -32,7 +32,12 @@ export const JudgeSettings = Schema.object({
     host: Schema.any(),
     secret: Schema.string().description('Judge Token Secret').default(String.random(32)),
     disable: Schema.boolean().description('Disable builtin judge').default(false),
-    detail: Schema.boolean().description('Show diff detail').default(true),
+    detail: Schema.union([
+        Schema.const('full'),
+        Schema.const('case'),
+        Schema.const('none'),
+        Schema.transform(Schema.boolean(), (v) => (v ? 'full' : 'case')),
+    ]).description('Show diff detail').default('full'),
     performance: Schema.boolean().description('Performance mode').default(false),
 });
 

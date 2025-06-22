@@ -36,6 +36,8 @@ export interface SubtaskConfig {
     cases?: TestCaseConfig[];
 }
 
+export type DetailType = 'full' | 'case' | 'none';
+
 export interface ProblemConfigFile {
     type?: ProblemType;
     subType?: string;
@@ -48,7 +50,7 @@ export interface ProblemConfigFile {
     num_processes?: number;
     user_extra_files?: string[];
     judge_extra_files?: string[];
-    detail?: boolean;
+    detail?: DetailType | boolean;
     answers?: Record<string, [string | string[], number]>;
     redirect?: string;
     cases?: TestCaseConfig[];

@@ -46,7 +46,6 @@ function judgeCase(c: NormalizedCase) {
         let score = 0;
         let status = STATUS.STATUS_ACCEPTED;
         let message: any;
-        const detail = ctx.config.detail ?? true;
         for (let i = 0; i < ctx.config.num_processes; i++) {
             const result = res[i + 1];
             time += result.time;
@@ -55,7 +54,7 @@ function judgeCase(c: NormalizedCase) {
             else if (result.memory > c.memory * 1024) status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             else if ((result.code && result.code !== 13 /* Broken Pipe */) || (result.code === 13 && !resManager.code)) {
                 status = STATUS.STATUS_RUNTIME_ERROR;
-                if (detail) {
+                if (ctx.config.detail === 'full') {
                     if (result.code < 32 && result.signalled) message = signals[result.code];
                     else message = { message: 'Your program returned {0}.', params: [result.code] };
                 }

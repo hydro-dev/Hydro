@@ -1,4 +1,4 @@
-import { STATUS } from '@hydrooj/common';
+import { DetailType, STATUS } from '@hydrooj/common';
 import { FormatError, SystemError } from './error';
 import { CopyInFile, runQueued } from './sandbox';
 import { parse } from './testlib';
@@ -12,7 +12,7 @@ export interface CheckConfig {
     code: CopyInFile;
     copyIn: Record<string, CopyInFile>;
     score: number;
-    detail: boolean;
+    detail: DetailType;
     env?: Record<string, string>;
 }
 
@@ -85,7 +85,7 @@ elif [ -n "$result" ]; then
 fi
 `;
 
-const getDefaultChecker = (strict: boolean) => async (config) => {
+const getDefaultChecker = (strict: boolean) => async (config: CheckConfig) => {
     const { code, stdout } = await runQueued(`/bin/bash compare.sh${strict ? '' : ' BZ'}`, {
         copyIn: {
             usrout: config.user_stdout,
@@ -102,7 +102,7 @@ const getDefaultChecker = (strict: boolean) => async (config) => {
         message = `Checker returned with status ${code}`;
     } else if (stdout) {
         status = STATUS.STATUS_WRONG_ANSWER;
-        if (config.detail && !strict) message = parseDiffMsg(stdout);
+        if (config.detail === 'full') message = parseDiffMsg(stdout);
     } else status = STATUS.STATUS_ACCEPTED;
     if (message.length > 1024000) message = '';
     return {

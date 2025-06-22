@@ -28,7 +28,6 @@ function judgeCase(c: NormalizedCase) {
         let { status } = res;
         let message: any = '';
         let score = 0;
-        const detail = ctx.config.detail ?? true;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -44,7 +43,7 @@ function judgeCase(c: NormalizedCase) {
                     user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
                     user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
                     score: c.score,
-                    detail,
+                    detail: ctx.config.detail,
                     env: {
                         ...ctx.env,
                         HYDRO_TESTCASE: c.id.toString(),
@@ -53,7 +52,7 @@ function judgeCase(c: NormalizedCase) {
                     },
                 }));
             }
-        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && detail) {
+        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && ctx.config.detail === 'full') {
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
