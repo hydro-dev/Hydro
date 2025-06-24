@@ -615,4 +615,8 @@ export const coreScripts: MigrationScript[] = [
         });
         return true;
     },
+    async function _94_95() {
+        await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
+        return true;
+    },
 ];

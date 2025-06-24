@@ -368,15 +368,8 @@ class DiscussionRawHandler extends DiscussionHandler {
 
 class DiscussionEditHandler extends DiscussionHandler {
     async get() {
-        const path = [
-            ['Hydro', 'homepage'],
-            ['discussion_main', 'discussion_main'],
-            [this.vnode.title, 'discussion_node', { type: discussion.typeDisplay[this.ddoc.parentType], name: this.ddoc.parentId }, true],
-            [this.ddoc.title, 'discussion_detail', { did: this.ddoc.docId }, true],
-            ['discussion_edit', null],
-        ];
         this.response.template = 'discussion_edit.html';
-        this.response.body = { ddoc: this.ddoc, path };
+        this.response.body = { ddoc: this.ddoc };
     }
 
     @param('did', Types.ObjectId)

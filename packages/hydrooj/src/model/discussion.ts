@@ -84,9 +84,11 @@ export async function get<T extends Field>(
 }
 
 export async function edit(domainId: string, did: ObjectId, $set: Partial<DiscussionDoc>) {
-    await coll.insertOne({
-        domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
-    });
+    if ($set.content) {
+        await coll.insertOne({
+            domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
+        });
+    }
     return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
 }
 
