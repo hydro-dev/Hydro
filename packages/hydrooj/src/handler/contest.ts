@@ -123,7 +123,7 @@ export class ContestDetailBaseHandler extends Handler {
             {
                 name: 'contest_problemlist',
                 args: { tid, prefix: 'contest_problemlist' },
-                checker: () => true,
+                checker: () => this.tsdoc?.attend || contest.isDone(this.tdoc),
             },
             {
                 name: 'contest_scoreboard',

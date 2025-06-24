@@ -64,6 +64,10 @@
         </a>
     {% endif %}
       </li>
+    {% else %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_problemlist', tid=tdoc.docId) }}">
+        <span class="icon icon-unordered_list"></span> {{ _('Problem List') }}
+      </a></li>
     {% endif %}{# not attend and not done #}
     {% if model.contest.canShowScoreboard.call(handler, tdoc, False) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">

@@ -694,6 +694,7 @@ Problem Category: 标签
 Problem Data: 题目数据
 Problem ID cannot be a pure number. Leave blank if you want to use numberic id.: 题目ID不能为纯数字。 若要自动分配数字ID请将此处留空。
 Problem ID List: 题目 ID 列表
+Problem List: 题目列表
 Problem Set: 题库
 Problem Settings: 题目设置
 Problem Solution List: 题解列表
