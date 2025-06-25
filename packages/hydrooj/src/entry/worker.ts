@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
 import cac from 'cac';
@@ -69,6 +68,12 @@ export async function apply(ctx: Context) {
     await loadDir(path.resolve(__dirname, '..', 'script'));
     await ctx.parallel('app/started');
     if (process.env.NODE_APP_INSTANCE === '0') {
+        const staticDir = path.join(os.homedir(), '.hydro/static');
+        await fs.emptyDir(staticDir);
+        await Promise.all(Object.values(global.addons).map(async (f) => {
+            const dir = path.join(f, 'public');
+            if (await fs.pathExists(dir)) await fs.copy(dir, staticDir);
+        }));
         await new Promise((resolve, reject) => {
             ctx.inject(['migration'], async (c) => {
                 c.migration.registerChannel('hydrooj', require('../upgrade').coreScripts);
@@ -81,10 +86,6 @@ export async function apply(ctx: Context) {
                 }
             });
         });
-    }
-    for (const f of Object.values(global.addons)) {
-        const dir = path.join(f, 'public');
-        if (await fs.pathExists(dir)) await fs.copy(dir, path.join(os.homedir(), '.hydro/static'));
     }
     ctx.inject(['server'], async ({ server }) => {
         await server.listen();
