@@ -431,7 +431,7 @@ Highlight: 高亮
 Hint: 提示
 Hint::icon::difficulty: Hydro 中题目的难度，根据递交数、通过率以及每个递交的递交时间和评测结果，综合计算得出，可能不准确。
 Hint::icon::switch_account: 作为超级管理员，您可以直接切换到其他人的账户。
-Hint::icon::testdata: <a href="https://hydro.js.org/docs/user/testdata/" target="_blank">请参照文档说明</a>
+Hint::icon::testdata: <a href="https://hydro.js.org/docs/Hydro/user/testdata" target="_blank">请参照文档说明</a>
 Hint::page::main: 欢迎来到 Hydro！ 您可在右上角注册或登录。此类提示仅会显示一次。
 Hint::page::problem_detail: 这是题目详情页面。您可点击右侧“进入在线编程模式"开始编写您的代码。
 Hint::page::problem_files: 您可以将文件或压缩包拖拽至对应区域来上传文件。点击文件名在线编辑或按住 Ctrl 后点击文件名下载单个文件。
