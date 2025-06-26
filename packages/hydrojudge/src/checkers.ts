@@ -135,7 +135,7 @@ const checkers: Record<string, Checker> = new Proxy({
         return {
             status,
             score: status === STATUS.STATUS_ACCEPTED ? config.score : 0,
-            message: stdout,
+            message: config.detail === 'full' ? stdout : '',
         };
     },
 
@@ -168,7 +168,7 @@ const checkers: Record<string, Checker> = new Proxy({
         const score = Math.floor(+files.score) || 0;
         return {
             score,
-            message: files.message,
+            message: config.detail === 'full' ? files.message : '',
             status: score === config.score
                 ? STATUS.STATUS_ACCEPTED
                 : STATUS.STATUS_WRONG_ANSWER,
@@ -193,7 +193,7 @@ const checkers: Record<string, Checker> = new Proxy({
         return {
             status: st,
             score: (status === STATUS.STATUS_ACCEPTED) ? config.score : 0,
-            message: stdout,
+            message: config.detail === 'full' ? stdout : '',
         };
     },
 
@@ -219,7 +219,7 @@ const checkers: Record<string, Checker> = new Proxy({
         if (status !== STATUS.STATUS_ACCEPTED) throw new SystemError('Checker returned {0}.', [status]);
         const score = +stdout;
         status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
-        return { status, score: Math.floor((score * config.score) / 100), message: stderr };
+        return { status, score: Math.floor((score * config.score) / 100), message: config.detail === 'full' ? stderr : '' };
     },
 
     async testlib(config) {
@@ -252,7 +252,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 message: `Checker exited with code ${code}`,
             };
         }
-        return parse(stderr, config.score);
+        return parse(stderr, config.score, config.detail);
     },
 
     // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
@@ -285,7 +285,9 @@ const checkers: Record<string, Checker> = new Proxy({
 
         const message = status === STATUS.STATUS_SYSTEM_ERROR
             ? files['feedback_dir/judgeerror.txt'] || `Checker exited with code ${code}`
-            : files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || '';
+            : config.detail === 'full'
+                ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
+                : '';
 
         return { status, score, message };
     },

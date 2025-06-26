@@ -1,8 +1,8 @@
-import { STATUS } from '@hydrooj/common';
+import { DetailType, STATUS } from '@hydrooj/common';
 
 const operation = /^\s*(status|score)\((\d+)\)\s*(.*)$/m;
 
-export function parse(output: string, fullscore: number) {
+export function parse(output: string, fullscore: number, detail: DetailType) {
     let status = STATUS.STATUS_WRONG_ANSWER;
     let score = 0;
     let builder = (msg: string) => msg;
@@ -51,5 +51,5 @@ export function parse(output: string, fullscore: number) {
             score = +val;
         }
     }
-    return { status, score, message: builder(message) };
+    return { status, score, message: builder(detail === 'full' ? message : '') };
 }
