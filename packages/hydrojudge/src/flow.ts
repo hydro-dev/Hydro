@@ -53,7 +53,9 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                     ctx.total_time += res.time;
                     ctx.total_memory = Math.max(ctx.total_memory, res.memory);
                 }
-                ctx.next({ ...res ? { case: res } : {}, addProgress: 100 / ctx.config.count });
+                if (ctx.config.detail !== 'none') {
+                    ctx.next({ ...res ? { case: res } : {}, addProgress: 100 / ctx.config.count });
+                }
             }));
         }
         try {
