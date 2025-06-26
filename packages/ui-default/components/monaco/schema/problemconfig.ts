@@ -86,7 +86,7 @@ const problemConfigSchema: JSONSchema7 = {
     cases: { $ref: '#/definitions/cases' },
     subtasks: { type: 'array', items: { $ref: '#/definitions/subtask' } },
     filename: { type: 'string' },
-    detail: { type: 'boolean' },
+    detail: { type: 'string', enum: ['full', 'case', 'none'] },
     time: { $ref: '#/definitions/time' },
     memory: { $ref: '#/definitions/memory' },
     score: { $ref: '#/definitions/score' },
