@@ -806,7 +806,7 @@ export async function apply(ctx: Context) {
                     `@contest "${escape(tdoc.title)}"`,
                     `@contlen ${Math.floor((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) / Time.minute)}`,
                     `@problems ${tdoc.pids.length}`,
-                    `@teams ${tdoc.attend + 100}`,
+                    `@teams ${tdoc.attend}`,
                     `@submissions ${submissions.length}`,
                 ].concat(
                     tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
@@ -815,7 +815,6 @@ export async function apply(ctx: Context) {
                         const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(showName)}`;
                         return `@t ${idx + 1},0,1,"${teamName}"`;
                     }),
-                    Array(100).fill(0).map((_, idx) => `@t ${tdoc.attend + idx + 1},0,1,"Пополнить команду"`),
                     submissions,
                 );
                 this.binary(res.join('\n'), `${this.tdoc.title}.ghost`);
