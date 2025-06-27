@@ -3,6 +3,7 @@ import $ from 'jquery';
 import responsiveCutoff from 'vj/breakpoints.json';
 import DomDialog from 'vj/components/dialog/DomDialog';
 import { InfoDialog } from 'vj/components/dialog/index';
+import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
 import {
   i18n, mediaQuery, request, tpl,
