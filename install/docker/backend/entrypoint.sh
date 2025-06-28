@@ -13,8 +13,9 @@ fi
 if [ ! -f "$ROOT/first" ]; then
     echo "for marking use only!" > "$ROOT/first"
 
-    hydrooj cli user create systemjudge@systemjudge.local root rootroot
-    hydrooj cli user setSuperAdmin 2
+    hydrooj cli user create systemjudge@systemjudge.local judge examplepassword 2
+    hydrooj cli user setJudge 2
+    hydrooj cli system set server.host 0.0.0.0
 fi
 
 pm2-runtime start hydrooj
