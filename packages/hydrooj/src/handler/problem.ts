@@ -334,6 +334,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             discussionCount: dcnt,
             tdoc: this.tdoc,
             owner_udoc: (tid && this.tdoc.owner !== this.pdoc.owner) ? await user.getById(domainId, this.tdoc.owner) : null,
+            mode: !tid ? 'normal'
+                : !this.tsdoc?.attend ? 'view'
+                    : !contest.isDone(this.tdoc) ? 'contest'
+                        : problem.canViewBy(this.pdoc, this.user) ? 'correction' : 'none',
         };
         if (this.tdoc && this.tsdoc) {
             const fields = ['attend', 'startAt'];
@@ -802,7 +806,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
     @query('tid', Types.ObjectId, true)
-    async get(domainId: string, type = 'additional_file', filename: string, noDisposition = false, tid: ObjectId) {
+    async get({ }, type = 'additional_file', filename: string, noDisposition = false, tid: ObjectId) {
         if (!tid) this.checkPerm(PERM.PERM_VIEW_PROBLEM);
         if (this.pdoc.reference) {
             if (type === 'testdata') throw new ProblemIsReferencedError('download testdata');

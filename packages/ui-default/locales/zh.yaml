@@ -223,6 +223,7 @@ Copy Selected: 复制选中
 Copy WeChat Account: 复制微信号
 Copy: 复制
 Copyright Complaint: 版权申诉
+Correction: 补题
 CPU Info: CPU信息
 Create a contest: 创建一个比赛
 Create a Discussion: 创建一个讨论
@@ -914,6 +915,7 @@ Testdata: 测试数据
 Text: 文本
 The 'default' role applies to ALL REGISTERED USER.: default 角色作用于<b>所有已注册用户</b>
 The contest is a flexible time contest. You need to complete the contest within a specified time after you attended.: 本场比赛采用灵活时间模式，你需要在参加后的指定时间内完成比赛。
+The contest is ended. New submissions will be treated as correction submissions and will not be counted in the contest.: 比赛已经结束。新提交将被视为补题提交，不计入比赛成绩。
 The group to join when user joining the domain.: 加入域时自动加入的小组。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 作业已超过截止时间，但仍在延期时间内。您递交题目将无法获得全部分数。
 The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀请码。您只能使用字母和数字，并且不能长于 64 个字符。

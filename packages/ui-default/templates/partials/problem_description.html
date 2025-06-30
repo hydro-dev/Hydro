@@ -14,10 +14,16 @@
       <p>{{ _('No submission language available for this problem.') }}</p>
     </blockquote>
   {% endif %}
-  {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST and model.contest.isDone(tdoc) %}
+  {% if tdoc and tdoc.docType == model.document.TYPE_CONTEST %}
+    {% if mode == 'view' %}
     <blockquote class="note">
       <p>{{ _('You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.') }}</p>
     </blockquote>
+    {% elif mode == 'correction' %}
+    <blockquote class="note">
+      <p>{{ _('The contest is ended. New submissions will be treated as correction submissions and will not be counted in the contest.') }}</p>
+    </blockquote>
+    {% endif %}
   {% endif %}
   {% if not renderredContent %}
     {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}

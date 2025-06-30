@@ -207,9 +207,18 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         const psdocs: any[] = Object.values(this.response.body.psdict);
         const canViewRecord = contest.canShowSelfRecord.call(this, this.tdoc);
         this.response.body.canViewRecord = canViewRecord;
+        const rids = psdocs.map((i) => i.rid);
+        if (contest.isDone(this.tdoc) && canViewRecord) {
+            const correction = await problem.getListStatus(domainId, this.user._id, this.tdoc.pids);
+            for (const pid in correction) {
+                if (this.tsdoc.detail[pid]?.rid === correction[pid].rid) delete correction[pid];
+            }
+            rids.push(...Object.values(correction).map((i) => i.rid));
+            this.response.body.correction = correction;
+        }
         [this.response.body.rdict, this.response.body.rdocs] = canViewRecord
             ? await Promise.all([
-                record.getList(domainId, psdocs.map((i: any) => i.rid)),
+                record.getList(domainId, rids),
                 record.getMulti(domainId, { contest: tid, uid: this.user._id })
                     .sort({ _id: -1 }).toArray(),
             ])

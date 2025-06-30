@@ -9,13 +9,15 @@
   pdoc: pdoc
 }) }}
 {% if tdoc %}
+  {{ set(UiContext, 'tdoc', tdoc) }}
+  {{ set(UiContext, 'tsdoc', tsdoc) }}
+{% endif %}
+{% if tdoc and mode == 'contest' %}
   {{ set(UiContext, 'canViewRecord', model.contest.canShowSelfRecord.call(handler, tdoc)) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId, query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'getSubmissionsUrl', url('record_main', query={fullStatus:'true', pid:pdoc.docId, tid:tdoc.docId})) }}
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}', query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId + "&tid=" + tdoc.docId) }}
-  {{ set(UiContext, 'tdoc', tdoc) }}
-  {{ set(UiContext, 'tsdoc', tsdoc) }}
 {% else %}
   {{ set(UiContext, 'canViewRecord', true) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId)) }}

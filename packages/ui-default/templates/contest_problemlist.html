@@ -5,6 +5,7 @@
 {% block content %}
 {{ set(UiContext, 'tdoc', tdoc) }}
 {{ set(UiContext, 'tsdoc', tsdoc) }}
+{% set hasCorrection = correction and Object.keys(correction).length %}
 <div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
@@ -27,7 +28,11 @@
             <tr>
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               <th class="col--status record-status--border">{{ _('Status') }}</th>
-              <th class="col--submit-at">{{ _('Last Submit At') }}</th>
+              {% if hasCorrection %}
+                <th class="col--correction">{{ _('Correction') }}</th>
+              {% else %}
+                <th class="col--submit-at">{{ _('Last Submit At') }}</th>
+              {% endif %}
             {% endif %}
             {% if showScore %}
               <th class="col--score">{{ _('Score') }}</th>
@@ -47,10 +52,21 @@
                 {% else %}
                   <td class="col--status record-status--border"><a href="{{ url('record_detail', rid=rdoc._id) }}">{{ _('Submitted') }}</a></td>
                 {% endif %}
-                <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
+                {% if not hasCorrection %}
+                  <td class="col--submit-at">{{ datetimeSpan(rdoc._id)|safe }}</td>
+                {% endif %}
               {% else %}
                 <td class="col--status record-status--border">{{ _('No Submissions') }}</td>
-                <td class="col--submit-at">-</td>
+                {% if not hasCorrection %}
+                  <td class="col--submit-at">-</td>
+                {% endif %}
+              {% endif %}
+              {% if hasCorrection %}
+                {% if correction[pid] %}
+                  {{ record.render_status_td(rdict[correction[pid].rid], class="col--correction") }}
+                {% else %}
+                  <td class="col--correction">-</td>
+                {% endif %}
               {% endif %}
             {% endif %}
             {% if showScore %}

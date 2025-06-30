@@ -143,11 +143,11 @@ Hydro 用户群：1085853538
 - framework: 添加 Subscription API
 - core: 添加 fixStorage 脚本
 - core: websocket: 重构 Subscription API
-- ui: 允许跨页选择题目
+- ui: 允许跨页选择题目，支持批量选择题目
 - judge: 重构 config.detail 设置
 - core: 自动清理多余的静态文件
 - ui: 优化比赛题目列表显示
-
+- core: 添加补题模式
 
 ### Bug Fixes
 
