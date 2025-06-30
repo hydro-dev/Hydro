@@ -19,7 +19,7 @@
         "saslprep": "^1.0.3",
         "schemastery": "^3.16.1",
         "shorty.js": "^1.0.1",
-        "ws": "^8.18.2"
+        "ws": "^8.18.3"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",

@@ -84,7 +84,7 @@ export function AddTestcase() {
 
   return (<>
     <li className={Classes.TREE_NODE} onClick={auto}>
-      <div className="bp5-tree-node-content bp5-tree-node-content-0">
+      <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
         <Icon icon="clean" />&nbsp;
         <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto detect')}</span>
       </div>
@@ -99,7 +99,7 @@ export function AddTestcase() {
         setOpen(true);
       }}
     >
-      <div className="bp5-tree-node-content bp5-tree-node-content-0">
+      <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
         <Icon icon="clean" />&nbsp;
         <span className={Classes.TREE_NODE_LABEL}>{i18n('Add testcase')}</span>
       </div>

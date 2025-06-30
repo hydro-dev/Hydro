@@ -19,7 +19,7 @@
     "devDependencies": {
         "@types/diff": "^8.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/lodash": "^4.17.18",
+        "@types/lodash": "^4.17.19",
         "sass": "^1.89.2"
     },
     "peerDependencies": {

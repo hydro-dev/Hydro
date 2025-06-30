@@ -41,7 +41,7 @@
         "mongodb": "^6.17.0",
         "mongodb-uri": "^0.9.7",
         "nanoid": "^5.1.5",
-        "nodemailer": "^7.0.3",
+        "nodemailer": "^7.0.4",
         "notp": "^2.0.3",
         "p-queue": "^8.1.0",
         "sanitize-filename": "^1.6.3",
@@ -52,7 +52,7 @@
         "superagent": "^10.2.1",
         "tar": "6.2.1",
         "thirty-two": "^1.0.2",
-        "ua-parser-js": "^2.0.3"
+        "ua-parser-js": "^2.0.4"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.5.7",
@@ -60,8 +60,8 @@
         "@types/fs-extra": "^11.0.4",
         "@types/js-yaml": "^4.0.9",
         "@types/koa-static-cache": "^5.1.4",
-        "@types/lodash": "^4.17.18",
-        "@types/mime-types": "^2.1.4",
+        "@types/lodash": "^4.17.19",
+        "@types/mime-types": "^3.0.1",
         "@types/mongodb-uri": "^0.9.4",
         "@types/nodemailer": "^6.4.17",
         "@types/notp": "^2.0.5",

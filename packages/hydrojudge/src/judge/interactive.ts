@@ -48,7 +48,7 @@ function judgeCase(c: NormalizedCase) {
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         } else {
-            const result = parse(resInteractor.stderr, c.score);
+            const result = parse(resInteractor.stderr, c.score, ctx.config.detail);
             status = result.status;
             score = result.score;
             message = result.message;

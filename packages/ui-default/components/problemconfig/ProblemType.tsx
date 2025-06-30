@@ -35,7 +35,7 @@ export default function ProblemType() {
           renderActiveTabPanelOnly
         >
           <span className={Classes.TAB}>{i18n('Problem Type')}</span>
-          <Tabs.Expander />
+          <TabsExpander />
           <Tab
             id="default"
             title={i18n('problem_type.default')}

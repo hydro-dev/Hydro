@@ -92,7 +92,8 @@ export default defineConfig([
             'default-param-last': 'off',
 
             'func-call-spacing': 'off',
-            '@stylistic/func-call-spacing': ['error', 'never'],
+            'function-call-spacing': 'off',
+            '@stylistic/function-call-spacing': ['error', 'never'],
             indent: 'off',
 
             '@stylistic/indent': ['warn', 4, {

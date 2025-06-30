@@ -76,7 +76,7 @@
     text-overflow: ellipsis;
   }
 
-  &>span.bp5-icon>svg {
+  &>span.bp6-icon>svg {
     font-size: 12px;
     cursor: pointer;
     padding: 4px;
@@ -104,7 +104,7 @@
       flex-grow: 1;
     }
 
-    &>span.bp5-icon>svg {
+    &>span.bp6-icon>svg {
       color: transparent;
     }
 
@@ -112,7 +112,7 @@
       background-color: #fafafa;
       font-weight: 600;
 
-      &>span.bp5-icon>svg {
+      &>span.bp6-icon>svg {
         color: #1890ff;
       }
     }
@@ -121,7 +121,7 @@
       background-color: #e6f7ff;
       cursor: pointer;
 
-      &>span.bp5-icon>svg {
+      &>span.bp6-icon>svg {
         color: currentColor;
       }
     }

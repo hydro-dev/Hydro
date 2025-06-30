@@ -15,7 +15,7 @@
         "semver": "^7.7.2",
         "shell-quote": "^1.8.3",
         "superagent": "^10.2.1",
-        "ws": "^8.18.2"
+        "ws": "^8.18.3"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",

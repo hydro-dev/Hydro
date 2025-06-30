@@ -1,7 +1,7 @@
 import { CustomSelectAutoComplete } from '@hydrooj/components';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 import {
-  Button, ControlGroup,
+  Button, Classes, ControlGroup,
   Dialog, DialogBody, DialogFooter,
   Icon, InputGroup, Tag,
 } from '@blueprintjs/core';
@@ -101,35 +101,35 @@ export function SubtaskSettings(props: SubtaskSettingsProps) {
       </DialogBody>
       <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
-    <li className="bp5-tree-node" onClick={() => setOpen(true)}>
-      <div className="bp5-tree-node-content">
-        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
+    <li className={Classes.TREE_NODE} onClick={() => setOpen(true)}>
+      <div className={Classes.TREE_NODE_CONTENT}>
+        <span className={`${Classes.TREE_NODE_CARET_NONE} ${Classes.ICON_STANDARD}`}></span>
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp5-tree-node-label${time ? '' : ' text-gray'}`}>{time || props.time || '1s'}</span>
+        <span className={`${Classes.TREE_NODE_LABEL}${time ? '' : ' text-gray'}`}>{time || props.time || '1s'}</span>
         <Icon icon="comparison" />
         &nbsp;&nbsp;
-        <span className={`bp5-tree-node-label${memory ? '' : ' text-gray'}`}>{memory || props.memory || '256m'}</span>
+        <span className={`${Classes.TREE_NODE_LABEL}${memory ? '' : ' text-gray'}`}>{memory || props.memory || '256m'}</span>
         <Icon icon="star" />
         {' '}
-        <span className="bp5-tree-node-secondary-label">{score || 0}</span>
+        <span className={Classes.TREE_NODE_SECONDARY_LABEL}>{score || 0}</span>
       </div>
     </li>
-    <li className="bp5-tree-node" onClick={() => setDepsOpen(true)}>
-      <div className="bp5-tree-node-content">
-        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
+    <li className={Classes.TREE_NODE} onClick={() => setDepsOpen(true)}>
+      <div className={Classes.TREE_NODE_CONTENT}>
+        <span className={`${Classes.TREE_NODE_CARET_NONE} ${Classes.ICON_STANDARD}`}></span>
         <Icon icon="diagram-tree" />
         &nbsp;&nbsp;
-        <span className="bp5-tree-node-label">{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</span>
+        <span className={Classes.TREE_NODE_LABEL}>{i18n('Dependencies')}: {deps.length ? deps.join(', ') : i18n('(None)')}</span>
       </div>
     </li>
-    <li className="bp5-tree-node">
-      <div className="bp5-tree-node-content">
-        <span className="bp5-tree-node-caret-none bp5-icon-standard"></span>
+    <li className={Classes.TREE_NODE}>
+      <div className={Classes.TREE_NODE_CONTENT}>
+        <span className={`${Classes.TREE_NODE_CARET_NONE} ${Classes.ICON_STANDARD}`}></span>
         <Icon icon="asterisk" />
         &nbsp;&nbsp;
-        <span className="bp5-tree-node-label">{i18n('Scoring method')}</span>
-        <span className="bp5-tree-node-secondary-label">
+        <span className={Classes.TREE_NODE_LABEL}>{i18n('Scoring method')}</span>
+        <span className={Classes.TREE_NODE_SECONDARY_LABEL}>
           <select className="compact select" value={ctype} onChange={(e) => setType(e.target.value)}>
             <option value="min">Min</option>
             <option value="max">Max</option>
@@ -184,14 +184,14 @@ export function GlobalSettings() {
       </DialogBody>
       <DialogFooter actions={<Button className="primary rounded button" onClick={onConfirm} intent="primary" text="Save" />} />
     </Dialog>
-    <li className="bp5-tree-node" onClick={() => setOpen(true)}>
-      <div className="bp5-tree-node-content">
+    <li className="bp6-tree-node" onClick={() => setOpen(true)}>
+      <div className="bp6-tree-node-content">
         <Icon icon="time" />
         &nbsp;&nbsp;
-        <span className={`bp5-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
+        <span className={`bp6-tree-node-label${time ? '' : ' text-gray'}`}>{time || '1s'}</span>
         <Icon icon="comparison" />
         {' '}
-        <span className={`bp5-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256MB'}</span>
+        <span className={`bp6-tree-node-secondary-label${memory ? '' : ' text-gray'}`}>{memory || '256MB'}</span>
       </div>
     </li>
   </>);

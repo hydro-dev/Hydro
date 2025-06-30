@@ -127,7 +127,7 @@ export function SubtaskConfigTree() {
     <div className={Classes.TREE}>
       <ul className={`${Classes.TREE_NODE_LIST} ${Classes.TREE_ROOT}`}>
         <li className={Classes.TREE_NODE} onClick={autoConfigure}>
-          <div className={`${Classes.TREE_NODE_CONTENT} bp5-tree-node-content-0`}>
+          <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
             <Icon icon="clean" />&nbsp;
             <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto configure')}</span>
           </div>
@@ -138,7 +138,7 @@ export function SubtaskConfigTree() {
           className={Classes.TREE_NODE}
           onClick={() => dispatch({ type: 'problemconfig/addSubtask' })}
         >
-          <div className={`${Classes.TREE_NODE_CONTENT} bp5-tree-node-content-0`}>
+          <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
             <Icon icon="folder-new" />&nbsp;
             <span className={Classes.TREE_NODE_LABEL}>{i18n('Add new subtask')}</span>
           </div>
