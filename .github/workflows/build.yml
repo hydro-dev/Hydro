@@ -4,6 +4,10 @@ on:
 - push
 - pull_request
 
+permissions:
+  # Provenance generation in GitHub Actions requires "write" access to the "id-token"
+  id-token: write
+
 env:
   CI: true
   YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
