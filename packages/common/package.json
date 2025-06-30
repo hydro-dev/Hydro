@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/common",
     "main": "./index.ts",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "sideEffects": false,
     "dependencies": {
         "@hydrooj/utils": "workspace:^"

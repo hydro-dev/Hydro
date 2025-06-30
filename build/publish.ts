@@ -40,8 +40,8 @@ if (CI && (!tag || GITHUB_EVENT_NAME !== 'push')) {
                 } catch (e) {
                     // expected
                 }
-            } else if (prerelease(meta.version)) return progress++; // Refuse to publish prerelease as 'latest' tag
-            if (!meta.private && /^[0-9.]+$/.test(meta.version)) {
+            }
+            if (!meta.private) {
                 try {
                     const { version } = await packageJson(meta.name, { version: tag });
                     if (typeof version === 'string' && gt(meta.version, version)) bumpMap[name] = meta.version;

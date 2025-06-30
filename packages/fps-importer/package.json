@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/fps-importer",
-    "version": "1.6.0-beta.1",
+    "version": "1.6.0-beta.2",
     "description": "Import FPS problems",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",

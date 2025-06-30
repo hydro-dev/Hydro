@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/import-hoj",
-    "version": "0.0.6-beta.1",
+    "version": "0.0.6-beta.2",
     "description": "Import HOJ problem export",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
