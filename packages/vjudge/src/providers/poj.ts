@@ -2,7 +2,7 @@
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-    htmlEncode, Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
+    htmlEncode, Logger, parseMemoryMB, parseTimeMS, randomstring, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -95,7 +95,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
                 }
                 const file = new PassThrough();
                 this.get(src).pipe(file);
-                const fid = String.random(8);
+                const fid = randomstring(8);
                 images[src] = fid;
                 files[`${fid}.png`] = file;
                 ele.setAttribute('src', `file://${fid}.png`);

@@ -3,10 +3,8 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/naming-convention */
 import yaml from 'js-yaml';
-import { pick } from 'lodash';
-import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import { sleep } from '@hydrooj/utils';
+import { randomstring, sleep } from '@hydrooj/utils';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
 import { PERM, PRIV, STATUS } from './model/builtin';
@@ -42,10 +40,10 @@ export const coreScripts: MigrationScript[] = [
     // Mark as used
     async function init() {
         if (!await user.getById('system', 0)) {
-            await user.create('Guest@hydro.local', 'Guest', String.random(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
+            await user.create('Guest@hydro.local', 'Guest', randomstring(32), 0, '127.0.0.1', PRIV.PRIV_REGISTER_USER);
         }
         if (!await user.getById('system', 1)) {
-            await user.create('Hydro@hydro.local', 'Hydro', String.random(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
+            await user.create('Hydro@hydro.local', 'Hydro', randomstring(32), 1, '127.0.0.1', PRIV.PRIV_USER_PROFILE);
         }
         const ddoc = await domain.get('system');
         if (!ddoc) await domain.add('system', 1, 'Hydro', 'Welcome to Hydro!');

@@ -10,7 +10,7 @@ import { nanoid } from 'nanoid';
 import sanitize from 'sanitize-filename';
 import Schema from 'schemastery';
 import parser from '@hydrooj/utils/lib/search';
-import { sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
+import { randomstring, sortFiles, streamToBuffer } from '@hydrooj/utils/lib/utils';
 import type { Context } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -709,7 +709,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     async postUploadFile(domainId: string, filename: string, type = 'testdata') {
         const file = this.request.files.file;
         if (!file) throw new ValidationError('file');
-        filename ||= file.originalFilename || String.random(16);
+        filename ||= file.originalFilename || randomstring(16);
         const files = [];
         if (filename.endsWith('.zip') && type === 'testdata') {
             const zip = new ZipReader(Readable.toWeb(createReadStream(file.filepath)));

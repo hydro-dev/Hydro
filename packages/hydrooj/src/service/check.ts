@@ -2,6 +2,7 @@
 
 import os from 'os';
 import { DisposableList } from 'cordis';
+import { randomstring } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
 import db from './db';
@@ -55,7 +56,7 @@ export default class CheckService extends Service {
     }
 
     async run(ctx, log, warn, error, cb: (id: string) => void) {
-        const id = String.random(6);
+        const id = randomstring(6);
         cb(id);
         for (const check of this.checkers) {
             if (this.c[id]) {

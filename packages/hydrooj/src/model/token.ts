@@ -2,7 +2,7 @@ import { Filter } from 'mongodb';
 import { Context } from '../context';
 import { TokenDoc } from '../interface';
 import db from '../service/db';
-import { ArgMethod } from '../utils';
+import { ArgMethod, randomstring } from '../utils';
 
 class TokenModel {
     static coll = db.collection('token');
@@ -26,7 +26,7 @@ class TokenModel {
     };
 
     static async add(
-        tokenType: number, expireSeconds: number, data: any, id = String.random(32),
+        tokenType: number, expireSeconds: number, data: any, id = randomstring(32),
     ): Promise<[string, TokenDoc]> {
         const now = new Date();
         const payload = {

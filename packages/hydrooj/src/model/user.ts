@@ -12,7 +12,7 @@ import pwhash from '../lib/hash.hydro';
 import bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
-import { ArgMethod, buildProjection } from '../utils';
+import { ArgMethod, buildProjection, randomstring } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
@@ -285,7 +285,7 @@ class UserModel {
 
     @ArgMethod
     static async setPassword(uid: number, password: string): Promise<Udoc> {
-        const salt = String.random();
+        const salt = randomstring();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { salt, hash: await pwhash(password, salt), hashType: 'hydro' } },
@@ -317,7 +317,7 @@ class UserModel {
             uid = Math.max((udoc?._id || 0) + 1, 2);
             autoAlloc = true;
         }
-        const salt = String.random();
+        const salt = randomstring();
         while (true) {
             try {
                 // eslint-disable-next-line no-await-in-loop

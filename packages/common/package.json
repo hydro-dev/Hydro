@@ -2,6 +2,7 @@
     "name": "@hydrooj/common",
     "main": "./index.ts",
     "version": "0.0.2",
+    "sideEffects": false,
     "dependencies": {
         "@hydrooj/utils": "workspace:^"
     }

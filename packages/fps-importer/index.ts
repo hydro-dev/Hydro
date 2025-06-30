@@ -4,7 +4,7 @@ import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
     _, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler, PERM, ProblemConfigFile,
-    ProblemModel, ProblemType, Schema, SolutionModel, SystemModel, ValidationError, yaml, Zip,
+    ProblemModel, ProblemType, randomstring, Schema, SolutionModel, SystemModel, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const knownRemoteMapping = {
@@ -65,7 +65,7 @@ class FpsProblemImportHandler extends Handler {
             }
             if (p.img?.length) {
                 for (const img of p.img) {
-                    const filename = String.random(8) + img.src[0].split('/').pop().split('.').pop();
+                    const filename = randomstring(8) + img.src[0].split('/').pop().split('.').pop();
                     tasks.push(ProblemModel.addAdditionalFile(domainId, pid, filename, Buffer.from(img.base64[0], 'base64')));
                     content = content.replace(img.src[0], `file://${filename}`);
                 }

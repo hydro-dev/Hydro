@@ -3,6 +3,7 @@ import { isoBase64URL } from '@simplewebauthn/server/helpers';
 import moment from 'moment-timezone';
 import { Binary } from 'mongodb';
 import Schema from 'schemastery';
+import { randomstring } from '@hydrooj/utils';
 import type { Context } from '../context';
 import {
     AuthOperationError, BadRequestError, BlacklistedError, BuiltinLoginError,
@@ -306,7 +307,7 @@ class UserRegisterWithCodeHandler extends Handler {
         if (provider.lockUsername) uname = this.tdoc.identity.username;
         if (!Types.Username[1](uname)) throw new ValidationError('uname');
         if (password !== verify) throw new VerifyPasswordError();
-        const randomEmail = `${String.random(12)}@invalid.local`; // some random email to remove in the future
+        const randomEmail = `${randomstring(12)}@invalid.local`; // some random email to remove in the future
         const uid = await user.create(this.tdoc.mail || randomEmail, uname, password, undefined, this.request.ip);
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = this.tdoc.mail.split('@');

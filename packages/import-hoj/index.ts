@@ -4,7 +4,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import {
     buildContent, Context, extractZip, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, ValidationError, yaml, Zip,
+    ProblemConfigFile, ProblemModel, randomstring, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-hoj');
@@ -13,7 +13,7 @@ fs.ensureDirSync(tmpdir);
 class ImportHojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
         const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(zipfile)));
-        const tmp = path.resolve(tmpdir, String.random(32));
+        const tmp = path.resolve(tmpdir, randomstring(32));
         await extractZip(zip, tmp, {
             strip: true,
             parseError: (e) => new ValidationError('zip', null, e.message),
