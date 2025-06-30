@@ -43,12 +43,11 @@ export class FilesHandler extends Handler {
         }
     }
 
-    @param('uid', Types.Int, true)
-    async get({ }, uid: number) {
+    async get({ }) {
         if (!this.udoc._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
         this.response.body = {
             files: sortFiles(this.udoc._files),
-            urlForFile: (filename: string) => this.url('fs_download', { uid, filename }),
+            urlForFile: (filename: string) => this.url('fs_download', { uid: this.udoc._id, filename }),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'home_files.html';

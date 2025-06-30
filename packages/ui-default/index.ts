@@ -181,6 +181,7 @@ export function apply(ctx: Context) {
         preload: Schema.string().default(''),
         domainNavigation: Schema.boolean().default(true).description('Show Domain Navigation'),
         about: Schema.string().role('markdown').default(defaultAbout),
+        enableScratchpad: Schema.boolean().default(true).description('Enable Scratchpad Mode'),
       }),
     }));
     ctx.Route('config_schema', '/manage/config/schema.json', SystemConfigSchemaHandler, PRIV.PRIV_EDIT_SYSTEM);

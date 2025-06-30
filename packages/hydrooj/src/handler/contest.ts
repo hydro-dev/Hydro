@@ -211,7 +211,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         if (contest.isDone(this.tdoc) && canViewRecord) {
             const correction = await problem.getListStatus(domainId, this.user._id, this.tdoc.pids);
             for (const pid in correction) {
-                if (this.tsdoc.detail[pid]?.rid === correction[pid].rid) delete correction[pid];
+                if (this.tsdoc.detail?.[pid]?.rid === correction[pid].rid) delete correction[pid];
             }
             rids.push(...Object.values(correction).map((i) => i.rid));
             this.response.body.correction = correction;

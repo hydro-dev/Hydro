@@ -70,10 +70,12 @@ export async function apply(ctx: Context) {
     if (process.env.NODE_APP_INSTANCE === '0') {
         const staticDir = path.join(os.homedir(), '.hydro/static');
         await fs.emptyDir(staticDir);
-        await Promise.all(Object.values(global.addons).map(async (f) => {
+        // Use ordered copy to allow resource override
+        for (const f of Object.values(global.addons)) {
             const dir = path.join(f, 'public');
+            // eslint-disable-next-line no-await-in-loop
             if (await fs.pathExists(dir)) await fs.copy(dir, staticDir);
-        }));
+        }
         await new Promise((resolve, reject) => {
             ctx.inject(['migration'], async (c) => {
                 c.migration.registerChannel('hydrooj', require('../upgrade').coreScripts);
