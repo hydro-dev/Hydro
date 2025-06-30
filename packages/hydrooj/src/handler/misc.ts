@@ -9,7 +9,7 @@ import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import user from '../model/user';
+import user, { User } from '../model/user';
 import {
     Handler, param, post, requireSudo, Types,
 } from '../service/server';
@@ -31,19 +31,31 @@ class SwitchLanguageHandler extends Handler {
 
 export class FilesHandler extends Handler {
     noCheckPermView = true;
+    udoc: User;
 
-    async get() {
-        if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
+    @param('uid', Types.Int, true)
+    async prepare({ domainId }, uid: number) {
+        if (uid) {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            this.udoc = await (await user.getById(domainId, uid)).private();
+        } else {
+            this.udoc = this.user;
+        }
+    }
+
+    @param('uid', Types.Int, true)
+    async get({ }, uid: number) {
+        if (!this.udoc._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
         this.response.body = {
-            files: sortFiles(this.user._files),
-            urlForFile: (filename: string) => this.url('fs_download', { uid: this.user._id, filename }),
+            files: sortFiles(this.udoc._files),
+            urlForFile: (filename: string) => this.url('fs_download', { uid, filename }),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'home_files.html';
     }
 
     @post('filename', Types.Filename)
-    async postUploadFile(domainId: string, filename: string) {
+    async postUploadFile({ }, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('count');
@@ -65,10 +77,10 @@ export class FilesHandler extends Handler {
     }
 
     @post('files', Types.ArrayOf(Types.Filename))
-    async postDeleteFiles(domainId: string, files: string[]) {
+    async postDeleteFiles({ }, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `user/${this.user._id}/${t}`), this.user._id),
-            user.setById(this.user._id, { _files: this.user._files.filter((i) => !files.includes(i.name)) }),
+            storage.del(files.map((t) => `user/${this.udoc._id}/${t}`), this.user._id),
+            user.setById(this.udoc._id, { _files: this.udoc._files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();
     }
