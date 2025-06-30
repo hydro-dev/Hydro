@@ -1,4 +1,5 @@
 {
     "name": "@hydrooj/a11y",
-    "version": "0.0.4"
+    "version": "0.0.4",
+    "repository": "https://github.com/hydro-dev/Hydro"
 }

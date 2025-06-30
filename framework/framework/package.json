@@ -3,6 +3,7 @@
     "version": "0.2.0",
     "main": "index.ts",
     "license": "MIT",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "peerDependencies": {
         "cordis": "*"
     },

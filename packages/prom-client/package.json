@@ -2,6 +2,7 @@
     "name": "@hydrooj/prom-client",
     "version": "0.2.0-beta.1",
     "main": "index.ts",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
         "prom-client": "^15.1.3"
     }
