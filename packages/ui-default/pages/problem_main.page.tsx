@@ -454,11 +454,14 @@ const page = new NamedPage(['problem_main'], () => {
   $(document).on('vjContentNew', (e) => processElement(e.target));
   processElement(document);
 
-  ReactDOM.createRoot(document.getElementById('problem_selection'))
-    .render(<ProblemSelectionDisplay
-      onChange={(pids) => { selectedPids = pids; }}
-      onClear={(handler) => { clearSelectionHandler = handler; }}
-    />);
+  const selection = document.getElementById('problem_selection');
+  if (selection) {
+    ReactDOM.createRoot(selection)
+      .render(<ProblemSelectionDisplay
+        onChange={(pids) => { selectedPids = pids; }}
+        onClear={(handler) => { clearSelectionHandler = handler; }}
+      />);
+  }
 
   addSpeculationRules({
     prerender: [{
