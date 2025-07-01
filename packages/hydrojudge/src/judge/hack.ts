@@ -40,6 +40,7 @@ export async function judge(ctx: Context) {
             copyIn: execute.copyIn,
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
+            filename: ctx.config.filename,
             cacheStdoutAndStderr: true,
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
