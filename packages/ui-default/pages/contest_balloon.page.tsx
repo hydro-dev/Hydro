@@ -8,6 +8,7 @@ import { NamedPage } from 'vj/misc/Page';
 import {
   i18n, pjax, request, tpl,
 } from 'vj/utils';
+import { getContestProblemAlphabeticId } from '@hydrooj/utils';
 
 function Balloon({ tdoc, val }) {
   const [color, setColor] = React.useState('');
@@ -31,8 +32,8 @@ function Balloon({ tdoc, val }) {
                 <tr key={pid}>
                   <td>
                     {now === pid
-                      ? (<b>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</b>)
-                      : (<span>{String.fromCharCode(65 + tdoc.pids.indexOf(+pid))}</span>)}
+                      ? (<b>{getContestProblemAlphabeticId(tdoc.pids.indexOf(+pid))}</b>)
+                      : (<span>{getContestProblemAlphabeticId(tdoc.pids.indexOf(+pid))}</span>)}
                   </td>
                   <td>
                     <HexColorInput

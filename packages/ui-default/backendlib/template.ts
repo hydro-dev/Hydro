@@ -1,6 +1,6 @@
 import path from 'path';
 import * as status from '@hydrooj/common/status';
-import { findFileSync } from '@hydrooj/utils/lib/utils';
+import { findFileSync, getContestProblemAlphabeticId } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
@@ -217,6 +217,7 @@ export class TemplateService extends Service {
     const env = new Nunjucks(Loader);
     env.addGlobal('findSubModule', (prefix) => Object.keys(that.registry).filter((n) => n.startsWith(prefix)));
     env.addGlobal('templateExists', (name) => !!that.registry[name]);
+    env.addGlobal('getContestProblemAlphabeticId', getContestProblemAlphabeticId)
 
     const render = (name: string, state: any) => new Promise<string>((resolve, reject) => {
       const start = Date.now();
