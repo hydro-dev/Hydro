@@ -1,9 +1,7 @@
 import { sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
-import { 
-    Counter, formatSeconds, Time,
-    getContestProblemAlphabeticId
-} from '@hydrooj/utils/lib/utils';
+import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
+import { getContestProblemAlphabeticId } from '@hydrooj/utils/lib/broswer-can-use';
 import {
     ContestAlreadyAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,

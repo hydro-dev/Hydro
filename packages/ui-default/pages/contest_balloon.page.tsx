@@ -8,7 +8,7 @@ import { NamedPage } from 'vj/misc/Page';
 import {
   i18n, pjax, request, tpl,
 } from 'vj/utils';
-import { getContestProblemAlphabeticId } from '@hydrooj/utils';
+import { getContestProblemAlphabeticId } from '@hydrooj/utils/lib/broswer-can-use';
 
 function Balloon({ tdoc, val }) {
   const [color, setColor] = React.useState('');
