@@ -30,6 +30,35 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     $(`[data-perm="${type}"] input`).removeAttr('disabled');
     $(`[data-perm="${type}"]`).show();
   }).trigger('change');
+  $('[name=limitLang]').removeAttr('disabled').on('change', () => {
+    const checked = $('[name=limitLang]').is(':checked');
+    if (checked) {
+      $('#limitLangListBox').show();
+      $('#limitLang_btnBox').show();
+    } else {
+      $('#limitLangListBox').hide();
+      $('#limitLang_btnBox').hide();
+    }
+  }).trigger('change');
+  $('.limitLangListItem').each(function () {
+    $(this).removeAttr('disabled');
+  }).on('change', () => {
+    const selectedLang = [];
+    $('.limitLangListItem:checked').each(function () {
+      selectedLang.push($(this).val());
+    });
+    $('[name=limitLangList]').val(selectedLang.join(','));
+  }).trigger('change');
+  $('#limitLangBtn_selectAll').on('click', () => {
+    $('.limitLangListItem').each(function () {
+      $(this).attr('checked', 'true');
+    });
+  });
+  $('#limitLangBtn_selectNone').on('click', () => {
+    $('.limitLangListItem').each(function () {
+      $(this).removeAttr('checked');
+    });
+  });
   if (pagename.endsWith('edit')) {
     let confirmed = false;
     $(document).on('click', '[value="delete"]', (ev) => {

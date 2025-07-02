@@ -270,6 +270,9 @@ export interface Tdoc extends Document {
     balloon?: Record<number, string | { color: string, name: string }>;
     score?: Record<number, number>;
 
+    // 允许使用的语言, undefined|null 则允许全部
+    limitLangList?: string[] | null;
+
     /**
      * In hours
      * 在比赛有效时间内选择特定的 X 小时参加比赛（从首次打开比赛算起）

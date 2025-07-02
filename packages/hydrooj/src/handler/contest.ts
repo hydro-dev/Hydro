@@ -4,9 +4,7 @@ import { stringify as toCSV } from 'csv-stringify/sync';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import {
-    Counter, diffArray, randomstring, sortFiles, Time, yaml,
-} from '@hydrooj/utils/lib/utils';
+import { Counter, diffArray, randomstring, sortFiles, Time, yaml } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -26,6 +24,7 @@ import ScheduleModel from '../model/schedule';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
+import * as setting from '../model/setting';
 import {
     Handler, param, post, Type, Types,
 } from '../service/server';
@@ -279,6 +278,34 @@ export class ContestEditHandler extends Handler {
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const beginAt = moment(this.tdoc?.beginAt || new Date(ts)).tz(this.user.timeZone);
+
+        // key, label, selected
+        let langList = [] as [string, string, boolean][];
+        if (!Array.isArray(setting.SETTINGS_BY_KEY.codeLang.range)) {
+            Object.keys(setting.SETTINGS_BY_KEY.codeLang.range).forEach((key) => {
+                langList.push([key, setting.SETTINGS_BY_KEY.codeLang.range[key], true]);
+            });
+        } else {
+            langList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => [...el, true]);
+        }
+        let limitLangListString = '';
+        let isLimitLang = false;
+        if (Array.isArray(this.tdoc?.limitLangList)) {
+            isLimitLang = true;
+            const allowedLangSet = new Set<string>();
+            this.tdoc?.limitLangList.forEach((k) => {
+                allowedLangSet.add(k);
+            });
+            for (let i = 0; i < langList.length; i++) {
+                if (!allowedLangSet.has(langList[i][0])) {
+                    langList[i][2] = false;
+                }
+            }
+            limitLangListString = this.tdoc?.limitLangList.join(',');
+        } else {
+            limitLangListString = langList.map((el) => el[0]).join(',');
+        }
+
         this.response.body = {
             rules,
             tdoc: this.tdoc,
@@ -286,6 +313,9 @@ export class ContestEditHandler extends Handler {
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
+            langList,
+            isLimitLang,
+            limitLangListString,
         };
     }
 
@@ -305,11 +335,14 @@ export class ContestEditHandler extends Handler {
     @param('contestDuration', Types.Float, true)
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean)
+    @param('limitLang', Types.Boolean)
+    @param('limitLangList', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false,
+        limitLang = false, limitLangList: string[] = [],
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -350,7 +383,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode,
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, limitLangList: limitLang ? limitLangList : null,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
