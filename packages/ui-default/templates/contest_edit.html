@@ -90,32 +90,10 @@
               row:false,
               disabled:true
             }) }}
-            <div class="medium-3 columns" id="limitLang_btnBox" {% if not isLimitLang %}style="display:none;"{% endif %}>
-              <button type="button" class=" button" id="limitLangBtn_selectAll">
-                {{ _('Select All') }}
-              </button>
-              <button type="button" class=" button" id="limitLangBtn_selectNone">
-                {{ _('Select None') }}
-              </button>
-            </div>
           </div>
-          <div id="limitLangListBox" {% if not isLimitLang %}style="display:none;"{% endif %}>
-            <div>
-              <p>对于有子类的语言，勾选时请详细至子分类！</p><br />
-            </div>
-            <div class="row">
-              {%- for k, v, enabled in langList -%}
-                <div class="medium-3 columns">
-                  <div name="form_item_limitLangList" class="checkbox-container">
-                    <label class="checkbox">
-                    <input type="checkbox" {% if enabled %}checked{% endif %} class="checkbox limitLangListItem" value="{{k}}" disabled>{{v}}
-                    </label>
-                  </div>
-                </div>
-              {%- endfor -%}
-            </div>
+          <div id="language-select-part" {% if not isLimitLang %}style="display:none;"{% endif %}>
+            <input name="limitLangList" value="{{limitLangListString}}">
           </div>
-          <input type="hidden" name="limitLangList" value="{{limitLangListString}}">
         </div>
         <div style="padding-top: 0" class="section__header">
           <h2 class="section__title">{{ _('Permission Control') }}</h2>

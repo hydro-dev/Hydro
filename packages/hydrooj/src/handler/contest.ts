@@ -288,6 +288,9 @@ export class ContestEditHandler extends Handler {
         } else {
             langList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => [...el, true]);
         }
+        const langPrefixes = new Set(langList.map((i) => i[0]).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+        langList = langList.filter((i) => !langPrefixes.has(i[0]));
+
         let limitLangListString = '';
         let isLimitLang = false;
         if (Array.isArray(this.tdoc?.limitLangList)) {

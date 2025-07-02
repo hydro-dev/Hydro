@@ -11,7 +11,7 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
     $('[name="lang"]').val('_');
     return;
   }
-  const availableLangs = getAvailableLangs(UiContext.submitableLangs);
+  const availableLangs = getAvailableLangs(config.langs);
   const mainLangs = {};
   const preferences = [UserContext.codeLang || ''];
   for (const key in availableLangs) {

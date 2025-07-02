@@ -316,6 +316,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                     (needHiddenLangs ? !setting.langs[i].remote : !setting.langs[i].remote && !setting.langs[i].hidden));
             }
             this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
+            // apply contest language limits
+            if (this?.tdoc && Array.isArray(this.tdoc?.limitLangList)) {
+                this.pdoc.config.langs = Array.from(Set.intersection(this.pdoc.config.langs, this.tdoc.limitLangList));
+            }
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([
@@ -464,18 +468,10 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
 
     async get() {
         this.response.template = 'problem_submit.html';
-        // const langRange = (typeof this.pdoc.config === 'object' && this.pdoc.config.langs)
-        //     ? Object.fromEntries(this.pdoc.config.langs.map((i) => [i, setting.langs[i]?.display || i]))
-        //     : setting.SETTINGS_BY_KEY.codeLang.range;
-
-        // problem_submit_page.tsx use pdoc.config.langs to get submitable langs
-        let submitableLangs = (this.pdoc.config as ProblemConfig).langs;
-        if (Array.isArray(this.tdoc?.limitLangList)) {
-            submitableLangs = Array.from(Set.intersection(submitableLangs, this.tdoc.limitLangList));
-        }
-        const langRange = Object.fromEntries(submitableLangs.map((i) => [i, setting.langs[i]?.display || i]));
+        const langRange = (typeof this.pdoc.config === 'object' && this.pdoc.config.langs)
+            ? Object.fromEntries(this.pdoc.config.langs.map((i) => [i, setting.langs[i]?.display || i]))
+            : setting.SETTINGS_BY_KEY.codeLang.range;
         this.response.body.langRange = langRange;
-        this.UiContext.submitableLangs = submitableLangs;
         this.response.body.page_name = this.tdoc
             ? this.tdoc.rule === 'homework'
                 ? 'homework_detail_problem_submit'
@@ -494,8 +490,6 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
         if (['submit_answer', 'objective'].includes(config.type)) {
             lang = '_';
         } else if ((config.langs && !config.langs.includes(lang)) || !setting.langs[lang] || setting.langs[lang].disabled) {
-            throw new ProblemNotAllowLanguageError();
-        } else if (this?.tdoc && Array.isArray(this.tdoc.limitLangList) && !this.tdoc.limitLangList.includes(lang)) {
             throw new ProblemNotAllowLanguageError();
         }
         if (pretest) {
