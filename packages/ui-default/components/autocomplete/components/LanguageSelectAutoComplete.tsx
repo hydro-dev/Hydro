@@ -6,36 +6,43 @@ interface LanguageFakeDoc {
   _id: string
   name: string
 }
+
+const getLanguagesDocList = (): LanguageFakeDoc[] => {
+  try {
+    if (!window.LANGS || typeof window.LANGS !== 'object') {
+      console.error('window.LANGS is not available or invalid');
+      return [];
+    }
+
+    const prefixes = new Set(
+      Object.keys(window.LANGS)
+        .filter((i) => i.includes('.'))
+        .map((i) => i.split('.')[0]),
+    );
+
+    return Object.keys(window.LANGS)
+      .filter((i) => !prefixes.has(i))
+      .map((i) => ({
+        name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`,
+        _id: i,
+      }));
+  } catch (error) {
+    console.error('Error processing languages:', error);
+    return [];
+  }
+};
+
 const LanguageSelectAutoComplete = forwardRef<AutoCompleteHandle<LanguageFakeDoc>, AutoCompleteProps<LanguageFakeDoc>>((props, ref) => (
   <AutoComplete<LanguageFakeDoc>
     ref={ref as any}
     cacheKey={`language-${UiContext.domainId}`}
     queryItems={async (query) => {
-      console.log('query', query);
-      const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-      const listAll = Object.keys(window.LANGS)
-        .filter((i) => !prefixes.has(i))
-        .map((i) => ({
-          name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`,
-          _id: i,
-        }));
       const q = query.toLocaleLowerCase();
-      return listAll.filter((el) =>
+      return getLanguagesDocList().filter((el) =>
         el._id.toLocaleLowerCase().includes(q) || el.name.toLocaleLowerCase().includes(q),
       );
     }}
-    fetchItems={async (ids) => {
-      // api('problems', { ids: ids.map((i) => +i) }, ['docId', 'pid', 'title'])
-      console.log('ids', ids);
-      const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-      const listAll = Object.keys(window.LANGS)
-        .filter((i) => !prefixes.has(i))
-        .map((i) => ({
-          name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`,
-          _id: i,
-        }));
-      return listAll;
-    }}
+    fetchItems={async (ids) => getLanguagesDocList().filter((el) => ids.includes(el._id))}
     itemText={(pdoc) => pdoc.name}
     itemKey={(pdoc) => pdoc._id}
     renderItem={(pdoc) => (
