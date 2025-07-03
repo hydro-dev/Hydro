@@ -293,7 +293,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         if (tidx % 100 === 0) {
             const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
             report({
-                message: `user finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
+                message: `contest finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
             });
         }
     }
