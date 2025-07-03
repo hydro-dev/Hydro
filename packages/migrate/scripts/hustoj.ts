@@ -100,6 +100,16 @@ export async function run({
     const udocs = await query('SELECT * FROM `users`');
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
+    const allUserAcDocs = await query(`
+        SELECT user_id, COUNT(DISTINCT problem_id) AS ac
+        FROM solution
+        WHERE result = 4 AND problem_id > 0
+        GROUP BY user_id;    
+    `);
+    const userAcMap: Record<string, number> = {};
+    for (const it of allUserAcDocs) {
+        userAcMap[it.user_id] = it.ac;
+    }
     for (let uidx = 0; uidx < udocs.length; uidx += 1) {
         const udoc = udocs[uidx];
         if (randomMail) delete udoc.email;
@@ -122,20 +132,11 @@ export async function run({
                 school: udoc.school || '',
                 hashType: 'hust',
             });
-            const passDoc = await query(`
-                SELECT count(DISTINCT problem_id) as \`ac\` 
-                FROM \`solution\` 
-                WHERE \`user_id\`='${udoc.user_id}' AND \`result\`=4 and problem_id > 0
-            `);
-            let nAccept = 0;
-            if (passDoc.length === 1) {
-                nAccept = passDoc[0].ac;
-            }
             await DomainModel.setUserInDomain(domainId, uid, {
                 displayName: udoc.nick || '',
                 school: udoc.school || '',
                 nSubmit: udoc.submit,
-                nAccept,
+                nAccept: userAcMap[udoc.user_id] || 0,
             });
         }
 
