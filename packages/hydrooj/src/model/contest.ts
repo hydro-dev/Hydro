@@ -848,7 +848,7 @@ export function getLimitLanguageConfig(tdoc: Tdoc | null = null) {
         langKeyList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => el[0]);
     }
     const langPrefixes = new Set(langKeyList.filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-    langKeyList = langKeyList.filter((i) => !langPrefixes.has(i[0]));
+    langKeyList = langKeyList.filter((i) => !langPrefixes.has(i));
 
     let isLimitLang = false;
     if (tdoc && Array.isArray(tdoc?.limitLangList)) {
