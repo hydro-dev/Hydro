@@ -16,7 +16,6 @@ import { Optional } from '../typeutils';
 import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
-import * as setting from './setting';
 import user, { User } from './user';
 
 interface AcmJournal {
@@ -838,31 +837,6 @@ export async function getRelated(domainId: string, pid: number, rule?: string) {
     return await document.getMulti(domainId, document.TYPE_CONTEST, { pids: pid, rule: rule || { $in: rules } }).toArray();
 }
 
-export function getLimitLanguageConfig(tdoc: Tdoc | null = null) {
-    let langKeyList = [];
-    if (!Array.isArray(setting.SETTINGS_BY_KEY.codeLang.range)) {
-        for (const key of Object.keys(setting.SETTINGS_BY_KEY.codeLang.range)) {
-            langKeyList.push(key);
-        }
-    } else {
-        langKeyList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => el[0]);
-    }
-    const langPrefixes = new Set(langKeyList.filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-    langKeyList = langKeyList.filter((i) => !langPrefixes.has(i));
-
-    let isLimitLang = false;
-    if (tdoc && Array.isArray(tdoc?.limitLangList)) {
-        isLimitLang = true;
-        langKeyList = Array.from(Set.intersection(langKeyList, tdoc?.limitLangList));
-    }
-    const limitLangListString = langKeyList.join(',');
-
-    return {
-        isLimitLang,
-        limitLangListString,
-    };
-}
-
 export async function addBalloon(domainId: string, tid: ObjectId, uid: number, rid: ObjectId, pid: number) {
     const balloon = await collBalloon.findOne({
         domainId, tid, pid, uid,
@@ -1104,7 +1078,6 @@ global.Hydro.model.contest = {
     addClarificationReply,
     getClarification,
     getMultiClarification,
-    getLimitLanguageConfig,
     isNew,
     isUpcoming,
     isNotStarted,

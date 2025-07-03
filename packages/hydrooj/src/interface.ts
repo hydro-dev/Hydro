@@ -270,8 +270,8 @@ export interface Tdoc extends Document {
     balloon?: Record<number, string | { color: string, name: string }>;
     score?: Record<number, number>;
 
-    // 允许使用的语言, undefined|null 则允许全部
-    limitLangList?: string[] | null;
+    // 允许使用的语言, undefined or len=0 则允许全部
+    limitLangList?: string[];
 
     /**
      * In hours

@@ -164,7 +164,6 @@ class HomeworkEditHandler extends Handler {
         const penaltySince = tid
             ? moment(tdoc.penaltySince).tz(this.user.timeZone)
             : beginAt.clone().add(7, 'days').tz(this.user.timeZone).hour(23).minute(59).millisecond(0);
-        const { isLimitLang, limitLangListString } = contest.getLimitLanguageConfig(tdoc);
         this.response.template = 'homework_edit.html';
         this.response.body = {
             tdoc,
@@ -176,8 +175,7 @@ class HomeworkEditHandler extends Handler {
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
             pids: tid ? tdoc.pids.join(',') : '',
             page_name: tid ? 'homework_edit' : 'homework_create',
-            isLimitLang,
-            limitLangListString,
+            limitLangListString: (tdoc?.limitLangList || []).join(','),
         };
     }
 
@@ -194,14 +192,13 @@ class HomeworkEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('maintainer', Types.NumericArray, true)
     @param('assign', Types.CommaSeperatedArray, true)
-    @param('limitLang', Types.Boolean)
     @param('limitLangList', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
         maintainer: number[] = [], assign: string[] = [],
-        limitLang = false, limitLangList: string[] = [],
+        limitLangList: string[] = [],
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
@@ -232,7 +229,7 @@ class HomeworkEditHandler extends Handler {
                 rated,
                 maintainer,
                 assign,
-                limitLangList: limitLang ? limitLangList : null,
+                limitLangList,
             });
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()

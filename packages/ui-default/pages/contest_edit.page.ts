@@ -32,14 +32,6 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     $(`[data-perm="${type}"] input`).removeAttr('disabled');
     $(`[data-perm="${type}"]`).show();
   }).trigger('change');
-  $('[name=limitLang]').removeAttr('disabled').on('change', () => {
-    const checked = $('[name=limitLang]').is(':checked');
-    if (checked) {
-      $('#language-select-part').show();
-    } else {
-      $('#language-select-part').hide();
-    }
-  }).trigger('change');
   if (pagename.endsWith('edit')) {
     let confirmed = false;
     $(document).on('click', '[value="delete"]', (ev) => {
