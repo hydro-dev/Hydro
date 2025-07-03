@@ -218,7 +218,7 @@ export class TemplateService extends Service {
     const env = new Nunjucks(Loader);
     env.addGlobal('findSubModule', (prefix) => Object.keys(that.registry).filter((n) => n.startsWith(prefix)));
     env.addGlobal('templateExists', (name) => !!that.registry[name]);
-    env.addGlobal('getContestProblemAlphabeticId', getContestProblemAlphabeticId)
+    env.addGlobal('getContestProblemAlphabeticId', getContestProblemAlphabeticId);
 
     const render = (name: string, state: any) => new Promise<string>((resolve, reject) => {
       const start = Date.now();

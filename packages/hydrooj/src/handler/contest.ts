@@ -4,7 +4,9 @@ import { stringify as toCSV } from 'csv-stringify/sync';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import { Counter, diffArray, randomstring, sortFiles, Time, yaml } from '@hydrooj/utils/lib/utils';
+import {
+ Counter, diffArray, randomstring, sortFiles, Time, yaml,
+} from '@hydrooj/utils/lib/utils';
 import { getContestProblemAlphabeticId } from '@hydrooj/utils/lib/browser-can-use';
 import { Context, Service } from '../context';
 import {
