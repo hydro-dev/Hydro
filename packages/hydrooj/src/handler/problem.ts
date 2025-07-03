@@ -20,7 +20,6 @@ import {
     ProblemNotFoundError, RecordNotFoundError, SolutionNotFoundError, ValidationError,
 } from '../error';
 import {
-    ProblemConfig,
     ProblemDoc, ProblemSearchOptions, ProblemStatusDoc, RecordDoc, User,
 } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';

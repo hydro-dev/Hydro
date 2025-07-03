@@ -4,7 +4,9 @@ import { stringify as toCSV } from 'csv-stringify/sync';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import { Counter, diffArray, randomstring, sortFiles, Time, yaml } from '@hydrooj/utils/lib/utils';
+import {
+    Counter, diffArray, randomstring, sortFiles, Time, yaml,
+} from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
     BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
@@ -21,10 +23,10 @@ import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
 import ScheduleModel from '../model/schedule';
+import * as setting from '../model/setting';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
-import * as setting from '../model/setting';
 import {
     Handler, param, post, Type, Types,
 } from '../service/server';
@@ -282,9 +284,9 @@ export class ContestEditHandler extends Handler {
         // key, label, selected
         let langList = [] as [string, string, boolean][];
         if (!Array.isArray(setting.SETTINGS_BY_KEY.codeLang.range)) {
-            Object.keys(setting.SETTINGS_BY_KEY.codeLang.range).forEach((key) => {
+            for (const key of Object.keys(setting.SETTINGS_BY_KEY.codeLang.range)) {
                 langList.push([key, setting.SETTINGS_BY_KEY.codeLang.range[key], true]);
-            });
+            }
         } else {
             langList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => [...el, true]);
         }
@@ -296,9 +298,9 @@ export class ContestEditHandler extends Handler {
         if (Array.isArray(this.tdoc?.limitLangList)) {
             isLimitLang = true;
             const allowedLangSet = new Set<string>();
-            this.tdoc?.limitLangList.forEach((k) => {
+            for (const k of (this.tdoc?.limitLangList || [])) {
                 allowedLangSet.add(k);
-            });
+            }
             for (let i = 0; i < langList.length; i++) {
                 if (!allowedLangSet.has(langList[i][0])) {
                     langList[i][2] = false;

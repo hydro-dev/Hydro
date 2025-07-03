@@ -1,8 +1,8 @@
 import $ from 'jquery';
 import moment from 'moment';
+import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelectAutoComplete';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelectAutoComplete';
 import { ConfirmDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
