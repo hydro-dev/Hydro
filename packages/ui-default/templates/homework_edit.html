@@ -90,6 +90,20 @@
               name:'pids',
               value:pids
           }) }}
+          <div class="row">
+            {{ form.form_checkbox({
+              columns:9,
+              label:'Limit language',
+              name:'limitLang',
+              placeholder:_('Limit contest submission language'),
+              value:isLimitLang,
+              row:false,
+              disabled:true
+            }) }}
+          </div>
+          <div id="language-select-part" {% if not isLimitLang %}style="display:none;"{% endif %}>
+            <input name="limitLangList" value="{{limitLangListString}}">
+          </div>
           {{ form.form_textarea({
               columns:null,
               label:'Content',

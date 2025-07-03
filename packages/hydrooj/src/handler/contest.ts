@@ -23,7 +23,6 @@ import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import record from '../model/record';
 import ScheduleModel from '../model/schedule';
-import * as setting from '../model/setting';
 import storage from '../model/storage';
 import * as system from '../model/system';
 import user from '../model/user';
@@ -280,36 +279,7 @@ export class ContestEditHandler extends Handler {
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const beginAt = moment(this.tdoc?.beginAt || new Date(ts)).tz(this.user.timeZone);
-
-        // key, label, selected
-        let langList = [] as [string, string, boolean][];
-        if (!Array.isArray(setting.SETTINGS_BY_KEY.codeLang.range)) {
-            for (const key of Object.keys(setting.SETTINGS_BY_KEY.codeLang.range)) {
-                langList.push([key, setting.SETTINGS_BY_KEY.codeLang.range[key], true]);
-            }
-        } else {
-            langList = setting.SETTINGS_BY_KEY.codeLang.range.map((el) => [...el, true]);
-        }
-        const langPrefixes = new Set(langList.map((i) => i[0]).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-        langList = langList.filter((i) => !langPrefixes.has(i[0]));
-
-        let limitLangListString = '';
-        let isLimitLang = false;
-        if (Array.isArray(this.tdoc?.limitLangList)) {
-            isLimitLang = true;
-            const allowedLangSet = new Set<string>();
-            for (const k of (this.tdoc?.limitLangList || [])) {
-                allowedLangSet.add(k);
-            }
-            for (let i = 0; i < langList.length; i++) {
-                if (!allowedLangSet.has(langList[i][0])) {
-                    langList[i][2] = false;
-                }
-            }
-            limitLangListString = this.tdoc?.limitLangList.join(',');
-        } else {
-            limitLangListString = langList.map((el) => el[0]).join(',');
-        }
+        const { isLimitLang, limitLangListString } = contest.getLimitLanguageConfig(this?.tdoc || null);
 
         this.response.body = {
             rules,
@@ -318,7 +288,6 @@ export class ContestEditHandler extends Handler {
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
-            langList,
             isLimitLang,
             limitLangListString,
         };
