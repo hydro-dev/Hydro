@@ -1,7 +1,7 @@
 import path from 'path';
 import * as status from '@hydrooj/common/status';
-import { findFileSync } from '@hydrooj/utils/lib/utils';
 import { getContestProblemAlphabeticId } from '@hydrooj/utils/lib/browser-can-use';
+import { findFileSync } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
