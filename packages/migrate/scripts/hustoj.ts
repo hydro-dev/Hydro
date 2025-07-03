@@ -100,7 +100,8 @@ export async function run({
     const udocs = await query('SELECT * FROM `users`');
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
-    for (const udoc of udocs) {
+    for (let uidx = 0; uidx < udocs.length; uidx += 1) {
+        const udoc = udocs[uidx];
         if (randomMail) delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
         current ||= await UserModel.getByUname(domainId, udoc.user_id);
@@ -121,11 +122,27 @@ export async function run({
                 school: udoc.school || '',
                 hashType: 'hust',
             });
+            const passDoc = await query(`
+                SELECT count(DISTINCT problem_id) as \`ac\` 
+                FROM \`solution\` 
+                WHERE \`user_id\`='${udoc.user_id}' AND \`result\`=4 and problem_id > 0
+            `);
+            let nAccept = 0;
+            if (passDoc.length === 1) {
+                nAccept = passDoc[0].ac;
+            }
             await DomainModel.setUserInDomain(domainId, uid, {
                 displayName: udoc.nick || '',
                 school: udoc.school || '',
                 nSubmit: udoc.submit,
-                nAccept: 0,
+                nAccept,
+            });
+        }
+
+        if (uidx % 100 === 0) {
+            const progress = Math.round(((uidx + 1) / udocs.length) * 100);
+            report({
+                message: `user finished ${uidx + 1} / ${udocs.length} (${progress}%)`,
             });
         }
     }
@@ -220,6 +237,12 @@ target: ybtbas/${+pdoc.id - 3000}
                 await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
             }
         }
+        if (pageId % 10 === 0) {
+            const progress = Math.round(((pageId * step) / pcount) * 100);
+            report({
+                message: `problem finished ${pageId * step} / ${pcount} (${progress}%)`,
+            });
+        }
     }
     if (remoteUsed) {
         MessageModel.sendNotification(`您导入的数据中使用了一本通编程启蒙远端测试题目。
@@ -245,7 +268,8 @@ hydrooj install https://hydro.ac/hydroac-client.zip
     */
     const tidMap: Record<string, string> = {};
     const tdocs = await query('SELECT * FROM `contest`');
-    for (const tdoc of tdocs) {
+    for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
+        const tdoc = tdocs[tidx];
         const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const files = {};
@@ -260,11 +284,18 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         const tid = await ContestModel.add(
             domainId, tdoc.title, description || 'Description',
             adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
-            { _code: password },
+            { _code: tdoc.password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
         await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
         if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
+
+        if (tidx % 100 === 0) {
+            const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
+            report({
+                message: `user finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
+            });
+        }
     }
     report({ message: 'contest finished' });
     /*
@@ -288,11 +319,12 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         lint_error	int		N	？？？
         judger	char(16)		N	判题机
     */
-    const [{ 'count(*)': _rcount }] = await query('SELECT count(*) FROM `solution`');
+    // 测试运行 problem_id=0 导致非比赛的提交无法确定属于哪个题目,因此跳过测试运行
+    const [{ 'count(*)': _rcount }] = await query('SELECT count(*) FROM `solution` WHERE `problem_id` > 0');
     const rcount = BigInt(_rcount);
     const rpageCount = rcount / BigInt(step) + (rcount % BigInt(step) === 0n ? 0n : 1n);
     for (let pageId = 0n; pageId < rpageCount; pageId++) {
-        const rdocs = await query(`SELECT * FROM \`solution\` LIMIT ${pageId * BigInt(step)}, ${step}`);
+        const rdocs = await query(`SELECT * FROM \`solution\` WHERE \`problem_id\` > 0 LIMIT ${pageId * BigInt(step)}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
                 status: statusMap[rdoc.result] || 0,
