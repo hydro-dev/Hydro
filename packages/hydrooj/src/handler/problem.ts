@@ -316,7 +316,10 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             }
             this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
             // apply contest language limits
-            if (this?.tdoc && Array.isArray(this.tdoc?.limitLangList) && this.tdoc?.limitLangList.length > 0) {
+            if (
+                !['objective', 'submit_answer'].includes(this.pdoc.config.type)
+                && this?.tdoc && Array.isArray(this.tdoc?.limitLangList) && this.tdoc?.limitLangList.length > 0
+            ) {
                 this.pdoc.config.langs = Array.from(Set.intersection(this.pdoc.config.langs, this.tdoc.limitLangList));
             }
         }
