@@ -318,9 +318,9 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             // apply contest language limits
             if (
                 !['objective', 'submit_answer'].includes(this.pdoc.config.type)
-                && this?.tdoc && Array.isArray(this.tdoc?.limitLangList) && this.tdoc?.limitLangList.length > 0
+                && this?.tdoc && Array.isArray(this.tdoc?.limitLangs) && this.tdoc?.limitLangs.length > 0
             ) {
-                this.pdoc.config.langs = Array.from(Set.intersection(this.pdoc.config.langs, this.tdoc.limitLangList));
+                this.pdoc.config.langs = Array.from(Set.intersection(this.pdoc.config.langs, this.tdoc.limitLangs));
             }
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);

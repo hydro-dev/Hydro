@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import moment from 'moment';
-import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelectAutoComplete';
+import CustomSelectAutoComplete from 'vj/components/autocomplete/CustomSelectAutoComplete';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ConfirmDialog } from 'vj/components/dialog';
@@ -10,7 +10,20 @@ import { i18n, request, tpl } from 'vj/utils';
 const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
   UserSelectAutoComplete.getOrConstruct<true>($('[name="maintainer"]'), { multi: true, clearDefaultValue: false });
-  LanguageSelectAutoComplete.getOrConstruct($('[name="limitLangList"]'), { multi: true, clearDefaultValue: false });
+
+  const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+  const langs = Object.keys(window.LANGS).filter((i) => !prefixes.has(i)).map((i) => (
+    { name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display}/` : ''}${window.LANGS[i].display}`, _id: i }
+  ));
+  const $langSelect = $('[name=limitLangs]');
+  $langSelect.val(($langSelect.val() as string).split(',').filter((i) => !prefixes.has(i)));
+  const select: CustomSelectAutoComplete<true> = CustomSelectAutoComplete.getOrConstruct($('[name=limitLangs]'), { multi: true, data: langs });
+  select.onChange((val) => {
+    const value = val.split(',');
+    value.push(...new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0])));
+    $langSelect.val(value.join(','));
+  });
+
   $('[name="rule"]').on('change', () => {
     const rule = $('[name="rule"]').val();
     $('.contest-rule-settings input').attr('disabled', 'disabled');

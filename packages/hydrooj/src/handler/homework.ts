@@ -175,7 +175,7 @@ class HomeworkEditHandler extends Handler {
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
             pids: tid ? tdoc.pids.join(',') : '',
             page_name: tid ? 'homework_edit' : 'homework_create',
-            limitLangListString: (tdoc?.limitLangList || []).join(','),
+            limitLangs: (tdoc?.limitLangs || []).join(','),
         };
     }
 
@@ -192,13 +192,13 @@ class HomeworkEditHandler extends Handler {
     @param('rated', Types.Boolean)
     @param('maintainer', Types.NumericArray, true)
     @param('assign', Types.CommaSeperatedArray, true)
-    @param('limitLangList', Types.CommaSeperatedArray, true)
+    @param('limitLangs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
         penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
         maintainer: number[] = [], assign: string[] = [],
-        limitLangList: string[] = [],
+        limitLangs: string[] = [],
     ) {
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
@@ -229,7 +229,7 @@ class HomeworkEditHandler extends Handler {
                 rated,
                 maintainer,
                 assign,
-                limitLangList,
+                limitLangs,
             });
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()
