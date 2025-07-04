@@ -1,7 +1,8 @@
 import { sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
-import { getContestProblemAlphabeticId } from '@hydrooj/utils/lib/browser-can-use';
-import { Counter, formatSeconds, Time } from '@hydrooj/utils/lib/utils';
+import {
+    Counter, formatSeconds, getAlphabeticId, Time,
+} from '@hydrooj/utils/lib/utils';
 import {
     ContestAlreadyAttendedError, ContestNotFoundError,
     ContestScoreboardHiddenError, ValidationError,
@@ -159,7 +160,7 @@ const acm = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getContestProblemAlphabeticId(i - 1),
+                    value: getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }
@@ -325,7 +326,7 @@ const oi = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getContestProblemAlphabeticId(i - 1),
+                    value: getAlphabeticId(i - 1),
                     raw: tdoc.pids[i - 1],
                 });
             }
@@ -700,7 +701,7 @@ const homework = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getContestProblemAlphabeticId(i - 1),
+                    value: getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }

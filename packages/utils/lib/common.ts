@@ -236,3 +236,16 @@ export function sortFiles(files: Record<string, any>[] | string[], key = '_id') 
         });
     return result.map((x) => (isString ? x.name : (delete x._weights && x)));
 }
+
+export const getAlphabeticId = (() => {
+    const f = (a: number) => (a < 0 ? '' : f(a / 26 - 1) + String.fromCharCode((a % 26) + 65)) as string;
+    const cache = (() => {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const list = alphabet.split('');
+        for (const ch of alphabet) list.push(...alphabet.split('').map((c) => ch + c));
+        return list;
+    })();
+
+    // A...Z, AA...AZ, BA...BZ, ...
+    return (i: number) => cache[i] || (i < 0 ? '?' : f(i));
+})();

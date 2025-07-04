@@ -64,7 +64,7 @@
             </form>
           {% endif %}
           {%- if tdoc -%}
-            {{ getContestProblemAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
+            {{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
           {%- elif pdoc.pid and pdoc.pid.includes('-') -%}
             {{ pdoc.pid.split('-').join('#') }}
           {%- else -%}
