@@ -261,7 +261,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
     const tdocs = await query('SELECT * FROM `contest`');
     for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
         const tdoc = tdocs[tidx];
-        const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
+        const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id} ORDER BY \`num\` ASC`);
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const files = {};
         let description = tdoc.description;
