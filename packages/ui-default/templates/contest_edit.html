@@ -71,6 +71,11 @@
             placeholder:_("Seperated with ','"),
             row:true
           }) }}
+          {{ form.form_begin({columns:null,label:_('Contest/Homework allow submit languages')}) }}
+            <div id="language-select-part">
+              <input name="limitLangs" value="{{limitLangs}}">
+            </div>
+          {{ form.form_end({}) }}
           {{ form.form_textarea({
             columns:null,
             label:'Description',

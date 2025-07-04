@@ -279,6 +279,7 @@ export class ContestEditHandler extends Handler {
         let ts = Date.now();
         ts = ts - (ts % (15 * Time.minute)) + 15 * Time.minute;
         const beginAt = moment(this.tdoc?.beginAt || new Date(ts)).tz(this.user.timeZone);
+
         this.response.body = {
             rules,
             tdoc: this.tdoc,
@@ -286,6 +287,7 @@ export class ContestEditHandler extends Handler {
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
+            limitLangs: (this?.tdoc?.limitLangs || []).join(','),
         };
     }
 
@@ -305,11 +307,13 @@ export class ContestEditHandler extends Handler {
     @param('contestDuration', Types.Float, true)
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean)
+    @param('limitLangs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false,
+        limitLangs: string[] = [],
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -350,7 +354,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode,
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, limitLangs,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });

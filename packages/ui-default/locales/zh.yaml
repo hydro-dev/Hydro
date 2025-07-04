@@ -524,6 +524,7 @@ Ledo: 乐多
 Legacy mode: 兼容模式
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
+Limit contest submission language: 限制比赛可提交的语言
 Limitations: 限制
 Links: 链接
 List View: 列表视图
@@ -821,6 +822,8 @@ Section: 章节
 Security: 安全
 Select a node to create discussion.: 选择一个节点来发表讨论。
 Select a role: 选择一个角色
+Select All: 全选
+Select None: 全不选
 Select Category: 选择标签
 Select User: 选择用户
 Selected categories: 已选标签

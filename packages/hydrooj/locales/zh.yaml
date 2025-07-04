@@ -172,6 +172,7 @@ contest_scoreboard: 比赛成绩表
 contest_user: 参赛者管理
 contest: 比赛
 Contest: 比赛
+Contest/Homework allow submit languages: 比赛/作业允许使用的提交语言
 Contests per page: 每页展示的比赛数量
 Continue: 继续
 Contributed Problems: 贡献的题目
