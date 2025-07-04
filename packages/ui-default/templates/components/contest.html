@@ -8,5 +8,5 @@
 {% endmacro %}
 
 {% macro render_clarification_subject(tdoc, pdict, subject) %}
-{% if subject == 0 %}{{ _('General Issue') }}{% elif subject == -1 %}{{ _('Technical Issue') }}{% else %}{{ String.fromCharCode(65 + tdoc.pids.indexOf(subject)) + 1 }}. {{ pdict[subject].title }}{% endif %}
+{% if subject == 0 %}{{ _('General Issue') }}{% elif subject == -1 %}{{ _('Technical Issue') }}{% else %}{{ utils.getAlphabeticId(tdoc.pids.indexOf(subject)) }}. {{ pdict[subject].title }}{% endif %}
 {% endmacro %}
