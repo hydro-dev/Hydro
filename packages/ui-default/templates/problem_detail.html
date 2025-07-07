@@ -64,7 +64,7 @@
             </form>
           {% endif %}
           {%- if tdoc -%}
-            {{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) }}
+            {{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
           {%- elif pdoc.pid and pdoc.pid.includes('-') -%}
             {{ pdoc.pid.split('-').join('#') }}
           {%- else -%}
@@ -80,7 +80,7 @@
               <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
                  class="{% if pass %}pass{% elif fail %}fail{% endif %}
                         {% if pid==pdoc.docId %} active{% endif %}">
-                <span class="id">{{ String.fromCharCode(65+loop.index0) }}</span>
+                <span class="id">{{ utils.getAlphabeticId(loop.index0) }}</span>
                 {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
               </a>
             {%- endfor %}

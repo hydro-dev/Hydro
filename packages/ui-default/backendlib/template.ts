@@ -1,6 +1,6 @@
 import path from 'path';
 import * as status from '@hydrooj/common/status';
-import { findFileSync } from '@hydrooj/utils/lib/utils';
+import { findFileSync, getAlphabeticId } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
@@ -130,7 +130,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('instanceof', (a, b) => a instanceof b);
     this.addGlobal('paginate', misc.paginate);
     this.addGlobal('size', misc.size);
-    this.addGlobal('utils', { status });
+    this.addGlobal('utils', { status, getAlphabeticId });
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
     this.addGlobal('model', global.Hydro.model);

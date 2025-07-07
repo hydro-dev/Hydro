@@ -5,7 +5,7 @@
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
 {% if show_pid %}
-<b>{%- if tdoc and alphabetic -%}{{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) }}
+<b>{%- if tdoc and alphabetic -%}{{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
 {%- elif pdoc.pid and pdoc.pid.includes('-') -%}{{ pdoc.pid.split('-').join('#') }}
 {%- else -%}{{ pdoc.pid|default(pdoc.docId) }}{%- endif -%}</b>
 {% endif %}

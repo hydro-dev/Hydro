@@ -185,7 +185,7 @@
                   <option value="0">{{ _('General Issue') }}</option>
                   <option value="-1">{{ _('Technical Issue') }}</option>
                   {% for pid in tdoc.pids %}
-                  <option value="{{ pid }}">{{ String.fromCharCode(65+loop.index0) }}. {{ pdict[pid].title }}</option>
+                  <option value="{{ pid }}">{{ utils.getAlphabeticId(loop.index0) }}. {{ pdict[pid].title }}</option>
                   {% endfor %}
                 </select>
               </label>
