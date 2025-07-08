@@ -36,7 +36,12 @@ export const JudgeSettings = Schema.object({
         Schema.const('full'),
         Schema.const('case'),
         Schema.const('none'),
-        Schema.transform(Schema.boolean(), (v) => (v ? 'full' : 'case')),
+        Schema.transform(Schema.union([
+            Schema.boolean().deprecated(),
+            Schema.const('full'),
+            Schema.const('none'),
+            Schema.const('case'),
+        ]), (v) => (typeof v === 'boolean' ? (v ? 'full' : 'case') : v)),
     ]).description('Show diff detail').default('full'),
     performance: Schema.boolean().description('Performance mode').default(false),
 });
