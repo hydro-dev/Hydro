@@ -310,18 +310,20 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       )}
       {focused && itemList.length > 0 && (
         <ul ref={listRef} className="autocomplete-list" style={listStyle} onMouseDown={(e) => e.preventDefault()}>
-          {itemList.map((item, idx) => (
-            <li
+          {itemList.map((item, idx) => {
+            const inner = renderItem(item);
+            if (!inner) return null;
+            return <li
               key={itemKey(item)}
               onClick={() => toggleItem(item)}
               onMouseMove={() => setCurrentItem(idx)}
               data-selected={selectedKeys.includes(itemKey(item))}
               data-focus={idx === currentItem}
             >
-              <div>{renderItem(item)}</div>
+              <div>{inner}</div>
               {selectedKeys.includes(itemKey(item)) && <Icon name="check" />}
-            </li>
-          ))}
+            </li>;
+          })}
         </ul>
       )}
     </div>

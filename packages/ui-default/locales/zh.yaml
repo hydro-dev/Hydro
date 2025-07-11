@@ -821,7 +821,9 @@ Section: 章节
 Security: 安全
 Select a node to create discussion.: 选择一个节点来发表讨论。
 Select a role: 选择一个角色
+Select All: 全选
 Select Category: 选择标签
+Select None: 全不选
 Select User: 选择用户
 Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
@@ -884,6 +886,7 @@ Start at: 开始于
 Statistics: 统计
 Status is hidden: 状态已隐藏
 Status: 状态
+Submission language limit: 提交语言限制
 Submission Statistics: 递交统计
 Submission: 递交
 Submissions: 递交
