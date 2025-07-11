@@ -117,7 +117,7 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 ctx.response.status = 302;
                 ctx.redirect(response.redirect);
             } else if (response.body) {
-                ctx.body = response.body;
+                ctx.body = response.body instanceof Blob ? Buffer.from(await response.body.arrayBuffer()) : response.body;
                 ctx.response.status = response.status || 200;
                 ctx.response.type = response.type
                     || (request.json
