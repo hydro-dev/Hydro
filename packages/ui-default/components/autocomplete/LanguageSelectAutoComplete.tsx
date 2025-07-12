@@ -6,7 +6,7 @@ interface LanguageSelectOptions {
   withAuto?: boolean;
 }
 
-export class LanguageSelectAutoComplete<Multi extends boolean> extends AutoComplete<LanguageSelectOptions> {
+export default class LanguageSelectAutoComplete<Multi extends boolean> extends AutoComplete<LanguageSelectOptions> {
   static DOMAttachKey = 'ucwLanguageSelectAutoCompleteInstance';
 
   constructor($dom, options: LanguageSelectOptions & AutoCompleteOptions<Multi>) {
