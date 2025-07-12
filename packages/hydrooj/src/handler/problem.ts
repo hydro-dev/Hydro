@@ -315,6 +315,13 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                     (needHiddenLangs ? !setting.langs[i].remote : !setting.langs[i].remote && !setting.langs[i].hidden));
             }
             this.pdoc.config.langs = ['objective', 'submit_answer'].includes(this.pdoc.config.type) ? ['_'] : intersection(baseLangs, ...t);
+            // apply contest language limits
+            if (
+                !['objective', 'submit_answer'].includes(this.pdoc.config.type)
+                && this?.tdoc && Array.isArray(this.tdoc?.limitLangs) && this.tdoc?.limitLangs.length > 0
+            ) {
+                this.pdoc.config.langs = Array.from(Set.intersection(this.pdoc.config.langs, this.tdoc.limitLangs));
+            }
         }
         await this.ctx.parallel('problem/get', this.pdoc, this);
         [this.psdoc, this.udoc] = await Promise.all([

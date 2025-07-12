@@ -83,7 +83,7 @@ function LangConfig() {
               selectedKeys={selectedKeys}
               onChange={(val) => {
                 const value = val.split(',');
-                value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]))));
+                value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]).filter((i) => prefixes.has(i)))));
                 dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value });
               }}
               multi
