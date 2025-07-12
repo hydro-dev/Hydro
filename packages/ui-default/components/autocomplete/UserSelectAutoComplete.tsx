@@ -4,7 +4,7 @@ import UserSelectAutoCompleteFC from './components/UserSelectAutoComplete';
 export default class UserSelectAutoComplete<Multi extends boolean> extends AutoComplete {
   static DOMAttachKey = 'ucwUserSelectAutoCompleteInstance';
 
-  constructor($dom, options: AutoCompleteOptions<Multi>) {
+  constructor($dom, options: AutoCompleteOptions<Multi> = {}) {
     super($dom, {
       classes: 'user-select',
       component: UserSelectAutoCompleteFC,

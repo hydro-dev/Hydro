@@ -1,10 +1,10 @@
-import AutoComplete from '.';
+import AutoComplete, { AutoCompleteOptions } from '.';
 import DomainSelectAutoCompleteFC from './components/DomainSelectAutoComplete';
 
-export default class DomainSelectAutoComplete extends AutoComplete {
+export default class DomainSelectAutoComplete<Multi extends boolean> extends AutoComplete {
   static DOMAttachKey = 'ucwDomainSelectAutoCompleteInstance';
 
-  constructor($dom, options) {
+  constructor($dom, options: AutoCompleteOptions<Multi> = {}) {
     super($dom, {
       classes: 'domain-select',
       component: DomainSelectAutoCompleteFC,

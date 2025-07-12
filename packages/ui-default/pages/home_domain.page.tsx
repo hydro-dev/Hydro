@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import React from 'react';
 import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
 import { ActionDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
