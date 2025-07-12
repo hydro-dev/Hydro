@@ -132,6 +132,14 @@
           <h2 class="section__title">{{ _('Contest Settings') }}</h2>
         </div>
         <div class="section__body">
+          {{ form.form_text({
+            columns:12,
+            label:'Submission language limit',
+            name:'langs',
+            value:tdoc.langs|default(''),
+            placeholder:_("Seperated with ','"),
+            row:true
+          }) }}
           <div class="row">
             {{ form.form_checkbox({
               columns:2,

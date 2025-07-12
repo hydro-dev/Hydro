@@ -60,7 +60,7 @@ const configFlat = (name) => ({
             ],
         },
     },
-    include: ['**/*.ts'],
+    include: ['**/*.ts', '**/*.tsx'],
     exclude,
 });
 

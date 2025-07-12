@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import moment from 'moment';
+import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelectAutoComplete';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import { ConfirmDialog } from 'vj/components/dialog';
@@ -9,6 +10,7 @@ import { i18n, request, tpl } from 'vj/utils';
 const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
   UserSelectAutoComplete.getOrConstruct<true>($('[name="maintainer"]'), { multi: true, clearDefaultValue: false });
+  LanguageSelectAutoComplete.getOrConstruct($('[name=langs]'), { multi: true });
   $('[name="rule"]').on('change', () => {
     const rule = $('[name="rule"]').val();
     $('.contest-rule-settings input').attr('disabled', 'disabled');

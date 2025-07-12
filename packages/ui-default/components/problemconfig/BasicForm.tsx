@@ -1,8 +1,8 @@
-import { CustomSelectAutoComplete } from '@hydrooj/components';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
+import LanguageSelectAutoComplete from '../autocomplete/components/LanguageSelectAutoComplete';
 import type { RootState } from './reducer/index';
 
 export function FormItem({
@@ -56,11 +56,6 @@ export function ManagedSelect({ options, formKey }: { options: string[], formKey
   );
 }
 
-const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-const data = Object.keys(window.LANGS).filter((i) => !prefixes.has(i))
-  .map((i) => ({ name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`, _id: i }));
-data.unshift({ name: 'Auto', _id: 'auto' });
-
 export function SingleFileSelect({ formKey, withLang = false, label = 'Checker' }: { formKey: FileSelectKey, withLang?: boolean, label?: string }) {
   const value = useSelector((state: RootState) => state.config[formKey]);
   const Files = useSelector((state: RootState) => state.testdata);
@@ -82,10 +77,10 @@ export function SingleFileSelect({ formKey, withLang = false, label = 'Checker' 
       />
     </FormItem>
     <FormItem columns={3} label="Language">
-      <CustomSelectAutoComplete
-        data={data}
+      <LanguageSelectAutoComplete
         selectedKeys={[selectedLang]}
         onChange={(val) => update(selectedFile, val)}
+        withAuto
       />
     </FormItem>
   </>) : (<FileSelectAutoComplete

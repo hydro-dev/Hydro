@@ -97,6 +97,14 @@
               value:tdoc['content']|default(''),
               markdown:true
           }) }}
+          {{ form.form_text({
+              columns:12,
+              label:'Submission language limit',
+              name:'langs',
+              value:tdoc.langs|default(''),
+              placeholder:_("Seperated with ','"),
+              row:true
+          }) }}
           <div class="row"><div class="columns">
           {% if page_name == 'homework_edit' %}
             <button name="operation" value="update" type="submit" class="rounded primary button">
