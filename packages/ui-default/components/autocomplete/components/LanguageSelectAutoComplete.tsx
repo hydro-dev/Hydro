@@ -18,9 +18,9 @@ const LanguageSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
       const active = new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
       value = value.filter((i) => !prefixes.has(i) || active.has(i));
       for (const i of active) if (!value.includes(i)) value.push(i);
-      props.onChange(value);
+      props.onChange(value.join(','));
     }}
-    multi
+    multi={!!props.multi}
   />
 ));
 

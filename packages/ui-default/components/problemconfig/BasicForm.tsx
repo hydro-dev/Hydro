@@ -79,7 +79,7 @@ export function SingleFileSelect({ formKey, withLang = false, label = 'Checker' 
     <FormItem columns={3} label="Language">
       <LanguageSelectAutoComplete
         selectedKeys={[selectedLang]}
-        onChange={(val) => update(selectedFile, val[0])}
+        onChange={(val) => update(selectedFile, val)}
         withAuto
       />
     </FormItem>

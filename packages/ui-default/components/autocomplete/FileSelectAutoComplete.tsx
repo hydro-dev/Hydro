@@ -13,7 +13,7 @@ export default class FileSelectAutoComplete<Multi extends boolean> extends AutoC
 
   constructor($dom, options: FileSelectOptions & AutoCompleteOptions<Multi>) {
     super($dom, {
-      classes: 'custom-select',
+      classes: 'file-select',
       component: FileSelectAutoCompleteFC,
       props: {
         data: options.data,

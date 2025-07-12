@@ -91,7 +91,7 @@ export default class AutoComplete<Options extends Record<string, any> = {}, Mult
     this.ref.closeList();
   }
 
-  value(): Multi extends true ? number[] : string {
+  value(): Multi extends true ? (string | number)[] : string {
     if (this.options.multi) return this.ref?.getSelectedItemKeys() ?? this.$dom.val();
     return this.ref?.getSelectedItems()[0] ?? null;
   }
