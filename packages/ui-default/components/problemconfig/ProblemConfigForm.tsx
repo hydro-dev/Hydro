@@ -1,4 +1,3 @@
-import { CustomSelectAutoComplete } from '@hydrooj/components';
 import {
   Card, InputGroup, Tag,
 } from '@blueprintjs/core';
@@ -7,6 +6,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
+import LanguageSelectAutoComplete from '../autocomplete/components/LanguageSelectAutoComplete';
 import { FormItem } from './BasicForm';
 import ProblemType from './ProblemType';
 import type { RootState } from './reducer/index';
@@ -67,25 +67,16 @@ function ExtraFilesConfig() {
 
 function LangConfig() {
   const langs = useSelector((state: RootState) => state.config.langs) || [];
-  const prefixes = new Set(Object.keys(window.LANGS).filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
-  const data = Object.keys(window.LANGS).filter((i) => !prefixes.has(i))
-    .map((i) => ({ name: `${i.includes('.') ? `${window.LANGS[i.split('.')[0]].display || ''}/` : ''}${window.LANGS[i].display}`, _id: i }));
   const dispatch = useDispatch();
-  const selectedKeys = langs.filter((i) => !prefixes.has(i));
   return (
     <FormItem columns={12} label="langs" disableLabel>
       <Card style={{ padding: 10 }}>
         <div className="row">
           <FormItem columns={12} label="langs">
-            <CustomSelectAutoComplete
-              data={data}
-              placeholder={!selectedKeys.length ? i18n('Unlimited') : i18n('Code language')}
-              selectedKeys={selectedKeys}
-              onChange={(val) => {
-                const value = val.split(',');
-                value.push(...Array.from(new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]))));
-                dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value });
-              }}
+            <LanguageSelectAutoComplete
+              placeholder={!langs.length ? i18n('Unlimited') : i18n('Code language')}
+              selectedKeys={langs}
+              onChange={(value) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value })}
               multi
             />
           </FormItem>

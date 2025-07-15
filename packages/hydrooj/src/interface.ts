@@ -269,6 +269,7 @@ export interface Tdoc extends Document {
     autoHide?: boolean;
     balloon?: Record<number, string | { color: string, name: string }>;
     score?: Record<number, number>;
+    langs?: string[];
 
     /**
      * In hours
