@@ -5,11 +5,11 @@
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
 {% if show_pid %}
-<b>{%- if tdoc and alphabetic -%}{{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
+<b>{%- if tdoc and alphabetic -%}{{ utils.getContestProblemConfig(pdoc.docId, tdoc).label }}
 {%- elif pdoc.pid and pdoc.pid.includes('-') -%}{{ pdoc.pid.split('-').join('#') }}
 {%- else -%}{{ pdoc.pid|default(pdoc.docId) }}{%- endif -%}</b>
 {% endif %}
-{%- if not small -%}{% if show_pid %}&nbsp;&nbsp;{% endif %}{{ pdoc.title }}{%- endif -%}
+{%- if not small -%}{% if show_pid %}&nbsp;&nbsp;{% endif %}{%- if tdoc -%}{{utils.getContestProblemConfig(pdoc.docId, tdoc).title|default(pdoc.title)}}{%- else -%}{{ pdoc.title }}{%- endif -%}{%- endif -%}
 {%- if not invalid -%}
   </a>
 {%- endif -%}

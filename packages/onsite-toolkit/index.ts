@@ -48,18 +48,18 @@ export function apply(ctx: Context) {
                 const teamIds: Record<number, number> = {};
                 for (let i = 1; i <= teams.length; i++) teamIds[teams[i - 1].uid] = i;
                 const time = (t: ObjectId) => Math.floor((t.getTimestamp().getTime() - tdoc.beginAt.getTime()) / Time.second);
-                const pid = (i: number) => String.fromCharCode(65 + i);
+
                 const unknownSchool = this.translate('Unknown School');
                 const submissions = teams.flatMap((i) => {
                     if (!i.journal) return [];
-                    return i.journal.filter((s) => tdoc.pids.includes(s.pid)).map((s) => ({ ...s, uid: i.uid }));
+                    return i.journal.filter((s) => tdoc.problems.find((p) => p.pid === s.pid)).map((s) => ({ ...s, uid: i.uid }));
                 });
                 this.response.body = {
                     payload: {
                         name: tdoc.title,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
                         frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
-                        problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),
+                        problems: tdoc.problems.map((p) => ({ name: p.label, id: p.pid.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
                             name: udict[t.uid].displayName || udict[t.uid].uname,
@@ -91,7 +91,7 @@ export function apply(ctx: Context) {
                     type, id: data.id, data, token: `t${token++}`,
                 });
                 const [pdict, tsdocs] = await Promise.all([
-                    ProblemModel.getList(tdoc.domainId, tdoc.pids, true, false, ProblemModel.PROJECTION_LIST, true),
+                    ProblemModel.getList(tdoc.domainId, tdoc.problems.map((p) => p.pid), true, false, ProblemModel.PROJECTION_LIST, true),
                     ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc._id }).toArray(),
                 ]);
                 const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
@@ -192,21 +192,21 @@ export function apply(ctx: Context) {
                             height: 1080,
                         }],
                     })),
-                    ...tdoc.pids.map((i, idx) => getFeed('problems', {
-                        id: `${i}`,
+                    ...tdoc.problems.map((p, idx) => getFeed('problems', {
+                        id: `${p.pid}`,
                         label: String.fromCharCode(65 + idx),
-                        name: pdict[i].title,
+                        name: p.title || pdict[p.pid].title,
                         ordinal: idx,
-                        color: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].name : tdoc.balloon?.[idx]) || 'white',
-                        rgb: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].color : null) || '#ffffff',
-                        time_limit: (parseTimeMS((pdict[i].config as ProblemConfig).timeMax) / 1000).toFixed(1),
+                        color: tdoc.problems[idx]?.balloon?.name || 'white',
+                        rgb: tdoc.problems[idx]?.balloon?.color || '#ffffff',
+                        time_limit: (parseTimeMS((pdict[p.pid].config as ProblemConfig).timeMax) / 1000).toFixed(1),
                         test_data_count: 20,
                     })),
                 ];
                 let cntJudge = 0;
                 const submissions = tsdocs.flatMap((i) => {
                     if (!i.journal) return [];
-                    const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
+                    const journal = i.journal.filter((s) => tdoc.problems.find((p) => p.pid === s.pid));
                     const result: any[] = [];
                     for (const s of journal) {
                         const submitTime = moment(s.rid.getTimestamp());

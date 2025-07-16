@@ -173,7 +173,7 @@ class HomeworkEditHandler extends Handler {
             timePenaltyText: penaltySince.format('H:mm'),
             extensionDays,
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
-            pids: tid ? tdoc.pids.join(',') : '',
+            problems: tid ? tdoc.problems : [],
             page_name: tid ? 'homework_edit' : 'homework_create',
         };
     }
@@ -187,7 +187,7 @@ class HomeworkEditHandler extends Handler {
     @param('penaltyRules', Types.Content, validatePenaltyRules, convertPenaltyRules)
     @param('title', Types.Title)
     @param('content', Types.Content)
-    @param('pids', Types.Content)
+    @param('problems', Types.Content)
     @param('rated', Types.Boolean)
     @param('maintainer', Types.NumericArray, true)
     @param('assign', Types.CommaSeperatedArray, true)
@@ -195,10 +195,11 @@ class HomeworkEditHandler extends Handler {
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string,
         penaltySinceDate: string, penaltySinceTime: string, extensionDays: number,
-        penaltyRules: PenaltyRules, title: string, content: string, _pids: string, rated = false,
+        penaltyRules: PenaltyRules, title: string, content: string, _problems: string, rated = false,
         maintainer: number[] = [], assign: string[] = [], langs: string[] = [],
     ) {
-        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
+        const { problems, score } = contest.resolveContestProblemJson(_problems);
+        const pids = problems.map((p) => p.pid);
         const tdoc = tid ? await contest.get(domainId, tid) : null;
         if (!tid) this.checkPerm(PERM.PERM_CREATE_HOMEWORK);
         else if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_HOMEWORK);
@@ -214,7 +215,9 @@ class HomeworkEditHandler extends Handler {
         if (!tid) {
             tid = await contest.add(domainId, title, content, this.user._id,
                 'homework', beginAt.toDate(), endAt.toDate(), pids, rated,
-                { penaltySince: penaltySince.toDate(), penaltyRules, assign });
+                {
+                    penaltySince: penaltySince.toDate(), penaltyRules, assign, problems, score,
+                });
         } else {
             await contest.edit(domainId, tid, {
                 title,
@@ -222,6 +225,8 @@ class HomeworkEditHandler extends Handler {
                 beginAt: beginAt.toDate(),
                 endAt: endAt.toDate(),
                 pids,
+                problems,
+                score,
                 penaltySince: penaltySince.toDate(),
                 penaltyRules,
                 rated,

@@ -245,3 +245,5 @@ export const getAlphabeticId = (() => {
     for (const ch of alphabet) cache.push(...alphabet.split('').map((c) => ch + c));
     return (i: number) => cache[i] || (i < 0 ? '?' : f(i));
 })();
+
+export const getContestProblemConfig = (pid, tdoc) => tdoc.problems.find((cp) => cp.pid === pid);

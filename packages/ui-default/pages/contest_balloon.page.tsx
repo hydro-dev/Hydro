@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-import { getAlphabeticId } from '@hydrooj/utils/lib/common';
 import yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
@@ -26,14 +25,15 @@ function Balloon({ tdoc, val }) {
             </tr>
           </thead>
           <tbody>
-            {tdoc.pids.map((pid) => {
+            {tdoc.problems.map((cp, idx) => {
+              const pid = cp.pid;
               const { color: c, name } = val[+pid];
               return (
                 <tr key={pid}>
                   <td>
                     {now === pid
-                      ? (<b>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</b>)
-                      : (<span>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</span>)}
+                      ? (<b>{cp.label}</b>)
+                      : (<span>{cp.label}</span>)}
                   </td>
                   <td>
                     <HexColorInput
@@ -52,7 +52,7 @@ function Balloon({ tdoc, val }) {
                       onChange={(e) => { val[+pid].name = e.target.value; }}
                     />
                   </td>
-                  {tdoc.pids.indexOf(+pid) === 0 && <td rowSpan={0}>
+                  {idx === 0 && <td rowSpan={0}>
                     {now && <HexColorPicker color={color} onChange={(e) => { val[+now].color = e; setColor(e); }} style={{ padding: '1rem' }} />}
                   </td>}
                 </tr>
@@ -66,8 +66,10 @@ function Balloon({ tdoc, val }) {
 }
 
 async function handleSetColor(tdoc) {
-  const val = tdoc.balloon || {};
-  for (const pid of tdoc.pids) val[+pid] ||= { color: '#ffffff', name: '' };
+  const val = {};
+  for (const cp of tdoc.problems) {
+    val[+cp.pid] = cp.balloon || { color: '#ffffff', name: '' };
+  }
   Notification.info(i18n('Loading...'));
   const action = await new ActionDialog({
     $body: tpl(<>

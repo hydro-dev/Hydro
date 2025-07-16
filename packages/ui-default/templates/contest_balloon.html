@@ -13,7 +13,7 @@
       </div>
       {{ noscript_note.render() }}
       <div class="section__body no-padding">
-        {% if not tdoc.balloon|length %}
+        {% if tdoc.problems|length===0 or not tdoc.problems[0].balloon %}
           {{ nothing.render('Please set the balloon color for each problem first.') }}
         {% else %}
         <table class="data-table record_main__table">

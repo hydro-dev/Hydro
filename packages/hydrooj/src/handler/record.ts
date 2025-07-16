@@ -68,9 +68,12 @@ class RecordListHandler extends ContestDetailBaseHandler {
                 notification.push({ name, args: { type: 'note' }, checker: () => true });
             }
         }
+        // in order to make contest's submissionList can show label like A
+        const realPid = pid;
         if (pid) {
-            if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {
-                pid = tdoc.pids[parseInt(pid, 36) - 10];
+            if (typeof pid === 'string' && tdoc) {
+                const result = tdoc.problems.find((i) => i.label === pid);
+                if (result) pid = result.pid;
             }
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) q.pid = pdoc.docId;
@@ -114,7 +117,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             udict,
             all,
             allDomain,
-            filterPid: pid,
+            filterPid: realPid,
             filterTid: tid,
             filterUidOrName: uidOrName,
             filterLang: lang,

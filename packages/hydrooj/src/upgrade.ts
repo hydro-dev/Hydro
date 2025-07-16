@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
-import { randomstring, sleep } from '@hydrooj/utils';
+import { getAlphabeticId, randomstring, sleep } from '@hydrooj/utils';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
 import { PERM, PRIV, STATUS } from './model/builtin';
@@ -615,6 +615,29 @@ export const coreScripts: MigrationScript[] = [
     },
     async function _94_95() {
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
+        return true;
+    },
+    async function _95_96() {
+        await iterateAllDomain(async ({ _id }) => {
+            logger.info('Processing domain %s', _id);
+            const tdocs = await contest.getMulti(_id, {}).toArray();
+            for (const tdoc of tdocs) {
+                await contest.edit(_id, tdoc._id, {
+                    problems: tdoc.pids.map((pid, idx) => ({
+                        pid,
+                        label: getAlphabeticId(idx),
+                        ...(tdoc?.score && tdoc.score[pid] ? { score: tdoc.score[pid] } : {}),
+                        ...(tdoc?.balloon && tdoc.balloon[pid] ? {
+                            balloon: {
+                                name: typeof tdoc.balloon[pid] === 'string' ? '' : tdoc.balloon[pid].name,
+                                color: typeof tdoc.balloon[pid] === 'string' ? tdoc.balloon[pid] : tdoc.balloon[pid].color,
+                            },
+                        } : {}),
+                    })),
+                });
+            }
+            logger.info('Domain %s done', _id);
+        });
         return true;
     },
 ];

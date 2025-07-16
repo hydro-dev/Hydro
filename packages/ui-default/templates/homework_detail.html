@@ -40,7 +40,8 @@
           <tbody>
           {% set isAdmin = handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD) %}
           {% set ntdoc = model.contest.isDone(tdoc) or (tsdoc.attend and not model.contest.isNotStarted(tdoc)) %}
-          {%- for pid in tdoc.pids -%}
+          {%- for cp in tdoc.problems -%}
+            {% set pid = cp.pid %}
             <tr>
               {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                 {% if psdict[pid] and psdict[pid].rid %}
@@ -58,9 +59,9 @@
               {% endif %}
               <td class="col--problem col--problem-name">
                 {% if isAdmin and not ntdoc %}
-                  {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false) }}
+                  {{ problem.render_problem_title(pdict[pid], show_invisible_flag=false, show_tags=false, alphabetic=true) }}
                 {% else %}
-                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false) }}
+                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false, alphabetic=true) }}
                 {% endif %}
               </td>
             </tr>

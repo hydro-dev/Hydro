@@ -17,7 +17,9 @@
       </button> |
     </form>
   {% endif %}
-  {% if pdoc and rdoc.contest %}
+  {% if tdoc %}
+    {{ problem.render_problem_title(pdoc, tdoc=tdoc, show_tags=false, show_invisible_flag=false, alphabetic=true) }}
+  {% elif pdoc and rdoc.contest %}
     {{ problem.render_problem_title(pdoc, tdoc=tdoc, show_tags=false, show_invisible_flag=false) }}
   {% elif pdoc and (not pdoc.hidden or handler.user.hasPerm(perm.PERM_VIEW_PROBLEM_HIDDEN) or handler.user.own(pdoc)) %}
     {{ problem.render_problem_title(pdoc, show_tags=false) }}

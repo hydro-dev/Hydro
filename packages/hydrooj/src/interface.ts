@@ -247,6 +247,14 @@ export interface TrainingNode {
     pids: number[],
 }
 
+export interface ContestProblem {
+    pid: number;
+    label: string;
+    title?: string;
+    score?: number;
+    balloon?: { color: string, name: string };
+}
+
 export interface Tdoc extends Document {
     docId: ObjectId;
     docType: document['TYPE_CONTEST'];
@@ -257,6 +265,7 @@ export interface Tdoc extends Document {
     content: string;
     rule: string;
     pids: number[];
+    problems: ContestProblem[];
     rated?: boolean;
     _code?: string;
     assign?: string[];

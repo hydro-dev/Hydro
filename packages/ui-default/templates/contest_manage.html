@@ -21,15 +21,15 @@
                 </tr>
               </thead>
               <tbody>
-              {%- for pid in tdoc.pids -%}
+              {%- for cp in tdoc.problems -%}
                 <tr>
                   <td class="col--problem col--problem-name">
-                    <a href="{{ url('problem_detail', pid=pid) }}">
-                      {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
+                    <a href="{{ url('problem_detail', pid=cp.pid) }}">
+                      {{ problem.render_problem_title(pdict[cp.pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
                     </a>
                   </td>
                   <td class="col--score">
-                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
+                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ cp.pid }}" data-score="{{ cp.score|default(100) }}">{{ cp.score|default(100) }}</a>
                   </td>
                 </tr>
               {%- endfor -%}
@@ -126,8 +126,8 @@
                       <select name="subject" class="select">
                         <option value="0">{{ _('General Issue') }}</option>
                         <option value="-1">{{ _('Technical Issue') }}</option>
-                        {% for pid in tdoc.pids %}
-                        <option value="{{ pid }}">{{ utils.getAlphabeticId(loop.index0) }}. {{ pdict[pid].title }}</option>
+                        {% for cp in tdoc.problems %}
+                        <option value="{{ cp.pid }}">{{ cp.label }}. {{ cp.title|default(pdict[pid].title) }}</option>
                         {% endfor %}
                       </select>
                     </label>

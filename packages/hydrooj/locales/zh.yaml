@@ -211,6 +211,7 @@ Current password doesn't match.: 当前密码输入错误。
 Current Password: 当前密码
 Current Status: 当前状态
 currently offline: 目前离线
+Custom Title: 自定义标题
 Data of Problem {0} not found.: 题目 {0} 的数据缺失。
 Data of problem {1} not found.: 题目 {1} 的数据未找到。
 Data of record {0} not found.: 记录 {0} 的数据未找到。
@@ -435,6 +436,7 @@ Judged At: 评测时间
 Judged By: 评测机
 Judging Queue: 评测队列
 Keep current expiration: 保持当前过期设置
+Label: 标号
 Language: 语言
 last active at: 最后活动于
 last login at: 最后登录于
@@ -638,6 +640,7 @@ Quote: 引用
 Rank: 排名
 ranking: 排名
 Ranking: 排名
+Raw Title: 原始标题
 Read record codes after accept: 题目通过后读取记录的代码
 Recalculates nSubmit and nAccept in problem status.: 重新计算每道题目的 AC 量和提交量
 Recommended: 推荐

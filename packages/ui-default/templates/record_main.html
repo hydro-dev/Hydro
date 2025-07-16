@@ -109,7 +109,7 @@
               (('&tid=' + filterTid) if filterTid else '')
               + (('&uidOrName=' + filterUidOrName) if filterUidOrName else '')
               + (('&lang=' + filterLang) if filterLang else '')
-              + (('&status=' + filterStatus) if filterStatus else '')
+              + (('&status=' + filterStatus) if filterStatus or filterStatus===0 else '')
               + (('&pid=' + filterPid) if filterPid else '')
               + ('&all=1' if all else '')
               + ('&allDomain=1' if allDomain else '') }}">{{ _('pager_next') }}</a>
