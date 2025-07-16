@@ -1,6 +1,6 @@
 import { getAlphabeticId } from '@hydrooj/utils/lib/common';
+import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import React from 'react';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { api, i18n } from 'vj/utils';
 import ProblemSelectAutoComplete from '../autocomplete/components/ProblemSelectAutoComplete';
 
@@ -25,7 +25,6 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
   // TODO: also support balloon and other fields in the future
   const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el) => ({ ...el, _tmpId: randomId() })));
 
-  console.log(problems);
   const problemRefs = React.useRef<{ [key: number]: any }>({});
   const [problemRawTitles, setProblemRawTitles] = React.useState<Record<number, string>>({});
 
@@ -79,7 +78,7 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
         problem.pid = Number(value);
         break;
       default:
-        problem[field] = value;
+        (problem as any)[field] = value;
     }
 
     newProblems[index] = problem;

@@ -35,7 +35,6 @@
     "@types/pickadate": "^3.5.35",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.23",
-    "@types/react-beautiful-dnd": "^13",
     "@types/react-dom": "^18.3.7",
     "@types/redux-logger": "^3.0.13",
     "@types/uuid": "^10.0.0",
@@ -122,6 +121,7 @@
     "webpackbar": "^7.0.0"
   },
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "@hydrooj/common": "workspace:^",
     "ansi_up": "^6.0.6",
     "cssfilter": "^0.0.11",
@@ -141,7 +141,6 @@
     "markdown-it-merge-cells": "^2.0.0",
     "markdown-it-table-of-contents": "^0.9.0",
     "nunjucks": "^3.2.4",
-    "react-beautiful-dnd": "^13.1.1",
     "schemastery-jsonschema": "^1.1.0",
     "streamsaver": "^2.0.6",
     "uuid": "^11.1.0",
