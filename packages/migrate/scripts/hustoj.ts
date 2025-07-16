@@ -1,6 +1,5 @@
 /* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
-import crypto from 'crypto';
 import path from 'path';
 import mariadb from 'mariadb';
 import TurndownService from 'turndown';
@@ -266,7 +265,6 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         password	char(16)			进入比赛的密码
         user_id	char(48)			允许参加比赛用户列表
     */
-    let haveNewPwdContest = false;
     const tidMap: Record<string, string> = {};
     const tdocs = await query('SELECT * FROM `contest`');
     for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
@@ -284,10 +282,9 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         }
         // WHY you allow contest with end time BEFORE start time? WHY???
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
-
+        let isAssignMode = false;
         if (tdoc.private === 1 && tdoc.password === '') {
-            tdoc.password = crypto.randomBytes(16).toString('hex');
-            haveNewPwdContest = true;
+            isAssignMode = true;
         }
         const tid = await ContestModel.add(
             domainId, tdoc.title, description || 'Description',
@@ -299,8 +296,15 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
 
         const allowedUser:{ user_id:string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
-        for (let i = 0; i < allowedUser.length; i++) {
-            await ContestModel.attend(domainId, tid, uidMap[allowedUser[i].user_id]).catch(noop);
+        const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
+        if (isAssignMode) {
+            await ContestModel.edit(domainId, tid, {
+                assign: assignUserList.map((uid) => uid.toString()),
+            });
+        } else {
+            for (let i = 0; i < assignUserList.length; i++) {
+                await ContestModel.attend(domainId, tid, assignUserList[i]).catch(noop);
+            }
         }
         if (tidx % 100 === 0) {
             const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
@@ -308,12 +312,6 @@ hydrooj install https://hydro.ac/hydroac-client.zip
                 message: `contest finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
             });
         }
-    }
-    if (haveNewPwdContest) {
-        MessageModel.sendNotification(`导入数据中存在私有但密码为空的比赛。
-这些比赛很可能只允许指定的账号登录。
-我们已对这些比赛生成了密码，原先设定的账号仍可参赛。
-若要查看密码，请进入对应比赛编辑页。`);
     }
     report({ message: 'contest finished' });
     /*
