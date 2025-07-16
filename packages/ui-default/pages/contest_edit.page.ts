@@ -20,7 +20,6 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     ReactDOM.createRoot(problemEditor[0]).render(
       React.createElement(ContestProblemEditor, {
         onChange: (problems) => {
-          console.log(problems);
           problemsInput.val(JSON.stringify(problems));
         },
         problems: JSON.parse(problemsInput.val() as string),

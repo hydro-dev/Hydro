@@ -158,7 +158,7 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
                             className="textbox"
                             value={problem.title || ''}
                             onChange={(e) => handleChange(index, 'title', e.target.value)}
-                            placeholder="Empty will use raw title"
+                            placeholder={i18n('Empty will use raw title')}
                           />
                         </td>
                         <td className='col--label'>
