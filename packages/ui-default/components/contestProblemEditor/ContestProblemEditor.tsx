@@ -32,7 +32,10 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
   const fetchProblemTitles = debounce(async (ids: number[]) => {
     api('problems', { ids }, ['docId', 'pid', 'title'])
       .then((res) => {
-        setProblemRawTitles(res.reduce((acc, cur) => ({ ...acc, [cur.docId]: cur.title }), {}));
+        setProblemRawTitles(res.reduce((acc, cur) => {
+          acc[cur.docId] = cur.title;
+          return acc;
+        }, {}));
       })
       .catch(() => {
         // pid maybe not exist
@@ -46,8 +49,9 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
   const onChange = (newProblems: Problem[]) => {
     const fixedProblems = newProblems.map((i) => {
       const problem = { ...i };
-      if (problem.title === '') delete problem.title;
-      if (problem.score === 100) delete problem.score;
+      // undefined is ok, JSON.stringify will ignore it
+      if (problem.title === '') problem.title = undefined;
+      if (problem.score === 100) problem.score = undefined;
       return problem;
     });
     setProblems(fixedProblems);
