@@ -177,7 +177,9 @@ function ensureAndGetSelectedPids() {
   return selectedPids;
 }
 
-async function handleOperation(operation) {
+let refDiv: any;
+
+async function handleOperation(operation: string) {
   const pids = ensureAndGetSelectedPids();
   if (pids === null) return;
   const payload: any = {};
@@ -187,9 +189,10 @@ async function handleOperation(operation) {
     }).open();
     if (action !== 'yes') return;
   } else if (operation === 'copy') {
-    const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($('.dialog__body--problem-copy [name="target"]'));
+    const $target = $(refDiv).find('[name="target"]');
+    const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($target);
     const copyDialog = await new ActionDialog({
-      $body: $('.dialog__body--problem-copy > div'),
+      $body: refDiv,
       onDispatch(action) {
         if (action === 'ok' && domainSelector.value() === null) {
           domainSelector.focus();
@@ -199,9 +202,8 @@ async function handleOperation(operation) {
       },
     }).open();
     if (copyDialog !== 'ok') return;
-    const target = $('[name="target"]').val();
-    if (!target) return;
-    payload.target = target;
+    payload.target = domainSelector.value()._id;
+    payload.hidden = $(refDiv).find('[name="hidden"]').prop('checked');
   }
   try {
     await request.post('', { operation, pids, ...payload });
@@ -412,23 +414,30 @@ const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
-  $(tpl`
-    <div style="display: none" class="dialog__body--problem-copy">
-      <div class="row"><div class="columns">
-        <h1 name="select_user_hint">${i18n('Copy Problems')}</h1>
+  $(tpl(
+    <div style={{ display: 'none' }} className="dialog__body--problem-copy">
+      <div className="row"><div className="columns">
+        <h1>{i18n('Copy Problems')}</h1>
       </div></div>
-      <div class="row">
-        <div class="columns">
+      <div className="row">
+        <div className="medium-8 columns">
           <label>
-            ${i18n('Target')}
-            <div class="textbox-container">
-              <input name="target" type="text" class="textbox" data-autofocus>
+            {i18n('Target')}
+            <div className="textbox-container">
+              <input name="target" type="text" className="textbox" data-autofocus />
             </div>
           </label>
         </div>
+        <div className="medium-4 columns">
+          <label className="checkbox">
+            {i18n('Hidden')}
+            <input name="hidden" type="checkbox" />
+          </label>
+        </div>
       </div>
-    </div>
-  `).appendTo(document.body);
+    </div>,
+  )).appendTo(document.body);
+  refDiv = $('.dialog__body--problem-copy > div');
 
   buildSearchContainer();
   buildLegacyCategoryFilter();

@@ -26,7 +26,7 @@ const page = new NamedPage([
   $(document).on('click', '[name="problem-sidebar__copy"]', () => {
     $(tpl`<div style="display: none" class="dialog__body--problem-copy">
   <div class="row"><div class="columns">
-    <h1 name="select_user_hint">${i18n('Copy Problem')}</h1>
+    <h1>${i18n('Copy Problem')}</h1>
   </div></div>
   <div class="row">
     <div class="columns">

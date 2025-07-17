@@ -66,6 +66,7 @@ interface ProblemImportOptions {
     override?: boolean;
     operator?: number;
     delSource?: boolean;
+    hidden?: boolean;
 }
 
 interface ProblemCreateOptions {
@@ -244,7 +245,7 @@ export class ProblemModel {
         return result;
     }
 
-    static async copy(domainId: string, _id: number, target: string, pid?: string) {
+    static async copy(domainId: string, _id: number, target: string, pid?: string, hidden?: boolean) {
         const original = await ProblemModel.get(domainId, _id);
         if (!original) throw new ProblemNotFoundError(domainId, _id);
         if (original.reference) throw new ValidationError('reference');
@@ -252,7 +253,7 @@ export class ProblemModel {
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
         return await ProblemModel.add(
             target, pid, original.title, original.content,
-            original.owner, original.tag, { hidden: original.hidden, reference: { domainId, pid: _id } },
+            original.owner, original.tag, { hidden: hidden || original.hidden, reference: { domainId, pid: _id } },
         );
     }
 
@@ -560,10 +561,11 @@ export class ProblemModel {
                         content: overrideContent || pdoc.content?.toString() || 'No content',
                         tag,
                         difficulty: pdoc.difficulty,
+                        ...(options.hidden ? { hidden: true } : {}),
                     })).docId
                     : await ProblemModel.add(
                         domainId, pid, title.trim(), overrideContent || pdoc.content?.toString() || 'No content',
-                        operator || pdoc.owner, tag, { hidden: pdoc.hidden, difficulty: pdoc.difficulty },
+                        operator || pdoc.owner, tag, { hidden: options.hidden || pdoc.hidden, difficulty: pdoc.difficulty },
                     );
                 // TODO delete unused file when updating pdoc
                 for (const [f, loc] of await getFiles('testdata', 'attachments', 'generators', 'include')) {
