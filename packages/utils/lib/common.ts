@@ -246,4 +246,4 @@ export const getAlphabeticId = (() => {
     return (i: number) => cache[i] || (i < 0 ? '?' : f(i));
 })();
 
-export const getContestProblemConfig = (pid, tdoc) => tdoc.problems.find((cp) => cp.pid === pid);
+export const getContestProblemConfig = (pid, tdoc) => tdoc.problems[tdoc.pid2idx?.[pid]];

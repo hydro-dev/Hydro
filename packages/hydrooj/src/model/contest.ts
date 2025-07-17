@@ -1,5 +1,6 @@
 import { sumBy } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
+import Schema from 'schemastery';
 import {
     Counter, formatSeconds, getAlphabeticId, Time,
 } from '@hydrooj/utils/lib/utils';
@@ -103,7 +104,7 @@ const acm = buildContestRule({
         let time = 0;
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
         for (const j of journal) {
-            if (!tdoc.problems.find((p) => p.pid === j.pid)) continue;
+            if (!Object.hasOwn(tdoc.pid2idx, j.pid)) continue;
             if (!this.submitAfterAccept && display[j.pid]?.status === STATUS.STATUS_ACCEPTED) continue;
             if (![STATUS.STATUS_ACCEPTED, STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR, STATUS.STATUS_CANCELED].includes(j.status)) {
                 naccept[j.pid]++;
@@ -144,7 +145,8 @@ const acm = buildContestRule({
         }
         columns.push({ type: 'solved', value: `${_('Solved')}\n${_('Total Time')}` });
         for (let i = 1; i <= tdoc.problems.length; i++) {
-            const pid = tdoc.problems[i - 1].pid;
+            const cp = tdoc.problems[i - 1];
+            const pid = cp.pid;
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (config.isExport) {
                 columns.push(
@@ -160,7 +162,7 @@ const acm = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getAlphabeticId(i - 1),
+                    value: cp.label,
                     raw: pid,
                 });
             }
@@ -284,7 +286,7 @@ const oi = buildContestRule({
         let score = 0;
 
         const lockAt = isLocked(tdoc) ? tdoc.lockAt : null;
-        for (const j of journal.filter((i) => tdoc.problems.find((p) => p.pid === i.pid))) {
+        for (const j of journal.filter((i) => Object.hasOwn(tdoc.pid2idx, i.pid))) {
             if (lockAt && j.rid.getTimestamp() > lockAt) {
                 npending[j.pid]++;
                 display[j.pid] ||= {};
@@ -297,7 +299,7 @@ const oi = buildContestRule({
             }
         }
         for (const i in display) {
-            score += ((tdoc.problems.find((p) => p.pid.toString() === i)?.score || 100) * (display[i].score || 0)) / 100;
+            score += ((tdoc.problems?.[tdoc.pid2idx?.[Number(i)]]?.score || 100) * (display[i].score || 0)) / 100;
         }
         return { score, detail, display };
     },
@@ -329,7 +331,7 @@ const oi = buildContestRule({
                 columns.push({
                     type: 'problem',
                     value: cp.label,
-                    raw: cp,
+                    raw: cp.pid,
                 });
             }
         }
@@ -353,8 +355,10 @@ const oi = buildContestRule({
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         const accepted = {};
         for (const s of tsdoc.journal || []) {
+            // console.log(typeof s.pid, s.pid, !!pdict[s.pid]);
             if (!pdict[s.pid]) continue;
             if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
+            // console.log(s.pid, pdict[s.pid].nSubmit)
             pdict[s.pid].nSubmit++;
             if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
                 pdict[s.pid].nAccept++;
@@ -481,7 +485,7 @@ const strictioi = buildContestRule({
             j.status = Math.max(...Object.values(subtasks[j.pid]).map((i) => i.status));
             if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = { ...j, subtasks: subtasks[j.pid] };
         }
-        for (const i in detail) score += ((tdoc.problems.find((p) => p.pid.toString() === i)?.score || 100) * (detail[i].score || 0)) / 100;
+        for (const i in detail) score += ((tdoc.problems?.[tdoc.pid2idx?.[Number(i)]]?.score || 100) * (detail[i].score || 0)) / 100;
         return { score, detail };
     },
     async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
@@ -509,6 +513,7 @@ const strictioi = buildContestRule({
         for (const cp of tdoc.problems) {
             const pid = cp.pid;
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
+            const fullMark = tdoc.problems?.[tdoc.pid2idx?.[pid]]?.score || 100;
             const n: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
                 && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()
@@ -517,19 +522,19 @@ const strictioi = buildContestRule({
                     type: 'records',
                     value: '',
                     raw: [{
-                        value: ((tsddict[pid]?.score || 0) * ((tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100)).toString() || '',
+                        value: ((tsddict[pid]?.score || 0) * (fullMark / 100)).toString() || '',
                         raw: tsddict[pid]?.rid || null,
                         score: tsddict[pid]?.score,
                     }, {
                         value: (
-                            (meta?.psdict?.[index]?.score || 0) * ((tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100)
+                            (meta?.psdict?.[index]?.score || 0) * (fullMark / 100)
                         ).toString() || '',
                         raw: meta?.psdict?.[index]?.rid ?? null,
                         score: meta?.psdict?.[index]?.score,
                     }],
                 } : {
                     type: 'record',
-                    value: ((tsddict[pid]?.score || 0) * ((tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100)).toString() || '',
+                    value: ((tsddict[pid]?.score || 0) * (fullMark / 100)).toString() || '',
                     raw: tsddict[pid]?.rid,
                     score: tsddict[pid]?.score,
                 };
@@ -571,7 +576,7 @@ const ledo = buildContestRule({
         for (const cp of tdoc.problems) {
             const pid = cp.pid;
             if (!detail[pid]) continue;
-            const rate = (tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100;
+            const rate = (tdoc.problems?.[tdoc.pid2idx?.[pid]]?.score || 100) / 100;
             score += detail[pid].penaltyScore * rate;
             originalScore += detail[pid].score * rate;
         }
@@ -609,7 +614,7 @@ const ledo = buildContestRule({
             const pid = cp.pid;
             row.push({
                 type: 'record',
-                value: ((tsddict[pid]?.penaltyScore || 0) * ((tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100)).toString(),
+                value: ((tsddict[pid]?.penaltyScore || 0) * ((tdoc.problems?.[tdoc.pid2idx?.[pid]]?.score || 100) / 100)).toString(),
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
                 score: tsddict[pid]?.score,
@@ -635,7 +640,7 @@ const homework = buildContestRule({
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.problems.find((p) => p.pid === j.pid)) effective[j.pid] = j;
+            if (Object.hasOwn(tdoc.pid2idx, j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
             const real = (jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000;
@@ -643,7 +648,7 @@ const homework = buildContestRule({
         }
 
         function penaltyScore(jdoc) {
-            const rate = (tdoc.problems.find((p) => p.pid.toString() === jdoc.pid)?.score || 100) / 100;
+            const rate = (tdoc.problems?.[tdoc.pid2idx?.[Number(jdoc.pid)]]?.score || 100) / 100;
             const exceedSeconds = Math.floor(
                 (jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime()) / 1000,
             );
@@ -817,13 +822,17 @@ export async function add(
             ...(data?.score && data.score[pid] ? { score: data.score[pid] } : {}),
         }));
     }
+    const pid2idx = {};
+    for (let i = 0; i < problems.length; i++) {
+        pid2idx[problems[i].pid] = i;
+    }
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, problems, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, problems, pid2idx, attend: 0,
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const docId = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        assign: [], ...data, title, rule, beginAt, endAt, pids, problems, attend: 0, rated,
+        assign: [], ...data, title, rule, beginAt, endAt, pids, problems, pid2idx, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, docId);
     return docId;
@@ -874,6 +883,12 @@ export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>)
                 ) : p.balloon,
             } : {}),
         }));
+    }
+    if ($set.problems) {
+        $set.pid2idx = {};
+        for (let i = 0; i < $set.problems.length; i++) {
+            $set.pid2idx[$set.problems[i].pid] = i;
+        }
     }
     const res = await document.set(domainId, document.TYPE_CONTEST, tid, $set);
     await bus.parallel('contest/edit', res);
@@ -1108,28 +1123,34 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
                 : 'Done');
 
 export function resolveContestProblemJson(text:string) {
+    const validate = Schema.array(Schema.object({
+        pid: Schema.number().required(),
+        label: Schema.string().required(),
+        title: Schema.string(),
+        score: Schema.number().min(0),
+        balloon: Schema.object({
+            color: Schema.string(),
+            name: Schema.string(),
+        }),
+    })).required();
+
     let _problemList = [];
     try {
-        _problemList = JSON.parse(text);
+        _problemList = validate(JSON.parse(text));
     } catch (e) {
         throw new ValidationError('problems');
     }
     const problems = [] as ContestProblem[];
     const score = {} as Record<number, number>;
     for (const p of _problemList) {
-        if (!p.pid || typeof p.pid !== 'number') throw new ValidationError('problems');
-        if (!p.label || typeof p.label !== 'string') throw new ValidationError('problems');
-        if (typeof p.title === 'string' && p.title.length === 0) delete p.title;
-        if (typeof p.score === 'number') {
-            if (p.score < 0) throw new ValidationError('problems');
-            if (p.score === 100) delete p.score;
+        if (typeof p.score === 'number' && p.score !== 100) {
             score[p.pid] = p.score;
         }
         problems.push({
             pid: p.pid,
             label: p.label,
-            ...(p.score ? { score: p.score } : {}),
-            ...(p.title ? { title: p.title } : {}),
+            ...(p.score && p.score !== 100 ? { score: p.score } : {}),
+            ...(p.title && p.title.length > 0 ? { title: p.title } : {}),
         });
     }
     return {

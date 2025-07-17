@@ -266,6 +266,7 @@ export interface Tdoc extends Document {
     rule: string;
     pids: number[];
     problems: ContestProblem[];
+    pid2idx: Record<number, number>;
     rated?: boolean;
     _code?: string;
     assign?: string[];
