@@ -625,7 +625,6 @@ export const coreScripts: MigrationScript[] = [
                 await contest.edit(_id, tdoc._id, {
                     problems: tdoc.pids.map((pid, idx) => ({
                         pid,
-                        label: getAlphabeticId(idx),
                         ...(tdoc?.score && tdoc.score[pid] ? { score: tdoc.score[pid] } : {}),
                         ...(tdoc?.balloon && tdoc.balloon[pid] ? {
                             balloon: {
