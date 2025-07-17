@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
-import { getAlphabeticId, randomstring, sleep } from '@hydrooj/utils';
+import { randomstring, sleep } from '@hydrooj/utils';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
 import { PERM, PRIV, STATUS } from './model/builtin';

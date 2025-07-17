@@ -812,12 +812,11 @@ export async function add(
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
     // TODO: this is the best way to support old plugins, but need remove one day
-    let problems = data?.problems || [];
+    let problems = data.problems || [];
     if (problems.length === 0 && pids.length > 0) {
-        problems = pids.map((pid, idx) => ({
+        problems = pids.map((pid) => ({
             pid,
-            label: getAlphabeticId(idx),
-            ...(data?.score && data.score[pid] ? { score: data.score[pid] } : {}),
+            ...(data.score?.[pid] ? { score: data.score[pid] } : {}),
         }));
     }
     Object.assign(data, {
@@ -847,9 +846,8 @@ export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>)
             }, {})),
             ...($set.score ? $set.score : {}),
         };
-        $set.problems = $set.pids.map((pid, idx) => ({
+        $set.problems = $set.pids.map((pid) => ({
             pid,
-            label: getAlphabeticId(idx),
             ...(mergedScore[pid] ? { score: mergedScore[pid] } : {}),
             ...($set.balloon
                 ? (
