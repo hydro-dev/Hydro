@@ -61,6 +61,7 @@ Active Sessions: 活动会话
 Add blacklist by ip, uid: 封禁 IP / 将对应 uid 的用户拉入黑名单
 Add module: 添加模块
 Add new data: 添加新数据
+Add Problem: 添加问题
 Add User: 添加用户
 Add: 添加
 Additional File: 附加文件
@@ -321,7 +322,6 @@ Edit training plans: 修改训练计划
 Edit: 编辑
 Email Visibility: Email 可见性
 Email: 电子邮件
-Empty will use raw title: 留空以使用原标题
 Enabled: 开启
 End at: 结束于
 End Date: 结束日期

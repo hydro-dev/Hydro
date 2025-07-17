@@ -1,5 +1,6 @@
 import { getAlphabeticId } from '@hydrooj/utils/lib/common';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
+import { debounce } from 'lodash';
 import React from 'react';
 import { api, i18n } from 'vj/utils';
 import ProblemSelectAutoComplete from '../autocomplete/components/ProblemSelectAutoComplete';
@@ -13,7 +14,7 @@ export interface Problem {
     color: string;
     name: string;
   };
-  _tmpId?: string; // use this as key for better rander
+  _tmpId?: string; // use this as key
 }
 
 export interface ContestProblemEditorProps {
@@ -21,14 +22,14 @@ export interface ContestProblemEditorProps {
   onChange: (problems: Problem[]) => void;
 }
 const randomId = () => Math.random().toString(16).substring(2);
-const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: initialProblems, onChange }) => {
+const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: initialProblems, onChange: _onChange }) => {
   // TODO: also support balloon and other fields in the future
   const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el) => ({ ...el, _tmpId: randomId() })));
 
   const problemRefs = React.useRef<{ [key: number]: any }>({});
   const [problemRawTitles, setProblemRawTitles] = React.useState<Record<number, string>>({});
 
-  const fetchProblemTitles = async (ids: number[]) => {
+  const fetchProblemTitles = debounce(async (ids: number[]) => {
     api('problems', { ids }, ['docId', 'pid', 'title'])
       .then((res) => {
         setProblemRawTitles(res.reduce((acc, cur) => ({ ...acc, [cur.docId]: cur.title }), {}));
@@ -36,13 +37,13 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
       .catch(() => {
         // pid maybe not exist
       });
-  };
+  }, 500);
 
   React.useEffect(() => {
     fetchProblemTitles(problems.map((i) => i.pid).filter((i) => i));
   }, []);
 
-  const beforeOnChange = (newProblems: Problem[]) => {
+  const onChange = (newProblems: Problem[]) => {
     const fixedProblems = newProblems.map((i) => {
       const problem = { ...i };
       if (problem.title === '') delete problem.title;
@@ -50,9 +51,8 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
       return problem;
     });
     setProblems(fixedProblems);
-    onChange(fixedProblems.map((i) => {
-      const p = { ...i };
-      delete p._tmpId;
+    _onChange(fixedProblems.map((i) => {
+      const { _tmpId, ...p } = i;
       return p;
     }));
   };
@@ -60,13 +60,13 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
   const handleAdd = () => {
     const newProblems = [...problems, { pid: 0, label: getAlphabeticId(problems.length), _tmpId: randomId() }];
     setProblems(newProblems);
-    beforeOnChange(newProblems);
+    onChange(newProblems);
   };
 
   const handleRemove = (index: number) => {
     const newProblems = problems.filter((_, i) => i !== index);
     setProblems(newProblems);
-    beforeOnChange(newProblems);
+    onChange(newProblems);
   };
 
   const handleChange = (index: number, field: keyof Problem, value: string | number) => {
@@ -86,26 +86,21 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
     if (field === 'pid') {
       fetchProblemTitles(newProblems.map((i) => i.pid).filter((i) => i));
     }
-    beforeOnChange(newProblems);
+    onChange(newProblems);
   };
 
   const onDragEnd = (result) => {
-    console.log(result);
     if (!result.destination) return;
 
-    const newProblems = Array.from(problems);
-    // exchange label
-    [
-      newProblems[result.source.index], newProblems[result.destination.index],
-    ] = [
-      newProblems[result.destination.index], newProblems[result.source.index],
-    ];
-    const [labelX, labelY] = [newProblems[result.source.index].label, newProblems[result.destination.index].label];
-    newProblems[result.source.index].label = labelY;
-    newProblems[result.destination.index].label = labelX;
+    const newProblems = [...problems];
+    const [iX, iY] = [result.source.index, result.destination.index];
+    [newProblems[iX], newProblems[iY]] = [newProblems[iY], newProblems[iX]];
+    const [labelX, labelY] = [newProblems[iX].label, newProblems[iY].label];
+    newProblems[iX].label = labelY;
+    newProblems[iY].label = labelX;
 
     setProblems(newProblems);
-    beforeOnChange(newProblems);
+    onChange(newProblems);
   };
 
   return (
@@ -115,7 +110,7 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
           <thead>
             <tr>
               <th className='col--drag'></th>
-              <th className='col--pid'>Pid</th>
+              <th className='col--pid'>pid</th>
               <th>{i18n('Raw Title')}</th>
               <th>{i18n('Custom Title')}</th>
               <th className='col--label'>{i18n('Label')}</th>
@@ -157,7 +152,7 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
                             className="textbox"
                             value={problem.title || ''}
                             onChange={(e) => handleChange(index, 'title', e.target.value)}
-                            placeholder={i18n('Empty will use raw title')}
+                            placeholder={i18n('(leave blank if none)')}
                           />
                         </td>
                         <td className='col--label'>

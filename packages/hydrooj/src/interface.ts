@@ -253,6 +253,7 @@ export interface ContestProblem {
     title?: string;
     score?: number;
     balloon?: { color: string, name: string };
+    [key: string]: any,
 }
 
 export interface Tdoc extends Document {

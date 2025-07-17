@@ -15,7 +15,8 @@
       </td>
     {% endif %}
     <td class="col--bid">{{ bdoc._id.toHexString()|truncate(8,true,'') }}</td>
-    <td class="col--problem col--problem-name" style="color:{{ tdoc.balloon[bdoc.pid].color }}">
+    {% set cp = utils.getContestProblemConfig(bdoc.pid, tdoc) %}
+    <td class="col--problem col--problem-name" style="color:{{ cp.balloon.color }}">
       {% if not bdoc.sent %}
         <form class="form--inline" method="post">
           <input type="hidden" name="balloon" value="{{ bdoc._id.toHexString() }}">
@@ -25,7 +26,7 @@
           </button> 
         </form>
       {% endif %}
-      <b>{{ utils.getContestProblemConfig(bdoc.pid, tdoc).label }}</b>&nbsp;&nbsp;({{ tdoc.balloon[bdoc.pid].name }})
+      <b>{{ cp.label }}</b>&nbsp;&nbsp;({{ cp.balloon.name }})
     </td>
     <td class="col--submit-by" data-tooltip="{{ bdoc._id.getTimestamp().format() }}">{{ user.render_inline(udict[bdoc.uid], badge=false) }}</td>
     <td class="col--send-by"{% if bdoc.sent %} data-tooltip="{{ bdoc.sentAt.format() }}"{% endif %}>
