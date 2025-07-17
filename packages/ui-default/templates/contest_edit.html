@@ -82,7 +82,7 @@
                       {% for p in problems %}
                       <tr>
                         <td>{{ p.pid }}</td>
-                        <td>{{ p.label }}</td>
+                        <td>{{ p.label|default(utils.getAlphabeticId(tdoc.pid2idx[p.pid])) }}</td>
                         <td>{{ p.score|default(100) }}</td>
                         <td>{{ p.title }}</td>
                       </tr>

@@ -162,7 +162,7 @@ const acm = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: cp.label,
+                    value: cp.label || getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }
@@ -330,7 +330,7 @@ const oi = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: cp.label,
+                    value: cp.label || getAlphabeticId(i - 1),
                     raw: cp.pid,
                 });
             }
@@ -355,10 +355,8 @@ const oi = buildContestRule({
         row.push({ type: 'total_score', value: tsdoc.score || 0 });
         const accepted = {};
         for (const s of tsdoc.journal || []) {
-            // console.log(typeof s.pid, s.pid, !!pdict[s.pid]);
             if (!pdict[s.pid]) continue;
             if (config.lockAt && s.rid.getTimestamp() > config.lockAt) continue;
-            // console.log(s.pid, pdict[s.pid].nSubmit)
             pdict[s.pid].nSubmit++;
             if (s.status === STATUS.STATUS_ACCEPTED && !accepted[s.pid]) {
                 pdict[s.pid].nAccept++;
@@ -715,7 +713,7 @@ const homework = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: cp.label,
+                    value: cp.label || getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }
@@ -822,17 +820,13 @@ export async function add(
             ...(data?.score && data.score[pid] ? { score: data.score[pid] } : {}),
         }));
     }
-    const pid2idx = {};
-    for (let i = 0; i < problems.length; i++) {
-        pid2idx[problems[i].pid] = i;
-    }
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, problems, pid2idx, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, problems, attend: 0,
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const docId = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        assign: [], ...data, title, rule, beginAt, endAt, pids, problems, pid2idx, attend: 0, rated,
+        assign: [], ...data, title, rule, beginAt, endAt, pids, problems, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, docId);
     return docId;
@@ -884,12 +878,6 @@ export async function edit(domainId: string, tid: ObjectId, $set: Partial<Tdoc>)
             } : {}),
         }));
     }
-    if ($set.problems) {
-        $set.pid2idx = {};
-        for (let i = 0; i < $set.problems.length; i++) {
-            $set.pid2idx[$set.problems[i].pid] = i;
-        }
-    }
     const res = await document.set(domainId, document.TYPE_CONTEST, tid, $set);
     await bus.parallel('contest/edit', res);
     return res;
@@ -906,7 +894,13 @@ export async function del(domainId: string, tid: ObjectId) {
 export async function get(domainId: string, tid: ObjectId): Promise<Tdoc> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
     if (!tdoc) throw new ContestNotFoundError(tid);
-    return tdoc;
+    return {
+        ...tdoc,
+        pid2idx: tdoc.problems.reduce((acc, cur, idx) => {
+            acc[cur.pid] = idx;
+            return acc;
+        }, {}),
+    };
 }
 
 export async function getRelated(domainId: string, pid: number, rule?: string) {
@@ -1122,18 +1116,17 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
                 ? 'Live...'
                 : 'Done');
 
-export function resolveContestProblemJson(text:string) {
-    const validate = Schema.array(Schema.object({
-        pid: Schema.number().required(),
-        label: Schema.string().required(),
-        title: Schema.string(),
-        score: Schema.number().min(0),
-        balloon: Schema.object({
-            color: Schema.string(),
-            name: Schema.string(),
-        }),
-    })).required();
-
+export const ContestProblemJsonSchema = Schema.array(Schema.object({
+    pid: Schema.number().required(),
+    label: Schema.string(),
+    title: Schema.string(),
+    score: Schema.number().min(0),
+    balloon: Schema.object({
+        color: Schema.string(),
+        name: Schema.string(),
+    }),
+})).required();
+export function resolveContestProblemJson(text:string, validate = ContestProblemJsonSchema) {
     let _problemList = [];
     try {
         _problemList = validate(JSON.parse(text));
@@ -1142,15 +1135,16 @@ export function resolveContestProblemJson(text:string) {
     }
     const problems = [] as ContestProblem[];
     const score = {} as Record<number, number>;
-    for (const p of _problemList) {
+    for (let i = 0; i < _problemList.length; i++) {
+        const p = _problemList[i];
         if (typeof p.score === 'number' && p.score !== 100) {
             score[p.pid] = p.score;
         }
         problems.push({
             pid: p.pid,
-            label: p.label,
             ...(p.score && p.score !== 100 ? { score: p.score } : {}),
             ...(p.title && p.title.length > 0 ? { title: p.title } : {}),
+            ...(p.label && p.label.length > 0 && p.label !== getAlphabeticId(i) ? { label: p.label } : {}),
         });
     }
     return {
@@ -1202,4 +1196,5 @@ global.Hydro.model.contest = {
     applyProjection,
     statusText,
     resolveContestProblemJson,
+    ContestProblemJsonSchema,
 };

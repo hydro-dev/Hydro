@@ -7,7 +7,7 @@ import ProblemSelectAutoComplete from '../autocomplete/components/ProblemSelectA
 
 export interface Problem {
   pid: number;
-  label: string;
+  label?: string;
   title?: string;
   score?: number;
   balloon?: {
@@ -22,9 +22,13 @@ export interface ContestProblemEditorProps {
   onChange: (problems: Problem[]) => void;
 }
 const randomId = () => Math.random().toString(16).substring(2);
-const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: initialProblems, onChange: _onChange }) => {
+const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange } : ContestProblemEditorProps) => {
   // TODO: also support balloon and other fields in the future
-  const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el) => ({ ...el, _tmpId: randomId() })));
+  const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el, idx) => ({
+    ...el,
+    _tmpId: randomId(),
+    ...(!el.label ? { label: getAlphabeticId(idx) } : {}),
+  })));
 
   const problemRefs = React.useRef<{ [key: number]: any }>({});
   const [problemRawTitles, setProblemRawTitles] = React.useState<Record<number, string>>({});
@@ -55,9 +59,12 @@ const ContestProblemEditor: React.FC<ContestProblemEditorProps> = ({ problems: i
       return problem;
     });
     setProblems(fixedProblems);
-    _onChange(fixedProblems.map((i) => {
-      const { _tmpId, ...p } = i;
-      return p;
+    _onChange(fixedProblems.map((i, idx) => {
+      const { _tmpId, label, ...p } = i;
+      return {
+        ...p,
+        ...(label !== getAlphabeticId(idx) ? { label } : {}),
+      };
     }));
   };
 

@@ -249,7 +249,7 @@ export interface TrainingNode {
 
 export interface ContestProblem {
     pid: number;
-    label: string;
+    label?: string;
     title?: string;
     score?: number;
     balloon?: { color: string, name: string };
@@ -267,7 +267,6 @@ export interface Tdoc extends Document {
     rule: string;
     pids: number[];
     problems: ContestProblem[];
-    pid2idx: Record<number, number>;
     rated?: boolean;
     _code?: string;
     assign?: string[];
@@ -295,6 +294,9 @@ export interface Tdoc extends Document {
     // For training
     description?: string;
     dag?: TrainingNode[];
+
+    // not stored in database
+    pid2idx?: Record<number, number>;
 }
 
 export interface TrainingDoc extends Omit<Tdoc, 'docType'> {

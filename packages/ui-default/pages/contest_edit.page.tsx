@@ -10,20 +10,19 @@ import { ConfirmDialog } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request, tpl } from 'vj/utils';
 
-const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
+export default new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
   UserSelectAutoComplete.getOrConstruct<true>($('[name="maintainer"]'), { multi: true, clearDefaultValue: false });
   LanguageSelectAutoComplete.getOrConstruct($('[name=langs]'), { multi: true });
   if ($('#problem-editor').length) {
-    const problemEditor = $('#problem-editor');
     const problemsInput = $('[name=problems]');
-    ReactDOM.createRoot(problemEditor[0]).render(
-      React.createElement(ContestProblemEditor, {
-        onChange: (problems) => {
+    ReactDOM.createRoot($('#problem-editor')[0]).render(
+      <ContestProblemEditor
+        problems={JSON.parse(problemsInput.val() as string)}
+        onChange={(problems) => {
           problemsInput.val(JSON.stringify(problems));
-        },
-        problems: JSON.parse(problemsInput.val() as string),
-      }),
+        }}
+      />,
     );
   }
   $('[name="rule"]').on('change', () => {
@@ -74,5 +73,3 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
     }, 500);
   }
 });
-
-export default page;

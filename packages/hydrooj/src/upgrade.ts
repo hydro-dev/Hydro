@@ -622,10 +622,6 @@ export const coreScripts: MigrationScript[] = [
             logger.info('Processing domain %s', _id);
             const tdocs = await contest.getMulti(_id, {}).toArray();
             for (const tdoc of tdocs) {
-                const pid2idx = {};
-                for (let i = 0; i < tdoc.pids.length; i++) {
-                    pid2idx[tdoc.pids[i]] = i;
-                }
                 await contest.edit(_id, tdoc._id, {
                     problems: tdoc.pids.map((pid, idx) => ({
                         pid,
@@ -638,7 +634,6 @@ export const coreScripts: MigrationScript[] = [
                             },
                         } : {}),
                     })),
-                    pid2idx,
                 });
             }
             logger.info('Domain %s done', _id);
