@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+import { getAlphabeticId } from '@hydrooj/utils/lib/common';
 import yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
@@ -32,8 +33,8 @@ function Balloon({ tdoc, val }) {
                 <tr key={pid}>
                   <td>
                     {now === pid
-                      ? (<b>{cp.label}</b>)
-                      : (<span>{cp.label}</span>)}
+                      ? (<b>{cp.label || getAlphabeticId(idx)}</b>)
+                      : (<span>{cp.label || getAlphabeticId(idx)}</span>)}
                   </td>
                   <td>
                     <HexColorInput

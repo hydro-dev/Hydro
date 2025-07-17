@@ -186,7 +186,7 @@
                   <option value="0">{{ _('General Issue') }}</option>
                   <option value="-1">{{ _('Technical Issue') }}</option>
                   {% for cp in tdoc.problems %}
-                  <option value="{{ cp.pid }}">{{ cp.label }}. {{ cp.title|default(pdict[cp.pid].title) }}</option>
+                  <option value="{{ cp.pid }}">{{ cp.label|default(utils.getAlphabeticId(tdoc.pid2idx[cp.pid])) }}. {{ cp.title|default(pdict[cp.pid].title) }}</option>
                   {% endfor %}
                 </select>
               </label>

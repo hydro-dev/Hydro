@@ -81,7 +81,7 @@
               <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
                  class="{% if pass %}pass{% elif fail %}fail{% endif %}
                         {% if pid==pdoc.docId %} active{% endif %}">
-                <span class="id">{{ cp.label }}</span>
+                <span class="id">{{ cp.label|default(utils.getAlphabeticId(tdoc.pid2idx[cp.pid])) }}</span>
                 {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
               </a>
             {%- endfor %}

@@ -2,7 +2,7 @@
 import moment from 'moment';
 import {
     avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
-    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
+    ForbiddenError, fs, getAlphabeticId, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel, Zip,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
@@ -59,7 +59,7 @@ export function apply(ctx: Context) {
                         name: tdoc.title,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
                         frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
-                        problems: tdoc.problems.map((p) => ({ name: p.label, id: p.pid.toString() })),
+                        problems: tdoc.problems.map((p, idx) => ({ name: p.label || getAlphabeticId(idx), id: p.pid.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
                             name: udict[t.uid].displayName || udict[t.uid].uname,
