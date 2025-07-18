@@ -279,7 +279,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (tid) {
-            if (!this.tdoc?.pids?.includes(this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
+            if (!Object.hasOwn(this.tdoc.pid2idx, this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
             // Delete problem-related info in contest mode
@@ -305,7 +305,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.tdoc?.langs) t.push(this.tdoc.langs);
+            if (this.tdoc?.langs && this.tdoc?.langs.length) t.push(this.tdoc.langs);
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
                 const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);

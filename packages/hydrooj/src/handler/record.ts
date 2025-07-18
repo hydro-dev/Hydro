@@ -20,7 +20,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, param, subscribe, Types,
 } from '../service/server';
-import { buildProjection, Time } from '../utils';
+import { buildProjection, getAlphabeticId, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
@@ -68,9 +68,15 @@ class RecordListHandler extends ContestDetailBaseHandler {
                 notification.push({ name, args: { type: 'note' }, checker: () => true });
             }
         }
+        // in order to make contest's submissionList can show label like A
+        const pidOrLabel = pid;
         if (pid) {
-            if (typeof pid === 'string' && tdoc && /^[A-Z]$/.test(pid)) {
-                pid = tdoc.pids[parseInt(pid, 36) - 10];
+            if (typeof pid === 'string' && tdoc) {
+                const result = tdoc.problems.find((i, idx) => {
+                    if (i.label) return i.label === pid;
+                    return pid === getAlphabeticId(idx);
+                });
+                if (result) pid = result.pid;
             }
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) q.pid = pdoc.docId;
@@ -114,7 +120,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             udict,
             all,
             allDomain,
-            filterPid: pid,
+            filterPid: pidOrLabel,
             filterTid: tid,
             filterUidOrName: uidOrName,
             filterLang: lang,
@@ -301,6 +307,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
         if (pid) {
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) this.pid = pdoc.docId;
+            // FIXME: error will be throw if pid is problem's label in contest
             else throw new ProblemNotFoundError(domainId, pid);
         }
         if (status) this.status = status;

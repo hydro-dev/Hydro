@@ -73,7 +73,7 @@ export default class AutoComplete<Options extends Record<string, any> = {}, Mult
           setValue(v);
           this.onChange(v);
         }}
-        selectedKeys={(Array.isArray(value) ? value : value.split(',')).map((i) => i.trim()).filter((i) => i)}
+        selectedKeys={(Array.isArray(value) ? value : (value || '').split(',')).map((i) => i.trim()).filter((i) => i)}
         height="34px"
         {...this.options.props}
       />;

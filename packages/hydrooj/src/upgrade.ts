@@ -617,4 +617,26 @@ export const coreScripts: MigrationScript[] = [
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
         return true;
     },
+    async function _95_96() {
+        await iterateAllDomain(async ({ _id }) => {
+            logger.info('Processing domain %s', _id);
+            const tdocs = await contest.getMulti(_id, {}).toArray();
+            for (const tdoc of tdocs) {
+                await contest.edit(_id, tdoc._id, {
+                    problems: tdoc.pids.map((pid, idx) => ({
+                        pid,
+                        ...(tdoc?.score && tdoc.score[pid] ? { score: tdoc.score[pid] } : {}),
+                        ...(tdoc?.balloon && tdoc.balloon[pid] ? {
+                            balloon: {
+                                name: typeof tdoc.balloon[pid] === 'string' ? '' : tdoc.balloon[pid].name,
+                                color: typeof tdoc.balloon[pid] === 'string' ? tdoc.balloon[pid] : tdoc.balloon[pid].color,
+                            },
+                        } : {}),
+                    })),
+                });
+            }
+            logger.info('Domain %s done', _id);
+        });
+        return true;
+    },
 ];
