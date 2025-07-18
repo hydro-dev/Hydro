@@ -1,8 +1,6 @@
-version: '3.9'
-
 services:
   mongo:
-    image: mongo:4-focal
+    image: mongo:8
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
@@ -15,8 +13,11 @@ services:
       - mongo
     volumes:
       - ..:/workspace:cached
+      - node_modules:/workspace/node_modules
       - testdata:/data/file
+    command: go-judge
 
 volumes:
   mongodb-data:
+  node_modules:
   testdata:
