@@ -107,10 +107,7 @@ export class ContestDetailBaseHandler extends Handler {
         if (!tid || this.tdoc.rule === 'homework') return;
         if (this.request.json || !this.response.template) return;
         const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
-        const pid2idx = {};
-        for (const [i, p] of this.tdoc.problems.entries()) {
-            pid2idx[p.pid] = i;
-        }
+        const cp = this.tdoc.problems[this.tdoc.pid2idx[pdoc.docId]];
         this.response.body.overrideNav = [
             {
                 name: 'contest_main',
@@ -136,7 +133,7 @@ export class ContestDetailBaseHandler extends Handler {
             },
             {
                 name: 'problem_detail',
-                displayName: `${this.tdoc.problems[pid2idx[pdoc.docId]]?.label}. ${this.tdoc.problems[pid2idx[pdoc.docId]]?.title ?? pdoc.title}`,
+                displayName: `${cp?.label || getAlphabeticId(this.tdoc.pid2idx[pdoc.docId])}. ${cp?.title || pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
             },
@@ -821,7 +818,7 @@ export async function apply(ctx: Context) {
                 };
                 const submissions = teams.flatMap((i, idx) => {
                     if (!i.journal) return [];
-                    const journal = i.journal.filter((s) => tdoc.pid2idx[s.pid] !== undefined);
+                    const journal = i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid));
                     const c = Counter();
                     return journal.map((s) => {
                         const id = tdoc.problems[tdoc.pid2idx[s.pid]].label || getAlphabeticId(tdoc.pid2idx[s.pid]);
