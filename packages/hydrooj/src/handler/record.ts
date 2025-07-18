@@ -69,7 +69,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             }
         }
         // in order to make contest's submissionList can show label like A
-        const realPid = pid;
+        const pidOrLabel = pid;
         if (pid) {
             if (typeof pid === 'string' && tdoc) {
                 const result = tdoc.problems.find((i, idx) => {
@@ -120,7 +120,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
             udict,
             all,
             allDomain,
-            filterPid: realPid,
+            filterPid: pidOrLabel,
             filterTid: tid,
             filterUidOrName: uidOrName,
             filterLang: lang,

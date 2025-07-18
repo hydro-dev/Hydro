@@ -5,7 +5,7 @@ import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
 import {
-    Counter, diffArray, randomstring, sortFiles, Time, yaml,
+    Counter, diffArray, getAlphabeticId, randomstring, sortFiles, Time, yaml,
 } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
@@ -821,14 +821,10 @@ export async function apply(ctx: Context) {
                 };
                 const submissions = teams.flatMap((i, idx) => {
                     if (!i.journal) return [];
-                    const pid2idx = {};
-                    for (let j = 0; j < tdoc.problems.length; j++) {
-                        pid2idx[tdoc.problems[j].pid] = j;
-                    }
-                    const journal = i.journal.filter((s) => pid2idx[s.pid] !== undefined);
+                    const journal = i.journal.filter((s) => tdoc.pid2idx[s.pid] !== undefined);
                     const c = Counter();
                     return journal.map((s) => {
-                        const id = tdoc.problems[pid2idx[s.pid]].label;
+                        const id = tdoc.problems[tdoc.pid2idx[s.pid]].label || getAlphabeticId(tdoc.pid2idx[s.pid]);
                         c[id]++;
                         return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${statusMap[s.status] || 'RJ'}`;
                     });
@@ -840,7 +836,9 @@ export async function apply(ctx: Context) {
                     `@teams ${tdoc.attend}`,
                     `@submissions ${submissions.length}`,
                 ].concat(
-                    tdoc.problems.map((p) => `@p ${p.label},${escape(p.title || pdict[p.pid]?.title || 'Unknown Problem')},20,0`),
+                    tdoc.problems.map((p, idx) =>
+                        `@p ${p.label || getAlphabeticId(idx)},${escape(p.title || pdict[p.pid]?.title || 'Unknown Problem')},20,0`,
+                    ),
                     teams.map((i, idx) => {
                         const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) && udict[i.uid].displayName
                             ? udict[i.uid].displayName : udict[i.uid].uname;
