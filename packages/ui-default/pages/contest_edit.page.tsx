@@ -1,6 +1,5 @@
 import $ from 'jquery';
 import moment from 'moment';
-import React from 'react';
 import ReactDOM from 'react-dom/client';
 import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelectAutoComplete';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
