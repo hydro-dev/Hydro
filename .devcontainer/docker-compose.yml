@@ -1,6 +1,6 @@
 services:
   mongo:
-    image: mongo:latest
+    image: mongo:8
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db

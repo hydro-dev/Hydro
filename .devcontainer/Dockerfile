@@ -1,6 +1,9 @@
 FROM mcr.microsoft.com/vscode/devcontainers/typescript-node:22-bookworm
 
-RUN mkdir -p /root/.hydro /data/file && \
-    chown -R root:root /root /root/.hydro /data/file && \
-    echo '{"uri":"mongodb://mongo/hydro"}' > /root/.hydro/config.json && \
-    echo '["@hydrooj/ui-default","@hydrooj/hydrojudge"]' > /root/.hydro/addon.json
+RUN install -d -o root -g root /root/.hydro /data/file \
+    && cat <<'EOF' > /root/.hydro/config.json
+{"uri":"mongodb://mongo/hydro"}
+EOF \
+    && cat <<'EOF' > /root/.hydro/addon.json
+["@hydrooj/ui-default","@hydrooj/hydrojudge"]
+EOF
