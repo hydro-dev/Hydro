@@ -265,6 +265,7 @@ export interface Tdoc extends Document {
     title: string;
     content: string;
     rule: string;
+    /** @deprecated */
     pids: number[];
     problems: ContestProblem[];
     rated?: boolean;
@@ -277,7 +278,9 @@ export interface Tdoc extends Document {
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
+    /** @deprecated */
     balloon?: Record<number, string | { color: string, name: string }>;
+    /** @deprecated */
     score?: Record<number, number>;
     langs?: string[];
 

@@ -2,7 +2,7 @@ import yaml from 'js-yaml';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
-import { sortFiles, Time } from '@hydrooj/utils/lib/utils';
+import { diffArray, sortFiles, Time } from '@hydrooj/utils/lib/utils';
 import {
     ContestNotFoundError, FileLimitExceededError, FileUploadError, HomeworkNotLiveError, NotAssignedError, ValidationError,
 } from '../error';
@@ -116,7 +116,7 @@ class HomeworkDetailHandler extends Handler {
             && !this.user.own(this.tdoc)
             && !this.user.hasPerm(PERM.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD)
         ) return;
-        const pdict = await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST);
+        const pdict = await problem.getList(domainId, this.tdoc.problems.map((p) => p.pid), true, true, problem.PROJECTION_CONTEST_LIST);
         const psdict = {};
         let rdict = {};
         if (tsdoc) {
@@ -237,7 +237,7 @@ class HomeworkEditHandler extends Handler {
             if (tdoc.beginAt !== beginAt.toDate()
                 || tdoc.endAt !== endAt.toDate()
                 || tdoc.penaltySince !== penaltySince.toDate()
-                || tdoc.pids.sort().join(' ') !== pids.sort().join(' ')) {
+                || diffArray(tdoc.problems.map((i) => i.pid), pids)) {
                 await contest.recalcStatus(domainId, tdoc.docId);
             }
         }
