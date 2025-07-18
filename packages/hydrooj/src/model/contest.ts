@@ -1004,7 +1004,7 @@ export async function getAndListStatus(domainId: string, tid: ObjectId): Promise
 
 export async function recalcStatus(domainId: string, tid: ObjectId) {
     const [tdoc, tsdocs] = await Promise.all([
-        document.get(domainId, document.TYPE_CONTEST, tid),
+        get(domainId, tid),
         document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
     ]);
     const tasks = [];
