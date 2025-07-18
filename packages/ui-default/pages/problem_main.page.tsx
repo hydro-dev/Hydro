@@ -5,15 +5,14 @@ import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/components/ProblemSelectAutoComplete';
-import DomainSelectAutoComplete from 'vj/components/autocomplete/DomainSelectAutoComplete';
-import { ActionDialog, ConfirmDialog, Dialog } from 'vj/components/dialog';
+import { confirm, Dialog, prompt } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import createHint from 'vj/components/hint';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  addSpeculationRules, delay, i18n, pjax, request, tpl,
+  addSpeculationRules, delay, i18n, pjax, request,
 } from 'vj/utils';
 
 const list = [];
@@ -177,33 +176,28 @@ function ensureAndGetSelectedPids() {
   return selectedPids;
 }
 
-let refDiv: any;
-
 async function handleOperation(operation: string) {
   const pids = ensureAndGetSelectedPids();
   if (pids === null) return;
   const payload: any = {};
   if (operation === 'delete') {
-    const action = await new ConfirmDialog({
-      $body: tpl.typoMsg(i18n('Confirm to delete the selected problems?')),
-    }).open();
-    if (action !== 'yes') return;
+    if (!(await confirm(i18n('Confirm to delete the selected problems?')))) return;
   } else if (operation === 'copy') {
-    const $target = $(refDiv).find('[name="target"]');
-    const domainSelector: any = DomainSelectAutoComplete.getOrConstruct($target);
-    const copyDialog = await new ActionDialog({
-      $body: refDiv,
-      onDispatch(action) {
-        if (action === 'ok' && domainSelector.value() === null) {
-          domainSelector.focus();
-          return false;
-        }
-        return true;
+    const res = await prompt(i18n('Copy Problems'), {
+      target: {
+        type: 'domain',
+        label: i18n('Target'),
+        required: true,
+        autofocus: true,
       },
-    }).open();
-    if (copyDialog !== 'ok') return;
-    payload.target = domainSelector.value()._id;
-    payload.hidden = $(refDiv).find('[name="hidden"]').prop('checked');
+      hidden: {
+        type: 'checkbox',
+        label: i18n('Hidden'),
+      },
+    });
+    if (!res) return;
+    payload.target = res.target;
+    payload.hidden = res.hidden;
   }
   try {
     await request.post('', { operation, pids, ...payload });
@@ -277,8 +271,8 @@ function buildSearchContainer() {
 
 async function handleDownload(ev) {
   let name = 'Export';
-  // eslint-disable-next-line no-alert
-  if (ev.shiftKey) name = prompt(i18n('Filename'), name);
+  if (ev.shiftKey) name = (await prompt(i18n('Filename'), { name: { type: 'text', default: name } }))?.name as string;
+  if (!name) return;
   const pids = ensureAndGetSelectedPids();
   if (pids) await downloadProblemSet(pids, name);
 }
@@ -414,30 +408,6 @@ const page = new NamedPage(['problem_main'], () => {
   const $body = $('body');
   $body.addClass('display-mode');
   $('.section.display-mode').removeClass('display-mode');
-  $(tpl(
-    <div style={{ display: 'none' }} className="dialog__body--problem-copy">
-      <div className="row"><div className="columns">
-        <h1>{i18n('Copy Problems')}</h1>
-      </div></div>
-      <div className="row">
-        <div className="medium-8 columns">
-          <label>
-            {i18n('Target')}
-            <div className="textbox-container">
-              <input name="target" type="text" className="textbox" data-autofocus />
-            </div>
-          </label>
-        </div>
-        <div className="medium-4 columns">
-          <label className="checkbox">
-            {i18n('Hidden')}
-            <input name="hidden" type="checkbox" />
-          </label>
-        </div>
-      </div>
-    </div>,
-  )).appendTo(document.body);
-  refDiv = $('.dialog__body--problem-copy > div');
 
   buildSearchContainer();
   buildLegacyCategoryFilter();

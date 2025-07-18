@@ -1,6 +1,5 @@
 import { openDB as _open } from 'idb';
-import { InfoDialog } from 'vj/components/dialog';
-import { tpl } from 'vj/utils';
+import { alert } from 'vj/components/dialog';
 
 export const openDB = _open('hydro', 1, {
   upgrade(db, oldVersion) {
@@ -21,15 +20,11 @@ export const openDB = _open('hydro', 1, {
   },
   blocked(currentVersion, blockedVersion) {
     console.error('IDB Blocked by version', blockedVersion, 'want', currentVersion);
-    new InfoDialog({
-      $body: tpl.typoMsg('Some other opened tabs locked the database. Please close them.'),
-    }).open();
+    alert('Some other opened tabs locked the database. Please close them.');
   },
   blocking(currentVersion, blockedVersion) {
     console.error('IDB Blocking version', blockedVersion);
-    new InfoDialog({
-      $body: tpl.typoMsg('Please close or refresh this tab to perform the upgrade.'),
-    }).open();
+    alert('Please close or refresh this tab to perform the upgrade.');
   },
   terminated() {
     console.error('IDB Terminated');

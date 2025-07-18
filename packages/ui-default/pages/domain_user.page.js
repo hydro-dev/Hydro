@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog, ConfirmDialog, InfoDialog } from 'vj/components/dialog';
+import { ActionDialog, confirm, InfoDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -101,14 +101,8 @@ const page = new NamedPage('domain_user', () => {
     if (selectedUsers === null) {
       return;
     }
-    const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm removing the selected users?')}</p>
-          <p>${i18n('Their account will not be deleted and they will be with the guest role until they re-join the domain.')}</p>
-        </div>`,
-    }).open();
-    if (action !== 'yes') return;
+    if (!(await confirm(`${i18n('Confirm removing the selected users?')}
+${i18n('Their account will not be deleted and they will be with the guest role until they re-join the domain.')}`))) return;
     try {
       await request.post('', {
         operation: 'kick',
