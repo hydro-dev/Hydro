@@ -52,7 +52,7 @@ export function apply(ctx: Context) {
                 const unknownSchool = this.translate('Unknown School');
                 const submissions = teams.flatMap((i) => {
                     if (!i.journal) return [];
-                    return i.journal.filter((s) => tdoc.problems.find((p) => p.pid === s.pid)).map((s) => ({ ...s, uid: i.uid }));
+                    return i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid)).map((s) => ({ ...s, uid: i.uid }));
                 });
                 this.response.body = {
                     payload: {
@@ -206,7 +206,7 @@ export function apply(ctx: Context) {
                 let cntJudge = 0;
                 const submissions = tsdocs.flatMap((i) => {
                     if (!i.journal) return [];
-                    const journal = i.journal.filter((s) => tdoc.problems.find((p) => p.pid === s.pid));
+                    const journal = i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid));
                     const result: any[] = [];
                     for (const s of journal) {
                         const submitTime = moment(s.rid.getTimestamp());

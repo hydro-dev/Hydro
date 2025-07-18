@@ -249,7 +249,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         if (!this.user.own(this.tdoc)) {
             await message.send(1, this.tdoc.maintainer.concat(this.tdoc.owner), JSON.stringify({
                 message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
-                params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.problems.findIndex((p) => p.pid === subject) + 1}` : 'the contest'],
+                params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pid2idx[subject] + 1}` : 'the contest'],
                 url: this.url('contest_manage', { tid }),
             }), message.FLAG_I18N | message.FLAG_UNREAD);
         }
@@ -524,8 +524,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('pid', Types.PositiveInt)
     @param('score', Types.PositiveInt)
     async postSetScore(domainId: string, pid: number, score: number) {
-        const idx = this.tdoc.problems.findIndex((i) => i.pid === pid);
-        if (idx === -1) throw new ValidationError('pid');
+        const idx = this.tdoc.pid2idx[pid];
+        if (idx === undefined) throw new ValidationError('pid');
         this.tdoc.problems[idx].score = score;
         // TODO: remove `score` field later
         this.tdoc.score = this.tdoc.problems.reduce(

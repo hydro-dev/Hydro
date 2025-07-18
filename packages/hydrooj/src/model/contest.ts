@@ -344,7 +344,7 @@ const oi = buildContestRule({
         ];
         const displayScore = (pid: number, score?: number) => {
             if (typeof score !== 'number') return '-';
-            return score * ((tdoc.problems.find((p) => p.pid === pid)?.score || 100) / 100);
+            return score * ((tdoc.problems[tdoc.pid2idx[pid]]?.score || 100) / 100);
         };
         if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
@@ -474,7 +474,7 @@ const strictioi = buildContestRule({
         const detail = {};
         let score = 0;
         const subtasks: Record<number, Record<number, SubtaskResult>> = {};
-        for (const j of journal.filter((i) => tdoc.problems.find((p) => p.pid === i.pid))) {
+        for (const j of journal.filter((i) => Object.hasOwn(tdoc.pid2idx, i.pid))) {
             subtasks[j.pid] ||= {};
             for (const i in j.subtasks) {
                 if (!subtasks[j.pid][i] || subtasks[j.pid][i].score < j.subtasks[i].score) subtasks[j.pid][i] = j.subtasks[i];
@@ -557,7 +557,7 @@ const ledo = buildContestRule({
     stat(tdoc, journal) {
         const ntry = Counter<number>();
         const detail = {};
-        for (const j of journal.filter((i) => tdoc.problems.find((p) => p.pid === i.pid))) {
+        for (const j of journal.filter((i) => Object.hasOwn(tdoc.pid2idx, i.pid))) {
             const vaild = ![STATUS.STATUS_COMPILE_ERROR, STATUS.STATUS_FORMAT_ERROR].includes(j.status);
             if (vaild) ntry[j.pid]++;
             const penaltyScore = vaild ? Math.round(Math.max(0.7, 0.95 ** (ntry[j.pid] - 1)) * j.score) : 0;
@@ -946,7 +946,7 @@ export async function updateStatus(
     }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
     const tdoc = await get(domainId, tid);
-    if (tdoc.problems.find((p) => p.pid === pid)?.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.problems[tdoc.pid2idx[pid]]?.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks, lang,
     }, 'rid');

@@ -103,7 +103,7 @@ export async function apply(ctx: Context) {
                             const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
                             const curStatus = status[j.status] || 'SYSTEM_ERROR';
                             return {
-                                problem_id: tdoc.problems.findIndex((p) => p.pid === j.pid),
+                                problem_id: tdoc.pid2idx[j.pid],
                                 team_id: `${i.uid}`,
                                 timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
                                 status: realtime
