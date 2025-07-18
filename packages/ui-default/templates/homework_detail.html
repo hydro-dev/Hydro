@@ -59,7 +59,7 @@
               {% endif %}
               <td class="col--problem col--problem-name">
                 {% if isAdmin and not ntdoc %}
-                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false, alphabetic=false) }}
+                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false, alphabetic=false, url_with_contest=false) }}
                 {% else %}
                   {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, show_invisible_flag=false, show_tags=false, alphabetic=true) }}
                 {% endif %}
