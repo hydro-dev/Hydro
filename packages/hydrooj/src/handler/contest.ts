@@ -787,7 +787,7 @@ export async function apply(ctx: Context) {
                 const page_name = tdoc.rule === 'homework'
                     ? 'homework_scoreboard'
                     : 'contest_scoreboard';
-                const isLargeBoard = rows.length * Object.keys(udict).length > 10000; // > 16 problem * 500 user
+                const isLargeBoard = rows.length * Object.keys(pdict).length > 10000; // > 16 problem * 500 user
                 const availableViews = scoreboard.getAvailableViews(tdoc.rule);
                 this.response.body = {
                     tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups, availableViews, isLargeBoard,
