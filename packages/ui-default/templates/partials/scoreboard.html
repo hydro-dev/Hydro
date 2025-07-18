@@ -51,8 +51,8 @@
             {%- elif column.type == 'user' -%}
               {%- set canView = canViewAll or handler.user._id == column.raw -%}
               <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+                <span class="starred--hide"><span class="icon icon-star--outline" {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ _('Star') }}"></span></span>
+                <span class="starred--show"><span class="icon icon-star" {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ _('Unstar') }}"></span></span>
               </button>
               {{ user.render_inline(udict[column.raw], badge=false) }}
             {%- elif column.type == 'record' and column.raw -%}
