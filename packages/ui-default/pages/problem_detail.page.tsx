@@ -2,7 +2,7 @@ import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { confirm } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { downloadProblemSet } from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
@@ -316,10 +316,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
         </a>
       </li>));
       $(document).on('click', '#clearAnswers', async () => {
-        const result = await new ConfirmDialog({
-          $body: tpl.typoMsg(i18n('All changes will be lost. Are you sure to clear all answers?')),
-        }).open();
-        if (result === 'yes') await clearAns();
+        if (await confirm(i18n('All changes will be lost. Are you sure to clear all answers?'))) await clearAns();
       });
     }
     const ele = document.createElement('div');
