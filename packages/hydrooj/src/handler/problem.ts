@@ -190,7 +190,8 @@ export class ProblemMainHandler extends Handler {
 
     @param('pids', Types.NumericArray)
     @param('target', Types.String)
-    async postCopy(domainId: string, pids: number[], target: string) {
+    @param('hidden', Types.Boolean)
+    async postCopy(domainId: string, pids: number[], target: string, hidden?: boolean) {
         const t = `,${this.domain.share || ''},`;
         if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
         const ddoc = await domain.get(target);
@@ -205,7 +206,7 @@ export class ProblemMainHandler extends Handler {
         const ids = [];
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
-            ids.push(await problem.copy(domainId, pid, target));
+            ids.push(await problem.copy(domainId, pid, target, undefined, hidden));
         }
         this.response.body = ids;
     }

@@ -321,7 +321,6 @@ export interface DomainDoc extends Record<string, any> {
 
 // Message
 export interface MessageDoc {
-    _id: ObjectId,
     from: number,
     to: number,
     content: string,

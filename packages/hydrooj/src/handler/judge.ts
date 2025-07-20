@@ -77,10 +77,10 @@ export class JudgeResultCallbackContext {
     private finishPromise: Promise<any>;
     private operationPromise = Promise.resolve(null);
     private relatedId = new ObjectId();
-    private meta: JudgeMeta;
+    private meta: { rejudge?: JudgeMeta['rejudge'] };
 
     constructor(public ctx: Context, public readonly task: Omit<Task, '_id'> & { type: string }) { // eslint-disable-line @typescript-eslint/no-shadow
-        this.meta = task.meta as JudgeMeta;
+        this.meta = task.meta as JudgeMeta || {};
         this.finishPromise = new Promise((resolve) => {
             this.resolve = resolve;
         });
@@ -90,7 +90,7 @@ export class JudgeResultCallbackContext {
         const {
             $set, $push, $unset, $inc,
         } = processPayload(body);
-        if (this.meta.rejudge === 'controlled') {
+        if (this.meta?.rejudge === 'controlled') {
             await record.collHistory.updateOne({
                 _id: this.relatedId,
             }, {
@@ -143,7 +143,7 @@ export class JudgeResultCallbackContext {
         $set.judgeAt = new Date();
         $set.judger = body.judger ?? 1;
 
-        if (this.meta.rejudge === 'controlled') {
+        if (this.meta?.rejudge === 'controlled') {
             await record.collHistory.updateOne({
                 _id: this.relatedId,
             }, {

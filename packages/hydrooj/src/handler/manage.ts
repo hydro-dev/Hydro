@@ -16,7 +16,7 @@ import user from '../model/user';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
 } from '../service/server';
-import * as judge from './judge';
+import { JudgeResultCallbackContext } from './judge';
 
 const logger = new Logger('manage');
 
@@ -104,33 +104,25 @@ class SystemScriptHandler extends SystemHandler {
             args = global.Hydro.script[id].validate(args);
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
-        const report = (data) => judge.next({ domainId, rid, ...data });
-        report({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
+        const c = new JudgeResultCallbackContext(this.ctx, { type: 'judge', domainId, rid });
+        c.next({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
         // Maybe async?
-        global.Hydro.script[id].run(args, report)
-            .then((ret: any) => {
-                const time = new Date().getTime() - start;
-                judge.end({
-                    domainId,
-                    rid: rid.toHexString(),
-                    status: STATUS.STATUS_ACCEPTED,
-                    message: inspect(ret, false, 10, true),
-                    judger: 1,
-                    time,
-                    memory: 0,
-                });
-            })
+        global.Hydro.script[id].run(args, (data) => c.next(data))
+            .then((ret: any) => c.end({
+                status: STATUS.STATUS_ACCEPTED,
+                message: inspect(ret, false, 10, true),
+                judger: 1,
+                time: Date.now() - start,
+                memory: 0,
+            }))
             .catch((err: Error) => {
-                const time = new Date().getTime() - start;
                 logger.error(err);
-                judge.end({
-                    domainId,
-                    rid: rid.toHexString(),
+                c.end({
                     status: STATUS.STATUS_SYSTEM_ERROR,
                     message: `${err.message} \n${(err as any).params || []} \n${err.stack} `,
                     judger: 1,
-                    time,
+                    time: Date.now() - start,
                     memory: 0,
                 });
             });

@@ -5,9 +5,9 @@ import LanguageSelectAutoComplete from 'vj/components/autocomplete/LanguageSelec
 import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
 import ContestProblemEditor from 'vj/components/contestProblemEditor/ContestProblemEditor';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { confirm } from 'vj/components/dialog';
 import { NamedPage } from 'vj/misc/Page';
-import { i18n, request, tpl } from 'vj/utils';
+import { i18n, request } from 'vj/utils';
 
 export default new NamedPage(['contest_edit', 'contest_create', 'homework_create', 'homework_edit'], (pagename) => {
   ProblemSelectAutoComplete.getOrConstruct($('[name="pids"]'), { multi: true, clearDefaultValue: false });
@@ -47,6 +47,7 @@ export default new NamedPage(['contest_edit', 'contest_create', 'homework_create
   }).trigger('change');
   if (pagename.endsWith('edit')) {
     let confirmed = false;
+    // eslint-disable-next-line consistent-return
     $(document).on('click', '[value="delete"]', (ev) => {
       ev.preventDefault();
       if (confirmed) {
@@ -55,12 +56,11 @@ export default new NamedPage(['contest_edit', 'contest_create', 'homework_create
         });
       }
       const message = `Confirm deleting this ${pagename.split('_')[0]}? Its files and status will be deleted as well.`;
-      return new ConfirmDialog({
-        $body: tpl.typoMsg(i18n(message)),
-      }).open().then((action) => {
-        if (action !== 'yes') return;
-        confirmed = true;
-        ev.target.click();
+      confirm(i18n(message)).then((yes) => {
+        if (yes) {
+          confirmed = true;
+          ev.target.click();
+        }
       });
     });
     setInterval(() => {

@@ -43,12 +43,6 @@ const langMap = {
     16: 'js',
     17: 'go',
 };
-const nameMap: Record<string, string> = {
-    'sample.in': 'sample0.in',
-    'sample.out': 'sample0.out',
-    'test.in': 'test0.in',
-    'test.out': 'test0.out',
-};
 
 async function addContestFile(domainId: string, tid: ObjectId, filename: string, filepath: string) {
     const tdoc = await ContestModel.get(domainId, tid);
@@ -58,6 +52,18 @@ async function addContestFile(domainId: string, tid: ObjectId, filename: string,
     if (!meta) return false;
     await ContestModel.edit(domainId, tid, { files: [...(tdoc.files || []), payload] });
     return true;
+}
+
+function fixFileName(fileName: string) {
+    if (fileName.endsWith('.in') || fileName.endsWith('.out')) {
+        const dotAt = fileName.lastIndexOf('.');
+        const name = fileName.slice(0, dotAt);
+        const suffix = fileName.slice(dotAt + 1);
+        if (!name.match(/[0-9]/)) {
+            fileName = `${name}0.${suffix}`;
+        }
+    }
+    return fileName.replace(/[\\/?#~!|*]/g, '_');
 }
 
 export async function run({
@@ -186,11 +192,13 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
-                const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
+                const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
                 for (const file of uploadFiles) {
                     try {
-                        files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-                        content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+                        const filename = fixFileName(file[3]);
+                        const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
+                        files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
+                        content = content.replace(`/upload/${fileWithPath}`, `file://${filename}`);
                     } catch (e) {
                         report({ message: `failed to read file: ${path.join(uploadDir, file[1])}` });
                     }
@@ -265,13 +273,19 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const files = {};
         let description = tdoc.description;
-        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
+        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
         for (const file of uploadFiles) {
-            files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-            description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+            const filename = fixFileName(file[3]);
+            const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
+            files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
+            description = description.replace(`/upload/${fileWithPath}`, `file://${filename}`);
         }
         // WHY you allow contest with end time BEFORE start time? WHY???
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
+        let isAssignMode = false;
+        if (tdoc.private === 1 && tdoc.password === '') {
+            isAssignMode = true;
+        }
         const tid = await ContestModel.add(
             domainId, tdoc.title, description || 'Description',
             adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
@@ -281,6 +295,17 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
         if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
 
+        const allowedUser:{ user_id:string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
+        const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
+        if (isAssignMode) {
+            await ContestModel.edit(domainId, tid, {
+                assign: assignUserList.map((uid) => uid.toString()),
+            });
+        } else {
+            for (let i = 0; i < assignUserList.length; i++) {
+                await ContestModel.attend(domainId, tid, assignUserList[i]).catch(noop);
+            }
+        }
         if (tidx % 100 === 0) {
             const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
             report({
@@ -374,7 +399,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            const filename = nameMap[data.name] || data.name;
+            const filename = fixFileName(data.name);
             await ProblemModel.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
         await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));

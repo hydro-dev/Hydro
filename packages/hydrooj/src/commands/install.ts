@@ -19,11 +19,12 @@ try {
 }
 
 const addonDir = path.join(hydroPath, 'addons');
+const userAgent = `Hydro/${version} Node.js/${process.version.split('v').pop()}`;
 
 function downloadAndExtractTgz(url: string, dest: string) {
     return new Promise((resolve, reject) => {
         superagent.get(url)
-            .set('User-Agent', `Hydro/${version} Node.js/${process.version.split('v').pop()}`)
+            .set('User-Agent', userAgent)
             .pipe(tar.x({
                 C: dest,
                 strip: 1,
@@ -33,7 +34,7 @@ function downloadAndExtractTgz(url: string, dest: string) {
     });
 }
 async function downloadAndExtractZip(url: string, dest: string) {
-    const res = await superagent.get(url).responseType('arraybuffer');
+    const res = await superagent.get(url).set('User-Agent', userAgent).responseType('arraybuffer');
     await extractZip(new ZipReader(new BlobReader(new Blob([res.body]))), dest, { strip: true, overwrite: true });
 }
 const types = {

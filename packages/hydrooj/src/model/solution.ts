@@ -70,6 +70,8 @@ class SolutionModel {
     }
 
     static async vote(domainId: string, psid: ObjectId, uid: number, value: number) {
+        const doc = await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid);
+        if (!doc) throw new SolutionNotFoundError(domainId, psid);
         const before = await document.setStatus(
             domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid,
             { vote: value }, 'before',
@@ -79,7 +81,7 @@ class SolutionModel {
         return [
             inc
                 ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
-                : await document.get(domainId, document.TYPE_PROBLEM_SOLUTION, psid),
+                : doc,
             await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid),
         ];
     }
