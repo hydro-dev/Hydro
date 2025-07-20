@@ -6,7 +6,7 @@ export { default as moment, isMoment } from 'moment-timezone';
 
 export {
     WebService, Router, HandlerCommon, httpServer,
-    Query, Mutation, Subscription, Apis,
+    Query, Mutation, Subscription, Apis, APIS,
 } from '@hydrooj/framework';
 
 export * from './pipelineUtils';

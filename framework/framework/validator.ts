@@ -111,7 +111,7 @@ export const Types = {
     Float: [(v) => +v, (v) => Number.isFinite(+v)],
 
     ObjectId: [() => { throw new Error('mongodb package not found'); }, () => true],
-    Boolean: [(v) => !!(v && !['false', 'off'].includes(v)), null, true],
+    Boolean: [(v) => !!(v && !['false', 'off', 'no', '0'].includes(v)), null, true],
     Date: [
         (v) => {
             const d = v.split('-');

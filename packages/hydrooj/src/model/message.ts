@@ -31,9 +31,8 @@ class MessageModel {
     }
 
     static async sendInfo(to: number, content: string) {
-        const _id = new ObjectId();
         const mdoc: MessageDoc = {
-            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
+            from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
         };
         bus.broadcast('user/message', [to], mdoc);
     }

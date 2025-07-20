@@ -192,23 +192,35 @@ export class ProblemMainHandler extends Handler {
     @param('target', Types.String)
     @param('hidden', Types.Boolean)
     async postCopy(domainId: string, pids: number[], target: string, hidden?: boolean) {
-        const t = `,${this.domain.share || ''},`;
-        if (t !== ',*,' && !t.includes(`,${target},`)) throw new PermissionError(target);
-        const ddoc = await domain.get(target);
+        let t = `,${this.domain.share || ''},`;
+        if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(this.domain._id, target);
+        let ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
         // Check if user can access all those problems
-        await problem.getList(
+        const pdict = await problem.getList(
             domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id,
             true, ['docId'], true,
         );
         const ids = [];
         for (const pid of pids) {
+            let pdoc = pdict[pid];
+            if (pdoc.reference) {
+                // eslint-disable-next-line no-await-in-loop
+                [pdoc, ddoc] = await Promise.all([
+                    problem.get(pdoc.reference.domainId, pdoc.reference.pid),
+                    domain.get(pdoc.reference.domainId),
+                ]);
+                if (!pdoc) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
+                t = `,${ddoc.share || ''},`;
+                if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(ddoc._id, target);
+            }
             // eslint-disable-next-line no-await-in-loop
-            ids.push(await problem.copy(domainId, pid, target, undefined, hidden));
+            ids.push(await problem.copy(pdoc.domainId, pdoc.docId, target, undefined, hidden));
         }
         this.response.body = ids;
+        if (ids.length === 1) this.response.redirect = this.url('problem_detail', { domainId: target, pid: ids[0] });
     }
 
     @param('pids', Types.NumericArray)
@@ -418,28 +430,6 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             ]);
         }
         this.back();
-    }
-
-    @param('target', Types.String)
-    async postCopy({ }, target: string) {
-        let t = `,${this.domain.share || ''},`;
-        if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(this.domain._id, target);
-        let ddoc = await domain.get(target);
-        if (!ddoc) throw new NotFoundError(target);
-        const dudoc = await user.getById(target, this.user._id);
-        let pdoc = this.pdoc;
-        if (this.pdoc.reference) {
-            [pdoc, ddoc] = await Promise.all([
-                problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid),
-                domain.get(this.pdoc.reference.domainId),
-            ]);
-            if (!pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            t = `,${ddoc.share || ''},`;
-            if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(ddoc._id, target);
-        }
-        if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
-        const docId = await problem.copy(pdoc.domainId, pdoc.docId, target);
-        this.response.redirect = this.url('problem_detail', { domainId: target, pid: docId });
     }
 
     async postDelete() {

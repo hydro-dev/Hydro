@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import $ from 'jquery';
 import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { i18n, tpl } from 'vj/utils';
 import DomainSelectAutoComplete from '../autocomplete/components/DomainSelectAutoComplete';
 import UserSelectAutoComplete from '../autocomplete/components/UserSelectAutoComplete';
@@ -125,6 +126,8 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
   const defaultValues = Object.fromEntries(Object.entries(fields)
     .map(([name, field]: [T, Field]) => [name, field.default || ''])) as Record<T, string | number | boolean>;
 
+  console.log(valueCache, defaultValues);
+
   const Component = () => {
     const [values, setValues] = React.useState(defaultValues);
 
@@ -132,7 +135,7 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
       valueCache = values;
     }, [values]);
 
-    return <div style={{ display: 'none' }}>
+    return <div>
       <div className="row"><div className="columns">
         <h1>{title}</h1>
       </div></div>
@@ -169,8 +172,12 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
       </div>)}
     </div>;
   };
+  const div = document.createElement('div');
+  const root = ReactDOM.createRoot(div);
+  root.render(<Component />);
   const res = await new Dialog({
-    $body: $(tpl(<Component />, true)),
+    $body: $(div),
+    $action: [buttonCancel, buttonOk].join('\n'),
     onDispatch(action) {
       if (action === 'ok') {
         for (const [name, field] of Object.entries(fields)) {
@@ -180,6 +187,7 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
       return true;
     },
   }).open();
+  root.unmount();
   if (res !== 'ok') return null;
   return valueCache;
 }
