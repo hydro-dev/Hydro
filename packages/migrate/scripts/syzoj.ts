@@ -286,7 +286,7 @@ export async function run({
         const tid = await ContestModel.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
             admin, contentTypeMap[tdoc.type], startAt, endAt,
-            pids, {}, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]), assign: [] },
+            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]), assign: [] },
         );
         tidMap[tdoc.id] = tid.toHexString();
     }

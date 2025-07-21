@@ -8,7 +8,7 @@ import {
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
-    BaseUserDict, ContestProblemConfig, ContestRule, ContestRules, ProblemDict, RecordDoc,
+    BaseUserDict, ContestRule, ContestRules, ProblemDict, RecordDoc,
     ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import bus from '../service/bus';
@@ -798,17 +798,18 @@ function _getStatusJournal(tsdoc) {
 export async function add(
     domainId: string, title: string, content: string, owner: number,
     rule: string, beginAt = new Date(), endAt = new Date(),
-    pids: number[] = [], problemConfig: Record<number, ContestProblemConfig> = {}, rated = false, data: Partial<Tdoc> = {},
+    pids: number[] = [], rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
+    data.problemConfig ||= {};
     Object.assign(data, {
-        content, owner, title, rule, beginAt, endAt, pids, problemConfig, attend: 0,
+        content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
     RULES[rule].check(data);
     await bus.parallel('contest/before-add', data);
     const docId = await document.add(domainId, content, owner, document.TYPE_CONTEST, null, null, null, {
-        assign: [], ...data, title, rule, beginAt, endAt, pids, problemConfig, attend: 0, rated,
+        assign: [], ...data, title, rule, beginAt, endAt, pids, attend: 0, rated,
     });
     await bus.parallel('contest/add', data, docId);
     return docId;

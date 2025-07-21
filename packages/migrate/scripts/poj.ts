@@ -201,7 +201,7 @@ memory: ${pdoc.memory_limit}k`,
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
         const tid = await ContestModel.add(
             domainId, tdoc.title, tdoc.description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, endAt, pids, {}, true,
+            adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             tdoc.private ? { _code: password } : {},
         );
         tidMap[tdoc.contest_id] = tid.toHexString();

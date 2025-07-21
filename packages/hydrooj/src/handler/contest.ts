@@ -341,8 +341,8 @@ export class ContestEditHandler extends Handler {
             }
         } else {
             tid = await contest.add(
-                domainId, title, content, this.user._id, rule, beginAt, endAt, pids, problemConfig, rated,
-                { duration: contestDuration },
+                domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated,
+                { duration: contestDuration, problemConfig },
             );
         }
         const task = {

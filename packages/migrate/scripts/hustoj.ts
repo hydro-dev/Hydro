@@ -288,7 +288,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         }
         const tid = await ContestModel.add(
             domainId, tdoc.title, description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, endAt, pids, {}, true,
+            adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
             { _code: tdoc.password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
