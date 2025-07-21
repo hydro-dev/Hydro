@@ -22,6 +22,7 @@
               </thead>
               <tbody>
               {%- for pid in tdoc.pids -%}
+                {% set cp = utils.getContestProblemConfig(pid, tdoc) %}
                 <tr>
                   <td class="col--problem col--problem-name">
                     <a href="{{ url('problem_detail', pid=pid) }}">
@@ -29,7 +30,7 @@
                     </a>
                   </td>
                   <td class="col--score">
-                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
+                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ cp.score|default(100) }}">{{ cp.score|default(100) }}</a>
                   </td>
                 </tr>
               {%- endfor -%}
@@ -127,7 +128,7 @@
                         <option value="0">{{ _('General Issue') }}</option>
                         <option value="-1">{{ _('Technical Issue') }}</option>
                         {% for pid in tdoc.pids %}
-                        <option value="{{ pid }}">{{ utils.getAlphabeticId(loop.index0) }}. {{ pdict[pid].title }}</option>
+                        <option value="{{ pid }}">{{ utils.getContestProblemConfig(pid, tdoc).label }}. {{ pdict[pid].title }}</option>
                         {% endfor %}
                       </select>
                     </label>

@@ -160,7 +160,7 @@ const acm = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getAlphabeticId(i - 1),
+                    value: tdoc.problemConfig[pid]?.label || getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }
@@ -296,7 +296,7 @@ const oi = buildContestRule({
             }
         }
         for (const i in display) {
-            score += ((tdoc.score?.[i] || 100) * (display[i].score || 0)) / 100;
+            score += ((tdoc.problemConfig[Number(i)]?.score || 100) * (display[i].score || 0)) / 100;
         }
         return { score, detail, display };
     },
@@ -317,17 +317,18 @@ const oi = buildContestRule({
         columns.push({ type: 'total_score', value: _('Total Score') });
         for (let i = 1; i <= tdoc.pids.length; i++) {
             const pid = tdoc.pids[i - 1];
+            const cp = tdoc.problemConfig[pid];
             pdict[pid].nAccept = pdict[pid].nSubmit = 0;
             if (config.isExport) {
                 columns.push({
                     type: 'string',
-                    value: '#{0} {1}'.format(i, pdict[tdoc.pids[i - 1]].title),
+                    value: '#{0} {1}'.format(i, pdict[pid].title),
                 });
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getAlphabeticId(i - 1),
-                    raw: tdoc.pids[i - 1],
+                    value: cp?.label || getAlphabeticId(i - 1),
+                    raw: pid,
                 });
             }
         }
@@ -340,7 +341,7 @@ const oi = buildContestRule({
         ];
         const displayScore = (pid: number, score?: number) => {
             if (typeof score !== 'number') return '-';
-            return score * ((tdoc.score?.[pid] || 100) / 100);
+            return score * ((tdoc.problemConfig[pid]?.score || 100) / 100);
         };
         if (config.isExport && config.showDisplayName) {
             row.push({ type: 'email', value: udoc.mail });
@@ -478,7 +479,7 @@ const strictioi = buildContestRule({
             j.status = Math.max(...Object.values(subtasks[j.pid]).map((i) => i.status));
             if (!detail[j.pid] || detail[j.pid].score < j.score) detail[j.pid] = { ...j, subtasks: subtasks[j.pid] };
         }
-        for (const i in detail) score += ((tdoc.score?.[i] || 100) * (detail[i].score || 0)) / 100;
+        for (const i in detail) score += ((tdoc.problemConfig[Number(i)]?.score || 100) * (detail[i].score || 0)) / 100;
         return { score, detail };
     },
     async scoreboardRow(config, _, tdoc, pdict, udoc, rank, tsdoc, meta) {
@@ -505,6 +506,7 @@ const strictioi = buildContestRule({
         }
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
+            const fullMark = tdoc.problemConfig[pid]?.score || 100;
             const n: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
                 && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()
@@ -513,17 +515,19 @@ const strictioi = buildContestRule({
                     type: 'records',
                     value: '',
                     raw: [{
-                        value: ((tsddict[pid]?.score || 0) * ((tdoc.score?.[pid] || 100) / 100)).toString() || '',
+                        value: ((tsddict[pid]?.score || 0) * (fullMark / 100)).toString() || '',
                         raw: tsddict[pid]?.rid || null,
                         score: tsddict[pid]?.score,
                     }, {
-                        value: ((meta?.psdict?.[index]?.score || 0) * ((tdoc.score?.[pid] || 100) / 100)).toString() || '',
+                        value: (
+                            (meta?.psdict?.[index]?.score || 0) * (fullMark / 100)
+                        ).toString() || '',
                         raw: meta?.psdict?.[index]?.rid ?? null,
                         score: meta?.psdict?.[index]?.score,
                     }],
                 } : {
                     type: 'record',
-                    value: ((tsddict[pid]?.score || 0) * ((tdoc.score?.[pid] || 100) / 100)).toString() || '',
+                    value: ((tsddict[pid]?.score || 0) * (fullMark / 100)).toString() || '',
                     raw: tsddict[pid]?.rid,
                     score: tsddict[pid]?.score,
                 };
@@ -564,7 +568,7 @@ const ledo = buildContestRule({
         let originalScore = 0;
         for (const pid of tdoc.pids) {
             if (!detail[pid]) continue;
-            const rate = (tdoc.score?.[pid] || 100) / 100;
+            const rate = (tdoc.problemConfig[pid]?.score || 100) / 100;
             score += detail[pid].penaltyScore * rate;
             originalScore += detail[pid].score * rate;
         }
@@ -601,7 +605,7 @@ const ledo = buildContestRule({
         for (const pid of tdoc.pids) {
             row.push({
                 type: 'record',
-                value: ((tsddict[pid]?.penaltyScore || 0) * ((tdoc.score?.[pid] || 100) / 100)).toString(),
+                value: ((tsddict[pid]?.penaltyScore || 0) * ((tdoc.problemConfig[pid]?.score || 100) / 100)).toString(),
                 hover: tsddict[pid]?.ntry ? `-${tsddict[pid].ntry} (${Math.round(Math.max(0.7, 0.95 ** tsddict[pid].ntry) * 100)}%)` : '',
                 raw: tsddict[pid]?.rid,
                 score: tsddict[pid]?.score,
@@ -627,7 +631,7 @@ const homework = buildContestRule({
     stat: (tdoc, journal) => {
         const effective = {};
         for (const j of journal) {
-            if (tdoc.pids.includes(j.pid)) effective[j.pid] = j;
+            if (tdoc.pids.find((pid) => pid === j.pid)) effective[j.pid] = j;
         }
         function time(jdoc) {
             const real = (jdoc.rid.getTimestamp().getTime() - tdoc.beginAt.getTime()) / 1000;
@@ -635,7 +639,7 @@ const homework = buildContestRule({
         }
 
         function penaltyScore(jdoc) {
-            const rate = (tdoc.score?.[jdoc.pid] || 100) / 100;
+            const rate = (tdoc.problemConfig[Number(jdoc.pid)]?.score || 100) / 100;
             const exceedSeconds = Math.floor(
                 (jdoc.rid.getTimestamp().getTime() - tdoc.penaltySince.getTime()) / 1000,
             );
@@ -701,7 +705,7 @@ const homework = buildContestRule({
             } else {
                 columns.push({
                     type: 'problem',
-                    value: getAlphabeticId(i - 1),
+                    value: tdoc.problemConfig[pid]?.label || getAlphabeticId(i - 1),
                     raw: pid,
                 });
             }
@@ -793,11 +797,12 @@ function _getStatusJournal(tsdoc) {
 
 export async function add(
     domainId: string, title: string, content: string, owner: number,
-    rule: string, beginAt = new Date(), endAt = new Date(), pids: number[] = [],
-    rated = false, data: Partial<Tdoc> = {},
+    rule: string, beginAt = new Date(), endAt = new Date(),
+    pids: number[] = [], rated = false, data: Partial<Tdoc> = {},
 ) {
     if (!RULES[rule]) throw new ValidationError('rule');
     if (beginAt >= endAt) throw new ValidationError('beginAt', 'endAt');
+    data.problemConfig ||= {};
     Object.assign(data, {
         content, owner, title, rule, beginAt, endAt, pids, attend: 0,
     });
@@ -879,7 +884,7 @@ export async function updateStatus(
     }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
     const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.problemConfig[pid]?.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks, lang,
     }, 'rid');
@@ -937,7 +942,7 @@ export async function getAndListStatus(domainId: string, tid: ObjectId): Promise
 
 export async function recalcStatus(domainId: string, tid: ObjectId) {
     const [tdoc, tsdocs] = await Promise.all([
-        document.get(domainId, document.TYPE_CONTEST, tid),
+        get(domainId, tid),
         document.getMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid }).toArray(),
     ]);
     const tasks = [];

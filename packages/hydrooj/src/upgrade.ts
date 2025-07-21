@@ -5,6 +5,7 @@
 import yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
 import { randomstring, sleep } from '@hydrooj/utils';
+import { ContestProblemConfig } from './interface';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
 import { PERM, PRIV, STATUS } from './model/builtin';
@@ -615,6 +616,31 @@ export const coreScripts: MigrationScript[] = [
     },
     async function _94_95() {
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
+        return true;
+    },
+    async function _95_96() {
+        await iterateAllDomain(async ({ _id }) => {
+            logger.info('Processing domain %s', _id);
+            const tdocs = await contest.getMulti(_id, {}).toArray();
+            for (const tdoc of tdocs) {
+                await contest.edit(_id, tdoc._id, {
+                    problemConfig: tdoc.pids.reduce((acc, pid) => {
+                        const cp = {} as ContestProblemConfig;
+                        if (tdoc?.score && tdoc.score[pid]) cp.score = tdoc.score[pid];
+                        if (tdoc?.balloon && tdoc.balloon[pid]) {
+                            if (typeof tdoc.balloon[pid] === 'string') {
+                                cp.balloon = { name: '', color: tdoc.balloon[pid] };
+                            } else {
+                                cp.balloon = tdoc.balloon[pid];
+                            }
+                        }
+                        if (Object.keys(cp).length > 0) acc[pid] = cp;
+                        return acc;
+                    }, {}),
+                });
+            }
+            logger.info('Domain %s done', _id);
+        });
         return true;
     },
 ];

@@ -245,3 +245,13 @@ export const getAlphabeticId = (() => {
     for (const ch of alphabet) cache.push(...alphabet.split('').map((c) => ch + c));
     return (i: number) => cache[i] || (i < 0 ? '?' : f(i));
 })();
+
+export const getContestProblemConfig = (pid, tdoc) => {
+    const cp = tdoc.problemConfig[pid] || {};
+    const idx = tdoc.pids.indexOf(pid);
+    // create label if not exists here will simplify the logic on template
+    return {
+        ...cp,
+        label: cp?.label || getAlphabeticId(idx),
+    };
+};

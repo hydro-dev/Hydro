@@ -26,14 +26,15 @@ function Balloon({ tdoc, val }) {
             </tr>
           </thead>
           <tbody>
-            {tdoc.pids.map((pid) => {
+            {tdoc.pids.map((pid, idx) => {
+              const cp = tdoc.problemConfig[pid];
               const { color: c, name } = val[+pid];
               return (
                 <tr key={pid}>
                   <td>
                     {now === pid
-                      ? (<b>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</b>)
-                      : (<span>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</span>)}
+                      ? (<b>{cp?.label || getAlphabeticId(idx)}</b>)
+                      : (<span>{cp?.label || getAlphabeticId(idx)}</span>)}
                   </td>
                   <td>
                     <HexColorInput
@@ -52,7 +53,7 @@ function Balloon({ tdoc, val }) {
                       onChange={(e) => { val[+pid].name = e.target.value; }}
                     />
                   </td>
-                  {tdoc.pids.indexOf(+pid) === 0 && <td rowSpan={0}>
+                  {idx === 0 && <td rowSpan={0}>
                     {now && <HexColorPicker color={color} onChange={(e) => { val[+now].color = e; setColor(e); }} style={{ padding: '1rem' }} />}
                   </td>}
                 </tr>
@@ -66,8 +67,10 @@ function Balloon({ tdoc, val }) {
 }
 
 async function handleSetColor(tdoc) {
-  const val = tdoc.balloon || {};
-  for (const pid of tdoc.pids) val[+pid] ||= { color: '#ffffff', name: '' };
+  const val = {};
+  for (const pid of tdoc.pids) {
+    val[+pid] = tdoc.problemConfig[pid]?.balloon || { color: '#ffffff', name: '' };
+  }
   Notification.info(i18n('Loading...'));
   const action = await new ActionDialog({
     $body: tpl(<>

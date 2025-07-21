@@ -2,7 +2,7 @@
 {% macro renderRecord(cell, canView) %}
   {% if canView %}<a href="{{ url('record_detail', rid=cell.raw) }}">{% endif %}
   {%- set _color = utils.status.getScoreColor(cell.score|default(cell.value)) -%}
-  <span {% if cell.hover %} data-tooltip="{{ cell.hover }}"{% endif %} style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
+  <span {% if cell.hover %} {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ cell.hover }}"{% endif %} style="font-weight:bold;color:{{ _color }}">{{ cell.value|string|nl2br|safe }}</span>
   {% if canView %}</a>{% endif %}
 {% endmacro %}
 
@@ -51,8 +51,8 @@
             {%- elif column.type == 'user' -%}
               {%- set canView = canViewAll or handler.user._id == column.raw -%}
               <button class="star user--{{ column.raw }}" data-uid="{{ column.raw }}">
-                <span class="starred--hide"><span class="icon icon-star--outline" data-tooltip="{{ _('Star') }}"></span></span>
-                <span class="starred--show"><span class="icon icon-star" data-tooltip="{{ _('Unstar') }}"></span></span>
+                <span class="starred--hide"><span class="icon icon-star--outline" {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ _('Star') }}"></span></span>
+                <span class="starred--show"><span class="icon icon-star" {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ _('Unstar') }}"></span></span>
               </button>
               {{ user.render_inline(udict[column.raw], badge=false) }}
             {%- elif column.type == 'record' and column.raw -%}
@@ -67,7 +67,7 @@
                 {%- endif -%}
               {%- endfor -%}
             {%- else -%}
-              <span data-tooltip="{{ column.hover }}">{{ column.value|string|nl2br|safe }}</span>
+              <span {% if not isLargeBoard %}data-tooltip{% else %}title{% endif %}="{{ column.hover }}">{{ column.value|string|nl2br|safe }}</span>
             {%- endif -%}
             </td>
           {%- endfor -%}

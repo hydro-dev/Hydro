@@ -84,12 +84,37 @@
               <textarea name="penaltyRules" class="monospace textbox" data-yaml>{% if tdoc %}{{ penaltyRules }}{% else %}{% include 'partials/homework_default_penalty_rules.yaml' %}{% endif %}</textarea>
             </label>
           </div></div>
-          {{ form.form_text({
-              columns:null,
-              label:'Problems',
-              name:'pids',
-              value:pids
-          }) }}
+          <div class="row">
+            <div class="medium-12 columns">
+              <label>{{ _('Problems') }}</label>
+              <div>                
+                <input type="text" name="pids" value="{{ pids }}" style="display: none !important;" />
+                <input type="text" name="problemConfig" value="{{ problemConfig | dump }}" style="display: none !important;" />
+                <div id="problem-editor">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>{{ _('Problem') }}</th>
+                        <th>{{ _('Label') }}</th>
+                        <th>{{ _('Score') }}</th>
+                        <th>{{ _('Custom Title') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for p in problems %}
+                      <tr>
+                        <td>{{ p.pid }}</td>
+                        <td>{{ p.label|default(utils.getAlphabeticId(tdoc.pid2idx[p.pid])) }}</td>
+                        <td>{{ p.score|default(100) }}</td>
+                        <td>{{ p.title }}</td>
+                      </tr>
+                      {% endfor %}  
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
           {{ form.form_textarea({
               columns:null,
               label:'Content',

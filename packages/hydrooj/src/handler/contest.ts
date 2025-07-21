@@ -13,7 +13,7 @@ import {
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, NotAssignedError, NotFoundError, PermissionError, ValidationError,
 } from '../error';
-import { ScoreboardConfig, Tdoc } from '../interface';
+import { ContestProblemConfig, ScoreboardConfig, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -132,7 +132,7 @@ export class ContestDetailBaseHandler extends Handler {
             },
             {
                 name: 'problem_detail',
-                displayName: `${getAlphabeticId(this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
+                displayName: `${this.tdoc.problemConfig[pdoc.docId]?.label || getAlphabeticId(this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
             },
@@ -196,7 +196,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tcdocs,
         };
         this.response.template = 'contest_problemlist.html';
-        this.response.body.showScore = Object.values(this.tdoc.score || {}).some((i) => i && i !== 100);
+        this.response.body.showScore = Object.values(this.tdoc.problemConfig || {}).some((cp) => cp.score && cp.score !== 100);
         if (!this.tsdoc) return;
         if (this.tsdoc.attend && !this.tsdoc.startAt && contest.isOngoing(this.tdoc)) {
             await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
@@ -284,6 +284,7 @@ export class ContestEditHandler extends Handler {
             tdoc: this.tdoc,
             duration: tid ? -beginAt.diff(this.tdoc.endAt, 'hour', true) : 2,
             pids: tid ? this.tdoc.pids.join(',') : '',
+            problemConfig: tid ? this.tdoc.problemConfig : {},
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
@@ -297,6 +298,7 @@ export class ContestEditHandler extends Handler {
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden)))
     @param('pids', Types.Content)
+    @param('problemConfig', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.Boolean)
@@ -308,11 +310,17 @@ export class ContestEditHandler extends Handler {
     @param('langs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _pids: string, rated = false,
+        title: string, content: string, rule: string, _pids: string, _problemConfig: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, langs: string[] = [],
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
+        let problemConfig = {} as Record<number, ContestProblemConfig>;
+        try {
+            problemConfig = JSON.parse(_problemConfig);
+        } catch (e) {
+            throw new ValidationError('problemConfig');
+        }
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
@@ -324,7 +332,7 @@ export class ContestEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, rated, duration: contestDuration,
+                title, content, rule, beginAt, endAt, pids, problemConfig, rated, duration: contestDuration,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
                 || diffArray(this.tdoc.pids, pids) || this.tdoc.rule !== rule
@@ -332,7 +340,10 @@ export class ContestEditHandler extends Handler {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
-            tid = await contest.add(domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated, { duration: contestDuration });
+            tid = await contest.add(
+                domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated,
+                { duration: contestDuration, problemConfig },
+            );
         }
         const task = {
             type: 'schedule', subType: 'contest', domainId, tid,
@@ -517,9 +528,9 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('score', Types.PositiveInt)
     async postSetScore(domainId: string, pid: number, score: number) {
         if (!this.tdoc.pids.includes(pid)) throw new ValidationError('pid');
-        this.tdoc.score ||= {};
-        this.tdoc.score[pid] = score;
-        await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score });
+        this.tdoc.problemConfig[pid] ||= {};
+        this.tdoc.problemConfig[pid].score = score;
+        await contest.edit(domainId, this.tdoc.docId, { problemConfig: this.tdoc.problemConfig });
         await contest.recalcStatus(domainId, this.tdoc.docId);
         this.back();
     }
@@ -606,12 +617,12 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     async postSetColor(domainId: string, tid: ObjectId, color: string) {
         const config = yaml.load(color);
         if (typeof config !== 'object') throw new ValidationError('color');
-        const balloon = {};
         for (const pid of this.tdoc.pids) {
             if (!config[pid]) throw new ValidationError('color');
-            balloon[pid] = config[pid.toString()];
+            this.tdoc.problemConfig[pid] ||= {};
+            this.tdoc.problemConfig[pid].balloon = config[pid.toString()];
         }
-        await contest.edit(domainId, tid, { balloon });
+        await contest.edit(domainId, tid, { problemConfig: this.tdoc.problemConfig });
         this.back();
     }
 
@@ -770,9 +781,10 @@ export async function apply(ctx: Context) {
                 const page_name = tdoc.rule === 'homework'
                     ? 'homework_scoreboard'
                     : 'contest_scoreboard';
+                const isLargeBoard = rows.length * Object.keys(pdict).length > 10000; // > 16 problem * 500 user
                 const availableViews = scoreboard.getAvailableViews(tdoc.rule);
                 this.response.body = {
-                    tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups, availableViews,
+                    tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups, availableViews, isLargeBoard,
                 };
                 this.response.pjax = 'partials/scoreboard.html';
                 this.response.template = 'contest_scoreboard.html';
@@ -792,7 +804,6 @@ export async function apply(ctx: Context) {
                 const teamIds: Record<number, number> = {};
                 for (let i = 1; i <= teams.length; i++) teamIds[teams[i - 1].uid] = i;
                 const time = (t: ObjectId) => Math.floor((t.getTimestamp().getTime() - tdoc.beginAt.getTime()) / Time.second);
-                const pid = (i: number) => getAlphabeticId(i);
                 const escape = (i: string) => i.replace(/[",]/g, '');
                 const unknownSchool = this.translate('Unknown School');
                 const statusMap = {
@@ -807,7 +818,7 @@ export async function apply(ctx: Context) {
                     const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
                     const c = Counter();
                     return journal.map((s) => {
-                        const id = pid(tdoc.pids.indexOf(s.pid));
+                        const id = tdoc.problemConfig[s.pid]?.label || getAlphabeticId(tdoc.pids.indexOf(s.pid));
                         c[id]++;
                         return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${statusMap[s.status] || 'RJ'}`;
                     });
@@ -819,7 +830,9 @@ export async function apply(ctx: Context) {
                     `@teams ${tdoc.attend}`,
                     `@submissions ${submissions.length}`,
                 ].concat(
-                    tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
+                    tdoc.pids.map((pid, idx) =>
+                        `@p ${escape(tdoc.problemConfig[pid]?.label || getAlphabeticId(idx))},${escape(pdict[pid]?.title || 'Unknown Problem')},20,0`,
+                    ),
                     teams.map((i, idx) => {
                         const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) && udict[i.uid].displayName
                             ? udict[i.uid].displayName : udict[i.uid].uname;

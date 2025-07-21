@@ -1,15 +1,15 @@
-{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false, inline=false, show_pid=true, small=false, alphabetic=false) %}
+{% macro render_problem_title(pdoc, tdoc=none, show_tags=true, show_invisible_flag=true, invalid=false, inline=false, show_pid=true, small=false, alphabetic=false, url_with_contest=true) %}
 {%- if not invalid -%}
   {% set _linkArgs = { pid:pdoc.pid|default(pdoc.docId) } %}
-  {% if tdoc %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
+  {% if tdoc and url_with_contest %}{{ set(_linkArgs, 'query', {tid:tdoc.docId}) }}{% endif %}
   <a href="{{ url('problem_detail', _linkArgs) }}"{% if small %} data-tooltip="{{ pdoc.title }}"{% endif %}>
 {%- endif -%}
 {% if show_pid %}
-<b>{%- if tdoc and alphabetic -%}{{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
+<b>{%- if tdoc and alphabetic -%}{{ utils.getContestProblemConfig(pdoc.docId, tdoc).label }}
 {%- elif pdoc.pid and pdoc.pid.includes('-') -%}{{ pdoc.pid.split('-').join('#') }}
 {%- else -%}{{ pdoc.pid|default(pdoc.docId) }}{%- endif -%}</b>
 {% endif %}
-{%- if not small -%}{% if show_pid %}&nbsp;&nbsp;{% endif %}{{ pdoc.title }}{%- endif -%}
+{%- if not small -%}{% if show_pid %}&nbsp;&nbsp;{% endif %}{%- if tdoc -%}{{utils.getContestProblemConfig(pdoc.docId, tdoc).title|default(pdoc.title)}}{%- else -%}{{ pdoc.title }}{%- endif -%}{%- endif -%}
 {%- if not invalid -%}
   </a>
 {%- endif -%}

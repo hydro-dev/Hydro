@@ -247,6 +247,13 @@ export interface TrainingNode {
     pids: number[],
 }
 
+export interface ContestProblemConfig {
+    label?: string;
+    score?: number;
+    balloon?: { color: string, name: string };
+    // [key: string]: any,
+}
+
 export interface Tdoc extends Document {
     docId: ObjectId;
     docType: document['TYPE_CONTEST'];
@@ -257,6 +264,7 @@ export interface Tdoc extends Document {
     content: string;
     rule: string;
     pids: number[];
+    problemConfig: Record<number, ContestProblemConfig>;
     rated?: boolean;
     _code?: string;
     assign?: string[];
@@ -267,7 +275,9 @@ export interface Tdoc extends Document {
     lockAt?: Date;
     unlocked?: boolean;
     autoHide?: boolean;
+    /** @deprecated */
     balloon?: Record<number, string | { color: string, name: string }>;
+    /** @deprecated */
     score?: Record<number, number>;
     langs?: string[];
 

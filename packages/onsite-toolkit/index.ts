@@ -2,7 +2,7 @@
 import moment from 'moment';
 import {
     avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
-    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
+    ForbiddenError, fs, getAlphabeticId, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel, Zip,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
@@ -48,7 +48,7 @@ export function apply(ctx: Context) {
                 const teamIds: Record<number, number> = {};
                 for (let i = 1; i <= teams.length; i++) teamIds[teams[i - 1].uid] = i;
                 const time = (t: ObjectId) => Math.floor((t.getTimestamp().getTime() - tdoc.beginAt.getTime()) / Time.second);
-                const pid = (i: number) => String.fromCharCode(65 + i);
+
                 const unknownSchool = this.translate('Unknown School');
                 const submissions = teams.flatMap((i) => {
                     if (!i.journal) return [];
@@ -59,7 +59,7 @@ export function apply(ctx: Context) {
                         name: tdoc.title,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
                         frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
-                        problems: tdoc.pids.map((i, n) => ({ name: pid(n), id: i.toString() })),
+                        problems: tdoc.pids.map((pid, idx) => ({ name: tdoc.problemConfig[pid]?.label || getAlphabeticId(idx), id: pid.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
                             name: udict[t.uid].displayName || udict[t.uid].uname,
@@ -192,14 +192,14 @@ export function apply(ctx: Context) {
                             height: 1080,
                         }],
                     })),
-                    ...tdoc.pids.map((i, idx) => getFeed('problems', {
-                        id: `${i}`,
-                        label: String.fromCharCode(65 + idx),
-                        name: pdict[i].title,
+                    ...tdoc.pids.map((pid, idx) => getFeed('problems', {
+                        id: `${pid}`,
+                        label: tdoc.problemConfig[pid]?.label || getAlphabeticId(idx),
+                        name: pdict[pid].title,
                         ordinal: idx,
-                        color: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].name : tdoc.balloon?.[idx]) || 'white',
-                        rgb: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].color : null) || '#ffffff',
-                        time_limit: (parseTimeMS((pdict[i].config as ProblemConfig).timeMax) / 1000).toFixed(1),
+                        color: tdoc.problemConfig[pid]?.balloon?.name || 'white',
+                        rgb: tdoc.problemConfig[pid]?.balloon?.color || '#ffffff',
+                        time_limit: (parseTimeMS((pdict[pid].config as ProblemConfig).timeMax) / 1000).toFixed(1),
                         test_data_count: 20,
                     })),
                 ];
