@@ -174,7 +174,7 @@ class HomeworkEditHandler extends Handler {
             extensionDays,
             penaltyRules: tid ? yaml.dump(tdoc.penaltyRules) : null,
             pids: tid ? tdoc.pids.join(',') : '',
-            problemConfig: tid ? tdoc.problemConfig : [],
+            problemConfig: tid ? tdoc.problemConfig : {},
             page_name: tid ? 'homework_edit' : 'homework_create',
         };
     }
