@@ -115,7 +115,7 @@ export async function run({
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.username.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
     for (const udoc of udocs) {
-        if (randomMail === 'always') delete udoc.email;
+        if (randomMail === 'always' || !udoc.email.includes('@')) delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.username}@syzoj.local`);
         current ||= await UserModel.getByUname(domainId, udoc.username);
         if (current && randomMail === 'needed') {
@@ -147,6 +147,7 @@ export async function run({
                 displayName: udoc.nickname || '',
                 nSubmit: udoc.submit_num,
                 nAccept: udoc.ac_num,
+                join: true,
             });
         }
     }
@@ -276,10 +277,16 @@ export async function run({
         const pdocs = tdoc.problems.split('|').map((i) => i.trim());
         const pids = pdocs.map((i) => pidMap[i]).filter((i) => i);
         const admin = uidMap[tdoc.holder_id] || uidMap[tdoc.admins.split('|')[0]];
+        const startAt = new Date(tdoc.start_time * 1000);
+        let endAt = new Date(tdoc.end_time * 1000);
+        if (startAt >= endAt) {
+            report({ message: `Invalid contest time: ${tdoc.title} ${tdoc.start_time} ${tdoc.end_time}` });
+            endAt = new Date(startAt.getTime() + 5000);
+        }
         const tid = await ContestModel.add(
             domainId, tdoc.title, `${tdoc.subtitle ? `#### ${tdoc.subtitle}\n` : ''}${tdoc.information || 'No Description'}`,
-            admin, contentTypeMap[tdoc.type], new Date(tdoc.start_time * 1000), new Date(tdoc.end_time * 1000),
-            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]) },
+            admin, contentTypeMap[tdoc.type], startAt, endAt,
+            pids, ratedTids.includes(tdoc.id), { maintainer: tdoc.admins.split('|').map((i) => uidMap[i]), assign: [] },
         );
         tidMap[tdoc.id] = tid.toHexString();
     }
@@ -353,7 +360,7 @@ export async function run({
                     }
                 }
             }
-            if (rdoc.type) {
+            if (rdoc.type && rdoc.type_info && tidMap[rdoc.type_info]) {
                 data.contest = new ObjectId(tidMap[rdoc.type_info]);
                 await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
             }
@@ -461,7 +468,7 @@ export async function run({
                     `spj.${langMap[syzojConfig.specialJudge.language]}`, `${dataDir}/testdata/${file.name}/${syzojConfig.specialJudge.fileName}`);
                 config.checker = `spj.${langMap[syzojConfig.specialJudge.language]}`;
             }
-            if (syzojConfig.subtasks) {
+            if (syzojConfig.subtasks && syzojConfig.inputFile && syzojConfig.outputFile) {
                 config.subtasks = syzojConfig.subtasks.map((subtask, index) => ({
                     score: subtask.score,
                     id: index + 1,

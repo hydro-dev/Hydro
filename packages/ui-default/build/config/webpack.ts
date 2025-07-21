@@ -1,16 +1,15 @@
-/* eslint-disable global-require */
+import fs from 'fs';
+import { dirname } from 'path';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { version as coreJsVersion } from 'core-js/package.json';
 import compat from 'core-js-compat';
 import { EsbuildPlugin } from 'esbuild-loader';
-import fs from 'fs';
 import { DuplicatesPlugin } from 'inspectpack/plugin';
 import ExtractCssPlugin from 'mini-css-extract-plugin';
 import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 import packageJson from 'package-json';
-import { dirname } from 'path';
 import { gt } from 'semver';
 import webpack from 'webpack';
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
@@ -46,7 +45,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       loader: 'esbuild-loader',
       options: {
         loader: 'tsx',
-        target: 'es6',
+        target: ['es2020', 'chrome70', 'firefox90', 'safari16'],
         sourcemap: true,
       },
     };
@@ -89,6 +88,14 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     };
   }
 
+  function scssLoader() {
+    return {
+      loader: 'sass-loader',
+      options: {
+      },
+    };
+  }
+
   const config: import('webpack').Configuration = {
     // bail: !env.production,
     mode: (env.production || env.measure) ? 'production' : 'development',
@@ -127,7 +134,8 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       extensions: ['.js', '.jsx', '.ts', '.tsx', '.cjs'],
       alias: {
         vj: root(),
-        'graphql-ws': root('../../modules/nop.ts'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+        react: require.resolve('react'),
       },
     },
     module: {
@@ -202,6 +210,10 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           use: [extractCssLoader(), cssLoader(), postcssLoader(), stylusLoader()],
         },
         {
+          test: /\.scss$/,
+          use: [extractCssLoader(), cssLoader(), postcssLoader(), scssLoader()],
+        },
+        {
           test: /\.css$/,
           use: [extractCssLoader(), cssLoader(), postcssLoader()],
         },
@@ -231,7 +243,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
             name(module) {
               const packageName = module.context.replace(/\\/g, '/').split('node_modules/').pop().split('/')[0];
               if (packageName === 'monaco-editor-nls') {
-                return `i.monaco.${module.userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
+                return `i.monaco.${(module as any).userRequest.replace(/\\/g, '/').split('/').pop().split('.')[0]}`;
               }
               return `n.${packageName.replace('@', '')}`;
             },
@@ -252,7 +264,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         minifyIdentifiers: true,
         treeShaking: true,
         target: [
-          'chrome65',
+          'chrome70',
         ],
         exclude: [/mathmaps/, /\.min\.js$/],
       })],
@@ -280,7 +292,6 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
           { from: root('components/navigation/nav-logo-small_dark.png'), to: 'components/navigation/nav-logo-small_dark.png' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/mitm.html`), to: 'streamsaver/mitm.html' },
           { from: root(`${dirname(require.resolve('streamsaver/package.json'))}/sw.js`), to: 'streamsaver/sw.js' },
-          { from: root(`${dirname(require.resolve('graphiql/package.json'))}/graphiql.min.css`), to: 'graphiql.min.css' },
           { from: `${dirname(require.resolve('monaco-themes/package.json'))}/themes`, to: 'monaco/themes/' },
         ],
       }),
@@ -305,6 +316,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
       }),
       new webpack.NormalModuleReplacementPlugin(/\/(vscode-)?nls\.js/, require.resolve('../../components/monaco/nls')),
       new webpack.NormalModuleReplacementPlugin(/^prettier[$/]/, root('../../modules/nop.ts')),
+      new webpack.NormalModuleReplacementPlugin(/^highlightjs[$/]/, root('../../modules/nop.ts')),
       new webpack.NormalModuleReplacementPlugin(/core-js\/stable/, root('__core-js.js')),
       new MonacoWebpackPlugin({
         filename: '[name].[hash:6].worker.js',

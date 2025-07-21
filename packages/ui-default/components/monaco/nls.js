@@ -1,3 +1,5 @@
+export { getNLSLanguage, getNLSMessages } from 'monaco-editor/esm/vs/nls.messages';
+
 function format(message, args) {
   let result;
   if (!args.length) result = message;
@@ -10,16 +12,14 @@ function format(message, args) {
   return result;
 }
 
-export const getConfiguredDefaultLocale = () => 'zh';
-
 let CURRENT_LOCALE_DATA = {}; // eslint-disable-line @typescript-eslint/naming-convention
 
 export function localize(path, message, ...args) {
-  return format(CURRENT_LOCALE_DATA[path.key || path] || message, args);
+  return format(CURRENT_LOCALE_DATA[path.key || path] || CURRENT_LOCALE_DATA[message] || message, args);
 }
 
 export function localize2(data, message, ...args) {
-  const original = localize(message, args);
+  const original = localize(data, message, args);
   return {
     value: original,
     original,
@@ -28,12 +28,4 @@ export function localize2(data, message, ...args) {
 
 export function setLocaleData(data) {
   CURRENT_LOCALE_DATA = Object.assign(...Object.values(data));
-}
-
-export function loadMessageBundle() {
-  return localize;
-}
-
-export function config() {
-  return loadMessageBundle;
 }

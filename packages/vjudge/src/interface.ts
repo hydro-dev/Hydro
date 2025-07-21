@@ -1,5 +1,4 @@
-import { LangConfig } from '@hydrooj/utils/lib/lang';
-import { JudgeResultBody } from 'hydrooj';
+import { JudgeResultBody, LangConfig } from '@hydrooj/common';
 
 export interface RemoteAccount {
     _id: string;
@@ -15,14 +14,15 @@ export interface RemoteAccount {
     enableOn?: string[];
     UA?: string;
 }
+export interface VjudgeMount {
+    _id: string; //  domainId, or `${domainId}.${namespace}`
+    mount: string;
+    syncDone: Record<string, boolean>;
+}
 declare module 'hydrooj' {
     interface Collections {
         vjudge: RemoteAccount;
-    }
-
-    interface DomainDoc {
-        mount?: string;
-        mountInfo?: any;
+        'vjudge.mount': VjudgeMount;
     }
 }
 type NextFunction = (body: Partial<JudgeResultBody>) => void;
@@ -41,6 +41,7 @@ export interface IBasicProvider {
     submitProblem(id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction): Promise<string | void>;
     waitForSubmission(id: string, next: NextFunction, end: NextFunction): Promise<void>;
     checkStatus?: (onCheckFunc: boolean) => Promise<void>;
+    stop?: () => Promise<void>;
 }
 
 export interface BasicProvider {

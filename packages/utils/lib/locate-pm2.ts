@@ -12,7 +12,7 @@ const pm2: typeof import('pm2') | null = (() => {
             const p = path.resolve(dir, info);
             if (p.startsWith('/nix')) return require(`${p.split('/bin')[0]}/lib/node_modules/pm2`);
             // installed by yarn
-            return require(`${p.split('.bin')[0]}pm2`); // eslint-disable-line import/no-dynamic-require
+            return require(`${p.split('.bin')[0]}pm2`);
         } catch (e) { }
     }
     return null;

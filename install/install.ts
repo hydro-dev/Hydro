@@ -2,10 +2,28 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
+import crypto from 'crypto';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import net from 'net';
 import os, { cpus } from 'os';
 import { createInterface } from 'readline/promises';
+import supportsHyperlink from 'supports-hyperlinks';
+
+const isSupported = supportsHyperlink.stdout;
+const OSC = '\u001B]';
+const BEL = '\u0007';
+const SEP = ';';
+export const link = isSupported ? (text: string, url: string) => [
+    OSC, '8', SEP, SEP, url, BEL, text, OSC, '8', SEP, SEP, BEL,
+].join('') : (text: string, url: string) => `${text} < ${url} > `;
+const freemem = os.freemem();
+const smallMemory = (freemem < 1024 * 1024 * 1024);
+
+const nixInstall = (...packages: string[]) => (smallMemory
+    ? packages.map((t) => `nix-env -iA ${t.includes('.') ? t : `nixpkgs.${t}`}`).join(' && ')
+    : `nix-env -iA ${packages.map((t) => (t.includes('.') ? t : `nixpkgs.${t}`)).join(' ')}`);
+
+const warnings: [string, ...any[]][] = [];
 
 const exec = (command: string, args?: ExecSyncOptions) => {
     try {
@@ -21,17 +39,20 @@ const exec = (command: string, args?: ExecSyncOptions) => {
     }
 };
 const sleep = (t: number) => new Promise((r) => { setTimeout(r, t); });
+
+const shmFAQ = 'https://docs.hydro.ac/FAQ/#%E8%B0%83%E6%95%B4%E4%B8%B4%E6%97%B6%E7%9B%AE%E5%BD%95%E5%A4%A7%E5%B0%8F';
 const locales = {
     zh: {
+        'install.wait': '安装脚本将等待 %d 秒后自动继续安装，或按 Ctrl-C 退出。',
         'install.start': '开始运行 Hydro 安装工具',
         'note.avx': `检测到您的 CPU 不支持 avx 指令集，这可能会影响系统运行速度。
-如果您正在使用 PVE/VirtualBox 等虚拟机平台，请尝试关机后将虚拟机的 CPU 类型设置为 Host，重启后再次运行该脚本。
-您也可以选择忽略此问题，安装脚本将在一分钟后自动继续安装。`,
+如果您正在使用 PVE/VirtualBox 等虚拟机平台，请尝试关机后将虚拟机的 CPU 类型设置为 Host，重启后再次运行该脚本。`,
         'warn.avx': '检测到您的 CPU 不支持 avx 指令集，将使用 mongodb@v4.4',
         'error.rootRequired': '请先使用 sudo su 切换到 root 用户后再运行该工具。',
         'error.unsupportedArch': '不支持的架构 %s ,请尝试手动安装。',
         'error.osreleaseNotFound': '无法获取系统版本信息（/etc/os-release 文件未找到），请尝试手动安装。',
         'error.unsupportedOS': '不支持的操作系统 %s ，请尝试手动安装，',
+        'error.centos': 'CentOS 及其变种系统因系统内核过低，无法安装 Hydro，强烈建议使用其他系统。若确有需求，请升级 Linux 内核至 4.4+ 后再手动安装 Hydro。',
         'install.preparing': '正在初始化安装...',
         'install.mongodb': '正在安装 mongodb...',
         'install.createDatabaseUser': '正在创建数据库用户...',
@@ -42,28 +63,37 @@ const locales = {
         'install.editJudgeConfigAndStart': '请编辑 ~/.hydro/judge.yaml 后使用 pm2 start hydrojudge && pm2 save 启动。',
         'extra.dbUser': '数据库用户名： hydro',
         'extra.dbPassword': '数据库密码： %s',
+        'port.80': '端口 80 已被占用，Caddy 无法正常监听此端口。',
+        'shm.readFail': '读取 /dev/shm 大小失败。请检查系统是否在此挂载了 tmpfs。',
+        'shm.sizeTooSmall': `您的系统 /dev/shm 大小为 %d MB，在高并发评测时可能产生问题。
+建议参照文档 ${link('FAQS', shmFAQ)} 进行调整。`,
         'info.skip': '步骤已跳过。',
-        'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Ubuntu 22.04 系统进行安装。
+        'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Debian 12 系统进行安装。
 要忽略该警告，请使用 --shamefully-unsafe-bt-panel 参数重新运行此脚本。`,
-        'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Ubuntu 22.04 系统进行安装。
+        'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Debian 12 系统进行安装。
 开发者对因为使用宝塔面板的数据丢失不承担任何责任。
 要取消安装，请使用 Ctrl-C 退出。安装程序将在五秒后继续。`,
         'migrate.hustojFound': `检测到 HustOJ。安装程序可以将 HustOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 HustOJ）
 该功能支持原版 HustOJ 和部分修改版，输入 y 确认该操作。
 迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
+        'install.restartRequired': '安装完成，请使用 sudo reboot 重启系统。在此之前系统的部分功能可能无法正常使用。',
+        'install.warnings': '安装过程中产生了以下警告：',
     },
     en: {
+        'install.wait': `The installation script will wait for %d seconds before continuing.
+Press Ctrl-C to exit.`,
         'install.start': 'Starting Hydro installation tool',
         'note.avx': `Your CPU does not support avx, this may affect system performance.
 If you are using a virtual machine platform such as PVE/VirtualBox,
 try shutting down and setting the CPU type of the virtual machine to Host,
-then restart and run the script again.
-You can also choose to ignore this issue, the installation script will continue in one minute.`,
+then restart and run the script again.`,
         'warn.avx': 'Your CPU does not support avx, will use mongodb@v4.4',
         'error.rootRequired': 'Please run this tool as root user.',
         'error.unsupportedArch': 'Unsupported architecture %s, please try to install manually.',
         'error.osreleaseNotFound': 'Unable to get system version information (/etc/os-release file not found), please try to install manually.',
         'error.unsupportedOS': 'Unsupported operating system %s, please try to install manually.',
+        'error.centos': `CentOS and its derivatives are not supported due to low system kernel versions.
+It is strongly recommended to use other systems. If you really need it, please upgrade the Linux kernel to 4.4+ and manually install Hydro.`,
         'install.preparing': 'Initializing installation...',
         'install.mongodb': 'Installing mongodb...',
         'install.createDatabaseUser': 'Creating database user...',
@@ -74,16 +104,22 @@ You can also choose to ignore this issue, the installation script will continue 
         'install.editJudgeConfigAndStart': 'Please edit config at ~/.hydro/judge.yaml than start hydrojudge with:\npm2 start hydrojudge && pm2 save.',
         'extra.dbUser': 'Database username: hydro',
         'extra.dbPassword': 'Database password: %s',
+        'port.80': 'Port 80 is already in use, Caddy cannot listen to this port.',
+        'shm.readFail': 'Failed to read /dev/shm size.',
+        'shm.sizeTooSmall': `Your system /dev/shm size is %d MB, which may cause problems in high concurrency testing.
+Please refer to ${link('FAQS', shmFAQ)} for adjustments.`,
         'info.skip': 'Step skipped.',
-        'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a pure Ubuntu 22.04 OS.
+        'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a clean Debian 12 OS.
 To ignore this warning, please run this script again with '--shamefully-unsafe-bt-panel' flag.`,
-        'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a pure Ubuntu 22.04 OS.
+        'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a clean Debian 12 OS.
 The developer is not responsible for any data loss caused by using BT-Panel.
 To cancel the installation, please use Ctrl-C to exit. The installation program will continue in five seconds.`,
         'migrate.hustojFound': `HustOJ detected. The installation program can migrate all data from HustOJ to Hydro.
 The original data will not be lost, and you can switch back to HustOJ at any time.
 This feature supports the original version of HustOJ and some modified versions. Enter y to confirm this operation.
 If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
+        'install.restartRequired': 'Please reboot the system. Some functions may not work properly before the restart.',
+        'install.warnings': 'The following warnings occurred during the installation:',
     },
 };
 
@@ -96,6 +132,8 @@ const substitutersArg = process.argv.find((i) => i.startsWith('--substituters=')
 const substituters = substitutersArg ? substitutersArg.split('=')[1].split(',') : [];
 const migrationArg = process.argv.find((i) => i.startsWith('--migration='));
 let migration = migrationArg ? migrationArg.split('=')[1] : '';
+
+let needRestart = false;
 
 let locale = (process.env.LANG?.includes('zh') || process.env.LOCALE?.includes('zh')) ? 'zh' : 'en';
 if (process.env.TERM === 'linux') locale = 'en';
@@ -125,16 +163,11 @@ const cpuInfoFile = readFileSync('/proc/cpuinfo', 'utf-8');
 if (!cpuInfoFile.includes('avx') && !installAsJudge) {
     avx = false;
     log.warn('warn.avx');
+    warnings.push(['warn.avx']);
 }
 let retry = 0;
 log.info('install.start');
-const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-function randomstring(digit = 32, dict = defaultDict) {
-    let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
-    return str;
-}
-let password = randomstring(32);
+let password = crypto.randomBytes(32).toString('hex');
 // eslint-disable-next-line
 let CN = true;
 
@@ -171,6 +204,7 @@ const Caddyfile = `\
 # 仅需将 :80 改为你的域名（如 hydro.ac）后使用 caddy reload 重载配置即可自动签发 ssl 证书。
 # 填写完整域名，注意区分有无 www （www.hydro.ac 和 hydro.ac 不同，请检查 DNS 设置）
 # 请注意在防火墙/安全组中放行端口，且部分运营商会拦截未经备案的域名。
+# 其他需求清参照 https://caddyserver.com/docs/ 说明进行设置。
 # For more information, refer to caddy v2 documentation.
 :80 {
   encode zstd gzip
@@ -218,6 +252,7 @@ hosts:
     uname: judge
     password: examplepassword
     detail: true
+    concurrency: 2
 tmpfs_size: 512m
 stdio_size: 256m
 memoryMax: ${Math.min(1024, os.totalmem() / 4)}m
@@ -229,7 +264,7 @@ parallelism: ${Math.max(1, Math.floor(cpus().length / 4))}
 singleTaskParallelism: 2
 rate: 1.00
 rerun: 2
-secret: Hydro-Judge-Secret
+secret: ${crypto.randomBytes(32).toString('hex')}
 env: |
     PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     HOME=/w
@@ -288,9 +323,10 @@ const mem = os.totalmem() / 1024 / 1024 / 1024; // In GiB
 // TODO: refuse to install if mem < 1.5
 const wtsize = Math.max(0.25, Math.floor((mem / 6) * 100) / 100);
 
+const inviteLink = 'https://qm.qq.com/cgi-bin/qm/qr?k=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw';
 const printInfo = [
-    'echo "扫码加入QQ群："',
-    'echo https://qm.qq.com/cgi-bin/qm/qr\\?k\\=0aTZfDKURRhPBZVpTYBohYG6P6sxABTw | qrencode -o - -m 2 -t UTF8',
+    () => console.log(`扫码或点击${link('链接', inviteLink)}加入QQ群：`),
+    `echo '${inviteLink}' | qrencode -o - -m 2 -t UTF8`,
     () => {
         if (installAsJudge) return;
         const config = require(`${process.env.HOME}/.hydro/config.json`);
@@ -314,15 +350,59 @@ const Steps = () => [
                         process.exit(1);
                     } else {
                         log.warn('warn.bt');
+                        warnings.push(['warn.bt']);
+                        log.info('install.wait', 5);
                         await sleep(5000);
                     }
                 }
             },
             async () => {
+                if (process.env.IGNORE_CENTOS) return;
+                const res = exec('yum -h');
+                if (res.code) return;
+                if (!process.argv.includes('--unsupported-centos')) {
+                    log.warn('error.centos');
+                    process.exit(1);
+                } else {
+                    log.warn('warn.centos');
+                    warnings.push(['warn.centos']);
+                }
+            },
+            async () => {
                 if (!avx && !installAsJudge) {
                     log.warn('note.avx');
+                    log.info('install.wait', 60);
                     await sleep(60000);
                 }
+            },
+            async () => {
+                const shm = exec('df --output=avail -k /dev/shm').output?.split('\n')[1];
+                if (!shm || !+shm) {
+                    log.warn('shm.readFail');
+                    warnings.push(['shm.readFail']);
+                    return;
+                }
+                const size = (+shm) / 1024;
+                if (size < 250) {
+                    log.warn('shm.sizeTooSmall', size);
+                    warnings.push(['shm.sizeTooSmall', size]);
+                }
+            },
+            async () => {
+                // Enable memory cgroup for Raspberry Pi
+                if (process.arch !== 'arm64') return;
+                const isRpi = ['rpi', 'raspberrypi'].some((i) => readFileSync('/proc/cpuinfo', 'utf-8').toLowerCase().includes(i));
+                if (!isRpi) return;
+                const memoryLine = readFileSync('/proc/cgroups', 'utf-8').split('\n').find((i) => i.includes('memory'))?.trim();
+                const memoryCgroupEnabled = memoryLine && !memoryLine.endsWith('0');
+                if (memoryCgroupEnabled) return;
+                let targetFile = '/boot/cmdline.txt';
+                let content = readFileSync(targetFile, 'utf-8');
+                if (content.includes('has moved to /boot/firmware/cmdline.txt')) targetFile = '/boot/firmware/cmdline.txt';
+                content = readFileSync(targetFile, 'utf-8');
+                if (content.includes('cgroup_enable=memory')) return;
+                writeFileSync(targetFile, content.replace(' console=', ' cgroup_enable=memory cgroup_memory=1 console='));
+                needRestart = true;
             },
             () => {
                 if (substituters.length) {
@@ -338,7 +418,7 @@ ${nixConfBase}`);
                 exec('nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs', { stdio: 'inherit' });
                 exec('nix-channel --update', { stdio: 'inherit' });
             },
-            `nix-env -iA ${['pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen'].map((i) => `nixpkgs.${i}`).join(' ')}`,
+            nixInstall('pm2', 'yarn', 'esbuild', 'bash', 'unzip', 'zip', 'diffutils', 'patch', 'screen', 'gawk'),
             'yarn config set disable-self-update-check true',
             async () => {
                 const rl = createInterface(process.stdin, process.stdout);
@@ -352,8 +432,8 @@ ${nixConfBase}`);
                     const docker = !exec('docker -v').code;
                     if (!docker) return;
                     const containers = exec('docker ps -a --format json').output?.split('\n')
-                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i));
-                    const uoj = containers?.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running');
+                        .map((i) => i.trim()).filter((i) => i).map((i) => JSON.parse(i)) || [];
+                    const uoj = containers.find((i) => i.Image.toLowerCase() === 'universaloj/uoj-system' && i.State === 'running');
                     if (uoj) {
                         log.info('migrate.uojFound');
                         const res = await rl.question('>');
@@ -389,29 +469,29 @@ ${nixConfBase}`);
         "openssl-1.1.1z"
     ];
 }`),
-            `nix-env -iA hydro.mongodb${avx ? 7 : 4}${CN ? '-cn' : ''} nixpkgs.mongosh nixpkgs.mongodb-tools`,
+            nixInstall(`hydro.mongodb${avx ? 7 : 4}${CN ? '-cn' : ''}`, 'mongosh', 'mongodb-tools'),
         ],
     },
     {
         init: 'install.compiler',
         operations: [
-            'nix-env -iA nixpkgs.gcc nixpkgs.python3',
+            nixInstall('gcc', 'python3'),
         ],
     },
     {
         init: 'install.sandbox',
         skip: () => !exec('hydro-sandbox --help').code,
         operations: [
-            'nix-env -iA nixpkgs.go-judge',
+            nixInstall('go-judge'),
             'ln -sf $(which go-judge) /usr/local/bin/hydro-sandbox',
         ],
     },
     {
         init: 'install.caddy',
-        skip: () => !exec('caddy version').code || installAsJudge || noCaddy || !existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
+        skip: () => installAsJudge || noCaddy || existsSync(`${process.env.HOME}/.hydro/Caddyfile`),
         hidden: installAsJudge,
         operations: [
-            'nix-env -iA nixpkgs.caddy',
+            nixInstall('caddy'),
             () => writeFileSync(`${process.env.HOME}/.hydro/Caddyfile`, Caddyfile),
         ],
     },
@@ -453,7 +533,7 @@ ${nixConfBase}`);
             () => sleep(3000),
             async () => {
                 // eslint-disable-next-line
-                const { MongoClient, WriteConcern } = require('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
+                const { MongoClient, WriteConcern } = eval('require')('/usr/local/share/.config/yarn/global/node_modules/mongodb') as typeof import('mongodb');
                 const client = await MongoClient.connect('mongodb://127.0.0.1', {
                     readPreference: 'nearest',
                     writeConcern: new WriteConcern('majority'),
@@ -489,11 +569,15 @@ ${nixConfBase}`);
                         exec('hydrooj cli system set server.host 0.0.0.0');
                         return;
                     }
-                    if (!await isPortFree(80)) log.warn('port.80');
                     if (migration === 'hustoj') {
                         exec('systemctl stop nginx || true');
                         exec('systemctl disable nginx || true');
                         exec('/etc/init.d/nginx stop || true');
+                        await sleep(1000);
+                    }
+                    if (!await isPortFree(80)) {
+                        log.warn('port.80');
+                        warnings.push(['port.80']);
                     }
                     exec('pm2 start caddy -- run', { cwd: `${process.env.HOME}/.hydro` });
                     exec('hydrooj cli system set server.xff x-forwarded-for');
@@ -520,6 +604,7 @@ ${nixConfBase}`);
         skip: () => migration !== 'hustoj',
         silent: true,
         operations: [
+            'pm2 restart hydrooj',
             () => {
                 const dbInc = readFileSync('/home/judge/src/web/include/db_info.inc.php', 'utf-8');
                 const l = dbInc.split('\n');
@@ -594,7 +679,7 @@ ${nixConfBase}`);
     {
         init: 'install.postinstall',
         operations: [
-            'echo "layout=1" >/etc/HYDRO_INSTALLER',
+            'echo "layout=2" >/etc/HYDRO_INSTALLER',
             'echo "vm.swappiness = 1" >>/etc/sysctl.conf',
             'sysctl -p',
             // dont retry this as it usually fails
@@ -607,6 +692,15 @@ ${nixConfBase}`);
             ...printInfo,
             () => log.info('install.alldone'),
             () => installAsJudge && log.info('install.editJudgeConfigAndStart'),
+            () => needRestart && log.info('install.restartRequired'),
+            () => {
+                if (warnings.length) {
+                    log.warn('install.warnings');
+                    for (const warning of warnings) {
+                        log.warn(warning[0], ...warning.slice(1));
+                    }
+                }
+            },
         ],
     },
 ];
@@ -640,7 +734,7 @@ async function main() {
                     while (res.code && op[1].ignore !== true) {
                         if (op[1].retry && retry < 30) {
                             log.warn('Retry in 3 secs... (%s)', op[0]);
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
                             res = exec(op[0], { stdio: 'inherit' });
                             retry++;
@@ -652,9 +746,9 @@ async function main() {
                     while (res === 'retry') {
                         if (retry < 30) {
                             log.warn('Retry in 3 secs...');
-                            // eslint-disable-next-line no-await-in-loop
+
                             await sleep(3000);
-                            // eslint-disable-next-line no-await-in-loop
+
                             res = await op[0](op[1]);
                             retry++;
                         } else log.fatal('Error installing');

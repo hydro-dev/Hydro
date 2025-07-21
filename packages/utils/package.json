@@ -1,22 +1,24 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.4.30",
+    "version": "1.4.35",
     "description": "hydrooj utils",
     "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
+    "optionalPeerDependencies": {
+        "bson": "^6.17.0",
+        "moment-timezone": "^0.5.48"
+    },
     "dependencies": {
         "@hydrooj/register": "workspace:^",
         "cac": "^6.7.14",
-        "fs-extra": "^11.2.0",
+        "fs-extra": "^11.3.0",
         "js-yaml": "^4.1.0",
-        "moment-timezone": "^0.5.46",
-        "mongodb": "^5.9.2",
-        "reggol": "^1.7.1",
+        "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
-        "systeminformation": "^5.23.5"
+        "systeminformation": "^5.27.7"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4"

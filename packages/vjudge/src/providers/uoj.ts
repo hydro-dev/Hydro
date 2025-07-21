@@ -2,7 +2,7 @@
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
 import {
-    Logger, parseMemoryMB, parseTimeMS, sleep, STATUS,
+    Logger, parseMemoryMB, parseTimeMS, randomstring, sleep, STATUS,
 } from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
@@ -39,7 +39,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
     }
 
     get loggedIn() {
-        return this.get('/login').then(({ text: html }) => !html.includes('<title>登录 - Universal Online Judge</title>'));
+        return this.get('/login').then(({ text: html }) => !html.includes('<title>登录 - '));
     }
 
     async ensureLogin() {
@@ -74,7 +74,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
             if (!src.startsWith('http')) continue;
             const file = new PassThrough();
             this.get(src).pipe(file);
-            const fid = String.random(8);
+            const fid = randomstring(8);
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);
         }
@@ -161,7 +161,6 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
     async waitForSubmission(id: string, next, end) {
         let i = 1;
         let count = 0;
-        // eslint-disable-next-line no-constant-condition
         while (count < 120) {
             count++;
             await sleep(3000);

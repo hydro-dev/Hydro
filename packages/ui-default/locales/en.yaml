@@ -29,6 +29,7 @@ problem_solution: Problem Solution
 problem_submit: Problem Submit
 problem_type.default: 'Type: Default'
 problem_type.interactive: 'Type: Interactive'
+problem_type.communication: 'Type: Communication'
 problem_type.objective: 'Type: Objective'
 problem_type.remote_judge: 'Type: RemoteJudge'
 problem_type.submit_answer: 'Type: SubmitAnswer'

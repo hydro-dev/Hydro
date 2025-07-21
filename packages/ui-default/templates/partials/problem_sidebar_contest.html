@@ -7,7 +7,7 @@
 {% endif %}
   <div>
     <ol class="menu">
-    {% if model.contest.isOngoing(tdoc, tsdoc) %}
+    {% if mode == 'contest' or mode == 'correction' %}
     {% if page_name == 'contest_detail_problem' %}
       <li class="menu__item scratchpad--hide nojs--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
@@ -20,10 +20,11 @@
         <span class="icon icon-flag"></span> {{ _('View Problem') }}
       </a></li>
     {% endif %}
-      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="{{ url('problem_submit', pid=pdoc.pid|default(pdoc.docId), query={tid:tdoc.docId}) }}">
+      <li class="menu__item scratchpad--hide"><a class="menu__link{% if page_name == 'contest_detail_problem_submit' %} active{% endif %}" href="{{ url('problem_submit', pid=pdoc.pid|default(pdoc.docId), query={tid:tdoc.docId} if mode=='contest' else {}) }}">
         <span class="icon icon-send"></span> {{ _('Submit') }}
       </a></li>
-    {% elif model.contest.isDone(tdoc) %}
+    {% endif %}
+    {% if mode != 'none' and model.contest.isDone(tdoc) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('problem_detail', pid=pdoc.pid|default(pdoc.docId)) }}">
         <span class="icon icon-send"></span> {{ _('Open in Problem Set') }}
       </a></li>

@@ -1,7 +1,7 @@
 {% import "components/problem.html" as problem with context %}
 {% extends "layout/basic.html" %}
 {% block content %}
-{% if typeof(rdoc['status']) === 'number' %}
+{% if typeof(rdoc['status']) === 'number' and not rev %}
   {{ set(UiContext, 'socketUrl', "record-detail-conn?domainId=" + rdoc.domainId + "&rid=" + rdoc._id) }}
 {% endif %}
 <div class="row">
@@ -106,6 +106,29 @@
         {% endif %}
       </div>
     </div>
+    {% if allRevs|length %}
+      <div class="section side">
+        <div class="section__header">
+          <h1 class="section__title">{{ _('History') }}</h1>
+        </div>
+        <div class="section__body no-padding">
+          <ol class="menu">
+            <li class="menu__item">
+              <a href="?rev=" {% if not rev %}style="border-color: #4690d0;"{% endif %} class="menu__link">
+                {{ _('Latest Version') }}
+              </a>
+            </li>
+            {% for r, rtime in allRevs %}
+            <li class="menu__item">
+              <a href="?rev={{ r }}" {% if rev and rev.equals(r) %}style="border-color: #4690d0;"{% endif %} class="menu__link">
+                {{ datetimeSpan(rtime, false)|safe }}
+              </a>
+            </li>
+            {% endfor %}
+          </ol>
+        </div>
+      </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

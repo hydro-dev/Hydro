@@ -31,7 +31,7 @@ if (typeof window['WeakRef'] === 'undefined') {
     return WeakRef;
   }(new WeakMap()));
 }
-if (!(window.matchMedia('all').addListener || window.matchMedia('all').addEventListener)) {
+if (!window.matchMedia('all').addListener && !window.matchMedia('all').addEventListener) {
   const localMatchMedia = window.matchMedia;
   const hasMediaQueries = localMatchMedia('only all').matches;
   let isListening = false;

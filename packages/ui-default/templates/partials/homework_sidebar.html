@@ -35,6 +35,10 @@
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Claim Homework') }}
         </a>
+    {% elif not handler.user._dudoc.join %}
+        <a class="menu__link" href="/domain/join?target={{ tdoc.domainId }}">
+          <span class="icon icon-add"></span> {{ _('Join Domain to Claim Homework') }}
+        </a>
     {% else %}
         <a class="menu__link disabled" href="javascript:;">
           <span class="icon icon-add"></span> {{ _('No Permission to Claim Homework') }}

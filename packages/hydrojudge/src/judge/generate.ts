@@ -2,7 +2,7 @@
 import { tmpdir } from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 import { SystemError } from '../error';
 import { CopyInFile, runQueued } from '../sandbox';
 import client from '../sandbox/client';
@@ -27,7 +27,7 @@ export const judge = async (ctx: JudgeTask) => {
     let totalStatus = 0;
 
     async function runGenerator(i: number) {
-        const res = await runQueued(
+        await using res = await runQueued(
             `${executeGenerator.execute} ${i}`,
             {
                 stdin: { content: ctx.input || '' },
@@ -37,12 +37,12 @@ export const judge = async (ctx: JudgeTask) => {
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
+            `generate[${i}]<${ctx.rid}>`,
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.in`);
-        ctx.clean.push(() => {
+        ctx.pushClean(() => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,
@@ -79,7 +79,7 @@ export const judge = async (ctx: JudgeTask) => {
         return status === STATUS.STATUS_ACCEPTED ? tmp : null;
     }
     async function runStd(i: number, stdin: CopyInFile) {
-        const res = await runQueued(
+        await using res = await runQueued(
             `${executeStd.execute} ${i}`,
             {
                 stdin,
@@ -89,12 +89,12 @@ export const judge = async (ctx: JudgeTask) => {
                 time: parseTimeMS('2s'),
                 memory: parseMemoryMB('256m'),
             },
+            `generate.std[${i}]<${ctx.rid}>`,
             1,
         );
         const tmp = path.join(tmpdir(), `${ctx.request.rid}.${i}.out`);
-        ctx.clean.push(() => {
+        ctx.pushClean(() => {
             if (fs.existsSync(tmp)) fs.removeSync(tmp);
-            return res.fileIds['stdout'] ? client.deleteFile(res.fileIds['stdout']) : Promise.resolve();
         });
         const {
             code, signalled, time, memory, fileIds, stderr,

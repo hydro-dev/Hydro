@@ -8,6 +8,8 @@ import list from 'monaco-themes/themes/themelist.json';
 import { nanoid } from 'nanoid';
 import { i18n, request } from 'vj/utils';
 
+export { renderMarkdown } from 'monaco-editor/esm/vs/base/browser/markdownRenderer';
+
 export default monaco;
 export const customOptions: monaco.editor.IStandaloneDiffEditorConstructionOptions = JSON.parse(localStorage.getItem('editor.config') || '{}');
 export function saveCustomOptions() {

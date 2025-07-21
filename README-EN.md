@@ -1,6 +1,6 @@
 # Hydro
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/hydro-dev/hydro/CI)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/hydro-dev/hydro/build.yml?branch=master)
 ![hydrooj](https://img.shields.io/npm/dm/hydrooj)
 ![npm](https://img.shields.io/npm/v/hydrooj?label=hydrooj)
 ![node-current](https://img.shields.io/node/v/hydrooj)
@@ -17,8 +17,6 @@ You can also just use the service without self-hosting the system with the power
 Feel free to create an account and then navigate to `MyAccount > MyDomains > Create Domain` to create one.  
 
 [中文](https://hydro.js.org/)  
-
-[Open pre-configured test environment in Gitpod](https://gitpod.io/#https://github.com/hydro-dev/Hydro)  
 
 We are now looking for help with Korean and Japanese translation, if you are a native speaker of these languages, please contact us, pull requests are always welcome.
 

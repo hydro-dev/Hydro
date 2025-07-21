@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
+import { Readable } from 'stream';
 import decodeHTML from 'decode-html';
 import xml2js from 'xml2js';
 import {
-    _, AdmZip, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler,
-    PERM, ProblemConfigFile, ProblemModel, ProblemType, SettingModel, SolutionModel, SystemModel, ValidationError, yaml,
+    _, BadRequestError, buildContent, Context, FileTooLargeError, fs, Handler, PERM, ProblemConfigFile,
+    ProblemModel, ProblemType, randomstring, Schema, SolutionModel, SystemModel, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const knownRemoteMapping = {
@@ -64,7 +65,7 @@ class FpsProblemImportHandler extends Handler {
             }
             if (p.img?.length) {
                 for (const img of p.img) {
-                    const filename = String.random(8) + img.src[0].split('/').pop().split('.').pop();
+                    const filename = randomstring(8) + img.src[0].split('/').pop().split('.').pop();
                     tasks.push(ProblemModel.addAdditionalFile(domainId, pid, filename, Buffer.from(img.base64[0], 'base64')));
                     content = content.replace(img.src[0], `file://${filename}`);
                 }
@@ -82,28 +83,28 @@ class FpsProblemImportHandler extends Handler {
     }
 
     async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
         const tasks = [];
         try {
-            const file = await fs.stat(this.request.files.file.filepath);
             if (file.size > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
-            const content = fs.readFileSync(this.request.files.file.filepath, 'utf-8');
+            const content = await fs.readFile(file.filepath, 'utf-8');
             const result = await xml2js.parseStringPromise(content);
             tasks.push(result);
         } catch (e) {
             if (e instanceof FileTooLargeError) throw e;
             console.log(e);
-            let zip: AdmZip;
+            const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(file.filepath)));
+            let entries: Zip.Entry[];
             try {
-                zip = new AdmZip(this.request.files.file.filepath);
+                entries = await zip.getEntries();
             } catch (err) {
                 throw new ValidationError('zip', null, err.message);
             }
-            for (const entry of zip.getEntries()) {
+            for (const entry of entries) {
                 try {
-                    const buf = entry.getData();
-                    if (buf.byteLength > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
-                    const content = buf.toString();
+                    if (entry.uncompressedSize > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
+                    const content = entry.getData(new Zip.TextWriter());
                     const result = await xml2js.parseStringPromise(content);
                     tasks.push(result);
                 } catch { }
@@ -114,6 +115,10 @@ class FpsProblemImportHandler extends Handler {
         this.response.redirect = this.url('problem_main');
     }
 }
+
+export const Config = Schema.object({
+    limit: Schema.number().role('limit').default(64 * 1024 * 1024).min(1).description('Maximum file size for FPS problemset import'),
+}).description('FPS Importer');
 
 export async function apply(ctx: Context) {
     ctx.Route('problem_import_fps', '/problem/import/fps', FpsProblemImportHandler, PERM.PERM_CREATE_PROBLEM);
@@ -132,10 +137,5 @@ we strongly recommend that you use tools such as EasyFPSViewer to split it or re
 Importing a large problem set on a machine with insufficient memory may cause a crash or freeze.',
         'problem.import.fps.hint3': 'If you really need it, this limit can be changed in the system settings. \
 We strongly recommend that you use the zip format to store or exchange problemsets.',
-    });
-    ctx.inject(['setting'], (c) => {
-        c.setting.SystemSetting(
-            SettingModel.Setting('setting_limits', 'import-fps.limit', 64 * 1024 * 1024, 'text', 'Maximum file size for FPS problemset import'),
-        );
     });
 }

@@ -43,12 +43,6 @@ const langMap = {
     16: 'js',
     17: 'go',
 };
-const nameMap: Record<string, string> = {
-    'sample.in': 'sample0.in',
-    'sample.out': 'sample0.out',
-    'test.in': 'test0.in',
-    'test.out': 'test0.out',
-};
 
 async function addContestFile(domainId: string, tid: ObjectId, filename: string, filepath: string) {
     const tdoc = await ContestModel.get(domainId, tid);
@@ -58,6 +52,18 @@ async function addContestFile(domainId: string, tid: ObjectId, filename: string,
     if (!meta) return false;
     await ContestModel.edit(domainId, tid, { files: [...(tdoc.files || []), payload] });
     return true;
+}
+
+function fixFileName(fileName: string) {
+    if (fileName.endsWith('.in') || fileName.endsWith('.out')) {
+        const dotAt = fileName.lastIndexOf('.');
+        const name = fileName.slice(0, dotAt);
+        const suffix = fileName.slice(dotAt + 1);
+        if (!name.match(/[0-9]/)) {
+            fileName = `${name}0.${suffix}`;
+        }
+    }
+    return fileName.replace(/[\\/?#~!|*]/g, '_');
 }
 
 export async function run({
@@ -80,6 +86,7 @@ export async function run({
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
+    await SystemModel.set('migrate.lock', 'hustoj');
     /*
         user_id     varchar 20	N	用户id（主键）
         email       varchar 100	Y	用户E-mail
@@ -99,7 +106,8 @@ export async function run({
     const udocs = await query('SELECT * FROM `users`');
     const precheck = await UserModel.getMulti({ unameLower: { $in: udocs.map((u) => u.user_id.toLowerCase()) } }).toArray();
     if (precheck.length) throw new Error(`Conflict username: ${precheck.map((u) => u.unameLower).join(', ')}`);
-    for (const udoc of udocs) {
+    for (let uidx = 0; uidx < udocs.length; uidx += 1) {
+        const udoc = udocs[uidx];
         if (randomMail) delete udoc.email;
         let current = await UserModel.getByEmail(domainId, udoc.email || `${udoc.user_id}@hustoj.local`);
         current ||= await UserModel.getByUname(domainId, udoc.user_id);
@@ -125,6 +133,13 @@ export async function run({
                 school: udoc.school || '',
                 nSubmit: udoc.submit,
                 nAccept: 0,
+            });
+        }
+
+        if (uidx % 100 === 0) {
+            const progress = Math.round(((uidx + 1) / udocs.length) * 100);
+            report({
+                message: `user finished ${uidx + 1} / ${udocs.length} (${progress}%)`,
             });
         }
     }
@@ -177,11 +192,13 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
-                const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
+                const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
                 for (const file of uploadFiles) {
                     try {
-                        files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-                        content = content.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+                        const filename = fixFileName(file[3]);
+                        const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
+                        files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
+                        content = content.replace(`/upload/${fileWithPath}`, `file://${filename}`);
                     } catch (e) {
                         report({ message: `failed to read file: ${path.join(uploadDir, file[1])}` });
                     }
@@ -219,6 +236,12 @@ target: ybtbas/${+pdoc.id - 3000}
                 await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
             }
         }
+        if (pageId % 10 === 0) {
+            const progress = Math.round(((pageId * step) / pcount) * 100);
+            report({
+                message: `problem finished ${pageId * step} / ${pcount} (${progress}%)`,
+            });
+        }
     }
     if (remoteUsed) {
         MessageModel.sendNotification(`您导入的数据中使用了一本通编程启蒙远端测试题目。
@@ -244,26 +267,51 @@ hydrooj install https://hydro.ac/hydroac-client.zip
     */
     const tidMap: Record<string, string> = {};
     const tdocs = await query('SELECT * FROM `contest`');
-    for (const tdoc of tdocs) {
-        const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id}`);
+    for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
+        const tdoc = tdocs[tidx];
+        const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id} ORDER BY \`num\` ASC`);
         const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
         const files = {};
         let description = tdoc.description;
-        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"]+\/([^"]+))"/g);
+        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
         for (const file of uploadFiles) {
-            files[file[2]] = await fs.readFile(path.join(uploadDir, file[1]));
-            description = description.replace(`/upload/${file[1]}`, `file://${file[2]}`);
+            const filename = fixFileName(file[3]);
+            const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
+            files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
+            description = description.replace(`/upload/${fileWithPath}`, `file://${filename}`);
         }
         // WHY you allow contest with end time BEFORE start time? WHY???
         const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
+        let isAssignMode = false;
+        if (tdoc.private === 1 && tdoc.password === '') {
+            isAssignMode = true;
+        }
         const tid = await ContestModel.add(
             domainId, tdoc.title, description || 'Description',
             adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
-            { _code: password },
+            { _code: tdoc.password },
         );
         tidMap[tdoc.contest_id] = tid.toHexString();
         await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
         if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
+
+        const allowedUser:{ user_id:string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
+        const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
+        if (isAssignMode) {
+            await ContestModel.edit(domainId, tid, {
+                assign: assignUserList.map((uid) => uid.toString()),
+            });
+        } else {
+            for (let i = 0; i < assignUserList.length; i++) {
+                await ContestModel.attend(domainId, tid, assignUserList[i]).catch(noop);
+            }
+        }
+        if (tidx % 100 === 0) {
+            const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
+            report({
+                message: `contest finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
+            });
+        }
     }
     report({ message: 'contest finished' });
     /*
@@ -287,10 +335,12 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         lint_error	int		N	？？？
         judger	char(16)		N	判题机
     */
-    const [{ 'count(*)': rcount }] = await query('SELECT count(*) FROM `solution`');
-    const rpageCount = Math.ceil(Number(rcount) / step);
-    for (let pageId = 0; pageId < rpageCount; pageId++) {
-        const rdocs = await query(`SELECT * FROM \`solution\` LIMIT ${pageId * step}, ${step}`);
+    // 测试运行 problem_id=0 导致非比赛的提交无法确定属于哪个题目,因此跳过测试运行
+    const [{ 'count(*)': _rcount }] = await query('SELECT count(*) FROM `solution` WHERE `problem_id` > 0');
+    const rcount = BigInt(_rcount);
+    const rpageCount = rcount / BigInt(step) + (rcount % BigInt(step) === 0n ? 0n : 1n);
+    for (let pageId = 0n; pageId < rpageCount; pageId++) {
+        const rdocs = await query(`SELECT * FROM \`solution\` WHERE \`problem_id\` > 0 LIMIT ${pageId * BigInt(step)}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
                 status: statusMap[rdoc.result] || 0,
@@ -317,11 +367,21 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             const source = await query(`SELECT \`source\` FROM \`source_code\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
             if (source[0]?.source) data.code = source[0].source;
             if (rdoc.contest_id) {
-                data.contest = new ObjectId(tidMap[rdoc.contest_id]);
-                await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                if (!tidMap[rdoc.contest_id]) {
+                    report({ message: `warning: contest_id ${rdoc.contest_id} for submission ${rdoc.solution_id} not found` });
+                } else {
+                    data.contest = new ObjectId(tidMap[rdoc.contest_id]);
+                    await ContestModel.attend(domainId, data.contest, uidMap[rdoc.user_id]).catch(noop);
+                }
             }
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
+        }
+        if (pageId % 10n === 0n) {
+            const progress = Math.round(((Number(pageId) * step) / Number(rcount)) * 100);
+            report({
+                message: `record finished ${Number(pageId * BigInt(step))} / ${Number(rcount)} (${progress}%)`,
+            });
         }
     }
     report({ message: 'record finished' });
@@ -339,10 +399,11 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         report({ message: `Syncing testdata for ${file.name}` });
         for (const data of datas) {
             if (data.isDirectory()) continue;
-            const filename = nameMap[data.name] || data.name;
+            const filename = fixFileName(data.name);
             await ProblemModel.addTestdata(domainId, pdoc.docId, filename, `${dataDir}/${file.name}/${data.name}`);
         }
         await ProblemModel.addTestdata(domainId, pdoc.docId, 'config.yaml', Buffer.from(pdoc.config as string));
     }
+    await SystemModel.set('migrate.lock', 0);
     return true;
 }

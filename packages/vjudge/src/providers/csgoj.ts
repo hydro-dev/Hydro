@@ -1,7 +1,9 @@
 /* eslint-disable no-await-in-loop */
 import { PassThrough } from 'stream';
 import { JSDOM } from 'jsdom';
-import { Logger, sleep, STATUS } from 'hydrooj';
+import {
+    Logger, randomstring, sleep, STATUS,
+} from 'hydrooj';
 import { BasicFetcher } from '../fetch';
 import { IBasicProvider, RemoteAccount } from '../interface';
 
@@ -91,7 +93,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
             }
             const file = new PassThrough();
             this.get(src).pipe(file);
-            const fid = String.random(8);
+            const fid = randomstring(8);
             images[src] = fid;
             files[`${fid}.png`] = file;
             ele.setAttribute('src', `file://${fid}.png`);

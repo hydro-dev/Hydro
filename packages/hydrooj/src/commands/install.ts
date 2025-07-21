@@ -1,30 +1,30 @@
 import child from 'child_process';
 import os from 'os';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import { BlobReader, ZipReader } from '@zip.js/zip.js';
 import { CAC } from 'cac';
 import fs from 'fs-extra';
 import superagent from 'superagent';
 import tar from 'tar';
 import { extractZip, Logger } from '@hydrooj/utils';
 import { version } from 'hydrooj/package.json';
+import { hydroPath } from '../options';
 
 const logger = new Logger('install');
 let yarnVersion = 0;
 try {
-    // eslint-disable-next-line no-unsafe-optional-chaining
     yarnVersion = +child.execSync('yarn --version', { cwd: os.tmpdir() }).toString().split('v').pop()!.split('.')[0];
 } catch (e) {
     // yarn 2 does not support global dir
 }
 
-const hydroPath = path.resolve(os.homedir(), '.hydro');
 const addonDir = path.join(hydroPath, 'addons');
+const userAgent = `Hydro/${version} Node.js/${process.version.split('v').pop()}`;
 
 function downloadAndExtractTgz(url: string, dest: string) {
     return new Promise((resolve, reject) => {
         superagent.get(url)
-            .set('User-Agent', `Hydro/${version} Node.js/${process.version.split('v').pop()}`)
+            .set('User-Agent', userAgent)
             .pipe(tar.x({
                 C: dest,
                 strip: 1,
@@ -34,8 +34,8 @@ function downloadAndExtractTgz(url: string, dest: string) {
     });
 }
 async function downloadAndExtractZip(url: string, dest: string) {
-    const res = await superagent.get(url).responseType('arraybuffer');
-    await extractZip(new AdmZip(res.body), dest, true, true);
+    const res = await superagent.get(url).set('User-Agent', userAgent).responseType('arraybuffer');
+    await extractZip(new ZipReader(new BlobReader(new Blob([res.body]))), dest, { strip: true, overwrite: true });
 }
 const types = {
     '.tgz': downloadAndExtractTgz,

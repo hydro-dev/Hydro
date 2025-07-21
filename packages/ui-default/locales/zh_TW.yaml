@@ -21,6 +21,7 @@ __langname: 正體中文
 'Hello, {0}! You can click following link to reset the password of your {1} account:': 您好，{0}！您可以點選以下連結來重置您 {1} 賬戶的密碼：
 'Hello! You can click following link to sign up your {0} account:': 您好！您可以點選以下連結來註冊您的 {0} 賬戶：
 'No': 否
+'Or use the following link:': 或使用以下連結：
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
 'Yes': 是
 (None): (無)
@@ -193,6 +194,7 @@ Forgot password or username?: 忘記密碼或者使用者名？
 Formula blocks: 公式區塊
 Gender Visibility: 性別可見性
 Gender: 性別
+Group Assignment (Optional): 小組分配 (選填)
 Hard Deadline: 最終截止時間
 Have ALL PERMISSIONS in this domain: 在此域中擁有全部許可權
 Help: 幫助
@@ -238,6 +240,7 @@ Last Submit At: 最後遞交於
 Last Update At: 最後活動時間
 LaTeX Expressions: LaTeX 表示式
 Learn More: 瞭解更多
+Leave: 離開
 Links: 連結
 List View: 列表視圖
 Live: 正在進行
@@ -461,8 +464,9 @@ Support: 支援
 Technical Information: 技術資訊
 Temporary session: 臨時會話
 Text: 文字
+The group to join when user joining the domain.: 加入域時自動加入的小組。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間内。您此時遞交的題目無法獲得全部分數。
-Their account will not be deleted and they will be with the default role.: 他們的賬號不會被刪除，並且之後將以 default 角色訪問。
+Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他們的賬號不會被刪除，並且之後將以 guest 角色訪問，直到他們重新加入域。
 There are no contests...: 沒有比賽…
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
@@ -477,6 +481,7 @@ timeago_locale: zh_TW
 Timezone: 時區
 title: 標題
 Title: 標題
+To join the domain, users can click the "Join Domain" button on "My Domain" page.: 要加入域，用戶可以點擊“我的域”頁面中的“加入域”按鈕。
 Toggle Pretest Panel: 切換自測面板
 Toggle Records Panel: 切換評測記錄面板
 Total Score: 總分
@@ -507,6 +512,7 @@ User-defined role: 使用者定義的角色
 User: 使用者
 Username / UID: 使用者名或 UID
 Username: 使用者名
+Users will have to manually join the domain first before selected roles can be applied.: 用戶需要先手動加入域才能應用此角色分配。
 Users with those roles will be removed from the domain.: 擁有這些角色的使用者將從此域中移除。
 Users: 使用者
 Using your {0} universal account: 使用您的 {0} 通用賬戶

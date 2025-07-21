@@ -1,26 +1,27 @@
 /* eslint-disable object-curly-newline */
-import { sum } from 'lodash';
+import { pick, sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
-    Filter, MatchKeysAndValues,
+    Filter, FindOptions, MatchKeysAndValues,
     ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
+import { ProblemConfigFile } from '@hydrooj/common';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
-import {
-    JudgeMeta, ProblemConfigFile, RecordDoc,
-} from '../interface';
+import { JudgeMeta, RecordDoc } from '../interface';
 import db from '../service/db';
 import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
 import DomainModel from './domain';
 import problem from './problem';
+import * as SystemModel from './system';
 import task from './task';
 
 export default class RecordModel {
     static coll = db.collection('record');
     static collStat = db.collection('record.stat');
+    static collHistory = db.collection('record.history');
     static PROJECTION_LIST: (keyof RecordDoc)[] = [
         '_id', 'score', 'time', 'memory', 'lang',
         'uid', 'pid', 'rejudged', 'progress', 'domainId',
@@ -78,15 +79,23 @@ export default class RecordModel {
         };
     }
 
-    static async judge(domainId: string, rids: MaybeArray<ObjectId>, priority = 0, config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {}) {
-        rids = rids instanceof Array ? rids : [rids];
-        if (!rids.length) return null;
-        const rdocs = await RecordModel.getMulti(domainId, { _id: { $in: rids } }).toArray();
+    static async judge(
+        domainId: string, rids: MaybeArray<ObjectId> | RecordDoc, priority = 0,
+        config: ProblemConfigFile = {}, meta: Partial<JudgeMeta> = {},
+    ) {
+        let rdocs: RecordDoc[];
+        const _rids = rids instanceof Array ? rids
+            : (rids instanceof ObjectId) ? [rids]
+                : [rids._id];
+        if (!_rids.length) return null;
+        if (rids instanceof Array || rids instanceof ObjectId || ObjectId.isValid(rids.toString())) {
+            rdocs = await RecordModel.getMulti(domainId, { _id: { $in: _rids } }, { readPreference: 'primary' }).toArray();
+        } else rdocs = [rids];
         if (!rdocs.length) return null;
         let source = `${domainId}/${rdocs[0].pid}`;
         let [pdoc] = await Promise.all([
             problem.get(domainId, rdocs[0].pid),
-            task.deleteMany({ rid: { $in: rids } }),
+            task.deleteMany({ rid: { $in: _rids } }),
         ]);
         if (!pdoc) throw new ProblemNotFoundError(domainId, rdocs[0].pid);
         if (pdoc.reference) {
@@ -102,8 +111,8 @@ export default class RecordModel {
             if (pdoc.config.type === 'remote_judge' && rdoc.contest?.toHexString() !== '0'.repeat(24)) type = 'remotejudge';
             else if (meta?.type === 'generate') type = 'generate';
             return ({
+                ...rdoc,
                 ...(pdoc.config as any), // TODO deprecate this
-                lang: rdoc.lang,
                 priority,
                 type,
                 rid: rdoc._id,
@@ -167,7 +176,7 @@ export default class RecordModel {
         bus.broadcast('record/change', data);
         if (addTask) {
             const priority = await RecordModel.submissionPriority(uid, args.type === 'pretest' ? -20 : (isContest ? 50 : 0));
-            await RecordModel.judge(domainId, res.insertedId, priority, isContest ? { detail: false } : {}, {
+            await RecordModel.judge(domainId, data, priority, isContest ? { detail: false } : {}, {
                 type: args.type,
                 rejudge: data.rejudged,
             });
@@ -175,9 +184,9 @@ export default class RecordModel {
         return res.insertedId;
     }
 
-    static getMulti(domainId: string, query: any) {
+    static getMulti(domainId: string, query: any, options?: FindOptions) {
         if (domainId) query = { domainId, ...query };
-        return RecordModel.coll.find(query);
+        return RecordModel.coll.find(query, options);
     }
 
     static getMultiStat(domainId: string, query: any, sortBy: any = { _id: -1 }) {
@@ -201,14 +210,13 @@ export default class RecordModel {
             return null;
         }
         if (Object.keys($update).length) {
-            const res = await RecordModel.coll.findOneAndUpdate(
+            return await RecordModel.coll.findOneAndUpdate(
                 { _id, domainId },
                 $update,
                 { returnDocument: 'after' },
             );
-            return res.value || null;
         }
-        return await RecordModel.get(domainId, _id);
+        return await RecordModel.coll.findOne({ _id }, { readPreference: 'primary' });
     }
 
     static async updateMulti(
@@ -226,6 +234,7 @@ export default class RecordModel {
     }
 
     static async reset(domainId: string, rid: MaybeArray<ObjectId>, isRejudge: boolean) {
+        const rids = Array.isArray(rid) ? rid : [rid];
         const upd: any = {
             score: 0,
             status: STATUS.STATUS_WAITING,
@@ -239,8 +248,21 @@ export default class RecordModel {
             judger: null,
         };
         if (isRejudge) upd.rejudged = true;
-        await RecordModel.collStat.deleteMany(rid instanceof Array ? { _id: { $in: rid } } : { _id: rid });
-        await task.deleteMany(rid instanceof Array ? { rid: { $in: rid } } : { rid });
+        const [rdocs] = await Promise.all([
+            RecordModel.coll.find({ _id: { $in: rids }, judgeAt: { $exists: true, $ne: null } }).toArray(),
+            RecordModel.collStat.deleteMany({ _id: { $in: rids } }),
+            task.deleteMany({ rid: { $in: rids } }),
+        ]);
+        if (rdocs.length) {
+            await RecordModel.collHistory.insertMany(rdocs.map((rdoc) => ({
+                ...pick(rdoc, [
+                    'compilerTexts', 'judgeTexts', 'testCases', 'subtasks',
+                    'score', 'time', 'memory', 'status', 'judgeAt', 'judger',
+                ]),
+                rid: rdoc._id,
+                _id: new ObjectId(),
+            })));
+        }
         return RecordModel.update(domainId, rid, upd);
     }
 
@@ -261,7 +283,7 @@ export default class RecordModel {
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     // Mark problem as deleted
     ctx.on('problem/delete', (domainId, docId) => Promise.all([
         RecordModel.coll.deleteMany({ domainId, pid: docId }),
@@ -270,6 +292,14 @@ export function apply(ctx: Context) {
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
     ctx.on('record/judge', async (rdoc, updated) => {
         if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
+            if (SystemModel.get('record.statMode') === 'unique') {
+                await RecordModel.collStat.deleteMany({
+                    _id: { $ne: rdoc._id },
+                    uid: rdoc.uid,
+                    pid: rdoc.pid,
+                    domainId: rdoc.domainId,
+                });
+            }
             await RecordModel.collStat.updateOne({
                 _id: rdoc._id,
             }, {
@@ -285,7 +315,7 @@ export function apply(ctx: Context) {
             }, { upsert: true });
         }
     });
-    ctx.on('ready', () => Promise.all([
+    await Promise.all([
         db.ensureIndexes(
             RecordModel.coll,
             { key: { domainId: 1, pid: 1 }, name: 'delete' },
@@ -302,6 +332,10 @@ export function apply(ctx: Context) {
             { key: { domainId: 1, pid: 1, uid: 1, memory: 1 }, name: 'memory' },
             { key: { domainId: 1, pid: 1, uid: 1, length: 1 }, name: 'length' },
         ),
-    ]) as any);
+        db.ensureIndexes(
+            RecordModel.collHistory,
+            { key: { rid: 1, _id: -1 }, name: 'basic' },
+        ),
+    ]);
 }
 global.Hydro.model.record = RecordModel;

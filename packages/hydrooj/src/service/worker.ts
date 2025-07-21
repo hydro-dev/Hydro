@@ -1,3 +1,4 @@
+import cac from 'cac';
 import moment from 'moment-timezone';
 import { sleep } from '@hydrooj/utils';
 import { Context, Service } from '../context';
@@ -9,7 +10,9 @@ declare module '../context' {
     }
 }
 
-export class WorkerService extends Service {
+const argv = cac().parse();
+
+export default class WorkerService extends Service {
     private handlers: Record<string, Function> = {};
     consuming = true;
     running = null;
@@ -17,8 +20,16 @@ export class WorkerService extends Service {
     coll = db.collection('schedule');
 
     constructor(ctx: Context) {
-        super(ctx, 'worker', true);
+        super(ctx, 'worker');
+    }
+
+    *[Service.init]() {
+        if (argv.options.disableWorker) return;
         this.consume();
+        yield () => {
+            this.consuming = false;
+            return this.promise;
+        };
     }
 
     async getFirst() {
@@ -29,13 +40,13 @@ export class WorkerService extends Service {
             subType: { $in: Object.keys(this.handlers) },
         };
         const res = await this.coll.findOneAndDelete(q);
-        if (res.value) {
-            this.ctx.logger.debug('%o', res.value);
-            if (res.value.interval) {
-                const executeAfter = moment(res.value.executeAfter).add(...res.value.interval).toDate();
-                await this.coll.insertOne({ ...res.value, executeAfter });
+        if (res) {
+            this.ctx.logger.debug('%o', res);
+            if (res.interval) {
+                const executeAfter = moment(res.executeAfter).add(...res.interval).toDate();
+                await this.coll.insertOne({ ...res, executeAfter });
             }
-            return res.value;
+            return res;
         }
         return null;
     }
@@ -79,14 +90,4 @@ export class WorkerService extends Service {
             };
         });
     }
-
-    public async stop() {
-        this.consuming = false;
-        await this.promise;
-    }
-}
-
-export async function apply(ctx: Context) {
-    ctx.provide('worker', undefined, true);
-    ctx.worker = new WorkerService(ctx);
 }

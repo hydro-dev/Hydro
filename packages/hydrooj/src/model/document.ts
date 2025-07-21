@@ -9,28 +9,26 @@ import {
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
     Tdoc, TrainingDoc,
 } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { ArrayKeys, MaybeArray, NumberKeys, Projection } from '../typeutils';
 import { buildProjection } from '../utils';
 
 type DocID = ObjectId | string | number;
-type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, Symbol>;
+type NormalArrayKeys<O, P = any> = Exclude<ArrayKeys<O, P>, symbol>;
 
 export const coll = db.collection('document');
 export const collStatus = db.collection('document.status');
 
-export const TYPE_PROBLEM: 10 = 10;
-export const TYPE_PROBLEM_SOLUTION: 11 = 11;
-export const TYPE_PROBLEM_LIST: 12 = 12;
-export const TYPE_DISCUSSION_NODE: 20 = 20;
-export const TYPE_DISCUSSION: 21 = 21;
-export const TYPE_DISCUSSION_REPLY: 22 = 22;
-export const TYPE_CONTEST: 30 = 30;
-export const TYPE_CONTEST_CLARIFICATION: 31 = 31;
-export const TYPE_TRAINING: 40 = 40;
-/** @deprecated use `TYPE_CONTEST` with rule `homework` instead. */
-export const TYPE_HOMEWORK: 60 = 60;
+export const TYPE_PROBLEM = 10 as const;
+export const TYPE_PROBLEM_SOLUTION = 11 as const;
+export const TYPE_PROBLEM_LIST = 12 as const;
+export const TYPE_DISCUSSION_NODE = 20 as const;
+export const TYPE_DISCUSSION = 21 as const;
+export const TYPE_DISCUSSION_REPLY = 22 as const;
+export const TYPE_CONTEST = 30 as const;
+export const TYPE_CONTEST_CLARIFICATION = 31 as const;
+export const TYPE_TRAINING = 40 as const;
 
 export interface DocType {
     [TYPE_PROBLEM]: ProblemDoc;
@@ -106,15 +104,14 @@ export async function set<K extends keyof DocType>(
 ): Promise<DocType[K]> {
     await bus.parallel('document/set', domainId, docType, docId, $set, $unset);
     const update: UpdateFilter<DocType[K]> = {};
-    if ($set) update.$set = $set;
-    if ($unset) update.$unset = $unset;
-    if ($push) update.$push = $push;
-    const res = await coll.findOneAndUpdate(
+    if ($set && Object.keys($set).length) update.$set = $set;
+    if ($unset && Object.keys($unset).length) update.$unset = $unset;
+    if ($push && Object.keys($push).length) update.$push = $push;
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         update,
         { returnDocument: 'after', upsert: true },
     );
-    return res.value;
 }
 
 export function deleteOne<K extends keyof DocType>(
@@ -150,24 +147,22 @@ export async function inc<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     key: NumberKeys<DocType[K]>, value: number,
 ) {
-    const res = await coll.findOneAndUpdate(
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $inc: { [key]: value } },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function incAndSet<K extends keyof DocType>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     key: NumberKeys<DocType[K]>, value: number, args: Partial<DocType[K]>,
 ) {
-    const res = await coll.findOneAndUpdate(
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         { $inc: { [key]: value }, $set: args },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export function count<K extends keyof DocType>(
@@ -204,34 +199,32 @@ export async function push(
         { $push: { [key]: v } },
         { returnDocument: 'after' },
     );
-    return [doc.value, _id];
+    return [doc, _id];
 }
 
 export async function pull<K extends keyof DocType, T extends ArrayKeys<DocType[K]>>(
     domainId: string, docType: K, docId: DocType[K]['docId'],
     setKey: T, contents: Filter<DocType[K][T][0]>,
 ): Promise<DocType[K]> {
-    const res = await coll.findOneAndUpdate(
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         // @ts-ignore
         { $pull: { [setKey]: { $in: contents } } },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function deleteSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
     key: K, subId: MaybeArray<DocType[T][K][0]['_id']>,
 ): Promise<DocType[T]> {
-    subId = (subId instanceof Array) ? subId : [subId];
-    const res = await coll.findOneAndUpdate(
+    subId = Array.isArray(subId) ? subId : [subId];
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         // @ts-ignore
         { $pull: { [key]: { _id: { $in: subId } } } },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function getSub<T extends keyof DocType, K extends ArrayKeys<DocType[T]>>(
@@ -257,7 +250,7 @@ export async function setSub<T extends keyof DocType, K extends NormalArrayKeys<
 ): Promise<DocType[T]> {
     const $set: Record<string, any> = {};
     for (const k in args) $set[`${key}.$.${k}`] = args[k];
-    const res = await coll.findOneAndUpdate(
+    return await coll.findOneAndUpdate(
         {
             domainId,
             docType,
@@ -267,20 +260,18 @@ export async function setSub<T extends keyof DocType, K extends NormalArrayKeys<
         { $set },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function addToSet<T extends keyof DocType, K extends ArrayKeys<DocType[T], string>>(
     domainId: string, docType: T, docId: DocType[T]['docId'],
     setKey: K, content: string,
 ) {
-    const res = await coll.findOneAndUpdate(
+    return await coll.findOneAndUpdate(
         { domainId, docType, docId },
         // @ts-ignore
         { $addToSet: { [setKey]: content } },
         { returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function getStatus<K extends keyof DocStatusType>(
@@ -305,7 +296,7 @@ export async function setStatus<K extends keyof DocStatusType>(
     domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
     args: UpdateFilter<DocStatusType[K]>['$set'], returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[K]> {
-    const res = await collStatus.findOneAndUpdate(
+    return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $set: args, $inc: { counter: 1 } },
         {
@@ -315,7 +306,6 @@ export async function setStatus<K extends keyof DocStatusType>(
             ...(returnDocument === 'before' ? { readConcern: { level: 'majority' }, readPreference: 'primary' } : {}),
         },
     );
-    return res.value;
 }
 
 export async function setMultiStatus<K extends keyof DocStatusType>(
@@ -327,18 +317,17 @@ export async function setMultiStatus<K extends keyof DocStatusType>(
     );
 }
 
-export async function setStatusIfNotCondition<T extends keyof DocStatusType>(
+export async function setStatusIfCondition<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     filter: Filter<DocStatusType[T]>, args: Partial<DocStatusType[T]> = {},
     returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[T]> {
     try {
-        const res = await collStatus.findOneAndUpdate(
-            { domainId, docType, docId, uid, $nor: [filter] },
+        return await collStatus.findOneAndUpdate(
+            { domainId, docType, docId, uid, ...filter },
             { $set: args },
             { upsert: true, returnDocument },
         );
-        return res.value;
     } catch (e) {
         return false;
     }
@@ -349,8 +338,8 @@ export async function setIfNotStatus<T extends keyof DocStatusType, K extends ke
     key: K, value: DocStatusType[T][K], ifNot: DocStatusType[T][K], args: Partial<DocStatusType[T]>,
     returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[T]> {
-    return await setStatusIfNotCondition(
-        domainId, docType, docId, uid, { [key]: ifNot } as any,
+    return await setStatusIfCondition(
+        domainId, docType, docId, uid, { [key]: { $ne: ifNot } } as any,
         { [key]: value, ...args }, returnDocument,
     );
 }
@@ -364,24 +353,22 @@ export async function cappedIncStatus<T extends keyof DocStatusType>(
     const $not = value > 0 ? { $gte: maxValue } : { $lte: minValue };
     const operation = { $inc: { [key]: value } } as UpdateFilter<DocStatusType[T]>;
     if (Object.keys(setPayload).length) operation.$set = setPayload;
-    const res = await collStatus.findOneAndUpdate(
+    return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid, [key]: { $not } },
         operation,
         { upsert: true, returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function incStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
     key: NumberKeys<DocStatusType[T]>, value: number,
 ): Promise<DocStatusType[T]> {
-    const res = await collStatus.findOneAndUpdate(
+    return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $inc: { [key]: value } },
         { upsert: true, returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function revPushStatus<T extends keyof DocStatusType>(
@@ -393,26 +380,23 @@ export async function revPushStatus<T extends keyof DocStatusType>(
         { $set: { [`${key}.$`]: value }, $inc: { rev: 1 } },
         { returnDocument: 'after' },
     );
-    if (!res.value) {
-        res = await collStatus.findOneAndUpdate(
-            { domainId, docType, docId, uid },
-            // @ts-ignore
-            { $push: { [key]: value }, $inc: { rev: 1 } },
-            { upsert: true, returnDocument: 'after' },
-        );
-    }
-    return res.value;
+    res ||= await collStatus.findOneAndUpdate(
+        { domainId, docType, docId, uid },
+        // @ts-ignore
+        { $push: { [key]: value }, $inc: { rev: 1 } },
+        { upsert: true, returnDocument: 'after' },
+    );
+    return res;
 }
 
 export async function revInitStatus<T extends keyof DocStatusType>(
     domainId: string, docType: T, docId: DocStatusType[T]['docId'], uid: number,
 ): Promise<DocStatusType[T]> {
-    const res = await collStatus.findOneAndUpdate(
+    return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
         { $inc: { rev: 1 } },
         { upsert: true, returnDocument: 'after' },
     );
-    return res.value;
 }
 
 export async function revSetStatus<T extends keyof DocStatusType>(
@@ -421,8 +405,7 @@ export async function revSetStatus<T extends keyof DocStatusType>(
 ): Promise<any> {
     const filter = { domainId, docType, docId, uid, rev };
     const update = { $set: args, $inc: { rev: 1 } };
-    const res = await collStatus.findOneAndUpdate(filter, update, { returnDocument: 'after' });
-    return res.value;
+    return await collStatus.findOneAndUpdate(filter, update, { returnDocument: 'after' });
 }
 
 export async function apply(ctx: Context) {
@@ -431,6 +414,7 @@ export async function apply(ctx: Context) {
         collStatus.deleteMany({ domainId }),
     ]));
     await db.clearIndexes(coll, ['tag', 'hidden']);
+    const onlyFor = (docType: number) => ({ partialFilterExpression: { docType } });
     await db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
@@ -441,8 +425,8 @@ export async function apply(ctx: Context) {
         // For problem solution
         { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, vote: -1, docId: -1 }, name: 'solution', sparse: true },
         // For discussion
-        { key: { domainId: 1, docType: 1, pin: -1, docId: -1 }, name: 'discussionSort', sparse: true },
-        { key: { domainId: 1, docType: 1, parentType: 1, parentId: 1, pin: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
+        { key: { docType: 1, domainId: 1, hidden: 1, pin: -1, docId: -1 }, name: 'discussionSort', ...onlyFor(TYPE_DISCUSSION) },
+        { key: { docType: 1, domainId: 1, hidden: 1, parentType: 1, parentId: 1, pin: -1, docId: -1 }, name: 'discussionNodeSort', sparse: true },
         // Hidden doc
         { key: { domainId: 1, docType: 1, hidden: 1, docId: -1 }, name: 'hiddenDoc', sparse: true },
         // For contest
@@ -490,7 +474,7 @@ global.Hydro.model.document = {
     revSetStatus,
     set,
     setIfNotStatus,
-    setStatusIfNotCondition,
+    setStatusIfCondition,
     setStatus,
     setMultiStatus,
     setSub,
@@ -500,7 +484,6 @@ global.Hydro.model.document = {
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,
     TYPE_DISCUSSION_REPLY,
-    TYPE_HOMEWORK,
     TYPE_PROBLEM,
     TYPE_PROBLEM_LIST,
     TYPE_PROBLEM_SOLUTION,

@@ -142,12 +142,12 @@
                 {% if handler.user.hasPerm(reply_post_perm) %}
                   <a href="javascript:;" data-tooltip="{{ _('Reply') }}" data-op="reply" data-type="reply"><span class="icon icon-reply"></span></a>
                 {% endif %}
-                {% if (handler.user.hasPerm(reply_edit_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(reply_edit_perm) %}
+                {% if (handler.user.hasPerm(reply_edit_self_perm) and handler.user.own(rdoc)) or handler.user.hasPerm(reply_edit_perm) %}
                   <a href="javascript:;" data-tooltip="{{ _('Edit') }}" data-op="edit" data-type="reply"
                     data-form="{{ {operation: reply_edit_op, psid: doc._id, psrid: rdoc._id}|json }}"
                   ><span class="icon icon-edit"></span></a>
                 {% endif %}
-                {% if (handler.user.hasPerm(reply_delete_self_perm) and handler.user.own(doc)) or handler.user.hasPerm(reply_delete_perm) %}
+                {% if (handler.user.hasPerm(reply_delete_self_perm) and handler.user.own(rdoc)) or handler.user.hasPerm(reply_delete_perm) %}
                   <a href="javascript:;" data-tooltip="{{ _('Delete') }}" data-op="delete" data-type="reply"
                     data-form="{{ {operation: reply_delete_op, psid: doc._id, psrid: rdoc._id}|json }}"
                   ><span class="icon icon-delete"></span></a>

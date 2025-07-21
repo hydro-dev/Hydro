@@ -1,5 +1,6 @@
 {
     "name": "@hydrooj/blog",
-    "version": "0.0.4",
+    "version": "0.1.0-beta.2",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "license": "AGPL-3.0-or-later"
 }

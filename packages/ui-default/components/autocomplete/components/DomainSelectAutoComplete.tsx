@@ -1,8 +1,8 @@
+import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/components';
 import type { DomainDoc } from 'hydrooj/src/interface';
 import PropTypes from 'prop-types';
 import React, { forwardRef } from 'react';
 import { request } from 'vj/utils';
-import AutoComplete, { AutoCompleteHandle, AutoCompleteProps } from './AutoComplete';
 
 const DomainSelectAutoComplete = forwardRef<AutoCompleteHandle<DomainDoc>, AutoCompleteProps<DomainDoc>>((props, ref) => (
   <AutoComplete<DomainDoc>
@@ -22,7 +22,17 @@ const DomainSelectAutoComplete = forwardRef<AutoCompleteHandle<DomainDoc>, AutoC
     queryItems={(query) => request.get('/domain/search', { q: query })}
     itemText={(domain) => domain.name}
     itemKey={(domain) => domain._id}
-    {...props}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: false,
+      selectedKeys: [],
+      allowEmptyQuery: true,
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
   />
 ));
 
@@ -36,17 +46,6 @@ DomainSelectAutoComplete.propTypes = {
   allowEmptyQuery: PropTypes.bool,
   freeSolo: PropTypes.bool,
   freeSoloConverter: PropTypes.func,
-};
-
-DomainSelectAutoComplete.defaultProps = {
-  width: '100%',
-  height: 'auto',
-  listStyle: {},
-  multi: false,
-  selectedKeys: [],
-  allowEmptyQuery: true,
-  freeSolo: false,
-  freeSoloConverter: (input) => input,
 };
 
 DomainSelectAutoComplete.displayName = 'DomainSelectAutoComplete';

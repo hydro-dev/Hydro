@@ -35,7 +35,7 @@ export class StorageModel {
     }
 
     static async get(path: string, savePath?: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
@@ -101,7 +101,7 @@ export class StorageModel {
     }
 
     static async getMeta(path: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
@@ -120,7 +120,7 @@ export class StorageModel {
             { path: target, autoDelete: null },
             { $set: { lastUsage: new Date() } },
         );
-        return await storage.signDownloadLink(res.value?.link || res.value?._id || target, filename, noExpire, useAlternativeEndpointFor);
+        return await storage.signDownloadLink(res?.link || res?._id || target, filename, noExpire, useAlternativeEndpointFor);
     }
 
     static async move(src: string, dst: string) {
@@ -128,7 +128,7 @@ export class StorageModel {
             { path: src, autoDelete: null },
             { $set: { path: dst } },
         );
-        return !!res.value;
+        return !!res;
     }
 
     static async exists(path: string) {
@@ -137,11 +137,12 @@ export class StorageModel {
     }
 
     static async copy(src: string, dst: string) {
-        const { value } = await StorageModel.coll.findOneAndUpdate(
+        const value = await StorageModel.coll.findOneAndUpdate(
             { path: src, autoDelete: null },
             { $set: { lastUsage: new Date() } },
             { returnDocument: 'after' },
         );
+        if (!value) throw new Error(`Original file ${src} not found`);
         const meta = {};
         await StorageModel.del([dst]);
         meta['Content-Type'] = mime(dst);
@@ -150,7 +151,7 @@ export class StorageModel {
         // eslint-disable-next-line no-await-in-loop
         while (await StorageModel.coll.findOne({ _id })) _id = StorageModel.generateId(extname(dst));
         await StorageModel.coll.insertOne({
-            ...value, _id, path: dst, link: value._id, lastModified: new Date(), owner: value.owner || 1,
+            ...value, _id, path: dst, link: value.link || value._id, lastModified: new Date(), owner: value.owner || 1,
         });
         return _id;
     }
@@ -169,15 +170,15 @@ async function cleanFiles() {
     }
     if (system.get('server.keepFiles')) return;
     let res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
-    while (res.value) {
+    while (res) {
         // eslint-disable-next-line no-await-in-loop
-        if (!res.value.link) await storage.del(res.value._id);
+        if (!res.link) await storage.del(res._id);
         // eslint-disable-next-line no-await-in-loop
         res = await StorageModel.coll.findOneAndDelete({ autoDelete: { $lte: new Date() } });
     }
 }
 
-export function apply(ctx: Context) {
+export async function apply(ctx: Context) {
     ctx.inject(['worker'], (c) => {
         c.worker.addHandler('storage.prune', cleanFiles);
     });
@@ -189,24 +190,21 @@ export function apply(ctx: Context) {
         ]);
         await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
     });
-
     if (process.env.NODE_APP_INSTANCE !== '0') return;
-    ctx.on('ready', async () => {
-        await db.ensureIndexes(
-            StorageModel.coll,
-            { key: { path: 1 }, name: 'path' },
-            { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
-            { key: { link: 1 }, sparse: true, name: 'link' },
-        );
-        if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
-            await ScheduleModel.add({
-                type: 'schedule',
-                subType: 'storage.prune',
-                executeAfter: moment().startOf('hour').toDate(),
-                interval: [1, 'hour'],
-            });
-        }
-    });
+    await db.ensureIndexes(
+        StorageModel.coll,
+        { key: { path: 1 }, name: 'path' },
+        { key: { path: 1, autoDelete: 1 }, sparse: true, name: 'autoDelete' },
+        { key: { link: 1 }, sparse: true, name: 'link' },
+    );
+    if (!await ScheduleModel.count({ type: 'schedule', subType: 'storage.prune' })) {
+        await ScheduleModel.add({
+            type: 'schedule',
+            subType: 'storage.prune',
+            executeAfter: moment().startOf('hour').toDate(),
+            interval: [1, 'hour'],
+        });
+    }
 }
 
 global.Hydro.model.storage = StorageModel;

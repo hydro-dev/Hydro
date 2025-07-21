@@ -1,15 +1,17 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
+import { Readable } from 'stream';
 import {
-    AdmZip, buildContent, Context, FileTooLargeError, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, Schema, ValidationError, yaml,
+    buildContent, Context, extractZip, FileTooLargeError, fs, Handler, PERM,
+    ProblemConfigFile, ProblemModel, randomstring, Schema, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-qduoj');
 fs.ensureDirSync(tmpdir);
 
 const StringValue = Schema.object({
+    format: Schema.union(['html', 'markdown']).default('html'),
     value: Schema.string(),
 });
 const ProblemSchema = Schema.object({
@@ -23,14 +25,20 @@ const ProblemSchema = Schema.object({
         output: Schema.string(),
     })),
     hint: StringValue,
-    source: StringValue,
-    display_id: Schema.string(),
+    source: Schema.union([StringValue, Schema.string()]),
+    display_id: Schema.transform(
+        Schema.union([Schema.number(), Schema.string()]),
+        (value) => (typeof value === 'number' ? `P${value.toString()}` : value),
+    ),
     time_limit: Schema.union([Schema.number(), Schema.string()]).required(),
     memory_limit: Schema.union([Schema.number(), Schema.string()]).required(),
-    spj: Schema.object({
-        language: Schema.string().required(),
-        code: Schema.string().required(),
-    }),
+    spj: Schema.union([
+        Schema.never(),
+        Schema.object({
+            language: Schema.string().required(),
+            code: Schema.string().required(),
+        }),
+    ]),
     test_case_score: Schema.array(Schema.object({
         input_name: Schema.string().required(),
         output_name: Schema.string().required(),
@@ -40,15 +48,11 @@ const ProblemSchema = Schema.object({
 
 class ImportQduojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
-        let zip: AdmZip;
-        try {
-            zip = new AdmZip(zipfile);
-        } catch (e) {
-            throw new ValidationError('zip', null, e.message);
-        }
-        const tmp = path.resolve(tmpdir, String.random(32));
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
+        const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(zipfile)));
+        const tmp = path.resolve(tmpdir, randomstring(32));
+        await extractZip(zip, tmp, {
+            strip: true,
+            parseError: (e) => new ValidationError('zip', null, e.message),
         });
         let cnt = 0;
         try {
@@ -63,11 +67,11 @@ class ImportQduojHandler extends Handler {
                     output: pdoc.output_description?.value,
                     samples: pdoc.samples.map((sample) => [sample.input, sample.output]),
                     hint: pdoc.hint?.value,
-                    source: pdoc.source?.value,
+                    source: typeof pdoc.source === 'string' ? pdoc.source : pdoc.source?.value || '',
                 }, 'html');
                 if (+pdoc.display_id) pdoc.display_id = `P${pdoc.display_id}`;
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     if (await ProblemModel.get(domainId, id)) return false;
                     return true;
                 };
@@ -128,10 +132,10 @@ class ImportQduojHandler extends Handler {
     }
 
     async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
-        const stat = await fs.stat(this.request.files.file.filepath);
-        if (stat.size > 256 * 1024 * 1024) throw new FileTooLargeError('256m');
-        await this.fromFile(domainId, this.request.files.file.filepath);
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
+        if (file.size > 256 * 1024 * 1024) throw new FileTooLargeError('256m');
+        await this.fromFile(domainId, file.filepath);
         this.response.redirect = this.url('problem_main');
     }
 }

@@ -7,6 +7,7 @@ export interface SandboxVersion {
     pipeProxy?: boolean;
     addressSpaceLimit?: boolean;
     stream?: boolean;
+    procPeak?: boolean;
 }
 
 export interface LocalFile {
@@ -157,6 +158,8 @@ export interface SandboxResult {
     memory: number;
     /** wall clock time in ns */
     runTime: number;
+    /** peak count of processes (thread) during execution */
+    procPeak?: number;
     /** copyOut file name to content (UTF-8 encoded and invalid character replaced) */
     files?: Record<string, string>;
     /** copyOutCached file name to fileId */

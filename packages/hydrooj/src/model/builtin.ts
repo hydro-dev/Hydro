@@ -1,10 +1,10 @@
 import {
-    getScoreColor, STATUS, STATUS_CODES, STATUS_SHORT_TEXTS,
+    getScoreColor, NORMAL_STATUS, STATUS, STATUS_CODES, STATUS_SHORT_TEXTS,
     STATUS_TEXTS, USER_GENDER_FEMALE, USER_GENDER_ICONS, USER_GENDER_MALE,
     USER_GENDER_OTHER, USER_GENDER_RANGE, USER_GENDERS,
-} from '@hydrooj/utils/lib/status';
+} from '@hydrooj/common';
 
-export * from '@hydrooj/utils/lib/status';
+export * from '@hydrooj/common/status';
 
 export const PERM = {
     PERM_NONE: 0n,
@@ -101,7 +101,7 @@ export const PERM = {
     PERM_NEVER: 1n << 60n,
 };
 
-export const Permission = (family: string, key: BigInt, desc: string) => ({ family, key, desc });
+export const Permission = (family: string, key: bigint, desc: string) => ({ family, key, desc });
 
 export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW, 'View this domain'),
@@ -475,6 +475,7 @@ global.Hydro.model.builtin = {
     STATUS_TEXTS,
     STATUS_SHORT_TEXTS,
     STATUS_CODES,
+    NORMAL_STATUS,
     USER_GENDER_MALE,
     USER_GENDER_FEMALE,
     USER_GENDER_OTHER,

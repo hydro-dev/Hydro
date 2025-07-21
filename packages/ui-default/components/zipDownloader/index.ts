@@ -1,9 +1,10 @@
+import { sleep } from '@hydrooj/utils/lib/common';
 import { dump } from 'js-yaml';
 import PQueue from 'p-queue';
 import streamsaver from 'streamsaver';
 import Notification from 'vj/components/notification';
 import {
-  api, createZipStream, gql, i18n, pipeStream, request,
+  api, createZipStream, i18n, pipeStream, request,
 } from 'vj/utils';
 import { ctx } from '../../context';
 
@@ -31,7 +32,7 @@ export default async function download(filename, targets) {
   const abortCallbackReceiver: any = {};
   function stopDownload() { abortCallbackReceiver.abort?.(); }
   let i = 0;
-  async function downloadFile(target) {
+  async function downloadFile(target, retry = 5) {
     try {
       let stream;
       if (target.url) {
@@ -46,6 +47,11 @@ export default async function download(filename, targets) {
         stream,
       };
     } catch (e) {
+      if (retry) {
+        Notification.warn(i18n('Download Error: {0} {1}, retry in 3 secs...', [target.filename, e.toString()]));
+        await sleep(3000);
+        return await downloadFile(target, retry - 1);
+      }
       window.captureException?.(e);
       stopDownload();
       Notification.error(i18n('Download Error: {0} {1}', [target.filename, e.toString()]));
@@ -84,27 +90,25 @@ declare module '../../api' {
 
 export async function downloadProblemSet(pids, name = 'Export') {
   Notification.info(i18n('Downloading...'));
-  const targets = [];
+  const targets: { filename: string; url?: string; content?: string }[] = [];
   try {
     await ctx.serial('problemset/download', pids, name, targets);
     for (const pid of pids) {
-      const pdoc = await api(gql`
-        problem(id: ${+pid}) {
-          pid
-          owner
-          title
-          content
-          tag
-          nSubmit
-          nAccept
-          data {
-            name
-          }
-          additional_file {
-            name
-          }
-        }
-      `, ['data', 'problem']);
+      const pdoc = await api('problem', { id: +pid }, {
+        pid: 1,
+        owner: 1,
+        title: 1,
+        content: 1,
+        tag: 1,
+        nSubmit: 1,
+        nAccept: 1,
+        data: {
+          name: 1,
+        },
+        additional_file: {
+          name: 1,
+        },
+      });
       targets.push({
         filename: `${pid}/problem.yaml`,
         content: dump({

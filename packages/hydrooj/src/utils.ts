@@ -1,3 +1,5 @@
+import { isNullable } from 'cosmokit';
+
 export function buildProjection<T extends string | number = string>(fields: readonly T[]): Record<T, true> {
     const o: Record<T, true> = Object.create(null);
     for (const k of fields) o[k] = true;
@@ -17,9 +19,13 @@ export function ArgMethod(target: any, funcName: string, obj: any) {
 }
 
 export function unwrapExports(module: any) {
-    return (!module || typeof module !== 'object') ? module
-        : 'apply' in module && typeof module.apply === 'function' ? module
-            : 'default' in module ? module.default : module;
+    if (isNullable(module)) return module;
+    if (typeof module !== 'object') return module;
+    if ('apply' in module && typeof module.apply === 'function') return module;
+    // https://github.com/evanw/esbuild/issues/2623
+    // https://esbuild.github.io/content-types/#default-interop
+    if (!module.__esModule) return module;
+    return module.default ?? module;
 }
 
 export * from '@hydrooj/utils/lib/utils';

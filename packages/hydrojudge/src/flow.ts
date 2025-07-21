@@ -1,10 +1,10 @@
 import Queue from 'p-queue';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import type { JudgeResultBody } from 'hydrooj';
+import {
+    JudgeResultBody, NormalizedCase, NormalizedSubtask, STATUS,
+} from '@hydrooj/common';
 import { getConfig } from './config';
 import { FormatError } from './error';
 import { Context, ContextSubTask } from './judge/interface';
-import { NormalizedCase, NormalizedSubtask } from './utils';
 
 interface Task {
     compile: () => Promise<void>;
@@ -53,7 +53,9 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                     ctx.total_time += res.time;
                     ctx.total_memory = Math.max(ctx.total_memory, res.memory);
                 }
-                ctx.next({ ...res ? { case: res } : {}, addProgress: 100 / ctx.config.count });
+                if (ctx.config.detail !== 'none') {
+                    ctx.next({ ...res ? { case: res } : {}, addProgress: 100 / ctx.config.count });
+                }
             }));
         }
         try {

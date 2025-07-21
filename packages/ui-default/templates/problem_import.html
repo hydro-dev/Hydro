@@ -20,8 +20,15 @@
               help_text:_('The preferred problem ID prefix.'),
               placeholder:_('Leave empty for default')
             }) }}
+            {{ form.form_checkbox({
+              label:'Hidden',
+              columns:6,
+              name:'hidden',
+              placeholder:_('Make the problem hidden.'),
+              row:false
+            }) }}
             {% if handler.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM) and not type %}
-              {{ form.form_checkbox ({
+              {{ form.form_checkbox({
                 label:'Keep original user',
                 columns:6,
                 name:'keepUser',

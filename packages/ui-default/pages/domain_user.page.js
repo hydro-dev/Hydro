@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, confirm, InfoDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -9,6 +9,20 @@ import {
 } from 'vj/utils';
 
 const page = new NamedPage('domain_user', () => {
+  $('.not-joined').data('tooltip', i18n('Click to view detailed instructions.'));
+  $('.not-joined').addClass('text-orange');
+  $(document).on('click', '.not-joined', () => {
+    new InfoDialog({
+      $body: tpl`
+        <div class="typo">
+          <p>${i18n('Users will have to manually join the domain first before selected roles can be applied.')}</p>
+          <p>${i18n('To join the domain, users can click the "Join Domain" button on "My Domain" page.')}</p>
+          <p>${i18n('Or use the following link:')}</p>
+          <p><a href="/domain/join?target=${UiContext.domain._id}">/domain/join?target=${UiContext.domain._id}</a></p>
+        </div>`,
+    }).open();
+  });
+
   const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));
   const addUserDialog = new ActionDialog({
     $body: $('.dialog__body--add-user > div'),
@@ -60,8 +74,8 @@ const page = new NamedPage('domain_user', () => {
     const role = addUserDialog.$dom.find('[name="role"]').val();
     try {
       await request.post('', {
-        operation: 'set_user',
-        uid: user._id,
+        operation: 'set_users',
+        uids: [user._id],
         role,
       });
       window.location.reload();
@@ -73,7 +87,7 @@ const page = new NamedPage('domain_user', () => {
   function ensureAndGetSelectedUsers() {
     const users = _.map(
       $('.domain-users tbody [type="checkbox"]:checked'),
-      (ch) => $(ch).closest('tr').attr('data-uid'),
+      (ch) => $(ch).attr('data-uid') || $(ch).closest('tr').attr('data-uid'),
     );
     if (users.length === 0) {
       Notification.error(i18n('Please select at least one user to perform this operation.'));
@@ -87,19 +101,12 @@ const page = new NamedPage('domain_user', () => {
     if (selectedUsers === null) {
       return;
     }
-    const action = await new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n('Confirm removing the selected users?')}</p>
-          <p>${i18n('Their account will not be deleted and they will be with the default role.')}</p>
-        </div>`,
-    }).open();
-    if (action !== 'yes') return;
+    if (!(await confirm(`${i18n('Confirm removing the selected users?')}
+${i18n('Their account will not be deleted and they will be with the guest role until they re-join the domain.')}`))) return;
     try {
       await request.post('', {
-        operation: 'set_users',
-        uid: selectedUsers,
-        role: 'default',
+        operation: 'kick',
+        uids: selectedUsers,
       });
       Notification.success(i18n('Selected users have been removed from the domain.'));
       await delay(2000);
@@ -122,7 +129,7 @@ const page = new NamedPage('domain_user', () => {
     try {
       await request.post('', {
         operation: 'set_users',
-        uid: selectedUsers,
+        uids: selectedUsers,
         role,
       });
       Notification.success(i18n('Role has been updated to {0} for selected users.', role));
@@ -138,8 +145,8 @@ const page = new NamedPage('domain_user', () => {
     const role = $(ev.currentTarget).val();
     try {
       await request.post('', {
-        operation: 'set_user',
-        uid: row.attr('data-uid'),
+        operation: 'set_users',
+        uids: [row.attr('data-uid')],
         role,
       });
       Notification.success(i18n('Role has been updated to {0}.', role));

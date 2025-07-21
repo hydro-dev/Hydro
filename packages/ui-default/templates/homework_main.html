@@ -16,7 +16,7 @@
           </span>
         {% if groups.length %}
           <form method="get" class="filter-form" name="filter-form">
-            {{ _('Show') }}:
+            <input type="text" class="inline compact textbox" name="q" value="{{ q }}" placeholder="{{ _('Search homeworks...') }}">
             <select class="inline compact select" name="group">
               <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
               {%- for g in groups -%}

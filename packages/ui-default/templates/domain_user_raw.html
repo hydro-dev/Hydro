@@ -1,0 +1,5 @@
+<pre>
+{%- for role in roles -%}{%- for rudoc in rudocs[role._id] -%}
+{{ rudoc._id }},{{ rudoc.role }},{{ udict[rudoc._id].uname }},{{ udict[rudoc._id].displayName}}
+{% endfor -%}{%- endfor -%}
+</pre>

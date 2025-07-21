@@ -4,6 +4,10 @@ on:
 - push
 - pull_request
 
+permissions:
+  # Provenance generation in GitHub Actions requires "write" access to the "id-token"
+  id-token: write
+
 env:
   CI: true
   YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
@@ -20,7 +24,7 @@ jobs:
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
@@ -60,10 +64,10 @@ jobs:
           .github/workflows/**
     - name: Build And Lint
       run: |
+        yarn build:ui:iconfont # icon font file needed for types
         if [[ ${{ steps.ui-changed-files.outputs.any_changed }} == true ]] || [[ $(npm info @hydrooj/ui-default version) != $(node -e 'console.log(require("./packages/ui-default/package.json").version)') ]]
         then
-          yarn build:ui:iconfont
-          parallel --tty -j+0 yarn ::: lint:ci lint:ui:ci build build:ui:production:webpack test
+          parallel --tty -j+0 yarn ::: lint:ci build build:ui:production:webpack test
         else
           parallel --tty -j+0 yarn ::: lint:ci build test
         fi

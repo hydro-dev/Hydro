@@ -1,3 +1,5 @@
+import { Context } from 'cordis';
+import Schema from 'schemastery';
 import { ValidationError } from './error';
 import type { Handler } from './server';
 import { Converter, Type, Validator } from './validator';
@@ -13,12 +15,32 @@ export interface ParamOption<T> {
     validate?: Validator,
 }
 
+const kSchema = Symbol.for('schemastery');
+const mergeValidator = (L: Validator, R: Validator) => (v: any) => L(v) && R(v);
+
+function isSchema(v: any): v is Schema {
+    return v && typeof v === 'function' && kSchema in v;
+}
+
 function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...args: Array<Type<any> | boolean | Validator | Converter<any>>) {
     let cursor = 0;
     const v: ParamOption<any> = { name, source };
     let isValidate = true;
     while (cursor < args.length) {
         const current = args[cursor];
+        if (isSchema(current)) {
+            v.validate = (val) => {
+                try {
+                    current(val);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            };
+            v.convert = (val) => current(val);
+            cursor++;
+            continue;
+        }
         if (current instanceof Array) {
             const type = current;
             if (type[0]) v.convert = type[0];
@@ -26,7 +48,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
             if (type[2]) v.isOptional = type[2];
         } else if (typeof current === 'boolean') v.isOptional = current;
         else if (isValidate) {
-            if (current !== null) v.validate = current;
+            if (current !== null) v.validate = v.validate ? mergeValidator(v.validate, current) : current;
             isValidate = false;
         } else v.convert = current;
         cursor++;
@@ -35,7 +57,7 @@ function _buildParam(name: string, source: 'get' | 'post' | 'all' | 'route', ...
 }
 
 function _descriptor(v: ParamOption<any>) {
-    return function desc(this: Handler, target: any, funcName: string, obj: any) {
+    return function desc<T extends Context>(this: Handler<T>, target: any, funcName: string, obj: any) {
         target.__param ||= {};
         target.__param[target.constructor.name] ||= {};
         if (!target.__param[target.constructor.name][funcName]) {
@@ -44,7 +66,7 @@ function _descriptor(v: ParamOption<any>) {
             const firstArg = val.split(')')[0]?.split(',')[0]?.split('(')[1]?.trim() || '';
             const domainIdStyle = firstArg.toLowerCase().startsWith('domainid');
             target.__param[target.constructor.name][funcName] = [];
-            obj.value = function validate(this: Handler, rawArgs: any, ...extra: any[]) {
+            obj.value = function validate(this: Handler<T>, rawArgs: any, ...extra: any[]) {
                 if (typeof rawArgs !== 'object' || extra.length) return originalMethod.call(this, rawArgs, ...extra);
                 const c = [];
                 const arglist: ParamOption<any>[] = target.__param[target.constructor.name][funcName];

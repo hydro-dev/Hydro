@@ -109,7 +109,6 @@ export default class YACSProvider extends BasicFetcher implements IBasicProvider
 
     async waitForSubmission(id: string, next, end) {
         const done = {};
-        // eslint-disable-next-line no-constant-condition
         while (true) {
             await sleep(3000);
             const { submission } = await this.getData(`/submission/${id}`);

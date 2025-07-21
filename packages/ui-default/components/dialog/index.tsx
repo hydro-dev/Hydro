@@ -1,6 +1,10 @@
+/* eslint-disable react-refresh/only-export-components */
 import $ from 'jquery';
 import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { i18n, tpl } from 'vj/utils';
+import DomainSelectAutoComplete from '../autocomplete/components/DomainSelectAutoComplete';
+import UserSelectAutoComplete from '../autocomplete/components/UserSelectAutoComplete';
 import DomDialog, { DialogOptions } from './DomDialog';
 
 export class Dialog {
@@ -108,7 +112,103 @@ export class ConfirmDialog extends Dialog {
   }
 }
 
+export interface Field {
+  type: 'text' | 'checkbox' | 'user' | 'domain';
+  placeholder?: string;
+  label?: string;
+  autofocus?: boolean;
+  required?: boolean;
+  default?: string;
+}
+
+export async function prompt<T extends string>(title: string, fields: Record<T, Field>) {
+  let valueCache: Record<T, string | number | boolean> = {} as any;
+  const defaultValues = Object.fromEntries(Object.entries(fields)
+    .map(([name, field]: [T, Field]) => [name, field.default || ''])) as Record<T, string | number | boolean>;
+
+  console.log(valueCache, defaultValues);
+
+  const Component = () => {
+    const [values, setValues] = React.useState(defaultValues);
+
+    React.useEffect(() => {
+      valueCache = values;
+    }, [values]);
+
+    return <div>
+      <div className="row"><div className="columns">
+        <h1>{title}</h1>
+      </div></div>
+      {Object.entries(fields).map(([name, field]: [string, Field]) => <div className="row" key={name}>
+        <div className="columns">
+          {['text', 'user', 'domain'].includes(field.type) && <label>
+            {field.label}
+            <div className="textbox-container">
+              {field.type === 'text'
+                ? <input
+                  type="text" className="textbox" data-autofocus={field.autofocus}
+                  defaultValue={field.default}
+                  onChange={(e) => setValues({ ...values, [name]: e.target.value })}
+                />
+                : field.type === 'user'
+                  ? <UserSelectAutoComplete
+                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
+                    onChange={(e) => setValues({ ...values, [name]: e })}
+                  />
+                  : <DomainSelectAutoComplete
+                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
+                    onChange={(e) => setValues({ ...values, [name]: e })}
+                  />}
+            </div>
+          </label>}
+          {field.type === 'checkbox' && <label className="checkbox">
+            <input type="checkbox"
+              defaultChecked={field.default === 'true'}
+              onChange={(e) => setValues({ ...values, [name]: !!e.target.checked })}
+            />
+            {field.label}
+          </label>}
+        </div>
+      </div>)}
+    </div>;
+  };
+  const div = document.createElement('div');
+  const root = ReactDOM.createRoot(div);
+  root.render(<Component />);
+  const res = await new Dialog({
+    $body: $(div),
+    $action: [buttonCancel, buttonOk].join('\n'),
+    onDispatch(action) {
+      if (action === 'ok') {
+        for (const [name, field] of Object.entries(fields)) {
+          if ((field as any).required && !valueCache[name]) return false;
+        }
+      }
+      return true;
+    },
+  }).open();
+  root.unmount();
+  if (res !== 'ok') return null;
+  return valueCache;
+}
+
+export async function confirm(text: string) {
+  const res = await new ConfirmDialog({
+    $body: tpl.typoMsg(text),
+  }).open();
+  return res === 'yes';
+}
+
+export async function alert(text: string) {
+  return await new InfoDialog({
+    $body: tpl.typoMsg(text),
+  }).open();
+}
+
 window.Hydro.components.Dialog = Dialog;
 window.Hydro.components.InfoDialog = InfoDialog;
 window.Hydro.components.ActionDialog = ActionDialog;
 window.Hydro.components.ConfirmDialog = ConfirmDialog;
+window.Hydro.components.prompt = prompt;
+window.Hydro.components.confirm = confirm;
+window.Hydro.components.alert = alert;

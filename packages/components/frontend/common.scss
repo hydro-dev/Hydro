@@ -1,0 +1,202 @@
+@use "sass:color";
+@use "sass:list";
+@use "sass:math";
+
+@function toRem($value) {
+    $remValue: calc($value / 16px) * 1rem;
+    @return $remValue;
+}
+@function rem($values) {
+    $remValues: ();
+    @each $value in $values {
+        $remValues: list.append($remValues, toRem($value));
+    }
+    @return $remValues;
+}
+@function lighten($color, $amount) {
+    @return color.adjust($color, $lightness: $amount);
+}
+
+// layout
+$grid-padding: 15px; // half gutter
+
+// fonts
+$primary-font-family: var(--font-family);
+$header-font-family: var(--font-family);
+$code-font-family: var(--code-font-family);
+
+// primary palette
+$default-color: #ddd;
+$primary-color: #5f9fd6;
+$secondary-color: #ed5f82;
+$highlight-color: #df6589;
+$code-color: #c92a2a;
+$text-1-color: #555;
+$text-2-color: lighten($text-1-color, 15%);
+$text-3-color: lighten($text-1-color, 30%);
+$header-1-color: #3d3d3d;
+$header-2-color: lighten($header-1-color, 20%);
+$blockquote-color: #999;
+$page-bg-color: #edf0f2;
+$content-bg-color: #fff;
+$border-1-color: $default-color;
+$border-2-color: lighten($default-color, 20%);
+
+$immersive-primary-color: #ffef87;
+$immersive-text-color: #ffffff;
+$immersive-header-color: #ffffff;
+
+$success-color: #25ad40;
+$fail-color: #fb5555;
+$progress-color: #f39800;
+$invalid-color: #9fa0a0;
+
+// sizes
+$font-size: 16px;             // main content
+$font-size-secondary: 14px;   // secondary content
+$font-size-small: 13px;       // additional informations, usually gray colored
+$font-size-icon: 16px;
+$font-size-title: 20px;
+
+// components
+$section-gap-v: 15px;
+$section-gap-h: $grid-padding;
+$section-list-v: 25px;
+$section-margin: 30px;
+$section-shadow: rem(0 6px 22px) rgba(#AFC2C9, 0.5);
+$section-bg-color: $content-bg-color;
+$section-title-color: $header-2-color;
+$section-toolbtn-color: #AAA;
+$section-toolbtn-color-hover: #444;
+
+$autocomplete-empty-row-color: #AAA;
+$userselect-uid-color: #BBB;
+
+$editor-border-color: $border-1-color;
+
+$datepicker-shadow: rem(0 2px 7px) rgba(#000, 0.3);
+$datapicker-list-item-bg-color-hover: #F0F0F0;
+
+$dialog-layer-bg-color: rgba(#F0F0F0, 0.6);
+$dialog-bg-color: $content-bg-color;
+$dialog-border-color: $border-1-color;
+$dialog-shadow: rem(0 2px 10px) rgba(#000, 0.2);
+$dialog-title-color: $header-2-color;
+
+$comment-placeholder-color: #AAA;
+$comment-op-color: lighten($text-1-color, 30%);
+$comment-op-link-color: lighten($text-1-color, 50%);
+
+$menu-item-bg-color-hover: #F4F4F4;
+$menu-drop-shadow: rem(0 2px 7px) rgba(#000, 0.3);
+$menu-drop-bg-color: $content-bg-color;
+$menu-drop-triangle-size: 4px;
+$menu-drop-triangle-shadow: rem(-2px -2px 2px) rgba(#000, 0.15);
+
+$nav-item-height: 45px;
+$nav-item-hover-color: $primary-color;
+$nav-item-active-color: $secondary-color;
+$nav-item-active-immersive-color: #9AE3F3;
+$nav-item-round-height: 32px;
+$nav-item-round-color: $primary-color;
+$nav-item-round-border: 2px;
+// $nav-logo-height: 32px;
+// $nav-logo-height-mobile: 23px;
+
+$header-layer-height: 100px;
+$header-bg-width: 1920px;
+$header-bg-height: 320px;
+$header-bg-height-mini: $header-bg-height - $header-layer-height;
+//$header-logo-width = 280px
+//$header-logo-height = 150px
+//$header-logo-width-real = 280px
+//$header-logo-height-real = 150px
+$header-logo-width: 252px;
+$header-logo-height: 150px;
+$header-logo-width-real: 381px;
+$header-logo-height-real: 201px;
+$header-logo-domain-lh: 60px;
+$header-logo-system-lh: 30px;
+
+$footer-bg-color: $content-bg-color;
+
+$input-focus-color: #C1E0FF;
+$form-control-height: 35px;
+$compact-control-height: 28px;
+$input-margin: 0 0 1rem;
+$input-multi-line-margin: 0 0.3rem 0.15rem 0;
+$input-image-radio-margin: 0 0.3rem 0.3rem 0;
+$input-background-color: $content-bg-color;
+$input-border: 1px solid $border-1-color;
+$input-outline: 2px solid transparent;
+$input-focus-border-color: $primary-color;
+$input-focus-outline: 2px solid $input-focus-color;
+$label-color: lighten($text-1-color, 10%);
+$help-text-color: lighten($text-1-color, 30%);
+
+$table-border-color: $border-2-color;
+$table-alternate-bg-color: #F4F4F4;
+$table-header-bg-color: rgba(#FFF, 0.95);
+$table-header-shadow: rem(0 3px 2px) rgba(#000, 0.03);
+$table-header-shadow-floating: rem(0 2px 5px) rgba(#000, 0.2);
+$table-padding-h: 10px;
+$table-lh: 26px;
+
+$toolbar-bg: #f2f6f7;
+$toolbar-fore: #8395a1;
+$toolbar-fore-hover: #5a6b75;
+$toolbar-bg-hover: #e3e7e8;
+$toolbar-fore-selected: #FFF;
+$toolbar-bg-selected: $secondary-color;
+$toolbar-disabled-opacity: 0.3;
+
+$supplementary-color: lighten($text-1-color, 50%);
+$supplementary-border-color: lighten($supplementary-color, 62%);
+$supplementary-link-color: lighten($text-1-color, 40%);
+
+$pager-border-color: $table-border-color;
+
+$nprogress-color: $primary-color;
+
+$syntax-hl-bg-color: #F8F8F8;
+
+// // Notification
+// $notification-color = {
+//   'success': #9BDB7B,
+//   'info': #78D6F4,
+//   'warn': #FCD279,
+//   'error': #FD848D,
+// }
+
+// $notification-icon = {
+//   'success': $icon-check--circle,
+//   'info': $icon-info--circle,
+//   'warn': $icon-info--circle,
+//   'error': $icon-close--circle,
+// }
+
+
+@mixin form-styles() {
+  appearance: none;
+  display: block;
+  width: 100%;
+  font-size: rem($font-size-secondary);
+  margin: $input-margin;
+  height: rem($form-control-height);
+  line-height: 1.2;
+  padding: rem(5px);
+  border: $input-border;
+
+  &.inline {
+    display: inline-block;
+    width: auto;
+  }
+}
+
+.fullscreen-content {
+  position: absolute;
+  left: 0;
+  top: $nav-item-height;
+  width: 100%;
+  bottom: 0;
+}

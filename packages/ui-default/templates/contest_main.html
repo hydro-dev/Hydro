@@ -59,7 +59,7 @@
         <h1 class="section__title">{{ _('All Contests') if not rule else _('All {0} Contests').format(_(model.contest.RULES[rule].TEXT)) }}</h1>
         <div class="section__tools">
           <form method="get" name="filter-form">
-            {{ _('Show') }}:
+            <input type="text" class="inline compact textbox" name="q" value="{{ q }}" placeholder="{{ _('Search contests...') }}">
             <select class="inline compact select" name="group">
               <option value=""{% if not group %} selected{% endif %}>{{ _('All') }}</option>
               {%- for g in groups -%}

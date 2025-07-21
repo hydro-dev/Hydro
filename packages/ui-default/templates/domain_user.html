@@ -75,8 +75,22 @@
         </tr>
       </thead>
       <tbody>
-        {%- for role in roles -%}
-        {%- for rudoc in rudocs[role._id] -%}
+        {%- for role, udocs in rudocs -%}
+        {%- if udocs|length > 50 -%}
+          <tr>
+            <td colspan="3" style="text-wrap: wrap;"><div style="max-height: 300px; overflow-y: auto">
+              {%- for udoc in udocs -%}
+                {% set is_disabled=(rudoc._id == handler.user._id) %}
+                <input type="checkbox" data-uid="{{udoc._id}}" data-checkbox-group="user" {% if is_disabled %}disabled{% else %}data-checkbox-range{% endif %}>
+                [{{udoc._id}}]{{ user.render_inline(udoc, avatar=false, badge=false) }}{% if not udoc.join %}
+                  <span class="not-joined">({{ _('Not joined yet') }})</span>
+                {% endif %}&nbsp;&nbsp;&nbsp;
+              {%- endfor -%}
+            </div></td>
+            <td>{{ role }}</td>
+          </tr>
+        {%- else -%}
+        {%- for rudoc in udocs -%}
         {% set is_disabled=(rudoc._id == handler.user._id) %}
         <tr data-uid="{{ rudoc._id }}">
           <td class="col--checkbox">
@@ -88,7 +102,8 @@
             {{ rudoc._id }}
           </td>
           <td class="col--user">
-            {{ user.render_inline(udict[rudoc._id], badge=false) }}
+            {{ user.render_inline(rudoc, badge=false) }}
+            {% if not rudoc.join %}<span class="text-orange">({{ _('Not joined yet') }})</span>{% endif %}
           </td>
           <td class="col--role">
             {{ form.select({
@@ -101,6 +116,7 @@
           </td>
         </tr>
         {%- endfor -%}
+        {%- endif -%}
         {%- endfor -%}
       </tbody>
     </table>

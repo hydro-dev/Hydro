@@ -1,7 +1,7 @@
 import { sign } from 'jsonwebtoken';
 import { } from '@hydrooj/ui-default/backendlib/markdown-it-media';
 import {
-    Context, Handler, superagent, SystemModel, UiContextBase, ValidationError,
+    Context, Handler, Schema, superagent, SystemModel, UiContextBase, ValidationError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -72,19 +72,6 @@ class OnlyofficeJWTHandler extends Handler {
 }
 
 export function apply(ctx: Context) {
-    Object.defineProperty(UiContextBase, 'onlyofficeApi', {
-        configurable: true,
-        enumerable: true,
-        get() {
-            return SystemModel.get('onlyoffice.api');
-        },
-    });
-    ctx.on('dispose', () => {
-        Object.defineProperty(UiContextBase, 'onlyofficeApi', {
-            enumerable: false,
-        });
-    });
-
     ctx.inject(['i18n'], (c) => {
         c.i18n.load('en', {
             'onlyoffice.not_configured': 'Onlyoffice API not configured.',
@@ -104,4 +91,24 @@ export function apply(ctx: Context) {
             },
         });
     }
+    ctx.setting.SystemSetting(Schema.object({
+        onlyoffice: Schema.object({
+            api: Schema.string().description('OnlyOffice API URL').role('url').default('https://documentserver/web-apps/apps/api/documents/api.js'),
+            jwtsecret: Schema.string().description('JWT Secret').default('secret'),
+            pdf: Schema.boolean().description('Handle pdf documents').default(false),
+            externalSign: Schema.string().description('External Sign URL').default(''),
+        }),
+    }));
+    Object.defineProperty(UiContextBase, 'onlyofficeApi', {
+        configurable: true,
+        enumerable: true,
+        get() {
+            return SystemModel.get('onlyoffice.api');
+        },
+    });
+    return () => {
+        Object.defineProperty(UiContextBase, 'onlyofficeApi', {
+            enumerable: false,
+        });
+    };
 }

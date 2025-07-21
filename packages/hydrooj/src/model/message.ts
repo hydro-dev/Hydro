@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from 'mongodb';
 import { MessageDoc } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 import { PRIV } from './builtin';
@@ -18,25 +18,23 @@ class MessageModel {
 
     @ArgMethod
     static async send(
-        from: number, to: number,
+        from: number, to: number | number[],
         content: string, flag: number = MessageModel.FLAG_UNREAD,
     ) {
-        const _id = new ObjectId();
-        const mdoc: MessageDoc = {
-            _id, from, to, content, flag,
-        };
-        await MessageModel.coll.insertOne(mdoc);
-        if (from !== to) bus.broadcast('user/message', to, mdoc);
+        if (!Array.isArray(to)) to = [to];
+        const base = { from, content, flag };
+        if (!to.length) return base;
+        await MessageModel.coll.insertMany(to.map((t) => ({ ...base, to: t })));
+        bus.broadcast('user/message', to, base);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
-        return mdoc;
+        return base;
     }
 
     static async sendInfo(to: number, content: string) {
-        const _id = new ObjectId();
         const mdoc: MessageDoc = {
-            _id, from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
+            from: 1, to, content, flag: MessageModel.FLAG_INFO | MessageModel.FLAG_I18N,
         };
-        bus.broadcast('user/message', to, mdoc);
+        bus.broadcast('user/message', [to], mdoc);
     }
 
     static async get(_id: ObjectId) {
@@ -55,12 +53,11 @@ class MessageModel {
     }
 
     static async setFlag(messageId: ObjectId, flag: number) {
-        const result = await MessageModel.coll.findOneAndUpdate(
+        return await MessageModel.coll.findOneAndUpdate(
             { _id: messageId },
             { $bit: { flag: { xor: flag } } },
             { returnDocument: 'after' },
         );
-        return result.value || null;
     }
 
     static async del(_id: ObjectId) {
@@ -80,7 +77,7 @@ class MessageModel {
         const targets = await user.getMulti({ priv: { $bitsAllSet: PRIV.PRIV_VIEW_SYSTEM_NOTIFICATION } })
             .project({ _id: 1, viewLang: 1 }).toArray();
         return Promise.all(targets.map(({ _id, viewLang }) => {
-            const msg = message.translate(viewLang || system.get('server.language')).format(...args);
+            const msg = app.i18n.translate(message, [viewLang || system.get('server.language')]).format(...args);
             return MessageModel.send(1, _id, msg, MessageModel.FLAG_RICHTEXT);
         }));
     }

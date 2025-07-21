@@ -1,33 +1,44 @@
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
-import { Duplex, PassThrough } from 'stream';
+import { Duplex, PassThrough, Writable } from 'stream';
 import { inspect } from 'util';
-import type AdmZip from 'adm-zip';
+import type { Entry, ZipReader } from '@zip.js/zip.js';
 import fs from 'fs-extra';
-import moment, { isMoment, Moment } from 'moment-timezone';
-import { ObjectId } from 'mongodb';
-import Logger from 'reggol';
+import type { Moment } from 'moment';
+import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
 export * as yaml from 'js-yaml';
 export * as fs from 'fs-extra';
 
-Logger.levels.base = process.env.DEV ? 3 : 2;
-Logger.targets[0].showTime = 'dd hh:mm:ss';
-Logger.targets[0].label = {
-    align: 'right',
-    width: 9,
-    margin: 1,
-};
+Factory.formatters['d'] = (value, exporter) => Reggol.color(exporter, 3, value);
 
-export { Logger, moment };
+const factory = new Factory();
+
+factory.addExporter(new Exporter.Console({
+    showDiff: false,
+    showTime: 'dd hh:mm:ss',
+    label: {
+        align: 'right',
+        width: 9,
+        margin: 1,
+    },
+    timestamp: Date.now(),
+    levels: { default: process.env.DEV ? 3 : 2 },
+}));
+
+function createLogger(name: string) {
+    return factory.createLogger(name);
+}
+
+export type Logger = Reggol & { new(name: string): Reggol & Logger };
+export const Logger = createLogger as any as Logger;
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
 export const md5 = (content: string) => encrypt('md5', content);
 
 export function folderSize(folderPath: string) {
-    // eslint-disable-next-line @typescript-eslint/no-shadow
     let size = 0;
     const _next = function a(p: string) {
         if (p) {
@@ -133,6 +144,18 @@ export namespace Time {
     }
 
     export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
+        let isMoment: (x: any) => x is Moment;
+        let ObjectId: typeof import('bson').ObjectId; // eslint-disable-line
+        try {
+            ({ ObjectId } = require('bson'));
+        } catch (e) {
+            throw new Error('No bson module found');
+        }
+        try {
+            ({ isMoment } = require('moment'));
+        } catch (e) {
+            throw new Error('No moment module found');
+        }
         let _timestamp: number;
         if (typeof timestamp === 'string') _timestamp = new Date(timestamp).getTime();
         else if (isMoment(timestamp)) _timestamp = timestamp.toDate().getTime();
@@ -306,27 +329,52 @@ export function sanitizePath(pathname: string) {
     return parts.join(path.sep);
 }
 
+export interface ExtractZipConfig {
+    overwrite?: boolean;
+    strip?: boolean;
+    signal?: AbortSignal;
+    parseError?: (err: Error) => Error;
+}
+
 /* eslint-disable no-await-in-loop */
-export async function extractZip(zip: AdmZip, dest: string, overwrite = false, strip = false) {
-    const entries = zip.getEntries();
-    const shouldStrip = strip ? entries.every((i) => i.entryName.startsWith(entries[0].entryName)) : false;
+export async function extractZip<T>(zipOrEntries: ZipReader<T> | Entry[], dest: string, config: ExtractZipConfig = {}) {
+    const { overwrite = false, strip = false, signal } = config;
+    let entries: Entry[];
+    if (Array.isArray(zipOrEntries)) entries = zipOrEntries;
+    else {
+        try {
+            entries = await zipOrEntries.getEntries();
+        } catch (e) {
+            if (config.parseError) throw config.parseError(e);
+            throw e;
+        }
+    }
+    const shouldStrip = strip ? entries.every((i) => i.filename.startsWith(entries[0].filename)) : false;
     for (const entry of entries) {
-        const name = shouldStrip ? entry.entryName.substring(entries[0].entryName.length) : entry.entryName;
+        const name = shouldStrip ? entry.filename.substring(entries[0].filename.length) : entry.filename;
         const d = sanitize(dest, canonical(name));
-        if (entry.isDirectory) {
+        if (entry.directory) {
             await fs.mkdir(d, { recursive: true });
             continue;
         }
-        const content = entry.getData();
+        if (fs.existsSync(d) && !overwrite) continue;
+        const dir = path.dirname(d);
+        if (!fs.existsSync(dir)) await fs.mkdir(dir, { recursive: true });
+        const content = await entry.getData(Writable.toWeb(fs.createWriteStream(d)), { signal });
         if (!content) throw new Error('CANT_EXTRACT_FILE');
-        if (!fs.existsSync(d) || overwrite) await fs.writeFile(d, content);
-        await fs.utimes(d, entry.header.time, entry.header.time);
+        await fs.utimes(d, entry.lastModDate, entry.lastModDate);
     }
+    return {
+        [Symbol.asyncDispose]: () => fs.remove(dest),
+    };
 }
 
 export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, timeout?: number, name?: string) {
     try {
         await new Promise((resolve, reject) => {
+            w.on('finish', () => {
+                resolve(null);
+            });
             req.buffer(false).timeout({
                 response: Math.min(10000, timeout),
                 deadline: timeout,
@@ -336,10 +384,10 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
                     resp.pipe(w);
                     resp.on('end', () => {
                         cb(null, undefined);
-                        resolve(null);
                     });
                     resp.on('error', (err) => {
                         cb(err, undefined);
+                        reject(err);
                     });
                 }
             }).catch(reject);

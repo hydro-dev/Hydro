@@ -2,9 +2,9 @@
 import mariadb from 'mariadb';
 import xml2js from 'xml2js';
 import {
-    AdmZip, ContestModel, DomainModel, fs, MessageModel, moment,
+    ContestModel, DomainModel, fs, MessageModel, moment,
     noop, NotFoundError, ObjectId, postJudge, ProblemConfigFile, ProblemModel, RecordDoc, RecordModel,
-    STATUS, SubtaskType, SystemModel, Time, UserModel, ValidationError, yaml,
+    STATUS, SubtaskType, SystemModel, Time, UserModel, ValidationError, yaml, Zip,
 } from 'hydrooj';
 const statusMap = {
     Accepted: STATUS.STATUS_ACCEPTED,
@@ -376,13 +376,16 @@ export async function run({
             };
             const content = JSON.parse(rdoc.content);
             try {
-                let zip: AdmZip;
+                const zip = new Zip.ZipReader(
+                    new Zip.BlobReader(new Blob([await fs.readFile(`${dataDir}/opt/uoj/web/app/storage${content.file_name}`)])),
+                );
+                let entries: Zip.Entry[];
                 try {
-                    zip = new AdmZip(await fs.readFile(`${dataDir}/opt/uoj/web/app/storage${content.file_name}`));
+                    entries = await zip.getEntries();
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
-                data.code = zip.getEntries().find((i) => i.name.endsWith('answer.code')).getData().toString();
+                data.code = await entries.find((i) => i.filename.endsWith('answer.code'))?.getData(new Zip.TextWriter()) || '';
             } catch { /* ignore no code */ }
             const result = JSON.parse(Buffer.from(rdoc.result, 'base64').toString('utf8'));
             if (result.error) {

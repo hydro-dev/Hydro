@@ -1,5 +1,5 @@
-import { AnsiUp } from 'ansi_up';
 import { moment, ObjectId } from 'hydrooj';
+import { AnsiUp } from 'ansi_up';
 
 export { size, formatSeconds } from 'hydrooj';
 

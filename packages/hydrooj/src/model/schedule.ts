@@ -4,7 +4,7 @@ import { Context } from '../context';
 import { Schedule } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
-import type { WorkerService } from '../service/worker';
+import type WorkerService from '../service/worker';
 import RecordModel from './record';
 
 const logger = new Logger('model/schedule');
@@ -15,13 +15,13 @@ async function getFirst(query: Filter<Schedule>) {
     const q = { ...query };
     q.executeAfter ||= { $lt: new Date() };
     const res = await coll.findOneAndDelete(q);
-    if (res.value) {
-        logger.debug('%o', res.value);
-        if (res.value.interval) {
-            const executeAfter = moment(res.value.executeAfter).add(...res.value.interval).toDate();
-            await coll.insertOne({ ...res.value, executeAfter });
+    if (res) {
+        logger.debug('%o', res);
+        if (res.interval) {
+            const executeAfter = moment(res.executeAfter).add(...res.interval).toDate();
+            await coll.insertOne({ ...res, executeAfter });
         }
-        return res.value;
+        return res;
     }
     return null;
 }

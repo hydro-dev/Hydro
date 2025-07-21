@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-import { statSync } from 'fs';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import { Context } from '../context';
@@ -11,13 +9,12 @@ import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import storage from '../model/storage';
 import * as system from '../model/system';
-import user from '../model/user';
+import user, { User } from '../model/user';
 import {
     Handler, param, post, requireSudo, Types,
 } from '../service/server';
 import { encodeRFC5987ValueChars } from '../service/storage';
-import { builtinConfig } from '../settings';
-import { md5, sortFiles } from '../utils';
+import { sortFiles } from '../utils';
 
 class SwitchLanguageHandler extends Handler {
     noCheckPermView = true;
@@ -34,27 +31,37 @@ class SwitchLanguageHandler extends Handler {
 
 export class FilesHandler extends Handler {
     noCheckPermView = true;
+    udoc: User;
 
-    async get() {
-        if (!this.user._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
+    @param('uid', Types.Int, true)
+    async prepare({ domainId }, uid: number) {
+        if (uid) {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            this.udoc = await (await user.getById(domainId, uid)).private();
+        } else {
+            this.udoc = this.user;
+        }
+    }
+
+    async get({ }) {
+        if (!this.udoc._files?.length) this.checkPriv(PRIV.PRIV_CREATE_FILE);
         this.response.body = {
-            files: sortFiles(this.user._files),
-            urlForFile: (filename: string) => this.url('fs_download', { uid: this.user._id, filename }),
+            files: sortFiles(this.udoc._files),
+            urlForFile: (filename: string) => this.url('fs_download', { uid: this.udoc._id, filename }),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'home_files.html';
     }
 
     @post('filename', Types.Filename)
-    async postUploadFile(domainId: string, filename: string) {
+    async postUploadFile({ }, filename: string) {
         this.checkPriv(PRIV.PRIV_CREATE_FILE);
         if ((this.user._files?.length || 0) >= system.get('limit.user_files')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('count');
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
-        const f = statSync(file.filepath);
-        const size = Math.sum((this.user._files || []).map((i) => i.size)) + f.size;
+        const size = Math.sum((this.user._files || []).map((i) => i.size)) + file.size;
         if (size >= system.get('limit.user_files_size')) {
             if (!this.user.hasPriv(PRIV.PRIV_UNLIMITED_QUOTA)) throw new FileLimitExceededError('size');
         }
@@ -69,10 +76,10 @@ export class FilesHandler extends Handler {
     }
 
     @post('files', Types.ArrayOf(Types.Filename))
-    async postDeleteFiles(domainId: string, files: string[]) {
+    async postDeleteFiles({ }, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `user/${this.user._id}/${t}`), this.user._id),
-            user.setById(this.user._id, { _files: this.user._files.filter((i) => !files.includes(i.name)) }),
+            storage.del(files.map((t) => `user/${this.udoc._id}/${t}`), this.user._id),
+            user.setById(this.udoc._id, { _files: this.udoc._files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();
     }
@@ -111,10 +118,9 @@ export class StorageHandler extends Handler {
     @param('filename', Types.Filename, true)
     @param('expire', Types.UnsignedInt)
     @param('secret', Types.String)
-    async get(domainId: string, target: string, filename = '', expire: number, secret: string) {
-        const expected = md5(`${target}/${expire}/${builtinConfig.file.secret}`);
+    async get({ }, target: string, filename = '', expire: number, secret: string) {
         if (expire < Date.now()) throw new AccessDeniedError();
-        if (secret !== expected) throw new AccessDeniedError();
+        if (!(await this.ctx.get('storage')?.isLinkValid?.(`${target}/${expire}/${secret}`))) throw new AccessDeniedError();
         this.response.body = await storage.get(target);
         this.response.type = (target.endsWith('.out') || target.endsWith('.ans'))
             ? 'text/plain'
@@ -126,7 +132,7 @@ export class StorageHandler extends Handler {
 export class SwitchAccountHandler extends Handler {
     @requireSudo
     @param('uid', Types.Int)
-    async get(domainId: string, uid: number) {
+    async get({ }, uid: number) {
         this.session.sudoUid = this.user._id;
         this.session.uid = uid;
         this.back();

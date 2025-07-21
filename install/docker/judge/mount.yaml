@@ -1,0 +1,46 @@
+mount:
+  - type: bind
+    source: /bin
+    target: /bin
+    readonly: true
+  - type: bind
+    source: /lib
+    target: /lib
+    readonly: true
+  - type: bind
+    source: /lib64
+    target: /lib64
+    readonly: true
+  - type: bind
+    source: /usr
+    target: /usr
+    readonly: true
+  - type: bind
+    source: /etc
+    target: /etc
+    readonly: true
+  - type: bind
+    source: /var
+    target: /var
+    readonly: true
+  - type: bind
+    source: /dev/null
+    target: /dev/null
+  - type: bind
+    source: /dev/urandom
+    target: /dev/urandom
+  - type: bind
+    source: /dev/zero
+    target: /dev/zero
+  - type: tmpfs
+    target: /w
+    data: size=512m,nr_inodes=8k
+  - type: tmpfs
+    target: /tmp
+    data: size=512m,nr_inodes=8k
+proc: true
+workDir: /w
+hostName: executor_server
+domainName: executor_server
+uid: 1536
+gid: 1536

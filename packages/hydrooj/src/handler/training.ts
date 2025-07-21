@@ -1,5 +1,4 @@
 import assert from 'assert';
-import { statSync } from 'fs-extra';
 import { pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
@@ -261,8 +260,7 @@ export class TrainingFilesHandler extends Handler {
         }
         const file = this.request.files?.file;
         if (!file) throw new ValidationError('file');
-        const f = statSync(file.filepath);
-        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + f.size;
+        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + file.size;
         if (size >= system.get('limit.contest_files_size')) {
             throw new FileLimitExceededError('size');
         }

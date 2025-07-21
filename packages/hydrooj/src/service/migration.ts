@@ -1,9 +1,12 @@
 /* eslint-disable no-await-in-loop */
+import cac from 'cac';
 import { Logger } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
 
-export type MigrationScript = null | (() => Promise<boolean | void>);
+const argv = cac().parse();
+
+export type MigrationScript = null | ((ctx: Context) => Promise<boolean | void>);
 const logger = new Logger('migration');
 
 declare module '../context' {
@@ -17,7 +20,7 @@ export default class MigrationService extends Service {
     private called = false;
 
     constructor(ctx: Context) {
-        super(ctx, 'migration', true);
+        super(ctx, 'migration');
     }
 
     async registerChannel(name: string, s: MigrationScript[]) {
@@ -39,9 +42,21 @@ export default class MigrationService extends Service {
             const isFresh = !dbVer;
             const expected = scripts.length;
             if (isFresh) {
-                await scripts[0]?.();
+                await scripts[0]?.(this.ctx);
                 await system.set(name, expected);
                 continue;
+            }
+            let upgraded = false;
+            if (dbVer > expected) {
+                logger.warn('Current database version for [%s] is %d, expected %d.', channel, dbVer, expected);
+                logger.warn('You are likely trying to apply a downgrade.');
+                logger.warn('This version of Hydro is not compatible with newer data version.');
+                if (!argv.options.ignoreVersion) {
+                    logger.warn('To prevent data corruption, the startup has been aborted.');
+                    logger.warn('If you want to continue, use --ignore-version on startup.');
+                    logger.warn('Do it at your own risk.');
+                    await new Promise(() => { });
+                }
             }
             while (dbVer < expected) {
                 const func = scripts[dbVer];
@@ -53,16 +68,18 @@ export default class MigrationService extends Service {
                 if ('dontWait' in func) {
                     logger.info('[Background Task]');
                     // For those scripts we don't really care if they fail
-                    func().then(() => {
+                    func(this.ctx).then(() => {
                         logger.info('Background Task Completed [%s]: from %d to %d', channel, func.dontWait, expected);
                     }).catch(logger.error);
                 } else {
-                    const result = await func();
+                    const result = await func(this.ctx);
                     if (!result) break;
                 }
                 dbVer++;
                 await system.set(name, dbVer);
+                upgraded = true;
             }
+            if (upgraded) logger.success('Database upgraded [%s]: current version %d', channel, dbVer);
         }
     }
 }

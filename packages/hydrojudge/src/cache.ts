@@ -18,7 +18,7 @@ export = async function main() {
         fs.emptyDirSync(CACHE_DIR);
         logger.info('Cleaned cache.');
     } else if (argv.args[1] === 'prune') {
-        const duration = +argv.options.duration || 30;
+        const duration = +argv.options.duration || +argv.options.days || 30;
         const now = Date.now();
         const hosts = await fs.readdir(CACHE_DIR, { withFileTypes: true });
         let cnt = 0;
@@ -59,5 +59,34 @@ export = async function main() {
         for (const [domain, s] of top10) {
             logger.info('  %s: %s', domain, size(s));
         }
+    } else if (argv.args[1] === 'clearCompileCache') {
+        const hosts = await fs.readdir(CACHE_DIR, { withFileTypes: true });
+        let cnt = 0;
+        for (const host of hosts) {
+            const hostdir = path.resolve(CACHE_DIR, host.name);
+            if (!host.isDirectory()) continue;
+            const domains = await fs.readdir(hostdir, { withFileTypes: true });
+            for (const domain of domains) {
+                if (!domain.isDirectory()) continue;
+                const domaindir = path.resolve(hostdir, domain.name);
+                const problems = await fs.readdir(domaindir, { withFileTypes: true });
+                for (const problem of problems) {
+                    const problemdir = path.resolve(domaindir, problem.name);
+                    if (!fs.statSync(problemdir).isDirectory()) continue;
+                    const etags = path.resolve(problemdir, 'etags');
+                    if (fs.existsSync(etags)) {
+                        const etag = JSON.parse(await fs.readFile(etags, 'utf-8'));
+                        if (etag['*cache']) {
+                            const removed = etag['*cache'];
+                            delete etag['*cache'];
+                            await fs.writeFile(etags, JSON.stringify(etag));
+                            logger.info('Removed bianry %s %o', problemdir, removed);
+                            cnt++;
+                        }
+                    }
+                }
+            }
+        }
+        logger.info('Done! %d items deleted.', cnt);
     }
 };

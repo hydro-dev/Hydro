@@ -1,4 +1,4 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 
 export function normalize(key: string) {
     return key.toUpperCase().replace(/ /g, '_');

@@ -2,14 +2,14 @@ import cac from 'cac';
 import PQueue from 'p-queue';
 import { gte } from 'semver';
 import { ParseEntry } from 'shell-quote';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import { getConfig } from './config';
 import { FormatError, SystemError } from './error';
 import { Logger } from './log';
 import client from './sandbox/client';
 import {
-    Cmd, CopyIn, CopyInFile, SandboxResult, SandboxStatus,
+    Cmd, CopyIn, CopyInFile, PipeMap, SandboxResult, SandboxStatus,
 } from './sandbox/interface';
 import { cmd, parseMemoryMB } from './utils';
 
@@ -29,10 +29,12 @@ const statusMap: Map<SandboxStatus, number> = new Map([
     [SandboxStatus.Signalled, STATUS.STATUS_RUNTIME_ERROR],
 ]);
 
-interface Parameter {
+export interface Parameter {
+    /** in ms */
     time?: number;
     stdin?: CopyInFile;
     execute?: string;
+    /** in MB */
     memory?: number;
     processLimit?: number;
     addressSpaceLimit?: boolean;
@@ -83,7 +85,7 @@ function proc(params: Parameter): Cmd {
         copyOutCached.push('stdout', 'stderr');
         if (params.filename) copyOutCached.push(`${params.filename}.out?`);
     } else if (params.filename) copyOut.push(`${params.filename}.out${supportOptional ? '?' : ''}`);
-    const copyIn = { ...(params.copyIn || {}) };
+    const copyIn = { ...params.copyIn };
     const stdin = params.stdin || { content: '' };
     if (params.filename) copyIn[`${params.filename}.in`] = stdin;
     const time = params.time || 16000;
@@ -114,7 +116,7 @@ function proc(params: Parameter): Cmd {
     };
 }
 
-async function adaptResult(result: SandboxResult, params: Parameter): Promise<SandboxAdaptedResult> {
+function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedResult {
     const rate = getConfig('rate') as number;
     // FIXME: Signalled?
     const ret: SandboxAdaptedResult = {
@@ -145,100 +147,98 @@ async function adaptResult(result: SandboxResult, params: Parameter): Promise<Sa
     return ret;
 }
 
-export async function runPiped(execute0: Parameter, execute1: Parameter): Promise<[SandboxAdaptedResult, SandboxAdaptedResult]> {
+export async function runPiped(
+    execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[], params: Parameter = {}, trace: string = '',
+): Promise<SandboxAdaptedResult[]> {
     let res: SandboxResult[];
     const size = parseMemoryMB(getConfig('stdio_size'));
     try {
+        if (!supportOptional) {
+            const { copyOutOptional } = await client.version();
+            supportOptional = copyOutOptional;
+            if (!copyOutOptional) logger.warn('Sandbox version tooooooo low! Please upgrade to at least 1.2.0');
+        }
         const body = {
-            cmd: [
-                proc(execute0),
-                proc(execute1),
-            ],
-            pipeMapping: [{
-                in: { index: 0, fd: 1 },
-                out: { index: 1, fd: 0 },
+            cmd: execute.map((exe) => proc({ ...exe, ...params })),
+            pipeMapping: pipeMapping.map((pipe) => ({
                 proxy: true,
-                name: 'stdout',
                 max: 1024 * 1024 * size,
-            }, {
-                in: { index: 1, fd: 1 },
-                out: { index: 0, fd: 0 },
-                proxy: true,
-                name: 'stdout',
-                max: 1024 * 1024 * size,
-            }],
+                ...pipe,
+            })),
         };
-        body.cmd[0].files[0] = null;
-        body.cmd[0].files[1] = null;
-        body.cmd[1].files[0] = null;
-        body.cmd[1].files[1] = null;
+        for (let i = 0; i < body.cmd.length; i++) {
+            if (pipeMapping.find((pipe) => pipe.out.index === i && pipe.out.fd === 0)) body.cmd[i].files[0] = null;
+            if (pipeMapping.find((pipe) => pipe.in.index === i && pipe.in.fd === 1)) body.cmd[i].files[1] = null;
+        }
         const id = callId++;
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
-        res = await client.run(body);
+        res = await client.run(body, trace);
         if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res));
     } catch (e) {
         if (e instanceof FormatError || e instanceof SystemError) throw e;
         console.error(e);
         throw new SystemError('Sandbox Error', [e]);
     }
-    return await Promise.all(res.map((r) => adaptResult(r, {}))) as [SandboxAdaptedResult, SandboxAdaptedResult];
+    return res.map((r) => adaptResult(r, params)) as SandboxAdaptedResult[];
 }
 
 export async function del(fileId: string) {
     await client.deleteFile(fileId);
 }
 
-export async function get(fileId: string) {
-    return await client.getFile(fileId);
-}
-
-export async function run(execute: string, params?: Parameter): Promise<SandboxAdaptedResult> {
-    let result: SandboxResult;
-    try {
-        if (!supportOptional) {
-            const res = await client.version();
-            supportOptional = res.copyOutOptional;
-            if (!supportOptional) logger.warn('Sandbox version tooooooo low! Please upgrade to at least 1.2.0');
-        }
-        const body = { cmd: [proc({ execute, ...params })] };
-        const id = callId++;
-        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(body));
-        const res = await client.run(body);
-        if (argv.options.showSandbox) logger.debug('%d %s', id, JSON.stringify(res));
-        [result] = res;
-    } catch (e) {
-        if (e instanceof FormatError || e instanceof SystemError) throw e;
-        console.error(e);
-        // FIXME request body larger than maxBodyLength limit
-        throw new SystemError('Sandbox Error', e.message);
-    }
-    return await adaptResult(result, params);
+export async function get(fileId: string, dest?: string) {
+    return await client.getFile(fileId, dest);
 }
 
 const queue = new PQueue({ concurrency: getConfig('concurrency') || getConfig('parallelism') });
 
-export function runQueued(execute: string, params?: Parameter, priority = 0) {
-    return queue.add(() => run(execute, params), { priority }) as Promise<SandboxAdaptedResult>;
+export function runQueued(
+    execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
+    params: Parameter, trace?: string, priority?: number,
+): Promise<SandboxAdaptedResult[] & AsyncDisposable>;
+export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
+): Promise<SandboxAdaptedResult & AsyncDisposable>;
+export function runQueued(
+    arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
+    arg2?: string | Parameter, arg3?: string | number, arg4?: number,
+) {
+    const single = !Array.isArray(arg0);
+    const [execute, pipeMapping, params, trace, priority] = single
+        ? [[{ execute: arg0 }], [], arg1 || {}, arg2 || '', arg3 || 0] as any
+        : [arg0, arg1, arg2 || {}, arg3 || '', arg4 || 0];
+    return queue.add(async () => {
+        const res = await runPiped(execute, pipeMapping, params, trace);
+        const ret = single ? res[0] : res;
+        (ret as any)[Symbol.asyncDispose] = () => Promise.allSettled(res.flatMap((t) => Object.values(t.fileIds || {}).map(del)));
+        return ret;
+    }, { priority });
 }
 
 export async function versionCheck(reportWarn: (str: string) => void, reportError = reportWarn) {
     let sandboxVersion: string;
     let sandboxCgroup: number;
+    let sandboxCgroupControllers: string[] | null;
     try {
         const version = await client.version();
         sandboxVersion = version.buildVersion.split('v')[1];
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
+        sandboxCgroupControllers = config.runnerConfig?.cgroupControllers || null;
     } catch (e) {
-        if (e?.syscall === 'connect') reportError('Connecting to sandbox failed, please check sandbox_host config and if your sandbox is running.');
+        if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
         return false;
     }
     const { osinfo } = await sysinfo.get();
     if (sandboxCgroup === 2) {
-        const kernelVersion = osinfo.kernel.split('-')[0];
-        if (!(gte(kernelVersion, '5.19.0') && gte(sandboxVersion, '1.6.10'))) {
+        const kernelVersion = osinfo.kernel.match(/^\d+\.\d+\.\d+/)[0];
+        if (!gte(kernelVersion, '5.19.0') || !gte(sandboxVersion, '1.6.10')) {
             reportWarn('You are using cgroup v2 without kernel 5.19+. This could result in inaccurate memory usage measurements.');
+        }
+    }
+    if (sandboxCgroupControllers) {
+        if (!sandboxCgroupControllers.includes('memory') && gte(sandboxVersion, '1.8.6')) {
+            reportWarn('The memory cgroup controller is not enabled. This could result in inaccurate memory usage measurements.');
         }
     }
     return true;

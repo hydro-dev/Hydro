@@ -1,10 +1,8 @@
-/* eslint-disable no-sequences */
-import { fs } from '@hydrooj/utils';
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { STATUS } from '@hydrooj/common';
+import { fs, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import checkers from '../checkers';
-import { del, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import signals from '../signals';
-import { parseMemoryMB, parseTimeMS } from '../utils';
 import { Context } from './interface';
 
 export async function judge(ctx: Context) {
@@ -13,9 +11,12 @@ export async function judge(ctx: Context) {
         ctx.compile(ctx.lang, ctx.code),
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ctx.compileLocalFile('validator', ctx.config.validator),
-        ctx.session.fetchFile(ctx.files.hack),
+        (async () => {
+            const f = await ctx.session.fetchFile(null, { [ctx.files.hack]: '' });
+            ctx.pushClean(() => fs.unlink(f));
+            return f;
+        })(),
     ]);
-    ctx.clean.push(() => fs.unlink(input));
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
     const validateResult = await runQueued(
         validator.execute,
@@ -25,23 +26,26 @@ export async function judge(ctx: Context) {
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
         },
+        `hack.validator[${ctx.rid}]`,
     );
     if (validateResult.status !== STATUS.STATUS_ACCEPTED) {
         const message = `${validateResult.stdout || ''}\n${validateResult.stderr || ''}`.trim();
         return ctx.end({ status: STATUS.STATUS_FORMAT_ERROR, message });
     }
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-    const res = await runQueued(
+    await using res = await runQueued(
         execute.execute,
         {
             stdin: { src: input },
             copyIn: execute.copyIn,
             time: parseTimeMS(ctx.config.time || '1s'),
             memory: parseMemoryMB(ctx.config.memory || '256m'),
+            filename: ctx.config.filename,
             cacheStdoutAndStderr: true,
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
+        `hack[${ctx.rid}]`,
     );
     const {
         code, signalled, time, memory,
@@ -61,8 +65,9 @@ export async function judge(ctx: Context) {
                 output: { content: '' },
                 user_stdout: res.fileIds.stdout ? { fileId: res.fileIds.stdout } : { content: '' },
                 user_stderr: { fileId: res.fileIds.stderr },
+                code: ctx.code,
                 score: 100,
-                detail: ctx.config.detail ?? true,
+                detail: ctx.config.detail ?? 'full',
                 env: { ...ctx.env, HYDRO_TESTCASE: '0' },
             }));
         }
@@ -70,8 +75,6 @@ export async function judge(ctx: Context) {
         if (code < 32 && signalled) message = signals[code];
         else message = { message: 'Your program returned {0}.', params: [code] };
     }
-    await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
-
     if (message) ctx.next({ message });
 
     return ctx.end({

@@ -21,6 +21,7 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDialogueListContainer extends React.PureComponent {
   componentDidMount() {
     $(this.refs.list).scrollLock({ strict: true });

@@ -22,8 +22,12 @@ const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
 
 const remove = [
+    // by esbuild
     /(const|let|var)\s+__filename\s*=\s*fileURLToPath\s*\(\s*import\.meta\.url\s*\)\s*;?/g,
     /(const|let|var)\s+__dirname\s*=\s*(path\.)?dirname\s*\(\s*__filename\s*\)\s*;?/g,
+    // by tsdown
+    /(const|let|var)\s+getFilename\s*=\s*\(\s*\)\s*=>\s*fileURLToPath\s*\(\s*import\.meta\.url\s*\)\s*;?/g,
+    /(const|let|var)\s+__filename\s*=\s*(\/\*\s*@__PURE__\s*\*\/)?\s*getFilename\s*\(\s*\)\s*;?/g,
 ];
 function tryTransform(filename, content, tsx = true) {
     for (const regex of remove) content = content.replace(regex, '');

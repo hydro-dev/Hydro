@@ -9,10 +9,10 @@ import {
 } from '../interface';
 import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
-import { ArgMethod, buildProjection } from '../utils';
+import { ArgMethod, buildProjection, randomstring } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
@@ -127,18 +127,12 @@ export class User {
             : doc.owner === this._id || (doc.maintainer || []).includes(this._id);
     }
 
-    hasPerm(...perm: bigint[]) {
-        for (const i in perm) {
-            if ((this.perm & this.scope & perm[i]) === perm[i]) return true;
-        }
-        return false;
+    hasPerm(...perms: bigint[]) {
+        return perms.some((perm) => (this.perm & this.scope & perm) === perm);
     }
 
-    hasPriv(...priv: number[]) {
-        for (const i in priv) {
-            if ((this.priv & priv[i]) === priv[i]) return true;
-        }
-        return false;
+    hasPriv(...privs: number[]) {
+        return privs.some((priv) => (this.priv & priv) === priv);
     }
 
     async checkPassword(password: string) {
@@ -165,7 +159,7 @@ export class User {
         return user;
     }
 
-    serialize(_, h) {
+    serialize(h) {
         if (!this._isPrivate) {
             const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
             if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName');
@@ -195,6 +189,7 @@ async function initAndCache(udoc: Udoc, dudoc, scope: bigint = PERM.PERM_ALL) {
 
 class UserModel {
     static coll = coll;
+    static collGroup = collGroup;
     static User = User;
     static cache = cache;
     static defaultUser: Udoc = {
@@ -214,6 +209,9 @@ class UserModel {
         ip: ['127.0.0.1'],
         loginip: '127.0.0.1',
     };
+
+    static _handleMailLower = handleMailLower;
+    static _deleteUserCache = deleteUserCache;
 
     @ArgMethod
     static async getById(domainId: string, _id: number, scope: bigint | string = PERM.PERM_ALL): Promise<User> {
@@ -271,7 +269,7 @@ class UserModel {
             deleteUserCache(udoc);
         }
         const res = await coll.findOneAndUpdate({ _id: uid }, op, { returnDocument: 'after' });
-        deleteUserCache(res.value);
+        deleteUserCache(res);
         return res;
     }
 
@@ -287,24 +285,25 @@ class UserModel {
 
     @ArgMethod
     static async setPassword(uid: number, password: string): Promise<Udoc> {
-        const salt = String.random();
+        const salt = randomstring();
         const res = await coll.findOneAndUpdate(
             { _id: uid },
             { $set: { salt, hash: await pwhash(password, salt), hashType: 'hydro' } },
             { returnDocument: 'after' },
         );
-        deleteUserCache(res.value);
-        return res.value;
+        deleteUserCache(res);
+        return res;
     }
 
     @ArgMethod
-    static async inc(_id: number, field: string, n: number = 1) {
-        if (_id < -999) return null;
-        const udoc = await coll.findOne({ _id });
-        if (!udoc) throw new UserNotFoundError(_id);
-        await coll.updateOne({ _id }, { $inc: { [field]: n } });
-        deleteUserCache(udoc);
-        return udoc;
+    static async inc(_id: number | number[], field: string, n: number = 1) {
+        const ids = (Array.isArray(_id) ? _id : [_id]).filter((i) => i >= -999);
+        if (!ids.length) return null;
+        const udocs = await coll.find({ _id: { $in: ids } }).toArray();
+        if (udocs.length !== ids.length) throw new UserNotFoundError(_id);
+        await coll.updateMany({ _id: { $in: ids } }, { $inc: { [field]: n } });
+        for (const udoc of udocs) deleteUserCache(udoc);
+        return udocs;
     }
 
     @ArgMethod
@@ -318,8 +317,8 @@ class UserModel {
             uid = Math.max((udoc?._id || 0) + 1, 2);
             autoAlloc = true;
         }
-        const salt = String.random();
-        while (true) { // eslint-disable-line no-constant-condition
+        const salt = randomstring();
+        while (true) {
             try {
                 // eslint-disable-next-line no-await-in-loop
                 await coll.insertOne({
@@ -339,6 +338,12 @@ class UserModel {
                     priv,
                     avatar: `gravatar:${mail}`,
                 });
+                // eslint-disable-next-line no-await-in-loop
+                await domain.collUser.updateOne(
+                    { uid, domainId: 'system' },
+                    { $set: { join: true } },
+                    { upsert: true },
+                );
                 return uid;
             } catch (e) {
                 if (e?.code === 11000) {
@@ -424,8 +429,8 @@ class UserModel {
             { $set: { priv } },
             { returnDocument: 'after' },
         );
-        deleteUserCache(res.value);
-        return res.value;
+        deleteUserCache(res);
+        return res;
     }
 
     @ArgMethod
@@ -471,22 +476,24 @@ class UserModel {
     }
 }
 
-bus.on('ready', () => Promise.all([
-    db.ensureIndexes(
-        coll,
-        { key: { unameLower: 1 }, name: 'uname', unique: true },
-        { key: { mailLower: 1 }, name: 'mail', unique: true },
-    ),
-    db.ensureIndexes(
-        collV,
-        { key: { unameLower: 1 }, name: 'uname', unique: true },
-        { key: { mailLower: 1 }, name: 'mail', unique: true },
-    ),
-    db.ensureIndexes(
-        collGroup,
-        { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
-        { key: { domainId: 1, uids: 1 }, name: 'uid' },
-    ),
-]));
+export async function apply() {
+    await Promise.all([
+        db.ensureIndexes(
+            coll,
+            { key: { unameLower: 1 }, name: 'uname', unique: true },
+            { key: { mailLower: 1 }, name: 'mail', unique: true },
+        ),
+        db.ensureIndexes(
+            collV,
+            { key: { unameLower: 1 }, name: 'uname', unique: true },
+            { key: { mailLower: 1 }, name: 'mail', unique: true },
+        ),
+        db.ensureIndexes(
+            collGroup,
+            { key: { domainId: 1, name: 1 }, name: 'name', unique: true },
+            { key: { domainId: 1, uids: 1 }, name: 'uid' },
+        ),
+    ]);
+}
 export default UserModel;
 global.Hydro.model.user = UserModel;

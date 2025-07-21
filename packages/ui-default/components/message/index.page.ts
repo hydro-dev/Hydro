@@ -89,9 +89,7 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
       action: () => window.open('/home/messages', '_blank'),
     }).show();
   }
-  const url = new URL(`${UiContext.ws_prefix}home/messages-conn`, window.location.href);
-  // TODO handle a better way for cookie
-  if (url.host !== window.location.host) url.searchParams.append('sid', document.cookie.split('sid=')[1].split(';')[0]);
+  const url = new URL(`${UiContext.ws_prefix}websocket`, window.location.href);
   const endpoint = url.toString().replace('http', 'ws');
   if (window.SharedWorker) {
     try {
@@ -129,9 +127,19 @@ const messagePage = new AutoloadPage('messagePage', (pagename) => {
     localStorage.setItem('page.master', selfId);
     const masterChannel = new BroadcastChannel('hydro-messages');
     const sock = new Sock(endpoint);
+    sock.onopen = () => {
+      sock.send(JSON.stringify({
+        operation: 'subscribe',
+        request_id: Math.random().toString(16).substring(2),
+        credential: document.cookie.split('sid=')[1].split(';')[0],
+        channels: ['message'],
+      }));
+    };
     sock.onmessage = async (message) => {
       const payload = JSON.parse(message.data);
-      masterChannel.postMessage({ type: 'message', payload });
+      if (payload.operation === 'event') {
+        masterChannel.postMessage({ type: 'message', payload: payload.payload });
+      }
     };
   }
 

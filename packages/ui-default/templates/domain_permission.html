@@ -5,14 +5,6 @@
   <div class="section__header">
     <h1 class="section__title">{{ _('{0}: Permissions').format(domain.name) }}</h1>
   </div>
-  {% if roles.length == 3 %}
-    <div class="section__body typo">
-      <blockquote class="warn">
-        <p>{{ _("The 'default' role applies to ALL REGISTERED USER.")|safe }}</p>
-        <p>{{ _("You may want to create a new role in 'Manage Role' page.")|safe }}</p>
-      </blockquote>
-    </div>
-  {% endif %}
   <div class="section__body no-padding domain-users">
     <table class="data-table">
       <colgroup>

@@ -9,8 +9,6 @@
 				"dbaeumer.vscode-eslint",
 				"gruntfuggly.todo-tree",
 				"ronnidc.nunjucks",
-				"eamodio.gitlens",
-				"vscode-icons-team.vscode-icons",
 				"sysoev.language-stylus"
 			]
 		}
@@ -20,5 +18,18 @@
 		2333,
 		8000
 	],
+	"features": {
+		"ghcr.io/devcontainers-extra/features/gh-release:1": {
+			"repo": "criyle/go-judge",
+			"binaryNames": "go-judge",
+			"assetRegex": "go-judge_.*\\.tar\\.gz"
+		},
+		"ghcr.io/devcontainers-extra/features/apt-packages:1": {
+			"packages": [
+				"gcc",
+				"g++"
+			]
+		}
+	},
 	"postCreateCommand": "git submodule update --init && yarn install && npx hydrooj cli system set server.port 2333 && npx hydrooj cli user create root@hydro.local root rootroot 2 && npx hydrooj cli user setSuperAdmin 2"
 }

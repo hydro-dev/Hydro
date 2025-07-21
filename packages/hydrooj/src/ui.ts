@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-shadow */
 import { Logger } from './logger';
-import * as bus from './service/bus';
+import bus from './service/bus';
 
 let terminating = false;
 async function terminate() {
@@ -12,6 +11,7 @@ async function terminate() {
     }, 1000);
     try {
         await bus.parallel('app/exit');
+        await app.fiber.dispose();
     } catch (e) {
         hasError = true;
     }

@@ -1,6 +1,3 @@
-/* eslint-disable max-len */
-/* eslint-disable func-names */
-
 interface IHydroError {
     new(...args: any[]): HydroError
 }

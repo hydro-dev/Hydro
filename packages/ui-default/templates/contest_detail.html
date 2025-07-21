@@ -12,14 +12,14 @@
         <h1 class="section__title">{{ tdoc.title }}</h1>
       </div>
       <div class="section__body">
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _(model.contest.statusText(tdoc, tsdoc)) }}</span>
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-award">{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('Start at') }}: {{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</span>
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-schedule">{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('Host') }}: {{ user.render_inline(udict[tdoc.owner], badge=false) }}</span>
-        <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-user--multiple">{{ tdoc['attend']|default(0) }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _(model.contest.statusText(tdoc, tsdoc)) }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-award">{{ _(model.contest.RULES[tdoc.rule].TEXT) }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Start at') }}: {{ contest.render_time(tsdoc.startAt or tdoc.beginAt) }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-schedule">{{ contest.render_duration(tdoc) }} {{ _('hour(s)') }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Host') }}: {{ user.render_inline(udict[tdoc.owner], badge=false) }}</span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-user--multiple">{{ tdoc['attend']|default(0) }}</span>
         {% if tsdoc.attend %}
-          <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-check">{{ _('Attended') }}</span>
         {% endif %}
       </div>
     </div>

@@ -1,15 +1,14 @@
-import { STATUS } from '@hydrooj/utils/lib/status';
+import { NormalizedCase, STATUS } from '@hydrooj/common';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { del, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import signals from '../signals';
-import { NormalizedCase } from '../utils';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
-        const res = await runQueued(
+        await using res = await runQueued(
             ctx.execute.execute,
             {
                 stdin: { src: c.input },
@@ -21,6 +20,7 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
+            `judgeCase[${c.id}]<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,
@@ -28,7 +28,6 @@ function judgeCase(c: NormalizedCase) {
         let { status } = res;
         let message: any = '';
         let score = 0;
-        const detail = ctx.config.detail ?? true;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
@@ -38,12 +37,13 @@ function judgeCase(c: NormalizedCase) {
                 ({ status, score, message } = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
                     copyIn: ctx.checker.copyIn || {},
+                    code: ctx.code,
                     input: { src: c.input },
                     output: { src: c.output },
                     user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
                     user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
                     score: c.score,
-                    detail,
+                    detail: ctx.config.detail,
                     env: {
                         ...ctx.env,
                         HYDRO_TESTCASE: c.id.toString(),
@@ -52,11 +52,10 @@ function judgeCase(c: NormalizedCase) {
                     },
                 }));
             }
-        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && detail) {
+        } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && ctx.config.detail === 'full') {
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
         }
-        await Promise.allSettled(Object.values(res.fileIds).map((id) => del(id)));
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
             return await runner(ctx, ctxSubtask);

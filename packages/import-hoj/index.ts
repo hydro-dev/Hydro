@@ -1,9 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import os from 'os';
 import path from 'path';
+import { Readable } from 'stream';
 import {
-    AdmZip, buildContent, Context, fs, Handler, PERM,
-    ProblemConfigFile, ProblemModel, ValidationError, yaml,
+    buildContent, Context, extractZip, fs, Handler, PERM,
+    ProblemConfigFile, ProblemModel, randomstring, ValidationError, yaml, Zip,
 } from 'hydrooj';
 
 const tmpdir = path.join(os.tmpdir(), 'hydro', 'import-hoj');
@@ -11,15 +12,11 @@ fs.ensureDirSync(tmpdir);
 
 class ImportHojHandler extends Handler {
     async fromFile(domainId: string, zipfile: string) {
-        let zip: AdmZip;
-        try {
-            zip = new AdmZip(zipfile);
-        } catch (e) {
-            throw new ValidationError('zip', null, e.message);
-        }
-        const tmp = path.resolve(tmpdir, String.random(32));
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(tmp, true, (err) => (err ? reject(err) : resolve(null)));
+        const zip = new Zip.ZipReader(Readable.toWeb(fs.createReadStream(zipfile)));
+        const tmp = path.resolve(tmpdir, randomstring(32));
+        await extractZip(zip, tmp, {
+            strip: true,
+            parseError: (e) => new ValidationError('zip', null, e.message),
         });
         let cnt = 0;
         try {
@@ -46,7 +43,7 @@ class ImportHojHandler extends Handler {
                     content.samples = examples.map((sample) => ([sample.input, sample.output]));
                 }
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z]+[0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
                     if (await ProblemModel.get(domainId, id)) return false;
                     return true;
                 };
@@ -124,10 +121,10 @@ class ImportHojHandler extends Handler {
     }
 
     async post({ domainId }) {
-        if (!this.request.files.file) throw new ValidationError('file');
-        const stat = await fs.stat(this.request.files.file.filepath);
-        if (stat.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
-        await this.fromFile(domainId, this.request.files.file.filepath);
+        const file = this.request.files.file;
+        if (!file) throw new ValidationError('file');
+        if (file.size > 128 * 1024 * 1024) throw new ValidationError('file', 'File too large');
+        await this.fromFile(domainId, file.filepath);
         this.response.redirect = this.url('problem_main');
     }
 }

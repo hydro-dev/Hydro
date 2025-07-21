@@ -1,13 +1,15 @@
 /* eslint-disable no-await-in-loop */
+import { createReadStream } from 'fs';
 import path from 'path';
-import AdmZip from 'adm-zip';
+import { Readable } from 'stream';
+import { ZipReader } from '@zip.js/zip.js';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
-import { fs, noop } from '@hydrooj/utils';
-import { parseLang } from '@hydrooj/utils/lib/lang';
-import { STATUS } from '@hydrooj/utils/lib/status';
-import type { JudgeResultBody } from 'hydrooj';
+import { JudgeResultBody, parseLang, STATUS } from '@hydrooj/common';
+import {
+    extractZip, findFileSync, fs, noop,
+} from '@hydrooj/utils';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
 import { Session } from '../interface';
@@ -19,14 +21,14 @@ function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
 }
 
-const langs = parseLang(fs.readFileSync(path.resolve(__dirname, '../../langs.yaml'), 'utf-8'));
+const langs = parseLang(fs.readFileSync(process.env.VJ4_LANGS || findFileSync('@hydrooj/hydrojudge/langs.yaml'), 'utf-8'));
 
 export default class VJ4 implements Session {
     config: any;
     progress = 0;
     ws: WebSocket;
 
-    async fetchFile(): Promise<string> {
+    async fetchFile(): Promise<any> {
         throw new Error('not implemented');
     }
 
@@ -81,18 +83,16 @@ export default class VJ4 implements Session {
         this.ws.send(JSON.stringify({ ...data, tag, key }));
     }
 
-    getNext(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+    getReporter(t: JudgeTask) {
+        const next = (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
             this.send((t.request as any).tag, 'next', data);
         };
-    }
-
-    getEnd(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+        const end = (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
             this.send((t.request as any).tag, 'end', data);
         };
+        return { next, end };
     }
 
     get(url: string) {
@@ -155,16 +155,11 @@ export default class VJ4 implements Session {
                 fs.createWriteStream(tmpFilePath),
             );
             fs.ensureDirSync(path.dirname(savePath));
-            const zip = new AdmZip(tmpFilePath);
-            const entries = zip.getEntries();
+            const zip = new ZipReader(Readable.toWeb(createReadStream(tmpFilePath)));
+            const entries = await zip.getEntries();
             if (entries.length > 512) throw new FormatError('Too many files');
-            if (Math.sum(entries.map((i) => i.header.size)) > 256 * 1024 * 1024) throw new FormatError('File too large');
-            await new Promise((resolve, reject) => {
-                zip.extractAllToAsync(savePath, true, (e) => {
-                    if (e) reject(e);
-                    else resolve(null);
-                });
-            });
+            if (Math.sum(entries.map((i) => i.uncompressedSize)) > 256 * 1024 * 1024) throw new FormatError('File too large');
+            await extractZip(entries, savePath, { strip: true });
             await fs.unlink(tmpFilePath);
             await this.processData(savePath).catch(noop);
         } catch (e) {
@@ -181,15 +176,10 @@ export default class VJ4 implements Session {
         const w = fs.createWriteStream(tmpFilePath);
         await pipeRequest(this.get(`records/${rid}/data`), w);
         fs.ensureDirSync(path.dirname(savePath));
-        const zip = new AdmZip(tmpFilePath);
-        const entries = zip.getEntries();
+        const zip = new ZipReader(Readable.toWeb(createReadStream(tmpFilePath)));
+        const entries = await zip.getEntries();
         if (entries.length > 512) throw new FormatError('Too many files');
-        await new Promise((resolve, reject) => {
-            zip.extractAllToAsync(savePath, true, (e) => {
-                if (e) reject(e);
-                else resolve(null);
-            });
-        });
+        await extractZip(entries, savePath, { strip: true });
         await fs.unlink(tmpFilePath);
         await this.processData(savePath);
         return savePath;
@@ -251,7 +241,7 @@ export default class VJ4 implements Session {
         }
     }
 
-    async processData(folder: string) { // eslint-disable-line class-methods-use-this
+    async processData(folder: string) {
         let files = await fs.readdir(folder);
         if (files.length <= 2) {
             if (files.length === 2) files.splice(files.indexOf('version'), 1);

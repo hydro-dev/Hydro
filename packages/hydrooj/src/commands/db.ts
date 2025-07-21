@@ -5,6 +5,7 @@ import readline from 'readline/promises';
 import cac, { CAC } from 'cac';
 import fs from 'fs-extra';
 import { Logger, size } from '@hydrooj/utils';
+import { hydroPath } from '../options';
 const argv = cac().parse();
 
 const logger = new Logger('db');
@@ -15,7 +16,6 @@ const exec = (...args: Parameters<typeof child.spawnSync>) => {
     if (res.status) throw new Error(`Error: Exited with code ${res.status}`);
     return res;
 };
-const hydroPath = path.resolve(os.homedir(), '.hydro');
 const dir = `${os.tmpdir()}/${Math.random().toString(36).substring(2)}`;
 function getUrl() {
     const dbConfig = fs.readFileSync(path.resolve(hydroPath, 'config.json'), 'utf-8');

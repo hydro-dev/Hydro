@@ -9,13 +9,15 @@
   pdoc: pdoc
 }) }}
 {% if tdoc %}
+  {{ set(UiContext, 'tdoc', tdoc) }}
+  {{ set(UiContext, 'tsdoc', tsdoc) }}
+{% endif %}
+{% if tdoc and mode == 'contest' %}
   {{ set(UiContext, 'canViewRecord', model.contest.canShowSelfRecord.call(handler, tdoc)) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId, query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'getSubmissionsUrl', url('record_main', query={fullStatus:'true', pid:pdoc.docId, tid:tdoc.docId})) }}
   {{ set(UiContext, 'getRecordDetailUrl', url('record_detail', rid='{rid}', query={tid:tdoc.docId})) }}
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId + "&tid=" + tdoc.docId) }}
-  {{ set(UiContext, 'tdoc', tdoc) }}
-  {{ set(UiContext, 'tsdoc', tsdoc) }}
 {% else %}
   {{ set(UiContext, 'canViewRecord', true) }}
   {{ set(UiContext, 'postSubmitUrl', url('problem_submit', pid=pdoc.docId)) }}
@@ -24,6 +26,22 @@
   {{ set(UiContext, 'pretestConnUrl', "record-conn?pretest=1&uidOrName=" + handler.user._id + "&pid=" + pdoc.docId + "&domainId=" + handler.args.domainId) }}
 {% endif %}
 </script>
+{% if not tdoc %}
+  {% block ogp %}
+    {% set preferredLang = handler.request.query.lang or handler.user.viewLang or handler.session.viewLang %}
+    {% set renderredContent = pdoc.content|content(preferredLang, pdoc.html) %}
+    {% set langs = pdoc.content|contentLang %}
+    {% for k in langs %}
+      {% if k != preferredLang %}
+        <meta property="og:locale:alternate" content="{{ k }}" />
+      {% else %}
+        <meta property="og:locale" content="{{ k }}" />
+      {% endif %}
+    {% endfor %}
+    <meta property="og:title" content="{{ pdoc.pid|default(pdoc.docId) }}. {{ pdoc.title }} - {{ model.system.get('server.name') }}" />
+    <meta property="og:description" content="{{ renderredContent|problemPreview|truncate(100, true) }}" />
+  {% endblock %}
+{% endif %}
 <div class="row" data-sticky-parent>
   <div class="medium-9 columns">
     <div class="section">
@@ -46,7 +64,7 @@
             </form>
           {% endif %}
           {%- if tdoc -%}
-            {{ String.fromCharCode(65+tdoc.pids.indexOf(pdoc.docId)) }}
+            {{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
           {%- elif pdoc.pid and pdoc.pid.includes('-') -%}
             {{ pdoc.pid.split('-').join('#') }}
           {%- else -%}
@@ -62,7 +80,7 @@
               <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
                  class="{% if pass %}pass{% elif fail %}fail{% endif %}
                         {% if pid==pdoc.docId %} active{% endif %}">
-                <span class="id">{{ String.fromCharCode(65+loop.index0) }}</span>
+                <span class="id">{{ utils.getAlphabeticId(loop.index0) }}</span>
                 {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
               </a>
             {%- endfor %}
@@ -72,26 +90,26 @@
       <div class="section__body">
         <ul class="problem__tags">
           {% if not tdoc %}
-            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
+            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
           {% endif %}
-          <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
           {% if pdoc.config.type == 'default' and pdoc.config.subType %}
-            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-book">{{ _('File IO: {0}').format(pdoc.config.subType) }}</span>
+            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-book">{{ _('File IO: {0}').format(pdoc.config.subType) }}</span>
           {% endif %}
           {% if pdoc.config.type != 'objective' and pdoc.config.type != 'submit_answer' %}
-            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
-            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
           {% if not tdoc %}
-            <a class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
-            <a class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
-            <span class="bp5-tag bp5-large bp5-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
-            <span class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
+            <a class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
+            <a class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
+            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
+            <span class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% endif %}
           {% if pdoc.tag.length %}
-            <span name="show_tags" class="bp5-tag bp5-large bp5-minimal bp5-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
+            <span name="show_tags" class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
             {%- for tag in pdoc.tag -%}
-              <span class="bp5-tag bp5-large bp5-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
+              <span class="bp6-tag bp6-large bp6-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
             {%- endfor -%}
           {% endif %}
         </ul>
@@ -108,7 +126,7 @@
             <ul class="section__tab-header flex-row">
               {% for k in pdoc.content|contentLang %}
               <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang or (pdoc.content|contentLang)[0] ) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
-                {{ model.setting.SETTINGS_BY_KEY['viewLang'].range[k] }}
+                {{ handler.ctx.i18n.get('__langname', k) or i18n('Unknown language') }}
               </a>
               {% endfor %}
             </ul>

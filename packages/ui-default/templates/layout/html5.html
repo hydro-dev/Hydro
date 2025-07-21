@@ -19,11 +19,13 @@
   <link rel="icon" type="image/png" href="{{ UiContext.cdn_prefix }}favicon-16x16.png" sizes="16x16">
   {% if handler.context.request.url %}<link rel="canonical" href="{{ model.system.get('server.url') }}{{ handler.context.request.url.substring(1) }}">{% endif %}
   <meta name="theme-color" content="#56758f">
-  {% block ogp %}
+  {% block ogp_site %}
   <meta property="og:site_name" content="{{ (handler.domain|default({ui:[]})).ui.name|default(model.system.get('server.name')) }}" />
-  <meta property="og:title" content="{{ handler.renderTitle(page_name) }}" />
   <meta property="og:url" content="{{ model.system.get('server.url') }}{{ handler.request.path.slice(1) }}" />
   <meta property="og:image" content="{{ UiContext.cdn_prefix }}favicon-96x96.png" />
+  {% endblock %}
+  {% block ogp %}
+  <meta property="og:title" content="{{ handler.renderTitle(page_name) }}" />
   {% endblock %}
   <title>{{ handler.renderTitle(page_name) }}</title>
   <style>
@@ -46,8 +48,8 @@
     <script>
       var _htmlNode = document.documentElement;
       _htmlNode.className = _htmlNode.className.replace(' nojs', ' hasjs');
-      var UiContext = '{{ UiContext|json|jsesc|safe }}';
-      var UserContext = '{{ UserContext|json|jsesc|safe }}';
+      window.UiContext = '{{ UiContext|json|jsesc|safe }}';
+      window.UserContext = '{{ UserContext|json|jsesc|safe }}';
     </script>
   {% endif %}
   {% set UiContext = Object.create(UiContext) %}
@@ -55,7 +57,7 @@
 </head>
 <body>
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
-    <script type="text/javascript" src="/constant/{{ UiContext.constantVersion }}.js"></script>
+    <script type="text/javascript" src="/resource/{{ UiContext.constantVersion }}/entry.js"></script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js{% if process.env.DEV %}?version=dev{% endif %}"></script>
   {% endif %}
@@ -63,8 +65,8 @@
   {% block script %}{% endblock %}
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
     <script>
-      var UiContextNew = '{{ UiContext|json|jsesc|safe }}';
-      var UserContextNew = '{{ UserContext|json|jsesc|safe }}';
+      window.UiContextNew = '{{ UiContext|json|jsesc|safe }}';
+      window.UserContextNew = '{{ UserContext|json|jsesc|safe }}';
     </script>
   {% endif %}
 </body>

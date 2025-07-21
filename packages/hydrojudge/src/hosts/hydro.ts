@@ -1,19 +1,17 @@
-/* eslint-disable no-await-in-loop */
 import path from 'path';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
+import type { LangConfig } from '@hydrooj/common';
 import { fs, pipeRequest } from '@hydrooj/utils';
-import { LangConfig } from '@hydrooj/utils/lib/lang';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import type { JudgeResultBody } from 'hydrooj';
-import { compilerVersions } from '../compiler';
 import { getConfig } from '../config';
 import { FormatError, SystemError } from '../error';
+import { compilerVersions, stackSize as getStackSize } from '../info';
 import { Session } from '../interface';
 import log from '../log';
 import { JudgeTask } from '../task';
-import { Lock } from '../utils';
 
 function removeNixPath(text: string) {
     return text.replace(/\/nix\/store\/[a-z0-9]{32}-/g, '/nix/');
@@ -51,76 +49,47 @@ export default class Hydro implements Session {
         setInterval(() => { this.get(''); }, 30000000); // Cookie refresh only
     }
 
-    async cacheOpen(source: string, files: any[], next?) {
-        await Lock.acquire(`${this.config.host}/${source}`);
-        try {
-            return await this._cacheOpen(source, files, next);
-        } catch (e) {
-            log.warn('CacheOpen Fail: %s %o %o', source, files, e);
-            throw e;
-        } finally {
-            Lock.release(`${this.config.host}/${source}`);
+    async fetchFile<T extends string | null>(namespace: T, files: Record<string, string>): Promise<T extends null ? string : null> {
+        if (!namespace) { // record-related resource (code)
+            const name = Object.keys(files)[0].split('#')[0];
+            const res = await this.post('judge/files', { id: name });
+            const target = Object.values(files)[0] || path.join(getConfig('tmp_dir'), Math.random().toString(36).substring(2));
+            await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
+            return target as any;
         }
-    }
-
-    async _cacheOpen(source: string, files: any[], next?) {
-        const [domainId, pid] = source.split('/');
-        const filePath = path.join(getConfig('cache_dir'), this.config.host, source);
-        await fs.ensureDir(filePath);
-        if (!files?.length) throw new FormatError('Problem data not found.');
-        let etags: Record<string, string> = {};
-        try {
-            etags = JSON.parse(await fs.readFile(path.join(filePath, 'etags'), 'utf-8'));
-        } catch (e) { /* ignore */ }
-        const version = {};
-        const filenames = [];
-        const allFiles = new Set<string>();
-        for (const file of files) {
-            allFiles.add(file.name);
-            version[file.name] = file.etag + file.lastModified;
-            if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
-        }
-        for (const name in etags) {
-            if (!allFiles.has(name) && fs.existsSync(path.join(filePath, name))) await fs.remove(path.join(filePath, name));
-        }
-        if (filenames.length) {
-            log.info(`Getting problem data: ${this.config.host}/${source}`);
-            next?.({ message: 'Syncing testdata, please wait...' });
-            await this.ensureLogin();
-            const res = await this.post(`/d/${domainId}/judge/files`, {
-                pid: +pid,
-                files: filenames,
+        const [domainId, pid] = namespace.split('/');
+        await this.ensureLogin();
+        const res = await this.post(`/d/${domainId}/judge/files`, {
+            pid: +pid,
+            files: Object.keys(files),
+        });
+        if (!res.body.links) throw new FormatError('problem not exist');
+        const queue = new PQueue({ concurrency: 10 });
+        for (const name in res.body.links) {
+            queue.add(async () => {
+                if (name.includes('/')) await fs.ensureDir(path.dirname(files[name]));
+                const w = fs.createWriteStream(files[name]);
+                await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
             });
-            if (!res.body.links) throw new FormatError('problem not exist');
-            const tasks = [];
-            const queue = new PQueue({ concurrency: 10 });
-            for (const name in res.body.links) {
-                tasks.push(queue.add(async () => {
-                    if (name.includes('/')) await fs.ensureDir(path.join(filePath, name.split('/')[0]));
-                    const w = fs.createWriteStream(path.join(filePath, name));
-                    await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
-                }));
-            }
-            await Promise.all(tasks);
-            await fs.writeFile(path.join(filePath, 'etags'), JSON.stringify(version));
         }
-        await fs.writeFile(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
-        return filePath;
+        await queue.onIdle();
+        return null;
     }
 
-    async fetchFile(name: string) {
-        name = name.split('#')[0];
-        const res = await this.post('judge/files', { id: name });
-        const target = path.join(getConfig('tmp_dir'), name.replace(/\//g, '_'));
-        await pipeRequest(this.get(res.body.url), fs.createWriteStream(target), 60000, name);
-        return target;
-    }
-
-    async postFile(target: string, filename: string, file: string) {
-        await this.post('judge/upload')
-            .field('rid', target)
-            .field('name', filename)
-            .attach('file', fs.createReadStream(file));
+    async postFile(target: string, filename: string, file: string, retry = 3) {
+        try {
+            await this.post('judge/upload')
+                .field('rid', target)
+                .field('name', filename)
+                .attach('file', await fs.readFile(file));
+        } catch (e) {
+            if (!retry) {
+                log.error('PostFile Fail: %s %s %o', target, filename, e);
+                throw e;
+            }
+            await new Promise((resolve) => { setTimeout(resolve, 1000); });
+            await this.postFile(target, filename, file, retry - 1);
+        }
     }
 
     getLang(name: string, doThrow = true) {
@@ -137,8 +106,8 @@ export default class Hydro implements Session {
         this.ws.send(JSON.stringify({ ...data, rid, key }));
     }
 
-    getNext(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+    getReporter(t: JudgeTask) {
+        const next = (data: Partial<JudgeResultBody>) => {
             log.debug('Next: %o', data);
             const performanceMode = getConfig('performance') || t.meta.rejudge || t.meta.hackRejudge;
             if (performanceMode && data.case && !data.compilerText && !data.message) {
@@ -150,14 +119,12 @@ export default class Hydro implements Session {
                 this.send(t.request.rid, 'next', data);
             }
         };
-    }
-
-    getEnd(t: JudgeTask) {
-        return (data: Partial<JudgeResultBody>) => {
+        const end = (data: Partial<JudgeResultBody>) => {
             log.info('End: %o', data);
             if (t.callbackCache) data.cases = t.callbackCache;
             this.send(t.request.rid, 'end', data);
         };
+        return { next, end };
     }
 
     async consume(queue: PQueue) {
@@ -175,7 +142,8 @@ export default class Hydro implements Session {
             ? JSON.stringify({ key: 'config', ...config })
             : '{"key":"ping"}';
         let compilers = {};
-        let compilerVersionCallback = () => { };
+        let sendStatus = () => { };
+        let stackSize = 0;
         this.ws.on('message', (data) => {
             if (data.toString() === 'ping') {
                 this.ws.send('pong');
@@ -184,9 +152,13 @@ export default class Hydro implements Session {
             const request = JSON.parse(data.toString());
             if (request.language) {
                 this.language = request.language;
-                compilerVersions(this.language).then((res) => {
-                    compilers = res;
-                    compilerVersionCallback();
+                Promise.allSettled([
+                    compilerVersions(this.language),
+                    getStackSize(),
+                ]).then(([compiler, stack]) => {
+                    compilers = compiler.status === 'fulfilled' ? compiler.value : {};
+                    stackSize = stack.status === 'fulfilled' ? stack.value : 0;
+                    sendStatus();
                 });
             }
             if (request.task) queue.add(() => new JudgeTask(this, request.task).handle().catch((e) => log.error(e)));
@@ -205,14 +177,24 @@ export default class Hydro implements Session {
                 this.ws.send('{"key":"start"}');
                 if (!this.config.noStatus) {
                     const info = await sysinfo.get();
-                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info } }));
-                    compilerVersionCallback = () => {
-                        this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers } }));
-                    };
-                    setInterval(async () => {
+                    this.ws.send(JSON.stringify({ key: 'status', info: { ...info, stackSize } }));
+                    sendStatus = () => this.ws.send(JSON.stringify({ key: 'status', info: { ...info, compilers, stackSize } }));
+                    const interval = setInterval(async () => {
                         const [mid, inf] = await sysinfo.update();
-                        this.ws.send(JSON.stringify({ key: 'status', info: { mid, ...inf, compilers } }));
+                        this.ws.send(JSON.stringify({
+                            key: 'status',
+                            info: {
+                                mid, ...inf, compilers, stackSize,
+                            },
+                        }));
                     }, 1200000);
+                    let stopped = false;
+                    const stop = () => {
+                        if (!stopped) clearInterval(interval);
+                        stopped = true;
+                    };
+                    this.ws.on('close', stop);
+                    this.ws.on('error', stop);
                 }
                 resolve(null);
             });

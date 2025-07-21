@@ -28,7 +28,7 @@ const pages = {
 let rerenderCallback = null;
 class ScratchpadService extends Service {
   constructor(public store) {
-    super(ctx, 'scratchpad', true);
+    super(ctx, 'scratchpad');
     this.load = new Promise((resolve) => {
       this.loadCallback = resolve;
     });
@@ -64,10 +64,7 @@ let scratchpad: ScratchpadService;
 
 export default function ScratchpadContainer() {
   const store = useStore();
-  if (!scratchpad) {
-    scratchpad = new ScratchpadService(store);
-    ctx.set('scratchpad', scratchpad);
-  }
+  scratchpad ||= new ScratchpadService(store);
   const [, updateState] = React.useState<any>();
   const forceUpdate = React.useCallback(() => updateState({}), []);
   React.useEffect(() => {

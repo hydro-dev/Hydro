@@ -1,8 +1,6 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable consistent-return */
 /* eslint-disable simple-import-sort/imports */
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-eval */
 import './init';
 import './interface';
 import path from 'path';
@@ -11,14 +9,17 @@ import child from 'child_process';
 import './utils';
 import cac from 'cac';
 import './ui';
-import './lib/i18n';
+import { I18nService } from './lib/i18n';
 
 import { Logger } from './logger';
-import { Context } from './context';
+import {
+    Context, Service, FiberState, Fiber,
+} from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
+import Schema from 'schemastery';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -31,10 +32,11 @@ const HYDROPATH = [];
 
 if (process.env.NIX_PROFILES) {
     try {
-        const result = JSON.parse(child.execSync('nix-env -q --json --out-path --meta').toString()) as Record<string, any>;
-        for (const derivation of Object.values(result)) {
-            if (derivation.name.startsWith('hydro-plugin-') && derivation.outputs?.out) {
-                HYDROPATH.push(derivation.outputs.out);
+        const result = JSON.parse(child.execSync('nix profile list --json').toString()) as any;
+        for (const [name, derivation] of Object.entries(result.elements) as any) {
+            if (!derivation.active) continue;
+            if (name.startsWith('hydro-plugin-') && derivation.storePaths) {
+                HYDROPATH.push(...derivation.storePaths);
             }
         }
     } catch (e) {
@@ -42,92 +44,98 @@ if (process.env.NIX_PROFILES) {
     }
 }
 
-export function resolveConfig(plugin: any, config: any) {
-    if (config === false) return;
-    if (config === true) config = undefined;
-    config ??= {};
-    const schema = plugin['Config'] || plugin['schema'];
-    if (schema && plugin['schema'] !== false) config = schema(config);
-    return config;
-}
-
-const timeout = Symbol.for('loader.timeout');
-const showLoadTime = argv.options.showLoadTime;
-
-export class Loader {
-    static readonly Record = Symbol.for('loader.record');
-
-    public app: Context;
-    public config: {};
+export class Loader extends Service {
+    public state: Record<string, Fiber> = Object.create(null);
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
+    // public warnings: Record<string, string> = Object.create(null);
 
-    unloadPlugin(ctx: Context, key: string) {
-        const fork = ctx.state[Loader.Record][key];
+    static inject = ['setting', 'timer', 'i18n', 'logger'];
+
+    constructor(ctx: Context) {
+        super(ctx, 'loader');
+
+        ctx.on('app/started', () => {
+            ctx.interval(async () => {
+                const pending = Object.entries(this.state).filter((v) => v[1].state === FiberState.PENDING);
+                if (pending.length) {
+                    logger.warn('Plugins are still pending: %s', pending.map((v) => v[0]).join(', '));
+                    for (const [key, value] of pending) {
+                        logger.warn('Plugin %s is still pending', key);
+                        console.log(value);
+                    }
+                }
+                const loading = Object.entries(this.state).filter((v) => v[1].state === FiberState.LOADING);
+                if (loading.length) {
+                    logger.warn('Plugins are still loading: %s', loading.map((v) => v[0]).join(', '));
+                    for (const [key, value] of loading) {
+                        logger.warn('Plugin %s is still loading', key);
+                        console.log(value);
+                    }
+                }
+                const failed = Object.entries(this.state).filter((v) => v[1].state === FiberState.FAILED);
+                if (failed.length) {
+                    logger.warn('Plugins failed to load: %s', failed.map((v) => v[0]).join(', '));
+                    for (const [key, value] of failed) {
+                        logger.warn('Plugin %s failed to load', key);
+                        console.log(value);
+                    }
+                }
+            }, 10000);
+        });
+    }
+
+    unloadPlugin(key: string) {
+        const fork = this.state[key];
         if (fork) {
             fork.dispose();
-            delete ctx.state[Loader.Record][key];
+            delete this.state[key];
             logger.info('unload plugin %c', key);
         }
     }
 
-    async reloadPlugin(parent: Context, key: string, config: any, asName = '') {
-        let fork = parent.state[Loader.Record]?.[key];
+    async resolveConfig(plugin: any, configScope: string) {
+        const schema = plugin['Config'] || plugin['schema'];
+        if (!schema) return {};
+        const schemaRequest = configScope ? Schema.object({
+            [configScope]: schema,
+        }) : schema;
+        await this.ctx.setting._tryMigrateConfig(schemaRequest);
+        const res = this.ctx.setting.requestConfig(schemaRequest);
+        return configScope ? res[configScope] : res;
+    }
+
+    async reloadPlugin(key: string, configScope: string) {
+        const plugin = this.resolvePlugin(key);
+        if (!plugin) return;
+        const config = await this.resolveConfig(plugin, configScope);
+        let fork = this.state[key];
+        const displayPath = key.includes('node_modules')
+            ? key.split('node_modules').pop()
+            : path.relative(process.cwd(), key);
+        logger.info(
+            `%s plugin %c${configScope ? ' with scope %c' : ''}`,
+            fork ? 'reload' : 'apply', displayPath, configScope,
+        );
         if (fork) {
-            logger.info('reload plugin %c', key.split('node_modules').pop());
             fork.update(config);
         } else {
-            logger.info('apply plugin %c', key.split('node_modules').pop());
-            let plugin = await this.resolvePlugin(key);
-            if (!plugin) return;
-            resolveConfig(plugin, config);
-            if (asName) plugin.name = asName;
-            // fork = parent.plugin(plugin, this.interpolate(config));
-            if (plugin.apply) {
-                const original = plugin.apply;
-                const apply = (...args) => {
-                    const start = Date.now();
-                    const result = Promise.resolve()
-                        .then(() => original(...args))
-                        .catch((e) => logger.error(e));
-                    Promise.race([
-                        result,
-                        new Promise((resolve) => {
-                            setTimeout(() => resolve(timeout), 10000);
-                        }),
-                    ]).then((t) => {
-                        if (t === timeout) {
-                            logger.warn('Plugin %s took too long to load', key);
-                        }
-                    });
-                    if (showLoadTime && (typeof showLoadTime !== 'number' || Date.now() - start > showLoadTime)) {
-                        logger.info('Plugin %s loaded in %dms', key, Date.now() - start);
-                    }
-                    return result;
-                };
-                plugin = Object.create(plugin);
-                Object.defineProperty(plugin, 'apply', {
-                    writable: true,
-                    value: apply,
-                    enumerable: true,
-                });
-            }
-            fork = parent.plugin(plugin, config);
+            fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
-            parent.state[Loader.Record] ||= Object.create(null);
-            parent.state[Loader.Record][key] = fork;
+            this.state[key] = fork;
         }
         return fork;
     }
 
-    async resolvePlugin(name: string) {
+    resolvePlugin(name: string) {
         try {
             this.cache[name] ||= require.resolve(name);
         } catch (err) {
             try {
                 this.cache[name] ||= require.resolve(name, { paths: HYDROPATH });
             } catch (e) {
-                logger.error(err.message);
+                logger.error('Failed to resolve plugin %s', name);
+                logger.error(err);
                 return;
             }
         }
@@ -135,23 +143,24 @@ export class Loader {
     }
 }
 
-const loader = new Loader();
-app.provide('loader');
-app.loader = loader;
-loader.app = app;
-app.state[Loader.Record] = Object.create(null);
+app.plugin(I18nService);
+app.plugin(Loader);
 
-function preload() {
+async function preload() {
+    global.app = await new Promise((resolve) => {
+        app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
+            resolve(c);
+        });
+    });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
         try {
             // Is a npm package
             const packagejson = require.resolve(`${a}/package.json`);
-            // eslint-disable-next-line import/no-dynamic-require
             const payload = require(packagejson);
             const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
             global.Hydro.version[name] = payload.version;
             const modulePath = path.dirname(packagejson);
-            global.addons.push(modulePath);
+            global.addons[name] = modulePath;
         } catch (e) {
             logger.error(`Addon not found: ${a}`);
             logger.error(e);
@@ -161,7 +170,7 @@ function preload() {
 }
 
 export async function load() {
-    preload();
+    await preload();
     Error.stackTraceLimit = 50;
     try {
         const { simpleGit } = require('simple-git') as typeof import('simple-git');
@@ -200,7 +209,7 @@ export async function load() {
 
 export async function loadCli() {
     process.env.HYDRO_CLI = 'true';
-    preload();
+    await preload();
     await require('./entry/cli').load(app);
     setTimeout(() => process.exit(0), 300);
 }

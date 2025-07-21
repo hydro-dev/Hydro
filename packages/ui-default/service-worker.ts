@@ -95,6 +95,7 @@ function shouldCachePath(path: string) {
   if (!path.split('?')[0].split('/').pop()) return false;
   if (!path.split('?')[0].split('/').pop().includes('.')) return false;
   if (process.env.NODE_ENV !== 'production' && (path.includes('.hot-update.') || path.includes('?version='))) return false;
+  if (path.includes('?v=')) return false;
   return true;
 }
 function shouldCache(request: Request) {
@@ -160,12 +161,12 @@ async function get(request: Request) {
         method: request.method,
         credentials: isResource ? 'same-origin' : 'include',
         headers: request.headers,
-        body: request.body,
         redirect: request.redirect,
         keepalive: request.keepalive,
         referrer: request.referrer,
         referrerPolicy: request.referrerPolicy,
         signal: request.signal,
+        ...(request.method.toLowerCase() === 'get' ? {} : { body: request.body }),
       });
       if (r.ok) {
         console.log('Load success from ', source.toString());

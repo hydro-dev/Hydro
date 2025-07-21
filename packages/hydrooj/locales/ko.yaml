@@ -1,4 +1,6 @@
+__flag: 🇰🇷
 __id: ko
+__interface: yes
 __langname: 한국어
 '"{data}" copied to clipboard!': “{data}”복사 완료
 '{0} comments': '{0} 댓글'
@@ -686,7 +688,6 @@ The role to assign when user joining the domain.: 사용자가 그룹에 참여�
 The uploaded file is too long.: 업로드한 파일이 너무 깁니다.
 The user is already a member of the domain.: 이미 그룹에 속한 사용자입니다.
 The user is too lazy to leave something here...: 설명이 없습니다... (´・ω・｀)
-Their account will not be deleted and they will be with the default role.: 계정은 삭제되지 않을 것이고, default 역할을 가질 것입니다.
 There are no contests...: 대회 없음
 There is no homework so far ╰(*°▽°*)╯: 과제 없음 ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
@@ -808,6 +809,7 @@ You cannot visit this domain.: 이 그룹을 방문할 수 없습니다.
 You don't have the required permission ({0}) in this domain.: 그룹 권한이 없습니다. ({0})。
 You don't have the required privilege.: 권한이 없습니다.
 You don't own any domain and don't have privilege to create domain.: 그룹을 만들 권한이 없습니다.
+You have been kicked from domain {0} by {1}.: 당신은 {1}에 의해 {0}에서 추방되었습니다.
 You have not submitted any solutions for this problem: 아직 답안을 제출하지 않았습니다.
 You have permission to create problems for this domain.: 이 그룹에서 문제를 만들기 위한 권한이 있습니다.
 You have uncompleted domain creation operation. You can click "Continue" to finish the creation.: 그룹 생성이 끝나지 않았습니다. "계속"을 눌러 생성을 완료하십시오.

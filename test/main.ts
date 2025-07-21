@@ -29,12 +29,15 @@ describe('App', () => {
         console.log('Application inited in %d ms', Date.now() - init);
     }, { timeout: 30000 });
 
-    const routes = ['/', '/api', '/p', '/contest', '/homework', '/user/1', '/training'];
-    routes.forEach((route) => it(`GET ${route}`, () => agent.get(route).expect(200)));
+    const routes = ['/', '/p', '/contest', '/homework', '/user/1', '/training'];
+    for (const route of routes) {
+        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        it(`GET ${route}`, () => agent.get(route).expect(200));
+    }
 
     it('API user', async () => {
-        await agent.get('/api?{user(id:1){uname}}').expect({ data: { user: { uname: 'Hydro' } } });
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: null } });
+        await agent.get('/api/user?args={"id":1}&projection=uname').expect({ uname: 'Hydro' });
+        await agent.get('/api/user?args={"id":2}&projection=uname').expect(null);
     });
 
     it('Create User', async () => {
@@ -56,24 +59,25 @@ describe('App', () => {
     });
 
     it('API registered user', async () => {
-        await agent.get('/api?{user(id:2){uname}}').expect({ data: { user: { uname: 'root' } } });
+        await agent.get('/api/user?args={"id":2}&projection=uname').expect({ uname: 'root' });
     });
 
     // TODO add more tests
 
+    const results: Record<string, autocannon.Result> = {};
     if (process.env.BENCHMARK) {
-        const results: Record<string, autocannon.Result> = {};
-        routes.forEach((route) => it(`Performance test ${route}`, { timeout: 60000 }, async () => {
-            await global.Hydro.model.system.set('limit.global', 99999);
-            const result = await autocannon({ url: `http://localhost:8888${route}` });
-            assert(result.errors === 0, `test ${route} returns errors`);
-            results[route] = result;
-        }));
+        for (const route of routes) {
+            it(`Performance test ${route}`, { timeout: 60000 }, async () => {
+                const result = await autocannon({ url: `http://localhost:8888${route}` });
+                assert(result.errors === 0, `test ${route} returns errors`);
+                results[route] = result;
+            });
+        }
     }
 
     after(() => {
         if (process.env.BENCHMARK) {
-            const metrics = Object.entries(([k, v]) => ({
+            const metrics = Object.entries(results).map(([k, v]) => ({
                 name: `Benchmark - ${k} - Req/sec`,
                 unit: 'Req/sec',
                 value: v.requests.average,

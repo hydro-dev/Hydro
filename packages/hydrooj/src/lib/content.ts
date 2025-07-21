@@ -48,7 +48,7 @@ export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 
             ...source.description ? [`<h2>${_('Description')}</h2>`, source.description] : [],
             ...source.input ? [`<h2>${_('Input Format')}</h2>`, source.input] : [],
             ...source.output ? [`<h2>${_('Output Format')}</h2>`, source.output] : [],
-            ...(source.samples).map((sample, i) => [
+            ...(source.samples || []).map((sample, i) => [
                 `<pre><code class="language-input${i + 1}">`,
                 sample[0],
                 `</code></pre><pre><code class="language-output${i + 1}">`,
@@ -63,18 +63,16 @@ export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 
             ...source.description ? [`## ${_('Description')}`, '', source.description, ''] : [],
             ...source.input ? [`## ${_('Input Format')}`, '', source.input, ''] : [],
             ...source.output ? [`## ${_('Output Format')}`, '', source.output, ''] : [],
-            ...(source.samples).map((sample, i) => [
+            ...(source.samples || []).flatMap((sample, i) => [
                 `\`\`\`input${i + 1}`,
                 sample[0],
                 '```',
                 `\`\`\`output${i + 1}`,
                 sample[1],
                 '```',
-            ].join('\n')),
+            ]),
             ...source.samplesRaw ? [source.samplesRaw] : [],
             ...source.hint ? [`## ${_('Hint')}`, '', source.hint, ''] : [],
             ...source.source ? [`## ${_('Source')}`, '', source.source, ''] : [],
         ].join('\n');
 }
-
-global.Hydro.lib.buildContent = buildContent;

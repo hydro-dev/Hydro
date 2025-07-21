@@ -5,7 +5,7 @@ import { DiscussionNodeNotFoundError, DocumentNotFoundError } from '../error';
 import {
     DiscussionHistoryDoc, DiscussionReplyDoc, DiscussionTailReplyDoc, Document,
 } from '../interface';
-import * as bus from '../service/bus';
+import bus from '../service/bus';
 import db from '../service/db';
 import { NumberKeys } from '../typeutils';
 import { buildProjection } from '../utils';
@@ -37,7 +37,6 @@ export const typeDisplay = {
     [document.TYPE_CONTEST]: 'contest',
     [document.TYPE_DISCUSSION_NODE]: 'node',
     [document.TYPE_TRAINING]: 'training',
-    [document.TYPE_HOMEWORK]: 'homework',
 };
 
 export const coll = db.collection('discussion.history');
@@ -85,9 +84,11 @@ export async function get<T extends Field>(
 }
 
 export async function edit(domainId: string, did: ObjectId, $set: Partial<DiscussionDoc>) {
-    await coll.insertOne({
-        domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
-    });
+    if ($set.content) {
+        await coll.insertOne({
+            domainId, docId: did, content: $set.content, uid: $set.editor, ip: $set.ip, time: new Date(),
+        });
+    }
     return document.set(domainId, document.TYPE_DISCUSSION, did, $set);
 }
 
@@ -275,15 +276,15 @@ export function flushNodes(domainId: string) {
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
         const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
-        if (!pdoc) throw new DiscussionNodeNotFoundError(id);
+        if (!pdoc) throw new DiscussionNodeNotFoundError(`problem/${id}`);
         return { ...pdoc, type, id: pdoc.docId };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
-        if (!ObjectId.isValid(id)) throw new DiscussionNodeNotFoundError(id);
+        if (!ObjectId.isValid(id)) throw new DiscussionNodeNotFoundError(`contest/${id}`);
         const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
-        if (!tdoc) throw new DiscussionNodeNotFoundError(id);
+        if (!tdoc) throw new DiscussionNodeNotFoundError(`contest/${id}`);
         if (uid) {
             const tsdoc = await model.getStatus(domainId, _id, uid);
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
@@ -320,7 +321,7 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
 
 export function checkVNodeVisibility(type: number, vnode: any, user: User) {
     if (type === document.TYPE_PROBLEM) {
-        if (vnode.hidden && !(user.own(vnode) || user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN))) return false;
+        if (vnode.hidden && !user.own(vnode) && !user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return false;
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;

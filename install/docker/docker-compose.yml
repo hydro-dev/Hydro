@@ -1,7 +1,4 @@
-version: '3.7'
-
 services:
-    
   # Warning: mongodb here is not password-protected.
   # DO NOT EXPOSE THIS SERVICE TO THE PUBLIC.
   oj-mongo:
@@ -21,7 +18,14 @@ services:
       - ./data/file:/data/file
       - ./data/backend:/root/.hydro
     ports:
-      - "0.0.0.0:80:8888" # In docker mode, change THIS port instead of port in system settings!
+      - "80:8888" # In docker mode, change THIS port instead of port in system settings!
+    healthcheck:
+      test: curl --silent --fail http://localhost:8888/status >/dev/null || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
 
   oj-judge:
     build: ./judge
@@ -29,6 +33,9 @@ services:
     restart: always
     privileged: true
     depends_on:
-      - oj-backend
+      oj-backend:
+        condition: service_healthy
+        restart: true
     volumes:
-      - ./data/judge:/root/.config/hydro
+      - ./judge/judge.yaml:/root/.hydro/judge.yaml
+      - ./judge/mount.yaml:/root/.hydro/mount.yaml

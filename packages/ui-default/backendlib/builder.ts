@@ -1,13 +1,12 @@
-import esbuild from 'esbuild';
-import {
-  Context, fs, Handler, Logger, NotFoundError, param, SettingModel, sha1,
-  size, SystemModel, Types, UiContextBase,
-} from 'hydrooj';
-import { debounce } from 'lodash';
 import { tmpdir } from 'os';
 import {
   basename, join, relative, resolve,
 } from 'path';
+import {
+  Context, fs, Handler, Logger, NotFoundError, param, SettingModel, sha1,
+  size, SystemModel, Types, UiContextBase,
+} from 'hydrooj';
+import esbuild from 'esbuild';
 
 declare module 'hydrooj' {
   interface UI {
@@ -92,7 +91,7 @@ export async function buildUI() {
   const entryPoints: string[] = [];
   const lazyModules: string[] = [];
   const newFiles = ['entry.js'];
-  for (const addon of global.addons) {
+  for (const addon of Object.values(global.addons)) {
     let publicPath = resolve(addon, 'frontend');
     if (!fs.existsSync(publicPath)) publicPath = resolve(addon, 'public');
     if (!fs.existsSync(publicPath)) continue;
@@ -118,6 +117,7 @@ export async function buildUI() {
   }
   for (const lang in global.Hydro.locales) {
     if (!/^[a-zA-Z_]+$/.test(lang)) continue;
+    if (!global.Hydro.locales[lang].__interface) continue;
     const str = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
     addFile(`lang-${lang}.js`, str);
   }
@@ -127,7 +127,13 @@ export async function buildUI() {
     ...entryPoints.map((i) => `import '${relative(tmp, i).replace(/\\/g, '\\\\')}';`),
   ].join('\n'));
   const pages = entry.outputFiles.filter((i) => i.path.endsWith('.js')).map((i) => i.text);
-  addFile('entry.js', `window._hydroLoad=()=>{ ${pages.join('\n')} };`);
+  const css = entry.outputFiles.filter((i) => i.path.endsWith('.css')).map((i) => i.text);
+  addFile('entry.js', `window._hydroLoad=()=>{
+    const style = document.createElement('style');
+    style.textContent = ${JSON.stringify(css.join('\n'))};
+    document.head.appendChild(style);
+    ${pages.join('\n')}
+  };`);
   UiContextBase.constantVersion = hashes['entry.js'];
   for (const key in vfs) {
     if (newFiles.includes(key)) continue;
@@ -140,10 +146,9 @@ export async function buildUI() {
 class UiConstantsHandler extends Handler {
   noCheckPermView = true;
 
-  @param('name', Types.Filename, true)
+  @param('name', Types.Filename)
   async all(domainId: string, name: string) {
     this.response.type = 'application/javascript';
-    name ||= 'entry.js';
     if (!vfs[name]) throw new NotFoundError(name);
     this.response.addHeader('ETag', hashes[name]);
     this.response.body = vfs[name];
@@ -152,11 +157,10 @@ class UiConstantsHandler extends Handler {
 }
 
 export async function apply(ctx: Context) {
-  ctx.Route('constant', '/constant/:version', UiConstantsHandler);
   ctx.Route('constant', '/lazy/:version/:name', UiConstantsHandler);
   ctx.Route('constant', '/resource/:version/:name', UiConstantsHandler);
   ctx.on('app/started', buildUI);
-  const debouncedBuildUI = debounce(buildUI, 2000, { trailing: true });
+  const debouncedBuildUI = ctx.debounce(buildUI, 2000);
   const triggerHotUpdate = (path?: string) => {
     if (path && !path.includes('/ui-default/') && !path.includes('/public/') && !path.includes('/frontend/')) return;
     debouncedBuildUI();
