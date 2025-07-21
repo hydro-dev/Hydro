@@ -126,8 +126,6 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
   const defaultValues = Object.fromEntries(Object.entries(fields)
     .map(([name, field]: [T, Field]) => [name, field.default || ''])) as Record<T, string | number | boolean>;
 
-  console.log(valueCache, defaultValues);
-
   const Component = () => {
     const [values, setValues] = React.useState(defaultValues);
 

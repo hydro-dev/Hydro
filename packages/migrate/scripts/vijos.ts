@@ -4,7 +4,7 @@ import mongodb, { Db, FindCursor } from 'mongodb';
 import {
     db as dst,
     DiscussionModel, DiscussionTailReplyDoc, DocumentModel,
-    MessageDoc, RecordDoc, TestCase, TrainingNode,
+    RecordDoc, TestCase, TrainingNode,
 } from 'hydrooj';
 
 const map = {};
@@ -359,15 +359,14 @@ async function message(src: Db, report: Function) {
             .toArray();
         for (const doc of docs) {
             for (const msg of doc.reply) {
-                const mdoc: MessageDoc = {
+                await dst.collection('message').insertOne({
                     _id: objid(msg.at),
                     from: msg.sender_uid,
                     to: msg.sender_uid === doc.sender_uid ? doc.sendee_uid : doc.sender_uid,
                     content: msg.content,
                     // Mark all as read
                     flag: 0,
-                };
-                await dst.collection('message').insertOne(mdoc);
+                });
             }
         }
         await report({ progress: Math.round(100 * ((i + 1) / (total + 1))) });

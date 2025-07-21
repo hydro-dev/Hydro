@@ -194,27 +194,28 @@ export class ProblemMainHandler extends Handler {
     async postCopy(domainId: string, pids: number[], target: string, hidden?: boolean) {
         let t = `,${this.domain.share || ''},`;
         if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(this.domain._id, target);
-        let ddoc = await domain.get(target);
+        const ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
         // Check if user can access all those problems
         const pdict = await problem.getList(
             domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id,
-            true, ['docId'], true,
+            true, ['domainId', 'docId', 'reference'], true,
         );
         const ids = [];
         for (const pid of pids) {
             let pdoc = pdict[pid];
             if (pdoc.reference) {
                 // eslint-disable-next-line no-await-in-loop
-                [pdoc, ddoc] = await Promise.all([
+                const [sourcePdoc, sourceDdoc] = await Promise.all([
                     problem.get(pdoc.reference.domainId, pdoc.reference.pid),
                     domain.get(pdoc.reference.domainId),
                 ]);
-                if (!pdoc) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
-                t = `,${ddoc.share || ''},`;
-                if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(ddoc._id, target);
+                if (!sourcePdoc) throw new ProblemNotFoundError(pdoc.reference.domainId, pdoc.reference.pid);
+                else pdoc = sourcePdoc;
+                t = `,${sourceDdoc.share || ''},`;
+                if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(sourceDdoc._id, target);
             }
             // eslint-disable-next-line no-await-in-loop
             ids.push(await problem.copy(pdoc.domainId, pdoc.docId, target, undefined, hidden));
@@ -317,7 +318,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (this.pdoc.config.langs) t.push(this.pdoc.config.langs);
             if (ddoc.langs) t.push(ddoc.langs.split(',').map((i) => i.trim()).filter((i) => i));
             if (this.domain.langs) t.push(this.domain.langs.split(',').map((i) => i.trim()).filter((i) => i));
-            if (this.tdoc?.langs) t.push(this.tdoc.langs);
+            if (this.tdoc?.langs?.length) t.push(this.tdoc.langs);
             if (this.pdoc.config.type === 'remote_judge') {
                 const p = this.pdoc.config.subType;
                 const dl = Object.keys(setting.langs).filter((i) => i.startsWith(`${p}.`) || setting.langs[i].validAs[p]);

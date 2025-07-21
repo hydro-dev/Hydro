@@ -111,6 +111,12 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.6 / UI 4.58.0-beta.6
+
+- core: 修复网页端执行脚本返回值
+- core: patch: 支持从本地文件读取
+- core: 支持复制/导入题目时设置隐藏
+
 ## Hydro 5.0.0-beta.3 / UI 4.58.0-beta.3
 
 ### New Features

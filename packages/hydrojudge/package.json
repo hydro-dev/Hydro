@@ -8,13 +8,13 @@
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@zip.js/zip.js": "^2.7.62",
+        "@zip.js/zip.js": "^2.7.64",
         "cac": "^6.7.14",
         "p-queue": "^8.1.0",
         "schemastery": "^3.16.1",
         "semver": "^7.7.2",
         "shell-quote": "^1.8.3",
-        "superagent": "^10.2.1",
+        "superagent": "^10.2.2",
         "ws": "^8.18.3"
     },
     "preferUnplugged": true,

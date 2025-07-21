@@ -28,9 +28,9 @@ const page = new NamedPage([
         autofocus: true,
       },
     });
-    if (!res) return;
+    if (!res?.target) return;
     try {
-      const { url } = await request.post('..', {
+      const { url } = await request.post('.', {
         operation: 'copy',
         pids: [UiContext.pdoc.docId],
         target: res.target,
