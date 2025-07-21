@@ -1,4 +1,5 @@
 import { getAlphabeticId } from '@hydrooj/utils/lib/common';
+import { ContestProblemConfig } from 'hydrooj/src/interface';
 import { debounce } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -6,21 +7,15 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { api, i18n } from 'vj/utils';
 import ProblemSelectAutoComplete from '../autocomplete/components/ProblemSelectAutoComplete';
 
-export interface Problem {
+interface Problem extends ContestProblemConfig {
   pid: number;
-  label?: string;
-  title?: string;
-  score?: number;
-  balloon?: {
-    color: string;
-    name: string;
-  };
   _tmpId?: string; // use this as key
 }
 
 export interface ContestProblemEditorProps {
-  problems: Problem[];
-  onChange: (problems: Problem[]) => void;
+  pids: number[];
+  problemConfig: ContestProblemConfig[];
+  onChange: (pids: number[], problemConfig: Record<number, ContestProblemConfig>) => void;
 }
 const randomId = () => Math.random().toString(16).substring(2);
 const ItemTypes = {
@@ -57,8 +52,10 @@ const DraggableRow = ({
   });
 
   return (
-    <tr ref={(node) => drag(drop(node))} style={{ opacity: isDragging ? 0.5 : 1 }}>
-      <td className='col--drag' style={{ cursor: 'move' }}>⋮</td>
+    <tr ref={drop} style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <td className='col--drag'>
+        <span ref={drag} style={{ cursor: 'move' }}>⋮</span>
+      </td>
       <td className='col--pid'>
         <ProblemSelectAutoComplete
           ref={(ref) => { problemRefs.current[index] = ref; }}
@@ -67,15 +64,6 @@ const DraggableRow = ({
         />
       </td>
       <td>{problemRawTitles[problem.pid]}</td>
-      <td>
-        <input
-          type="text"
-          className="textbox"
-          value={problem.title || ''}
-          onChange={(e) => handleChange(index, 'title', e.target.value)}
-          placeholder={i18n('(leave blank if none)')}
-        />
-      </td>
       <td className='col--label'>
         <input
           type="text"
@@ -102,13 +90,17 @@ const DraggableRow = ({
   );
 };
 
-const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }: ContestProblemEditorProps) => {
+const ContestProblemEditor = ({ pids: initialPids, problemConfig: initialProblemConfig, onChange: _onChange }: ContestProblemEditorProps) => {
   // TODO: also support balloon and other fields in the future
-  const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el, idx) => ({
-    ...el,
-    _tmpId: randomId(),
-    ...(!el.label ? { label: getAlphabeticId(idx) } : {}),
-  })));
+  const [problems, setProblems] = React.useState<Problem[]>(initialPids.map((pid, idx) => {
+    const cp = initialProblemConfig[pid] || {};
+    return {
+      pid,
+      ...cp,
+      ...(!cp.label ? { label: getAlphabeticId(idx) } : {}),
+      _tmpId: randomId(),
+    };
+  }));
 
   const problemRefs = React.useRef<{ [key: number]: any }>({});
   const [problemRawTitles, setProblemRawTitles] = React.useState<Record<number, string>>({});
@@ -133,19 +125,20 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
   const onChange = (newProblems: Problem[]) => {
     const fixedProblems = newProblems.map((i) => {
       const problem = { ...i };
-      // undefined is ok, JSON.stringify will ignore it
-      if (problem.title === '') problem.title = undefined;
       if (problem.score === 100) problem.score = undefined;
       return problem;
     });
     setProblems(fixedProblems);
-    _onChange(fixedProblems.map((i, idx) => {
-      const { _tmpId, label, ...p } = i;
-      return {
-        ...p,
-        ...(label !== getAlphabeticId(idx) ? { label } : {}),
-      };
-    }));
+
+    const pids = fixedProblems.map((i) => i.pid);
+    const problemConfig = fixedProblems.reduce((acc, cur, idx) => {
+      const cp = {} as ContestProblemConfig;
+      if (cur.label && cur.label !== getAlphabeticId(idx)) cp.label = cur.label;
+      if (cur.score && cur.score !== 100) cp.score = cur.score;
+      if (Object.keys(cur).length > 0) acc[cur.pid] = cp;
+      return acc;
+    }, {});
+    _onChange(pids, problemConfig);
   };
 
   const handleAdd = () => {
@@ -180,13 +173,11 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
     onChange(newProblems);
   };
 
-  const moveRow = (iX: number, iY: number) => {
+  const moveRow = (dragIndex: number, hoverIndex: number) => {
     const newProblems = [...problems];
 
-    [newProblems[iX], newProblems[iY]] = [newProblems[iY], newProblems[iX]];
-    const [labelX, labelY] = [newProblems[iX].label, newProblems[iY].label];
-    newProblems[iX].label = labelY;
-    newProblems[iY].label = labelX;
+    const [movedItem] = newProblems.splice(dragIndex, 1);
+    newProblems.splice(hoverIndex, 0, movedItem);
 
     setProblems(newProblems);
     onChange(newProblems);
@@ -200,8 +191,7 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
             <tr>
               <th className='col--drag'></th>
               <th className='col--pid'>pid</th>
-              <th>{i18n('Raw Title')}</th>
-              <th>{i18n('Custom Title')}</th>
+              <th>{i18n('Title')}</th>
               <th className='col--label'>{i18n('Label')}</th>
               <th className='col--score'>{i18n('Score')}</th>
               <th className='col--action'>{i18n('Action')}</th>

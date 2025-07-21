@@ -5,6 +5,7 @@
 import yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
 import { randomstring, sleep } from '@hydrooj/utils';
+import { ContestProblemConfig } from './interface';
 import { buildContent } from './lib/content';
 import { Logger } from './logger';
 import { PERM, PRIV, STATUS } from './model/builtin';
@@ -623,16 +624,19 @@ export const coreScripts: MigrationScript[] = [
             const tdocs = await contest.getMulti(_id, {}).toArray();
             for (const tdoc of tdocs) {
                 await contest.edit(_id, tdoc._id, {
-                    problems: tdoc.pids.map((pid, idx) => ({
-                        pid,
-                        ...(tdoc?.score && tdoc.score[pid] ? { score: tdoc.score[pid] } : {}),
-                        ...(tdoc?.balloon && tdoc.balloon[pid] ? {
-                            balloon: {
-                                name: typeof tdoc.balloon[pid] === 'string' ? '' : tdoc.balloon[pid].name,
-                                color: typeof tdoc.balloon[pid] === 'string' ? tdoc.balloon[pid] : tdoc.balloon[pid].color,
-                            },
-                        } : {}),
-                    })),
+                    problemConfig: tdoc.pids.reduce((acc, pid) => {
+                        const cp = {} as ContestProblemConfig;
+                        if (tdoc?.score && tdoc.score[pid]) cp.score = tdoc.score[pid];
+                        if (tdoc?.balloon && tdoc.balloon[pid]) {
+                            if (typeof tdoc.balloon[pid] === 'string') {
+                                cp.balloon = { name: '', color: tdoc.balloon[pid] };
+                            } else {
+                                cp.balloon = tdoc.balloon[pid];
+                            }
+                        }
+                        if (Object.keys(cp).length > 0) acc[pid] = cp;
+                        return acc;
+                    }, {}),
                 });
             }
             logger.info('Domain %s done', _id);

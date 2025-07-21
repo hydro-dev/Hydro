@@ -87,8 +87,9 @@
           <div class="row">
             <div class="medium-12 columns">
               <label>{{ _('Problems') }}</label>
-              <div>
-                <input type="text" name="problems" value="{{ problems | dump }}" style="display: none !important;" />
+              <div>                
+                <input type="text" name="pids" value="{{ pids }}" style="display: none !important;" />
+                <input type="text" name="problemConfig" value="{{ problemConfig | dump }}" style="display: none !important;" />
                 <div id="problem-editor">
                   <table class="data-table">
                     <thead>

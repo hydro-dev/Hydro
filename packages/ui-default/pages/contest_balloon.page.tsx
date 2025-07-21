@@ -26,15 +26,15 @@ function Balloon({ tdoc, val }) {
             </tr>
           </thead>
           <tbody>
-            {tdoc.problems.map((cp, idx) => {
-              const pid = cp.pid;
+            {tdoc.pids.map((pid, idx) => {
+              const cp = tdoc.problemConfig[pid];
               const { color: c, name } = val[+pid];
               return (
                 <tr key={pid}>
                   <td>
                     {now === pid
-                      ? (<b>{cp.label || getAlphabeticId(idx)}</b>)
-                      : (<span>{cp.label || getAlphabeticId(idx)}</span>)}
+                      ? (<b>{cp?.label || getAlphabeticId(idx)}</b>)
+                      : (<span>{cp?.label || getAlphabeticId(idx)}</span>)}
                   </td>
                   <td>
                     <HexColorInput
@@ -68,8 +68,8 @@ function Balloon({ tdoc, val }) {
 
 async function handleSetColor(tdoc) {
   const val = {};
-  for (const cp of tdoc.problems) {
-    val[+cp.pid] = cp.balloon || { color: '#ffffff', name: '' };
+  for (const pid of tdoc.pids) {
+    val[+pid] = tdoc.problemConfig[pid]?.balloon || { color: '#ffffff', name: '' };
   }
   Notification.info(i18n('Loading...'));
   const action = await new ActionDialog({

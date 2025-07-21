@@ -8,5 +8,5 @@
 {% endmacro %}
 
 {% macro render_clarification_subject(tdoc, pdict, subject) %}
-{% if subject == 0 %}{{ _('General Issue') }}{% elif subject == -1 %}{{ _('Technical Issue') }}{% else %}{% set cp = utils.getContestProblemConfig(subject, tdoc) %}{{ cp.label }}. {{ cp.title|default(pdict[subject].title) }}{% endif %}
+{% if subject == 0 %}{{ _('General Issue') }}{% elif subject == -1 %}{{ _('Technical Issue') }}{% else %}{{ utils.getContestProblemConfig(subject, tdoc).label }}. {{ pdict[subject].title }}{% endif %}
 {% endmacro %}

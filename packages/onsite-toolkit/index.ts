@@ -52,14 +52,14 @@ export function apply(ctx: Context) {
                 const unknownSchool = this.translate('Unknown School');
                 const submissions = teams.flatMap((i) => {
                     if (!i.journal) return [];
-                    return i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid)).map((s) => ({ ...s, uid: i.uid }));
+                    return i.journal.filter((s) => tdoc.pids.includes(s.pid)).map((s) => ({ ...s, uid: i.uid }));
                 });
                 this.response.body = {
                     payload: {
                         name: tdoc.title,
                         duration: Math.floor((new Date(tdoc.endAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
                         frozen: Math.floor((new Date(tdoc.lockAt).getTime() - new Date(tdoc.beginAt).getTime()) / 1000),
-                        problems: tdoc.problems.map((p, idx) => ({ name: p.label || getAlphabeticId(idx), id: p.pid.toString() })),
+                        problems: tdoc.pids.map((pid, idx) => ({ name: tdoc.problemConfig[pid]?.label || getAlphabeticId(idx), id: pid.toString() })),
                         teams: teams.map((t) => ({
                             id: t.uid.toString(),
                             name: udict[t.uid].displayName || udict[t.uid].uname,
@@ -91,7 +91,7 @@ export function apply(ctx: Context) {
                     type, id: data.id, data, token: `t${token++}`,
                 });
                 const [pdict, tsdocs] = await Promise.all([
-                    ProblemModel.getList(tdoc.domainId, tdoc.problems.map((p) => p.pid), true, false, ProblemModel.PROJECTION_LIST, true),
+                    ProblemModel.getList(tdoc.domainId, tdoc.pids, true, false, ProblemModel.PROJECTION_LIST, true),
                     ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc._id }).toArray(),
                 ]);
                 const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
@@ -192,21 +192,21 @@ export function apply(ctx: Context) {
                             height: 1080,
                         }],
                     })),
-                    ...tdoc.problems.map((p, idx) => getFeed('problems', {
-                        id: `${p.pid}`,
-                        label: String.fromCharCode(65 + idx),
-                        name: p.title || pdict[p.pid].title,
+                    ...tdoc.pids.map((pid, idx) => getFeed('problems', {
+                        id: `${pid}`,
+                        label: tdoc.problemConfig[pid]?.label || getAlphabeticId(idx),
+                        name: pdict[pid].title,
                         ordinal: idx,
-                        color: tdoc.problems[idx]?.balloon?.name || 'white',
-                        rgb: tdoc.problems[idx]?.balloon?.color || '#ffffff',
-                        time_limit: (parseTimeMS((pdict[p.pid].config as ProblemConfig).timeMax) / 1000).toFixed(1),
+                        color: tdoc.problemConfig[pid]?.balloon?.name || 'white',
+                        rgb: tdoc.problemConfig[pid]?.balloon?.color || '#ffffff',
+                        time_limit: (parseTimeMS((pdict[pid].config as ProblemConfig).timeMax) / 1000).toFixed(1),
                         test_data_count: 20,
                     })),
                 ];
                 let cntJudge = 0;
                 const submissions = tsdocs.flatMap((i) => {
                     if (!i.journal) return [];
-                    const journal = i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid));
+                    const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
                     const result: any[] = [];
                     for (const s of journal) {
                         const submitTime = moment(s.rid.getTimestamp());

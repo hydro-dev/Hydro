@@ -71,17 +71,17 @@
             #{{ pdoc.pid|default(pdoc.docId) }}
           {%- endif -%}. {%- if tdoc -%}{{ utils.getContestProblemConfig(pdoc.docId, tdoc).title|default(pdoc.title) }}{%- else -%}{{ pdoc.title }}{%- endif -%}
         </h1>
-        {% if tdoc and tdoc.problems|length <= 26 %}
+        {% if tdoc and tdoc.pids|length <= 26 %}
           <div class="section__tools contest-problems">
-            {% for cp in tdoc.problems -%}
-              {% set pid = cp.pid %}
+            {% for pid in tdoc.pids -%}
+              {% set cp = utils.getContestProblemConfig(pid, tdoc) %}
               {% set status = tsdoc.detail[pid].status %}
               {% set pass = status == STATUS.STATUS_ACCEPTED %}
               {% set fail = status and not pass %}
               <a href="{{ url('problem_detail', pid=pid, query={tid:tdoc.docId}) }}"
                  class="{% if pass %}pass{% elif fail %}fail{% endif %}
                         {% if pid==pdoc.docId %} active{% endif %}">
-                <span class="id">{{ cp.label|default(utils.getAlphabeticId(tdoc.pid2idx[cp.pid])) }}</span>
+                <span class="id">{{ cp.label }}</span>
                 {% if status %}<span class="icon icon-{% if pass %}check{% else %}close{% endif %}"></span>{% endif %}
               </a>
             {%- endfor %}

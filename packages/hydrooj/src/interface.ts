@@ -247,13 +247,11 @@ export interface TrainingNode {
     pids: number[],
 }
 
-export interface ContestProblem {
-    pid: number;
+export interface ContestProblemConfig {
     label?: string;
-    title?: string;
     score?: number;
     balloon?: { color: string, name: string };
-    [key: string]: any,
+    // [key: string]: any,
 }
 
 export interface Tdoc extends Document {
@@ -265,9 +263,8 @@ export interface Tdoc extends Document {
     title: string;
     content: string;
     rule: string;
-    /** @deprecated */
     pids: number[];
-    problems: ContestProblem[];
+    problemConfig: Record<number, ContestProblemConfig>;
     rated?: boolean;
     _code?: string;
     assign?: string[];
@@ -297,9 +294,6 @@ export interface Tdoc extends Document {
     // For training
     description?: string;
     dag?: TrainingNode[];
-
-    // not stored in database
-    pid2idx?: Record<number, number>;
 }
 
 export interface TrainingDoc extends Omit<Tdoc, 'docType'> {

@@ -63,8 +63,8 @@ export async function apply(ctx: Context) {
                             end_time: Math.floor(tdoc.endAt.getTime() / 1000),
                             frozen_time: tdoc.lockAt ? Math.floor((tdoc.endAt.getTime() - tdoc.lockAt.getTime()) / 1000) : 0,
                             penalty: 1200,
-                            problem_quantity: tdoc.problems.length,
-                            problem_id: tdoc.problems.map((cp, idx) => cp.label || getAlphabeticId(idx)),
+                            problem_quantity: tdoc.pids.length,
+                            problem_id: tdoc.pids.map((pid, idx) => tdoc.problemConfig[pid]?.label || getAlphabeticId(idx)),
                             group: {
                                 official: '正式队伍',
                                 unofficial: '打星队伍',
@@ -83,10 +83,10 @@ export async function apply(ctx: Context) {
                                     bronze,
                                 },
                             },
-                            balloon_color: tdoc.problems.some((p) => p.balloon)
-                                ? tdoc.problems.filter((p) => p.balloon).map((p) => ({
+                            balloon_color: tdoc.pids.some((pid) => tdoc.problemConfig[pid]?.balloon)
+                                ? tdoc.pids.filter((pid) => tdoc.problemConfig[pid]?.balloon).map((pid) => ({
                                     color: '#000',
-                                    background_color: p.balloon.color,
+                                    background_color: tdoc.problemConfig[pid].balloon.color,
                                 }))
                                 : [],
                             logo: {
@@ -103,7 +103,7 @@ export async function apply(ctx: Context) {
                             const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
                             const curStatus = status[j.status] || 'SYSTEM_ERROR';
                             return {
-                                problem_id: tdoc.pid2idx[j.pid],
+                                problem_id: tdoc.pids.indexOf(j.pid),
                                 team_id: `${i.uid}`,
                                 timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
                                 status: realtime

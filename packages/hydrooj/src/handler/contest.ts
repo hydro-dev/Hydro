@@ -13,7 +13,7 @@ import {
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, NotAssignedError, NotFoundError, PermissionError, ValidationError,
 } from '../error';
-import { ScoreboardConfig, Tdoc } from '../interface';
+import { ContestProblemConfig, ScoreboardConfig, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -107,7 +107,6 @@ export class ContestDetailBaseHandler extends Handler {
         if (!tid || this.tdoc.rule === 'homework') return;
         if (this.request.json || !this.response.template) return;
         const pdoc = 'pdoc' in this ? (this as any).pdoc : {};
-        const cp = this.tdoc.problems[this.tdoc.pid2idx[pdoc.docId]];
         this.response.body.overrideNav = [
             {
                 name: 'contest_main',
@@ -133,7 +132,7 @@ export class ContestDetailBaseHandler extends Handler {
             },
             {
                 name: 'problem_detail',
-                displayName: `${cp?.label || getAlphabeticId(this.tdoc.pid2idx[pdoc.docId] || 0)}. ${cp?.title || pdoc.title}`,
+                displayName: `${this.tdoc.problemConfig[pdoc.docId]?.label || getAlphabeticId(this.tdoc.pids.indexOf(pdoc.docId))}. ${pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
             },
@@ -189,7 +188,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         if (!this.tsdoc?.attend && !contest.isDone(this.tdoc)) throw new ContestNotAttendedError(domainId, tid);
         const [pdict, udict, tcdocs] = await Promise.all([
-            problem.getList(domainId, this.tdoc.problems.map((p) => p.pid), true, true, problem.PROJECTION_CONTEST_LIST),
+            problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             user.getList(domainId, [this.tdoc.owner, this.user._id]),
             contest.getMultiClarification(domainId, tid, this.user._id),
         ]);
@@ -197,7 +196,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
             pdict, psdict: {}, udict, rdict: {}, tdoc: this.tdoc, tcdocs,
         };
         this.response.template = 'contest_problemlist.html';
-        this.response.body.showScore = this.tdoc.problems.some((p) => p.score && p.score !== 100);
+        this.response.body.showScore = Object.values(this.tdoc.problemConfig || {}).some((cp) => cp.score && cp.score !== 100);
         if (!this.tsdoc) return;
         if (this.tsdoc.attend && !this.tsdoc.startAt && contest.isOngoing(this.tdoc)) {
             await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
@@ -210,7 +209,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         this.response.body.canViewRecord = canViewRecord;
         const rids = psdocs.map((i) => i.rid);
         if (contest.isDone(this.tdoc) && canViewRecord) {
-            const correction = await problem.getListStatus(domainId, this.user._id, this.tdoc.problems.map((p) => p.pid));
+            const correction = await problem.getListStatus(domainId, this.user._id, this.tdoc.pids);
             for (const pid in correction) {
                 if (this.tsdoc.detail?.[pid]?.rid === correction[pid].rid) delete correction[pid];
             }
@@ -246,7 +245,7 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         if (!this.user.own(this.tdoc)) {
             await message.send(1, this.tdoc.maintainer.concat(this.tdoc.owner), JSON.stringify({
                 message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
-                params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pid2idx[subject] + 1}` : 'the contest'],
+                params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
                 url: this.url('contest_manage', { tid }),
             }), message.FLAG_I18N | message.FLAG_UNREAD);
         }
@@ -284,7 +283,8 @@ export class ContestEditHandler extends Handler {
             rules,
             tdoc: this.tdoc,
             duration: tid ? -beginAt.diff(this.tdoc.endAt, 'hour', true) : 2,
-            problems: tid ? this.tdoc.problems : [],
+            pids: tid ? this.tdoc.pids.join(',') : '',
+            problemConfig: tid ? this.tdoc.problemConfig : {},
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
         };
@@ -297,7 +297,8 @@ export class ContestEditHandler extends Handler {
     @param('title', Types.Title)
     @param('content', Types.Content)
     @param('rule', Types.Range(Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden)))
-    @param('problems', Types.Content)
+    @param('pids', Types.Content)
+    @param('problemConfig', Types.Content)
     @param('rated', Types.Boolean)
     @param('code', Types.String, true)
     @param('autoHide', Types.Boolean)
@@ -309,13 +310,18 @@ export class ContestEditHandler extends Handler {
     @param('langs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
-        title: string, content: string, rule: string, _problems: string, rated = false,
+        title: string, content: string, rule: string, _pids: string, _problemConfig: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
         contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, langs: string[] = [],
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
-        const { problems, score } = contest.resolveContestProblemJson(_problems);
-        const pids = problems.map((p) => p.pid);
+        let problemConfig = {} as Record<number, ContestProblemConfig>;
+        try {
+            problemConfig = JSON.parse(_problemConfig);
+        } catch (e) {
+            throw new ValidationError('problemConfig');
+        }
+        const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
         const beginAtMoment = moment.tz(`${beginAtDate} ${beginAtTime}`, this.user.timeZone);
         if (!beginAtMoment.isValid()) throw new ValidationError('beginAtDate', 'beginAtTime');
         const endAt = beginAtMoment.clone().add(duration, 'hours').toDate();
@@ -326,17 +332,17 @@ export class ContestEditHandler extends Handler {
         await problem.getList(domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id, true);
         if (tid) {
             await contest.edit(domainId, tid, {
-                title, content, rule, beginAt, endAt, pids, problems, score, rated, duration: contestDuration,
+                title, content, rule, beginAt, endAt, pids, problemConfig, rated, duration: contestDuration,
             });
             if (this.tdoc.beginAt !== beginAt || this.tdoc.endAt !== endAt
-                || diffArray(this.tdoc.problems.map((i) => i.pid), pids) || this.tdoc.rule !== rule
+                || diffArray(this.tdoc.pids, pids) || this.tdoc.rule !== rule
                 || lockAt !== this.tdoc.lockAt) {
                 await contest.recalcStatus(domainId, this.tdoc.docId);
             }
         } else {
             tid = await contest.add(
-                domainId, title, content, this.user._id, rule, beginAt, endAt, pids, rated,
-                { duration: contestDuration, score, problems },
+                domainId, title, content, this.user._id, rule, beginAt, endAt, pids, problemConfig, rated,
+                { duration: contestDuration },
             );
         }
         const task = {
@@ -443,7 +449,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
-            pdict: await problem.getList(domainId, this.tdoc.problems.map((i) => i.pid), true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
+            pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             files: sortFiles(this.tdoc.files || []),
             udict: await user.getListForRender(
                 domainId, tcdocs.map((i) => i.owner),
@@ -521,17 +527,10 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('pid', Types.PositiveInt)
     @param('score', Types.PositiveInt)
     async postSetScore(domainId: string, pid: number, score: number) {
-        const idx = this.tdoc.pid2idx[pid];
-        if (idx === undefined) throw new ValidationError('pid');
-        this.tdoc.problems[idx].score = score;
-        // TODO: remove `score` field later
-        this.tdoc.score = this.tdoc.problems.reduce(
-            (acc, cur) => {
-                if (cur.score) acc[cur.pid] = cur.score;
-                return acc;
-            }, {},
-        );
-        await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score, problems: this.tdoc.problems });
+        if (!this.tdoc.pids.includes(pid)) throw new ValidationError('pid');
+        this.tdoc.problemConfig[pid] ||= {};
+        this.tdoc.problemConfig[pid].score = score;
+        await contest.edit(domainId, this.tdoc.docId, { problemConfig: this.tdoc.problemConfig });
         await contest.recalcStatus(domainId, this.tdoc.docId);
         this.back();
     }
@@ -605,7 +604,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
-            pdict: await problem.getList(domainId, this.tdoc.problems.map((i) => i.pid), true, true, problem.PROJECTION_CONTEST_LIST),
+            pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             bdocs,
             udict: await user.getListForRender(domainId, uids, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
         };
@@ -618,14 +617,12 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     async postSetColor(domainId: string, tid: ObjectId, color: string) {
         const config = yaml.load(color);
         if (typeof config !== 'object') throw new ValidationError('color');
-        const balloon = {};
-        for (let i = 0; i < this.tdoc.problems.length; i++) {
-            const pid = this.tdoc.problems[i].pid;
+        for (const pid of this.tdoc.pids) {
             if (!config[pid]) throw new ValidationError('color');
-            balloon[pid] = config[pid.toString()];
-            this.tdoc.problems[i].balloon = config[pid.toString()];
+            this.tdoc.problemConfig[pid] ||= {};
+            this.tdoc.problemConfig[pid].balloon = config[pid.toString()];
         }
-        await contest.edit(domainId, tid, { balloon, problems: this.tdoc.problems });
+        await contest.edit(domainId, tid, { problemConfig: this.tdoc.problemConfig });
         this.back();
     }
 
@@ -759,7 +756,7 @@ export async function apply(ctx: Context) {
         const tasks = [];
         for (const op of doc.operation) {
             if (op === 'unhide') {
-                for (const pid of tdoc.problems.map((i) => i.pid)) {
+                for (const pid of tdoc.pids) {
                     tasks.push(problem.edit(doc.domainId, pid, { hidden: false }));
                 }
             }
@@ -800,7 +797,7 @@ export async function apply(ctx: Context) {
                     this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 }
                 const [pdict, teams] = await Promise.all([
-                    problem.getList(tdoc.domainId, tdoc.problems.map((i) => i.pid), true, false, problem.PROJECTION_LIST, true),
+                    problem.getList(tdoc.domainId, tdoc.pids, true, false, problem.PROJECTION_LIST, true),
                     contest.getMultiStatus(tdoc.domainId, { docId: tdoc._id }).toArray(),
                 ]);
                 const udict = await user.getList(tdoc.domainId, teams.map((i) => i.uid));
@@ -818,10 +815,10 @@ export async function apply(ctx: Context) {
                 };
                 const submissions = teams.flatMap((i, idx) => {
                     if (!i.journal) return [];
-                    const journal = i.journal.filter((s) => Object.hasOwn(tdoc.pid2idx, s.pid));
+                    const journal = i.journal.filter((s) => tdoc.pids.includes(s.pid));
                     const c = Counter();
                     return journal.map((s) => {
-                        const id = tdoc.problems[tdoc.pid2idx[s.pid]].label || getAlphabeticId(tdoc.pid2idx[s.pid]);
+                        const id = tdoc.problemConfig[s.pid]?.label || getAlphabeticId(tdoc.pids.indexOf(s.pid));
                         c[id]++;
                         return `@s ${idx + 1},${id},${c[id]},${time(s.rid)},${statusMap[s.status] || 'RJ'}`;
                     });
@@ -829,12 +826,12 @@ export async function apply(ctx: Context) {
                 const res = [
                     `@contest "${escape(tdoc.title)}"`,
                     `@contlen ${Math.floor((tdoc.endAt.getTime() - tdoc.beginAt.getTime()) / Time.minute)}`,
-                    `@problems ${tdoc.problems.length}`,
+                    `@problems ${tdoc.pids.length}`,
                     `@teams ${tdoc.attend}`,
                     `@submissions ${submissions.length}`,
                 ].concat(
-                    tdoc.problems.map((p, idx) =>
-                        `@p ${escape(p.label || getAlphabeticId(idx))},${escape(p.title || pdict[p.pid]?.title || 'Unknown Problem')},20,0`,
+                    tdoc.pids.map((pid, idx) =>
+                        `@p ${escape(tdoc.problemConfig[pid]?.label || getAlphabeticId(idx))},${escape(pdict[pid]?.title || 'Unknown Problem')},20,0`,
                     ),
                     teams.map((i, idx) => {
                         const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) && udict[i.uid].displayName

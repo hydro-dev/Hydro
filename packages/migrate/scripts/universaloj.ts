@@ -324,7 +324,7 @@ export async function run({
         const endAt = startAt.clone().add(tdoc.last_min, 'minutes');
         const tid = await ContestModel.add(
             domainId, tdoc.name, content, uidMap[permissions[0]?.username] || 1, info.contest_type?.toLowerCase() || 'oi',
-            startAt.toDate(), endAt.toDate(), pids, !Object.keys(info).includes('unrated'), { maintainer },
+            startAt.toDate(), endAt.toDate(), pids, {}, !Object.keys(info).includes('unrated'), { maintainer },
         );
         tidMap[tdoc.id] = tid.toHexString();
     }

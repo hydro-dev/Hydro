@@ -279,7 +279,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         this.pdoc = await problem.get(domainId, pid);
         if (!this.pdoc) throw new ProblemNotFoundError(domainId, pid);
         if (tid) {
-            if (!Object.hasOwn(this.tdoc.pid2idx, this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
+            if (!this.tdoc?.pids?.includes(this.pdoc.docId)) throw new ContestNotFoundError(domainId, tid);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
             // Delete problem-related info in contest mode

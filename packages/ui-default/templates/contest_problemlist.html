@@ -41,8 +41,8 @@
             </tr>
           </thead>
           <tbody>
-          {%- for cp in tdoc.problems -%}
-            {% set pid = cp.pid %}
+          {%- for pid in tdoc.pids -%}
+            {% set cp = utils.getContestProblemConfig(pid, tdoc) %}
             <tr>
             {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
               {% if psdict[pid] and psdict[pid].rid %}
@@ -185,8 +185,9 @@
                 <select name="subject" class="select">
                   <option value="0">{{ _('General Issue') }}</option>
                   <option value="-1">{{ _('Technical Issue') }}</option>
-                  {% for cp in tdoc.problems %}
-                  <option value="{{ cp.pid }}">{{ cp.label|default(utils.getAlphabeticId(tdoc.pid2idx[cp.pid])) }}. {{ cp.title|default(pdict[cp.pid].title) }}</option>
+                  {% for pid in tdoc.pids %}
+                  {% set cp = utils.getContestProblemConfig(pid, tdoc) %}
+                  <option value="{{ pid }}">{{ cp.label }}. {{ pdict[pid].title }}</option>
                   {% endfor %}
                 </select>
               </label>

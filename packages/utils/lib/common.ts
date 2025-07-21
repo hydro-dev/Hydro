@@ -247,11 +247,11 @@ export const getAlphabeticId = (() => {
 })();
 
 export const getContestProblemConfig = (pid, tdoc) => {
-    const idx = tdoc.pid2idx?.[pid];
-    const cp = tdoc.problems[idx];
+    const cp = tdoc.problemConfig[pid] || {};
+    const idx = tdoc.pids.indexOf(pid);
     // create label if not exists here will simplify the logic on template
     return {
         ...cp,
-        label: cp.label || (idx === undefined ? '' : getAlphabeticId(idx)),
+        label: cp?.label || getAlphabeticId(idx),
     };
 };

@@ -40,8 +40,7 @@
           <tbody>
           {% set isAdmin = handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_VIEW_HOMEWORK_HIDDEN_SCOREBOARD) %}
           {% set ntdoc = model.contest.isDone(tdoc) or (tsdoc.attend and not model.contest.isNotStarted(tdoc)) %}
-          {%- for cp in tdoc.problems -%}
-            {% set pid = cp.pid %}
+          {%- for pid in tdoc.pids -%}
             <tr>
               {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
                 {% if psdict[pid] and psdict[pid].rid %}

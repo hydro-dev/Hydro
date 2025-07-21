@@ -40,7 +40,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
         all = false, allDomain = false,
     ) {
         const notification = [];
-        let tdoc = null;
+        let tdoc : null | Tdoc = null;
         let invalid = false;
         this.response.template = 'record_main.html';
         const q: Filter<RecordDoc> = { contest: tid };
@@ -72,11 +72,11 @@ class RecordListHandler extends ContestDetailBaseHandler {
         const pidOrLabel = pid;
         if (pid) {
             if (typeof pid === 'string' && tdoc) {
-                const result = tdoc.problems.find((i, idx) => {
-                    if (i.label) return i.label === pid;
+                const result = tdoc.pids.find((_pid, idx) => {
+                    if (tdoc.problemConfig[_pid]?.label) return tdoc.problemConfig[_pid]?.label === pid;
                     return pid === getAlphabeticId(idx);
                 });
-                if (result) pid = result.pid;
+                if (result) pid = result;
             }
             const pdoc = await problem.get(domainId, pid);
             if (pdoc) q.pid = pdoc.docId;
