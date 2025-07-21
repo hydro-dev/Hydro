@@ -511,7 +511,7 @@ const strictioi = buildContestRule({
         for (const cp of tdoc.problems) {
             const pid = cp.pid;
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
-            const fullMark = tdoc.problems[tdoc.pid2idx[pid]]?.score || 100;
+            const fullMark = cp?.score || 100;
             const n: ScoreboardNode = (!config.isExport && !config.lockAt && isDone(tdoc)
                 && meta?.psdict?.[index]?.rid
                 && tsddict[pid]?.rid?.toHexString() !== meta?.psdict?.[index]?.rid?.toHexString()

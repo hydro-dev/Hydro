@@ -1,7 +1,8 @@
 import { getAlphabeticId } from '@hydrooj/utils/lib/common';
-import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { debounce } from 'lodash';
 import React from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { api, i18n } from 'vj/utils';
 import ProblemSelectAutoComplete from '../autocomplete/components/ProblemSelectAutoComplete';
 
@@ -22,7 +23,86 @@ export interface ContestProblemEditorProps {
   onChange: (problems: Problem[]) => void;
 }
 const randomId = () => Math.random().toString(16).substring(2);
-const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange } : ContestProblemEditorProps) => {
+const ItemTypes = {
+  PROBLEM: 'problem',
+};
+
+interface DragItem {
+  index: number;
+  id: string;
+  type: string;
+}
+
+const DraggableRow = ({
+  problem, index, handleChange, handleRemove, problemRefs, problemRawTitles, moveRow,
+}) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.PROBLEM,
+    item: { type: ItemTypes.PROBLEM, id: problem._tmpId, index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: ItemTypes.PROBLEM,
+    hover: (item: DragItem, monitor) => {
+      if (!monitor.isOver({ shallow: true })) return;
+      const dragIndex = item.index;
+      const hoverIndex = index;
+      if (dragIndex === hoverIndex) return;
+      moveRow(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  return (
+    <tr ref={(node) => drag(drop(node))} style={{ opacity: isDragging ? 0.5 : 1 }}>
+      <td className='col--drag' style={{ cursor: 'move' }}>⋮</td>
+      <td className='col--pid'>
+        <ProblemSelectAutoComplete
+          ref={(ref) => { problemRefs.current[index] = ref; }}
+          onChange={(v) => handleChange(index, 'pid', v)}
+          selectedKeys={[problem.pid.toString()]}
+        />
+      </td>
+      <td>{problemRawTitles[problem.pid]}</td>
+      <td>
+        <input
+          type="text"
+          className="textbox"
+          value={problem.title || ''}
+          onChange={(e) => handleChange(index, 'title', e.target.value)}
+          placeholder={i18n('(leave blank if none)')}
+        />
+      </td>
+      <td className='col--label'>
+        <input
+          type="text"
+          className="textbox"
+          value={problem.label}
+          onChange={(e) => handleChange(index, 'label', e.target.value)}
+        />
+      </td>
+      <td className='col--score'>
+        <input
+          type="number"
+          className="textbox"
+          value={problem.score || 100}
+          onChange={(e) => handleChange(index, 'score', parseInt(e.target.value, 10) || 0)}
+          min={0}
+        />
+      </td>
+      <td className="col--action">
+        <a className="typo-a" onClick={() => handleRemove(index)}>
+          {i18n('Remove')}
+        </a>
+      </td>
+    </tr>
+  );
+};
+
+const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }: ContestProblemEditorProps) => {
   // TODO: also support balloon and other fields in the future
   const [problems, setProblems] = React.useState<Problem[]>(initialProblems.map((el, idx) => ({
     ...el,
@@ -100,11 +180,9 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
     onChange(newProblems);
   };
 
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-
+  const moveRow = (iX: number, iY: number) => {
     const newProblems = [...problems];
-    const [iX, iY] = [result.source.index, result.destination.index];
+
     [newProblems[iX], newProblems[iY]] = [newProblems[iY], newProblems[iX]];
     const [labelX, labelY] = [newProblems[iX].label, newProblems[iY].label];
     newProblems[iX].label = labelY;
@@ -115,8 +193,8 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
   };
 
   return (
-    <div className="contest-problem-editor">
-      <DragDropContext onDragEnd={onDragEnd}>
+    <DndProvider backend={HTML5Backend}>
+      <div className="contest-problem-editor">
         <table className="data-table">
           <thead>
             <tr>
@@ -129,82 +207,28 @@ const ContestProblemEditor = ({ problems: initialProblems, onChange: _onChange }
               <th className='col--action'>{i18n('Action')}</th>
             </tr>
           </thead>
-          <Droppable droppableId="droppable-problems">
-            {(provided) => (
-              <tbody {...provided.droppableProps} ref={provided.innerRef}>
-                {problems.map((problem, index) => (
-                  <Draggable
-                    key={problem._tmpId}
-                    draggableId={`problem-${problem._tmpId}`}
-                    index={index}
-                  >
-                    {(providedDrag, snapshot) => (
-                      <tr
-                        ref={providedDrag.innerRef}
-                        {...providedDrag.draggableProps}
-                        className={snapshot.isDragging ? 'dragging' : ''}
-                      >
-                        <td {...providedDrag.dragHandleProps} className='col--drag' style={{ cursor: 'move' }}>
-                          ⋮
-                        </td>
-                        <td className='col--pid'>
-                          <ProblemSelectAutoComplete
-                            ref={(ref) => { problemRefs.current[index] = ref; }}
-                            onChange={(v) => handleChange(index, 'pid', v)}
-                            selectedKeys={[problem.pid.toString()]}
-                          />
-                        </td>
-                        <td>
-                          {problemRawTitles[problem.pid]}
-                        </td>
-                        <td>
-                          <input
-                            type="text"
-                            className="textbox"
-                            value={problem.title || ''}
-                            onChange={(e) => handleChange(index, 'title', e.target.value)}
-                            placeholder={i18n('(leave blank if none)')}
-                          />
-                        </td>
-                        <td className='col--label'>
-                          <input
-                            type="text"
-                            className="textbox"
-                            value={problem.label}
-                            onChange={(e) => handleChange(index, 'label', e.target.value)}
-                          />
-                        </td>
-                        <td className='col--score'>
-                          <input
-                            type="number"
-                            className="textbox"
-                            value={problem.score || 100}
-                            onChange={(e) => handleChange(index, 'score', parseInt(e.target.value, 10) || 0)}
-                            min={0}
-                          />
-                        </td>
-                        <td className="col--action">
-                          <a className="typo-a" onClick={() => handleRemove(index)}>
-                            {i18n('Remove')}
-                          </a>
-                        </td>
-                      </tr>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </tbody>
-            )}
-          </Droppable>
+          <tbody>
+            {problems.map((problem, index) => (
+              <DraggableRow
+                key={problem._tmpId}
+                problem={problem}
+                index={index}
+                handleChange={handleChange}
+                handleRemove={handleRemove}
+                problemRefs={problemRefs}
+                problemRawTitles={problemRawTitles}
+                moveRow={moveRow}
+              />
+            ))}
+          </tbody>
         </table>
-      </DragDropContext>
-      <div style={{ marginTop: '1em' }}>
-
-        <button type="button" className="primary button" onClick={handleAdd}>
-          {i18n('Add Problem')}
-        </button>
+        <div style={{ marginTop: '1em' }}>
+          <button type="button" className="primary button" onClick={handleAdd}>
+            {i18n('Add Problem')}
+          </button>
+        </div>
       </div>
-    </div>
+    </DndProvider>
   );
 };
 

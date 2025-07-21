@@ -133,7 +133,7 @@ export class ContestDetailBaseHandler extends Handler {
             },
             {
                 name: 'problem_detail',
-                displayName: `${cp?.label || getAlphabeticId(this.tdoc.pid2idx[pdoc.docId])}. ${cp?.title || pdoc.title}`,
+                displayName: `${cp?.label || getAlphabeticId(this.tdoc.pid2idx[pdoc.docId] || 0)}. ${cp?.title || pdoc.title}`,
                 args: { query: { tid }, pid: pdoc.docId, prefix: 'contest_detail_problem' },
                 checker: () => 'pdoc' in this,
             },
@@ -834,7 +834,7 @@ export async function apply(ctx: Context) {
                     `@submissions ${submissions.length}`,
                 ].concat(
                     tdoc.problems.map((p, idx) =>
-                        `@p ${p.label || getAlphabeticId(idx)},${escape(p.title || pdict[p.pid]?.title || 'Unknown Problem')},20,0`,
+                        `@p ${escape(p.label || getAlphabeticId(idx))},${escape(p.title || pdict[p.pid]?.title || 'Unknown Problem')},20,0`,
                     ),
                     teams.map((i, idx) => {
                         const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) && udict[i.uid].displayName
