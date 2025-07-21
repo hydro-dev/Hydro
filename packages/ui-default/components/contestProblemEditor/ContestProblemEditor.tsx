@@ -14,7 +14,7 @@ interface Problem extends ContestProblemConfig {
 
 export interface ContestProblemEditorProps {
   pids: number[];
-  problemConfig: ContestProblemConfig[];
+  problemConfig: Record<number, ContestProblemConfig>;
   onChange: (pids: number[], problemConfig: Record<number, ContestProblemConfig>) => void;
 }
 const randomId = () => Math.random().toString(16).substring(2);
@@ -135,7 +135,7 @@ const ContestProblemEditor = ({ pids: initialPids, problemConfig: initialProblem
       const cp = {} as ContestProblemConfig;
       if (cur.label && cur.label !== getAlphabeticId(idx)) cp.label = cur.label;
       if (cur.score && cur.score !== 100) cp.score = cur.score;
-      if (Object.keys(cur).length > 0) acc[cur.pid] = cp;
+      if (Object.keys(cp).length > 0) acc[cur.pid] = cp;
       return acc;
     }, {});
     _onChange(pids, problemConfig);
