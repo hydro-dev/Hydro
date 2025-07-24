@@ -346,6 +346,7 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     private wsLayers = [];
     private captureAllRoutes = Object.create(null);
     private customDefaultContext: C;
+    private activeHandlers: Map<Handler<C>, { start: number, name: string }> = new Map();
 
     renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
@@ -473,6 +474,14 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
+    public statistics() {
+        const count = Counter();
+        for (const [, t] of this.activeHandlers.entries()) {
+            count[t.name]++;
+        }
+        return count;
+    }
+
     async listen() {
         this.ctx.effect(() => () => {
             httpServer.close();
@@ -495,6 +504,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const method = ctx.method.toLowerCase();
         const name = ((Object.hasOwn(HandlerClass, kHandler) && typeof HandlerClass[kHandler] === 'string')
             ? HandlerClass[kHandler] : HandlerClass.name).replace(/Handler$/, '');
+        this.activeHandlers.set(h, { start: Date.now(), name });
         try {
             const operation = (method === 'post' && ctx.request.body?.operation)
                 ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
@@ -565,6 +575,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 h.response.type = 'text/plain';
                 h.response.body = `${err.message}\n${err.stack}`;
             }
+        } finally {
+            this.activeHandlers.delete(h);
         }
     }
 
@@ -599,6 +611,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         ctx.handler = h;
         h.conn = conn;
         let closed = false;
+        this.activeHandlers.set(h, { start: Date.now(), name: HandlerClass.name });
 
         const clean = async (err?: Error) => {
             if (closed) return;
@@ -616,6 +629,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 }
             } finally {
                 await sub.dispose();
+                this.activeHandlers.delete(h);
             }
         };
 

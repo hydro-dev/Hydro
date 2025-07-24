@@ -66,6 +66,20 @@ export function createRegistry(ctx: Context) {
         labelNames: ['type'],
     });
 
+    ctx.inject(['server'], () => {
+        const gauge = createMetric(Gauge, 'hydro_active_handler', 'active handler count', {
+            async collect() {
+                const stats = ctx.server.statistics();
+                this.reset();
+                for (const key in stats) this.set({ type: key }, stats[key]);
+            },
+            labelNames: ['type'],
+        });
+        return () => {
+            gauge.remove();
+        };
+    });
+
     const eventCounter = createMetric(Counter, 'hydro_eventcount', 'eventcount', {
         labelNames: ['name'],
     });
