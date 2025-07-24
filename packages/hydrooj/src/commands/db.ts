@@ -39,13 +39,22 @@ export function register(cli: CAC) {
             child.spawn('mongo', [url], { stdio: 'inherit' });
         }
     });
+
+    const withPasswordFile = async (password: string, cb: (passwordFile: string) => Promise<void>) => {
+        if (!password) throw new Error('Restic password is required');
+        const passwordFile = path.join(os.tmpdir(), 'hydrooj-restic-password');
+        fs.writeFileSync(passwordFile, password.toString());
+        await cb(passwordFile);
+        fs.removeSync(passwordFile);
+    };
+
     cli.command('backup')
         .option('--dbOnly', 'Only dump database', { default: false })
         .option('--withAddons', 'Include addons', { default: false })
         .option('--withLogs', 'Include logs', { default: false })
         .option('-r <repo>', 'Restic repository', { default: '' })
         .option('-p <password>', 'Restic password', { default: '' })
-        .action(() => {
+        .action(async () => {
             const url = getUrl();
             exec('mongodump', [
                 url, `--out=${dir}/dump`,
@@ -75,11 +84,9 @@ export function register(cli: CAC) {
             }
             if (argv.options.withLogs && fs.existsSync('/data/access.log')) addFile('/data', 'access.log');
             if (argv.options.r) {
-                if (!argv.options.p) throw new Error('Restic password is required');
-                const passwordFile = path.join(os.tmpdir(), 'hydrooj-restic-password');
-                fs.writeFileSync(passwordFile, argv.options.p.toString());
-                exec('restic', ['backup', '-r', argv.options.r.toString(), '-p', passwordFile, ...filesToAdd], { stdio: 'inherit', cwd: '/data' });
-                fs.removeSync(passwordFile);
+                await withPasswordFile(argv.options.p, async (file) => {
+                    exec('restic', ['backup', '-r', argv.options.r.toString(), '-p', file, ...filesToAdd], { stdio: 'inherit', cwd: '/data' });
+                });
                 for (const file of filesToRemove) fs.removeSync(file);
             } else {
                 const stat = fs.statSync(target);
@@ -106,7 +113,8 @@ export function register(cli: CAC) {
             }
             if (!argv.options.y) {
                 const rl = readline.createInterface(process.stdin, process.stdout);
-                const answer = await rl.question(`Overwrite current database with backup file ${filename}? [y/N]`);
+                const source = argv.options.r ? `restic repository ${argv.options.r}` : `backup file ${filename}`;
+                const answer = await rl.question(`Overwrite current database with ${source}? [y/N]`);
                 rl.close();
                 if (answer.toLowerCase() !== 'y') {
                     logger.warn('Abort.');
@@ -118,13 +126,11 @@ export function register(cli: CAC) {
             } else if (filename) {
                 dataDir = filename;
             } else {
-                if (!argv.options.p) throw new Error('Restic password is required');
-                const passwordFile = path.join(os.tmpdir(), 'hydrooj-restic-password');
-                fs.writeFileSync(passwordFile, argv.options.p.toString());
                 fs.ensureDirSync(dir);
-                restic = child.spawn('restic', ['mount', '-r', argv.options.r, '-p', passwordFile, dir], { stdio: 'inherit' });
-                await sleep(1000);
-                fs.removeSync(passwordFile);
+                await withPasswordFile(argv.options.p, async (passwordFile) => {
+                    restic = child.spawn('restic', ['mount', '-r', argv.options.r, '-p', passwordFile, dir], { stdio: 'inherit' });
+                    await sleep(1000);
+                });
                 dataDir = path.join(dir, 'snapshots/latest');
             }
             let isReadOnly = false;
@@ -135,8 +141,18 @@ export function register(cli: CAC) {
             }
             exec('mongorestore', [`--uri=${url}`, `--dir=${dataDir}/dump/hydro`, '--drop'], { stdio: 'inherit' });
             if (fs.existsSync(`${dataDir}/file`)) {
-                exec('rm', ['-rf', '/data/file/hydro'], { stdio: 'inherit' });
-                exec('bash', ['-c', `${isReadOnly ? 'cp -r' : 'mv'} ${dataDir}/file/* /data/file`], { stdio: 'inherit' });
+                if (argv.options.r) {
+                    await withPasswordFile(argv.options.p, async (file) => {
+                        exec('restic', [
+                            'restore', '-r', argv.options.r, '-p', file, 'latest',
+                            '-t', '/data', '-i', '/file', '--delete',
+                            '--overwrite', 'if-changed', '--path', '/data/file',
+                        ], { stdio: 'inherit' });
+                    });
+                } else {
+                    await fs.remove('/data/file/hydro');
+                    exec('bash', ['-c', `${isReadOnly ? 'cp -r' : 'mv'} ${dataDir}/file/* /data/file`], { stdio: 'inherit' });
+                }
             }
             if (argv.options.withAddons) {
                 if (fs.existsSync(`${dataDir}/addons.json`)) {
