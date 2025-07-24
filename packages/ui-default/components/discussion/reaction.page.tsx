@@ -9,7 +9,7 @@ import ReactDOM from 'react-dom/client';
 import { AutoloadPage } from 'vj/misc/Page';
 import { request } from 'vj/utils';
 
-function renderReactions(reactions, self, rootEle) {
+function renderReactions(reactions = {}, self = {}, rootEle) {
   let html = '';
   for (const [k, v] of Object.entries(reactions).sort(([, v1], [, v2]) => +v2 - +v1)) {
     if (!v) continue;

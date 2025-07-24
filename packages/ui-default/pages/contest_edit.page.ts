@@ -42,7 +42,7 @@ const page = new NamedPage(['contest_edit', 'contest_create', 'homework_create',
         });
       }
       const message = `Confirm deleting this ${pagename.split('_')[0]}? Its files and status will be deleted as well.`;
-      confirm(i18n(message)).then((yes) => {
+      return confirm(i18n(message)).then((yes) => {
         if (yes) {
           confirmed = true;
           ev.target.click();

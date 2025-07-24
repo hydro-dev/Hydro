@@ -195,7 +195,7 @@ export async function apply(ctx: Context) {
                 if (overrideLimit) maxOperations = overrideLimit;
                 // deprecated: remove boolean support in future
                 if (typeof defaultKey === 'boolean') defaultKey = defaultKey ? '{{user}}' : '{{ip}}';
-                const id = defaultKey.replace('{{ip}}', this.request.ip).replace('{{user}}', this.user._id);
+                const id = defaultKey.replace('{{ip}}', this.request.ip).replace('{{user}}', this.user?._id?.toString() || '0');
                 await opcount.inc(op, id, periodSecs, maxOperations);
             },
             renderTitle(str: string) {

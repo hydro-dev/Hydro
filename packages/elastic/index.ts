@@ -51,7 +51,7 @@ export default class ElasticSearchService extends Service {
             },
         });
         let hits = res.hits.hits.map((i) => i._id);
-        if (!opts.skip) {
+        if (!opts?.skip) {
             let pdoc = await ProblemModel.get(domainId, +q || q, ProblemModel.PROJECTION_LIST);
             if (pdoc) {
                 hits = hits.filter((i) => i !== `${pdoc.domainId}/${pdoc.docId}`);

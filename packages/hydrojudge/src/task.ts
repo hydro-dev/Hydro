@@ -127,7 +127,10 @@ export class JudgeTask {
             if (filenames.length) {
                 logger.info(`Getting problem data: ${this.session?.config.host || 'local'}/${source}`);
                 this.next({ message: 'Syncing testdata, please wait...' });
-                await this.session.fetchFile(source, Object.fromEntries(files.map((i) => [i.name, join(filePath, i.name)])));
+                await this.session.fetchFile(source, Object.fromEntries(
+                    files.filter((i) => filenames.includes(i.name))
+                        .map((i) => [i.name, join(filePath, i.name)]),
+                ));
                 await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
                 this.compileCache = {};
             }

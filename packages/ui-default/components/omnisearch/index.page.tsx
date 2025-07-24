@@ -50,12 +50,17 @@ export default new AutoloadPage('omnibar', () => {
             href={`${base}/p/${pid || docId}`}
           >
             <div>
-              <a
-                href={psdict[`${domainId}#${docId}`]?.rid && `${base}/record/${psdict[`${domainId}#${docId}`]?.rid}`}
+              <p
+                onClick={(ev) => {
+                  if (psdict[`${domainId}#${docId}`]?.rid) {
+                    window.location.href = `${base}/record/${psdict[`${domainId}#${docId}`]?.rid}`;
+                  }
+                  ev.preventDefault();
+                }}
                 className={`record-status--text ${STATUS_CODES[psdict[`${domainId}#${docId}`]?.status]}`}
               >
                 <span className={`icon record-status--icon ${STATUS_CODES[psdict[`${domainId}#${docId}`]?.status]}`}></span>
-              </a>
+              </p>
               <div>{title}</div>
             </div>
             <div>
