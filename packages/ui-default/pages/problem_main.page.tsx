@@ -282,6 +282,14 @@ function processElement(ele) {
   createHint('Hint::icon::difficulty', $(ele).find('th.col--difficulty'));
 }
 
+function getAllPids() {
+  return $('[data-checkbox-group="problem"]').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
+}
+
+function getSelectedPids() {
+  return $('[data-checkbox-group="problem"]:checked').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
+}
+
 function ProblemSelectionDisplay(props) { // eslint-disable-line
   const [pids, setPids] = React.useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -296,24 +304,21 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
   }, [props.onClear]);
 
   React.useEffect(() => {
-    $(document).on('click', '[data-checkbox-group="problem"]:checked', (ev) => {
-      const $checkbox = $(ev.currentTarget);
-      const pid = $checkbox.closest('tr').attr('data-pid');
-      setPids((o) => Array.from(new Set([...o, pid])));
+    const cb = () => queueMicrotask(() => {
+      const all = getAllPids();
+      const selected = getSelectedPids();
+      setPids((o) => {
+        const ret = o.filter((i) => !all.includes(i) || selected.includes(i));
+        for (const val of selected) if (!ret.includes(val)) ret.push(val);
+        return ret;
+      });
     });
-    $(document).on('click', '[data-checkbox-group="problem"]:not(:checked)', (ev) => {
-      const $checkbox = $(ev.currentTarget);
-      const pid = $checkbox.closest('tr').attr('data-pid');
-      setPids((o) => o.filter((i) => i !== pid));
-    });
-    $(document).on('click', '[data-checkbox-toggle="problem"]:checked', () => {
-      const all = $('[data-checkbox-group="problem"]').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
-      setPids((o) => Array.from(new Set([...o, ...all])));
-    });
-    $(document).on('click', '[data-checkbox-toggle="problem"]:not(:checked)', () => {
-      const all = $('[data-checkbox-group="problem"]').map((_index, i) => $(i).closest('tr').attr('data-pid')).get();
-      setPids((o) => o.filter((i) => !all.includes(i)));
-    });
+    $(document).on('click', '[data-checkbox-group="problem"]', cb);
+    $(document).on('click', '[data-checkbox-toggle="problem"]', cb);
+    return () => {
+      $(document).off('click', '[data-checkbox-group="problem"]', cb);
+      $(document).off('click', '[data-checkbox-toggle="problem"]', cb);
+    };
   }, []);
   React.useEffect(() => {
     (window as any).__getPids = () => pids;
