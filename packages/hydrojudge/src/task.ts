@@ -120,7 +120,7 @@ export class JudgeTask {
             for (const file of files) {
                 allFiles.add(file.name);
                 version[file.name] = file.etag + file.lastModified;
-                if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
+                if (etags[file.name] !== file.etag + file.lastModified || !fs.existsSync(join(filePath, file.name))) { filenames.push(file.name); }
             }
             const allFilesToRemove = Object.keys(etags).filter((name) => !allFiles.has(name) && fs.existsSync(join(filePath, name)));
             await Promise.all(allFilesToRemove.map((name) => fs.remove(join(filePath, name))));
