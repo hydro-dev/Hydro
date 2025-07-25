@@ -49,13 +49,13 @@ export interface DocStatusType {
 }
 
 export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(
-    domainId: string, content: Content, owner: number,
+    domainId: string, content: DocType[T]['content'], owner: number,
     docType: T, docId: K,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
 ): Promise<K>;
 export async function add<T extends keyof DocType>(
-    domainId: string, content: Content, owner: number,
+    domainId: string, content: DocType[T]['content'], owner: number,
     docType: T, docId: null,
     parentType?: DocType[T]['parentType'], parentId?: DocType[T]['parentId'],
     args?: Partial<DocType[T]>,
