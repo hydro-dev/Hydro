@@ -120,7 +120,7 @@ export class JudgeTask {
             for (const file of files) {
                 allFiles.add(file.name);
                 version[file.name] = file.etag + file.lastModified;
-                if (etags[file.name] !== file.etag + file.lastModified || !fs.existsSync(join(filePath, file.name))) { filenames.push(file.name); }
+                if (etags[file.name] !== file.etag + file.lastModified) filenames.push(file.name);
             }
             const allFilesToRemove = Object.keys(etags).filter((name) => !allFiles.has(name) && fs.existsSync(join(filePath, name)));
             await Promise.all(allFilesToRemove.map((name) => fs.remove(join(filePath, name))));
@@ -131,8 +131,10 @@ export class JudgeTask {
                     files.filter((i) => filenames.includes(i.name))
                         .map((i) => [i.name, join(filePath, i.name)]),
                 ));
-                await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
                 this.compileCache = {};
+            }
+            if (allFilesToRemove.length || filenames.length) {
+                await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
             }
             await fs.writeFile(join(filePath, 'lastUsage'), Date.now().toString());
             return filePath;
