@@ -14,7 +14,6 @@
               <option value="list" selected>{{ _('List View') }}</option>
             </select>
           </span>
-        {% if groups.length %}
           <form method="get" class="filter-form" name="filter-form">
             <input type="text" class="inline compact textbox" name="q" value="{{ q }}" placeholder="{{ _('Search homeworks...') }}">
             <select class="inline compact select" name="group">
@@ -30,7 +29,6 @@
               {{ _('Search') }}
             </button>
           </form>
-        {% endif %}
         {% if handler.user.hasPerm(perm.PERM_CREATE_HOMEWORK) %}
           <a class="compact button" href="{{ url('homework_create') }}">{{ _('Create Homework') }}</a>
         {% endif %}
