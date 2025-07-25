@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.58.0-beta.5",
+  "version": "4.58.0-beta.6",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -21,7 +21,7 @@
     "@fontsource/source-code-pro": "^5.2.6",
     "@fontsource/ubuntu-mono": "^5.2.6",
     "@hydrooj/utils": "workspace:^",
-    "@sentry/browser": "^9.40.0",
+    "@sentry/browser": "^9.41.0",
     "@sentry/webpack-plugin": "^4.0.0",
     "@simplewebauthn/browser": "13.1.2",
     "@svgr/webpack": "^8.1.0",
