@@ -35,7 +35,7 @@
         "@types/autocannon": "^7.12.7",
         "@types/chai": "^5.2.2",
         "@types/cross-spawn": "^6.0.6",
-        "@types/node": "24.0.15",
+        "@types/node": "24.1.0",
         "@types/semver": "^7.7.0",
         "autocannon": "^8.0.0",
         "cac": "^6.7.14",
