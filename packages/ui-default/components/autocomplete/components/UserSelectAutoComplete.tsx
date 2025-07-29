@@ -4,14 +4,14 @@ import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 import { api } from 'vj/utils';
 
-const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc>>((props, ref) => (
+const UserSelectAutoComplete = forwardRef<AutoCompleteHandle<Udoc>, AutoCompleteProps<Udoc> & { byId?: boolean }>((props, ref) => (
   <AutoComplete<Udoc>
     ref={ref as any}
     cacheKey="user"
     queryItems={(query) => api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl'])}
     fetchItems={(ids) => api('users', { auto: ids }, ['_id', 'uname', 'displayName'])}
     itemText={(user) => user.uname + (user.displayName ? ` (${user.displayName})` : '')}
-    itemKey={(user) => ((props.multi || /^[+-]?\d+$/.test(user.uname.trim())) ? user._id.toString() : user.uname)}
+    itemKey={(user) => ((props.multi || props.byId || /^[+-]?\d+$/.test(user.uname.trim())) ? user._id.toString() : user.uname)}
     renderItem={(user) => (
       <div className="media">
         <div className="media__left medium">

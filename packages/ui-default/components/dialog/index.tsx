@@ -150,8 +150,9 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
                 />
                 : field.type === 'user'
                   ? <UserSelectAutoComplete
-                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
-                    onChange={(e) => setValues({ ...values, [name]: e })}
+                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name].toString()] : []}
+                    onChange={(e) => setValues({ ...values, [name]: +e })}
+                    byId
                   />
                   : <DomainSelectAutoComplete
                     data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
