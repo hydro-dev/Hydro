@@ -220,8 +220,11 @@ export class ProblemMainHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             ids.push(await problem.copy(pdoc.domainId, pdoc.docId, target, undefined, hidden));
         }
-        this.response.body = ids;
-        if (ids.length === 1) this.response.redirect = this.url('problem_detail', { domainId: target, pid: ids[0] });
+        if (ids.length === 1) {
+            this.response.redirect = this.url('problem_detail', { domainId: target, pid: ids[0] });
+        } else {
+            this.response.body = ids;
+        }
     }
 
     @param('pids', Types.NumericArray)
