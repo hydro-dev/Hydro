@@ -131,8 +131,10 @@ export class JudgeTask {
                     files.filter((i) => filenames.includes(i.name))
                         .map((i) => [i.name, join(filePath, i.name)]),
                 ));
-                await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
                 this.compileCache = {};
+            }
+            if (allFilesToRemove.length || filenames.length) {
+                await fs.writeFile(join(filePath, 'etags'), JSON.stringify(version));
             }
             await fs.writeFile(join(filePath, 'lastUsage'), Date.now().toString());
             return filePath;
