@@ -34,6 +34,7 @@ const page = new NamedPage([
         operation: 'copy',
         pids: [UiContext.pdoc.docId],
         target: res.target,
+        redirect: true,
       });
       window.location.href = url;
     } catch (error) {

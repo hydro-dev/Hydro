@@ -191,13 +191,15 @@ export class ProblemMainHandler extends Handler {
     @param('pids', Types.NumericArray)
     @param('target', Types.String)
     @param('hidden', Types.Boolean)
-    async postCopy(domainId: string, pids: number[], target: string, hidden?: boolean) {
+    @param('redirect', Types.Boolean)
+    async postCopy(domainId: string, pids: number[], target: string, hidden?: boolean, redirect = false) {
         let t = `,${this.domain.share || ''},`;
         if (t !== ',*,' && !t.includes(`,${target},`)) throw new ProblemNotAllowCopyError(this.domain._id, target);
         const ddoc = await domain.get(target);
         if (!ddoc) throw new NotFoundError(target);
         const dudoc = await user.getById(target, this.user._id);
         if (!dudoc.hasPerm(PERM.PERM_CREATE_PROBLEM)) throw new PermissionError(PERM.PERM_CREATE_PROBLEM);
+        if (!pids.length) throw new ValidationError('pids');
         // Check if user can access all those problems
         const pdict = await problem.getList(
             domainId, pids, this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id,
@@ -220,8 +222,8 @@ export class ProblemMainHandler extends Handler {
             // eslint-disable-next-line no-await-in-loop
             ids.push(await problem.copy(pdoc.domainId, pdoc.docId, target, undefined, hidden));
         }
-        this.response.body = ids;
-        if (ids.length === 1) this.response.redirect = this.url('problem_detail', { domainId: target, pid: ids[0] });
+        if (redirect) this.response.redirect = this.url('problem_detail', { domainId: target, pid: ids[0] });
+        else this.response.body = ids;
     }
 
     @param('pids', Types.NumericArray)
