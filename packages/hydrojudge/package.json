@@ -1,14 +1,14 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "3.5.0-beta.5",
+    "version": "3.5.0-beta.6",
     "main": "./src/index.ts",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@zip.js/zip.js": "^2.7.68",
+        "@zip.js/zip.js": "^2.7.71",
         "cac": "^6.7.14",
         "p-queue": "^8.1.0",
         "schemastery": "^3.16.1",

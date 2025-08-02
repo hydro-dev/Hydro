@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "5.0.0-beta.6",
+    "version": "5.0.0-beta.7",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -23,7 +23,7 @@
         "@hydrooj/utils": "workspace:^",
         "@simplewebauthn/server": "13.1.2",
         "@undefined-moe/require-resolve-hook": "^1.1.0",
-        "@zip.js/zip.js": "^2.7.68",
+        "@zip.js/zip.js": "^2.7.71",
         "adm-zip": "0.5.16",
         "cac": "^6.7.14",
         "cordis": "4.0.0-beta.5",
