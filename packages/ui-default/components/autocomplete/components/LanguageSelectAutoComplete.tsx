@@ -15,7 +15,7 @@ const LanguageSelectAutoComplete = React.forwardRef<any, any>((props, ref) => (
     renderItem={(item) => (prefixes.has(item._id) ? '' : `${item.name}`)}
     onChange={(val) => {
       let value = val.split(',');
-      const active = new Set(value.filter((i) => i.includes('.')).map((i) => i.split('.')[0]));
+      const active = new Set(value.filter((i) => i.includes('.').map((i) => i.split('.')[0])));
       value = value.filter((i) => !prefixes.has(i) || active.has(i));
       for (const i of active) if (!value.includes(i)) value.push(i);
       props.onChange(value.join(','));
