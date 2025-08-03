@@ -219,9 +219,15 @@ class VJudgeService extends Service {
     }
 
     async updateLangs(provider: string, mapping: Record<string, Partial<LangConfig>>) {
-        const config = yaml.load(SystemModel.get('hydrooj.langs'));
+        const config = yaml.load(SystemModel.get('hydrooj.langs')) as Record<string, Partial<LangConfig>>;
         const old = yaml.dump(config);
+        const existingMappings: Set<string> = new Set();
+        for (const key in config) {
+            const target = config[key]?.validAs?.[provider];
+            if (target) existingMappings.add(target);
+        }
         for (const key in mapping) {
+            if (existingMappings.has(mapping[key].key)) continue;
             config[key] ||= {
                 execute: '/bin/echo For remote judge only',
                 hidden: true,
