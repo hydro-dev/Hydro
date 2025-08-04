@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable ts/naming-convention */
 /* eslint-disable no-await-in-loop */
 import mongodb, { Db, FindCursor } from 'mongodb';
 import {
@@ -93,7 +93,7 @@ const tasks = {
             processer: (rule) => {
                 const n = {};
                 for (const key in rule) {
-                    n[parseInt(key, 10) / 3600] = rule;
+                    n[Number.parseInt(key, 10) / 3600] = rule;
                 }
                 return n;
             },
@@ -383,7 +383,7 @@ async function removeInvalidPid(report: Function) {
             .find({ docType: 10 }).skip(i * 50).limit(50)
             .toArray();
         for (const doc of docs) {
-            const id = parseInt(doc.pid, 10);
+            const id = Number.parseInt(doc.pid, 10);
             if (Number.isSafeInteger(id)) {
                 bulk.find({ _id: doc._id }).updateOne({ $unset: { pid: '' } });
             }
@@ -495,6 +495,6 @@ export async function run({
     await discussionNode(src, report);
     await message(src, report);
     await removeInvalidPid(report);
-    await global.Hydro.model.system.set('db.ver', 1);
+    await globalThis.Hydro.model.system.set('db.ver', 1);
     return true;
 }

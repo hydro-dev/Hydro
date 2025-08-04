@@ -166,7 +166,7 @@ export function parseTimeMS(str: string | number, throwOnError = true) {
     const match = TIME_RE.exec(str);
     if (!match && throwOnError) throw new Error(`${str} error parsing time`);
     if (!match) return 1000;
-    return Math.floor(parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
+    return Math.floor(Number.parseFloat(match[1]) * TIME_UNITS[match[2].toLowerCase()]);
 }
 
 export function parseMemoryMB(str: string | number, throwOnError = true) {
@@ -174,7 +174,7 @@ export function parseMemoryMB(str: string | number, throwOnError = true) {
     const match = MEMORY_RE.exec(str);
     if (!match && throwOnError) throw new Error(`${str} error parsing memory`);
     if (!match) return 256;
-    return Math.ceil(parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
+    return Math.ceil(Number.parseFloat(match[1]) * MEMORY_UNITS[match[2].toLowerCase()]);
 }
 
 function _digit2(number: number) {
@@ -209,7 +209,7 @@ export function randomPick<T>(arr: T[]): T {
 export type StringKeys<O> = {
     [K in keyof O]: string extends O[K] ? K : never
 }[keyof O];
-const fSortR = /[^\d]+|\d+/g;
+const fSortR = /\D+|\d+/g;
 export function sortFiles(files: string[]): string[];
 export function sortFiles<T extends { _id: string }>(files: T[], key?: '_id'): T[];
 export function sortFiles<T extends Record<string, any>>(files: T[], key: StringKeys<T>): T[];

@@ -49,7 +49,7 @@ export const JudgeSettings = Schema.object({
 const oldPath = path.resolve(os.homedir(), '.config', 'hydro', 'judge.yaml');
 const newPath = path.resolve(os.homedir(), '.hydro', 'judge.yaml');
 
-let config = global.Hydro
+let config = globalThis.Hydro
     ? JudgeSettings({})
     : (() => {
         const base: any = {};

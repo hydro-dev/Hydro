@@ -12,7 +12,7 @@ function format(message, args) {
   return result;
 }
 
-let CURRENT_LOCALE_DATA = {}; // eslint-disable-line @typescript-eslint/naming-convention
+let CURRENT_LOCALE_DATA = {}; // eslint-disable-line ts/naming-convention
 
 export function localize(path, message, ...args) {
   return format(CURRENT_LOCALE_DATA[path.key || path] || CURRENT_LOCALE_DATA[message] || message, args);

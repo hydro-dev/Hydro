@@ -60,7 +60,6 @@ export async function log<T extends Handler | ConnectionHandler>(handler: T, typ
 export async function get(id: ObjectId) {
     return await coll.findOne({ _id: id });
 }
-
-global.Hydro.model.oplog = {
+globalThis.Hydro.model.oplog = {
     coll, add, get, log,
 };

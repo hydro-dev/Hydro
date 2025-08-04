@@ -1,7 +1,7 @@
 import { moment, ObjectId } from 'hydrooj';
 import { AnsiUp } from 'ansi_up';
 
-export { size, formatSeconds } from 'hydrooj';
+export { formatSeconds, size } from 'hydrooj';
 
 const AU = new AnsiUp();
 

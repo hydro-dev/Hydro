@@ -1,11 +1,11 @@
 export interface ProblemSource {
-    description?: string,
-    input?: string,
-    output?: string,
-    samples?: [string, string][],
-    samplesRaw?: string,
-    hint?: string,
-    source?: string,
+    description?: string;
+    input?: string;
+    output?: string;
+    samples?: [string, string][];
+    samplesRaw?: string;
+    hint?: string;
+    source?: string;
 }
 
 export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 'markdown', translate?: (s: string) => string) {

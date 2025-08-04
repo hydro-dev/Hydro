@@ -10,7 +10,7 @@ interface Task {
     compile: () => Promise<void>;
     judgeCase: (c: NormalizedCase) => (
         (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => Promise<JudgeResultBody['case']>
-    )
+    );
 }
 
 const Score = {

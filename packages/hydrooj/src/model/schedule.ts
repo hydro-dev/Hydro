@@ -68,14 +68,14 @@ export async function apply(ctx: Context) {
             await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
             pref.record = Date.now() - start;
             start = Date.now();
-            await global.Hydro.script.rp?.run(pref, new Logger('task/rp').debug);
+            await globalThis.Hydro.script.rp?.run(pref, new Logger('task/rp').debug);
             pref.rp = Date.now() - start;
             start = Date.now();
-            await global.Hydro.script.problemStat?.run(pref, new Logger('task/problem').debug);
+            await globalThis.Hydro.script.problemStat?.run(pref, new Logger('task/problem').debug);
             pref.problemStat = Date.now() - start;
             start = Date.now();
-            if (global.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
-                await global.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
+            if (globalThis.Hydro.model.system.get('server.checkUpdate') && !(new Date().getDay() % 3)) {
+                await globalThis.Hydro.script.checkUpdate?.run({}, new Logger('task/checkUpdate').debug);
                 pref.checkUpdate = Date.now() - start;
                 start = Date.now();
             }
@@ -101,4 +101,4 @@ export async function apply(ctx: Context) {
 }
 
 export default ScheduleModel;
-global.Hydro.model.schedule = ScheduleModel;
+globalThis.Hydro.model.schedule = ScheduleModel;

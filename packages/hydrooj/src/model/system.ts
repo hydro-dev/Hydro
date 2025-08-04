@@ -71,8 +71,7 @@ export async function runConfig() {
 bus.on('system/setting', (args) => {
     for (const key in args) cache[key] = args[key];
 });
-
-global.Hydro.model.system = {
+globalThis.Hydro.model.system = {
     runConfig,
     get,
     getMany,

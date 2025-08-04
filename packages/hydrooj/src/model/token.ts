@@ -115,4 +115,4 @@ export async function apply(ctx: Context) {
     );
 }
 export default TokenModel;
-global.Hydro.model.token = TokenModel;
+globalThis.Hydro.model.token = TokenModel;

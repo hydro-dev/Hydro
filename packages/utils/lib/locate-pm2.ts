@@ -3,7 +3,6 @@ import path from 'path';
 
 const PATH = process.env.PATH?.split(':') || [];
 
-/* eslint-disable import/no-dynamic-require */
 // @ts-ignore
 const pm2: typeof import('pm2') | null = (() => {
     for (const dir of PATH) {

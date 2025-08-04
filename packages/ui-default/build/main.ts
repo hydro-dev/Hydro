@@ -1,4 +1,3 @@
-/* eslint-disable import/no-import-module-exports */
 import path from 'path';
 import { size } from '@hydrooj/utils/lib/utils';
 import cac from 'cac';
@@ -106,7 +105,7 @@ async function main() {
       classNamePrefix: 'icon',
       fontName: 'hydro-icons',
       css: true,
-      startUnicode: 0xea01,
+      startUnicode: 0xEA01,
       svg2ttf: {
         timestamp: 1577836800, // 2020-1-1
       },

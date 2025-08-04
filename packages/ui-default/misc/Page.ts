@@ -16,7 +16,7 @@ export class Page {
     }
     if (process.env.NODE_ENV !== 'production') {
       if (typeof name !== 'string' && !(name instanceof Array)) {
-        throw new Error("'name' should be a string or string[]");
+        throw new TypeError("'name' should be a string or string[]");
       }
       if (typeof this.afterLoading !== 'function' && this.afterLoading != null) {
         throw new Error("'afterLoading' should be a function");

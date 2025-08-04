@@ -460,7 +460,7 @@ export const CATEGORIES = {
     ],
 };
 
-global.Hydro.model.builtin = {
+globalThis.Hydro.model.builtin = {
     Permission,
     getScoreColor,
     PERM,

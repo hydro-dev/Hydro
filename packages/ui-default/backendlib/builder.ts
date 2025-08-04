@@ -10,7 +10,7 @@ import esbuild from 'esbuild';
 
 declare module 'hydrooj' {
   interface UI {
-    esbuildPlugins?: esbuild.Plugin[]
+    esbuildPlugins?: esbuild.Plugin[];
   }
   interface SystemKeys {
     'ui-default.nav_logo_dark': string;
@@ -69,7 +69,7 @@ const build = async (contents: string) => {
     write: false,
     target: ['chrome65'],
     plugins: [
-      ...(global.Hydro.ui.esbuildPlugins || []),
+      ...(globalThis.Hydro.ui.esbuildPlugins || []),
       federationPlugin,
     ],
     minify: !process.env.DEV,
@@ -91,7 +91,7 @@ export async function buildUI() {
   const entryPoints: string[] = [];
   const lazyModules: string[] = [];
   const newFiles = ['entry.js'];
-  for (const addon of Object.values(global.addons)) {
+  for (const addon of Object.values(globalThis.addons) as string[]) {
     let publicPath = resolve(addon, 'frontend');
     if (!fs.existsSync(publicPath)) publicPath = resolve(addon, 'public');
     if (!fs.existsSync(publicPath)) continue;
@@ -115,10 +115,10 @@ export async function buildUI() {
       addFile(basename(m).replace(/\.[tj]sx?$/, '.js'), file.text);
     }
   }
-  for (const lang in global.Hydro.locales) {
+  for (const lang in globalThis.Hydro.locales) {
     if (!/^[a-zA-Z_]+$/.test(lang)) continue;
-    if (!global.Hydro.locales[lang].__interface) continue;
-    const str = `window.LOCALES=${JSON.stringify(global.Hydro.locales[lang][Symbol.for('iterate')])};`;
+    if (!globalThis.Hydro.locales[lang].__interface) continue;
+    const str = `window.LOCALES=${JSON.stringify(globalThis.Hydro.locales[lang][Symbol.for('iterate')])};`;
     addFile(`lang-${lang}.js`, str);
   }
   const entry = await build([

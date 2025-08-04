@@ -95,7 +95,7 @@ class DiscussionNodeHandler extends DiscussionHandler {
     async get(domainId: string, type: string, _name: string, page = 1) {
         let name: ObjectId | string | number;
         if (ObjectId.isValid(_name)) name = new ObjectId(_name);
-        else if (isSafeInteger(parseInt(_name, 10))) name = parseInt(_name, 10);
+        else if (isSafeInteger(Number.parseInt(_name, 10))) name = Number.parseInt(_name, 10);
         else name = _name;
         const hidden = this.user.own(this.vnode) || this.user.hasPerm(PERM.PERM_EDIT_DISCUSSION) ? {} : { hidden: false };
         const [ddocs, dpcount] = await this.paginate(

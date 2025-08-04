@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-declaration-merging */
 import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -77,7 +78,8 @@ export interface HydroResponse {
     type: string;
     status: number;
     template?: string;
-    /** If set, and pjax content was request from client,
+    /**
+     * If set, and pjax content was request from client,
      *  The template will be used for rendering.
      */
     pjax?: string;
@@ -87,14 +89,14 @@ export interface HydroResponse {
     attachment: (name: string, stream?: any) => void;
     addHeader: (name: string, value: string) => void;
 }
-type HydroContext = {
+interface HydroContext {
     request: HydroRequest;
     response: HydroResponse;
     args: Record<string, any>;
     UiContext: Record<string, any>;
     domain: { _id: string };
     user: { _id: number };
-};
+}
 export type KoaContext = Koa.Context & {
     HydroContext: HydroContext;
     handler: any;
@@ -103,14 +105,14 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
-export type TextRenderer = {
+export interface TextRenderer {
     output: 'html' | 'json' | 'text';
     render: (name: string, args: Record<string, any>, context: Record<string, any>) => string | Promise<string>;
-};
-export type BinaryRenderer = {
+}
+export interface BinaryRenderer {
     output: 'binary';
     render: (name: string, args: Record<string, any>, context: Record<string, any>) => Buffer | Promise<Buffer>;
-};
+}
 export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
     accept: readonly string[];
@@ -139,7 +141,7 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon<C> { } // eslint-disable-line @typescript-eslint/no-unused-vars
+export interface HandlerCommon<C> { } // eslint-disable-line ts/no-unused-vars
 export class HandlerCommon<C> {
     static [kHandler]: string | boolean = 'HandlerCommon';
     session: Record<string, any>;
@@ -507,7 +509,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.activeHandlers.set(h, { start: Date.now(), name });
         try {
             const operation = (method === 'post' && ctx.request.body?.operation)
-                ? `_${ctx.request.body.operation}`.replace(/_([a-z])/gm, (s) => s[1].toUpperCase())
+                // eslint-disable-next-line regexp/no-unused-capturing-group
+                ? `_${ctx.request.body.operation}`.replace(/_([a-z])/g, (s) => s[1].toUpperCase())
                 : '';
 
             // FIXME: should pass type check
@@ -777,7 +780,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.ctx.on(`handler/register/${name}`, callback as any);
     }
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+    // eslint-disable-next-line ts/naming-convention
     public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
         // if (name === 'contest_scoreboard') {
         //     console.log('+++', this.ctx);
@@ -786,7 +789,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
+    // eslint-disable-next-line ts/naming-convention
     public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler<C>, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }

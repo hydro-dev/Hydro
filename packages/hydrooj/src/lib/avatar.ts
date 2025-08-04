@@ -4,9 +4,9 @@ import { md5 } from '../utils';
 type AvatarProvider = (src: string, size: number) => string;
 
 export const providers: Record<string, AvatarProvider> = {
-    gravatar: (email, size) => `${global.Hydro.model.system.get('avatar.gravatar_url')}`
+    gravatar: (email, size) => `${globalThis.Hydro.model.system.get('avatar.gravatar_url')}`
         + `${md5((email || '').toString().trim().toLowerCase())}?d=mm&s=${size || 32}`,
-    qq: (id) => `//q1.qlogo.cn/g?b=qq&nk=${(/(\d+)/g.exec(id) || ['', ''])[1]}&s=160`,
+    qq: (id) => `//q1.qlogo.cn/g?b=qq&nk=${(/(\d+)/.exec(id) || ['', ''])[1]}&s=160`,
     github: (id, size) => `//github.com/${id}.png?size=${Math.min(size, 460)}`,
     url: (url) => url,
 };

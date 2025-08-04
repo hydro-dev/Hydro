@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 /// <reference no-default-lib="true" />
 /// <reference lib="webworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
@@ -64,10 +63,10 @@ function initConn(path: string, port: MessagePort, cookie: any) {
     console.log('Connected');
     broadcastMsg({ type: 'open' });
     conn.send(JSON.stringify({
-      'operation': 'subscribe',
-      'request_id': Math.random().toString(16).substring(2),
-      'credential': lcookie,
-      'channels': ['message'],
+      operation: 'subscribe',
+      request_id: Math.random().toString(16).substring(2),
+      credential: lcookie,
+      channels: ['message'],
     }));
   };
   conn.onerror = () => broadcastMsg({ type: 'error' });

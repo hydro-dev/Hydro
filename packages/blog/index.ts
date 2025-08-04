@@ -98,7 +98,7 @@ export class BlogModel {
     }
 }
 
-global.Hydro.model.blog = BlogModel;
+globalThis.Hydro.model.blog = BlogModel;
 
 class BlogHandler extends Handler {
     ddoc?: BlogDoc;

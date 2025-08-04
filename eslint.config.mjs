@@ -1,20 +1,28 @@
 /* eslint-disable max-len */
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable ts/naming-convention */
+
 import path from 'node:path';
-import { defineConfig, globalIgnores } from 'eslint/config';
+import stylistic from '@stylistic/eslint-plugin';
 import globals from 'globals';
 import react from '@hydrooj/eslint-config';
 
-export default defineConfig([globalIgnores([
-    '**/{public,files}/**/*.js',
-    '**/dist',
-    '**/*.d.ts',
-    '**/node_modules',
-    '**/.*.js',
-    'packages/ui-default/public',
-]), {
-    extends: [react],
-
+const config = react({
+    ignores: [
+        '**/{public,files}/**/*.js',
+        '**/dist',
+        '**/*.d.ts',
+        '**/node_modules',
+        '**/.*.js',
+        'packages/ui-default/public',
+    ],
+    stylistic: {
+        indent: 4,
+    },
+    jsonc: false,
+    rules: {
+        'yaml/indent': ['warn', 2],
+    },
+}, {
     languageOptions: {
         ecmaVersion: 5,
         sourceType: 'module',
@@ -103,6 +111,10 @@ export default defineConfig([globalIgnores([
         },
     },
 
+    plugins: {
+        stylistic,
+    },
+
     rules: {
         'github/array-foreach': 0,
         '@typescript-eslint/no-invalid-this': 0,
@@ -146,7 +158,18 @@ export default defineConfig([globalIgnores([
         },
     },
 
+    plugins: {
+        stylistic,
+    },
+
     rules: {
         '@stylistic/indent': ['warn', 2],
     },
-}]);
+}, {
+    files: ['**/*.yaml', '**/*.yml'],
+    rules: {
+        'style/no-trailing-spaces': 'off',
+        'max-len': 'off',
+    },
+});
+export default config;

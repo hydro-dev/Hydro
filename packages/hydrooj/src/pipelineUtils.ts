@@ -43,7 +43,7 @@ export async function iterateAllPsdoc(filter: Filter<ProblemStatusDoc>, cb: (psd
 }
 
 interface PartialProblemDoc extends ProblemDoc {
-    [key: string]: any,
+    [key: string]: any;
 }
 
 export async function iterateAllProblemInDomain(

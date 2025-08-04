@@ -73,7 +73,7 @@ function addInvisibles(grammar) {
   for (const name in grammar) {
     if (Object.prototype.hasOwnProperty.call(grammar, name) && !invisibles[name]) {
       if (name === 'rest') addInvisibles(grammar.rest);
-      else handlerInvisiblesToken(grammar, name); // eslint-disable-line @typescript-eslint/no-use-before-define
+      else handlerInvisiblesToken(grammar, name); // eslint-disable-line ts/no-use-before-define
     }
   }
 }

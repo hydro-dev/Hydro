@@ -66,13 +66,13 @@ export interface ProblemConfigFile {
 
 export interface FileInfo {
     /** storage path */
-    _id: string,
+    _id: string;
     /** filename */
-    name: string,
+    name: string;
     /** file size (in bytes) */
-    size: number,
-    etag: string,
-    lastModified: Date,
+    size: number;
+    etag: string;
+    lastModified: Date;
 }
 
 export interface JudgeMeta {
@@ -113,7 +113,7 @@ export interface RecordPayload extends RecordJudgeInfo {
     /** 0 if pretest&script */
     contest?: string;
 
-    files?: Record<string, string>
+    files?: Record<string, string>;
 }
 
 export interface JudgeRequest extends Omit<RecordPayload, 'testCases'> {

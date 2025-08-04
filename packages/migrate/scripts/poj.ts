@@ -1,5 +1,6 @@
-/* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
+/* eslint-disable style/no-tabs */
+
 import path from 'path';
 import zlib from 'zlib';
 import mariadb from 'mariadb';

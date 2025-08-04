@@ -69,7 +69,7 @@ export const Setting = (
 
 declare global {
     namespace Schemastery {
-        interface Meta<T> { // eslint-disable-line @typescript-eslint/no-unused-vars
+        interface Meta<T> { // eslint-disable-line ts/no-unused-vars
             family?: string;
             secret?: boolean;
         }
@@ -360,11 +360,11 @@ export const langs: Record<string, LangConfig> = {};
 export const inject = ['db'];
 export async function apply(ctx: Context) {
     logger.info('Ensuring settings');
-    for (const lang in global.Hydro.locales) {
-        if (!global.Hydro.locales[lang].__interface) continue;
-        langRange[lang] = global.Hydro.locales[lang].__langname;
+    for (const lang in globalThis.Hydro.locales) {
+        if (!globalThis.Hydro.locales[lang].__interface) continue;
+        langRange[lang] = globalThis.Hydro.locales[lang].__langname;
     }
-    const system = global.Hydro.model.system;
+    const system = globalThis.Hydro.model.system;
     for (const setting of SYSTEM_SETTINGS) {
         if (!setting.value) continue;
         const current = await ctx.db.collection('system').findOne({ _id: setting.key });
@@ -388,8 +388,7 @@ export async function apply(ctx: Context) {
         ServerLangSettingNode.range = range;
     });
 }
-
-global.Hydro.model.setting = {
+globalThis.Hydro.model.setting = {
     apply,
     inject,
 

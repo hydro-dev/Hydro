@@ -42,9 +42,9 @@ export function SelectionManager(props: SelectionManagerProps) {
     for (const el of selected) {
       if (collide(el, { ...pos, width: 1, height: 1 })) return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // eslint-disable-next-line ts/no-use-before-define
     document.body.addEventListener('mousemove', handleMouseMove);
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    // eslint-disable-next-line ts/no-use-before-define
     document.body.addEventListener('mouseup', handleMouseUp);
     $('body').css('cursor', 'crosshair')
       .append('<div id="divSelectArea" style="position:absolute;background-color:#e073d4;"></div>');

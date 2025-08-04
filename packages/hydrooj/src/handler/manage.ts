@@ -92,23 +92,23 @@ class SystemDashboardHandler extends SystemHandler {
 class SystemScriptHandler extends SystemHandler {
     async get() {
         this.response.template = 'manage_script.html';
-        this.response.body.scripts = global.Hydro.script;
+        this.response.body.scripts = globalThis.Hydro.script;
     }
 
     @param('id', Types.Name)
     @param('args', Types.Content, true)
     async post(domainId: string, id: string, raw = '{}') {
-        if (!global.Hydro.script[id]) throw new ValidationError('id');
+        if (!globalThis.Hydro.script[id]) throw new ValidationError('id');
         let args = JSON.parse(raw);
-        if (typeof global.Hydro.script[id].validate === 'function') {
-            args = global.Hydro.script[id].validate(args);
+        if (typeof globalThis.Hydro.script[id].validate === 'function') {
+            args = globalThis.Hydro.script[id].validate(args);
         }
         const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
         const c = new JudgeResultCallbackContext(this.ctx, { type: 'judge', domainId, rid });
         c.next({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
         // Maybe async?
-        global.Hydro.script[id].run(args, (data) => c.next(data))
+        globalThis.Hydro.script[id].run(args, (data) => c.next(data))
             .then((ret: any) => c.end({
                 status: STATUS.STATUS_ACCEPTED,
                 message: inspect(ret, false, 10, true),
@@ -239,7 +239,7 @@ class SystemUserImportHandler extends SystemHandler {
     @param('draft', Types.Boolean)
     async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
-        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any; }[] = [];
+        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any }[] = [];
         const messages = [];
         const mapping = Object.create(null);
         const groups: Record<string, string[]> = Object.create(null);

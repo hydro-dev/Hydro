@@ -456,19 +456,20 @@ const page = new NamedPage(['problem_main'], () => {
 
   const selection = document.getElementById('problem_selection');
   if (selection) {
-    ReactDOM.createRoot(selection)
-      .render(<ProblemSelectionDisplay
+    ReactDOM.createRoot(selection).render(
+      <ProblemSelectionDisplay
         onChange={(pids) => { selectedPids = pids; }}
         onClear={(handler) => { clearSelectionHandler = handler; }}
-      />);
+      />,
+    );
   }
 
   addSpeculationRules({
     prerender: [{
-      'where': {
-        'or': [
-          { 'href_matches': '/p/*' },
-          { 'href_matches': '/d/*/p/*' },
+      where: {
+        or: [
+          { href_matches: '/p/*' },
+          { href_matches: '/d/*/p/*' },
         ],
       },
     }],

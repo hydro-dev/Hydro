@@ -169,9 +169,9 @@ export default class Editor extends DOMAttachedObject {
       const [val, setVal] = React.useState(value);
       that.setMarkdownEditorValue = setVal;
       return <MdEditor
-        className='textbox'
+        className="textbox"
         autoFocus={hasFocus}
-        codeTheme='github'
+        codeTheme="github"
         codeStyleReverse={false}
         ref={renderCallback}
         value={val}

@@ -39,4 +39,4 @@ export async function apply(ctx: Context) {
     );
 }
 export default BlackListModel;
-global.Hydro.model.blacklist = BlackListModel;
+globalThis.Hydro.model.blacklist = BlackListModel;

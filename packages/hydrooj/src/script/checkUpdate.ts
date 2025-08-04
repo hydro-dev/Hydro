@@ -14,8 +14,8 @@ async function getRemoteVersion(id: string) {
     }
 }
 
-export async function run(_: {}, report: Function) {
-    const current = global.Hydro.version;
+export async function run(_: void, report: (data: any) => void) {
+    const current = globalThis.Hydro.version;
     const message = [''];
     for (const name in current) {
         if (name === 'node') continue;

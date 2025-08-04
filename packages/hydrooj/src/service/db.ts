@@ -14,16 +14,16 @@ const logger = new Logger('mongo');
 export interface Collections { }
 
 interface MongoConfig {
-    protocol?: string,
-    username?: string,
-    password?: string,
-    host?: string,
-    port?: string,
-    name?: string,
-    url?: string,
-    uri?: string,
-    prefix?: string,
-    collectionMap?: Record<string, string>,
+    protocol?: string;
+    username?: string;
+    password?: string;
+    host?: string;
+    port?: string;
+    name?: string;
+    url?: string;
+    uri?: string;
+    prefix?: string;
+    collectionMap?: Record<string, string>;
 }
 
 declare module '../context' {

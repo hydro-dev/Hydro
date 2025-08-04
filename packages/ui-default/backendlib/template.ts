@@ -30,7 +30,7 @@ async function getFiles(folder: string, base = ''): Promise<string[]> {
       files.push(...await getFiles(path.join(folder, i), path.join(base, i)));
     } else files.push(path.join(base, i));
   }
-  return files.map((item) => item.replace(/\\/gmi, '/'));
+  return files.map((item) => item.replace(/\\/g, '/'));
 }
 
 function locateFile(basePath: string, filenames: string[]) {
@@ -47,7 +47,7 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
   if (obj === undefined || obj === null) return undefined;
   if (typeof obj[val] === 'function') {
     const fn = function (...args) {
-      return obj[val].call(obj, ...args);
+      return obj[val].call(obj, ...args); // eslint-disable-line no-useless-call
     };
     fn._original = obj[val];
     return fn;
@@ -125,7 +125,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('Array', Array);
     this.addGlobal('Math', Math);
     this.addGlobal('process', process);
-    this.addGlobal('global', global);
+    this.addGlobal('global', globalThis);
     this.addGlobal('typeof', (o) => typeof o);
     this.addGlobal('instanceof', (a, b) => a instanceof b);
     this.addGlobal('paginate', misc.paginate);
@@ -133,9 +133,9 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('utils', { status, getAlphabeticId });
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
-    this.addGlobal('model', global.Hydro.model);
+    this.addGlobal('model', globalThis.Hydro.model);
     this.addGlobal('lib', { difficulty: difficultyAlgorithm });
-    this.addGlobal('ui', global.Hydro.ui);
+    this.addGlobal('ui', globalThis.Hydro.ui);
     this.addGlobal('isIE', (str) => {
       if (!str) return false;
       if (['MSIE', 'rv:11.0'].some((i) => str.includes(i))) return true;
@@ -252,10 +252,10 @@ export class TemplateService extends Service {
   }
 
   async [Context.init]() {
-    const pending = Object.values(global.addons);
+    const pending = Object.values(globalThis.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {
-      const p = locateFile(i, ['template', 'templates']);
+      const p = locateFile(i as string, ['template', 'templates']);
       if (p && (await fs.stat(p)).isDirectory()) {
         try {
           const files = await getFiles(p);

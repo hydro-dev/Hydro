@@ -717,5 +717,5 @@ export function apply(ctx: Context) {
     });
 }
 
-global.Hydro.model.problem = ProblemModel;
+globalThis.Hydro.model.problem = ProblemModel;
 export default ProblemModel;

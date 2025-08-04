@@ -8,11 +8,11 @@ type MethodDecorator = (target: any, funcName: string, obj: any) => any;
 type ClassDecorator = <T extends new (...args: any[]) => any>(Class: T) => T extends new (...args: infer R) => infer S
     ? new (...args: R) => S : never;
 export interface ParamOption<T> {
-    name: string,
-    source: 'all' | 'get' | 'post' | 'route',
-    isOptional?: boolean | 'convert',
-    convert?: Converter<T>,
-    validate?: Validator,
+    name: string;
+    source: 'all' | 'get' | 'post' | 'route';
+    isOptional?: boolean | 'convert';
+    convert?: Converter<T>;
+    validate?: Validator;
 }
 
 const kSchema = Symbol.for('schemastery');

@@ -22,7 +22,7 @@ class WikiAboutHandler extends Handler {
   async get() {
     let raw = SystemModel.get('ui-default.about') || '';
     // TODO template engine
-    raw = raw.replace(/{{ name }}/g, this.domain.ui?.name || SystemModel.get('server.name')).trim();
+    raw = raw.replace(/\{\{ name \}\}/g, this.domain.ui?.name || SystemModel.get('server.name')).trim();
     const lines = raw.split('\n');
     const sections: { id: string, title: string, content: string }[] = [];
     for (const line of lines) {
@@ -131,6 +131,7 @@ class RichMediaHandler extends Handler {
   }
 }
 
+/* eslint-disable style/quote-props */
 const fontRange = {
   'Open Sans': 'Open Sans',
   'Seravek': 'Seravek',

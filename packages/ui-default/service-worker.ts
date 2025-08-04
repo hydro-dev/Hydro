@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 /// <reference no-default-lib="true" />
 /// <reference lib="webworker" />
 export { }; // make it a module so that declare self works
@@ -27,7 +26,7 @@ self.onmessage = (event) => {
   const data = event.data;
   const downloadUrl = data.url || `${self.registration.scope + Math.random()}/${typeof data === 'string' ? data : data.filename}`;
   const port = event.ports[0];
-  const metadata = new Array(3); // [stream, data, port]
+  const metadata = Array.from({ length: 3 }); // [stream, data, port]
   metadata[1] = data;
   metadata[2] = port;
   if (event.data.readableStream) {

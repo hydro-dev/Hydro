@@ -1,3 +1,4 @@
+/* eslint-disable ts/no-unsafe-declaration-merging */
 import LoggerService from '@cordisjs/plugin-logger';
 import { TimerService } from '@cordisjs/plugin-timer';
 import * as cordis from 'cordis';
@@ -12,20 +13,20 @@ import type { } from './service/migration';
 export { EventMap as Events };
 
 function addScript<K>(name: string, description: string, validate: Schema<K>, run: (args: K, report: any) => boolean | Promise<boolean>) {
-    if (global.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
-    global.Hydro.script[name] = { description, validate, run };
-    return () => delete global.Hydro.script[name];
+    if (globalThis.Hydro.script[name]) throw new Error(`duplicate script ${name} registered.`);
+    globalThis.Hydro.script[name] = { description, validate, run };
+    return () => delete globalThis.Hydro.script[name];
 }
 
 function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, module: ModuleInterfaces[T]) {
-    if (global.Hydro.module[type][id]) throw new Error(`duplicate module ${type}/${id} registered.`);
-    global.Hydro.module[type as any][id] = module;
-    return () => delete global.Hydro.module[type][id];
+    if (globalThis.Hydro.module[type][id]) throw new Error(`duplicate module ${type}/${id} registered.`);
+    globalThis.Hydro.module[type as any][id] = module;
+    return () => delete globalThis.Hydro.module[type][id];
 }
 
 export type Fiber = cordis.Fiber<Context>;
 
-export { Disposable, Plugin, FiberState } from 'cordis';
+export { Disposable, FiberState, Plugin } from 'cordis';
 
 export interface Context extends cordis.Context {
     [Context.events]: EventMap & cordis.Events<Context>;

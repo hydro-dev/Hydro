@@ -25,7 +25,7 @@ export async function apply(ctx: Context) {
         logger.info('Starting setup');
         await require('./setup').load(ctx);
     }
-    const pending = global.addons;
+    const pending = globalThis.addons;
     const fail = [];
     await locale(pending, fail);
     await ctx.plugin(MongoService, load() || {});
@@ -71,7 +71,7 @@ export async function apply(ctx: Context) {
         const staticDir = path.join(os.homedir(), '.hydro/static');
         await fs.emptyDir(staticDir);
         // Use ordered copy to allow resource override
-        for (const f of Object.values(global.addons)) {
+        for (const f of Object.values(globalThis.addons)) {
             const dir = path.join(f, 'public');
             // eslint-disable-next-line no-await-in-loop
             if (await fs.pathExists(dir)) await fs.copy(dir, staticDir);

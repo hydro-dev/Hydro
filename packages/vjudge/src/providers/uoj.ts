@@ -32,9 +32,9 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
     async getCsrfToken(url: string) {
         const { text: html, header } = await this.get(url);
         if (header['set-cookie']) await this.setCookie(header['set-cookie'], true);
-        let value = /_token *: *"(.+?)"/g.exec(html);
+        let value = /_token *: *"(.+?)"/.exec(html);
         if (value) return value[1];
-        value = /_token" value="(.+?)"/g.exec(html);
+        value = /_token" value="(.+?)"/.exec(html);
         return value?.[1];
     }
 
@@ -227,7 +227,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
                 }
             }
             if (document.querySelector('tbody').innerHTML.includes('Judging')) continue;
-            // eslint-disable-next-line no-unsafe-optional-chaining
+
             const score = +summary.children[3]?.children[0]?.innerHTML || 0;
             const status = score === 100 ? STATUS.STATUS_ACCEPTED : STATUS.STATUS_WRONG_ANSWER;
             return await end({

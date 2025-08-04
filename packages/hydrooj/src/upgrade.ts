@@ -1,7 +1,7 @@
 /* eslint-disable consistent-return */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable ts/no-unused-vars */
 /* eslint-disable no-await-in-loop */
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable ts/naming-convention */
 import yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
 import { randomstring, sleep } from '@hydrooj/utils';
@@ -51,7 +51,7 @@ export const coreScripts: MigrationScript[] = [
         return true;
     },
     // Init
-    ...new Array(47).fill(unsupportedUpgrade), // oxlint-disable-line no-new-array
+    ...Array.from({ length: 47 }).fill(unsupportedUpgrade) as any,
     async function _48_49() {
         await RecordModel.coll.updateMany({ input: { $exists: true } }, { $set: { contest: new ObjectId('000000000000000000000000') } });
         return true;
@@ -221,7 +221,7 @@ export const coreScripts: MigrationScript[] = [
                         config.answers[cnt] = l;
                     }
 
-                    function processSingleLanguage(content: string) { // eslint-disable-line no-inner-declarations
+                    function processSingleLanguage(content: string) {
                         let text = '';
                         try {
                             let scnt = 0;

@@ -7,7 +7,7 @@ const logger = new Logger('mail');
 export async function sendMail(to: string, subject: string, text: string, html: string) {
     let t: unknown;
     try {
-        const { system } = global.Hydro.model;
+        const { system } = globalThis.Hydro.model;
         const [host, port, secure, user, pass, from] = await Promise.all([
             system.get('smtp.host'),
             system.get('smtp.port'),

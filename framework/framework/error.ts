@@ -1,5 +1,5 @@
 interface IHydroError {
-    new(...args: any[]): HydroError
+    new(...args: any[]): HydroError;
 }
 
 export class HydroError extends Error {
@@ -32,7 +32,7 @@ const Err = (name: string, Class: IHydroError, ...info: Array<(() => string) | s
             msg = item;
         }
     }
-    // eslint-disable-next-line @typescript-eslint/no-shadow
+    // eslint-disable-next-line ts/no-shadow
     return class HydroError extends Class {
         name = name;
         constructor(...args: any[]) {

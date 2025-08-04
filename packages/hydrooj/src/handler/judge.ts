@@ -79,7 +79,7 @@ export class JudgeResultCallbackContext {
     private relatedId = new ObjectId();
     private meta: { rejudge?: JudgeMeta['rejudge'] };
 
-    constructor(public ctx: Context, public readonly task: Omit<Task, '_id'> & { type: string }) { // eslint-disable-line @typescript-eslint/no-shadow
+    constructor(public ctx: Context, public readonly task: Omit<Task, '_id'> & { type: string }) { // eslint-disable-line ts/no-shadow
         this.meta = task.meta as JudgeMeta || {};
         this.finishPromise = new Promise((resolve) => {
             this.resolve = resolve;

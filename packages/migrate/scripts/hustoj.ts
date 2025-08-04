@@ -1,4 +1,4 @@
-/* eslint-disable no-tabs */
+/* eslint-disable style/no-tabs */
 /* eslint-disable no-await-in-loop */
 import path from 'path';
 import mariadb from 'mariadb';
@@ -191,7 +191,7 @@ export async function run({
                     samples: [[pdoc.sample_input.trim(), pdoc.sample_output.trim()]],
                     hint: pdoc.hint,
                     source: pdoc.source,
-                }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
+                }, 'html').replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md\]/g, '');
                 const uploadFiles = content.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
                 for (const file of uploadFiles) {
                     try {
@@ -295,7 +295,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
         if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
 
-        const allowedUser:{ user_id:string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
+        const allowedUser: { user_id: string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
         const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
         if (isAssignMode) {
             await ContestModel.edit(domainId, tid, {

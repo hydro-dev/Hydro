@@ -10,7 +10,7 @@ import { ProblemConfigTree } from './ProblemConfigTree';
 import { RootState } from './reducer';
 
 interface Props {
-  onSave: () => void
+  onSave: () => void;
 }
 
 export default function ProblemConfig(props: Props) {
@@ -31,8 +31,12 @@ export default function ProblemConfig(props: Props) {
         <Tabs onChange={(t) => (t !== 'errors' && setSelected(t.toString()))} selectedTabId={valid ? selected : 'errors'}>
           <Tab id="basic" disabled={!valid} title={i18n('Basic')} panel={<ProblemConfigForm />} />
           <Tab id="subtasks" disabled={!valid} title={i18n('Subtasks')} panel={<ProblemConfigTree />} />
-          <Tab id="errors" disabled={valid} title={errors.length ? `Errors(${errors.length})` : 'No Errors'} panel={
-            <div>{errors.map((i) => (<pre key={i}>{i}</pre>))}</div>} />
+          <Tab
+            id="errors"
+            disabled={valid}
+            title={errors.length ? `Errors(${errors.length})` : 'No Errors'}
+            panel={<div>{errors.map((i) => (<pre key={i}>{i}</pre>))}</div>}
+          />
         </Tabs>
       </div>
     </div>
