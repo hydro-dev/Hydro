@@ -388,6 +388,7 @@ export async function apply(ctx: Context) {
         ServerLangSettingNode.range = range;
     });
 }
+
 globalThis.Hydro.model.setting = {
     apply,
     inject,

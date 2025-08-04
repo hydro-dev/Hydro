@@ -206,5 +206,6 @@ export async function apply(ctx: Context) {
         });
     }
 }
+
 globalThis.Hydro.model.storage = StorageModel;
 export default StorageModel;

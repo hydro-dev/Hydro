@@ -100,7 +100,6 @@ export const RpTypes: Record<string, RpDef> = {
         base: 0,
     },
 };
-
 globalThis.Hydro.model.rp = RpTypes;
 
 export async function calcLevel(domainId: string, report: Report) {

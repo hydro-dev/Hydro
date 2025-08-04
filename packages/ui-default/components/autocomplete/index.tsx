@@ -19,7 +19,7 @@ export interface AutoCompleteOptions<Multi extends boolean = boolean> {
   text?: () => string;
 }
 
-export default class AutoComplete<Options extends Record<string, any> = {}, Multi extends boolean = boolean> extends DOMAttachedObject {
+export default class AutoComplete<Options extends Record<string, any> = object, Multi extends boolean = boolean> extends DOMAttachedObject {
   static DOMAttachKey = 'ucwAutoCompleteInstance';
   ref = null;
   container = document.createElement('div');

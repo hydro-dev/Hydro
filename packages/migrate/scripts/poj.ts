@@ -35,7 +35,7 @@ export async function run({
     host = 'localhost', port = 3306, name,
     username, password, domainId, contestType = 'oi',
     dataDir, imageDir, rerun = true, randomMail = false,
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,

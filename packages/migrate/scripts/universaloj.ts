@@ -45,7 +45,7 @@ export async function run({
     host = '172.17.0.2', port = 3306, name = 'app_uoj233',
     username, password, domainId, dataDir,
     rerun = true, randomMail = false,
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,
@@ -509,7 +509,7 @@ export async function run({
                     config.subtasks.push(...[...Array.from({ length: +confInfo.n_subtasks })].map((v, i) => i + 1).map((i) => ({
                         id: +i,
                         score: confInfo.subtask_score[i],
-                        cases: [...new Array(confInfo.subtask_end[i] - (confInfo.subtask_end[i - 1] || 0))].map((v, j) => ({
+                        cases: [...Array.from({ length: confInfo.subtask_end[i] - (confInfo.subtask_end[i - 1] || 0) })].map((v, j) => ({
                             input: `${confInfo.input_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.input_suf}`,
                             output: `${confInfo.output_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.output_suf}`,
                         })),

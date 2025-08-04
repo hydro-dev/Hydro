@@ -75,7 +75,7 @@ export async function run({
     host = 'localhost', port = 3306, name = 'syzoj',
     username, password, domainId, dataDir,
     rerun = true, randomMail = 'never',
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,

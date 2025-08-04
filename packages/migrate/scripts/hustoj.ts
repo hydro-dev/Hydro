@@ -70,7 +70,7 @@ export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
     dataDir, uploadDir = '/home/judge/src/web/upload/', rerun = true, randomMail = false,
-}, report: Function) {
+}, report: (data: any) => void) {
     let remoteUsed = false;
     const src = await mariadb.createConnection({
         host,

@@ -253,10 +253,10 @@ export function findFileSync(pathname: string, doThrow: boolean | Error = true) 
     return null;
 }
 
-export async function retry(func: Function, ...args: any[]): Promise<any>;
-export async function retry(times: number, func: Function, ...args: any[]): Promise<any>;
+export async function retry<Arg extends any[], Ret>(func: (...args: Arg) => Ret, ...args: Arg): Promise<Ret>;
+export async function retry<Arg extends any[], Ret>(times: number, func: (...args: Arg) => Ret, ...args: Arg): Promise<Ret>;
 // eslint-disable-next-line consistent-return
-export async function retry(arg0: number | Function, func: any, ...args: any[]) {
+export async function retry(arg0: number | ((...args: any[]) => any), func: any, ...args: any[]): Promise<any> {
     let res;
     if (typeof arg0 !== 'number') {
         args = [func, ...args];

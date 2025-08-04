@@ -119,4 +119,5 @@ export function apply(ctx: Context) {
 }
 
 export default app;
+
 globalThis.bus = app;

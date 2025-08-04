@@ -353,6 +353,7 @@ export function apply(ctx: Context) {
         return await document.coll.updateMany({ _id: { $in: dids } }, { $set: { hidden: result.hidden } });
     });
 }
+
 globalThis.Hydro.model.discussion = {
     coll,
     typeDisplay,

@@ -13,6 +13,8 @@ const pid = (id) => {
     return id;
 };
 
+type Report = (args: { progress?: number, message?: string }) => void;
+
 const tasks = {
     user: async (doc) => ({
         _id: doc._id,
@@ -282,7 +284,7 @@ const cursor: NodeJS.Dict<CursorGetter> = {
     file: (s) => s.collection('fs.files').find(),
 };
 
-async function discussionNode(src: Db, report: Function) {
+async function discussionNode(src: Db, report: Report) {
     const count = await src.collection('document').countDocuments({ doc_type: 20 });
     await report({ progress: 1, message: `discussion.node: ${count}` });
     const total = Math.floor(count / 5);
@@ -327,7 +329,7 @@ async function fix(doc) {
     );
 }
 
-async function fixProblem(report: Function) {
+async function fixProblem(report: Report) {
     const count = await dst.collection('document').countDocuments({ docType: 10 });
     await report({ progress: 1, message: `Fix pid: ${count}` });
     const total = Math.floor(count / 50);
@@ -349,7 +351,7 @@ function objid(ts: Date) {
 }
 
 // FIXME this seems not working
-async function message(src: Db, report: Function) {
+async function message(src: Db, report: Report) {
     const count = await src.collection('message').countDocuments();
     await report({ progress: 1, message: `Messages: ${count}` });
     const total = Math.floor(count / 50);
@@ -373,7 +375,7 @@ async function message(src: Db, report: Function) {
     }
 }
 
-async function removeInvalidPid(report: Function) {
+async function removeInvalidPid(report: Report) {
     const count = await dst.collection('document').countDocuments({ docType: 10 });
     const bulk = dst.collection('document').initializeUnorderedBulkOp();
     await report({ progress: 1, message: `Remove pid: ${count}` });
@@ -392,7 +394,7 @@ async function removeInvalidPid(report: Function) {
     }
 }
 
-async function task(name: any, src: Db, report: Function) {
+async function task(name: any, src: Db, report: Report) {
     await report({ progress: 1, message: `${name}` });
     let lastProgress = -1;
     for (let i = 0; ; i++) {
@@ -466,7 +468,7 @@ async function task(name: any, src: Db, report: Function) {
 
 export async function run({
     host = 'localhost', port = 27017, name = 'vijos4', username, password,
-}, report: Function) {
+}, report: Report) {
     let mongourl = 'mongodb://';
     if (username) mongourl += `${username}:${password}@`;
     mongourl += `${host}:${port}/${name}`;
