@@ -149,7 +149,8 @@ export interface ProblemConfig {
     hackable?: boolean;
 }
 
-export type Content = string | Record<string, string>;
+export type LocalizedContent = ({ content: string, name: string, lang: string })[];
+export type Content = string | LocalizedContent;
 
 export interface Document {
     _id: ObjectId;
@@ -166,7 +167,7 @@ declare module './model/problem' {
         docId: number;
         pid: string;
         title: string;
-        content: string;
+        content: LocalizedContent;
         nSubmit: number;
         nAccept: number;
         tag: string[];
