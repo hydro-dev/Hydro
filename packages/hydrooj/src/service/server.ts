@@ -111,7 +111,7 @@ export async function apply(ctx: Context) {
         applyApiHandler(childContext, 'api', '/api/:op');
         server.setDefaultContext(childContext);
 
-        for (const addon of [...Object.values(globalThis.addons)].reverse()) {
+        for (const addon of [...Object.values(global.addons)].reverse()) {
             const dir = resolve(addon, 'public');
             if (!fs.existsSync(dir)) continue;
             server.addServerLayer(`${addon}_public`, cache(dir, {

@@ -100,7 +100,7 @@ export const RpTypes: Record<string, RpDef> = {
         base: 0,
     },
 };
-globalThis.Hydro.model.rp = RpTypes;
+global.Hydro.model.rp = RpTypes;
 
 export async function calcLevel(domainId: string, report: Report) {
     await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
@@ -123,7 +123,7 @@ export async function calcLevel(domainId: string, report: Report) {
     }
     if (!count) return;
     await bulk.execute();
-    const levels = globalThis.Hydro.model.builtin.LEVELS;
+    const levels = global.Hydro.model.builtin.LEVELS;
     bulk = coll.initializeUnorderedBulkOp();
     for (let i = 0; i < levels.length; i++) {
         const query: Filter<Udoc> = {

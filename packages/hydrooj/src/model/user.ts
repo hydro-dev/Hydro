@@ -136,7 +136,7 @@ export class User {
     }
 
     async checkPassword(password: string) {
-        const h = globalThis.Hydro.module.hash[this.hashType];
+        const h = global.Hydro.module.hash[this.hashType];
         if (!h) throw new Error('Unknown hash method');
         const result = await h(password, this._salt, this);
         if (result !== true && result !== this._hash) {
@@ -496,4 +496,4 @@ export async function apply() {
     ]);
 }
 export default UserModel;
-globalThis.Hydro.model.user = UserModel;
+global.Hydro.model.user = UserModel;

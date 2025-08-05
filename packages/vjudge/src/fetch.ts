@@ -12,7 +12,7 @@ interface FetchOptions {
     get?: Omit<FetchOptions, 'get' | 'post'>;
 }
 
-const defaultUA = `Hydro/${globalThis.Hydro.version.hydrooj} VJudge/${globalThis.Hydro.version.vjudge}`;
+const defaultUA = `Hydro/${global.Hydro.version.hydrooj} VJudge/${global.Hydro.version.vjudge}`;
 
 export class BasicFetcher {
     cookie: string[] = [];

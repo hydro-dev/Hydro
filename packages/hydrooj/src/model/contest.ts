@@ -1047,7 +1047,7 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
                 ? 'Live...'
                 : 'Done');
 
-globalThis.Hydro.model.contest = {
+global.Hydro.model.contest = {
     RULES,
     buildContestRule,
     add,

@@ -10,11 +10,15 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 /** @type {typeof antfu} */
 const base = (option, ...args) => antfu(
     {
+        markdown: false,
+        typescript: true,
+        vue: true,
         ...option,
         gitignore: false,
         ignores: [
             '**/*.d.ts',
             '**/.git',
+            '**/.pnp.*',
             ...(option.ignores || []),
         ],
         languageOptions: {
@@ -22,13 +26,16 @@ const base = (option, ...args) => antfu(
                 Atomics: 'readonly',
                 BigInt: 'readonly',
                 SharedArrayBuffer: 'readonly',
+                ...(option.languageOptions?.globals || {}),
             },
+            ...(option.languageOptions || {}),
         },
-        markdown: false,
+        lessOpinionated: true,
         plugins: {
             '@eslint-react': eslintReact,
             'react-refresh': reactRefresh,
             'simple-import-sort': simpleImportSort,
+            ...(option.plugins || {}),
         },
         rules: {
             '@eslint-react/dom/no-missing-button-type': 0,
@@ -44,9 +51,6 @@ const base = (option, ...args) => antfu(
 
             'antfu/consistent-chaining': 'off',
             'antfu/consistent-list-newline': 'off',
-            'antfu/curly': 'off',
-            'antfu/if-newline': 'off',
-            'antfu/top-level-function': 'off',
 
             'class-methods-use-this': 0,
             'consistent-return': 1,
@@ -211,12 +215,9 @@ const base = (option, ...args) => antfu(
                 SwitchCase: 1,
                 VariableDeclarator: 1,
             }],
-            'style/indent-binary-ops': 'off',
             'style/jsx-closing-bracket-location': 'off',
             'style/jsx-closing-tag-location': 'off',
             'style/jsx-function-call-newline': 'off',
-            'style/jsx-indent': 'off',
-            'style/jsx-indent-props': 'off',
             'style/jsx-one-expression-per-line': 'off',
             'style/jsx-wrap-multilines': 'off',
             'style/keyword-spacing': ['error', {
@@ -324,7 +325,6 @@ const base = (option, ...args) => antfu(
 
             ...(option.rules || {}),
         },
-
         settings: {
             'import/extensions': ['.js', '.mjs', '.jsx', '.ts', '.tsx', '.d.ts'],
             'import/external-module-folders': ['node_modules', 'node_modules/@types'],
@@ -333,16 +333,14 @@ const base = (option, ...args) => antfu(
                     extensions: ['.mjs', '.js', '.json', '.ts', '.d.ts'],
                 },
             },
+            ...(option.settings || {}),
         },
-
         stylistic: {
             indent: 4,
             quotes: undefined,
             semi: true,
             ...(typeof option.stylistic === 'object' ? option.stylistic : {}),
         },
-        typescript: true,
-        vue: true,
     },
     github.getFlatConfigs().react,
     deMorgan.configs.recommended,

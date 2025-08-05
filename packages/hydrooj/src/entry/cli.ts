@@ -25,7 +25,7 @@ function parseParameters(fn: Function) {
 }
 
 async function runScript(name: string, arg: any) {
-    const s = globalThis.Hydro.script[name];
+    const s = global.Hydro.script[name];
     if (!s) return console.error('Script %s not found.', name);
     if (typeof s.validate === 'function') arg = s.validate(arg);
     return await s.run(arg, console.info);
@@ -52,20 +52,20 @@ async function cli() {
         }
         return await runScript(func, arg);
     }
-    if (!globalThis.Hydro.model[modelName]) {
+    if (!global.Hydro.model[modelName]) {
         return console.error(`Model ${modelName} doesn't exist.`);
     }
     if (!func) {
-        return console.log(Object.keys(globalThis.Hydro.model[modelName]));
+        return console.log(Object.keys(global.Hydro.model[modelName]));
     }
-    if (!globalThis.Hydro.model[modelName][func]) {
+    if (!global.Hydro.model[modelName][func]) {
         return console.error(`Function ${func} doesn't exist in model ${modelName}.`);
     }
-    if (typeof globalThis.Hydro.model[modelName][func] !== 'function') {
+    if (typeof global.Hydro.model[modelName][func] !== 'function') {
         return console.error(`${func} in model ${modelName} is not a function.`);
     }
-    const parameterMin = globalThis.Hydro.model[modelName][func].length;
-    const parameters = parseParameters(globalThis.Hydro.model[modelName][func]);
+    const parameterMin = global.Hydro.model[modelName][func].length;
+    const parameters = parseParameters(global.Hydro.model[modelName][func]);
     const parameterMax = parameters.length;
     if (args.length > parameterMax) {
         console.error(`Too many arguments. Max ${parameterMax}`);
@@ -97,7 +97,7 @@ async function cli() {
             }
         }
     }
-    let result = globalThis.Hydro.model[modelName][func](...args);
+    let result = global.Hydro.model[modelName][func](...args);
     if (result instanceof Promise) result = await result;
     return console.log(result);
 }
@@ -107,7 +107,7 @@ export async function load(ctx: Context) {
     require('../utils');
     require('../error');
     require('../service/bus').apply(ctx);
-    const pending = globalThis.addons;
+    const pending = global.addons;
     const fail = [];
     await ctx.plugin(MongoService, loadOptions() || {});
     await ctx.plugin(SettingService);

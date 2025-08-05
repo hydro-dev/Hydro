@@ -320,4 +320,4 @@ export async function apply(ctx: Context) {
     ]);
 }
 export default DomainModel;
-globalThis.Hydro.model.domain = DomainModel;
+global.Hydro.model.domain = DomainModel;

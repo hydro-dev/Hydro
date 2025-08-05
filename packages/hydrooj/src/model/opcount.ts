@@ -25,4 +25,4 @@ export const apply = () => db.ensureIndexes(
     { key: { expireAt: -1 }, name: 'expire', expireAfterSeconds: 0 },
     { key: { op: 1, ident: 1, expireAt: 1 }, name: 'unique', unique: true },
 );
-globalThis.Hydro.model.opcount = { inc, apply };
+global.Hydro.model.opcount = { inc, apply };

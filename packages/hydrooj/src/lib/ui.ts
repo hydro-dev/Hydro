@@ -74,6 +74,6 @@ inject('DomainManage', 'domain_user', { family: 'Access Control', icon: 'user' }
 inject('DomainManage', 'domain_permission', { family: 'Access Control', icon: 'user' });
 inject('DomainManage', 'domain_group', { family: 'Access Control', icon: 'user' });
 
-globalThis.Hydro.ui.inject = inject;
-globalThis.Hydro.ui.nodes = nodes as any;
-globalThis.Hydro.ui.getNodes = getNodes;
+global.Hydro.ui.inject = inject;
+global.Hydro.ui.nodes = nodes as any;
+global.Hydro.ui.getNodes = getNodes;

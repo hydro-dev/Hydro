@@ -10,4 +10,4 @@ function hash(password: string, salt: string): Promise<string> {
 }
 
 export default hash;
-globalThis.Hydro.module.hash.hydro = hash;
+global.Hydro.module.hash.hydro = hash;

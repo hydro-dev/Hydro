@@ -14,6 +14,7 @@ const config = react({
         '**/node_modules',
         '**/.*.js',
         'packages/ui-default/public',
+        'packages/hydrojudge/vendor',
     ],
     stylistic: {
         indent: 4,
@@ -21,6 +22,8 @@ const config = react({
     jsonc: false,
     rules: {
         'yaml/indent': ['warn', 2],
+        // There are too many `global` in codebase already
+        'no-restricted-globals': 'off',
     },
 }, {
     languageOptions: {
@@ -117,16 +120,18 @@ const config = react({
 
     rules: {
         'github/array-foreach': 0,
-        '@typescript-eslint/no-invalid-this': 0,
+        'ts/no-invalid-this': 0,
 
         // FIXME A bug with eslint-parser
         // 'template-curly-spacing': 'off',
 
-        '@stylistic/indent': [
+        'style/indent': [
             'warn',
             2,
             { SwitchCase: 1 },
         ],
+        'style/indent-binary-ops': ['warn', 2],
+        'style/jsx-indent-props': ['warn', 2],
         'function-paren-newline': 'off',
         'no-mixed-operators': 'off',
         'no-await-in-loop': 'off',
@@ -163,7 +168,9 @@ const config = react({
     },
 
     rules: {
-        '@stylistic/indent': ['warn', 2],
+        'style/indent': ['warn', 2],
+        'style/indent-binary-ops': ['warn', 2],
+        'style/jsx-indent-props': ['warn', 2],
     },
 }, {
     files: ['**/*.yaml', '**/*.yml'],

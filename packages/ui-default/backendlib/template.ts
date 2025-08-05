@@ -125,7 +125,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('Array', Array);
     this.addGlobal('Math', Math);
     this.addGlobal('process', process);
-    this.addGlobal('global', globalThis);
+    this.addGlobal('global', global.;
     this.addGlobal('typeof', (o) => typeof o);
     this.addGlobal('instanceof', (a, b) => a instanceof b);
     this.addGlobal('paginate', misc.paginate);
@@ -133,9 +133,9 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('utils', { status, getAlphabeticId });
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
-    this.addGlobal('model', globalThis.Hydro.model);
+    this.addGlobal('model', global.Hydro.model);
     this.addGlobal('lib', { difficulty: difficultyAlgorithm });
-    this.addGlobal('ui', globalThis.Hydro.ui);
+    this.addGlobal('ui', global.Hydro.ui);
     this.addGlobal('isIE', (str) => {
       if (!str) return false;
       if (['MSIE', 'rv:11.0'].some((i) => str.includes(i))) return true;
@@ -252,7 +252,7 @@ export class TemplateService extends Service {
   }
 
   async [Context.init]() {
-    const pending = Object.values(globalThis.addons);
+    const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {
       const p = locateFile(i as string, ['template', 'templates']);

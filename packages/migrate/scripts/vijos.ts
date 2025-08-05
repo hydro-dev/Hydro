@@ -497,6 +497,6 @@ export async function run({
     await discussionNode(src, report);
     await message(src, report);
     await removeInvalidPid(report);
-    await globalThis.Hydro.model.system.set('db.ver', 1);
+    await global.Hydro.model.system.set('db.ver', 1);
     return true;
 }

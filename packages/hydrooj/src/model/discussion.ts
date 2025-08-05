@@ -354,7 +354,7 @@ export function apply(ctx: Context) {
     });
 }
 
-globalThis.Hydro.model.discussion = {
+global.Hydro.model.discussion = {
     coll,
     typeDisplay,
     PROJECTION_LIST,

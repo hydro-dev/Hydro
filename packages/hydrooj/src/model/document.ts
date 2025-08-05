@@ -444,7 +444,7 @@ export async function apply(ctx: Context) {
     );
 }
 
-globalThis.Hydro.model.document = {
+global.Hydro.model.document = {
     coll,
     collStatus,
 

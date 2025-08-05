@@ -146,7 +146,7 @@ app.plugin(I18nService);
 app.plugin(Loader);
 
 async function preload() {
-    globalThis.app = await new Promise((resolve) => {
+    global.app = await new Promise((resolve) => {
         app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
             resolve(c);
         });
@@ -157,9 +157,9 @@ async function preload() {
             const packagejson = require.resolve(`${a}/package.json`);
             const payload = require(packagejson);
             const name = payload.name.startsWith('@hydrooj/') ? payload.name.split('@hydrooj/')[1] : payload.name;
-            globalThis.Hydro.version[name] = payload.version;
+            global.Hydro.version[name] = payload.version;
             const modulePath = path.dirname(packagejson);
-            globalThis.addons[name] = modulePath;
+            global.addons[name] = modulePath;
         } catch (e) {
             logger.error(`Addon not found: ${a}`);
             logger.error(e);
@@ -203,7 +203,7 @@ export async function load() {
         }
     } catch (e) { }
     await require('./entry/worker').apply(app);
-    globalThis.gc?.();
+    global.gc?.();
 }
 
 export async function loadCli() {

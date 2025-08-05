@@ -108,4 +108,4 @@ bus.on('problem/delete', async (domainId, docId) => {
 });
 
 export default SolutionModel;
-globalThis.Hydro.model.solution = SolutionModel;
+global.Hydro.model.solution = SolutionModel;

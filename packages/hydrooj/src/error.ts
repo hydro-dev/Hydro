@@ -26,7 +26,7 @@ export const PermissionError = Err('PermissionError', ForbiddenError, function (
     return "You don't have the required permission ({0}) in this domain.";
 });
 export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function (this: HydroError) {
-    if (this.params.includes(globalThis.Hydro.model.builtin.PRIV.PRIV_USER_PROFILE)) {
+    if (this.params.includes(global.Hydro.model.builtin.PRIV.PRIV_USER_PROFILE)) {
         return "You're not logged in.";
     }
     return "You don't have the required privilege.";

@@ -91,4 +91,4 @@ export async function apply() {
     );
 }
 export default MessageModel;
-globalThis.Hydro.model.message = MessageModel;
+global.Hydro.model.message = MessageModel;

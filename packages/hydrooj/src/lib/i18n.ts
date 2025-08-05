@@ -64,7 +64,7 @@ function collect(lang: string) {
     return result;
 }
 
-globalThis.Hydro.locales = new Proxy(translations, {
+global.Hydro.locales = new Proxy(translations, {
     get(self, lang: string) {
         if (!self[lang]) return {};
         return new Proxy(self[lang], {

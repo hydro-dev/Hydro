@@ -191,4 +191,4 @@ export async function apply(ctx: Context) {
 }
 
 export default TaskModel;
-globalThis.Hydro.model.task = TaskModel;
+global.Hydro.model.task = TaskModel;

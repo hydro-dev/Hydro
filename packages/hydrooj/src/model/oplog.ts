@@ -61,6 +61,6 @@ export async function get(id: ObjectId) {
     return await coll.findOne({ _id: id });
 }
 
-globalThis.Hydro.model.oplog = {
+global.Hydro.model.oplog = {
     coll, add, get, log,
 };

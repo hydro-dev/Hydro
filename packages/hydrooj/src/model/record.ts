@@ -337,4 +337,4 @@ export async function apply(ctx: Context) {
         ),
     ]);
 }
-globalThis.Hydro.model.record = RecordModel;
+global.Hydro.model.record = RecordModel;

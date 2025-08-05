@@ -18,7 +18,7 @@ const logger = new Logger('monitor');
 export async function feedback(): Promise<[string, StatusUpdate]> {
     const {
         system, domain, document, user, record,
-    } = globalThis.Hydro.model;
+    } = global.Hydro.model;
     const version = require('hydrooj/package.json').version;
     const [mid, $update, inf] = await sysinfo.update();
     const [installId, name, url] = system.getMany(['installid', 'server.name', 'server.url']);
@@ -39,7 +39,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         problemCount,
         discussionCount,
         recordCount,
-        addons: Object.values(globalThis.addons),
+        addons: Object.values(global.addons),
         memory: inf.memory,
         osinfo: inf.osinfo,
         cpu: inf.cpu,
@@ -66,7 +66,7 @@ export async function feedback(): Promise<[string, StatusUpdate]> {
         .send({ installId, payload })
         .then((res) => {
             if (res.body.updateUrl?.startsWith('https://')) system.set('server.center', res.body.updateUrl);
-            if (res.body.notification) globalThis.Hydro.model.message.sendNotification(res.body.notification);
+            if (res.body.notification) global.Hydro.model.message.sendNotification(res.body.notification);
             if (res.body.reassignId) system.set('installid', res.body.reassignId);
         })
         .catch(() => logger.debug('Cannot connect to hydro center.'));

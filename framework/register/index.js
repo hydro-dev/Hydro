@@ -1,5 +1,4 @@
 /* eslint-disable node/no-deprecated-api */
-/* eslint-disable no-restricted-globals */
 const map = {};
 require('source-map-support').install({
     handleUncaughtExceptions: false,

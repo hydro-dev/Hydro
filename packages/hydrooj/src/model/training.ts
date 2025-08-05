@@ -117,7 +117,7 @@ export async function getList(domainId: string, tids: ObjectId[]) {
     return r;
 }
 
-globalThis.Hydro.model.training = {
+global.Hydro.model.training = {
     getPids,
     isDone,
     isProgress,
