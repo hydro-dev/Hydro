@@ -346,8 +346,10 @@ const base = (option, ...args) => antfu(
     github.getFlatConfigs().react,
     deMorgan.configs.recommended,
     {
-
+        files: ['**/*.vue'],
         rules: {
+            'vue/block-order': ['warn', { order: ['template', 'script[setup]', 'script:not([setup])', 'style[scoped]', 'style:not([scoped])'] }],
+            'vue/singleline-html-element-content-newline': 'off',
         },
     },
     {
