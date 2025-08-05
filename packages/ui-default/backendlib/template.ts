@@ -125,7 +125,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('Array', Array);
     this.addGlobal('Math', Math);
     this.addGlobal('process', process);
-    this.addGlobal('global', global.;
+    this.addGlobal('global', global);
     this.addGlobal('typeof', (o) => typeof o);
     this.addGlobal('instanceof', (a, b) => a instanceof b);
     this.addGlobal('paginate', misc.paginate);

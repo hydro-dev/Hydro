@@ -310,13 +310,11 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             Notification.error(err.message);
           });
       });
-      $('.section--problem-sidebar ol.menu').prepend(tpl(
-        <li className="menu__item" id="clearAnswers">
-          <a className="menu__link" href="javascript:;">
-            <span className="icon icon-erase" /> {i18n('Clear answers')}
-          </a>
-        </li>,
-      ));
+      $('.section--problem-sidebar ol.menu').prepend(tpl(<li className="menu__item" id="clearAnswers">
+        <a className="menu__link" href="javascript:;">
+          <span className="icon icon-erase" /> {i18n('Clear answers')}
+        </a>
+      </li>));
       $(document).on('click', '#clearAnswers', async () => {
         if (await confirm(i18n('All changes will be lost. Are you sure to clear all answers?'))) await clearAns();
       });

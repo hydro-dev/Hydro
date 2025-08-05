@@ -1,3 +1,4 @@
+/* eslint-disable perfectionist/sort-exports */
 import type { AttestationFormat, CredentialDeviceType } from '@simplewebauthn/server';
 import type { ParsedAuthenticatorData } from '@simplewebauthn/server/helpers';
 import type fs from 'fs';
@@ -11,8 +12,7 @@ import type { DocStatusType } from './model/document';
 import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
 
-// Discussion
-export type { DiscussionDoc } from './model/discussion';
+export * from '@hydrooj/common/types';
 
 type document = typeof import('./model/document');
 
@@ -120,7 +120,7 @@ export interface UserPreferenceDoc {
     content: string;
 }
 
-export interface OwnerInfo { owner: number, maintainer?: number[] }
+export interface ownerInfo { owner: number, maintainer?: number[] }
 
 export type User = import('./model/user').User;
 export type Udict = Record<number, User>;
@@ -187,7 +187,7 @@ declare module './model/problem' {
         config: string | ProblemConfig;
     }
 }
-export type { OauthMap, OAuthProvider, OAuthUserResponse } from './model/oauth';
+export type { ProblemDoc } from './model/problem';
 export type ProblemDict = NumericDictionary<ProblemDoc>;
 
 export interface StatusDocBase {
@@ -322,7 +322,8 @@ export interface BlacklistDoc {
     expireAt: Date;
 }
 
-export type { ProblemDoc } from './model/problem';
+// Discussion
+export type { DiscussionDoc } from './model/discussion';
 declare module './model/discussion' {
     interface DiscussionDoc {
         docType: document['TYPE_DISCUSSION'];
@@ -494,7 +495,7 @@ export interface OpCountDoc {
     opcount: number;
 }
 
-export * from '@hydrooj/common/types';
+export type { OauthMap, OAuthProvider, OAuthUserResponse } from './model/oauth';
 
 export interface DiscussionHistoryDoc {
     title?: string;
