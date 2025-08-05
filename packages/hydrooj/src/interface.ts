@@ -120,7 +120,7 @@ export interface UserPreferenceDoc {
     content: string;
 }
 
-export interface ownerInfo { owner: number, maintainer?: number[] }
+export interface OwnerInfo { owner: number, maintainer?: number[] }
 
 export type User = import('./model/user').User;
 export type Udict = Record<number, User>;

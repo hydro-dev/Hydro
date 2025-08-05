@@ -255,6 +255,7 @@ export class XJOI extends HUSTOJ {
 
     async waitForSubmission(rid, next, end) {
         const SUPERMONIT = [
+            // eslint-disable-next-line regexp/no-super-linear-backtracking
             /<textarea .*?>([\s\S]*?)<\/textarea>/gi,
             /time: ([0-9]+)ms, memory: ([0-9]+)kb, points: ([0-9]+), status: (.*?)/gi,
         ];

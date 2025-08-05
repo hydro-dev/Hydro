@@ -79,7 +79,7 @@ function DraggableSelection({
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const {
     multi = false, width = '100%', height = 'auto',
-    freeSolo = false, allowEmptyQuery = false, listStyle = {}, // eslint-disable-line @eslint-react/no-unstable-default-props
+    freeSolo = false, allowEmptyQuery = false, listStyle = {},
     disabled = false, disabledHint = '', draggable = multi,
   } = props;
   const queryItems = props.queryItems ?? (() => []);

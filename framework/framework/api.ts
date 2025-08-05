@@ -68,8 +68,7 @@ type MKeyOf<T> = T extends any ? keyof T : never;
 type MId<T> = { [K in MKeyOf<T>]: T[K] } & {};
 type ProjectionSchema<T> = T extends Array<infer U>
     ? ProjectionSchema<U>
-    : | { [K in keyof T]?: ProjectionSchemaId | ProjectionSchema<T[K]> }
-    | Record<keyof any, ProjectionSchemaId | object>;
+    : { [K in keyof T]?: ProjectionSchemaId | ProjectionSchema<T[K]> } | Record<keyof any, ProjectionSchemaId | object>;
 type AsKeys<T> = T extends Array<infer U extends string> ? Record<U, 1> : T;
 type Projection<T, S> = S extends ProjectionSchemaId
     ? T : T extends Array<infer U> ? Array<MId<Projection<U, S>>> : {

@@ -1,8 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable ts/naming-convention */
-
 import path from 'node:path';
-import stylistic from '@stylistic/eslint-plugin';
 import globals from 'globals';
 import react from '@hydrooj/eslint-config';
 
@@ -22,8 +20,10 @@ const config = react({
     jsonc: false,
     rules: {
         'yaml/indent': ['warn', 2],
-        // There are too many `global` in codebase already
+
+        // There are too many `global` and `Function` in codebase already
         'no-restricted-globals': 'off',
+        'ts/no-unsafe-function-type': 'off',
     },
 }, {
     languageOptions: {
@@ -114,10 +114,6 @@ const config = react({
         },
     },
 
-    plugins: {
-        stylistic,
-    },
-
     rules: {
         'github/array-foreach': 0,
         'ts/no-invalid-this': 0,
@@ -131,7 +127,6 @@ const config = react({
             { SwitchCase: 1 },
         ],
         'style/indent-binary-ops': ['warn', 2],
-        'style/jsx-indent-props': ['warn', 2],
         'function-paren-newline': 'off',
         'no-mixed-operators': 'off',
         'no-await-in-loop': 'off',
@@ -156,25 +151,19 @@ const config = react({
     },
 }, {
     files: ['packages/ui-next/src/**/*.{ts,tsx}'],
-
     languageOptions: {
         globals: {
             ...globals.browser,
         },
     },
-
-    plugins: {
-        stylistic,
-    },
-
     rules: {
         'style/indent': ['warn', 2],
         'style/indent-binary-ops': ['warn', 2],
-        'style/jsx-indent-props': ['warn', 2],
     },
 }, {
     files: ['**/*.yaml', '**/*.yml'],
     rules: {
+        'yaml/plain-scalar': 'off',
         'style/no-trailing-spaces': 'off',
         'max-len': 'off',
     },

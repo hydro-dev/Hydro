@@ -13,6 +13,7 @@ function youtubeParser(url: string) {
   const match = url.match(ytRegex);
   return match && match[7].length === 11 ? match[7] : url;
 }
+// eslint-disable-next-line regexp/no-empty-alternative
 const vimeoRegex = /https?:\/\/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
 function vimeoParser(url: string) {
   const match = url.match(vimeoRegex);

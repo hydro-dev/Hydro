@@ -29,6 +29,7 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
+        // eslint-disable-next-line regexp/no-super-linear-backtracking
         regex: /^(([\w.-]*?)(?:(\d*)[-_])?(\d+))\.(in|IN|txt|TXT|in\.txt|IN\.TXT)$/,
         output: (a) => ['out', 'ans']
             .flatMap((i) => [i, i.toUpperCase(), `${i}.txt`, `${i.toUpperCase()}.TXT`])

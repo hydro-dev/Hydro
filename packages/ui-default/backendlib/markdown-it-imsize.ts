@@ -8,7 +8,7 @@ function parseNextNumber(str, pos, max) {
     value: '',
   };
   let code = str.charCodeAt(pos);
-  while (pos < max && (code >= 0x30 /* 0 */ && code <= 0x39 /* 9 */) || code === 0x25 /* % */) {
+  while (pos < max && ((code >= 0x30 /* 0 */ && code <= 0x39 /* 9 */) || code === 0x25 /* % */)) {
     code = str.charCodeAt(++pos);
   }
   result.ok = true;

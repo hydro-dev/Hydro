@@ -151,6 +151,7 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html');
+                // eslint-disable-next-line regexp/no-super-linear-backtracking
                 const uploadFiles = content.matchAll(/(?:src|href)="\/images\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     try {
