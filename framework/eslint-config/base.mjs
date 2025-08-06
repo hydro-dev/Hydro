@@ -56,9 +56,7 @@ const base = (option, ...args) => antfu(
             'consistent-return': 1,
             curly: ['error', 'multi-line'],
             'default-param-last': 'off',
-
             'dot-notation': 0,
-
             'eslint-comments/no-unlimited-disable': 'off',
             'func-names': 0,
             'function-call-argument-newline': 0,
@@ -121,6 +119,7 @@ const base = (option, ...args) => antfu(
             'no-return-await': 0,
             'no-underscore-dangle': 0,
             'no-unmodified-loop-condition': 1,
+            'no-useless-concat': 'warn',
 
             'node/prefer-global/buffer': 'off',
             'node/prefer-global/process': 'off',
@@ -128,6 +127,7 @@ const base = (option, ...args) => antfu(
             'perfectionist/sort-named-imports': 'off',
 
             'prefer-destructuring': 0,
+            'prefer-template': 'warn',
             'quote-props': 0,
             'react-hooks/exhaustive-deps': 0,
             'react-refresh/only-export-components': ['warn', {
