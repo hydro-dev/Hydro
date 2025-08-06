@@ -8,7 +8,7 @@
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@zip.js/zip.js": "^2.7.71",
+        "@zip.js/zip.js": "^2.7.72",
         "cac": "^6.7.14",
         "p-queue": "^8.1.0",
         "schemastery": "^3.16.1",
