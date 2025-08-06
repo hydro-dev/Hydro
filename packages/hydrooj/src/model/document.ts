@@ -1,4 +1,3 @@
-/* eslint-disable object-curly-newline */
 import assert from 'assert';
 import {
     Filter, FindCursor, ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
@@ -43,9 +42,9 @@ export interface DocType {
 }
 
 export interface DocStatusType {
-    [TYPE_PROBLEM]: ProblemStatusDoc,
+    [TYPE_PROBLEM]: ProblemStatusDoc;
     // FIXME: this need to be typed
-    [key: number]: any
+    [key: number]: any;
 }
 
 export async function add<T extends keyof DocType, K extends DocType[T]['docId']>(

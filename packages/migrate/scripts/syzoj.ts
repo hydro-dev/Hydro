@@ -75,7 +75,7 @@ export async function run({
     host = 'localhost', port = 3306, name = 'syzoj',
     username, password, domainId, dataDir,
     rerun = true, randomMail = 'never',
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,
@@ -199,7 +199,7 @@ export async function run({
         `publicize_time` datetime NULL DEFAULT NULL, 公开时间
         `type` enum('traditional','submit-answer','interaction') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'traditional',
     */
-    const fileReg = /\[.*\]\((\/problem\/(\d+)\/testdata\/download\/(.*))\)/gm;
+    const fileReg = /\[.*\]\((\/problem\/(\d+)\/testdata\/download\/(.*))\)/g;
     const pidMap: Record<string, number> = {};
     const configMap: Record<string, string> = {};
     const problemAdditionalFile = {};

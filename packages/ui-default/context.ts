@@ -1,3 +1,5 @@
+/* eslint-disable ts/no-unsafe-declaration-merging */
+
 import * as cordis from 'cordis';
 import type { EventMap } from './api';
 

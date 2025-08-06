@@ -97,8 +97,8 @@ export async function get(domainId: string, tid: ObjectId) {
     if (!tdoc) throw new TrainingNotFoundError(domainId, tid);
     for (const i in tdoc.dag) {
         for (const j in tdoc.dag[i].pids) {
-            if (Number.isSafeInteger(parseInt(tdoc.dag[i].pids[j], 10))) {
-                tdoc.dag[i].pids[j] = parseInt(tdoc.dag[i].pids[j], 10);
+            if (Number.isSafeInteger(Number.parseInt(tdoc.dag[i].pids[j], 10))) {
+                tdoc.dag[i].pids[j] = Number.parseInt(tdoc.dag[i].pids[j], 10);
             }
         }
     }

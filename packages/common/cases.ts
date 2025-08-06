@@ -1,7 +1,7 @@
 import { findFileSync, parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import { CompilableSource, ProblemConfigFile } from './types';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line ts/no-unused-vars
 export async function readYamlCases(cfg: ProblemConfigFile = {}, checkFile = (s: CompilableSource, errMsg: string) => s) {
     const config: any = {
         checker_type: cfg.checker_type || 'default',

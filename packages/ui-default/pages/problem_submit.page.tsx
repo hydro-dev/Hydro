@@ -49,7 +49,8 @@ const page = new NamedPage(['problem_submit', 'contest_detail_problem_submit', '
   root.render(<blockquote className="note">
     <p>{i18n('This page is only for pasting code from other sources.')}</p>
     <p>{i18n("To get a better editing experience, with code highlighting and test runs, \
-please go back to the problem detail page and use 'Open Scratchpad' button.")}</p>
+please go back to the problem detail page and use 'Open Scratchpad' button.")}
+    </p>
     <a onClick={() => root.unmount()}>{i18n('Dismiss')}</a> / <a onClick={ignore}>{i18n("Don't show again")}</a>
   </blockquote>);
 });

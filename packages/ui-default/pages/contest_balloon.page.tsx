@@ -37,7 +37,7 @@ function Balloon({ tdoc, val }) {
                   </td>
                   <td>
                     <HexColorInput
-                      className='textbox'
+                      className="textbox"
                       color={c}
                       onFocus={() => { setNow(pid); setColor(c); }}
                       onChange={(e) => { val[+pid].color = e; setColor(e); }}

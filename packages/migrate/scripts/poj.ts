@@ -1,5 +1,6 @@
-/* eslint-disable no-tabs */
 /* eslint-disable no-await-in-loop */
+/* eslint-disable style/no-tabs */
+
 import path from 'path';
 import zlib from 'zlib';
 import mariadb from 'mariadb';
@@ -34,7 +35,7 @@ export async function run({
     host = 'localhost', port = 3306, name,
     username, password, domainId, contestType = 'oi',
     dataDir, imageDir, rerun = true, randomMail = false,
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,
@@ -150,6 +151,7 @@ export async function run({
                     hint: pdoc.hint,
                     source: pdoc.source,
                 }, 'html');
+                // eslint-disable-next-line regexp/no-super-linear-backtracking
                 const uploadFiles = content.matchAll(/(?:src|href)="\/images\/([^"]+\/([^"]+))"/g);
                 for (const file of uploadFiles) {
                     try {

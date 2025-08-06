@@ -144,24 +144,29 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
             <div className="textbox-container">
               {field.type === 'text'
                 ? <input
-                  type="text" className="textbox" data-autofocus={field.autofocus}
+                  type="text"
+                  className="textbox"
+                  data-autofocus={field.autofocus}
                   defaultValue={field.default}
                   onChange={(e) => setValues({ ...values, [name]: e.target.value })}
                 />
                 : field.type === 'user'
                   ? <UserSelectAutoComplete
-                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name].toString()] : []}
+                    data-autofocus={field.autofocus}
+                    selectedKeys={values[name] ? [values[name].toString()] : []}
                     onChange={(e) => setValues({ ...values, [name]: +e })}
                     byId
                   />
                   : <DomainSelectAutoComplete
-                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
+                    data-autofocus={field.autofocus}
+                    selectedKeys={values[name] ? [values[name]] : []}
                     onChange={(e) => setValues({ ...values, [name]: e })}
                   />}
             </div>
           </label>}
           {field.type === 'checkbox' && <label className="checkbox">
-            <input type="checkbox"
+            <input
+              type="checkbox"
               defaultChecked={field.default === 'true'}
               onChange={(e) => setValues({ ...values, [name]: !!e.target.checked })}
             />

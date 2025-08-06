@@ -191,8 +191,8 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
             ele.setAttribute('src', `file://${fid}.png`);
         }
         const title = document.querySelector('.title').innerHTML.trim().split('. ')[1];
-        const time = parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
-        const memory = parseInt(document.querySelector('.memory-limit').innerHTML.substr(55, 4), 10);
+        const time = Number.parseInt(document.querySelector('.time-limit').innerHTML.substr(53, 2), 10);
+        const memory = Number.parseInt(document.querySelector('.memory-limit').innerHTML.substr(55, 4), 10);
         document.body.firstChild.remove();
         document.querySelector('.input-specification')?.firstChild.remove();
         document.querySelector('.output-specification')?.firstChild.remove();

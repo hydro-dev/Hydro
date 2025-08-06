@@ -4,7 +4,7 @@ import { CompilableSource } from '@hydrooj/common';
 import { fs } from '@hydrooj/utils';
 import { FormatError } from './error';
 
-const EMPTY_STR = /^[ \r\n\t]*$/i;
+const EMPTY_STR = /^[ \r\n\t]*$/;
 
 export const cmd = parse;
 
@@ -34,7 +34,7 @@ export function compilerText(...messages: string[]) {
 function restrictFile(p: string) {
     if (!p) return '/';
     if (p[0] === '/') p = '';
-    return p.replace(/\.\./gmi, '');
+    return p.replace(/\.\./g, '');
 }
 
 export function ensureFile(folder: string) {

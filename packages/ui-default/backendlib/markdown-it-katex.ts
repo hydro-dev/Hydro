@@ -112,7 +112,7 @@ export default function plugin(md) {
   const render = (latex: string, displayMode = false) => {
     options.displayMode = displayMode;
     try {
-      latex = latex.replace(/\\def{\\([a-zA-Z0-9]+)}/g, '\\def\\$1');
+      latex = latex.replace(/\\def\{\\([a-zA-Z0-9]+)\}/g, '\\def\\$1');
       return katex.renderToString(latex, options);
     } catch (error) {
       if (options.throwOnError) console.error(error);

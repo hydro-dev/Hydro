@@ -20,15 +20,21 @@ interface UploadOptions {
 export default async function uploadFiles(endpoint = '', files: File[] | FileList = [], options: UploadOptions = {}) {
   const dialog = new Dialog({
     $body: $(tpl(<>
-      <div className="file-label" style={{
-        textAlign: 'center', marginBottom: '5px', color: 'gray', fontSize: 'small',
-      }}></div>
+      <div
+        className="file-label"
+        style={{
+          textAlign: 'center', marginBottom: '5px', color: 'gray', fontSize: 'small',
+        }}
+      ></div>
       <div className={`${Classes.PROGRESS_BAR} ${Classes.INTENT_PRIMARY} bp5-no-stripes`}>
         <div className={`file-progress ${Classes.PROGRESS_METER}`} style={{ width: 0 }}></div>
       </div>
-      <div className="upload-label" style={{
-        textAlign: 'center', margin: '5px 0', color: 'gray', fontSize: 'small',
-      }}></div>
+      <div
+        className="upload-label"
+        style={{
+          textAlign: 'center', margin: '5px 0', color: 'gray', fontSize: 'small',
+        }}
+      ></div>
       <div className={`${Classes.PROGRESS_BAR} ${Classes.INTENT_PRIMARY} bp5-no-stripes`}>
         <div className={`upload-progress ${Classes.PROGRESS_METER}`} style={{ width: 0 }}></div>
       </div>

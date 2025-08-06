@@ -239,7 +239,7 @@ class SystemUserImportHandler extends SystemHandler {
     @param('draft', Types.Boolean)
     async post(domainId: string, _users: string, draft: boolean) {
         const users = _users.split('\n');
-        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any; }[] = [];
+        const udocs: { email: string, username: string, password: string, displayName?: string, [key: string]: any }[] = [];
         const messages = [];
         const mapping = Object.create(null);
         const groups: Record<string, string[]> = Object.create(null);

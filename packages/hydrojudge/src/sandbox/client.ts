@@ -27,8 +27,8 @@ export class Stream extends EventEmitter {
                     break;
                 case 2:
                     this.emit('output', {
-                        index: (data[1] >> 4) & 0xf,
-                        fd: (data[1]) & 0xf,
+                        index: (data[1] >> 4) & 0xF,
+                        fd: (data[1]) & 0xF,
                         content: data.subarray(2),
                     });
                     break;

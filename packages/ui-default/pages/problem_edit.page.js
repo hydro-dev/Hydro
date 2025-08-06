@@ -37,7 +37,7 @@ async function updateSelection() {
     }
   }
   const requestCategoryTags = _.uniq(selections
-    .filter((s) => s.indexOf(',') !== -1)
+    .filter((s) => s.includes(','))
     .map((s) => s.split(',')[0]));
   // drop the category if its subcategory is selected
   const requestTags = _.uniq(_.pullAll(selections, requestCategoryTags));
@@ -267,7 +267,7 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       val = JSON.parse(val);
       if (!(val instanceof Array)) val = JSON.stringify(val);
     } catch { }
-    const empty = /^\s*$/g.test(val);
+    const empty = /^\s*$/.test(val);
     if (empty) delete content[activeTab];
     else content[activeTab] = val;
     if (!Object.keys(content).length) $field.text('');

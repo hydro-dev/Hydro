@@ -30,7 +30,7 @@ async function getFiles(folder: string, base = ''): Promise<string[]> {
       files.push(...await getFiles(path.join(folder, i), path.join(base, i)));
     } else files.push(path.join(base, i));
   }
-  return files.map((item) => item.replace(/\\/gmi, '/'));
+  return files.map((item) => item.replace(/\\/g, '/'));
 }
 
 function locateFile(basePath: string, filenames: string[]) {
@@ -47,7 +47,7 @@ nunjucks.runtime.memberLookup = function memberLookup(obj, val) {
   if (obj === undefined || obj === null) return undefined;
   if (typeof obj[val] === 'function') {
     const fn = function (...args) {
-      return obj[val].call(obj, ...args);
+      return obj[val].call(obj, ...args); // eslint-disable-line no-useless-call
     };
     fn._original = obj[val];
     return fn;
@@ -255,7 +255,7 @@ export class TemplateService extends Service {
     const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {
-      const p = locateFile(i, ['template', 'templates']);
+      const p = locateFile(i as string, ['template', 'templates']);
       if (p && (await fs.stat(p)).isDirectory()) {
         try {
           const files = await getFiles(p);

@@ -84,13 +84,13 @@ export default async function download(filename, targets) {
 
 declare module '../../api' {
   interface EventMap {
-    'problemset/download': (pids: number[], name: string, targets: { filename: string; url?: string; content?: string }[]) => void;
+    'problemset/download': (pids: number[], name: string, targets: { filename: string, url?: string, content?: string }[]) => void;
   }
 }
 
 export async function downloadProblemSet(pids, name = 'Export') {
   Notification.info(i18n('Downloading...'));
-  const targets: { filename: string; url?: string; content?: string }[] = [];
+  const targets: { filename: string, url?: string, content?: string }[] = [];
   try {
     await ctx.serial('problemset/download', pids, name, targets);
     for (const pid of pids) {
@@ -122,7 +122,7 @@ export async function downloadProblemSet(pids, name = 'Export') {
       });
       try {
         const c = JSON.parse(pdoc.content);
-        if (c instanceof Array || typeof c === 'string') throw new Error();
+        if (c instanceof Array || typeof c === 'string') throw new Error('Invalid content');
         for (const key of Object.keys(c)) {
           targets.push({
             filename: `${pid}/problem_${key}.md`,

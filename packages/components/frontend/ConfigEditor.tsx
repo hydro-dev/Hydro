@@ -91,7 +91,7 @@ function MonacoContainer({
     if (!editor) return;
     const current = editor.getValue({ lineEnding: '\n', preserveBOM: false });
     const diff = diffLines(current, config);
-    const ops: { range: any; text: string }[] = [];
+    const ops: { range: any, text: string }[] = [];
     let cursor = 1;
     for (const line of diff) {
       if (line.added) {
@@ -109,11 +109,7 @@ function MonacoContainer({
     }
     model.pushEditOperations([], ops, undefined);
   }, [editor, config]);
-  return (
-    <div ref={initializeEditor} style={{
-      width: '100%', height: '500px',
-    }} />
-  );
+  return <div ref={initializeEditor} style={{ width: '100%', height: '500px' }} />;
 }
 
 export default function ConfigEditor({
@@ -166,8 +162,12 @@ export default function ConfigEditor({
     <Allotment onChange={setSize}>
       <Allotment.Pane>
         <MonacoContainer
-          editorCallback={registerAction} schema={schema} monaco={monaco}
-          config={stringConfig} setValue={updateFromMonaco} setError={setInfo}
+          editorCallback={registerAction}
+          schema={schema}
+          monaco={monaco}
+          config={stringConfig}
+          setValue={updateFromMonaco}
+          setError={setInfo}
           size={size[0]}
           dark={document.documentElement.className.includes('theme--dark')}
         />

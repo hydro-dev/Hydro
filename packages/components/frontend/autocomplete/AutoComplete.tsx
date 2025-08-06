@@ -79,7 +79,7 @@ function DraggableSelection({
 const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, ref: React.Ref<AutoCompleteHandle<T>>) {
   const {
     multi = false, width = '100%', height = 'auto',
-    freeSolo = false, allowEmptyQuery = false, listStyle = {}, // eslint-disable-line @eslint-react/no-unstable-default-props
+    freeSolo = false, allowEmptyQuery = false, listStyle = {},
     disabled = false, disabledHint = '', draggable = multi,
   } = props;
   const queryItems = props.queryItems ?? (() => []);
@@ -87,7 +87,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
   const itemText = props.itemText ?? ((item) => item.toString());
   const itemKey = props.itemKey ?? itemText;
   const onChange = props.onChange ?? (() => { });
-  const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : ((i) => i);
+  const freeSoloConverter = freeSolo ? props.freeSoloConverter ?? ((i) => i) : (i) => i;
 
   const [focused, setFocused] = useState(false); // is focused
   const [selectedKeys, setSelectedKeys] = useState(props.selectedKeys || []); // keys of selected items

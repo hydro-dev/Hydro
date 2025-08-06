@@ -52,7 +52,7 @@ class HomeworkMainHandler extends Handler {
                     ],
                 },
             ...group ? { assign: { $in: [group] } } : {},
-            ...q ? { title: { $regex: new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi') } } : {},
+            ...q ? { title: { $regex: new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gim') } } : {},
         }).sort({
             penaltySince: -1, endAt: -1, beginAt: -1, _id: -1,
         });

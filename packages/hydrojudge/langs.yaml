@@ -1,38 +1,38 @@
 c:
-    compile: /usr/bin/gcc -O2 -Wall -std=c99 -o foo foo.c -lm
+  compile: /usr/bin/gcc -O2 -Wall -std=c99 -o foo foo.c -lm
 cc:
-    compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o foo foo.cc -lm
+  compile: /usr/bin/g++ -O2 -Wall -std=c++11 -o foo foo.cc -lm
 pas:
-    compile: /usr/bin/fpc -O2 -ofoo foo.pas
+  compile: /usr/bin/fpc -O2 -ofoo foo.pas
 java:
-    compile: /usr/bin/bash -c "javac -d /w -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
-    code_file: Main.java
-    target: Main.jar
-    execute: /usr/bin/java -Dfile.encoding="UTF-8" -cp Main.jar Main
-    time_limit_rate: 2
-    compile_time_limit: 30000
-    compile_memory_limit: 1024
+  compile: /usr/bin/bash -c "javac -d /w -encoding utf8 ./Main.java && jar cvf Main.jar *.class >/dev/null"
+  code_file: Main.java
+  target: Main.jar
+  execute: /usr/bin/java -Dfile.encoding="UTF-8" -cp Main.jar Main
+  time_limit_rate: 2
+  compile_time_limit: 30000
+  compile_memory_limit: 1024
 py3:
-    compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
-    code_file: foo.py
-    execute: /usr/bin/python3 foo
+  compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
+  code_file: foo.py
+  execute: /usr/bin/python3 foo
 php:
-    execute: /usr/bin/php foo.php
+  execute: /usr/bin/php foo.php
 rs:
-    compile: /usr/bin/rustc -O -o /w/foo /w/foo.rs
-    compile_time_limit: 30000
+  compile: /usr/bin/rustc -O -o /w/foo /w/foo.rs
+  compile_time_limit: 30000
 hs:
-    compile: /usr/bin/ghc -O -outputdir /tmp -o /w/foo /w/foo.hs
-    compile_time_limit: 30000
+  compile: /usr/bin/ghc -O -outputdir /tmp -o /w/foo /w/foo.hs
+  compile_time_limit: 30000
 js:
-    execute: /usr/bin/jsc foo.js
+  execute: /usr/bin/jsc foo.js
 go:
-    compile: /usr/bin/go build -o /w/foo /w/foo.go
-    compile_time_limit: 30000
+  compile: /usr/bin/go build -o /w/foo /w/foo.go
+  compile_time_limit: 30000
 rb:
-    execute: /usr/bin/ruby foo.rb
-    compile_time_limit: 30000
+  execute: /usr/bin/ruby foo.rb
+  compile_time_limit: 30000
 cs:
-    compile: /usr/bin/mcs csc -optimize+ -out:/w/foo.exe /w/foo.cs
-    execute: /usr/bin/mono foo.exe
-    compile_time_limit: 30000
+  compile: /usr/bin/mcs csc -optimize+ -out:/w/foo.exe /w/foo.cs
+  execute: /usr/bin/mono foo.exe
+  compile_time_limit: 30000

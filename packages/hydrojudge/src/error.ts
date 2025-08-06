@@ -1,9 +1,9 @@
 import { STATUS_TEXTS } from '@hydrooj/common';
 
 interface CompileErrorInfo {
-    stdout?: string,
-    stderr?: string,
-    status?: number
+    stdout?: string;
+    stderr?: string;
+    status?: number;
 }
 
 export class CompileError extends Error {

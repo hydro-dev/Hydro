@@ -62,8 +62,8 @@ function Reaction({ payload, ele }) {
             <input name="emojiSuggest" onFocus={() => updateFocus(true)} onBlur={() => updateFocus(false)}></input>
           </div>
         </div>
-      </div>
-      }>
+      </div>}
+    >
       <span className="icon icon-emoji"></span>
     </Popover>
   );

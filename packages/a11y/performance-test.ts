@@ -167,7 +167,7 @@ export async function startPerformanceTest(args: { enable5: boolean }, report) {
     await ProblemModel.addTestdata('system', docId, 'config.yaml', Buffer.from(yaml.dump({
         time: '3s',
         memory: args.enable5 ? '2g' : '512m',
-        cases: new Array(20).fill({
+        cases: Array.from({ length: 20 }).fill({
             input: '1.in',
             output: '1.out',
         }),

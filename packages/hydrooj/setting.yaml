@@ -22,13 +22,13 @@ langs:
     __hint__:
       - ~ All keys starting with _ will be ignored
       - ~ Entries named like [foo], [foo].[bar] [foo].[baz]
-      -   will be merged into one category.
+      - . will be merged into one category.
       - ~ A entry named [foo].[bar] will inhert all options
-      -   defined in entry [foo] if not overwritten
+      - . defined in entry [foo] if not overwritten
       - ~ code_file option defaults to foo.[name]
       - ~ highlight option defaults to [name]
       - ~ if highlight option was set, monaco option defaults
-      -   to [highlight], otherwise defaults to [name]
+      - . to [highlight], otherwise defaults to [name]
       - ~ Compiling be be ignored if compile option wasn't set
       - ~ Key marked with a ? means the option is optional
       - (name):

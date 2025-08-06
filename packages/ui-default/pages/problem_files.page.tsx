@@ -175,14 +175,21 @@ const page = new NamedPage('problem_files', () => {
                       style={{ ...style, ...(highlight ? { color: 'transparent', background: 'transparent', caretColor: 'black' } : {}) }}
                       value={original}
                       onChange={(e) => setOriginal(e.currentTarget.value)}
-                    ></input>
+                    />
                   </div>
-                  <div className="textbox-container" style={{
-                    position: 'absolute', top: 0, left: 0, zIndex: 0,
-                  }}>
-                    {highlight && <span className="textbox" style={{
-                      ...style, border: 'none', display: 'inline-flex', alignItems: 'center',
-                    }} dangerouslySetInnerHTML={{ __html: highlight }} />}
+                  <div
+                    className="textbox-container"
+                    style={{
+                      position: 'absolute', top: 0, left: 0, zIndex: 0,
+                    }}
+                  >
+                    {highlight && <span
+                      className="textbox"
+                      style={{
+                        ...style, border: 'none', display: 'inline-flex', alignItems: 'center',
+                      }}
+                      dangerouslySetInnerHTML={{ __html: highlight }}
+                    />}
                   </div>
                 </div>
               </label>
@@ -237,7 +244,7 @@ const page = new NamedPage('problem_files', () => {
             </tbody>
           </table>
         </div>}
-      </div >;
+      </div>;
     }
 
     const promise = new ActionDialog({

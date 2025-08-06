@@ -17,9 +17,10 @@ import db from '../service/db';
 export const description = 'Calculate rp of a domain, or all domains';
 
 type ND = NumericDictionary<number>;
+type Report = (data: any) => void;
 
 interface RpDef {
-    run(domainIds: string[], udict: ND, report: Function): Promise<void>;
+    run(domainIds: string[], udict: ND, report: Report): Promise<void>;
     hidden: boolean;
     base: number;
 }
@@ -101,7 +102,7 @@ export const RpTypes: Record<string, RpDef> = {
 };
 global.Hydro.model.rp = RpTypes;
 
-export async function calcLevel(domainId: string, report: Function) {
+export async function calcLevel(domainId: string, report: Report) {
     await domain.setMultiUserInDomain(domainId, {}, { level: 0, rank: null });
     let last = { rp: null };
     let rank = 0;
@@ -135,7 +136,7 @@ export async function calcLevel(domainId: string, report: Function) {
     await bulk.execute();
 }
 
-async function runInDomain(domainId: string, report: Function) {
+async function runInDomain(domainId: string, report: Report) {
     const results: Record<keyof typeof RpTypes, ND> = {};
     const udict = Counter();
     await db.collection('domain.user').updateMany({ domainId }, { $set: { rpInfo: {} } });
@@ -160,7 +161,7 @@ async function runInDomain(domainId: string, report: Function) {
     await calcLevel(domainId, report);
 }
 
-export async function run({ domainId }, report: Function) {
+export async function run({ domainId }, report: Report) {
     if (!domainId) {
         const domains = await domain.getMulti().toArray();
         await report({ message: `Found ${domains.length} domains` });

@@ -1,4 +1,3 @@
-/* eslint-disable object-curly-newline */
 import { pick, sum } from 'lodash';
 import moment from 'moment-timezone';
 import {
@@ -133,11 +132,11 @@ export default class RecordModel {
         domainId: string, pid: number, uid: number,
         lang: string, code: string, addTask: boolean,
         args: {
-            contest?: ObjectId,
-            input?: string,
-            files?: Record<string, string>,
-            hackTarget?: ObjectId,
-            type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate',
+            contest?: ObjectId;
+            input?: string;
+            files?: Record<string, string>;
+            hackTarget?: ObjectId;
+            type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate';
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {

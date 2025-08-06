@@ -1,4 +1,3 @@
-/* eslint-disable import/no-dynamic-require */
 import cac from 'cac';
 import { getAddons } from '../src/options';
 

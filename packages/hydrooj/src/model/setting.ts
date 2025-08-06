@@ -69,7 +69,7 @@ export const Setting = (
 
 declare global {
     namespace Schemastery {
-        interface Meta<T> { // eslint-disable-line @typescript-eslint/no-unused-vars
+        interface Meta<T> { // eslint-disable-line ts/no-unused-vars
             family?: string;
             secret?: boolean;
         }

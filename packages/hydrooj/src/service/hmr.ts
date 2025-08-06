@@ -1,7 +1,6 @@
 // This file was adapted from @koishijs, MIT licensed.
 /* eslint-disable consistent-return */
-/* eslint-disable import/no-dynamic-require */
-/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable ts/no-shadow */
 import { readFileSync } from 'fs';
 import { relative } from 'path';
 import { codeFrameColumns } from '@babel/code-frame';

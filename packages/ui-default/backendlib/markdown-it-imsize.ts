@@ -8,7 +8,7 @@ function parseNextNumber(str, pos, max) {
     value: '',
   };
   let code = str.charCodeAt(pos);
-  while (pos < max && (code >= 0x30 /* 0 */ && code <= 0x39 /* 9 */) || code === 0x25 /* % */) {
+  while (pos < max && ((code >= 0x30 /* 0 */ && code <= 0x39 /* 9 */) || code === 0x25 /* % */)) {
     code = str.charCodeAt(++pos);
   }
   result.ok = true;
@@ -24,9 +24,9 @@ function parseImageSize(str, pos, max) {
     width: '',
     height: '',
   };
-  if (pos >= max) { return result; }
+  if (pos >= max) return result;
   let code = str.charCodeAt(pos);
-  if (code !== 0x3d /* = */) { return result; }
+  if (code !== 0x3D /* = */) return result;
   pos++;
   code = str.charCodeAt(pos);
   if (code !== 0x78 /* x */ && (code < 0x30 || code > 0x39) /* [0-9] */) {
@@ -67,14 +67,14 @@ export default function plugin(md) {
     const oldPos = state.pos;
     const max = state.posMax;
 
-    if (state.src.charCodeAt(state.pos) !== 0x21/* ! */) { return false; }
-    if (state.src.charCodeAt(state.pos + 1) !== 0x5B/* [ */) { return false; }
+    if (state.src.charCodeAt(state.pos) !== 0x21/* ! */) return false;
+    if (state.src.charCodeAt(state.pos + 1) !== 0x5B/* [ */) return false;
 
     const labelStart = state.pos + 2;
     const labelEnd = md.helpers.parseLinkLabel(state, state.pos + 1, false);
 
     // parser failed to find ']', so it's not a valid link
-    if (labelEnd < 0) { return false; }
+    if (labelEnd < 0) return false;
 
     pos = labelEnd + 1;
     if (pos < max && state.src.charCodeAt(pos) === 0x28/* ( */) {
@@ -89,7 +89,7 @@ export default function plugin(md) {
         code = state.src.charCodeAt(pos);
         if (code !== 0x20 && code !== 0x0A) { break; }
       }
-      if (pos >= max) { return false; }
+      if (pos >= max) return false;
 
       // [link](  <href>  "title"  )
       //          ^^^^^^ parsing link destination
@@ -162,7 +162,7 @@ export default function plugin(md) {
       //
       // Link reference
       //
-      if (typeof state.env.references === 'undefined') { return false; }
+      if (typeof state.env.references === 'undefined') return false;
 
       // [foo]  [bar]
       //      ^^ optional whitespace (can include newlines)

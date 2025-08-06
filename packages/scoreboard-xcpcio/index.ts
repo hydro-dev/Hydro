@@ -4,8 +4,8 @@ import {
 } from 'hydrooj';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
-const indexJs = file.match(/index-([A-Za-z0-9_-]+)\.js"/)?.[1];
-const indexCss = file.match(/index-([A-Za-z0-9_-]+)\.css"/)?.[1];
+const indexJs = file.match(/index-([\w-]+)\.js"/)?.[1];
+const indexCss = file.match(/index-([\w-]+)\.css"/)?.[1];
 const status = {
     [STATUS.STATUS_WRONG_ANSWER]: 'WRONG_ANSWER',
     [STATUS.STATUS_ACCEPTED]: 'CORRECT',
@@ -72,9 +72,9 @@ export async function apply(ctx: Context) {
                             },
                             organization: 'School',
                             status_time_display: {
-                                'correct': true,
-                                'incorrect': true,
-                                'pending': true,
+                                correct: true,
+                                incorrect: true,
+                                pending: true,
                             },
                             medal: {
                                 official: {

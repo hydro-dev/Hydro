@@ -31,7 +31,7 @@ describe('App', () => {
 
     const routes = ['/', '/p', '/contest', '/homework', '/user/1', '/training'];
     for (const route of routes) {
-        // eslint-disable-next-line @typescript-eslint/no-loop-func
+        // eslint-disable-next-line ts/no-loop-func
         it(`GET ${route}`, () => agent.get(route).expect(200));
     }
 

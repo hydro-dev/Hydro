@@ -10,7 +10,7 @@ import esbuild from 'esbuild';
 
 declare module 'hydrooj' {
   interface UI {
-    esbuildPlugins?: esbuild.Plugin[]
+    esbuildPlugins?: esbuild.Plugin[];
   }
   interface SystemKeys {
     'ui-default.nav_logo_dark': string;
@@ -91,7 +91,7 @@ export async function buildUI() {
   const entryPoints: string[] = [];
   const lazyModules: string[] = [];
   const newFiles = ['entry.js'];
-  for (const addon of Object.values(global.addons)) {
+  for (const addon of Object.values(global.addons) as string[]) {
     let publicPath = resolve(addon, 'frontend');
     if (!fs.existsSync(publicPath)) publicPath = resolve(addon, 'public');
     if (!fs.existsSync(publicPath)) continue;
