@@ -18,7 +18,7 @@ async function handlerSwitchAccount(ev) {
   const target = await selectUser('Hint::icon::switch_account');
   if (!target) return;
   try {
-    const res = await request.get(`/account/${target}`);
+    const res = await request.get(`/account/${target._id}`);
     if (res.url) window.location.href = res.url;
     else window.location.reload();
   } catch (error) {

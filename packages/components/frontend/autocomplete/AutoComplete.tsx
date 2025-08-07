@@ -126,10 +126,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     else onChange(selectedKeys.filter((v) => v?.trim().length).join(','));
   };
 
-  let first = !multi;
   useEffect(() => {
-    if (first) first = false;
-    else dispatchChange();
+    dispatchChange();
     if (!multi) return; // Load pre-selected items only in multi mode
     const ids = [];
     for (const key of selectedKeys) if (!valueCache[key]) ids.push(key);
@@ -161,7 +159,6 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       setSelectedKeys([key]);
       inputRef.current.value = key;
     }
-    dispatchChange();
     if (!shouldKeepOpen) {
       setItemList([]);
       setCurrentItem(null);
