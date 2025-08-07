@@ -4,7 +4,7 @@ import { LangConfig, STATUS } from '@hydrooj/common';
 import {
     Context, db, DomainModel, JudgeResultCallbackContext, Logger,
     ProblemModel, RecordModel, Service, SettingModel,
-    sleep, SystemModel, TaskModel, Time, yaml,
+    sleep, SolutionModel, SystemModel, TaskModel, Time, yaml,
 } from 'hydrooj';
 import { BasicProvider, IBasicProvider, RemoteAccount } from './interface';
 import providers from './providers/index';
@@ -109,6 +109,7 @@ class AccountService {
                     for (const key in res.data) {
                         await ProblemModel.addTestdata(domainId, docId, key, res.data[key]);
                     }
+                    if (res.solution) await SolutionModel.add(domainId, docId, 1, res.solution);
                     logger.info(`${domainId}: problem ${docId}(${pid}) sync done -> ${targetPid}(${docId})`);
                 } finally {
                     delete syncing[`${domainId}/${pid}`];

@@ -35,6 +35,7 @@ export interface IBasicProvider {
         tag: string[];
         content: string;
         difficulty?: number;
+        solution?: string;
     }>;
     entryProblemLists?: string[];
     listProblem: (page: number, resync: boolean, listId: string) => Promise<string[]>;
