@@ -215,7 +215,7 @@ export default class Calendar {
     const daysByWeek = _.chunk(days, 7);
 
     const numberOfWeeks = days.length / 7;
-    const bannersByWeek = _.fill(new Array(numberOfWeeks), 1).map(() => []);
+    const bannersByWeek = _.fill(Array.from({ length: numberOfWeeks }), 1).map(() => []);
     const beginDate = days[0].date.clone();
     const endDate = _.last(days).date.clone();
 
@@ -268,7 +268,7 @@ export default class Calendar {
         ]))
       .map((banners) => {
         const dayBitmap = _
-          .fill(new Array(7), 1)
+          .fill(Array.from({ length: 7 }), 1)
           .map(() => []);
         banners.forEach((banner) => {
           const beginDay = banner.beginAt.day();
@@ -292,7 +292,7 @@ export default class Calendar {
         // merge adjacent cells and arrange banners by vertical index
         const vMaxLength = _.max(_.range(0, 7).map((day) => dayBitmap[day].length));
         const weekBanners = _
-          .fill(new Array(vMaxLength), 1)
+          .fill(Array.from({ length: vMaxLength }), 1)
           .map(() => []);
         for (let vIndex = 0; vIndex < vMaxLength; ++vIndex) {
           let last = { span: 1, banner: dayBitmap[0][vIndex] };

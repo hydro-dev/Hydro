@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable ts/no-use-before-define */
 import { ObjectId } from 'mongodb';
 import Schema from 'schemastery';
 import blacklist from '../model/blacklist';

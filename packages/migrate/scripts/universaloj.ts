@@ -45,7 +45,7 @@ export async function run({
     host = '172.17.0.2', port = 3306, name = 'app_uoj233',
     username, password, domainId, dataDir,
     rerun = true, randomMail = false,
-}, report: Function) {
+}, report: (data: any) => void) {
     const src = await mariadb.createConnection({
         host,
         port,
@@ -506,10 +506,10 @@ export async function run({
                 if (confInfo.n_subtasks
                     && Object.keys(confInfo.subtask_end).length === +confInfo.n_subtasks
                     && Object.keys(confInfo.subtask_score).length === +confInfo.n_subtasks) {
-                    config.subtasks.push(...[...new Array(+confInfo.n_subtasks)].map((v, i) => i + 1).map((i) => ({
+                    config.subtasks.push(...[...Array.from({ length: +confInfo.n_subtasks })].map((v, i) => i + 1).map((i) => ({
                         id: +i,
                         score: confInfo.subtask_score[i],
-                        cases: [...new Array(confInfo.subtask_end[i] - (confInfo.subtask_end[i - 1] || 0))].map((v, j) => ({
+                        cases: [...Array.from({ length: confInfo.subtask_end[i] - (confInfo.subtask_end[i - 1] || 0) })].map((v, j) => ({
                             input: `${confInfo.input_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.input_suf}`,
                             output: `${confInfo.output_pre}${j + (confInfo.subtask_end[i - 1] || 0) + 1}.${confInfo.output_suf}`,
                         })),
@@ -521,7 +521,7 @@ export async function run({
                             id: 1,
                             score: 97,
                             type: 'sum' as SubtaskType,
-                            cases: [...new Array(+confInfo.n_tests)].map((v, i) => i + 1).map((i) => ({
+                            cases: [...Array.from({ length: +confInfo.n_tests })].map((v, i) => i + 1).map((i) => ({
                                 input: `${confInfo.input_pre}${i}.${confInfo.input_suf}`,
                                 output: `${confInfo.output_pre}${i}.${confInfo.output_suf}`,
                             })),
@@ -530,7 +530,7 @@ export async function run({
                     config.subtasks.push({
                         id: Math.max(...config.subtasks.map((i) => i.id)) + 1,
                         score: 3,
-                        cases: [...new Array(+confInfo.n_ex_tests)].map((v, i) => i + 1).map((i) => ({
+                        cases: [...Array.from({ length: +confInfo.n_ex_tests })].map((v, i) => i + 1).map((i) => ({
                             input: `ex_${confInfo.input_pre}${i}.${confInfo.input_suf}`,
                             output: `ex_${confInfo.output_pre}${i}.${confInfo.output_suf}`,
                         })),

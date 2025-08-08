@@ -21,7 +21,7 @@ const start = new Date();
 
 function buildSequence(pages, type) {
   if (process.env.NODE_ENV !== 'production') {
-    if (['before', 'after'].indexOf(type) === -1) {
+    if (!['before', 'after'].includes(type)) {
       throw new Error("'type' should be one of 'before' or 'after'");
     }
   }

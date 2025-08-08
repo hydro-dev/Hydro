@@ -1,4 +1,7 @@
 /* eslint-disable max-len */
+/* eslint-disable regexp/prefer-question-quantifier */
+/* eslint-disable regexp/no-useless-non-capturing-group */
+/* eslint-disable regexp/optimal-quantifier-concatenation */
 
 import type MarkdownIt from 'markdown-it';
 import { v4 as uuid } from 'uuid';
@@ -10,6 +13,7 @@ function youtubeParser(url: string) {
   const match = url.match(ytRegex);
   return match && match[7].length === 11 ? match[7] : url;
 }
+// eslint-disable-next-line regexp/no-empty-alternative
 const vimeoRegex = /https?:\/\/(?:www\.|player\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
 function vimeoParser(url: string) {
   const match = url.match(vimeoRegex);
@@ -25,7 +29,7 @@ function preziParser(url: string) {
   const match = url.match(preziRegex);
   return match ? match[1] : url;
 }
-const EMBED_REGEX = /@\[([a-zA-Z].+?)]\((.*?)[)]/im;
+const EMBED_REGEX = /@\[([a-zA-Z].+?)\]\((.*?)\)/;
 function extractVideoParameters(url: string) {
   const parameterMap = new Map();
   const params = url.replace(/&amp;/gi, '&').split(/[#?&]/);
@@ -83,7 +87,7 @@ declare module 'hydrooj' {
   interface ModuleInterfaces {
     richmedia: {
       get: (service: string, src: string, md: MarkdownIt) => string | null;
-    }
+    };
   }
 }
 

@@ -94,11 +94,11 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
       <>
         <div className="messagepad__header">
           { this.props.item
-          && (
-            <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
-              {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
-            </a>
-          )}
+            && (
+              <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
+                {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
+              </a>
+            )}
         </div>
         <ol className="messagepad__content" ref="list">
           {this.renderInner()}

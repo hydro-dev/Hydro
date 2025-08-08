@@ -8,8 +8,8 @@ proxy(superagent);
 
 interface FetchOptions {
     headers?: { [key: string]: string };
-    post?: Omit<FetchOptions, 'get' | 'post'>
-    get?: Omit<FetchOptions, 'get' | 'post'>
+    post?: Omit<FetchOptions, 'get' | 'post'>;
+    get?: Omit<FetchOptions, 'get' | 'post'>;
 }
 
 const defaultUA = `Hydro/${global.Hydro.version.hydrooj} VJudge/${global.Hydro.version.vjudge}`;

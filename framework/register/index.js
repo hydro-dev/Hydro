@@ -1,3 +1,4 @@
+/* eslint-disable node/no-deprecated-api */
 const map = {};
 require('source-map-support').install({
     handleUncaughtExceptions: false,
@@ -27,7 +28,7 @@ const remove = [
     /(const|let|var)\s+__dirname\s*=\s*(path\.)?dirname\s*\(\s*__filename\s*\)\s*;?/g,
     // by tsdown
     /(const|let|var)\s+getFilename\s*=\s*\(\s*\)\s*=>\s*fileURLToPath\s*\(\s*import\.meta\.url\s*\)\s*;?/g,
-    /(const|let|var)\s+__filename\s*=\s*(\/\*\s*@__PURE__\s*\*\/)?\s*getFilename\s*\(\s*\)\s*;?/g,
+    /(const|let|var)\s+__filename\s*=\s*(?:(\/\*\s*@__PURE__\s*\*\/)\s*)?getFilename\s*\(\s*\)\s*;?/g,
 ];
 function tryTransform(filename, content, tsx = true) {
     for (const regex of remove) content = content.replace(regex, '');
@@ -93,10 +94,10 @@ require.extensions['.jsc'] = function loader(module, filename) {
     if (![12, 13, 14, 15, 16, 17].filter((i) => process.version.startsWith(`v${i}`)).length) {
         bytecode.subarray(16, 20).copy(buf, 16);
     }
-    // eslint-disable-next-line no-return-assign
+
     const length = buf.subarray(8, 12).reduce((sum, number, power) => sum += number * (256 ** power), 0);
     let dummyCode = '';
-    if (length > 1) dummyCode = `"${'\u200b'.repeat(length - 2)}"`;
+    if (length > 1) dummyCode = `"${'\u200B'.repeat(length - 2)}"`;
     const script = new vm.Script(dummyCode, {
         filename,
         lineOffset: 0,

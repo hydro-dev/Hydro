@@ -139,25 +139,25 @@ export function apply(ctx: Context) {
                         solved: +i === STATUS.STATUS_ACCEPTED,
                     })),
                     getFeed('languages', {
-                        id: 'c', name: 'C', 'entry_point_required': false, extensions: ['c'],
+                        id: 'c', name: 'C', entry_point_required: false, extensions: ['c'],
                     }),
                     getFeed('languages', {
-                        id: 'cpp', name: 'C++', 'entry_point_required': false, extensions: ['cpp', 'cc', 'cxx', 'c++'],
+                        id: 'cpp', name: 'C++', entry_point_required: false, extensions: ['cpp', 'cc', 'cxx', 'c++'],
                     }),
                     getFeed('languages', {
-                        id: 'java', name: 'Java', 'entry_point_required': true, extensions: ['java'],
+                        id: 'java', name: 'Java', entry_point_required: true, extensions: ['java'],
                     }),
                     getFeed('languages', {
-                        id: 'python3', name: 'Python 3', 'entry_point_required': false, 'entry_point_name': 'Main file', extensions: ['py', 'py3'],
+                        id: 'python3', name: 'Python 3', entry_point_required: false, entry_point_name: 'Main file', extensions: ['py', 'py3'],
                     }),
                     getFeed('languages', {
-                        id: 'kotlin', name: 'Kotlin', 'entry_point_required': true, extensions: ['kt'],
+                        id: 'kotlin', name: 'Kotlin', entry_point_required: true, extensions: ['kt'],
                     }),
                     getFeed('languages', {
-                        id: 'rust', name: 'Rust', 'entry_point_required': true, extensions: ['rs'],
+                        id: 'rust', name: 'Rust', entry_point_required: true, extensions: ['rs'],
                     }),
                     getFeed('languages', {
-                        id: 'go', name: 'Go', 'entry_point_required': true, extensions: ['go'],
+                        id: 'go', name: 'Go', entry_point_required: true, extensions: ['go'],
                     }),
                     getFeed('groups', { id: 'participants', name: '正式队伍' }),
                     getFeed('groups', { id: 'observers', name: '打星队伍' }),

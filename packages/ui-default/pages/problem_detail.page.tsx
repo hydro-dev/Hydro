@@ -194,15 +194,15 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const ans = {};
     const pids = [];
     let cnt = 0;
-    const reg = /{{ (input|select|multiselect|textarea)\(\d+(-\d+)?\) }}/g;
+    const reg = /\{\{ (input|select|multiselect|textarea)\(\d+(-\d+)?\) \}\}/g;
     $('.problem-content .typo').children().each((i, e) => {
       if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
       const questions = [];
       let q;
-      while (q = reg.exec(e.innerText)) questions.push(q); // eslint-disable-line no-cond-assign
+      while (q = reg.exec(e.textContent)) questions.push(q); // eslint-disable-line no-cond-assign
       for (const [info, type] of questions) {
         cnt++;
-        const id = info.replace(/{{ (input|select|multiselect|textarea)\((\d+(-\d+)?)\) }}/, '$2');
+        const id = info.replace(/\{\{ (input|select|multiselect|textarea)\((\d+(-\d+)?)\) \}\}/, '$2');
         pids.push(id);
         if (type === 'input') {
           $(e).html($(e).html().replace(info, tpl`

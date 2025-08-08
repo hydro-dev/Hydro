@@ -1,9 +1,4 @@
 import fs from 'fs';
-import { rules as baseBestPracticesRules } from 'eslint-config-airbnb-base/rules/best-practices';
-import { rules as baseErrorsRules } from 'eslint-config-airbnb-base/rules/errors';
-import { rules as baseES6Rules } from 'eslint-config-airbnb-base/rules/es6';
-import { rules as baseStyleRules } from 'eslint-config-airbnb-base/rules/style';
-import { rules as baseVariablesRules } from 'eslint-config-airbnb-base/rules/variables';
 import yaml from 'js-yaml';
 
 const base = yaml.load(fs.readFileSync('base.yaml', 'utf8')) as any;
@@ -21,11 +16,6 @@ function sort<T>(obj: Record<string, T>): Record<string, T> {
 // NOTE: oxlint doesn't support most stylistic rules
 
 const rules = sort({
-    ...baseBestPracticesRules,
-    ...baseErrorsRules,
-    ...baseES6Rules,
-    ...baseStyleRules,
-    ...baseVariablesRules,
     ...base.rules,
     ...react.rules,
     'no-unused-vars': [

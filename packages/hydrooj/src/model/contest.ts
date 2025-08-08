@@ -641,7 +641,7 @@ const homework = buildContestRule({
             );
             if (exceedSeconds < 0) return rate * jdoc.score;
             let coefficient = 1;
-            const keys = Object.keys(tdoc.penaltyRules).map(parseFloat).sort((a, b) => a - b);
+            const keys = Object.keys(tdoc.penaltyRules).map(Number.parseFloat).sort((a, b) => a - b);
             for (const i of keys) {
                 if (i * 3600 <= exceedSeconds) coefficient = tdoc.penaltyRules[i];
                 else break;

@@ -30,7 +30,7 @@ export function TestcaseNode(props: TestcaseNodeProps) {
       data-selected={selected}
       content={
         <Menu>
-          <MenuItem icon="drawer-left" text={i18n('Move to subtask')} >
+          <MenuItem icon="drawer-left" text={i18n('Move to subtask')}>
             {subtaskIds.filter((i) => i !== subtaskId).map((i) => (
               <MenuItem key={i} text={i18n('Subtask {0}', i)} />
             ))}

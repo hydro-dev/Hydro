@@ -2,7 +2,7 @@ import { CustomSelectAutoComplete as CustomSelectAutoCompleteFC } from '@hydrooj
 import AutoComplete, { AutoCompleteOptions } from '.';
 
 interface CustomSelectOptions {
-  data: any[]
+  data: any[];
 }
 
 export default class CustomSelectAutoComplete<Multi extends boolean> extends AutoComplete<CustomSelectOptions> {

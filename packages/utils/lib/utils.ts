@@ -8,7 +8,8 @@ import fs from 'fs-extra';
 import type { Moment } from 'moment';
 import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
-export * as yaml from 'js-yaml';
+
+export * from '@hydrooj/utils/lib/common';
 export * as fs from 'fs-extra';
 
 Factory.formatters['d'] = (value, exporter) => Reggol.color(exporter, 3, value);
@@ -252,10 +253,10 @@ export function findFileSync(pathname: string, doThrow: boolean | Error = true) 
     return null;
 }
 
-export async function retry(func: Function, ...args: any[]): Promise<any>;
-export async function retry(times: number, func: Function, ...args: any[]): Promise<any>;
+export async function retry<Arg extends any[], Ret>(func: (...args: Arg) => Ret, ...args: Arg): Promise<Ret>;
+export async function retry<Arg extends any[], Ret>(times: number, func: (...args: Arg) => Ret, ...args: Arg): Promise<Ret>;
 // eslint-disable-next-line consistent-return
-export async function retry(arg0: number | Function, func: any, ...args: any[]) {
+export async function retry(arg0: number | ((...args: any[]) => any), func: any, ...args: any[]): Promise<any> {
     let res;
     if (typeof arg0 !== 'number') {
         args = [func, ...args];
@@ -397,4 +398,4 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
     }
 }
 
-export * from '@hydrooj/utils/lib/common';
+export * as yaml from 'js-yaml';

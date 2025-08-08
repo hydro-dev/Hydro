@@ -15,8 +15,8 @@ const collUser = db.collection('domain.user');
 const cache = new LRUCache<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
 
 interface DomainUserArg {
-    _id: number,
-    priv: number,
+    _id: number;
+    priv: number;
 }
 
 class DomainModel {
@@ -282,7 +282,7 @@ class DomainModel {
 
     @ArgMethod
     static async getPrefixSearch(prefix: string, limit: number = 50) {
-        const $regex = new RegExp(escapeRegExp(prefix), 'mi');
+        const $regex = new RegExp(escapeRegExp(prefix), 'im');
         const ddocs = await coll.find({
             $or: [{ _id: { $regex } }, { name: { $regex } }],
         }).limit(limit).toArray();

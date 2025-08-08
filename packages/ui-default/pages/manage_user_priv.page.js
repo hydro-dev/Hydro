@@ -48,7 +48,7 @@ const page = new NamedPage('manage_user_priv', () => {
 
   async function handleClickSelectUser() {
     const target = await selectUser();
-    if (!target) return;
+    if (!target?._id) return;
     const user = await request.get(`/user/${target._id}`);
     handleOpenUserPrivDialog(user.udoc);
   }

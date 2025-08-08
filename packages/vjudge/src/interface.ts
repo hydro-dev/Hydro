@@ -27,19 +27,20 @@ declare module 'hydrooj' {
 }
 type NextFunction = (body: Partial<JudgeResultBody>) => void;
 export interface IBasicProvider {
-    ensureLogin(): Promise<boolean | string>;
-    getProblem(id: string, meta: Record<string, any>): Promise<{
+    ensureLogin: () => Promise<boolean | string>;
+    getProblem: (id: string, meta: Record<string, any>) => Promise<{
         title: string;
         data: Record<string, any>;
         files: Record<string, any>;
         tag: string[];
         content: string;
         difficulty?: number;
+        solution?: string;
     }>;
     entryProblemLists?: string[];
-    listProblem(page: number, resync: boolean, listId: string): Promise<string[]>;
-    submitProblem(id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction): Promise<string | void>;
-    waitForSubmission(id: string, next: NextFunction, end: NextFunction): Promise<void>;
+    listProblem: (page: number, resync: boolean, listId: string) => Promise<string[]>;
+    submitProblem: (id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction) => Promise<string | void>;
+    waitForSubmission: (id: string, next: NextFunction, end: NextFunction) => Promise<void>;
     checkStatus?: (onCheckFunc: boolean) => Promise<void>;
     stop?: () => Promise<void>;
 }

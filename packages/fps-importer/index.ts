@@ -27,7 +27,7 @@ class FpsProblemImportHandler extends Handler {
                 samples: p.sample_input?.map((input, i) => [input, p.sample_output[i]]),
                 hint: p.hint?.[0],
                 source: p.source?.join(' '),
-            }, 'html', (s) => this.translate(s)).replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md]/g, '');
+            }, 'html', (s) => this.translate(s)).replace(/<math xm<x>lns=/g, '<math xmlns=').replace(/\[\/?md\]/g, '');
             const config: ProblemConfigFile = {
                 time: p.time_limit[0]._ + p.time_limit[0].$.unit,
                 memory: p.memory_limit[0]._ + p.memory_limit[0].$.unit,

@@ -2,18 +2,18 @@ import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
 
 export function convertIniConfig(ini: string) {
     const f = ini.split('\n');
-    const count = parseInt(f[0], 10);
+    const count = Number.parseInt(f[0], 10);
     const res = { subtasks: [] };
     for (let i = 1; i <= count; i++) {
         if (!f[i]?.trim()) throw new Error('Testdata count incorrect.');
         const [input, output, time, score, memory] = f[i].split('|');
         const cur = {
             cases: [{ input, output }],
-            score: parseInt(score, 10),
+            score: Number.parseInt(score, 10),
             time: `${time}s`,
             memory: '256m',
         };
-        if (!Number.isNaN(parseInt(memory, 10))) cur.memory = `${Math.floor(parseInt(memory, 10) / 1024)}m`;
+        if (!Number.isNaN(Number.parseInt(memory, 10))) cur.memory = `${Math.floor(Number.parseInt(memory, 10) / 1024)}m`;
         res.subtasks.push(cur);
     }
     return res;
@@ -29,7 +29,8 @@ interface MatchRule {
 
 const SubtaskMatcher: MatchRule[] = [
     {
-        regex: /^(([A-Za-z0-9._-]*?)(?:(\d*)[-_])?(\d+))\.(in|IN|txt|TXT|in\.txt|IN\.TXT)$/,
+        // eslint-disable-next-line regexp/no-super-linear-backtracking
+        regex: /^(([\w.-]*?)(?:(\d*)[-_])?(\d+))\.(in|IN|txt|TXT|in\.txt|IN\.TXT)$/,
         output: (a) => ['out', 'ans']
             .flatMap((i) => [i, i.toUpperCase(), `${i}.txt`, `${i.toUpperCase()}.TXT`])
             .flatMap((i) => [`${a[1]}.${i}`, `${a[1]}.${i}`.replace(/input/g, 'output').replace(/INPUT/g, 'OUTPUT')])
@@ -39,7 +40,7 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: (a) => (a[3] ? 'min' : 'sum'),
     },
     {
-        regex: /^([^\d]*)\.(in|IN)(\d+)$/,
+        regex: /^(\D*)\.(in|IN)(\d+)$/,
         output: (a) => [
             `${a[1]}.${a[2] === 'in' ? 'ou' : 'OU'}${a[3]}`,
             `${a[1]}.${a[2] === 'in' ? 'out' : 'OUT'}${a[3]}`,
@@ -49,14 +50,14 @@ const SubtaskMatcher: MatchRule[] = [
         preferredScorerType: () => 'sum',
     },
     {
-        regex: /^([^\d]*)([0-9]+)([-_])([0-9]+)\.(in|IN)$/,
+        regex: /^(\D*)([0-9]+)([-_])([0-9]+)\.(in|IN)$/,
         output: (a) => ['out', 'ans', 'OUT', 'ANS'].flatMap((i) => `${a[1]}${a[2]}${a[3]}${a[4]}.${i}`),
         id: (a) => +a[4],
         subtask: (a) => +a[2],
         preferredScorerType: () => 'min',
     },
     {
-        regex: /^(([0-9]+)[-_](?:.*))\.(in|IN)$/,
+        regex: /^(([0-9]+)[-_].*)\.(in|IN)$/,
         output: (a) => ['out', 'ans', 'OUT', 'ANS'].flatMap((i) => `${a[1]}.${i}`),
         id: (a) => +a[2],
         subtask: () => 1,

@@ -534,7 +534,7 @@ class HomeDomainCreateHandler extends Handler {
     @param('name', Types.Title)
     @param('bulletin', Types.Content)
     @param('avatar', Types.Content, true)
-    // eslint-disable-next-line @typescript-eslint/no-shadow
+    // eslint-disable-next-line ts/no-shadow
     async post(_: string, id: string, name: string, bulletin: string, avatar: string) {
         const doc = await domain.get(id);
         if (doc) throw new DomainAlreadyExistsError(id);

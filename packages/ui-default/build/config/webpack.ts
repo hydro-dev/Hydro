@@ -108,7 +108,7 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
     devtool: env.production ? 'source-map' : false,
     entry: {
       [`hydro-${version}`]: './entry.js',
-      'sentry': './sentry.ts',
+      sentry: './sentry.ts',
       'default.theme': './theme/default.js',
       'service-worker': './service-worker.ts',
     },

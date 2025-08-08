@@ -159,7 +159,7 @@ export async function previewFile(ev?, type = '') {
     Notification.info(i18n('Loading file...'));
     try {
       const { url } = await request.get(link, {}, { headers: { Pragma: 'no-cache' } });
-      if (/^(doc|xls|ppt)x?$/.test(ext)) return previewOffice(link, url);
+      if (/^(?:doc|xls|ppt)x?$/.test(ext)) return previewOffice(link, url);
       content = await request.get(url, undefined, { dataType: 'text' });
     } catch (e) {
       Notification.error(i18n('Failed to load file: {0}', e.message));

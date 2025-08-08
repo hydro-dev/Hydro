@@ -7,11 +7,11 @@ const buffer = fs.readFileSync(findFileSync('@hydrooj/geoip/GeoLite2-City.mmdb')
 const reader = new Reader(buffer);
 
 export interface Result {
-    location?: string,
-    continent?: string,
-    country?: string,
-    city?: string,
-    display: string
+    location?: string;
+    continent?: string;
+    country?: string;
+    city?: string;
+    display: string;
 }
 
 export default class GeoIPService extends Service {

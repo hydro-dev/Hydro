@@ -27,12 +27,14 @@ export default new AutoloadPage('customFont', (pageName) => {
     if (!dialog) {
       const fonts = await getAvailableFonts();
       dialog = new ActionDialog({
-        $body: $(tpl(<CustomSelectAutoComplete
-          ref={(el) => { handle = el; }}
-          allowEmptyQuery={false}
-          data={fonts}
-          renderItem={(item) => <div style={{ fontFamily: item.id }}>{item.name}</div>}
-        />, true)),
+        $body: $(tpl(
+          <CustomSelectAutoComplete
+            ref={(el) => { handle = el; }}
+            allowEmptyQuery={false}
+            data={fonts}
+            renderItem={(item) => <div style={{ fontFamily: item.id }}>{item.name}</div>}
+          />, true,
+        )),
         onDispatch: (action) => {
           selection = handle.getSelectedItems()?.[0]?.id;
           return action !== 'ok' || selection;

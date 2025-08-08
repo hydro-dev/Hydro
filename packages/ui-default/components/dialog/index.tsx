@@ -113,7 +113,7 @@ export class ConfirmDialog extends Dialog {
 }
 
 export interface Field {
-  type: 'text' | 'checkbox' | 'user' | 'domain';
+  type: 'text' | 'checkbox' | 'user' | 'userId' | 'username' | 'domain';
   placeholder?: string;
   label?: string;
   autofocus?: boolean;
@@ -121,13 +121,23 @@ export interface Field {
   default?: string;
 }
 
-export async function prompt<T extends string>(title: string, fields: Record<T, Field>) {
-  let valueCache: Record<T, string | number | boolean> = {} as any;
+type Result<T extends string, R extends Record<T, Field>> = {
+  [K in keyof R]: ('text' | 'password' | 'username' | 'domain') extends R[K]['type'] ? string
+    : R[K]['type'] extends 'checkbox' ? boolean
+      : R[K]['type'] extends 'userId' ? number
+        : R[K]['type'] extends 'user' ? any
+          : never;
+};
+
+export async function prompt<T extends string, R extends Record<T, Field>>(title: string, fields: R): Promise<Result<T, R>> {
+  let valueCache: Result<T, R> = {} as any;
   const defaultValues = Object.fromEntries(Object.entries(fields)
-    .map(([name, field]: [T, Field]) => [name, field.default || ''])) as Record<T, string | number | boolean>;
+    .map(([name, field]: [T, Field]) => [name, field.default || ''])) as Result<T, R>;
 
   const Component = () => {
     const [values, setValues] = React.useState(defaultValues);
+    const [selected, setSelected] = React.useState<Partial<Result<T, R>>>({});
+    const refs = React.useRef<Partial<Record<T, React.RefObject<any>>>>({});
 
     React.useEffect(() => {
       valueCache = values;
@@ -139,29 +149,38 @@ export async function prompt<T extends string>(title: string, fields: Record<T, 
       </div></div>
       {Object.entries(fields).map(([name, field]: [string, Field]) => <div className="row" key={name}>
         <div className="columns">
-          {['text', 'user', 'domain'].includes(field.type) && <label>
+          {['text', 'user', 'userId', 'username', 'domain'].includes(field.type) && <label>
             {field.label}
             <div className="textbox-container">
-              {field.type === 'text'
+              {['text', 'password'].includes(field.type)
                 ? <input
-                  type="text" className="textbox" data-autofocus={field.autofocus}
+                  type={field.type}
+                  className="textbox"
+                  data-autofocus={field.autofocus}
                   defaultValue={field.default}
                   onChange={(e) => setValues({ ...values, [name]: e.target.value })}
                 />
-                : field.type === 'user'
+                : ['userId', 'username', 'user'].includes(field.type)
                   ? <UserSelectAutoComplete
-                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name].toString()] : []}
-                    onChange={(e) => setValues({ ...values, [name]: +e })}
-                    byId
+                    data-autofocus={field.autofocus}
+                    ref={(el) => { refs.current[name] = el; }}
+                    selectedKeys={selected[name] ? [selected[name].toString()] : []}
+                    onChange={(e) => {
+                      const val = refs.current[name].getSelectedItems()[0];
+                      setValues({ ...values, [name]: field.type === 'username' ? val.uname : field.type === 'userId' ? val._id : val });
+                      setSelected({ ...selected, [name]: e });
+                    }}
                   />
                   : <DomainSelectAutoComplete
-                    data-autofocus={field.autofocus} selectedKeys={values[name] ? [values[name]] : []}
+                    data-autofocus={field.autofocus}
+                    selectedKeys={values[name] ? [values[name]] : []}
                     onChange={(e) => setValues({ ...values, [name]: e })}
                   />}
             </div>
           </label>}
           {field.type === 'checkbox' && <label className="checkbox">
-            <input type="checkbox"
+            <input
+              type="checkbox"
               defaultChecked={field.default === 'true'}
               onChange={(e) => setValues({ ...values, [name]: !!e.target.checked })}
             />

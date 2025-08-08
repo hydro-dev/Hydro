@@ -24,7 +24,7 @@ const mapDispatchToProps = (dispatch) => ({
 
 interface Props {
   config: any;
-  handleUpdateCode: Function;
+  handleUpdateCode: (val: string) => void;
 }
 
 const configKey = [

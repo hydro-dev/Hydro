@@ -13,8 +13,8 @@ import {
 
 const argv = cac().parse();
 const tmpdir = path.resolve(os.tmpdir(), 'hydro');
-const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-const ARR = /=>.*$/mg;
+const COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
+const ARR = /=>.*$/gm;
 function parseParameters(fn: Function) {
     const code = fn.toString()
         .replace(COMMENTS, '')

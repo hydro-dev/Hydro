@@ -11,20 +11,20 @@ const REDIRECT = Symbol.for('hydro.api.response.redirect');
 
 type MaybePromise<T> = T | Promise<T>;
 export type ApiType = 'Query' | 'Mutation' | 'Subscription';
-export type ApiCall<Type extends ApiType, Arg, Res, Progress = never> = {
+export interface ApiCall<Type extends ApiType, Arg, Res, Progress = never> {
     readonly type: Type;
     readonly input: Schema<Arg>;
     readonly func: (Type extends 'Subscription'
         ? (context: any, args: Arg, emit: (payload: Res) => void) => (() => MaybePromise<void>)
         : (context: any, args: Arg) => MaybePromise<Res | AsyncGenerator<Progress, Res, never>>);
     readonly hooks: ApiCall<'Query', Arg, void>[];
-};
+}
 
 export const _get = <Type extends ApiType>(type: Type) => <Arg, Res, Progress>(
     schema: Schema<Arg>,
     func: ApiCall<Type, Arg, Res, Progress>['func'],
     hooks: ApiCall<'Query', Arg, void, never>[] = [],
-): ApiCall<Type, Arg, Res, Progress> => ({ input: schema, func, hooks, type } as const); // eslint-disable-line
+): ApiCall<Type, Arg, Res, Progress> => ({ input: schema, func, hooks, type } as const);
 
 export const Query = _get('Query');
 export const Mutation = _get('Mutation');
@@ -57,7 +57,7 @@ export interface Apis {
     builtin: {
         'query.batch': ApiCall<'Query', { op: string, args: any }[], { [key: string]: any }>;
         'mutation.batch': ApiCall<'Mutation', { op: string, args: any }[], { [key: string]: any }>;
-    }
+    };
     test: typeof TestApis;
 }
 export type FlattenedApis = Apis[keyof Apis];
@@ -68,8 +68,7 @@ type MKeyOf<T> = T extends any ? keyof T : never;
 type MId<T> = { [K in MKeyOf<T>]: T[K] } & {};
 type ProjectionSchema<T> = T extends Array<infer U>
     ? ProjectionSchema<U>
-    : | { [K in keyof T]?: ProjectionSchemaId | ProjectionSchema<T[K]> }
-    | Record<keyof any, ProjectionSchemaId | object>;
+    : { [K in keyof T]?: ProjectionSchemaId | ProjectionSchema<T[K]> } | Record<keyof any, ProjectionSchemaId | object>;
 type AsKeys<T> = T extends Array<infer U extends string> ? Record<U, 1> : T;
 type Projection<T, S> = S extends ProjectionSchemaId
     ? T : T extends Array<infer U> ? Array<MId<Projection<U, S>>> : {

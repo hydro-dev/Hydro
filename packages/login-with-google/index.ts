@@ -3,7 +3,7 @@ import {
 } from 'hydrooj';
 
 function unescapedString(escapedString: string) {
-    escapedString += new Array(5 - (escapedString.length % 4)).join('=');
+    escapedString += Array.from({ length: 5 - (escapedString.length % 4) }).join('=');
     return escapedString.replace(/-/g, '+').replace(/_/g, '/');
 }
 

@@ -7,7 +7,7 @@ export function stringify(queryObject: SearchParserResult, options: SearchParser
     if (!Object.keys(queryObject || {}).length) return '';
     prefix ||= '';
     const toArray = (val: string | string[]) => (typeof val === 'string' ? [val] : val);
-    const addQuotes = (s: string) => (s.indexOf(' ') > -1 ? JSON.stringify(s) : s);
+    const addQuotes = (s: string) => (s.includes(' ') ? JSON.stringify(s) : s);
     const addPrefix = (s: string) => prefix + s;
     const parts = [];
     if (queryObject.text) {

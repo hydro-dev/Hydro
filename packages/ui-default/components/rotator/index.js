@@ -56,7 +56,7 @@ export default class Rotator extends DOMAttachedObject {
       return;
     }
     let fromPosition;
-    if (parseFloat(value) > parseFloat(this.value)) {
+    if (Number.parseFloat(value) > Number.parseFloat(this.value)) {
       fromPosition = POS_BELOW;
     } else {
       fromPosition = POS_ABOVE;

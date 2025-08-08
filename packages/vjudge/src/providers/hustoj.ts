@@ -47,7 +47,7 @@ interface HustOJRemoteConfig {
         endpoint?: string;
         matcher?: RegExp;
         selector?: string;
-    },
+    };
     server?: string;
 }
 
@@ -68,7 +68,7 @@ const defaultConfig: HustOJRemoteConfig = {
     // },
     ceInfo: {
         endpoint: '/ceinfo.php?sid={rid}',
-        matcher: /<pre class=".*?" id='errtxt' >(.*?)<\/pre>/gmi,
+        matcher: /<pre class=".*?" id='errtxt' >(.*?)<\/pre>/gi,
     },
     monit: {
         endpoint: '/status.php?pid={pid}&user_id={uid}',
@@ -87,7 +87,7 @@ const defaultConfig: HustOJRemoteConfig = {
         codeField: 'source',
         extra: {},
         tooFrequent: 'UNKNOWN',
-        rid: /<tbody>\n<tr class="evenrow"><td>([0-9]+)<\/td>/gmi,
+        rid: /<tbody>\n<tr class="evenrow"><td>([0-9]+)<\/td>/gi,
     },
     server: 'https://acm.hust.edu.cn',
 };
@@ -188,7 +188,7 @@ export class HUSTOJ extends BasicFetcher implements IBasicProvider {
     async waitForSubmission(rid, next, end) {
         let url = this.config.monit.endpoint.replace('{uid}', this.state.username).replace('{pid}', this.state.pid);
         // eslint-disable-next-line max-len
-        const RE = new RegExp(`<tr.*?class="evenrow".*?><td>${rid}</td>.*?</td><td>.*?</td><td><font color=".*?">(.*?)</font></td><td>(.*?)<font color="red">kb</font></td><td>(.*?)<font color="red">ms`, 'gmi');
+        const RE = new RegExp(`<tr.*?class="evenrow".*?><td>${rid}</td>.*?</td><td>.*?</td><td><font color=".*?">(.*?)</font></td><td>(.*?)<font color="red">kb</font></td><td>(.*?)<font color="red">ms`, 'gim');
         const res = await this.get(url);
         let [, status, time, memory] = RE.exec(res.text);
         while (isProcessing(status)) {
@@ -249,14 +249,15 @@ export class XJOI extends HUSTOJ {
             codeField: 'source',
             tooFrequent: '请稍后再提交',
             extra: {},
-            rid: /<tr class="table-bordered"><td class="status-table-text"> <a href="\/detail\/([0-9]+)"/igm,
+            rid: /<tr class="table-bordered"><td class="status-table-text"> <a href="\/detail\/([0-9]+)"/gi,
         };
     }
 
     async waitForSubmission(rid, next, end) {
         const SUPERMONIT = [
-            /<textarea .*?>([\s\S]*?)<\/textarea>/igm,
-            /time: ([0-9]+)ms, memory: ([0-9]+)kb, points: ([0-9]+), status: (.*?)/gmi,
+            // eslint-disable-next-line regexp/no-super-linear-backtracking
+            /<textarea .*?>([\s\S]*?)<\/textarea>/gi,
+            /time: ([0-9]+)ms, memory: ([0-9]+)kb, points: ([0-9]+), status: (.*?)/gi,
         ];
         const url = `/detail${rid}`;
         let res = await this.get(url);

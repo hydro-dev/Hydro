@@ -5,7 +5,7 @@ import { serializer } from '@hydrooj/framework';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
-    ownerInfo, Udict, Udoc, VUdoc,
+    OwnerInfo, Udict, Udoc, VUdoc,
 } from '../interface';
 import avatar from '../lib/avatar';
 import pwhash from '../lib/hash.hydro';
@@ -116,9 +116,9 @@ export class User {
         return this;
     }
 
-    own<T extends ownerInfo>(doc: T, checkPerm: bigint): boolean;
-    own<T extends ownerInfo>(doc: T, exact: boolean): boolean;
-    own<T extends ownerInfo>(doc: T): boolean;
+    own<T extends OwnerInfo>(doc: T, checkPerm: bigint): boolean;
+    own<T extends OwnerInfo>(doc: T, exact: boolean): boolean;
+    own<T extends OwnerInfo>(doc: T): boolean;
     own<T extends { owner: number, maintainer?: number[] }>(doc: T): boolean;
     own(doc: any, arg1: any = false): boolean {
         if (typeof arg1 === 'bigint' && !this.hasPerm(arg1)) return false;
@@ -143,7 +143,7 @@ export class User {
             throw new LoginError(this.uname);
         }
         if (this.hashType !== 'hydro') {
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            // eslint-disable-next-line ts/no-use-before-define
             UserModel.setPassword(this._id, password);
         }
     }

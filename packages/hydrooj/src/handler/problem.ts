@@ -56,7 +56,7 @@ function buildQuery(udoc: User) {
 const defaultSearch = async (domainId: string, q: string, options?: ProblemSearchOptions) => {
     const escaped = escapeRegExp(q.toLowerCase());
     const projection: (keyof ProblemDoc)[] = ['domainId', 'docId', 'pid'];
-    const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
+    const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gim');
     const filter = { $or: [{ pid: { $regex } }, { title: { $regex } }, { tag: q }] };
     const pdocs = await problem.getMulti(domainId, filter, projection)
         .skip(options.skip || 0).limit(options.limit || system.get('pagination.problem')).toArray();
@@ -109,7 +109,7 @@ export class ProblemMainHandler extends Handler {
         this.response.template = 'problem_main.html';
         if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
         this.queryContext.query = buildQuery(this.user);
-        // eslint-disable-next-line @typescript-eslint/no-shadow
+        // eslint-disable-next-line ts/no-shadow
         const query = this.queryContext.query;
         const psdict = {};
         const search = Object.values(global.Hydro.module.problemSearch)[0] || defaultSearch;
@@ -607,7 +607,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
     @route('pid', Types.ProblemId)
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.ProblemId, true, (i) => /^([a-zA-Z0-9]{1,10}-)?[a-zA-Z]+[a-zA-Z0-9]*$/i.test(i))
+    @post('pid', Types.ProblemId, true, (i) => /^(?:[a-z0-9]{1,10}-)?[a-z][a-z0-9]*$/i.test(i))
     @post('hidden', Types.Boolean)
     @post('tag', Types.Content, true, null, parseCategory)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
@@ -837,7 +837,7 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
         if (!accepted || !this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION_ACCEPT)) {
             this.checkPerm(PERM.PERM_VIEW_PROBLEM_SOLUTION);
         }
-        // eslint-disable-next-line prefer-const
+
         let [psdocs, pcount, pscount] = await this.paginate(
             solution.getMulti(domainId, this.pdoc.docId),
             page,
@@ -995,7 +995,7 @@ export class ProblemCreateHandler extends Handler {
 
     @post('title', Types.Title)
     @post('content', Types.Content)
-    @post('pid', Types.ProblemId, true, (i) => /^([a-zA-Z0-9]{1,10}-)?[a-zA-Z]+[a-zA-Z0-9]*$/i.test(i))
+    @post('pid', Types.ProblemId, true, (i) => /^(?:[a-z0-9]{1,10}-)?[a-z][a-z0-9]*$/i.test(i))
     @post('hidden', Types.Boolean)
     @post('difficulty', Types.PositiveInt, (i) => +i <= 10, true)
     @post('tag', Types.Content, true, null, parseCategory)
@@ -1006,7 +1006,7 @@ export class ProblemCreateHandler extends Handler {
         if (typeof pid !== 'string') pid = `P${pid}`;
         if (pid && await problem.get(domainId, pid)) throw new ProblemAlreadyExistError(pid);
         const docId = await problem.add(domainId, pid, title, content, this.user._id, tag ?? [], { hidden, difficulty });
-        const files = new Set(Array.from(content.matchAll(/file:\/\/([a-zA-Z0-9_-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
+        const files = new Set(Array.from(content.matchAll(/file:\/\/([\w-]+\.[a-zA-Z0-9]+)/g)).map((i) => i[1]));
         const tasks = [];
         for (const file of files) {
             if (this.user._files.find((i) => i.name === file)) {

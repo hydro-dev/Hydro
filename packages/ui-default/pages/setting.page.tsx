@@ -57,7 +57,8 @@ const page = new NamedPage('manage_config', async () => {
         .omnibar-toggle {
           display: none;
         }
-      `}</style>
+      `}
+      </style>
     </ComponentsProvider>,
   );
 });

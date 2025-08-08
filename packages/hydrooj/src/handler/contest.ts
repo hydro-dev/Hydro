@@ -42,7 +42,7 @@ export class ContestListHandler extends Handler {
         if (group && !groups.includes(group)) throw new NotAssignedError(group);
         const rules = Object.keys(contest.RULES).filter((i) => !contest.RULES[i].hidden);
         const escaped = escapeRegExp(q.toLowerCase());
-        const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gmi');
+        const $regex = new RegExp(q.length >= 2 ? escaped : `\\A${escaped}`, 'gim');
         const filter = {
             ...(this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) && !group)
                 ? {}
@@ -626,10 +626,10 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     }
 }
 
-type BuiltinInput = {
+interface BuiltinInput {
     tdoc: Tdoc;
     groups: any[];
-};
+}
 type AnyFunction = (...args: any) => any;
 type ParseArgs<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }> = {
     [key in keyof T]: T[key] extends keyof BuiltinInput ? BuiltinInput[T[key]] : T[key] extends AnyFunction ? ReturnType<T[key]> : any
@@ -696,9 +696,9 @@ class ScoreboardService extends Service {
     addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }>(
         id: string, name: string, args: T,
         { display, supportedRules, cacheTime }: {
-            display: (this: ContestScoreboardHandler, args: ParseArgs<T>) => Promise<void>,
-            supportedRules: string[],
-            cacheTime?: number,
+            display: (this: ContestScoreboardHandler, args: ParseArgs<T>) => Promise<void>;
+            supportedRules: string[];
+            cacheTime?: number;
         },
     ) {
         if (this.views[id]) throw new Error(`View ${id} already exists`);
@@ -766,7 +766,7 @@ export async function apply(ctx: Context) {
                     config.lockAt = this.tdoc.lockAt;
                 }
                 const [, rows, udict, pdict] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, config);
-                // eslint-disable-next-line @typescript-eslint/naming-convention
+                // eslint-disable-next-line ts/naming-convention
                 const page_name = tdoc.rule === 'homework'
                     ? 'homework_scoreboard'
                     : 'contest_scoreboard';

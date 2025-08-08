@@ -17,9 +17,9 @@ export interface CheckConfig {
 }
 
 type Checker = (config: CheckConfig) => Promise<{
-    status: number,
-    score: number,
-    message: string,
+    status: number;
+    score: number;
+    message: string;
 }>;
 
 function parseDiffMsg(msg: string) {
@@ -206,7 +206,6 @@ const checkers: Record<string, Checker> = new Proxy({
      * stderr：输出错误报告
      */
     async syzoj(config) {
-        // eslint-disable-next-line prefer-const
         let { status, stdout, stderr } = await runQueued(config.execute, {
             copyIn: {
                 input: config.input,
