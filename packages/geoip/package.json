@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "maxmind": "^4.3.29"
+        "maxmind": "^5.0.0"
     },
     "preferUnplugged": true
 }
