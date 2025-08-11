@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog, confirm, InfoDialog } from 'vj/components/dialog';
+import { confirm, InfoDialog, prompt } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -23,60 +22,36 @@ const page = new NamedPage('domain_user', () => {
     }).open();
   });
 
-  const addUserSelector = UserSelectAutoComplete.getOrConstruct($('.dialog__body--add-user [name="user"]'));
-  const addUserDialog = new ActionDialog({
-    $body: $('.dialog__body--add-user > div'),
-    onDispatch(action) {
-      const $role = addUserDialog.$dom.find('[name="role"]');
-      if (action === 'ok') {
-        if (addUserSelector.value() === null) {
-          addUserSelector.focus();
-          return false;
-        }
-        if (!$role.val()) {
-          $role.focus();
-          return false;
-        }
-      }
-      return true;
-    },
-  });
-  const firstRoleForAddUser = addUserDialog.$dom.find('[name="role"] option').first().val();
-  addUserDialog.clear = function () {
-    addUserSelector.clear();
-    this.$dom.find('[name="role"]').val(firstRoleForAddUser);
-    return this;
-  };
-
-  const setRolesDialog = new ActionDialog({
-    $body: $('.dialog__body--set-role > div'),
-    onDispatch(action) {
-      const $role = setRolesDialog.$dom.find('[name="role"]');
-      if (action === 'ok' && !$role.val()) {
-        $role.focus();
-        return false;
-      }
-      return true;
-    },
-  });
-  const firstRoleForSetRole = setRolesDialog.$dom.find('[name="role"] option').first().val();
-  setRolesDialog.clear = function () {
-    this.$dom.find('[name="role"]').val(firstRoleForSetRole);
-    return this;
-  };
-
   async function handleClickAddUser() {
-    const action = await addUserDialog.clear().open();
-    if (action !== 'ok') {
-      return;
-    }
-    const user = addUserSelector.value();
-    const role = addUserDialog.$dom.find('[name="role"]').val();
+    const res = await prompt('Add User', {
+      user: {
+        type: 'userId',
+        required: true,
+        autofocus: true,
+        label: 'Username / UID',
+        columns: 6,
+      },
+      role: {
+        type: 'text',
+        required: true,
+        label: 'Role',
+        options: UiContext.roles.filter((i) => !['default', 'guest'].includes(i)),
+        columns: -6,
+      },
+      ...(UiContext.canForceJoin ? {
+        join: {
+          type: 'checkbox',
+          label: 'Mark user as joined using admin privilege',
+        },
+      } : {}),
+    });
+    if (!res?.user || !res?.role) return;
     try {
       await request.post('', {
         operation: 'set_users',
-        uids: [user._id],
-        role,
+        uids: [res.user],
+        role: res.role,
+        join: res.join,
       });
       window.location.reload();
     } catch (error) {
@@ -98,9 +73,7 @@ const page = new NamedPage('domain_user', () => {
 
   async function handleClickRemoveSelected() {
     const selectedUsers = ensureAndGetSelectedUsers();
-    if (selectedUsers === null) {
-      return;
-    }
+    if (selectedUsers === null) return;
     if (!(await confirm(`${i18n('Confirm removing the selected users?')}
 ${i18n('Their account will not be deleted and they will be with the guest role until they re-join the domain.')}`))) return;
     try {
@@ -117,22 +90,24 @@ ${i18n('Their account will not be deleted and they will be with the guest role u
   }
 
   async function handleClickSetSelected() {
+    const res = await prompt('Set Role', {
+      role: {
+        type: 'text',
+        required: true,
+        label: 'Set Roles for selected users',
+        options: UiContext.roles.filter((i) => !['guest'].includes(i)),
+      },
+    });
+    if (!res?.role) return;
     const selectedUsers = ensureAndGetSelectedUsers();
-    if (selectedUsers === null) {
-      return;
-    }
-    const action = await setRolesDialog.clear().open();
-    if (action !== 'ok') {
-      return;
-    }
-    const role = setRolesDialog.$dom.find('[name="role"]').val();
+    if (selectedUsers === null) return;
     try {
       await request.post('', {
         operation: 'set_users',
         uids: selectedUsers,
-        role,
+        role: res.role,
       });
-      Notification.success(i18n('Role has been updated to {0} for selected users.', role));
+      Notification.success(i18n('Role has been updated to {0} for selected users.', res.role));
       await delay(2000);
       window.location.reload();
     } catch (error) {

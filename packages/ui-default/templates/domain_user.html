@@ -1,51 +1,8 @@
 {% extends "domain_base.html" %}
 {% block domain_content %}
+{{ set(UiContext, 'roles', roles.map(eval('(i) => i._id'))) }}
+{{ set(UiContext, 'canForceJoin', handler.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) }}
 {% set _rolesSelect = roles.filter(eval("(i) => i._id !== 'guest'")).map(eval('(role) => [role._id, role._id]')) %}
-{% set _rolesSelectWithoutDefault = _rolesSelect.filter(eval("(i) => i[0] !== 'default'")) %}
-<div style="display: none" class="dialog__body--add-user">
-  <div>
-    <div class="row"><div class="columns">
-      <h1>{{ _('Add User') }}</h1>
-    </div></div>
-    <div class="row">
-      <div class="medium-6 columns">
-        <label>
-          {{ _('Username / UID') }}
-          <input name="user" type="text" class="textbox" autocomplete="off" data-autofocus>
-        </label>
-      </div>
-      <div class="medium-6 columns">
-        <label>
-          {{ _('Role') }}
-          {{ form.select({
-               label:_('Select a role'),
-               options:_rolesSelectWithoutDefault,
-               name:'role'
-             }) }}
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
-<div style="display: none" class="dialog__body--set-role">
-  <div>
-    <div class="row"><div class="columns">
-      <h1>{{ _('Set Role') }}</h1>
-    </div></div>
-    <div class="row">
-      <div class="medium-12 columns">
-        <label>
-          {{ _('Set Roles for selected users') }}
-          {{ form.select({
-               label:_('Select a role'),
-               options:_rolesSelect,
-               name:'role'
-             }) }}
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
 <div class="section">
   <div class="section__header">
     <h1 class="section__title">{{ _('{0}: Users').format(domain.name) }}</h1>

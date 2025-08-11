@@ -173,11 +173,14 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('uids', Types.NumericArray)
     @param('role', Types.Role)
-    async postSetUsers(domainId: string, uid: number[], role: string) {
+    @param('join', Types.Boolean)
+    async postSetUsers(domainId: string, uid: number[], role: string, join = false) {
+        if (join) this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
-            oplog.log(this, 'domain.setRole', { uid, role }),
+            oplog.log(this, 'domain.setRole', { uid, role, join }),
         ]);
+        if (join) await domain.setJoin(domainId, uid, true);
         this.back();
     }
 
