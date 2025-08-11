@@ -54,6 +54,7 @@ export interface Setting {
     name: string;
     desc: string;
     flag: number;
+    validation?: (val: any) => boolean;
 }
 
 export interface Authenticator {

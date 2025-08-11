@@ -4,6 +4,7 @@ import fs from 'fs';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
+import saslPrep from 'saslprep';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
 import { findFileSync, randomstring, retry } from '@hydrooj/utils';
@@ -47,6 +48,7 @@ export type SettingType = 'text' | 'yaml' | 'number' | 'float' | 'markdown' | 'p
 export const Setting = (
     family: string, key: string, value: any = null,
     type: SettingType = 'text', name = '', desc = '', flag = 0,
+    validation?: (val: any) => boolean,
 ): _Setting => {
     let subType = '';
     if (type === 'yaml' && typeof value !== 'string') {
@@ -64,6 +66,7 @@ export const Setting = (
         subType,
         type: typeof type === 'object' ? 'select' : type,
         range: typeof type === 'object' ? type : null,
+        validation,
     };
 };
 
@@ -82,13 +85,16 @@ function schemaToSettings(schema: Schema<any>) {
         if (s.dict) throw new Error('Dict is not supported here');
         let flag = (s.meta?.hidden ? FLAG_HIDDEN : 0)
             | (s.meta?.disabled ? FLAG_DISABLED : 0);
-        const type = s.type === 'number' ? 'number'
-            : s.type === 'boolean' ? 'boolean'
-                : s.meta?.role === 'markdown' ? 'markdown'
-                    : s.meta?.role === 'textarea' ? 'textarea' : 'text';
+        const actualType = s.type === 'transform' ? s.inner.type : s.type;
+        const actualList = s.type === 'transform' ? s.inner.list : s.list;
+        const type = actualType === 'any' ? 'json'
+            : actualType === 'number' ? 'number'
+                : actualType === 'boolean' ? 'boolean'
+                    : s.meta?.role === 'markdown' ? 'markdown'
+                        : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
         const options = {};
-        for (const item of s.list || []) {
+        for (const item of actualList || []) {
             if (item.type !== 'const') throw new Error('List item must be a constant');
             options[item.value] = item.meta?.description || item.value;
         }
@@ -100,8 +106,16 @@ function schemaToSettings(schema: Schema<any>) {
             desc: s.meta?.description,
             flag,
             subType: '',
-            type: s.list ? 'select' : type,
-            range: s.list ? options : null,
+            type: actualList ? 'select' : type,
+            range: actualList ? options : null,
+            validation: (v) => {
+                try {
+                    (s as any)(v);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
         } as _Setting;
     };
     if (!schema.dict) return [];
@@ -263,18 +277,16 @@ DomainSetting(
     Setting('setting_storage', 'host', '', 'text', 'Custom host', null, FLAG_HIDDEN | FLAG_DISABLED),
 );
 
-DomainUserSetting(
-    Setting('setting_info', 'displayName', '', 'text', 'Display Name'),
-    Setting('setting_storage', 'nAccept', 0, 'number', 'nAccept', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'nSubmit', 0, 'number', 'nSubmit', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'nLike', 0, 'number', 'nLike', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rp', 0, 'number', 'RP', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rpInfo', {}, 'json', 'RP Detail', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rpdelta', 0, 'number', 'RP.delta', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'rank', 0, 'number', 'Rank', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'level', 0, 'number', 'level', null, FLAG_HIDDEN | FLAG_DISABLED),
-    Setting('setting_storage', 'join', 0, 'number', 'join', null, FLAG_HIDDEN | FLAG_DISABLED),
-);
+DomainUserSetting(Schema.object({
+    displayName: Schema.transform(String, (input) => saslPrep(input)).default('').description('Display Name').extra('family', 'setting_info'),
+
+    rpInfo: Schema.any().extra('family', 'setting_storage').disabled().hidden(),
+
+    ...Object.fromEntries(['nAccept', 'nSubmit', 'nLike', 'rp', 'rpdelta', 'rank', 'level', 'join'].map((i) => ([
+        i, Schema.number().default(0).extra('family', 'setting_storage').disabled().hidden(),
+    ]))),
+
+}));
 
 const ignoreUA = [
     'bingbot',

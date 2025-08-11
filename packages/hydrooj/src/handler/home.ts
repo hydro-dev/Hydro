@@ -366,6 +366,7 @@ function set(s: Setting, key: string, value: any) {
     if (s.family === 'setting_storage') return undefined;
     if (s.flag & setting.FLAG_DISABLED) return undefined;
     if ((s.flag & setting.FLAG_SECRET) && !value) return undefined;
+    if (s.validation && !s.validation(value)) throw new ValidationError(key);
     if (s.type === 'boolean') {
         if (value === 'on') return true;
         return false;
