@@ -383,6 +383,7 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
     throttleSend: any;
     applyProjection = false;
     noTemplate = false;
+    canViewCode = false;
 
     @param('rid', Types.ObjectId)
     @param('noTemplate', Types.Boolean, true)
@@ -404,14 +405,10 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             problem.getStatus(domainId, rdoc.pid, this.user._id),
         ]);
 
-        let canViewCode = rdoc.uid === this.user._id;
-        canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
-        canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
-        if (!canViewCode) {
-            rdoc.code = '';
-            rdoc.compilerTexts = [];
-        }
+        this.canViewCode = rdoc.uid === this.user._id;
+        this.canViewCode ||= this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE);
+        this.canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
+        this.canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
 
         if (!rdoc.contest || this.user._id !== rdoc.uid) {
             if (!problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
@@ -444,9 +441,16 @@ class RecordDetailConnectionHandler extends ConnectionHandler {
             clearTimeout(this.disconnectTimeout);
             this.disconnectTimeout = null;
         }
-        if (this.applyProjection && rdoc.input === undefined) rdoc = contest.applyProjection(this.tdoc, rdoc, this.user);
+        if (this.applyProjection) rdoc = contest.applyProjection(this.tdoc, rdoc, this.user);
         // TODO: frontend doesn't support incremental update
         // if ($set) this.send({ $set, $push });
+        if (!this.canViewCode) {
+            rdoc = {
+                ...rdoc,
+                code: '',
+                compilerTexts: [],
+            };
+        }
         if (![STATUS.STATUS_WAITING, STATUS.STATUS_JUDGING, STATUS.STATUS_COMPILING, STATUS.STATUS_FETCHED].includes(rdoc.status)) {
             this.disconnectTimeout = setTimeout(() => this.close(4001, 'Ended'), 30000);
         }
