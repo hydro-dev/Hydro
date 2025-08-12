@@ -600,7 +600,7 @@ declare module '@hydrooj/framework' {
 
 export async function apply(ctx: Context) {
     ctx.Route('user_login', '/login', UserLoginHandler);
-    ctx.Route('user_oauth', '/oauth/:type', OauthHandler);
+    ctx.Route('user_oauth', '/oauth/:type/login', OauthHandler);
     ctx.Route('user_sudo', '/user/sudo', UserSudoHandler, PRIV.PRIV_USER_PROFILE);
     ctx.Route('user_tfa', '/user/tfa', UserTFAHandler);
     ctx.Route('user_webauthn', '/user/webauthn', UserWebauthnHandler);
