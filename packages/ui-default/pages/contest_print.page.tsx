@@ -1,9 +1,10 @@
 import $ from 'jquery';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
+import { ConfirmDialog } from 'vj/components/dialog';
 import highlighter from 'vj/components/highlighter/prismjs';
 import { NamedPage } from 'vj/misc/Page';
-import { delay, mongoId, request, tpl } from 'vj/utils';
+import { delay, i18n, mongoId, request, tpl } from 'vj/utils';
 
 interface PrintTask {
   _id: string;
@@ -98,7 +99,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
         <style>
           body { font-family: monospace; margin: 10px; font-size: 14px; line-height: 1.2; }
           .header { border-bottom: 1px solid #ccc; }
-          pre { margin: 0; margin-block: 0; }
+          pre { margin: 0; margin-block: 0; white-space: pre-wrap !important; }
         </style>
       </head>
       <body>
@@ -189,12 +190,23 @@ const page = new NamedPage('contest_print', () => {
   element.name = 'file';
   element.style.display = 'none';
   document.body.appendChild(element);
-  element.onchange = (ev: Event) => {
+  element.onchange = async (ev: Event) => {
     const file = (ev.target as HTMLInputElement).files[0];
     if (!file) return;
     const formData = new FormData();
     formData.append('file', file);
     formData.append('operation', 'print');
+    const language = file.name.split('.').pop()?.toLowerCase();
+    const dialog = new ConfirmDialog({
+      $body: tpl(<div className="typo">
+        <h3>{i18n('Are you sure to print this file?')}<span style={{ float: 'right' }}>{i18n('Filename: {0}', file.name)}</span></h3>
+        <div style={{ maxHeight: '60vh', overflow: 'scroll' }}>
+          <pre><code className={`language-${language}`}>{await file.text()}</code></pre>
+        </div>
+      </div>),
+    });
+    const action = await dialog.open();
+    if (action !== 'yes') return;
     request.postFile('', formData).then(() => {
       window.location.reload();
     });
