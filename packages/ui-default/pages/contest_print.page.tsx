@@ -49,6 +49,7 @@ function inlineStyles(element: HTMLElement) {
   Array.from(element.children).forEach((child) => inlineStyles(child as HTMLElement));
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
   const [printTasks, setPrintTasks] = useState<PrintTask[]>([]);
   const [isKioskActive, setIsKioskActive] = useState(false);
@@ -64,6 +65,15 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600,popup=1');
     if (!printWindow) return;
 
+    // Limit line count to prevent printing too many pages
+    const finalContent = [];
+    let cnt = 0;
+    for (const line of task.content.split('\n')) {
+      cnt += Math.ceil(line.length / 100);
+      if (cnt > 300) break;
+      finalContent.push(line);
+    }
+
     const parts = task.title.split('.');
     const ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'plaintext';
     const tempDiv = document.createElement('div');
@@ -72,7 +82,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
     pre.className = 'content';
     const code = document.createElement('code');
     code.className = `language-${ext}`;
-    code.textContent = task.content;
+    code.textContent = finalContent.join('\n');
     pre.appendChild(code);
     tempDiv.appendChild(pre);
     document.body.appendChild(tempDiv);
