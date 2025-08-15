@@ -60,7 +60,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
   };
 
   const printTask = async (task, udoc) => {
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'width=800,height=600,popup=1');
     if (!printWindow) return;
 
     const parts = task.title.split('.');
@@ -81,10 +81,12 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
     document.body.removeChild(tempDiv);
 
     const header = tpl(<div className="header">
-      <h2>{task.title}</h2>
       <p>
-        <strong>User:</strong> {udoc.uname}[{task.owner}] &nbsp;
-        <strong>Time:</strong> {new Date(mongoId(task._id).timestamp * 1000).toLocaleString()}
+        [{udoc.uname}] {udoc.school || ''} {udoc.displayName || ''} &nbsp;
+        <span style={{ float: 'right' }}>{new Date(mongoId(task._id).timestamp * 1000).toLocaleString()}</span>
+        <br />
+        Filename: {task.title}
+        <span style={{ float: 'right' }}>By Hydro</span>
       </p>
     </div>);
 
@@ -94,9 +96,9 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
       <head>
         <title>Print Page</title>
         <style>
-          body { font-family: monospace; white-space: pre-wrap; margin: 10px; }
-          .header { border-bottom: 1px solid #ccc; padding-bottom: 10px; }
-          .content { font-size: 12px; line-height: 1.2; }
+          body { font-family: monospace; margin: 10px; font-size: 14px; line-height: 1.2; }
+          .header { border-bottom: 1px solid #ccc; }
+          pre { margin: 0; margin-block: 0; }
         </style>
       </head>
       <body>
@@ -109,7 +111,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
 
     setTimeout(() => {
       printWindow.print();
-      printWindow.close();
+      // printWindow.close();
       callApi('updatePrintTask', task._id, 'printed').then(() => pollPrintTasks());
     }, 500);
   };
