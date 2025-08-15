@@ -13,7 +13,7 @@
           {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
             <button class="primary rounded button" name="enable_print_kiosk">{{ _('Enable Print Kiosk') }}</button>
           {% endif %}
-          <button class="primary rounded button" name="add_print_task">{{ _('Print File') }}</button>
+          <button class="primary rounded button" name="add_print_task">{{ _('Print New File') }}</button>
         </div>
       </div>
       <div class="section__body no-padding" id="printKioskContainer" {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}data-is-admin="true" {% endif %}></div>

@@ -1,7 +1,7 @@
-import { readFile } from 'fs/promises';
 import { Readable } from 'stream';
 import { BlobWriter, TextReader, ZipWriter } from '@zip.js/zip.js';
 import { stringify as toCSV } from 'csv-stringify/sync';
+import { readFile } from 'fs-extra';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
@@ -184,12 +184,15 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
 }
 
 export class ContestPrintHandler extends ContestDetailBaseHandler {
-    async prepare() {
+    @param('tid', Types.ObjectId)
+    async prepare({ domainId }, tid: ObjectId) {
         if (!this.tdoc?.allowPrint) throw new NotFoundError();
+        if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST) && !this.tsdoc?.attend) {
+            throw new ContestNotAttendedError(domainId, tid);
+        }
     }
 
-    @param('tid', Types.ObjectId)
-    async get(_domainId: string, _tid: ObjectId) {
+    async get() {
         this.response.body = { tdoc: this.tdoc };
         this.response.template = 'contest_print.html';
     }
@@ -232,7 +235,7 @@ export class ContestPrintHandler extends ContestDetailBaseHandler {
             throw new PermissionError(PERM.PERM_EDIT_CONTEST);
         }
         const task = await contest.allocatePrintTask(domainId, tid);
-        const udoc = await user.getById(domainId, task.owner);
+        const udoc = task ? await user.getById(domainId, task.owner) : null;
         this.response.body = { task, udoc };
     }
 

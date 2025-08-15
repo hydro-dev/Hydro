@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
+import highlighter from 'vj/components/highlighter/prismjs';
 import { NamedPage } from 'vj/misc/Page';
 import { delay, mongoId, request, tpl } from 'vj/utils';
 
@@ -29,6 +30,24 @@ const callApi = async <T extends keyof typeof apis>(api: T, ...args: Parameters<
   }
 };
 
+function inlineStyles(element: HTMLElement) {
+  const style = window.getComputedStyle(element);
+  element.style.color = style.color;
+  element.style.backgroundColor = style.backgroundColor;
+  element.style.fontWeight = style.fontWeight;
+  element.style.fontStyle = style.fontStyle;
+  element.style.textDecoration = style.textDecoration;
+  element.style.fontFamily = style.fontFamily;
+  element.style.fontSize = style.fontSize;
+  element.style.lineHeight = style.lineHeight;
+  element.style.whiteSpace = style.whiteSpace;
+  element.style.wordSpacing = style.wordSpacing;
+  element.style.wordBreak = style.wordBreak;
+  element.style.tabSize = style.tabSize;
+  element.style.hyphens = style.hyphens;
+  Array.from(element.children).forEach((child) => inlineStyles(child as HTMLElement));
+}
+
 const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
   const [printTasks, setPrintTasks] = useState<PrintTask[]>([]);
   const [isKioskActive, setIsKioskActive] = useState(false);
@@ -40,9 +59,34 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
     setUdict(response.udict || {});
   };
 
-  const printTask = async (task) => {
+  const printTask = async (task, udoc) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    const parts = task.title.split('.');
+    const ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'plaintext';
+    const tempDiv = document.createElement('div');
+    tempDiv.style.display = 'none';
+    const pre = document.createElement('pre');
+    pre.className = 'content';
+    const code = document.createElement('code');
+    code.className = `language-${ext}`;
+    code.textContent = task.content;
+    pre.appendChild(code);
+    tempDiv.appendChild(pre);
+    document.body.appendChild(tempDiv);
+    highlighter.highlightBlocks($(tempDiv));
+    inlineStyles(pre);
+    const highlightedContent = pre.outerHTML;
+    document.body.removeChild(tempDiv);
+
+    const header = tpl(<div className="header">
+      <h2>{task.title}</h2>
+      <p>
+        <strong>User:</strong> {udoc.uname}[{task.owner}] &nbsp;
+        <strong>Time:</strong> {new Date(mongoId(task._id).timestamp * 1000).toLocaleString()}
+      </p>
+    </div>);
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -56,19 +100,11 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
         </style>
       </head>
       <body>
-      ${tpl(<>
-      <div className="header">
-        <h2>{task.title}</h2>
-        <p>
-          <strong>User:</strong> {task.owner} &nbsp;
-          <strong>Time:</strong> {new Date(mongoId(task._id).timestamp * 1000).toLocaleString()}
-        </p>
-      </div>
-      <pre className="content"><code>{task.content}</code></pre>
-    </>)}
-    </body >
-      </html >
-  `);
+        ${header}
+        ${highlightedContent}
+      </body>
+      </html>
+    `);
     printWindow.document.close();
 
     setTimeout(() => {
@@ -87,7 +123,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
           const task = await callApi('allocatePrintTask');
           if (!task?.task) await delay(5000);
           else {
-            await printTask(task.task);
+            await printTask(task.task, task.udoc);
             await pollPrintTasks();
           }
         }
@@ -104,7 +140,7 @@ const PrintKiosk = ({ isAdmin }: { isAdmin: boolean }) => {
     return () => {
       $(document).off('click', '[name="enable_print_kiosk"]', cb);
     };
-  });
+  }, []);
 
   return <div className="print-kiosk">
     {isKioskActive && <p style={{ textAlign: 'center' }}>Print Kiosk is enabled</p>}

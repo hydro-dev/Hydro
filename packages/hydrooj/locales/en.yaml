@@ -10,6 +10,7 @@ contest_detail: Contest Detail
 contest_edit: Contest Edit
 contest_main: Contest
 contest_manage: Contest Management
+contest_print: Print
 contest_problemlist: Problem List
 contest_scoreboard: Scoreboard
 contest_user: Attendee Manage
