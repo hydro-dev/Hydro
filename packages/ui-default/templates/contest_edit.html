@@ -166,6 +166,14 @@
               value:tdoc.allowViewCode|default(true),
               row:false
             }) }}
+            {{ form.form_checkbox({
+              columns:4,
+              label:'Allow Print',
+              name:'allowPrint',
+              placeholder:_('Allow user to print during contest'),
+              value:tdoc.allowPrint|default(false),
+              row:false
+            }) }}
             <div style="display: none" class="contest-rule-settings contest-rule--acm contest-rule--ioi">
             {{ form.form_text({
               columns:4,

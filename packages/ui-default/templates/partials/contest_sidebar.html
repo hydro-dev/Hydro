@@ -78,6 +78,11 @@
         <span class="icon icon-statistics"></span> {{ _('Scoreboard (Hidden)') }}
       </a></li>
     {% endif %}
+    {% if tdoc.allowPrint and (tsdoc.attend or handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST)) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('contest_print', tid=tdoc.docId) }}">
+        <span class="icon icon-print"></span> {{ _('Print') }}
+      </a></li>
+    {% endif %}
     {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_edit', tid=tdoc.docId) }}">
         <span class="icon icon-edit"></span> {{ _('Edit Contest') }}

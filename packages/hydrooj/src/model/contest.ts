@@ -8,7 +8,7 @@ import {
     ContestScoreboardHiddenError, ValidationError,
 } from '../error';
 import {
-    BaseUserDict, ContestRule, ContestRules, ProblemDict, RecordDoc,
+    BaseUserDict, ContestPrintDoc, ContestRule, ContestRules, ProblemDict, RecordDoc,
     ScoreboardConfig, ScoreboardNode, ScoreboardRow, SubtaskResult, Tdoc,
 } from '../interface';
 import bus from '../service/bus';
@@ -19,6 +19,13 @@ import { PERM, STATUS, STATUS_SHORT_TEXTS } from './builtin';
 import * as document from './document';
 import problem from './problem';
 import user, { User } from './user';
+
+export enum PrintTaskStatus {
+    pending = 'pending',
+    printing = 'printing',
+    printed = 'printed',
+    failed = 'failed',
+}
 
 interface AcmJournal {
     rid: ObjectId;
@@ -1047,8 +1054,41 @@ export const statusText = (tdoc: Tdoc, tsdoc?: any) => (
                 ? 'Live...'
                 : 'Done');
 
+export function addPrintTask(domainId: string, tid: ObjectId, uid: number, name: string, content: string) {
+    return document.add(domainId, content, uid, document.TYPE_CONTEST_PRINT, null, document.TYPE_CONTEST, tid, {
+        title: name,
+        status: PrintTaskStatus.pending,
+    });
+}
+
+export async function updatePrintTask(domainId: string, tid: ObjectId, taskId: ObjectId, $set: Partial<ContestPrintDoc>) {
+    const res = await document.coll.updateOne({
+        domainId, docType: document.TYPE_CONTEST_PRINT,
+        docId: taskId, parentType: document.TYPE_CONTEST, parentId: tid,
+    }, { $set });
+    return !!res.modifiedCount;
+}
+
+export function allocatePrintTask(domainId: string, tid: ObjectId) {
+    return document.coll.findOneAndUpdate({
+        domainId, docType: document.TYPE_CONTEST_PRINT,
+        parentType: document.TYPE_CONTEST, parentId: tid,
+        status: PrintTaskStatus.pending,
+    }, {
+        $set: {
+            status: PrintTaskStatus.printing,
+        },
+    }, { returnDocument: 'after' });
+}
+
+export function getMultiPrintTask(domainId: string, tid: ObjectId, query = {}) {
+    return document.getMulti(domainId, document.TYPE_CONTEST_PRINT, { parentType: document.TYPE_CONTEST, parentId: tid, ...query })
+        .sort({ _id: 1 });
+}
+
 global.Hydro.model.contest = {
     RULES,
+    PrintTaskStatus,
     buildContestRule,
     add,
     getListStatus,
@@ -1089,4 +1129,8 @@ global.Hydro.model.contest = {
     isExtended,
     applyProjection,
     statusText,
+    addPrintTask,
+    updatePrintTask,
+    allocatePrintTask,
+    getMultiPrintTask,
 };
