@@ -217,15 +217,16 @@ export class ContestPrintHandler extends ContestDetailBaseHandler {
 
     @param('tid', Types.ObjectId)
     async postGetPrintTask(domainId: string, tid: ObjectId) {
-        const projection = { _id: 1, title: 1, owner: 1, status: 1 };
-        const tasks = (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST))
-            ? await contest.getMultiPrintTask(domainId, tid, { owner: this.user._id })
-                .project(projection).sort({ _id: 1 }).toArray()
-            : await contest.getMultiPrintTask(domainId, tid)
-                .project(projection).sort({ _id: 1 }).toArray();
-
+        const isContestAdmin = this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST);
+        const tasks = await contest.getMultiPrintTask(domainId, tid, isContestAdmin ? {} : { owner: this.user._id })
+            .project({ _id: 1, title: 1, owner: 1, status: 1 }).sort({ _id: 1 }).toArray();
         const uids = Array.from(new Set(tasks.map((i) => i.owner)));
-        const udict = await user.getListForRender(domainId, uids, ['displayName', 'school', 'schoolId']);
+        const udict = await user.getListForRender(
+            domainId, uids,
+            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)
+                ? ['displayName', 'school', 'studentId']
+                : [],
+        );
         this.response.body = { tasks, udict };
     }
 
