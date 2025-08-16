@@ -225,7 +225,7 @@ export class ContestPrintHandler extends ContestDetailBaseHandler {
                 .project(projection).sort({ _id: 1 }).toArray();
 
         const uids = Array.from(new Set(tasks.map((i) => i.owner)));
-        const udict = await user.getList(domainId, uids);
+        const udict = await user.getListForRender(domainId, uids, ['displayName', 'school', 'schoolId']);
         this.response.body = { tasks, udict };
     }
 
