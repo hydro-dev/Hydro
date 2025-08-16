@@ -98,6 +98,8 @@
           <li class="footer__extra-link-item">Worker {{ process.env.NODE_APP_INSTANCE }}, {{ Date.now() - handler.args.__start }}ms</li>
           <!-- Prepare {{ handler.args.__prepareDone - handler.args.__prepare }}ms -->
           <!-- Method {{ handler.args.__methodDone - handler.args.__method }}ms -->
+          {# You are not permitted to hide, edit or remove the following copyright info unless you have purchased an active enterprise license. #}
+          {# 除非您已购买了有效的企业版授权，否则您不得隐藏、修改或移除下方的版权信息。 #}
           <li class="footer__extra-link-item">Powered by <a href="https://hydro.js.org">Hydro v{{ global.Hydro.version.hydrooj }}</a> {{ "Professional" if model.system.get('server.pro') else "Community" }}</li>
         </ol>
       </div>
