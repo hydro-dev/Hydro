@@ -1,0 +1,27 @@
+{% extends "layout/basic.html" %}
+{% import "components/contest.html" as contest with context %}
+{% import "components/form.html" as form with context %}
+{% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+{{ set(UiContext, 'tsdoc', tsdoc) }}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Print Request') }} - {{ tdoc.title }}</h1>
+        <div class="section__tools">
+          {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}
+            <button class="primary rounded button" name="enable_print_kiosk">{{ _('Enable Print Kiosk') }}</button>
+          {% endif %}
+          <button class="primary rounded button" name="add_print_task">{{ _('Print New File') }}</button>
+        </div>
+      </div>
+      <div class="section__body no-padding" id="printKioskContainer" {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_CONTEST) %}data-is-admin="true" {% endif %}></div>
+    </div>
+  </div>
+  <div class="medium-3 columns">
+  {% set owner_udoc = udict[tdoc.owner] %}
+  {% include "partials/contest_sidebar.html" %}
+  </div>
+</div>
+{% endblock %}

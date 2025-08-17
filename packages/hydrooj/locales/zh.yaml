@@ -32,13 +32,13 @@ __langname: 简体中文
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
+'Or upload a file:': 或者上传一个文件：
 'Original score: {0}': '原得分: {0}'
 'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
-'Or upload a file:': 或者上传一个文件：
 "Split by ',' '.'": 由“, ”或“，”分隔。
 "What's file?": 什么是文件？
 (All Problems): (所有题目)
@@ -167,6 +167,7 @@ contest_detail: 比赛详情
 contest_edit: 编辑比赛
 contest_main: 比赛
 contest_manage: 比赛管理
+contest_print: 打印
 contest_problemlist: 题目列表
 contest_scoreboard: 比赛成绩表
 contest_user: 参赛者管理
@@ -592,6 +593,7 @@ Pretest Your Code: 使用自定义数据测试
 Pretest: 自测
 Pretest?: 自测?
 Preview: 预览
+Print: 打印
 Privacy: 隐私
 Problem {1} not found.: 题目 {1} 不存在。
 Problem Categories: 题目标签

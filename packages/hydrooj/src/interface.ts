@@ -8,6 +8,7 @@ import type {
     FileInfo, RecordJudgeInfo, RecordPayload,
 } from '@hydrooj/common/types';
 import type { Context } from './context';
+import type { PrintTaskStatus } from './model/contest';
 import type { DocStatusType } from './model/document';
 import type { OauthMap } from './model/oauth';
 import type { ProblemDoc } from './model/problem';
@@ -264,6 +265,7 @@ export interface Tdoc extends Document {
     assign?: string[];
     files?: FileInfo[];
     allowViewCode?: boolean;
+    allowPrint?: boolean;
 
     // For contest
     lockAt?: Date;
@@ -381,6 +383,16 @@ export interface ContestClarificationDoc extends Document {
     ip: string;
     content: string;
     reply: DiscussionTailReplyDoc[];
+}
+
+export interface ContestPrintDoc extends Document {
+    docType: document['TYPE_CONTEST_PRINT'];
+    docId: ObjectId;
+    parentType: document['TYPE_CONTEST'];
+    parentId: ObjectId;
+    title: string;
+    content: string;
+    status: PrintTaskStatus;
 }
 
 export interface TokenDoc {
