@@ -1,6 +1,7 @@
 import { Readable } from 'stream';
 import { BlobWriter, TextReader, ZipWriter } from '@zip.js/zip.js';
 import { stringify as toCSV } from 'csv-stringify/sync';
+import { readFile } from 'fs-extra';
 import { escapeRegExp, pick } from 'lodash';
 import moment from 'moment-timezone';
 import { ObjectId } from 'mongodb';
@@ -182,6 +183,77 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
     }
 }
 
+export class ContestPrintHandler extends ContestDetailBaseHandler {
+    @param('tid', Types.ObjectId)
+    async prepare({ domainId }, tid: ObjectId) {
+        if (!this.tdoc?.allowPrint) throw new NotFoundError();
+        if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST) && !this.tsdoc?.attend) {
+            throw new ContestNotAttendedError(domainId, tid);
+        }
+    }
+
+    async get() {
+        this.response.body = { tdoc: this.tdoc };
+        this.response.template = 'contest_print.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('title', Types.Title, true)
+    @param('content', Types.Content, true)
+    async postPrint(domainId: string, tid: ObjectId, title = '', content = '') {
+        if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
+        if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(domainId, tid);
+        await this.limitRate('add_print', 3600, 60);
+        if (this.request.files?.file) {
+            const file = this.request.files.file;
+            if (file.size > 1024 * 1024) throw new ValidationError('file');
+            content = await readFile(file.filepath, 'utf-8');
+            title ||= file.originalFilename || 'file';
+        }
+        if (!content) throw new ValidationError('content');
+        await contest.addPrintTask(domainId, tid, this.user._id, title, content);
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    async postGetPrintTask(domainId: string, tid: ObjectId) {
+        const isContestAdmin = this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST);
+        const tasks = await contest.getMultiPrintTask(domainId, tid, isContestAdmin ? {} : { owner: this.user._id })
+            .project({ _id: 1, title: 1, owner: 1, status: 1 }).sort({ _id: 1 }).toArray();
+        const uids = Array.from(new Set(tasks.map((i) => i.owner)));
+        const udict = await user.getListForRender(
+            domainId, uids,
+            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)
+                ? ['displayName', 'school', 'studentId']
+                : [],
+        );
+        this.response.body = { tasks, udict };
+    }
+
+    @param('tid', Types.ObjectId)
+    async postAllocatePrintTask(domainId: string, tid: ObjectId) {
+        if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+            throw new PermissionError(PERM.PERM_EDIT_CONTEST);
+        }
+        const task = await contest.allocatePrintTask(domainId, tid);
+        const udoc = task ? await user.getById(domainId, task.owner) : null;
+        this.response.body = { task, udoc };
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('taskId', Types.ObjectId)
+    @param('status', Types.Range(['printed', 'pending']))
+    async postUpdatePrintTask(domainId: string, tid: ObjectId, taskId: ObjectId, status: 'printed' | 'pending') {
+        if (!this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
+            throw new PermissionError(PERM.PERM_EDIT_CONTEST);
+        }
+        await contest.updatePrintTask(domainId, tid, taskId, {
+            status: status === 'printed' ? contest.PrintTaskStatus.printed : contest.PrintTaskStatus.pending,
+        });
+        this.response.body = { success: true };
+    }
+}
+
 export class ContestProblemListHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
@@ -305,12 +377,13 @@ export class ContestEditHandler extends Handler {
     @param('contestDuration', Types.Float, true)
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean)
+    @param('allowPrint', Types.Boolean)
     @param('langs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
-        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, langs: string[] = [],
+        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false, langs: string[] = [],
     ) {
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
         const pids = _pids.replace(/，/g, ',').split(',').map((i) => +i).filter((i) => i);
@@ -351,7 +424,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode, langs,
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, langs,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
@@ -734,6 +807,7 @@ export async function apply(ctx: Context) {
     ctx.Route('contest_detail', '/contest/:tid', ContestDetailHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_problemlist', '/contest/:tid/problems', ContestProblemListHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_print', '/contest/:tid/print', ContestPrintHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_manage', '/contest/:tid/management', ContestManagementHandler);
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
