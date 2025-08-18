@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/components",
-    "version": "1.0.0-beta.5",
+    "version": "1.0.0-beta.6",
     "main": "./frontend/index.ts",
     "repository": "https://github.com/hydro-dev/Hydro",
     "sideEffects": [

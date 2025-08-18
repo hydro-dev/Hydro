@@ -8,7 +8,7 @@
     "dependencies": {
         "mariadb": "^3.4.5",
         "mongodb": "^6.18.0",
-        "turndown": "^7.2.0",
+        "turndown": "^7.2.1",
         "xml2js": "^0.6.2"
     },
     "devDependencies": {
