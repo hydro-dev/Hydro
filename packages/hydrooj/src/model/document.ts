@@ -4,7 +4,7 @@ import {
 } from 'mongodb';
 import { Context } from '../context';
 import {
-    Content, ContestClarificationDoc, DiscussionDoc,
+    Content, ContestClarificationDoc, ContestPrintDoc, DiscussionDoc,
     DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
     Tdoc, TrainingDoc,
 } from '../interface';
@@ -27,6 +27,7 @@ export const TYPE_DISCUSSION = 21 as const;
 export const TYPE_DISCUSSION_REPLY = 22 as const;
 export const TYPE_CONTEST = 30 as const;
 export const TYPE_CONTEST_CLARIFICATION = 31 as const;
+export const TYPE_CONTEST_PRINT = 32 as const;
 export const TYPE_TRAINING = 40 as const;
 
 export interface DocType {
@@ -37,6 +38,7 @@ export interface DocType {
     [TYPE_DISCUSSION]: DiscussionDoc;
     [TYPE_DISCUSSION_REPLY]: DiscussionReplyDoc;
     [TYPE_CONTEST]: Tdoc;
+    [TYPE_CONTEST_PRINT]: ContestPrintDoc;
     [TYPE_CONTEST_CLARIFICATION]: ContestClarificationDoc;
     [TYPE_TRAINING]: TrainingDoc;
 }
@@ -480,6 +482,7 @@ global.Hydro.model.document = {
 
     TYPE_CONTEST,
     TYPE_CONTEST_CLARIFICATION,
+    TYPE_CONTEST_PRINT,
     TYPE_DISCUSSION,
     TYPE_DISCUSSION_NODE,
     TYPE_DISCUSSION_REPLY,
