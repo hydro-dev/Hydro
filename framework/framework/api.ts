@@ -11,7 +11,7 @@ const REDIRECT = Symbol.for('hydro.api.response.redirect');
 
 type MaybePromise<T> = T | Promise<T>;
 export type ApiType = 'Query' | 'Mutation' | 'Subscription';
-export interface ApiCall<Type extends ApiType, Arg, Res, Progress = never> {
+export interface ApiCall<Type extends ApiType, Arg, Res, Progress = void> {
     readonly type: Type;
     readonly input: Schema<Arg>;
     readonly func: (Type extends 'Subscription'
@@ -20,10 +20,10 @@ export interface ApiCall<Type extends ApiType, Arg, Res, Progress = never> {
     readonly hooks: ApiCall<'Query', Arg, void>[];
 }
 
-export const _get = <Type extends ApiType>(type: Type) => <Arg, Res, Progress>(
+export const _get = <Type extends ApiType>(type: Type) => <Arg, Res, Progress = void>(
     schema: Schema<Arg>,
     func: ApiCall<Type, Arg, Res, Progress>['func'],
-    hooks: ApiCall<'Query', Arg, void, never>[] = [],
+    hooks: ApiCall<'Query', Arg, void, void>[] = [],
 ): ApiCall<Type, Arg, Res, Progress> => ({ input: schema, func, hooks, type } as const);
 
 export const Query = _get('Query');
@@ -115,14 +115,16 @@ export class ApiService extends Service {
         super(ctx, 'api');
     }
 
-    provide(calls: Partial<FlattenedApis>) {
+    provide(calls: Partial<FlattenedApis>, atNameSpace = '') {
         this.ctx.effect(() => {
             for (const key in calls) {
-                APIS[key] = calls[key];
+                const target = `${atNameSpace ? `${atNameSpace}.` : ''}${key}`;
+                if (APIS[target]) console.warn(`API ${target} already exists, will be overridden`);
+                APIS[target] = calls[key];
             }
             return () => {
                 for (const key in calls) {
-                    delete APIS[key];
+                    delete APIS[`${atNameSpace ? `${atNameSpace}.` : ''}${key}`];
                 }
             };
         });

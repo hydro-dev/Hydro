@@ -95,7 +95,7 @@ function schemaToSettings(schema: Schema<any>) {
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
         const options = {};
         for (const item of actualList || []) {
-            if (item.type !== 'const') throw new Error('List item must be a constant');
+            if (item.type !== 'const') throw new Error(`List item must be a constant, got ${item.type}`);
             options[item.value] = item.meta?.description || item.value;
         }
         return {
