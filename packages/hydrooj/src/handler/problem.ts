@@ -1044,7 +1044,7 @@ export const ProblemApi = {
         async (ctx, args) => {
             const pdocs = await problem.getList(args.domainId, args.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
                 undefined, undefined, true);
-            return Object.keys(pdocs).map((id) => pdocs[+id]);
+            return args.ids.map((id) => pdocs[+id]).filter((i) => i);
         },
     ),
 } as const;
