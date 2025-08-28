@@ -8,6 +8,23 @@
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__header">
+        <h1 class="section__title">{{ tdoc.title }}</h1>
+        <div class="section__body">
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Status') }}: {{ _(model.contest.statusText(tdoc)) }}</span>
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Problems') }}: {{ tdoc.pids|length }}</span>
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Open Since') }}: {{ datetimeSpan(tdoc['beginAt'])|safe }}</span>
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">
+            {% if model.contest.isExtended(tdoc) or model.contest.isDone(tdoc) %}
+              {{ _('Hard Deadline') }}: {{ datetimeSpan(tdoc['endAt'])|safe }}
+            {% else %}
+              {{ _('Deadline') }}: {{ datetimeSpan(tdoc['penaltySince'])|safe }}
+            {% endif %}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section__header">
         <h1 class="section__title">{{ _('Homework Introduction') }}</h1>
       </div>
       <div class="section__body typo richmedia">

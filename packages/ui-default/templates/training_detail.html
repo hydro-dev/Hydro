@@ -42,6 +42,27 @@
   <div class="medium-9 columns">
   {%- endif -%}
     <div class="section">
+      <div class="section__header" style="align: center">
+        <h1 class="section__title">{{ tdoc.title }}</h1>
+      </div>
+      <div class="section__body">
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">
+          {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+            {{ _('Completed' if tsdoc['done'] else 'In Progress') if tsdoc['enroll'] else _('Not Enrolled') }}
+          {% else %}
+            {{ _('Status Unavailable') }}
+          {% endif %}
+        </span>
+        {% if tsdoc['enroll'] %}
+          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-progress">
+            {{ _('Completed') }} {{ (100 * tsdoc['donePids']|length / pids|length)|round|int }}%
+          </span>
+        {% endif %}
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-user--multiple">{{ tdoc.attend|default(0) }} </span>
+        <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Created By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
+      </div>
+    </div>
+    <div class="section">
       <div class="section__body typo">
         {{ tdoc['content'] }}
       </div>
