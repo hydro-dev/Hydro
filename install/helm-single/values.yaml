@@ -29,7 +29,7 @@ Judge:
         server_url: http://backend-service.hydro-namespace.svc.cluster.local:8080/
         uname: root
         password: rootroot
-        detail: true
+        detail: full
 
 Global:
   Mongo:

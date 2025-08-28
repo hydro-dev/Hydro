@@ -251,7 +251,7 @@ hosts:
     server_url: https://hydro.ac/
     uname: judge
     password: examplepassword
-    detail: true
+    detail: full
     concurrency: 2
 tmpfs_size: 512m
 stdio_size: 256m
