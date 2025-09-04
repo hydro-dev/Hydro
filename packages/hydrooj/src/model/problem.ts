@@ -421,7 +421,8 @@ export class ProblemModel {
         domainId: string, pid: number, uid: number,
         rid: ObjectId, status: number, score: number,
     ) {
-        const condition = status === STATUS.STATUS_ACCEPTED ? {} : { status: { $ne: STATUS.STATUS_ACCEPTED } };
+        const condition = status === STATUS.STATUS_ACCEPTED ? {}
+            : { $or: [{ status: { $ne: STATUS.STATUS_ACCEPTED } }, { rid }] };
         const res = await document.setStatusIfCondition(
             domainId, document.TYPE_PROBLEM, pid, uid,
             condition, { rid, status, score },
