@@ -190,8 +190,10 @@ class DomainUserHandler extends ManageHandler {
         const original = await domain.getMultiUserInDomain(domainId, { uid: { $in: uids } }).toArray();
         const needUpdate = uids.filter((uid) => original.find((i) => i.uid === uid)?.join);
         if (!needUpdate.length) return;
+        const target = needUpdate.length > 1 ? needUpdate : needUpdate[0];
         await Promise.all([
-            domain.setJoin(domainId, needUpdate.length > 1 ? needUpdate : needUpdate[0], false),
+            domain.setJoin(domainId, target, false),
+            domain.setUserRole(domainId, target, 'guest'),
             oplog.log(this, 'domain.kick', { uids: needUpdate }),
         ]);
         const msg = JSON.stringify({
