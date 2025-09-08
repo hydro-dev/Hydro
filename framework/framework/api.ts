@@ -31,7 +31,7 @@ export const Mutation = _get('Mutation');
 export const Subscription = _get('Subscription');
 
 export class BinaryResponse {
-    [BINARY]: true;
+    [BINARY] = true;
     constructor(public readonly data: Buffer, public filename: string) { }
     static check(value: any): value is BinaryResponse {
         return value && typeof value === 'object' && BINARY in value && value[BINARY] === true;
@@ -39,7 +39,7 @@ export class BinaryResponse {
 }
 
 export class RedirectResponse {
-    [REDIRECT]: true;
+    [REDIRECT] = true;
     constructor(public readonly url: string) { }
     static check(value: any): value is RedirectResponse {
         return value && typeof value === 'object' && REDIRECT in value && value[REDIRECT] === true;
