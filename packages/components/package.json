@@ -21,7 +21,7 @@
         "@types/diff": "^8.0.0",
         "@types/js-yaml": "^4.0.9",
         "@types/lodash": "^4.17.20",
-        "sass": "^1.90.0"
+        "sass": "^1.92.1"
     },
     "peerDependencies": {
         "react": "*",

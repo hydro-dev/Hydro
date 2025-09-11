@@ -111,6 +111,26 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.9 / UI 4.58.0-beta.9
+
+- core: 修复 OI/IOI 赛制一血计算
+- judge: 修复 detail 设置
+- core: problems 接口按请求顺序返回
+- core: 添加解绑 OAuth 账户支持
+- framework: 支持 API namespace
+- judge: 优化比较器性能
+- core: 检查作业延期规则合法性
+- core: 踢出用户时自动标记权限为 Guest
+- ui: 删除域增加确认弹框
+- core: 允许重测同一记录覆盖题目状态
+
+## Hydro 5.0.0-beta.8 / UI 4.58.0-beta.8
+
+- core&ui: 添加比赛打印功能
+- core: 允许使用管理员权限直接邀请用户加入域
+- vjudge: 支持拉取远端题解
+- core: settings: 禁止 displayName 使用特殊 unicode 字符
+
 ## Hydro 5.0.0-beta.6 / UI 4.58.0-beta.6
 
 - core: 修复网页端执行脚本返回值

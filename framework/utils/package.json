@@ -18,7 +18,7 @@
         "js-yaml": "^4.1.0",
         "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
-        "systeminformation": "^5.27.7"
+        "systeminformation": "^5.27.8"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4"
