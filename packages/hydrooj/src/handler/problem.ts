@@ -721,7 +721,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 throw new ValidationError('zip', null, e.message);
             }
             for (const entry of entries) {
-                if (!entry.filename || entry.directory) continue;
+                if (!entry.filename || entry.directory === true) continue;
                 files.push({
                     type,
                     name: sanitize(entry.filename),

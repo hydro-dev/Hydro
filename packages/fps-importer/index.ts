@@ -103,6 +103,7 @@ class FpsProblemImportHandler extends Handler {
             }
             for (const entry of entries) {
                 try {
+                    if (entry.directory === true) continue;
                     if (entry.uncompressedSize > SystemModel.get('import-fps.limit')) throw new FileTooLargeError();
                     const content = entry.getData(new Zip.TextWriter());
                     const result = await xml2js.parseStringPromise(content);
