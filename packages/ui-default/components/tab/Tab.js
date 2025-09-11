@@ -24,6 +24,7 @@ export default class Tab extends DOMAttachedObject {
   constructor($dom) {
     super($dom);
     this.attached = false;
+    this.hasMemo = false;
     this.attach();
   }
 
@@ -96,6 +97,7 @@ export default class Tab extends DOMAttachedObject {
 
     // 4. Finalize
     this.currentIndex = idx;
+    if (this.hasMemo) location.hash = `#tab-${idx}`;
     this.isAnimating = false;
   }
 
@@ -131,13 +133,34 @@ export default class Tab extends DOMAttachedObject {
     this.$dom = $container;
 
     this.currentIndex = 0;
+    this.hasMemo = this.$dom.hasClass('memo');
+    if (this.hasMemo) {
+      const getIdx = () => {
+        const hash = location.hash.substring(1);
+        const match = /^tab-(\d+)$/.exec(hash);
+        if (match) {
+          const idx = +match[1];
+          if (!Number.isNaN(idx) && idx < this.$header.children().length) {
+            return idx;
+          }
+        }
+        return null;
+      };
+      const handleIdChange = () => {
+        const idx = getIdx();
+        if (typeof idx === 'number') this.switchToTab(idx);
+      };
+      $(window).on('hashchange', handleIdChange);
+      handleIdChange();
+    } else this.currentIndex = 0;
+
     this.$content
       .children()
-      .eq(0)
+      .eq(this.currentIndex)
       .addClass('active');
     this.$header
       .children()
-      .eq(0)
+      .eq(this.currentIndex)
       .addClass('selected');
 
     return true;
