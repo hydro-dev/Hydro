@@ -17,9 +17,9 @@ import {
 
 const list = [];
 const filterTags = {};
-const pinned: Record<string, string[]> = { category: [], difficulty: [] };
-const selections = { category: {}, difficulty: {} };
-const selectedTags: Record<string, string[]> = { category: [], difficulty: [] };
+const pinned: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
+const selections = { category: {}, difficulty: {}, namespace: {} };
+const selectedTags: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
 
 let selectedPids: string[] = [];
 let clearSelectionHandler: (() => void) | null = null;
@@ -35,7 +35,7 @@ function setDomSelected($dom, selected, icon?) {
 }
 
 const parserOptions = {
-  keywords: ['category', 'difficulty'],
+  keywords: ['category', 'difficulty', 'namespace'],
   offsets: true,
   alwaysArray: true,
   tokenize: true,
