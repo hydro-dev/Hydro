@@ -49,7 +49,7 @@ export default new NamedPage('home_account', () => {
         github: 'GitHub username',
         qq: 'QQ ID',
         url: 'Avatar URL',
-        upload: 'Avatar URL',
+        upload: '',
       } as const)[String($type.val() ?? 'qq')] ?? 'QQ ID';
       $text.attr('placeholder', i18n(placeholder));
     }
