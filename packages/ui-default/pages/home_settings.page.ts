@@ -12,6 +12,7 @@ export default new NamedPage('home_account', () => {
       <option value="gravatar">${i18n('Gravatar')}</option>
       <option value="github">${i18n('Github')}</option>
       <option value="qq">${i18n('QQ')}</option>
+      <option value="url">${i18n('URL')}</option>
       <option value="upload">${i18n('Upload')}</option>
     </select>
   `);
@@ -43,11 +44,13 @@ export default new NamedPage('home_account', () => {
     } else {
       $text.show();
       $file.hide();
-      const placeholder = $type.val() === 'gravatar'
-        ? 'Email address'
-        : $type.val() === 'github'
-          ? 'Github username'
-          : 'QQ ID';
+      const placeholder = ({
+        gravatar: 'Email address',
+        github: 'GitHub username',
+        qq: 'QQ ID',
+        url: 'Avatar URL',
+        upload: 'Avatar URL',
+      } as const)[String($type.val() ?? 'qq')] ?? 'QQ ID';
       $text.attr('placeholder', i18n(placeholder));
     }
   });
