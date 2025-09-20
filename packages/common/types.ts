@@ -51,7 +51,7 @@ export interface ProblemConfigFile {
     user_extra_files?: string[];
     judge_extra_files?: string[];
     detail?: DetailType | boolean;
-    answers?: Record<string, [string | string[], number]>;
+    answers?: Record<string, [string | string[], number, string]>;
     redirect?: string;
     cases?: TestCaseConfig[];
     subtasks?: SubtaskConfig[];

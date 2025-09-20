@@ -32,7 +32,7 @@ export async function judge({
     const subtasks = {};
     if (!Object.keys(config.answers).length) throw new FormatError('Invalid standard answer.');
     for (const key in config.answers) {
-        const ansInfo = config.answers[key] as [string | string[], number] | Record<string, number>;
+        const ansInfo = config.answers[key] as [string | string[], number, string] | Record<string, number>;
         // eslint-disable-next-line ts/no-loop-func
         const report = (status: STATUS, score: number, message: string) => {
             const [subtaskId, caseId] = key.split('-').map(Number);
@@ -68,6 +68,10 @@ export async function judge({
                 const ans = new Set(answers[key] instanceof Array ? answers[key] : [answers[key]]);
                 if (stdAns.length === ans.size && Set.isSuperset(stdSet, ans)) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
                 else if (ans.size && Set.isSuperset(stdSet, ans)) report(STATUS.STATUS_WRONG_ANSWER, Math.floor(fullScore / 2), 'Partially Correct');
+                else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
+            } else if (ansInfo[2] === 'regex') {
+                const regex = new RegExp(stdAns);
+                if (regex.test(usrAns)) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
                 else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
             } else if (stdAns.toString() === usrAns) report(STATUS.STATUS_ACCEPTED, fullScore, 'Correct');
             else report(STATUS.STATUS_WRONG_ANSWER, 0, 'Incorrect');
