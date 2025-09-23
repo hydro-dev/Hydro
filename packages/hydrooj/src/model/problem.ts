@@ -489,12 +489,15 @@ export class ProblemModel {
         }
         for (const i of problems) {
             try {
-                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${i}`);
                 const files = await fs.readdir(path.join(tmpdir, i), { withFileTypes: true });
                 if (!files.find((f) => f.name === 'problem.yaml')) continue;
+                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${i}`);
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
                 const pdoc: ProblemDoc = yaml.load(content) as any;
-                if (!pdoc) continue;
+                if (!pdoc) {
+                    if (process.env.HYDRO_CLI) logger.error(`Invalid problem.yaml ${i}`);
+                    continue;
+                }
                 let pid = pdoc.pid;
                 let overridePid = null;
 
