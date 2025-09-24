@@ -13,7 +13,7 @@ import {
     extractZip, Logger, size, streamToBuffer,
 } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
-import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
+import { FileUploadError, NotFoundError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
@@ -460,6 +460,8 @@ export class ProblemModel {
         } = options;
         let delSource = options.delSource;
         let problems: string[];
+        const ddoc = await DomainModel.get(domainId);
+        if (!ddoc) throw new NotFoundError(domainId);
         try {
             if (filepath.endsWith('.zip')) {
                 tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
@@ -502,7 +504,11 @@ export class ProblemModel {
                 let overridePid = null;
 
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^(?:[a-z0-9]{1,10}-)?[a-z][0-9a-z]*$/i.test(id))) return false;
+                    if (id.includes('-')) {
+                        const [prefix] = id.split('-');
+                        if (!ddoc?.namespaces?.[prefix]) return false;
+                    }
                     const doc = await ProblemModel.get(domainId, id);
                     if (doc) {
                         if (!override) return false;
