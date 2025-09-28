@@ -721,7 +721,7 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
                 throw new ValidationError('zip', null, e.message);
             }
             for (const entry of entries) {
-                if (!entry.filename || entry.directory) continue;
+                if (!entry.filename || entry.directory === true) continue;
                 files.push({
                     type,
                     name: sanitize(entry.filename),
@@ -1044,7 +1044,7 @@ export const ProblemApi = {
         async (ctx, args) => {
             const pdocs = await problem.getList(args.domainId, args.ids, ctx.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || ctx.user._id,
                 undefined, undefined, true);
-            return Object.keys(pdocs).map((id) => pdocs[+id]);
+            return args.ids.map((id) => pdocs[+id]).filter((i) => i);
         },
     ),
 } as const;

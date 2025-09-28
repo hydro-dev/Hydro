@@ -22,8 +22,8 @@ import { ContestCodeHandler, ContestFileDownloadHandler, ContestScoreboardHandle
 
 const validatePenaltyRules = (input: string) => {
     try {
-        yaml.load(input);
-        return true;
+        const res = yaml.load(input);
+        return typeof res === 'object' && res !== null && Object.keys(res).every((key) => typeof res[key] === 'number');
     } catch (e) {
         return false;
     }

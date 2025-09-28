@@ -66,10 +66,31 @@ function fixFileName(fileName: string) {
     return fileName.replace(/[\\/?#~!|*]/g, '_');
 }
 
+async function iterate(
+    count: bigint | number, step: bigint | number, cb: (pageId: bigint) => Promise<void>,
+    reportOpts?: { every: number | bigint, namespace: string, report: (data: any) => void },
+) {
+    const _count = BigInt(count);
+    const _step = BigInt(step);
+    const { every, namespace, report } = reportOpts || {};
+    const _showProgress = every ? BigInt(every) : 0n;
+    const pageCount = _count / _step + (_count % _step === 0n ? 0n : 1n);
+    for (let pageId = 0n; pageId < pageCount; pageId++) {
+        await cb(pageId);
+        if (reportOpts && pageId % _showProgress === 0n) {
+            const progress = pageId * _step * 100n / _count;
+            report({
+                message: `${namespace} finished ${Number(pageId * _step)} / ${Number(count)} (${Number(progress)}%)`,
+            });
+        }
+    }
+}
+
 export async function run({
     host = 'localhost', port = 3306, name = 'jol',
     username, password, domainId, contestType = 'oi',
     dataDir, uploadDir = '/home/judge/src/web/upload/', rerun = true, randomMail = false,
+    withContest = true,
 }, report: (data: any) => void) {
     let remoteUsed = false;
     const src = await mariadb.createConnection({
@@ -172,10 +193,9 @@ export async function run({
     */
     const pidMap: Record<string, number> = {};
     const [{ 'count(*)': pcount }] = await query('SELECT count(*) FROM `problem`');
-    const step = 50;
-    const pageCount = Math.ceil(Number(pcount) / step);
-    for (let pageId = 0; pageId < pageCount; pageId++) {
-        const pdocs = await query(`SELECT * FROM \`problem\` LIMIT ${pageId * step}, ${step}`);
+    const step = 50n;
+    await iterate(pcount, 50n, async (pageId: bigint) => {
+        const pdocs = await query(`SELECT * FROM \`problem\` LIMIT ${Number(pageId * step)}, ${Number(step)}`);
         for (const pdoc of pdocs) {
             if (rerun) {
                 const opdoc = await ProblemModel.get(domainId, `P${pdoc.problem_id}`);
@@ -236,13 +256,8 @@ target: ybtbas/${+pdoc.id - 3000}
                 await SolutionModel.add(domainId, pidMap[pdoc.problem_id], 1, md);
             }
         }
-        if (pageId % 10 === 0) {
-            const progress = Math.round(((pageId * step) / pcount) * 100);
-            report({
-                message: `problem finished ${pageId * step} / ${pcount} (${progress}%)`,
-            });
-        }
-    }
+    }, { every: 10n, namespace: 'problem', report });
+
     if (remoteUsed) {
         MessageModel.sendNotification(`您导入的数据中使用了一本通编程启蒙远端测试题目。
 请在迁移脚本运行完成后，在终端中运行
@@ -266,54 +281,56 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         user_id	char(48)			允许参加比赛用户列表
     */
     const tidMap: Record<string, string> = {};
-    const tdocs = await query('SELECT * FROM `contest`');
-    for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
-        const tdoc = tdocs[tidx];
-        const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id} ORDER BY \`num\` ASC`);
-        const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
-        const files = {};
-        let description = tdoc.description;
-        const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
-        for (const file of uploadFiles) {
-            const filename = fixFileName(file[3]);
-            const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
-            files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
-            description = description.replace(`/upload/${fileWithPath}`, `file://${filename}`);
-        }
-        // WHY you allow contest with end time BEFORE start time? WHY???
-        const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
-        let isAssignMode = false;
-        if (tdoc.private === 1 && tdoc.password === '') {
-            isAssignMode = true;
-        }
-        const tid = await ContestModel.add(
-            domainId, tdoc.title, description || 'Description',
-            adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
-            { _code: tdoc.password },
-        );
-        tidMap[tdoc.contest_id] = tid.toHexString();
-        await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
-        if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
+    if (withContest) {
+        const tdocs = await query('SELECT * FROM `contest`');
+        for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
+            const tdoc = tdocs[tidx];
+            const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.contest_id} ORDER BY \`num\` ASC`);
+            const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
+            const files = {};
+            let description = tdoc.description;
+            const uploadFiles = description.matchAll(/(?:src|href)="\/upload\/([^"/]+)(?:\/([^"/]+))?\/([^"/]+\.[^"/.]+)"/g);
+            for (const file of uploadFiles) {
+                const filename = fixFileName(file[3]);
+                const fileWithPath = [file[1], ...(file[2] ? [file[2]] : []), file[3]].join('/');
+                files[filename] = await fs.readFile(path.join(uploadDir, fileWithPath));
+                description = description.replace(`/upload/${fileWithPath}`, `file://${filename}`);
+            }
+            // WHY you allow contest with end time BEFORE start time? WHY???
+            const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
+            let isAssignMode = false;
+            if (tdoc.private === 1 && tdoc.password === '') {
+                isAssignMode = true;
+            }
+            const tid = await ContestModel.add(
+                domainId, tdoc.title, description || 'Description',
+                adminUids[0], contestType, tdoc.start_time, endAt, pids, true,
+                { _code: tdoc.password },
+            );
+            tidMap[tdoc.contest_id] = tid.toHexString();
+            await Promise.all(Object.keys(files).map((filename) => addContestFile(domainId, tid, filename, files[filename])));
+            if (Object.keys(files).length) report({ message: `move ${Object.keys(files).length} file for contest ${tidMap[tdoc.contest_id]}` });
 
-        const allowedUser: { user_id: string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
-        const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
-        if (isAssignMode) {
-            await ContestModel.edit(domainId, tid, {
-                assign: assignUserList.map((uid) => uid.toString()),
-            });
-        } else {
-            for (let i = 0; i < assignUserList.length; i++) {
-                await ContestModel.attend(domainId, tid, assignUserList[i]).catch(noop);
+            const allowedUser: { user_id: string }[] = await query(`SELECT * FROM privilege WHERE rightstr = 'c${tdoc.contest_id}';`);
+            const assignUserList = allowedUser.map((i) => uidMap[i.user_id]).filter((i) => i);
+            if (isAssignMode) {
+                await ContestModel.edit(domainId, tid, {
+                    assign: assignUserList.map((uid) => uid.toString()),
+                });
+            } else {
+                for (let i = 0; i < assignUserList.length; i++) {
+                    await ContestModel.attend(domainId, tid, assignUserList[i]).catch(noop);
+                }
+            }
+            if (tidx % 100 === 0) {
+                const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
+                report({
+                    message: `contest finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
+                });
             }
         }
-        if (tidx % 100 === 0) {
-            const progress = Math.round(((tidx + 1) / tdocs.length) * 100);
-            report({
-                message: `contest finished ${tidx + 1} / ${tdocs.length} (${progress}%)`,
-            });
-        }
+        report({ message: 'contest finished' });
     }
-    report({ message: 'contest finished' });
     /*
         solution	程序运行结果记录
         字段名	类型	长度	是否允许为空	备注
@@ -336,10 +353,8 @@ hydrooj install https://hydro.ac/hydroac-client.zip
         judger	char(16)		N	判题机
     */
     // 测试运行 problem_id=0 导致非比赛的提交无法确定属于哪个题目,因此跳过测试运行
-    const [{ 'count(*)': _rcount }] = await query('SELECT count(*) FROM `solution` WHERE `problem_id` > 0');
-    const rcount = BigInt(_rcount);
-    const rpageCount = rcount / BigInt(step) + (rcount % BigInt(step) === 0n ? 0n : 1n);
-    for (let pageId = 0n; pageId < rpageCount; pageId++) {
+    const [{ 'count(*)': rcount }] = await query('SELECT count(*) FROM `solution` WHERE `problem_id` > 0');
+    await iterate(rcount, 50n, async (pageId: bigint) => {
         const rdocs = await query(`SELECT * FROM \`solution\` WHERE \`problem_id\` > 0 LIMIT ${pageId * BigInt(step)}, ${step}`);
         for (const rdoc of rdocs) {
             const data: RecordDoc = {
@@ -366,7 +381,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             if (rtInfo[0]?.error) data.judgeTexts.push(rtInfo[0].error);
             const source = await query(`SELECT \`source\` FROM \`source_code\` WHERE \`solution_id\` = ${rdoc.solution_id}`);
             if (source[0]?.source) data.code = source[0].source;
-            if (rdoc.contest_id) {
+            if (rdoc.contest_id && withContest) {
                 if (!tidMap[rdoc.contest_id]) {
                     report({ message: `warning: contest_id ${rdoc.contest_id} for submission ${rdoc.solution_id} not found` });
                 } else {
@@ -377,13 +392,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
             await RecordModel.coll.insertOne(data);
             await postJudge(data).catch((err) => report({ message: err.message }));
         }
-        if (pageId % 10n === 0n) {
-            const progress = Math.round(((Number(pageId) * step) / Number(rcount)) * 100);
-            report({
-                message: `record finished ${Number(pageId * BigInt(step))} / ${Number(rcount)} (${progress}%)`,
-            });
-        }
-    }
+    }, { every: 10n, namespace: 'record', report });
     report({ message: 'record finished' });
 
     src.end();

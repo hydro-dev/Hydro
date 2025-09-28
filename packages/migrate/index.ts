@@ -28,6 +28,7 @@ export function apply(ctx: Context) {
             contestType: Schema.string().default('oi'),
             dataDir: Schema.string().required(),
             uploadDir: Schema.string().default('/home/judge/src/web/upload/'),
+            withContest: Schema.boolean().default(true),
         }),
         checkLock((...args) => require('./scripts/hustoj').run(...args)),
     );

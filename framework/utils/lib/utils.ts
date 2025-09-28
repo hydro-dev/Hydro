@@ -354,7 +354,7 @@ export async function extractZip<T>(zipOrEntries: ZipReader<T> | Entry[], dest: 
     for (const entry of entries) {
         const name = shouldStrip ? entry.filename.substring(entries[0].filename.length) : entry.filename;
         const d = sanitize(dest, canonical(name));
-        if (entry.directory) {
+        if (entry.directory === true) {
             await fs.mkdir(d, { recursive: true });
             continue;
         }

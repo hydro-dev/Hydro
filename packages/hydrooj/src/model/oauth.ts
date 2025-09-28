@@ -50,7 +50,7 @@ export default class OauthModel extends Service {
 
     async [Context.init]() {
         await this.ctx.db.ensureIndexes(this.coll,
-            // { key: { platform: 1, id: 1 }, name: 'platform_id', unique: true },
+            { key: { platform: 1, id: 1 }, name: 'platform_id', unique: true },
             { key: { uid: 1, platform: 1 }, name: 'uid_platform' },
         );
     }
@@ -70,8 +70,8 @@ export default class OauthModel extends Service {
         return res?.uid;
     }
 
-    async unbind(platform: string, id: string, uid: number) {
-        await this.coll.deleteOne({ platform, id, uid });
+    async unbind(platform: string, uid: number) {
+        await this.coll.deleteOne({ platform, uid });
     }
 
     async list(uid: number) {

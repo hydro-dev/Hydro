@@ -154,8 +154,10 @@ export class JudgeResultCallbackContext {
         }
 
         const rdoc = await record.update(this.task.domainId, new ObjectId(this.task.rid as string), $set, $push, $unset);
-        if (rdoc) bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
-        await JudgeResultCallbackContext.postJudge(rdoc, this);
+        if (rdoc) {
+            bus.broadcast('record/change', rdoc, null, null, body); // trigger a full update
+            await JudgeResultCallbackContext.postJudge(rdoc, this);
+        }
         this.resolve(rdoc);
     }
 
@@ -165,8 +167,10 @@ export class JudgeResultCallbackContext {
         $set.judgeAt = new Date();
         $set.judger = body.judger ?? 1;
         const rdoc = await record.update(domainId, rid, $set, $push, $unset);
-        if (rdoc) app.broadcast('record/change', rdoc, null, null, body); // trigger a full update
-        await JudgeResultCallbackContext.postJudge(rdoc);
+        if (rdoc) {
+            app.broadcast('record/change', rdoc, null, null, body); // trigger a full update
+            await JudgeResultCallbackContext.postJudge(rdoc);
+        }
     }
 
     end(body?: Partial<JudgeResultBody>) {

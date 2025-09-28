@@ -2,18 +2,25 @@ services:
   # Warning: mongodb here is not password-protected.
   # DO NOT EXPOSE THIS SERVICE TO THE PUBLIC.
   oj-mongo:
-    image: mongo
+    image: mongo:7-jammy
     container_name: oj-mongo
     restart: always
     volumes:
       - ./data/mongo:/data/db
-
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
   oj-backend:
     build: ./backend
     container_name: oj-backend
     restart: always
     depends_on:
-      - oj-mongo
+      oj-mongo:
+        condition: service_healthy
+        restart: true
     volumes:
       - ./data/file:/data/file
       - ./data/backend:/root/.hydro

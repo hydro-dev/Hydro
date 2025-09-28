@@ -54,16 +54,13 @@ export class Consumer {
                     });
                     continue;
                 }
-                // eslint-disable-next-line no-await-in-loop
-                const res = await getFirst(this.filter);
+                const res = await getFirst(this.filter); // eslint-disable-line no-await-in-loop
                 if (!res) {
-                    let timeout: NodeJS.Timeout = null;
                     // eslint-disable-next-line no-await-in-loop
-                    await new Promise((resolve) => {
-                        timeout = setTimeout(resolve, 1000 / (this.concurrency - this.processing.size));
-                        this.notify = resolve;
-                    });
-                    clearTimeout(timeout);
+                    await Promise.race([
+                        new Promise((resolve) => { this.notify = resolve; }),
+                        sleep(1000 / (this.concurrency - this.processing.size)),
+                    ]);
                     continue;
                 }
                 this.processing.add(res);

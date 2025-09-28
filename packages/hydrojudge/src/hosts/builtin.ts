@@ -5,7 +5,7 @@ import { fs } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';
 import {
     Context as HydroContext, db, JudgeHandler, JudgeResultCallbackContext,
-    ObjectId, RecordModel, SettingModel, StorageModel, SystemModel, TaskModel,
+    ObjectId, RecordModel, SettingModel, StorageModel, TaskModel,
 } from 'hydrooj';
 import { langs } from 'hydrooj/src/model/setting';
 import { getConfig } from '../config';
@@ -18,7 +18,7 @@ import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
 
 const session: Session = {
-    config: { detail: SystemModel.get('hydrojudge.detail') },
+    config: { detail: getConfig('detail') },
     async fetchFile(namespace, files) {
         if (namespace === null) {
             const name = Object.keys(files)[0].split('#')[0];

@@ -385,7 +385,8 @@ export async function run({
                 } catch (e) {
                     throw new ValidationError('zip', null, e.message);
                 }
-                data.code = await entries.find((i) => i.filename.endsWith('answer.code'))?.getData(new Zip.TextWriter()) || '';
+                const codeEntry = entries.find((i) => i.filename.endsWith('answer.code') && i.directory === false);
+                data.code = await (codeEntry as any)?.getData(new Zip.TextWriter()) || '';
             } catch { /* ignore no code */ }
             const result = JSON.parse(Buffer.from(rdoc.result, 'base64').toString('utf8'));
             if (result.error) {

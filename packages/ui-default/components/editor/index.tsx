@@ -246,6 +246,8 @@ export default class Editor extends DOMAttachedObject {
       />;
     }
 
+    this.valueCache = value;
+
     this.reactRoot = ReactDOM.createRoot(ele);
     this.reactRoot.render(<EditorComponent />);
     $dom.hide();

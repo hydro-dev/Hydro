@@ -31,7 +31,7 @@
   <div class="section__header">
     <h1 class="section__title" data-heading>{{ _('Delete Domain') }}</h1>
     <div class="section__tools">
-      <form method="POST">
+      <form method="POST" id="delete-domain-form">
         <div>
           <input type="hidden" name="operation" value="delete">
           <input type="submit" value="{{ _('Delete Domain') }}" class="rounded primary button">

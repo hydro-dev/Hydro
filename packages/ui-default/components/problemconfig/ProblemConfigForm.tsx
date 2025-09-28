@@ -76,7 +76,7 @@ function LangConfig() {
             <LanguageSelectAutoComplete
               placeholder={!langs.length ? i18n('Unlimited') : i18n('Code language')}
               selectedKeys={langs}
-              onChange={(value) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value })}
+              onChange={(value) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'langs', value: value.split(',') })}
               multi
             />
           </FormItem>

@@ -367,6 +367,7 @@ const oi = buildContestRule({
             }
         }
         const tsddict = ((config.lockAt && isLocked(tdoc, new Date())) ? tsdoc.display : tsdoc.detail) || {};
+        const useRelativeTime = !!tdoc.duration;
         for (const pid of tdoc.pids) {
             const index = `${tsdoc.uid}/${tdoc.domainId}/${pid}`;
 
@@ -394,7 +395,8 @@ const oi = buildContestRule({
                     score: tsddict[pid]?.score,
                 };
             if (tsddict[pid]?.status === STATUS.STATUS_ACCEPTED) {
-                if (tsddict[pid].rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime() === meta?.first?.[pid]) {
+                const startAt = (useRelativeTime ? tsdoc.startAt || tdoc.beginAt : tdoc.beginAt).getTime();
+                if (tsddict[pid].rid.getTimestamp().getTime() - startAt === meta?.first?.[pid]) {
                     node.style = 'background-color: rgb(217, 240, 199);';
                 }
             }
@@ -408,10 +410,11 @@ const oi = buildContestRule({
         const udict = await user.getListForRender(tdoc.domainId, uids, config.showDisplayName ? ['displayName'] : []);
         const psdict = {};
         const first = {};
+        const useRelativeTime = !!tdoc.duration;
         for (const [, tsdoc] of rankedTsdocs) {
             for (const [pid, detail] of Object.entries(tsdoc.detail || {})) {
                 if (detail.status !== STATUS.STATUS_ACCEPTED) continue;
-                const time = detail.rid.getTimestamp().getTime() - (tsdoc.startAt || tdoc.beginAt).getTime();
+                const time = detail.rid.getTimestamp().getTime() - (useRelativeTime ? tsdoc.startAt || tdoc.beginAt : tdoc.beginAt).getTime();
                 if (!first[pid] || first[pid] > time) first[pid] = time;
             }
         }

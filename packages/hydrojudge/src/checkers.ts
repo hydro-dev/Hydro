@@ -58,12 +58,25 @@ function parseDiffMsg(msg: string) {
 
 const compareSh = `#!/bin/bash
 set -e
+process_file() {
+  cat $1 | awk '
+    /^$/{n=n RS};
+    /./{
+      printf "%s",n; n="";
+      for (i=length; i>0; i--) {
+        c = substr($0, i, 1);
+        if (c != " " && c != "\\t" && c != "\\r") break
+      }
+      if (i == 0) print ""
+      else print substr($0, 1, i);
+    }' >$2
+}
 if [ "$1" = "BZ" ]; then
-  cat usrout | awk '{sub(/[ \\t\\r]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >usrout.processed
-  cat answer | awk '{sub(/[ \\t\\r]+$/, ""); print $0;}' | awk '/^$/{n=n RS}; /./{printf "%s",n; n=""; print}' >answer.processed
+  process_file usrout usrout.processed
+  process_file answer answer.processed
 else
-  cat usrout | awk '{sub(/[\\r]+$/, ""); print $0;}' >usrout.processed
-  cat answer | awk '{sub(/[\\r]+$/, ""); print $0;}' >answer.processed
+  cat usrout | awk '{sub(/\\r+$/, ""); print $0;}' >usrout.processed
+  cat answer | awk '{sub(/\\r+$/, ""); print $0;}' >answer.processed
 fi
 usrsize=$(wc -c < usrout.processed)
 stdsize=$(wc -c < answer.processed)

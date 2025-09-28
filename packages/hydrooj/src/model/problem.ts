@@ -13,7 +13,7 @@ import {
     extractZip, Logger, size, streamToBuffer,
 } from '@hydrooj/utils/lib/utils';
 import { Context } from '../context';
-import { FileUploadError, ProblemNotFoundError, ValidationError } from '../error';
+import { FileUploadError, NotFoundError, ProblemNotFoundError, ValidationError } from '../error';
 import type {
     Document, ProblemDict, ProblemStatusDoc, User,
 } from '../interface';
@@ -421,7 +421,8 @@ export class ProblemModel {
         domainId: string, pid: number, uid: number,
         rid: ObjectId, status: number, score: number,
     ) {
-        const condition = status === STATUS.STATUS_ACCEPTED ? {} : { status: { $ne: STATUS.STATUS_ACCEPTED } };
+        const condition = status === STATUS.STATUS_ACCEPTED ? {}
+            : { $or: [{ status: { $ne: STATUS.STATUS_ACCEPTED } }, { rid }] };
         const res = await document.setStatusIfCondition(
             domainId, document.TYPE_PROBLEM, pid, uid,
             condition, { rid, status, score },
@@ -459,6 +460,8 @@ export class ProblemModel {
         } = options;
         let delSource = options.delSource;
         let problems: string[];
+        const ddoc = await DomainModel.get(domainId);
+        if (!ddoc) throw new NotFoundError(domainId);
         try {
             if (filepath.endsWith('.zip')) {
                 tmpdir = path.join(os.tmpdir(), 'hydro', `${Math.random()}.import`);
@@ -488,17 +491,24 @@ export class ProblemModel {
         }
         for (const i of problems) {
             try {
-                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${i}`);
                 const files = await fs.readdir(path.join(tmpdir, i), { withFileTypes: true });
                 if (!files.find((f) => f.name === 'problem.yaml')) continue;
+                if (process.env.HYDRO_CLI) logger.info(`Importing problem ${i}`);
                 const content = fs.readFileSync(path.join(tmpdir, i, 'problem.yaml'), 'utf-8');
                 const pdoc: ProblemDoc = yaml.load(content) as any;
-                if (!pdoc) continue;
+                if (!pdoc) {
+                    if (process.env.HYDRO_CLI) logger.error(`Invalid problem.yaml ${i}`);
+                    continue;
+                }
                 let pid = pdoc.pid;
                 let overridePid = null;
 
                 const isValidPid = async (id: string) => {
-                    if (!(/^[A-Za-z][0-9A-Za-z]*$/.test(id))) return false;
+                    if (!(/^(?:[a-z0-9]{1,10}-)?[a-z][0-9a-z]*$/i.test(id))) return false;
+                    if (id.includes('-')) {
+                        const [prefix] = id.split('-');
+                        if (!ddoc?.namespaces?.[prefix]) return false;
+                    }
                     const doc = await ProblemModel.get(domainId, id);
                     if (doc) {
                         if (!override) return false;

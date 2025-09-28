@@ -1,4 +1,4 @@
-{% set _categories = (handler.domain.problemCategories or model.system.get('problem.categories'))|parseYaml %}
+{% set _categories = handler.ctx.setting.get('problem.categories')|parseYaml %}
 <div class="dialog--category-filter" style="display:none;">
   <div>
     <div class="category-filter__header">      

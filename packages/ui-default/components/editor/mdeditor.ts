@@ -36,9 +36,9 @@ config({
       });
     }
   },
-  markdownItPlugins(plugins) {
-    console.log('Active builtin mdit plugins', plugins);
-    return plugins.filter((plugin) => ['sub', 'sup'].includes(plugin.type));
+  markdownItPlugins() {
+    // disable all default plugins
+    return [];
   },
 });
 
