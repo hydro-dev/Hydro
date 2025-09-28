@@ -65,6 +65,10 @@ export default class Hydro implements Session {
         });
         if (!res.body.links) throw new FormatError('problem not exist');
         const queue = new PQueue({ concurrency: 10 });
+        let error = null;
+        queue.on('error', (e) => {
+            error = e;
+        });
         for (const name in res.body.links) {
             queue.add(async () => {
                 if (name.includes('/')) await fs.ensureDir(path.dirname(files[name]));
@@ -73,6 +77,7 @@ export default class Hydro implements Session {
             });
         }
         await queue.onIdle();
+        if (error) throw error;
         return null;
     }
 
