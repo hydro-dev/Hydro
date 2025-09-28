@@ -1,10 +1,15 @@
 import { STATUS } from '@hydrooj/common';
 
 export function normalize(key: string) {
-    return key.toUpperCase().replace(/ /g, '_');
+    return key.toUpperCase().replace(/ _-/g, '');
 }
 
-export const VERDICT = new Proxy<Record<string, STATUS>>({
+function removeSlash(src: Record<string, STATUS>) {
+    for (const key in Object.keys(src)) src[key.replace(/_/g, '')] = src[key];
+    return src;
+}
+
+export const VERDICT = new Proxy<Record<string, STATUS>>(removeSlash({
     RUNTIME_ERROR: STATUS.STATUS_RUNTIME_ERROR,
     WRONG_ANSWER: STATUS.STATUS_WRONG_ANSWER,
     OK: STATUS.STATUS_ACCEPTED,
@@ -75,7 +80,7 @@ export const VERDICT = new Proxy<Record<string, STATUS>>({
     SYSTEM_ERROR: STATUS.STATUS_SYSTEM_ERROR,
     SE: STATUS.STATUS_SYSTEM_ERROR,
     未知错误: STATUS.STATUS_SYSTEM_ERROR,
-}, {
+}), {
     get(self, key) {
         if (typeof key === 'symbol') return null;
         key = normalize(key);
