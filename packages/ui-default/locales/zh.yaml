@@ -47,11 +47,13 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
+'Tip:': '提示：'
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "View other's records": 查看他人的记录
 "What's file?": 什么是文件？
+'You are entering ': '您正在进入 '
 (All Problems): (所有题目)
 (leave blank if none): （若不需要则留空）
 (None): (无)
@@ -87,6 +89,7 @@ Add testcase: 添加测试点
 Add User: 添加用户
 Add: 添加
 additional_file: 附加文件
+After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.: 执行了 Sudo 模式保护的操作后，只有在账户连续几个小时无活动记录后，您才会被再次要求进行用户授权。
 All {0} Contests: 所有 {0} 比赛
 All changes will be lost. Are you sure to clear all answers?: 所有更改将会丢失。您确定要清除所有答案吗？
 All Contests: 所有比赛
@@ -187,6 +190,8 @@ Compilers' Version and Parameters: 编译器版本及参数
 Complete: 完成
 Completed: 已完成
 Config: 配置
+Confirm: 确认
+Confirm Access: 确认授权
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this domain? This action cannot be undone.: '确认删除此域？此操作无法撤销。'
@@ -903,6 +908,7 @@ Submit: 递交
 Submitted: 已递交
 Subtask {0}: 子任务 {0}
 Subtasks: 子任务
+sudo mode: Sudo 模式
 SuperUser: 超级管理员
 SuperUser's Password: 超级管理员的密码
 Support: 支持
