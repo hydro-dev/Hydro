@@ -299,7 +299,7 @@ class UserModel {
 
     @ArgMethod
     static async inc(_id: number | number[], field: string, n: number = 1) {
-        const ids = (Array.isArray(_id) ? _id : [_id]).filter((i) => i >= -999);
+        const ids = (Array.isArray(_id) ? Array.from(new Set(_id)) : [_id]).filter((i) => i >= -999);
         if (!ids.length) return null;
         const udocs = await coll.find({ _id: { $in: ids } }).toArray();
         if (udocs.length !== ids.length) throw new UserNotFoundError(_id);
