@@ -14,7 +14,7 @@ import {
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, NotAssignedError, NotFoundError, PermissionError, ValidationError,
 } from '../error';
-import { ScoreboardConfig, Tdoc } from '../interface';
+import { FileInfo, ScoreboardConfig, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -513,10 +513,10 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             files: sortFiles(this.tdoc.files || []),
             privateFiles: sortFiles(this.tdoc.privateFiles || []),
-            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
+            urlForFile: (filename: string, type: string) => this.url('contest_file_download', { tid, filename, type }),
         };
         this.response.pjax = [
-            ['partials/files.html', {}],
+            ['partials/files.html', { filetype: 'public' }],
             ['partials/files.html', {
                 files: this.response.body.privateFiles,
                 filetype: 'private',
@@ -527,8 +527,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
 
     @param('tid', Types.ObjectId)
     @post('filename', Types.Filename, true)
-    @post('private', Types.Boolean, true)
-    async postUploadFile(domainId: string, tid: ObjectId, filename: string, isPrivate = true) {
+    @post('type', Types.Boolean, true)
+    async postUploadFile(domainId: string, tid: ObjectId, filename: string, type: 'private' | 'public' = 'private') {
         const allFiles = [...(this.tdoc.files || []), ...(this.tdoc.privateFiles || [])];
         if (allFiles.length >= this.ctx.setting.get('limit.contest_files')) {
             throw new FileLimitExceededError('count');
@@ -539,24 +539,26 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             throw new FileLimitExceededError('size');
         }
         filename ||= file.originalFilename || randomstring(16);
-        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
-        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        const target = `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${filename}`;
+        await storage.put(target, file.filepath, this.user._id);
+        const meta = await storage.getMeta(target);
         const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
         if (!meta) throw new FileUploadError();
+        const updateList = (files: FileInfo[], newFile: FileInfo) => (files || []).filter((i) => i._id !== newFile._id).concat(newFile);
         await contest.edit(domainId, tid, {
-            files: isPrivate ? this.tdoc.files : [...(this.tdoc.files || []), payload],
-            privateFiles: isPrivate ? [...(this.tdoc.privateFiles || []), payload] : this.tdoc.privateFiles,
+            files: type === 'private' ? this.tdoc.files : updateList(this.tdoc.files, payload),
+            privateFiles: type === 'private' ? updateList(this.tdoc.privateFiles, payload) : this.tdoc.privateFiles,
         });
         this.back();
     }
 
     @param('tid', Types.ObjectId)
     @post('files', Types.ArrayOf(Types.Filename))
-    @post('private', Types.Boolean, true)
-    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], isPrivate = false) {
+    @post('type', Types.Range(['public', 'private']), true)
+    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], type = 'public') {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
-            contest.edit(domainId, tid, isPrivate
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${t}`), this.user._id),
+            contest.edit(domainId, tid, type === 'public'
                 ? { privateFiles: this.tdoc.privateFiles.filter((i) => !files.includes(i.name)) }
                 : { files: this.tdoc.files.filter((i) => !files.includes(i.name)) },
             ),
@@ -631,14 +633,14 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
-    @param('private', Types.Boolean, true)
-    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false, isPrivate = false) {
-        if (isPrivate && !this.user.own(this.tdoc)) {
+    @param('type', Types.Range(['public', 'private']), true)
+    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false, type = 'private') {
+        if (type === 'private' && !this.user.own(this.tdoc)) {
             if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
             if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         }
         this.response.addHeader('Cache-Control', 'public');
-        const target = `contest/${domainId}/${tid}/${isPrivate ? 'private/' : '/'}${filename}`;
+        const target = `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${filename}`;
         const file = await storage.getMeta(target);
         await oplog.log(this, 'download.file.contest', {
             target,
@@ -845,7 +847,7 @@ export async function apply(ctx: Context) {
     ctx.Route('contest_manage', '/contest/:tid/management', ContestManagementHandler);
     ctx.Route('contest_clarification', '/contest/:tid/clarification', ContestClarificationHandler);
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
-    ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
+    ctx.Route('contest_file_download', '/contest/:tid/file/:type/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_balloon', '/contest/:tid/balloon', ContestBalloonHandler, PERM.PERM_VIEW_CONTEST);
     ctx.worker.addHandler('contest', async (doc) => {

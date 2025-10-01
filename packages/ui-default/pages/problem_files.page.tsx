@@ -82,11 +82,8 @@ const page = new NamedPage('problem_files', () => {
     FileSelectAutoComplete.getOrConstruct($('[name=std]'), { data: UiContext.pdoc.data });
     $('[name="generate_testdata"]').on('click', handleGenerateTestdata);
   }
-
-  if ($('[name="upload_testdata"]').length) {
-    $(document).on('click', '[name="create_testdata"]', () => previewFile(undefined, 'testdata'));
-    $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
-  }
+  $(document).on('click', '[name="create_testdata"]', () => previewFile(undefined, 'testdata'));
+  $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
   $(document).on('click', '[name="download_selected_testdata"]', () => handleClickDownloadSelected('testdata'));
   $(document).on('click', '[name="download_selected_file"]', () => handleClickDownloadSelected('additional_file'));
   $(document).on('vjContentNew', (e) => {

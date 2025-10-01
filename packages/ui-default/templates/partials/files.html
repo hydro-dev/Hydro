@@ -28,11 +28,11 @@
             </label>
           </td>
           <td class="col--name" data-preview>
-            <a href="{{ urlForFile(file.name) }}">{{ file.name }}</a>
+            <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
           </td>
           <td class="col--size">{{ size(file.size) }}</td>
           <td class="col--operation">
-            <a href="{{ urlForFile(file.name) }}" class="icon icon-download"></a>
+            <a href="{{ urlForFile(file.name, filetype) }}" class="icon icon-download"></a>
           </td>
         </tr>
         {%- endfor -%}

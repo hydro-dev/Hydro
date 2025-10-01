@@ -45,7 +45,7 @@ async function handleClickRename(ev) {
       label: 'New Filename',
     },
   });
-  if (!res.name) return;
+  if (!res?.name) return;
   try {
     await request.post('./files', {
       operation: 'rename_files',
