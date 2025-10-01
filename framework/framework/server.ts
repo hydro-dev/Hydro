@@ -82,7 +82,7 @@ export interface HydroResponse {
      * If set, and pjax content was request from client,
      *  The template will be used for rendering.
      */
-    pjax?: string;
+    pjax?: string | (readonly [string, Record<string, any>])[];
     redirect?: string;
     disposition?: string;
     etag?: string;

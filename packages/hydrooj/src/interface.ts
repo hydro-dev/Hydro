@@ -264,6 +264,7 @@ export interface Tdoc extends Document {
     _code?: string;
     assign?: string[];
     files?: FileInfo[];
+    privateFiles?: FileInfo[];
     allowViewCode?: boolean;
     allowPrint?: boolean;
 

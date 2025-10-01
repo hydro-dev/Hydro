@@ -25,7 +25,6 @@ import problem from '../model/problem';
 import record from '../model/record';
 import ScheduleModel from '../model/schedule';
 import storage from '../model/storage';
-import * as system from '../model/system';
 import user from '../model/user';
 import {
     Handler, param, post, Type, Types,
@@ -156,6 +155,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             tsdoc: this.tsdocAsPublic(),
             udict,
             files: sortFiles(this.tdoc.files || []),
+            privateFiles: sortFiles(this.tdoc.privateFiles || []),
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
         if (this.request.json) return;
@@ -506,22 +506,93 @@ export class ContestCodeHandler extends Handler {
 export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
-        const tcdocs = await contest.getMultiClarification(domainId, tid);
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
             files: sortFiles(this.tdoc.files || []),
+            privateFiles: sortFiles(this.tdoc.privateFiles || []),
+            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
+        };
+        this.response.pjax = [
+            ['partials/files.html', {}],
+            ['partials/files.html', {
+                files: this.response.body.privateFiles,
+                filetype: 'private',
+            }],
+        ];
+        this.response.template = 'contest_manage.html';
+    }
+
+    @param('tid', Types.ObjectId)
+    @post('filename', Types.Filename, true)
+    @post('private', Types.Boolean, true)
+    async postUploadFile(domainId: string, tid: ObjectId, filename: string, isPrivate = true) {
+        const allFiles = [...(this.tdoc.files || []), ...(this.tdoc.privateFiles || [])];
+        if (allFiles.length >= this.ctx.setting.get('limit.contest_files')) {
+            throw new FileLimitExceededError('count');
+        }
+        const file = this.request.files?.file;
+        if (!file) throw new ValidationError('file');
+        if (Math.sum(allFiles.map((i) => i.size)) + file.size >= this.ctx.setting.get('limit.contest_files_size')) {
+            throw new FileLimitExceededError('size');
+        }
+        filename ||= file.originalFilename || randomstring(16);
+        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
+        if (!meta) throw new FileUploadError();
+        await contest.edit(domainId, tid, {
+            files: isPrivate ? this.tdoc.files : [...(this.tdoc.files || []), payload],
+            privateFiles: isPrivate ? [...(this.tdoc.privateFiles || []), payload] : this.tdoc.privateFiles,
+        });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @post('files', Types.ArrayOf(Types.Filename))
+    @post('private', Types.Boolean, true)
+    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], isPrivate = false) {
+        await Promise.all([
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            contest.edit(domainId, tid, isPrivate
+                ? { privateFiles: this.tdoc.privateFiles.filter((i) => !files.includes(i.name)) }
+                : { files: this.tdoc.files.filter((i) => !files.includes(i.name)) },
+            ),
+        ]);
+        this.back();
+    }
+
+    @param('pid', Types.PositiveInt)
+    @param('score', Types.PositiveInt)
+    async postSetScore(domainId: string, pid: number, score: number) {
+        if (!this.tdoc.pids.includes(pid)) throw new ValidationError('pid');
+        this.tdoc.score ||= {};
+        this.tdoc.score[pid] = score;
+        await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score });
+        await contest.recalcStatus(domainId, this.tdoc.docId);
+        this.back();
+    }
+}
+
+class ContestClarificationHandler extends ContestManagementBaseHandler {
+    @param('tid', Types.ObjectId)
+    async get(domainId: string, tid: ObjectId) {
+        const tcdocs = await contest.getMultiClarification(domainId, tid);
+        this.response.body = {
+            tdoc: this.tdoc,
+            tsdoc: this.tsdoc,
+            owner_udoc: await user.getById(domainId, this.tdoc.owner),
+            pdict: await problem.getList(domainId, this.tdoc.pids, true, true, [...problem.PROJECTION_CONTEST_LIST, 'tag']),
+            tcdocs,
             udict: await user.getListForRender(
                 domainId, tcdocs.map((i) => i.owner),
                 this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : [],
             ),
-            tcdocs,
-            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
         };
-        this.response.pjax = 'partials/files.html';
-        this.response.template = 'contest_manage.html';
+        this.response.pjax = 'partials/contest_clarification.html';
+        this.response.template = 'contest_clarification.html';
     }
 
     @param('tid', Types.ObjectId)
@@ -554,57 +625,20 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
         }
         this.back();
     }
-
-    @param('tid', Types.ObjectId)
-    @post('filename', Types.Filename, true)
-    async postUploadFile(domainId: string, tid: ObjectId, filename: string) {
-        if ((this.tdoc.files?.length || 0) >= system.get('limit.contest_files')) {
-            throw new FileLimitExceededError('count');
-        }
-        const file = this.request.files?.file;
-        if (!file) throw new ValidationError('file');
-        const size = Math.sum((this.tdoc.files || []).map((i) => i.size)) + file.size;
-        if (size >= system.get('limit.contest_files_size')) {
-            throw new FileLimitExceededError('size');
-        }
-        filename ||= file.originalFilename || randomstring(16);
-        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
-        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
-        const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
-        if (!meta) throw new FileUploadError();
-        await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
-        this.back();
-    }
-
-    @param('tid', Types.ObjectId)
-    @post('files', Types.ArrayOf(Types.Filename))
-    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
-        await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
-            contest.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
-        ]);
-        this.back();
-    }
-
-    @param('pid', Types.PositiveInt)
-    @param('score', Types.PositiveInt)
-    async postSetScore(domainId: string, pid: number, score: number) {
-        if (!this.tdoc.pids.includes(pid)) throw new ValidationError('pid');
-        this.tdoc.score ||= {};
-        this.tdoc.score[pid] = score;
-        await contest.edit(domainId, this.tdoc.docId, { score: this.tdoc.score });
-        await contest.recalcStatus(domainId, this.tdoc.docId);
-        this.back();
-    }
 }
 
 export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     @param('filename', Types.Filename)
     @param('noDisposition', Types.Boolean)
-    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false) {
+    @param('private', Types.Boolean, true)
+    async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false, isPrivate = false) {
+        if (isPrivate && !this.user.own(this.tdoc)) {
+            if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
+            if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
+        }
         this.response.addHeader('Cache-Control', 'public');
-        const target = `contest/${domainId}/${tid}/${filename}`;
+        const target = `contest/${domainId}/${tid}/${isPrivate ? 'private/' : '/'}${filename}`;
         const file = await storage.getMeta(target);
         await oplog.log(this, 'download.file.contest', {
             target,
@@ -809,6 +843,7 @@ export async function apply(ctx: Context) {
     ctx.Route('contest_edit', '/contest/:tid/edit', ContestEditHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_print', '/contest/:tid/print', ContestPrintHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_manage', '/contest/:tid/management', ContestManagementHandler);
+    ctx.Route('contest_clarification', '/contest/:tid/clarification', ContestClarificationHandler);
     ctx.Route('contest_code', '/contest/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_file_download', '/contest/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_CONTEST);
     ctx.Route('contest_user', '/contest/:tid/user', ContestUserHandler, PERM.PERM_VIEW_CONTEST);

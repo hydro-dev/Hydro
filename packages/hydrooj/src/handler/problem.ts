@@ -646,28 +646,15 @@ export class ProblemFilesHandler extends ProblemDetailHandler {
     notUsage = true;
 
     @param('d', Types.CommaSeperatedArray, true)
-    @param('pjax', Types.Boolean)
     @param('sidebar', Types.Boolean)
-    async get(domainId: string, d = ['testdata', 'additional_file'], pjax = false, sidebar = false) {
+    async get({ }, d = ['testdata', 'additional_file'], sidebar = false) {
         if (this.tdoc) throw new ContestNotEndedError();
-        this.response.body.testdata = d.includes('testdata') ? sortFiles(this.pdoc.data || []) : [];
+        this.response.body.testdata = sortFiles(this.pdoc.data || []);
+        this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
         this.response.body.reference = this.pdoc.reference;
-        this.response.body.additional_file = d.includes('additional_file') ? sortFiles(this.pdoc.additional_file || []) : [];
-        if (pjax) {
-            const { testdata, additional_file } = this.response.body;
-            const owner = await user.getById(domainId, this.pdoc.owner);
-            const args = {
-                testdata, additional_file, pdoc: this.pdoc, owner_udoc: owner, sidebar, can_edit: true,
-            };
-            const tasks = [];
-            if (d.includes('testdata')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'testdata' }));
-            if (d.includes('additional_file')) tasks.push(this.renderHTML('partials/problem_files.html', { ...args, filetype: 'additional_file' }));
-            if (!sidebar) tasks.push(this.renderHTML('partials/problem-sidebar-information.html', args));
-            this.response.body = {
-                fragments: (await Promise.all(tasks)).map((i) => ({ html: i })),
-            };
-            this.response.template = '';
-        } else this.response.template = 'problem_files.html';
+        this.response.pjax = d.map((i) => ['partials/problem_files.html', { filetype: i, sidebar, can_edit: true }]);
+        if (!sidebar) this.response.pjax.push(['partials/problem-sidebar-information.html', {}]);
+        this.response.template = 'problem_files.html';
     }
 
     async post() {

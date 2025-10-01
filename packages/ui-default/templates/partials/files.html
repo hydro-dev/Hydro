@@ -1,5 +1,5 @@
 {% import "components/nothing.html" as nothing with context %}
-<div class="section__body no-padding files" data-fragment-id="files">
+<div class="section__body no-padding files" {% if filetype %}data-type="{{ filetype }}"{% endif %} data-fragment-id="files{% if filetype %}-{{ filetype }}{% endif %}">
   {% if files.length %}
     <table class="data-table">
       <colgroup>
@@ -11,7 +11,7 @@
         <tr>
           <th class="col--checkbox">
             <label class="compact checkbox">
-              <input type="checkbox" name="select_all" data-checkbox-toggle="files">
+              <input type="checkbox" name="select_all" data-checkbox-toggle="{{ filetype|default('files') }}">
             </label>
           </th>
           <th class="col--name">{{ _('Filename') }}</th>
@@ -24,7 +24,7 @@
         <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
           <td class="col--checkbox">
             <label class="compact checkbox">
-              <input type="checkbox" data-checkbox-group="files" data-checkbox-range>
+              <input type="checkbox" data-checkbox-group="{{ filetype|default('files') }}" data-checkbox-range>
             </label>
           </td>
           <td class="col--name" data-preview>
