@@ -16,7 +16,7 @@ function emoji(range) {
 
 function qqEmoji(range) {
   return qface.data.flatMap((i) => {
-    const url = qface.getUrl(i.QSid, 'https://qq-face.vercel.app');
+    const url = qface.getUrl(i.QSid, 'https://koishi.js.org/QFace');
     return [i.QDes.substring(1), ...(i.Input || [])].map((input) => ({
       label: `/${input}`,
       kind: monaco.languages.CompletionItemKind.Keyword,
