@@ -443,7 +443,11 @@ export class ContestEditHandler extends Handler {
             ScheduleModel.deleteMany({
                 type: 'schedule', subType: 'contest', domainId, tid,
             }),
-            storage.del(this.tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+            storage.del(
+                (this.tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [])
+                    .concat(this.tdoc.privateFiles?.map((i) => `contest/${domainId}/${tid}/private/${i.name}`) || []),
+                this.user._id,
+            ),
         ]));
         this.response.redirect = this.url('contest_main');
     }
@@ -539,7 +543,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             throw new FileLimitExceededError('size');
         }
         filename ||= file.originalFilename || randomstring(16);
-        const target = `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${filename}`;
+        const target = `contest/${domainId}/${tid}/${type}/${filename}`;
         await storage.put(target, file.filepath, this.user._id);
         const meta = await storage.getMeta(target);
         const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
@@ -557,8 +561,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @post('type', Types.Range(['public', 'private']), true)
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], type = 'public') {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${t}`), this.user._id),
-            contest.edit(domainId, tid, type === 'public'
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/${type}/${t}`), this.user._id),
+            contest.edit(domainId, tid, type === 'private'
                 ? { privateFiles: this.tdoc.privateFiles.filter((i) => !files.includes(i.name)) }
                 : { files: this.tdoc.files.filter((i) => !files.includes(i.name)) },
             ),
@@ -640,7 +644,7 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
             if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         }
         this.response.addHeader('Cache-Control', 'public');
-        const target = `contest/${domainId}/${tid}/${type === 'private' ? 'private/' : ''}${filename}`;
+        const target = `contest/${domainId}/${tid}/${type}/${filename}`;
         const file = await storage.getMeta(target);
         await oplog.log(this, 'download.file.contest', {
             target,
