@@ -616,7 +616,7 @@ export class ProblemEditHandler extends ProblemManageHandler {
         newPid: string | number = '', hidden = false, tag: string[] = [], difficulty = 0,
     ) {
         if (typeof newPid !== 'string') newPid = `P${newPid}`;
-        if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new ProblemAlreadyExistError(pid);
+        if (newPid !== this.pdoc.pid && await problem.get(domainId, newPid)) throw new ProblemAlreadyExistError(newPid);
         const $update: Partial<ProblemDoc> = {
             title, content, pid: newPid, hidden, tag: tag ?? [], difficulty, html: false,
         };
