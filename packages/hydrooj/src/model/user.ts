@@ -75,6 +75,10 @@ export class User {
     group?: string[];
     [key: string]: any;
 
+    static _allowedFields = [
+        '_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn',
+    ];
+
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
         this._id = udoc._id;
 
@@ -161,13 +165,15 @@ export class User {
 
     serialize(h) {
         if (!this._isPrivate) {
-            const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
-            if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) {
-                fields.push('displayName', 'school', 'studentId');
-            }
+            const fields = [...new Set(User._allowedFields)];
+            if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName', 'school', 'studentId');
             return pick(this, fields);
         }
         return JSON.stringify(this, serializer(true, h));
+    }
+
+    static addAllowedFields(...fields: string[]) {
+        User._allowedFields.push(...fields);
     }
 }
 
