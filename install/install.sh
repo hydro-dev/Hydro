@@ -12,6 +12,14 @@ echo "Executing Hydro install script v3.0.1"
 echo "Hydro includes system telemetry,
 which helps developers figure out the most commonly used operating system and platform.
 To disable this feature, checkout our sourcecode."
+# Sessions started with `su` will not have updated $USER, need to manually fix everything
+actual_user=$(whoami)
+if [ "$actual_user" != "$USER" ]; then
+export USER=root
+export LOGNAME=root
+export HOME=/root
+export PWD=/root
+fi
 mkdir -p /data/db /data/file ~/.hydro
 bash <(curl https://hydro.ac/nix.sh)
 export PATH=$HOME/.nix-profile/bin:$PATH
