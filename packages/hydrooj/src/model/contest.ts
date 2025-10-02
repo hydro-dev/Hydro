@@ -566,7 +566,7 @@ const ledo = buildContestRule({
                 detail[j.pid] = {
                     ...j,
                     penaltyScore,
-                    ntry: ntry[j.pid] - 1,
+                    ntry: Math.max(0, ntry[j.pid] - 1),
                 };
             }
         }
