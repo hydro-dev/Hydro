@@ -1,10 +1,10 @@
 import moment from 'moment-timezone';
 import { Filter, ObjectId } from 'mongodb';
+import { Time } from '@hydrooj/utils';
 import { Context } from '../context';
 import { Schedule } from '../interface';
 import { Logger } from '../logger';
 import db from '../service/db';
-import type WorkerService from '../service/worker';
 import RecordModel from './record';
 
 const logger = new Logger('model/schedule');
@@ -55,16 +55,17 @@ class ScheduleModel {
     }
 
     static getFirst = getFirst;
-    /** @deprecated use ctx.inject(['worker'], cb) instead */
-    static Worker: WorkerService;
 }
 
 export async function apply(ctx: Context) {
     ctx.inject(['worker'], (c) => {
-        ScheduleModel.Worker = c.worker;
-        c.worker.addHandler('task.daily', async () => {
+        c.worker.addHandler('task.daily', async (task) => {
             const pref: Record<string, number> = {};
             let start = Date.now();
+            if (start - task.executeAfter.getTime() > Time.week) {
+                logger.warn('task.daily for date %s skipped', task.executeAfter.toISOString());
+                return;
+            }
             await RecordModel.coll.deleteMany({ contest: { $in: [RecordModel.RECORD_PRETEST, RecordModel.RECORD_GENERATE] } });
             pref.record = Date.now() - start;
             start = Date.now();
