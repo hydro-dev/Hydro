@@ -154,7 +154,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             tdoc: this.tdoc,
             tsdoc: this.tsdocAsPublic(),
             udict,
-            files: (this.tsdoc?.attend && contest.isNotStarted(this.tdoc)) ? sortFiles(this.tdoc.privateFiles || []) : [],
+            files: (this.tsdoc?.attend && !contest.isNotStarted(this.tdoc)) ? sortFiles(this.tdoc.privateFiles || []) : [],
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename, type: 'private' }),
         };
         if (this.request.json) return;
@@ -530,7 +530,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
 
     @param('tid', Types.ObjectId)
     @post('filename', Types.Filename, true)
-    @post('type', Types.Boolean, true)
+    @post('type', Types.Range(['private', 'public']), true)
     async postUploadFile(domainId: string, tid: ObjectId, filename: string, type: 'private' | 'public' = 'private') {
         const allFiles = [...(this.tdoc.files || []), ...(this.tdoc.privateFiles || [])];
         if (allFiles.length >= this.ctx.setting.get('limit.contest_files')) {

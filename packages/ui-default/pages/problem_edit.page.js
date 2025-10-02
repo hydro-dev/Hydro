@@ -1,14 +1,13 @@
 import $ from 'jquery';
 import _ from 'lodash';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
-import uploadFiles from 'vj/components/upload';
 import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  i18n, pjax, request, slideDown, slideUp, tpl,
+  i18n, request, slideDown, slideUp,
 } from 'vj/utils';
 
 const categories = {};
@@ -165,14 +164,8 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
         Notification.error(e.message);
       });
     }
-    const message = 'Confirm deleting this problem? Its files, submissions, discussions and solutions will be deleted as well.';
-    return new ConfirmDialog({
-      $body: tpl`
-        <div class="typo">
-          <p>${i18n(message)}</p>
-        </div>`,
-    }).open().then((action) => {
-      if (action !== 'yes') return;
+    return confirm(i18n('Confirm deleting this problem? Its files, submissions, discussions and solutions will be deleted as well.')).then((yes) => {
+      if (!yes) return;
       confirmed = true;
       ev.target.click();
     });
@@ -180,57 +173,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   $(document).on('change', '[name="tag"]', parseCategorySelection);
   buildCategoryFilter();
   parseCategorySelection();
-
-  async function handleClickUpload() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.click();
-    await new Promise((resolve) => { input.onchange = resolve; });
-    await uploadFiles('./files', input.files, {
-      type: 'additional_file',
-      sidebar: true,
-      pjax: true,
-    });
-  }
-
-  async function handleClickRename(ev) {
-    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
-    // eslint-disable-next-line no-alert
-    const newName = prompt(i18n('Enter a new name for the file: '));
-    if (!newName) return;
-    try {
-      await request.post('./files', {
-        operation: 'rename_files',
-        files: file,
-        newNames: [newName],
-        type: 'additional_file',
-      });
-      Notification.success(i18n('File have been renamed.'));
-      await pjax.request({ url: './files?d=additional_file&sidebar=true', push: false });
-    } catch (error) {
-      Notification.error(error.message);
-    }
-  }
-
-  async function handleClickRemove(ev) {
-    const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
-    const action = await new ConfirmDialog({
-      $body: tpl.typoMsg(i18n('Confirm to delete the file?')),
-    }).open();
-    if (action !== 'yes') return;
-    try {
-      await request.post('./files', {
-        operation: 'delete_files',
-        files: file,
-        type: 'additional_file',
-      });
-      Notification.success(i18n('File have been deleted.'));
-      await pjax.request({ url: './files?d=additional_file&sidebar=true', push: false });
-    } catch (error) {
-      Notification.error(error.message);
-    }
-  }
 
   async function handleClickDownloadAll() {
     const files = $('.additional_file-table tr').map(function () { return $(this).attr('data-filename'); }).get();
@@ -294,9 +236,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       ev.preventDefault();
     }
   });
-  $(document).on('click', '[name="additional_file__upload"]', () => handleClickUpload());
-  $(document).on('click', '[name="additional_file__rename"]', (ev) => handleClickRename(ev));
-  $(document).on('click', '[name="additional_file__delete"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="additional_file__download"]', () => handleClickDownloadAll());
   $(document).on('click', '[name="additional_file__section__expand"]', (ev) => handleSection(ev, 'additional_file', 'expand'));
   $(document).on('click', '[name="additional_file__section__collapse"]', (ev) => handleSection(ev, 'additional_file', 'collapse'));

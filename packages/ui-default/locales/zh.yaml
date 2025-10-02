@@ -391,8 +391,8 @@ Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
-File have been deleted.: 文件已被删除。
-File have been renamed.: 文件已被重命名。
+File has been deleted.: 文件已被删除。
+File has been renamed.: 文件已被重命名。
 File saved.: 文件已成功保存。
 file too large: 文件过大
 File uploaded successfully.: 上传文件成功

@@ -9,6 +9,25 @@ import {
   i18n, pjax, request, tpl,
 } from 'vj/utils';
 
+let endpoint = '';
+
+const getUrl = (type: string, sidebar: boolean) => {
+  let url = endpoint;
+  const search = new URLSearchParams();
+  if (type) search.append('d', type);
+  if (sidebar) search.append('sidebar', 'true');
+  if (search.size) url += `?${search.toString()}`;
+  return url;
+};
+
+const extractArgsFromEvent = (ev) => {
+  return {
+    file: $(ev.currentTarget).parent().parent().attr('data-filename'),
+    type: $(ev.target).closest('[data-type]').attr('data-type') || '',
+    sidebar: !!ev.target.closest('[data-sidebar]'),
+  };
+};
+
 function ensureAndGetSelectedFiles(type = '') {
   const allChecked = $(`.files tbody [data-checkbox-group="${type}"]:checked`);
   const files = allChecked.get().map((i) => $(i).closest('tr').attr('data-filename'));
@@ -19,7 +38,11 @@ function ensureAndGetSelectedFiles(type = '') {
   return files;
 }
 
-async function handleClickUpload(type = '', files?: File[] | FileList) {
+async function handleClickUpload(
+  ev: JQuery.ClickEvent<Document, undefined, HTMLElement, HTMLElement> | JQuery.DropEvent<Document, undefined, HTMLElement, HTMLElement>,
+  files?: File[] | FileList,
+) {
+  const { type, sidebar } = extractArgsFromEvent(ev);
   if (!files) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -32,12 +55,11 @@ async function handleClickUpload(type = '', files?: File[] | FileList) {
     Notification.warn(i18n('No file selected.'));
     return;
   }
-  await uploadFiles('', files, { pjax: true, type });
+  await uploadFiles(endpoint, files, { pjax: true, type, sidebar });
 }
 
 async function handleClickRename(ev) {
-  const file = [$(ev.currentTarget).parent().parent().attr('data-filename')];
-  const type = $(ev.target).closest('[data-type]').attr('data-type') || '';
+  const { file, type, sidebar } = extractArgsFromEvent(ev);
   const res = await prompt(i18n('Enter a new name for the file: '), {
     name: {
       type: 'text',
@@ -53,15 +75,15 @@ async function handleClickRename(ev) {
       newNames: [res.name],
       type,
     });
-    Notification.success(i18n('File have been renamed.'));
-    await pjax.request({ push: false });
+    Notification.success(i18n('File has been renamed.'));
+    await pjax.request({ url: getUrl(type, sidebar), push: false });
   } catch (error) {
     Notification.error(error.message);
   }
 }
 
 async function handleClickRenameSelected(ev) {
-  const type = $(ev.target).closest('[data-type]').attr('data-type') || '';
+  const { type, sidebar } = extractArgsFromEvent(ev);
   const selectedFiles = ensureAndGetSelectedFiles(type);
   if (!selectedFiles?.length) return;
   let onActionButton = (_: string) => false;
@@ -133,7 +155,7 @@ async function handleClickRenameSelected(ev) {
           type,
         }).then(() => {
           Notification.success(i18n('Selected files have been renamed.'));
-          pjax.request({ push: false });
+          pjax.request({ url: getUrl(type, sidebar), push: false });
         }).catch((error) => {
           Notification.error(error.message);
         });
@@ -248,15 +270,16 @@ async function handleClickRenameSelected(ev) {
 }
 
 async function handleClickRemove(ev) {
+  const { file, type, sidebar } = extractArgsFromEvent(ev);
   if (!(await confirm(i18n('Confirm to delete the file?')))) return;
   try {
     await request.post('', {
       operation: 'delete_files',
-      files: [$(ev.currentTarget).parent().parent().attr('data-filename')],
-      type: $(ev.target).closest('[data-type]').attr('data-type') || '',
+      files: [file],
+      type,
     });
-    Notification.success(i18n('File have been deleted.'));
-    await pjax.request({ push: false });
+    Notification.success(i18n('File has been deleted.'));
+    await pjax.request({ url: getUrl(type, sidebar), push: false });
   } catch (error) {
     Notification.error(error.message);
   }
@@ -304,14 +327,18 @@ function handleDrop(e: JQuery.DropEvent<Document, undefined, HTMLElement, HTMLEl
       files.push(ev.dataTransfer.files[i]);
     }
   }
-  handleClickUpload(e.target.closest('[data-type]')?.getAttribute('data-type'), files);
+  handleClickUpload(e, files);
 }
 
-const page = new NamedPage(['problem_files', 'home_files', 'contest_manage', 'training_files', 'homework_files'], () => {
+const page = new NamedPage([
+  'problem_files', 'problem_edit',
+  'home_files', 'contest_manage', 'training_files', 'homework_files',
+], (pageName) => {
+  if (pageName === 'problem_edit') endpoint = './files';
   $(document).on('click', '[name="file_rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="file_remove"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="rename_selected"]', (ev) => handleClickRenameSelected(ev));
-  $(document).on('click', '[name="upload_file"]', (ev) => handleClickUpload(ev.target.closest('[data-type]')?.getAttribute('data-type')));
+  $(document).on('click', '[name="upload_file"]', (ev) => handleClickUpload(ev));
   $(document).on('click', '[name="remove_selected"]', (ev) => handleClickRemoveSelected(ev.target.closest('[data-type]')?.getAttribute('data-type')));
   $(document).on('dragover', '.files', (ev) => handleDragOver(ev));
   $(document).on('drop', '.files', (ev) => handleDrop(ev));
