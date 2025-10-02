@@ -47,7 +47,7 @@ async function handleClickRename(ev) {
   });
   if (!res?.name) return;
   try {
-    await request.post('./files', {
+    await request.post('', {
       operation: 'rename_files',
       files: file,
       newNames: [res.name],
@@ -250,7 +250,7 @@ async function handleClickRenameSelected(ev) {
 async function handleClickRemove(ev) {
   if (!(await confirm(i18n('Confirm to delete the file?')))) return;
   try {
-    await request.post('./files', {
+    await request.post('', {
       operation: 'delete_files',
       files: [$(ev.currentTarget).parent().parent().attr('data-filename')],
       type: $(ev.target).closest('[data-type]').attr('data-type') || '',

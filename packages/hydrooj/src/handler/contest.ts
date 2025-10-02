@@ -443,7 +443,7 @@ export class ContestEditHandler extends Handler {
                 type: 'schedule', subType: 'contest', domainId, tid,
             }),
             storage.del(
-                (this.tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [])
+                (this.tdoc.files?.map((i) => `contest/${domainId}/${tid}/public/${i.name}`) || [])
                     .concat(this.tdoc.privateFiles?.map((i) => `contest/${domainId}/${tid}/private/${i.name}`) || []),
                 this.user._id,
             ),
