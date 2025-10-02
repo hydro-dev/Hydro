@@ -154,14 +154,13 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
             tdoc: this.tdoc,
             tsdoc: this.tsdocAsPublic(),
             udict,
-            files: sortFiles(this.tdoc.files || []),
-            privateFiles: sortFiles(this.tdoc.privateFiles || []),
-            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
+            files: (this.tsdoc?.attend && contest.isNotStarted(this.tdoc)) ? sortFiles(this.tdoc.privateFiles || []) : [],
+            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename, type: 'private' }),
         };
         if (this.request.json) return;
         this.response.body.tdoc.content = this.response.body.tdoc.content
-            .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
-            .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
+            .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/public/`)
+            .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/public/`);
     }
 
     @param('tid', Types.ObjectId)
@@ -642,6 +641,7 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
         if (type === 'private' && !this.user.own(this.tdoc)) {
             if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
             if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
+            if (!this.tsdoc.startAt) await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
         }
         this.response.addHeader('Cache-Control', 'public');
         const target = `contest/${domainId}/${tid}/${type}/${filename}`;
