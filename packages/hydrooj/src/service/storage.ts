@@ -73,7 +73,7 @@ const FileSetting = Schema.intersect([
     }).i18n({ en: 'File Storage Setting', zh: '文件存储设置' }),
     Schema.union([
         Schema.object({
-            type: Schema.const('file').required(),
+            type: Schema.const('file'),
             path: Schema.string().default(defaultPath).i18n({ en: 'Storage path', zh: '存储路径' }),
             secret: Schema.string().default(nanoid()).i18n({ en: 'Download file sign secret', zh: '下载文件签名密钥' }),
         }),
@@ -87,13 +87,7 @@ const FileSetting = Schema.intersect([
             pathStyle: Schema.boolean().default(true),
         }),
     ] as const),
-] as const).default({
-    type: 'file',
-    path: defaultPath,
-    endPointForUser: '/fs/',
-    endPointForJudge: '/fs/',
-    secret: nanoid(),
-});
+] as const);
 
 export const Config = FileSetting;
 
