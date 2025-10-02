@@ -24,4 +24,6 @@ cat >/tmp/install.b64 << EOF123
 EOF123
 cat /tmp/install.b64 | base64 -d | gunzip >/tmp/install.js
 node /tmp/install.js "$@"
+pm2 unstartup
+pm2 startup -u root
 set +e
