@@ -64,8 +64,12 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         }
         if (!response.type) {
             if (response.pjax && args.pjax) {
-                const html = await handler.renderHTML(response.pjax, response.body);
-                response.body = { fragments: [{ html }] };
+                const pjax = typeof response.pjax === 'string' ? [[response.pjax, {}]] : response.pjax;
+                response.body = {
+                    fragments: (await Promise.all(
+                        pjax.map(async ([template, extra]) => handler.renderHTML(template, { ...response.body, ...extra })),
+                    )).map((i) => ({ html: i })),
+                };
                 response.type = 'application/json';
             } else if (
                 request.json || response.redirect
