@@ -12,7 +12,7 @@ import pwhash from '../lib/hash.hydro';
 import bus from '../service/bus';
 import db from '../service/db';
 import { Value } from '../typeutils';
-import { ArgMethod, buildProjection, randomstring } from '../utils';
+import { ArgMethod, buildProjection, randomstring, sleep } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
@@ -346,6 +346,13 @@ class UserModel {
                     { $set: { join: true } },
                     { upsert: true },
                 );
+                // make sure user is immediately available after creation
+                // give some time for database to sync in replicas
+                for (let i = 1; i <= 10; i++) {
+                    const udoc = await UserModel.getById('system', uid); // eslint-disable-line no-await-in-loop
+                    if (udoc) break;
+                    await sleep(500); // eslint-disable-line no-await-in-loop
+                }
                 return uid;
             } catch (e) {
                 if (e?.code === 11000) {

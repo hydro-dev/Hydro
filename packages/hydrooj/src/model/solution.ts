@@ -78,12 +78,9 @@ class SolutionModel {
         );
         let inc = value;
         if (before?.vote) inc -= before.vote;
-        return [
-            inc
-                ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
-                : doc,
-            await document.getStatus(domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid),
-        ];
+        return inc
+            ? await document.inc(domainId, document.TYPE_PROBLEM_SOLUTION, psid, 'vote', inc)
+            : doc;
     }
 
     static async getListStatus(domainId: string, psids: ObjectId[], uid: number) {

@@ -299,7 +299,7 @@ export async function setStatus<K extends keyof DocStatusType>(
 ): Promise<DocStatusType[K]> {
     return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
-        { $set: args, $inc: { counter: 1 } },
+        { $set: args },
         {
             upsert: true,
             returnDocument,
