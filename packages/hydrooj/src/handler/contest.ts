@@ -558,7 +558,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     @post('files', Types.ArrayOf(Types.Filename))
     @post('type', Types.Range(['public', 'private']), true)
-    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], type = 'public') {
+    async postDeleteFiles(domainId: string, tid: ObjectId, files: string[], type = 'private') {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${type}/${t}`), this.user._id),
             contest.edit(domainId, tid, type === 'private'

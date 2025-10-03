@@ -285,7 +285,8 @@ async function handleClickRemove(ev) {
   }
 }
 
-async function handleClickRemoveSelected(type = '') {
+async function handleClickRemoveSelected(ev: JQuery.ClickEvent<Document, undefined, HTMLElement, HTMLElement>) {
+  const { type, sidebar } = extractArgsFromEvent(ev);
   const selectedFiles = ensureAndGetSelectedFiles(type);
   if (selectedFiles === null) return;
   if (!(await confirm(i18n('Confirm to delete the selected files?')))) return;
@@ -296,7 +297,7 @@ async function handleClickRemoveSelected(type = '') {
       type,
     });
     Notification.success(i18n('Selected files have been deleted.'));
-    await pjax.request({ push: false });
+    await pjax.request({ url: getUrl(type, sidebar), push: false });
   } catch (error) {
     Notification.error(error.message);
   }
@@ -337,9 +338,9 @@ const page = new NamedPage([
   if (pageName === 'problem_edit') endpoint = './files';
   $(document).on('click', '[name="file_rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="file_remove"]', (ev) => handleClickRemove(ev));
-  $(document).on('click', '[name="rename_selected"]', (ev) => handleClickRenameSelected(ev));
   $(document).on('click', '[name="upload_file"]', (ev) => handleClickUpload(ev));
-  $(document).on('click', '[name="remove_selected"]', (ev) => handleClickRemoveSelected(ev.target.closest('[data-type]')?.getAttribute('data-type')));
+  $(document).on('click', '[name="rename_selected"]', (ev) => handleClickRenameSelected(ev));
+  $(document).on('click', '[name="remove_selected"]', (ev) => handleClickRemoveSelected(ev));
   $(document).on('dragover', '.files', (ev) => handleDragOver(ev));
   $(document).on('drop', '.files', (ev) => handleDrop(ev));
 });
