@@ -17,7 +17,18 @@ if [ "$confirm" != "Yes, do as I say!" ];then
   echo "Aborted."
   exit;
 fi
-
+if [ "$actual_user" != "$USER" ]; then
+echo "In the current environment, the environmental variable does not belong to root, which can lead to failed uninstallation and strange errors"
+echo "在目前环境下，环境变量并不属于 root，这会导致卸载失败以及奇怪的错误"
+echo "Try to fix it..."
+echo "尝试修复..."
+export USER=root
+export LOGNAME=root
+export HOME=/root
+export PWD=/root
+echo "This might work"
+echo "这可能会奏效"
+fi
 echo "The script will run in 10 seconds. Press Ctrl+C to cancel."
 echo "脚本将在 10 秒后执行。按 Ctrl+C 取消。"
 sleep 10
