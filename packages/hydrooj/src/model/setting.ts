@@ -31,6 +31,8 @@ export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
 export const FLAG_SECRET = 4;
 export const FLAG_PRO = 8;
+export const FLAG_PUBLIC = 16;
+export const FLAG_PRIVATE = 32;
 
 export const PREFERENCE_SETTINGS: _Setting[] = [];
 export const ACCOUNT_SETTINGS: _Setting[] = [];
@@ -75,6 +77,7 @@ declare global {
         interface Meta<T> { // eslint-disable-line ts/no-unused-vars
             family?: string;
             secret?: boolean;
+            flag?: number;
         }
     }
 }
@@ -93,6 +96,7 @@ function schemaToSettings(schema: Schema<any>) {
                     : s.meta?.role === 'markdown' ? 'markdown'
                         : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
+        if (s.meta?.flag) flag |= s.meta?.flag;
         const options = {};
         for (const item of actualList || []) {
             if (item.type !== 'const') throw new Error(`List item must be a constant, got ${item.type}`);
@@ -256,9 +260,9 @@ AccountSetting(
     Setting('setting_info', 'qq', null, 'text', 'QQ'),
     Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
-    Setting('setting_info', 'school', '', 'text', 'School'),
-    Setting('setting_info', 'studentId', '', 'text', 'Student ID'),
-    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_DISABLED),
+    Setting('setting_info', 'school', '', 'text', 'School', '', FLAG_PRIVATE),
+    Setting('setting_info', 'studentId', '', 'text', 'Student ID', '', FLAG_PRIVATE),
+    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_PRIVATE),
     Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
@@ -278,7 +282,8 @@ DomainSetting(
 );
 
 DomainUserSetting(Schema.object({
-    displayName: Schema.transform(String, (input) => saslPrep(input)).default('').description('Display Name').extra('family', 'setting_info'),
+    displayName: Schema.transform(String, (input) => saslPrep(input)).default('').description('Display Name')
+        .extra('family', 'setting_info').extra('flag', FLAG_PRIVATE),
 
     rpInfo: Schema.any().extra('family', 'setting_storage').disabled().hidden(),
 
@@ -415,6 +420,8 @@ global.Hydro.model.setting = {
     FLAG_DISABLED,
     FLAG_SECRET,
     FLAG_PRO,
+    FLAG_PUBLIC,
+    FLAG_PRIVATE,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
     SETTINGS,

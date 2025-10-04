@@ -5,7 +5,7 @@
     <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
   {% endif %}
   <a class="user-profile-name uname--lv{{ udoc.level|default(0) }}" href="{{ url('user_detail', uid=udoc._id) }}">
-    {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
+    {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName and udoc.displayName != udoc.uname %}
       {{ udoc.displayName }} ({{ udoc.uname }})
     {% else %}
       {{ udoc.uname }}

@@ -12,7 +12,9 @@ export const PERM = {
     // Domain Settings
     PERM_VIEW: 1n << 0n,
     PERM_EDIT_DOMAIN: 1n << 1n,
+    /** @deprecated use PERM_VIEW_USER_PRIVATE_INFO instead */
     PERM_VIEW_DISPLAYNAME: 1n << 67n,
+    PERM_VIEW_USER_PRIVATE_INFO: 1n << 67n,
     PERM_MOD_BADGE: 1n << 2n,
 
     // Problem
@@ -105,7 +107,7 @@ export const Permission = (family: string, key: bigint, desc: string) => ({ fami
 
 export const PERMS = [
     Permission('perm_general', PERM.PERM_VIEW, 'View this domain'),
-    Permission('perm_general', PERM.PERM_VIEW_DISPLAYNAME, 'View domain user displayname'),
+    Permission('perm_general', PERM.PERM_VIEW_USER_PRIVATE_INFO, 'View domain user private info'),
     Permission('perm_general', PERM.PERM_EDIT_DOMAIN, 'Edit domain settings'),
     Permission('perm_general', PERM.PERM_MOD_BADGE, 'Show MOD badge'),
     Permission('perm_problem', PERM.PERM_CREATE_PROBLEM, 'Create problems'),
@@ -191,7 +193,7 @@ PERM.PERM_BASIC = PERM.PERM_VIEW
     | PERM.PERM_VIEW_RECORD;
 
 PERM.PERM_DEFAULT = PERM.PERM_VIEW
-    | PERM.PERM_VIEW_DISPLAYNAME
+    | PERM.PERM_VIEW_USER_PRIVATE_INFO
     | PERM.PERM_VIEW_PROBLEM
     | PERM.PERM_EDIT_PROBLEM_SELF
     | PERM.PERM_SUBMIT_PROBLEM
