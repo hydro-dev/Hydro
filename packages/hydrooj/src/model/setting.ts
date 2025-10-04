@@ -262,7 +262,7 @@ AccountSetting(
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
     Setting('setting_info', 'school', '', 'text', 'School', '', FLAG_PRIVATE),
     Setting('setting_info', 'studentId', '', 'text', 'Student ID', '', FLAG_PRIVATE),
-    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_PRIVATE),
+    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_DISABLED | FLAG_PRIVATE),
     Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
