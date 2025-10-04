@@ -111,7 +111,7 @@ class TrainingDetailHandler extends Handler {
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
-            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
+            user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO)),
             problem.getList(domainId, pids, canViewHidden, true),
             problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},

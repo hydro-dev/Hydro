@@ -20,7 +20,7 @@
             <div class="media__body profile-header__main">
               <h1>
                 {{ udoc['uname'] }}
-                {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
+                {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
               </h1>
               <p>
                 {{ _('UID') }}: {{ udoc['_id'] }},
