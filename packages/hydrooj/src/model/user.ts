@@ -1,7 +1,8 @@
 import { escapeRegExp, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
-import { serializer } from '@hydrooj/framework';
+import { HandlerCommon, serializer } from '@hydrooj/framework';
+import { Context, Service } from '../context';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -74,10 +75,6 @@ export class User {
     authn: boolean;
     group?: string[];
     [key: string]: any;
-
-    static _allowedFields = [
-        '_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn',
-    ];
 
     constructor(udoc: Udoc, dudoc, scope = PERM.PERM_ALL) {
         this._id = udoc._id;
@@ -163,17 +160,21 @@ export class User {
         return user;
     }
 
-    serialize(h) {
+    serialize(h: HandlerCommon<any>) {
         if (!this._isPrivate) {
-            const fields = [...new Set(User._allowedFields)];
+            const fields = h?.ctx?.user
+                ? h.ctx.user.getAllowedFields()
+                : ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
             if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) fields.push('displayName', 'school', 'studentId');
             return pick(this, fields);
         }
         return JSON.stringify(this, serializer(true, h));
     }
+}
 
-    static addAllowedFields(...fields: string[]) {
-        User._allowedFields.push(...fields);
+declare module '../context' {
+    interface Context {
+        user: UserService;
     }
 }
 
@@ -484,7 +485,31 @@ class UserModel {
     }
 }
 
-export async function apply() {
+class UserService extends Service {
+    private allowedFields = [
+        '_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn',
+    ];
+
+    constructor(ctx: Context) {
+        super(ctx, 'user');
+    }
+
+    addAllowedField(field: string) {
+        this.ctx.effect(() => {
+            this.allowedFields.push(field);
+            return () => {
+                this.allowedFields = this.allowedFields.filter((k) => k !== field);
+            };
+        });
+    }
+
+    getAllowedFields() {
+        return [...new Set(this.allowedFields)];
+    }
+}
+
+export async function apply(ctx: Context) {
+    ctx.plugin(UserService);
     await Promise.all([
         db.ensureIndexes(
             coll,
@@ -504,4 +529,5 @@ export async function apply() {
     ]);
 }
 export default UserModel;
+export { UserService };
 global.Hydro.model.user = UserModel;
