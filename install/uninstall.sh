@@ -1,6 +1,13 @@
 #!/bin/bash
 
 clear
+if [ $EUID != 0 ]; then
+    echo "This script requires root however you are currently running under another user."
+    echo "Please use 'sudo su' to switch to root user before running this script."
+    echo "卸载脚本需要使用 root 权限，请先使用 sudo su 切换到 root 用户后再运行此脚本。"
+    # sudo "$0" "$@"
+    exit $?
+fi
 echo "
 Warning: 
    This will also delete all process managed by pm2,
@@ -9,13 +16,6 @@ Warning:
    You are warned.
 警告：
    此脚本会删除所有 pm2 托管的进程，并删除所有相关数据。
-if [ $EUID != 0 ]; then
-    echo "This script requires root however you are currently running under another user."
-    echo "Please use 'sudo su' to switch to root user before running this script."
-    echo "卸载脚本需要使用 root 权限，请先使用 sudo su 切换到 root 用户后再运行此脚本。"
-    # sudo "$0" "$@"
-    exit $?
-fi
 Type 'Yes, do as I say!' (without quotes) below to continue:
 输入 'Yes, do as I say!' (不含引号) 继续："
 read -p "> " confirm;
