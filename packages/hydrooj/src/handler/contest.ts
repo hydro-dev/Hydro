@@ -94,7 +94,8 @@ export class ContestDetailBaseHandler extends Handler {
             }
         }
         if (this.tdoc.duration && this.tsdoc?.startAt) {
-            this.tsdoc.endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
+            const endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
+            this.tsdoc.endAt = endAt < this.tdoc.endAt ? endAt : this.tdoc.endAt;
         }
     }
 
