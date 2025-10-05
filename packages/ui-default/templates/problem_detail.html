@@ -126,7 +126,7 @@
             <ul class="section__tab-header flex-row">
               {% for k in pdoc.content|contentLang %}
               <a class="section__tab-header-item {{'tab--active' if (handler.request.query.lang or handler.user.viewLang or handler.session.viewLang or (pdoc.content|contentLang)[0] ) == k }}" data-lang="{{ k }}" href="./{{pdoc.pid|default(pdoc.docId)}}?lang={{k}}">
-                {{ handler.ctx.i18n.get('__langname', k) or i18n('Unknown language') }}
+                {{ handler.ctx.i18n.get('__langname', k) or _('Unknown language') }}
               </a>
               {% endfor %}
             </ul>
