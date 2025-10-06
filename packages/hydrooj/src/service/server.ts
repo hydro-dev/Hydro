@@ -240,7 +240,8 @@ export async function apply(ctx: Context) {
         server.wsHandlerMixin({
             async onerror(err: HydroError) {
                 if (![NotFoundError, PrivilegeError, PermissionError].some((i) => err instanceof i) || this.user?._id !== 0) {
-                    logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`);
+                    const msg = 'msg' in err ? err.msg() : (err as any)?.message || '';
+                    logger.error(`Path:${this.request.path}, User:${this.user?._id}(${this.user?.uname})`, msg, err.params);
                     logger.error(err);
                 }
                 if (err instanceof UserFacingError) err.stack = this.request.path;
