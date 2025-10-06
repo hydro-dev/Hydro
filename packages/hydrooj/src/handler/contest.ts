@@ -222,12 +222,7 @@ export class ContestPrintHandler extends ContestDetailBaseHandler {
         const tasks = await contest.getMultiPrintTask(domainId, tid, isContestAdmin ? {} : { owner: this.user._id })
             .project({ _id: 1, title: 1, owner: 1, status: 1 }).sort({ _id: 1 }).toArray();
         const uids = Array.from(new Set(tasks.map((i) => i.owner)));
-        const udict = await user.getListForRender(
-            domainId, uids,
-            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)
-                ? ['displayName', 'school', 'studentId']
-                : [],
-        );
+        const udict = await user.getListForRender(domainId, uids, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO));
         this.response.body = { tasks, udict };
     }
 
@@ -516,7 +511,7 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             files: sortFiles(this.tdoc.files || []),
             udict: await user.getListForRender(
                 domainId, tcdocs.map((i) => i.owner),
-                this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : [],
+                this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO),
             ),
             tcdocs,
             urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename }),
@@ -628,7 +623,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         }
         const udict = await user.getListForRender(
             domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)],
-            this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : [],
+            this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO),
         );
         this.response.body = { tdoc: this.tdoc, tsdocs, udict };
         this.response.pjax = 'partials/contest_user.html';
@@ -669,7 +664,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
             owner_udoc: await user.getById(domainId, this.tdoc.owner),
             pdict: await problem.getList(domainId, this.tdoc.pids, true, true, problem.PROJECTION_CONTEST_LIST),
             bdocs,
-            udict: await user.getListForRender(domainId, uids, this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? ['displayName'] : []),
+            udict: await user.getListForRender(domainId, uids, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO)),
         };
         this.response.pjax = 'partials/contest_balloon.html';
         this.response.template = 'contest_balloon.html';
@@ -836,7 +831,7 @@ export async function apply(ctx: Context) {
                 if (realtime && !this.user.own(tdoc)) {
                     this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 }
-                const config: ScoreboardConfig = { isExport: false, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) };
+                const config: ScoreboardConfig = { isExport: false, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) };
                 if (!realtime && this.tdoc.lockAt && !this.tdoc.unlocked) {
                     config.lockAt = this.tdoc.lockAt;
                 }
@@ -896,7 +891,7 @@ export async function apply(ctx: Context) {
                 ].concat(
                     tdoc.pids.map((i, idx) => `@p ${pid(idx)},${escape(pdict[i]?.title || 'Unknown Problem')},20,0`),
                     teams.map((i, idx) => {
-                        const showName = this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) && udict[i.uid].displayName
+                        const showName = this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) && udict[i.uid].displayName
                             ? udict[i.uid].displayName : udict[i.uid].uname;
                         const teamName = `${i.rank ? '*' : ''}${escape(udict[i.uid].school || unknownSchool)}-${escape(showName)}`;
                         return `@t ${idx + 1},0,1,"${teamName}"`;
@@ -911,7 +906,7 @@ export async function apply(ctx: Context) {
             async display({ tdoc }) {
                 await this.limitRate('scoreboard_download', 60, 3);
                 const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
-                    isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                    isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO),
                 });
                 this.binary(await this.renderHTML('contest_scoreboard_download_html.html', { rows, tdoc }), `${this.tdoc.title}.html`);
             },
@@ -921,7 +916,7 @@ export async function apply(ctx: Context) {
             async display({ tdoc }) {
                 await this.limitRate('scoreboard_download', 60, 3);
                 const [, rows] = await contest.getScoreboard.call(this, tdoc.domainId, tdoc._id, {
-                    isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME),
+                    isExport: true, lockAt: this.tdoc.lockAt, showDisplayName: this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO),
                 });
                 this.binary(toCSV(rows.map((r) => r.map((c) => c.value.toString())), { bom: true }), `${this.tdoc.title}.csv`);
             },

@@ -18,12 +18,12 @@
         </li>
         <ul class="enroll_user_menu">
         {%- for uid, udoc in udict -%}
-        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udoc.uname }}" {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName %}data-displayname="{{ udoc.displayName }}"{% endif %}>
+        <li class="menu__item enroll_user_menu_item" data-uid="{{ uid }}" data-uname="{{ udoc.uname }}" {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName %}data-displayname="{{ udoc.displayName }}"{% endif %}>
           <a href="./{{ tdoc._id }}?uid={{ uid }}" class="menu__link{% if (handler.request.query.uid or handler.user._id) == uid %} active{% endif %}">
             <span class="user-profile-link">
               <img class="small user-profile-avatar v-center" loading="lazy" src="{{ avatarUrl(udoc.avatar|default('')) }}" width="20" height="20">
               <span class="user-profile-name">
-                {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName and udoc.displayName != udoc.uname %}
+                {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName and udoc.displayName != udoc.uname %}
                   {{ udoc.displayName }} ({{ udoc.uname }})
                 {% else %}
                   {{ udoc.uname }}
