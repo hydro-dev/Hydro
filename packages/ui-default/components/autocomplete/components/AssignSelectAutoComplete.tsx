@@ -1,0 +1,134 @@
+import { AutoComplete, AutoCompleteHandle, AutoCompleteProps } from '@hydrooj/components';
+import type { GDoc, Udoc } from 'hydrooj/src/interface';
+import PropTypes from 'prop-types';
+import React, { forwardRef } from 'react';
+import { api } from 'vj/utils';
+
+interface AssignItem {
+  type: 'user' | 'group';
+  key: string;
+  name: string;
+  displayName?: string;
+  avatarUrl?: string;
+  uids?: number[];
+}
+
+const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, AutoCompleteProps<AssignItem>>((props, ref) => (
+  <AutoComplete<AssignItem>
+    ref={ref as any}
+    cacheKey="assign"
+    queryItems={async (query) => {
+      const [users, groups] = await Promise.all([
+        api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl']),
+        api('groups', { search: query }, ['name', 'uids']),
+      ]);
+
+      const userItems: AssignItem[] = users.map((user: Udoc) => ({
+        type: 'user' as const,
+        key: user._id.toString(),
+        name: user.uname,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+      }));
+
+      const groupItems: AssignItem[] = groups.map((group: GDoc) => ({
+        type: 'group' as const,
+        key: group.name,
+        name: group.name,
+        uids: group.uids,
+      }));
+
+      return [...groupItems, ...userItems];
+    }}
+    fetchItems={async (keys) => {
+      const userIds: string[] = [];
+      const groupNames: string[] = [];
+
+      keys.forEach((key) => {
+        if (/^[0-9]+$/.test(key)) {
+          userIds.push(key);
+        } else {
+          groupNames.push(key);
+        }
+      });
+
+      const [users, groups] = await Promise.all([
+        userIds.length > 0 ? api('users', { auto: userIds }, ['_id', 'uname', 'displayName']) : [],
+        groupNames.length > 0 ? api('groups', { names: groupNames }, ['name', 'uids']) : [],
+      ]);
+
+      const userItems: AssignItem[] = (users as Udoc[]).map((user) => ({
+        type: 'user' as const,
+        key: user._id.toString(),
+        name: user.uname,
+        displayName: user.displayName,
+      }));
+
+      const groupItems: AssignItem[] = (groups as GDoc[]).map((group) => ({
+        type: 'group' as const,
+        key: group.name,
+        name: group.name,
+        uids: group.uids,
+      }));
+
+      return [...groupItems, ...userItems];
+    }}
+    itemText={(item) => {
+      if (item.type === 'group') {
+        return `${item.name} (${item.uids?.length || 0} users)`;
+      }
+      return item.name + (item.displayName ? ` (${item.displayName})` : '');
+    }}
+    itemKey={(item) => item.key}
+    renderItem={(item) => {
+      if (item.type === 'group') {
+        return (
+          <div className="media">
+            <div className="media__body medium">
+              <div className="assign-select__name">{item.name}</div>
+              <div className="assign-select__desc">Group • {item.uids?.length || 0} users</div>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="media">
+          <div className="media__left medium">
+            <img className="small user-profile-avatar" alt="" src={item.avatarUrl} width="30" height="30" />
+          </div>
+          <div className="media__body medium">
+            <div className="assign-select__name">{item.name}{item.displayName && ` (${item.displayName})`}</div>
+            <div className="assign-select__desc">User • UID = {item.key}</div>
+          </div>
+        </div>
+      );
+    }}
+    {...{
+      width: '100%',
+      height: 'auto',
+      listStyle: {},
+      multi: true,
+      selectedKeys: [],
+      allowEmptyQuery: false,
+      freeSolo: false,
+      freeSoloConverter: (input) => input,
+      ...props,
+    }}
+  />
+));
+
+AssignSelectAutoComplete.propTypes = {
+  width: PropTypes.string,
+  height: PropTypes.string,
+  listStyle: PropTypes.object,
+  onChange: PropTypes.func.isRequired,
+  multi: PropTypes.bool,
+  selectedKeys: PropTypes.arrayOf(PropTypes.string),
+  allowEmptyQuery: PropTypes.bool,
+  freeSolo: PropTypes.bool,
+  freeSoloConverter: PropTypes.func,
+};
+
+AssignSelectAutoComplete.displayName = 'AssignSelectAutoComplete';
+
+export default AssignSelectAutoComplete;

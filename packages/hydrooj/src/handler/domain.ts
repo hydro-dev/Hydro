@@ -432,6 +432,24 @@ export const DomainApi = {
             return ddoc;
         },
     ),
+    groups: Query(
+        Schema.object({
+            search: Schema.string(),
+            names: Schema.array(Schema.string()),
+        }),
+        async (ctx, args) => {
+            const { domainId } = ctx.args;
+            const groups = await user.listGroup(domainId);
+            if (args.names?.length) {
+                return groups.filter((g) => args.names.includes(g.name));
+            }
+            if (args.search) {
+                const searchLower = args.search.toLowerCase();
+                return groups.filter((g) => g.name.toLowerCase().includes(searchLower));
+            }
+            return groups;
+        },
+    ),
     'domain.group': Mutation(
         Schema.object({
             name: Schema.string().required(),
