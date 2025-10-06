@@ -3,17 +3,20 @@
   {% if files.length %}
     <table class="data-table">
       <colgroup>
-        <col class="col--checkbox">
+        {% if not sidebar %}<col class="col--checkbox">{% endif %}
         <col class="col--name">
         <col class="col--size">
+        <col class="col--operation">
       </colgroup>
       <thead>
         <tr>
+          {% if not sidebar %}
           <th class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" name="select_all" data-checkbox-toggle="{{ filetype|default('files') }}">
             </label>
           </th>
+          {% endif %}
           <th class="col--name">{{ _('Filename') }}</th>
           <th class="col--size">{{ _('Size') }}</th>
           <th class="col--operation"></th>
@@ -22,11 +25,13 @@
       <tbody>
         {%- for file in files -%}
         <tr data-filename="{{ file.name }}" data-size="{{ file.size }}">
+          {% if not sidebar %}
           <td class="col--checkbox">
             <label class="compact checkbox">
               <input type="checkbox" data-checkbox-group="{{ filetype|default('files') }}" data-checkbox-range>
             </label>
           </td>
+          {% endif %}
           <td class="col--name" data-preview>
             <a href="{{ urlForFile(file.name, filetype) }}">{{ file.name }}</a>
           </td>
@@ -39,6 +44,6 @@
       </tbody>
     </table>
   {% else %}
-    {{ nothing.render('There are no files currently.') }}
+    {{ nothing.render('There are no files currently.', compact=true) }}
   {% endif %}
 </div>

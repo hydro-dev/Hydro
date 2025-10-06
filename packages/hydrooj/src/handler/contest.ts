@@ -357,6 +357,8 @@ export class ContestEditHandler extends Handler {
             pids: tid ? this.tdoc.pids.join(',') : '',
             beginAt,
             page_name: tid ? 'contest_edit' : 'contest_create',
+            files: tid ? this.tdoc.files : [],
+            urlForFile: (filename: string) => this.url('contest_file_download', { tid, filename, type: 'public' }),
         };
     }
 

@@ -14,7 +14,7 @@
       </div>
       <div class="section__body">
       {% if not tcdocs.length %}
-        {{ nothing.render('Oh, there is no clarification!') }}
+        {{ nothing.render('Oh, there is no clarification!', compact=true) }}
       {% else %}
       <ul class="dczcomments__list">
         {% for doc in tcdocs %}
