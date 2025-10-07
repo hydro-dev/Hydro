@@ -441,7 +441,6 @@ export const DomainApi = {
             domainId: Schema.string().required(),
         }),
         async (ctx, args) => {
-            if (args.domainId !== ctx.domain._id) throw new BadRequestError();
             if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
             const groups = await user.listGroup(args.domainId);
             if (args.names?.length) {
