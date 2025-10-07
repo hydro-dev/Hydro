@@ -11,7 +11,23 @@ interface AssignItem {
   displayName?: string;
   avatarUrl?: string;
   uids?: number[];
+  invalid?: boolean;
 }
+
+const toUserItem = (user: Udoc): AssignItem => ({
+  type: 'user',
+  key: user._id.toString(),
+  name: user.uname,
+  displayName: user.displayName,
+  avatarUrl: user.avatarUrl,
+});
+
+const toGroupItem = (group: GDoc): AssignItem => ({
+  type: 'group',
+  key: group.name,
+  name: group.name,
+  uids: group.uids,
+});
 
 const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, AutoCompleteProps<AssignItem>>((props, ref) => (
   <AutoComplete<AssignItem>
@@ -22,59 +38,41 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
         api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl']),
         api('groups', { search: query }, ['name', 'uids']),
       ]);
-
-      const userItems: AssignItem[] = users.map((user: Udoc) => ({
-        type: 'user' as const,
-        key: user._id.toString(),
-        name: user.uname,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-      }));
-
-      const groupItems: AssignItem[] = groups.map((group: GDoc) => ({
-        type: 'group' as const,
-        key: group.name,
-        name: group.name,
-        uids: group.uids,
-      }));
-
+      const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
+      const groupItems: AssignItem[] = groups.map((group: GDoc) => toGroupItem(group));
       return [...groupItems, ...userItems];
     }}
     fetchItems={async (keys) => {
+      const isUserId = (k: string) => /^-?[0-9]+$/.test(k);
       const userIds: string[] = [];
       const groupNames: string[] = [];
 
       keys.forEach((key) => {
-        if (/^[0-9]+$/.test(key)) {
+        if (isUserId(key)) {
           userIds.push(key);
         } else {
           groupNames.push(key);
         }
       });
 
-      const [users, groups] = await Promise.all([
+      const [users, groups]: [Udoc[], GDoc[]] = await Promise.all([
         userIds.length > 0 ? api('users', { auto: userIds }, ['_id', 'uname', 'displayName']) : [],
         groupNames.length > 0 ? api('groups', { names: groupNames }, ['name', 'uids']) : [],
       ]);
 
-      const userItems: AssignItem[] = (users as Udoc[]).map((user) => ({
-        type: 'user' as const,
-        key: user._id.toString(),
-        name: user.uname,
-        displayName: user.displayName,
-      }));
-
-      const groupItems: AssignItem[] = (groups as GDoc[]).map((group) => ({
-        type: 'group' as const,
-        key: group.name,
-        name: group.name,
-        uids: group.uids,
-      }));
+      const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
+      const groupItems: AssignItem[] = keys
+        .filter((key) => !isUserId(key))
+        .map((key) => {
+          const group = groups.find((g) => g.name === key);
+          return group ? toGroupItem(group) : { type: 'group', key, name: key, invalid: true };
+        });
 
       return [...groupItems, ...userItems];
     }}
     itemText={(item) => {
       if (item.type === 'group') {
+        if (item.invalid) return `${item.name} (invalid)`;
         return `${item.name} (${item.uids?.length || 0} users)`;
       }
       return item.name + (item.displayName ? ` (${item.displayName})` : '');
@@ -85,8 +83,13 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
         return (
           <div className="media">
             <div className="media__body medium">
-              <div className="assign-select__name">{item.name}</div>
-              <div className="assign-select__desc">Group • {item.uids?.length || 0} users</div>
+              <div className="assign-select__name">
+                {item.name}
+                {item.invalid && <span style={{ color: '#d93025' }}> (invalid)</span>}
+              </div>
+              <div className="assign-select__desc">
+                {item.invalid ? 'Group • Not found' : `Group • ${item.uids?.length || 0} users`}
+              </div>
             </div>
           </div>
         );

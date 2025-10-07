@@ -436,12 +436,11 @@ export const DomainApi = {
         Schema.object({
             search: Schema.string(),
             names: Schema.array(Schema.string()),
+            domainId: Schema.string(),
         }),
         async (ctx, args) => {
-            const { domainId } = ctx.args;
-            const udoc = await user.getById(domainId, ctx.user._id);
-            if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
-            const groups = await user.listGroup(domainId);
+            if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
+            const groups = await user.listGroup(args.domainId);
             if (args.names?.length) {
                 return groups.filter((g) => args.names.includes(g.name));
             }
