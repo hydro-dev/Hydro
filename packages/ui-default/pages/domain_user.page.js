@@ -125,6 +125,8 @@ ${i18n('Their account will not be deleted and they will be with the guest role u
         role,
       });
       Notification.success(i18n('Role has been updated to {0}.', role));
+      await delay(2000);
+      window.location.reload();
     } catch (error) {
       Notification.error(error.message);
     }
