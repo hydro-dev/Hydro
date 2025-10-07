@@ -34,13 +34,18 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
     ref={ref as any}
     cacheKey="assign"
     queryItems={async (query) => {
-      const [users, groups] = await Promise.all([
-        api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl']),
-        api('groups', { search: query }, ['name', 'uids']),
-      ]);
-      const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
-      const groupItems: AssignItem[] = groups.map((group: GDoc) => toGroupItem(group));
-      return [...groupItems, ...userItems];
+      try {
+        const [users, groups] = await Promise.all([
+          api('users', { search: query }, ['_id', 'uname', 'displayName', 'avatarUrl']),
+          api('groups', { search: query }, ['name', 'uids']),
+        ]);
+        const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
+        const groupItems: AssignItem[] = groups.map((group: GDoc) => toGroupItem(group));
+        return [...groupItems, ...userItems];
+      } catch (e) {
+        console.error('Failed to fetch assign items', e);
+        return [];
+      }
     }}
     fetchItems={async (keys) => {
       try {
