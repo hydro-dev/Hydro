@@ -43,24 +43,29 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
       return [...groupItems, ...userItems];
     }}
     fetchItems={async (keys) => {
-      const isUserId = (k: string) => /^-?[0-9]+$/.test(k);
-      const userIds: string[] = keys.filter((k) => isUserId(k));
-      const groupNames: string[] = keys.filter((k) => !isUserId(k));
+      try {
+        const isUserId = (k: string) => /^-?[0-9]+$/.test(k);
+        const userIds: string[] = keys.filter((k) => isUserId(k));
+        const groupNames: string[] = keys.filter((k) => !isUserId(k));
 
-      const [users, groups]: [Udoc[], GDoc[]] = await Promise.all([
-        userIds.length > 0 ? api('users', { auto: userIds }, ['_id', 'uname', 'displayName']) : [],
-        groupNames.length > 0 ? api('groups', { names: groupNames }, ['name', 'uids']) : [],
-      ]);
+        const [users, groups]: [Udoc[], GDoc[]] = await Promise.all([
+          userIds.length > 0 ? api('users', { auto: userIds }, ['_id', 'uname', 'displayName']) : [],
+          groupNames.length > 0 ? api('groups', { names: groupNames }, ['name', 'uids']) : [],
+        ]);
 
-      const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
-      const groupItems: AssignItem[] = keys
-        .filter((key) => !isUserId(key))
-        .map((key) => {
-          const group = groups.find((g) => g.name === key);
-          return group ? toGroupItem(group) : { type: 'group', key, name: key, invalid: true };
-        });
+        const userItems: AssignItem[] = users.map((user: Udoc) => toUserItem(user));
+        const groupItems: AssignItem[] = keys
+          .filter((key) => !isUserId(key))
+          .map((key) => {
+            const group = groups.find((g) => g.name === key);
+            return group ? toGroupItem(group) : { type: 'group', key, name: key, invalid: true };
+          });
 
-      return [...groupItems, ...userItems];
+        return [...groupItems, ...userItems];
+      } catch (e) {
+        console.error('Failed to fetch assign items', e);
+        return [];
+      }
     }}
     itemText={(item) => {
       if (item.type === 'group') {
