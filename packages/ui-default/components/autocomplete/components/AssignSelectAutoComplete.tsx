@@ -85,10 +85,9 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
             <div className="media__body medium">
               <div className="assign-select__name">
                 {item.name}
-                {item.invalid && <span style={{ color: '#d93025' }}> (invalid)</span>}
               </div>
               <div className="assign-select__desc">
-                {item.invalid ? 'Group • Not found' : `Group • ${item.uids?.length || 0} users`}
+                Group • {item.uids?.length || 0} users
               </div>
             </div>
           </div>
