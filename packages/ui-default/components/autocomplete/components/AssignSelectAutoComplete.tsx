@@ -44,16 +44,8 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
     }}
     fetchItems={async (keys) => {
       const isUserId = (k: string) => /^-?[0-9]+$/.test(k);
-      const userIds: string[] = [];
-      const groupNames: string[] = [];
-
-      keys.forEach((key) => {
-        if (isUserId(key)) {
-          userIds.push(key);
-        } else {
-          groupNames.push(key);
-        }
-      });
+      const userIds: string[] = keys.filter((k) => isUserId(k));
+      const groupNames: string[] = keys.filter((k) => !isUserId(k));
 
       const [users, groups]: [Udoc[], GDoc[]] = await Promise.all([
         userIds.length > 0 ? api('users', { auto: userIds }, ['_id', 'uname', 'displayName']) : [],
@@ -78,33 +70,23 @@ const AssignSelectAutoComplete = forwardRef<AutoCompleteHandle<AssignItem>, Auto
       return item.name + (item.displayName ? ` (${item.displayName})` : '');
     }}
     itemKey={(item) => item.key}
-    renderItem={(item) => {
-      if (item.type === 'group') {
-        return (
-          <div className="media">
-            <div className="media__body medium">
-              <div className="assign-select__name">
-                {item.name}
-              </div>
-              <div className="assign-select__desc">
-                Group • {item.uids?.length || 0} users
-              </div>
-            </div>
-          </div>
-        );
-      }
-      return (
-        <div className="media">
+    renderItem={(item) => (
+      <div className="media">
+        {item.type === 'user' ? (
           <div className="media__left medium">
             <img className="small user-profile-avatar" alt="" src={item.avatarUrl} width="30" height="30" />
           </div>
-          <div className="media__body medium">
-            <div className="assign-select__name">{item.name}{item.displayName && ` (${item.displayName})`}</div>
-            <div className="assign-select__desc">User • UID = {item.key}</div>
+        ) : null}
+        <div className="media__body medium">
+          <div className="assign-select__name">
+            {item.name}{item.type === 'user' && item.displayName && ` (${item.displayName})`}
+          </div>
+          <div className="assign-select__desc">
+            {item.type === 'group' ? <>Group • {item.uids?.length || 0} users</> : <>User • UID = {item.key}</>}
           </div>
         </div>
-      );
-    }}
+      </div>
+    )}
     {...{
       width: '100%',
       height: 'auto',
