@@ -299,8 +299,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
                 const fetched = await props.fetchItems(ids);
                 for (const item of fetched) valueCache[itemKey(item)] = item;
                 setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
-              } catch (e) {
-                console.error('Failed to fetch items on paste', e);
+              } catch (err) {
+                console.error('Failed to fetch items on paste', err);
               }
             }}
             placeholder={props.placeholder}

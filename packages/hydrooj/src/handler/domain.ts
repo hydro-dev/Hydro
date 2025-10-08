@@ -4,7 +4,6 @@ import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import type { Context } from '../context';
 import {
-    BadRequestError,
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
     InvalidJoinInvitationCodeError, NotFoundError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
