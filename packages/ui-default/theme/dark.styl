@@ -93,7 +93,7 @@ $hover-background-color = #424242
     box-shadow: 0 0.125rem 0.625rem rgba(255 255 255 20%)
 
   .section__table-header
-    background-color: rgba($table-header-bg-color, 0.95)
+    background-color: rgba(0, 0, 0, 0.95)
     box-shadow: 0 0.1875rem 0.125rem rgba(255 255 255 3%)
 
   .data-table tr
@@ -406,5 +406,8 @@ $hover-background-color = #424242
   &.hasjs .collapsed #status:not([data-status="7"]) .compiler-text-mask
     background-image: linear-gradient(to bottom, transparent, #000000 25px)
 
-  .page--record_detail .subtask
+  &.page--record_detail .subtask
     background-color: #000 !important
+
+  &.page--contest_scoreboard .star-highlight 
+    background: #6f757b
