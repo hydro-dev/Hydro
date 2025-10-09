@@ -24,7 +24,7 @@ const extractArgsFromEvent = (ev) => {
   return {
     file: $(ev.currentTarget).parent().parent().attr('data-filename'),
     type: $(ev.currentTarget).closest('[data-type]').attr('data-type') || '',
-    sidebar: !!$(ev.currentTarget).closest('[data-sidebar]'),
+    sidebar: !!$(ev.currentTarget).closest('[data-sidebar]').length,
   };
 };
 
