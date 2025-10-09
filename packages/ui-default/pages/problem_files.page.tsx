@@ -22,13 +22,14 @@ function ensureAndGetSelectedFiles(type = '') {
 }
 
 const page = new NamedPage('problem_files', () => {
-  async function handleClickDownloadSelected(type) {
+  async function handleClickDownloadSelected(ev) {
+    const type = $(ev.currentTarget).closest('[data-type]').attr('data-type');
     const files = ensureAndGetSelectedFiles(type);
     if (files === null) return;
     const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
     const targets = [];
     for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
-    await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
+    await download(`${pdoc.docId} ${pdoc.title} ${type}.zip`, targets);
   }
 
   async function handleGenerateTestdata(ev) {
@@ -84,8 +85,7 @@ const page = new NamedPage('problem_files', () => {
   }
   $(document).on('click', '[name="create_testdata"]', () => previewFile(undefined, 'testdata'));
   $(document).on('click', '[name="create_file"]', () => previewFile(undefined, 'additional_file'));
-  $(document).on('click', '[name="download_selected_testdata"]', () => handleClickDownloadSelected('testdata'));
-  $(document).on('click', '[name="download_selected_file"]', () => handleClickDownloadSelected('additional_file'));
+  $(document).on('click', '[name="download_selected"]', (ev) => handleClickDownloadSelected(ev));
   $(document).on('vjContentNew', (e) => {
     createHint('Hint::icon::testdata', $(e.target).find('[name="create_testdata"]').get(0)?.parentNode?.parentNode?.children?.[0]);
   });

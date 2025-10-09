@@ -22,7 +22,7 @@
       {% include "partials/problem_files.html" %}
       {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
-          <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
+          <button class="rounded button" name="download_selected">{{ _('Download Selected') }}</button>
           {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
             <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
             <button class="rounded button" name="rename_selected">{{ _('Rename Selected') }}</button>
