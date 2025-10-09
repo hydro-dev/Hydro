@@ -4,11 +4,12 @@ const sourceMapArg = process.env.LOADER_SOURCEMAP_ONLY
     || process.argv.find((i) => i.startsWith('--sourcemap-only='))
     || '';
 const sourceMapOnly = sourceMapArg ? sourceMapArg.split('=')[1].split(',').filter((i) => i) : false;
-const map = new Proxy({}, {
+const map = new Proxy(Object.create(null), {
     get(target, key) {
-        return zlib.inflateSync(target[key]);
+        return zlib.inflateSync(target[key]).toString();
     },
     set(target, key, value) {
+        if (typeof value !== 'string') return false;
         if (sourceMapOnly && key.includes('node_modules') && !sourceMapOnly.some((entry) => key.includes(entry))) {
             return true;
         }
@@ -93,7 +94,7 @@ require.extensions['.js'] = function loader(module, filename) {
         const lastLine = content.trim().split('\n').pop();
         if (lastLine.startsWith('//# sourceMappingURL=data:application/json;base64,')) {
             const info = lastLine.split('//# sourceMappingURL=data:application/json;base64,')[1];
-            const payload = JSON.parse(Buffer.from(info, 'base64').toString());
+            const payload = Buffer.from(info, 'base64').toString();
             map[filename] = payload;
             content = content.split('//# sourceMappingURL')[0];
         }
