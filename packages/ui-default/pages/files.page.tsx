@@ -29,7 +29,7 @@ const extractArgsFromEvent = (ev) => {
 };
 
 function ensureAndGetSelectedFiles(type = '') {
-  const allChecked = $(`.files tbody [data-checkbox-group="${type}"]:checked`);
+  const allChecked = $(`.files tbody [data-checkbox-group="${type || 'files'}"]:checked`);
   const files = allChecked.get().map((i) => $(i).closest('tr').attr('data-filename'));
   if (files.length === 0) {
     Notification.error(i18n('Please select at least one file to perform this operation.'));
