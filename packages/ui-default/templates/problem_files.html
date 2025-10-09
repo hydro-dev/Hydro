@@ -64,11 +64,11 @@
   <div class="medium-4 columns" data-type="additional_file">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Files') }}</h1>
+        <h1 class="section__title">{{ _('Additional Files') }}</h1>
         <div class="section__tools">
           {% if (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
-            <button class="primary rounded button" name="create_file">{{ _('Create File') }}</button>
-            <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+            <button class="primary rounded button" name="create_file">{{ _('Create') }}</button>
+            <button class="primary rounded button" name="upload_file">{{ _('Upload') }}</button>
           {% endif %}
         </div>
       </div>

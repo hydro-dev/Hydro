@@ -23,8 +23,8 @@ const getUrl = (type: string, sidebar: boolean) => {
 const extractArgsFromEvent = (ev) => {
   return {
     file: $(ev.currentTarget).parent().parent().attr('data-filename'),
-    type: $(ev.target).closest('[data-type]').attr('data-type') || '',
-    sidebar: !!ev.target.closest('[data-sidebar]'),
+    type: $(ev.currentTarget).closest('[data-type]').attr('data-type') || '',
+    sidebar: !!$(ev.currentTarget).closest('[data-sidebar]'),
   };
 };
 
@@ -69,7 +69,7 @@ async function handleClickRename(ev) {
   });
   if (!res?.name) return;
   try {
-    await request.post('', {
+    await request.post(endpoint, {
       operation: 'rename_files',
       files: file,
       newNames: [res.name],
@@ -148,7 +148,7 @@ async function handleClickRenameSelected(ev) {
           setPreview(true);
           return false;
         }
-        request.post('', {
+        request.post(endpoint, {
           operation: 'rename_files',
           files: selectedFiles,
           newNames,
@@ -273,7 +273,7 @@ async function handleClickRemove(ev) {
   const { file, type, sidebar } = extractArgsFromEvent(ev);
   if (!(await confirm(i18n('Confirm to delete the file?')))) return;
   try {
-    await request.post('', {
+    await request.post(endpoint, {
       operation: 'delete_files',
       files: [file],
       type,
@@ -291,7 +291,7 @@ async function handleClickRemoveSelected(ev: JQuery.ClickEvent<Document, undefin
   if (selectedFiles === null) return;
   if (!(await confirm(i18n('Confirm to delete the selected files?')))) return;
   try {
-    await request.post('', {
+    await request.post(endpoint, {
       operation: 'delete_files',
       files: selectedFiles,
       type,
