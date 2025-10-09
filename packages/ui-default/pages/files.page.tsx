@@ -332,8 +332,8 @@ function handleDrop(e: JQuery.DropEvent<Document, undefined, HTMLElement, HTMLEl
 }
 
 const page = new NamedPage([
-  'problem_files', 'problem_edit',
-  'home_files', 'contest_manage', 'training_files', 'homework_files',
+  'problem_files', 'problem_edit', 'contest_edit', 'contest_manage',
+  'home_files', 'training_files', 'homework_files',
 ], (pageName) => {
   if (pageName === 'problem_edit') endpoint = './files';
   $(document).on('click', '[name="file_rename"]', (ev) => handleClickRename(ev));
