@@ -64,7 +64,7 @@ async function handleClickRename(ev) {
     name: {
       type: 'text',
       required: true,
-      label: 'New Filename',
+      label: i18n('New Filename'),
     },
   });
   if (!res?.name) return;
