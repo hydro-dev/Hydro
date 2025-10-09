@@ -315,9 +315,9 @@ export class ContestProblemListHandler extends ContestDetailBaseHandler {
         await contest.addClarification(domainId, tid, this.user._id, content, this.request.ip, subject);
         if (!this.user.own(this.tdoc)) {
             await message.send(1, this.tdoc.maintainer.concat(this.tdoc.owner), JSON.stringify({
-                message: 'Contest {0} has a new clarification about {1}, please go to contest management to reply.',
+                message: 'Contest {0} has a new clarification about {1}, please go to contest clarifications page to reply.',
                 params: [this.tdoc.title, subject > 0 ? `#${this.tdoc.pids.indexOf(subject) + 1}` : 'the contest'],
-                url: this.url('contest_manage', { tid }),
+                url: this.url('contest_clarification', { tid }),
             }), message.FLAG_I18N | message.FLAG_UNREAD);
         }
         this.back();
