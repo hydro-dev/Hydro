@@ -4,11 +4,8 @@ import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
-import download from 'vj/components/zipDownloader';
 import { NamedPage } from 'vj/misc/Page';
-import {
-  i18n, request, slideDown, slideUp,
-} from 'vj/utils';
+import { i18n, request } from 'vj/utils';
 
 const categories = {};
 const dirtyCategories = [];
@@ -138,21 +135,6 @@ function buildCategoryFilter() {
   });
 }
 
-async function handleSection(ev, sidebar, type) {
-  const $section = $(ev.currentTarget).closest(`.section--problem-sidebar-${sidebar}`);
-  if ($section.is(`.${type}d, .animating`)) return;
-  $section.addClass('animating');
-  const $detail = $section.find(`.section--problem-sidebar-${sidebar}__detail`);
-  if (type === 'expand') {
-    await slideDown($detail, 300, { opacity: 0 }, { opacity: 1 });
-  } else {
-    await slideUp($detail, 300, { opacity: 1 }, { opacity: 0 });
-  }
-  $section.addClass(type === 'expand' ? 'expanded' : 'collapsed');
-  $section.removeClass(type === 'expand' ? 'collapsed' : 'expanded');
-  $section.removeClass('animating');
-}
-
 export default new NamedPage(['problem_create', 'problem_edit'], () => {
   let confirmed = false;
   $(document).on('click', '[name="operation"]', (ev) => {
@@ -173,14 +155,6 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
   $(document).on('change', '[name="tag"]', parseCategorySelection);
   buildCategoryFilter();
   parseCategorySelection();
-
-  async function handleClickDownloadAll() {
-    const files = $('.additional_file-table tr').map(function () { return $(this).attr('data-filename'); }).get();
-    const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'additional_file' });
-    const targets = [];
-    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
-    await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
-  }
 
   const $main = $('textarea[data-editor]');
   const $field = $('textarea[data-markdown-upload]');
@@ -236,9 +210,4 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       ev.preventDefault();
     }
   });
-  $(document).on('click', '[name="additional_file__download"]', () => handleClickDownloadAll());
-  $(document).on('click', '[name="additional_file__section__expand"]', (ev) => handleSection(ev, 'additional_file', 'expand'));
-  $(document).on('click', '[name="additional_file__section__collapse"]', (ev) => handleSection(ev, 'additional_file', 'collapse'));
-  $(document).on('click', '[name="tags__section__expand"]', (ev) => handleSection(ev, 'tags', 'expand'));
-  $(document).on('click', '[name="tags__section__collapse"]', (ev) => handleSection(ev, 'tags', 'collapse'));
 });
