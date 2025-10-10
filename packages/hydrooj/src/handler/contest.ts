@@ -564,8 +564,8 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
         await Promise.all([
             storage.del(files.map((t) => `contest/${domainId}/${tid}/${type}/${t}`), this.user._id),
             contest.edit(domainId, tid, type === 'private'
-                ? { privateFiles: this.tdoc.privateFiles.filter((i) => !files.includes(i.name)) }
-                : { files: this.tdoc.files.filter((i) => !files.includes(i.name)) },
+                ? { privateFiles: this.tdoc.privateFiles?.filter((i) => !files.includes(i.name)) }
+                : { files: this.tdoc.files?.filter((i) => !files.includes(i.name)) },
             ),
         ]);
         this.back();

@@ -23,8 +23,8 @@ const getUrl = (type: string, sidebar: boolean) => {
 const extractArgsFromEvent = (ev) => {
   return {
     file: $(ev.currentTarget).parent().parent().attr('data-filename'),
-    type: $(ev.currentTarget).closest('[data-type]').attr('data-type') || '',
-    sidebar: !!$(ev.currentTarget).closest('[data-sidebar]').length,
+    type: $(ev.target).closest('[data-type]').attr('data-type') || '',
+    sidebar: !!$(ev.target).closest('[data-sidebar]').length,
   };
 };
 
@@ -71,7 +71,7 @@ async function handleClickRename(ev) {
   try {
     await request.post(endpoint, {
       operation: 'rename_files',
-      files: file,
+      files: [file],
       newNames: [res.name],
       type,
     });
