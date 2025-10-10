@@ -23,7 +23,7 @@
         "oxlint": "cd framework/eslint-config && node -r @hydrooj/register build.ts && cd ../../ && oxlint --config framework/eslint-config/.oxlintrc.json",
         "lint": "eslint --flag v10_config_lookup_from_file packages plugins modules framework --ext .ts,.tsx,.jsx,.vue,.yaml,.yml --fix",
         "lint:ci": "eslint --flag v10_config_lookup_from_file packages plugins modules framework --ext .ts,.tsx,.jsx,.vue,.yaml,.yml --max-warnings=0",
-        "debug": "node --trace-warnings --inspect=192.168.99.234:1111 --async-stack-traces --trace-deprecation packages/hydrooj/bin/hydrooj --debug --template",
+        "debug": "node --trace-warnings --async-stack-traces --trace-deprecation packages/hydrooj/bin/hydrooj --debug --template",
         "start": "packages/hydrooj/bin/hydrooj.js",
         "postinstall": "node build/prepare.js",
         "gen-patch": "node -r @hydrooj/register build/gen-patch.ts",
