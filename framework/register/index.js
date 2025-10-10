@@ -6,6 +6,7 @@ const sourceMapArg = process.env.LOADER_SOURCEMAP_ONLY
 const sourceMapOnly = sourceMapArg ? sourceMapArg.split('=')[1].split(',').filter((i) => i) : false;
 const map = new Proxy(Object.create(null), {
     get(target, key) {
+        if (!target[key]) return null;
         return zlib.inflateSync(target[key]).toString();
     },
     set(target, key, value) {
