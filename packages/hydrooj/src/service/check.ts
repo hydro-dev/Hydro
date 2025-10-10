@@ -2,6 +2,7 @@
 
 import os from 'os';
 import { DisposableList } from 'cordis';
+import inspector from 'inspector';
 import { randomstring } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import * as system from '../model/system';
@@ -48,6 +49,10 @@ export default class CheckService extends Service {
             if (url === '/') warn("server.url isn't set.");
             const header = system.get('server.xff');
             if (header && !c.request.ip) warn('IP header seems incorrect.\nCheck dashboard>settings>server.');
+        });
+        this.addChecker('Inspector', async (c, log, warn) => {
+            const url = inspector.url();
+            if (url) warn(`Inspector is enabled at ${url}.`);
         });
     }
 
