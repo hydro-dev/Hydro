@@ -8,7 +8,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later OR Proprietary",
     "engines": {
-        "node": ">=18"
+        "node": ">=22"
     },
     "preferUnplugged": true,
     "dependencies": {
