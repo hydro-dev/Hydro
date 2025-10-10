@@ -1,5 +1,6 @@
 import { Classes } from '@blueprintjs/core';
 import $ from 'jquery';
+import React from 'react';
 import { Dialog } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import {
@@ -82,9 +83,9 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
     Notification.success(i18n('File uploaded successfully.'));
     if (options.pjax) {
       let params = '';
-      if (options.type) params += `? d = ${options.type} `;
-      if (options.sidebar) params += `${params ? '&' : '?'} sidebar = true`;
-      await pjax.request({ push: false, url: `${endpoint}${params || ''} ` });
+      if (options.type) params += `?d=${encodeURIComponent(options.type)}`;
+      if (options.sidebar) params += `${params ? '&' : '?'}sidebar=true`;
+      await pjax.request({ push: false, url: `${endpoint}${params || ''}` });
     }
   } catch (e) {
     console.error(e);

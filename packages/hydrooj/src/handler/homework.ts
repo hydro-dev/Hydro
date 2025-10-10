@@ -247,7 +247,7 @@ class HomeworkEditHandler extends Handler {
         await Promise.all([
             record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' }),
             contest.del(domainId, tid),
-            storage.del(tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+            storage.del(tdoc.files?.map((i) => `contest/${domainId}/${tid}/private/${i.name}`) || [], this.user._id),
         ]);
         this.response.redirect = this.url('homework_main');
     }
@@ -289,8 +289,8 @@ export class HomeworkFilesHandler extends Handler {
         if (size >= system.get('limit.contest_files_size')) {
             throw new FileLimitExceededError('size');
         }
-        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
-        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        await storage.put(`contest/${domainId}/${tid}/private/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`contest/${domainId}/${tid}/private/${filename}`);
         const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
         if (!meta) throw new FileUploadError();
         await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
@@ -301,7 +301,7 @@ export class HomeworkFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/private/${t}`), this.user._id),
             contest.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();

@@ -52,7 +52,7 @@ const page = new NamedPage('problem_config', () => {
         newNames: [newName],
         type: 'testdata',
       });
-      Notification.success(i18n('File have been renamed.'));
+      Notification.success(i18n('File has been renamed.'));
       await pjax.request({ url: './files?d=testdata&sidebar=true', push: false });
     } catch (error) {
       Notification.error(error.message);
@@ -68,7 +68,7 @@ const page = new NamedPage('problem_config', () => {
         files: file,
         type: 'testdata',
       });
-      Notification.success(i18n('File have been deleted.'));
+      Notification.success(i18n('File has been deleted.'));
       reduxStore.dispatch({
         type: 'CONFIG_DELETE_TESTDATA',
         value: file,

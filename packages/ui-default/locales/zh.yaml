@@ -86,6 +86,7 @@ Add suffix: 添加后缀
 Add testcase: 添加测试点
 Add User: 添加用户
 Add: 添加
+Additional Files: 附加文件
 additional_file: 附加文件
 All {0} Contests: 所有 {0} 比赛
 All changes will be lost. Are you sure to clear all answers?: 所有更改将会丢失。您确定要清除所有答案吗？
@@ -391,8 +392,8 @@ Failed to parse testcase.: 无法解析测试点信息。
 Feedback: 反馈
 Field {0} or {1} validation failed.: 字段 {0} 或 {1} 验证失败。
 Field {0} validation failed.: 字段 {0} 验证失败。
-File have been deleted.: 文件已被删除。
-File have been renamed.: 文件已被重命名。
+File has been deleted.: 文件已被删除。
+File has been renamed.: 文件已被重命名。
 File saved.: 文件已成功保存。
 file too large: 文件过大
 File uploaded successfully.: 上传文件成功
@@ -585,9 +586,8 @@ Nav Logo Light: 左上角图标（亮）
 Nav Logo Light@2x: 左上角图标（亮）（大）
 Network error: 网络错误
 Never expire: 从不过期
-New dataset: 新测试数据
 New Email: 新电子邮件
-New file: 新文件
+New Filename: 新文件名
 New filename(s): 新文件名
 New Password: 新密码
 New Training Plan: 新训练计划

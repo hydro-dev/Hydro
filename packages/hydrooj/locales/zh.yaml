@@ -153,13 +153,14 @@ Contact Us: 联系我们
 Contact: 联系
 content: 内容
 Content: 内容
-Contest {0} has a new clarification about {1}, please go to contest management to reply.: 比赛 {0} 有一条关于 {1} 的新问答，请前往比赛管理页面回复。
-Contest {0} jury replied to your clarification, please go to contest page to view.: 比赛 {0} 的裁判回复了您的问答，请前往比赛页面查看。
-Contest Clarifications: 问答
+Contest {0} has a new clarification about {1}, please go to contest clarifications page to reply.: 比赛 {0} 有一条关于 {1} 的新答疑，请前往比赛答疑页面回复。
+Contest {0} jury replied to your clarification, please go to contest page to view.: 比赛 {0} 的裁判回复了您的答疑，请前往比赛页面查看。
+Contest Clarifications: 赛时答疑
 Contest Management: 比赛管理
 Contest scoreboard is not visible.: 当前比赛成绩表隐藏，暂不可显示。
 Contest Scoreboard: 比赛成绩表
 contest_balloon: 气球状态
+contest_clarification: 赛时答疑
 contest_create: 创建比赛
 contest_detail_problem_submit: 递交比赛题目
 contest_detail_problem: 题目详情
@@ -476,6 +477,7 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Yellow: 标黄
+Materials: 材料
 Max files for user: 单用户最大文件数量
 Max files per problem: 单题最大文件数量
 Max files size per problem: 单题最大总文件大小
@@ -501,7 +503,6 @@ name: 名称
 Name: 名称
 Network error: 网络错误
 Never expire: 从不过期
-New dataset: 新测试数据
 New Email: 新电子邮件
 New file: 新文件
 New Password: 新密码
@@ -532,10 +533,11 @@ Oh, the user doesn't have any contributions!: 啊哦，这个用户还没贡献�
 Oh, the user hasn't created any discussions yet!: 这个用户还没有发布过讨论
 Oh, the user hasn't submitted yet!: 这个用户还没有交过题 _(:зゝ∠)_
 Oh, there are no tasks that match the filter!: 喔，目前没有符合过滤条件的任务。
-Oh, there is no clarification!: 喔，目前没有提问！
+Oh, there is no clarification!: 喔，目前没有答疑！
 Oh, there is no task in the queue!: 喔，队列中目前没有任务。
 Ok: 确定
 Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
+Only Partic.: 仅参赛者
 Oops, there are no results.: 呀，没有结果。
 Oops!: Oops!
 Open in Problem Set: 在题库中打开

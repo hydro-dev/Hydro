@@ -5,142 +5,69 @@
 {{ set(UiContext, 'tdoc', tdoc) }}
 <div class="row">
   <div class="medium-9 columns">
-    <div class="row">
-      <div class="medium-7 columns">
-        <div class="section">
-          <div class="section__body no-padding">
-            <table class="data-table">
-              <colgroup>
-                <col class="col--problem">
-                <col class="col--score">
-              </colgroup>
-              <thead>
-                <tr>
-                  <th class="col--problem">{{ _('Problem') }}</th>
-                  <th class="col--score">{{ _('Score') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-              {%- for pid in tdoc.pids -%}
-                <tr>
-                  <td class="col--problem col--problem-name">
-                    <a href="{{ url('problem_detail', pid=pid) }}">
-                      {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
-                    </a>
-                  </td>
-                  <td class="col--score">
-                    <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
-                  </td>
-                </tr>
-              {%- endfor -%}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <div class="section">
+      <div class="section__body no-padding">
+        <table class="data-table">
+          <colgroup>
+            <col class="col--id">
+            <col class="col--problem">
+            <col class="col--score">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="col--id">{{ _('ID') }}</th>
+              <th class="col--problem">{{ _('Problem') }}</th>
+              <th class="col--score">{{ _('Score') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+          {%- for pid in tdoc.pids -%}
+            <tr>
+              <td class="col--id">{{ pdict[pid].docId }}</td>
+              <td class="col--problem col--problem-name">
+                <a href="{{ url('problem_detail', pid=pid) }}">
+                  {{ problem.render_problem_title(pdict[pid], tdoc=tdoc, invalid=true, alphabetic=true) }}
+                </a>
+              </td>
+              <td class="col--score">
+                <a class="typo-a" data-tooltip="{{ _('Set Score for Contest') }}" name="set_score" data-pid="{{ pid }}" data-score="{{ tdoc.score[pid]|default(100) }}">{{ tdoc.score[pid]|default(100) }}</a>
+              </td>
+            </tr>
+          {%- endfor -%}
+          </tbody>
+        </table>
       </div>
-      <div class="medium-5 columns">
-        <div class="section">
+    </div>
+    <div class="row">
+      <div class="medium-6 columns">
+        <div class="section" data-type="public">
           <div class="section__header">
-            <h1 class="section__title">{{ _('Files') }}</h1>
+            <h1 class="section__title">{{ _('Files') }}({{ _('Public') }})</h1>
             <div class="section__tools">
               <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
             </div>
           </div>
           {{ noscript_note.render() }}
+          {% set filetype = "public" %}
           {% include "partials/files.html" %}
           <div class="section__body">
             <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
           </div>
         </div>
       </div>
-      <div class="medium-12 columns">
-        <div class="section">
+      <div class="medium-6 columns">
+        <div class="section" data-type="private">
           <div class="section__header">
-            <h1 class="section__title">{{ _('Contest Clarifications') }}</h1>
+            <h1 class="section__title">{{ _('Materials') }}({{ _('Only Partic.') }})</h1>
             <div class="section__tools">
-              <a href="#reply_or_broadcast" class="primary rounded button" name="broadcast" data-title="{{ _('Send Broadcast Message') }}" data-did="">{{ _('Send Broadcast Message') }}</a>
+              <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
             </div>
           </div>
+          {% set files = tdoc.privateFiles %}
+          {% set filetype = "private" %}
+          {% include "partials/files.html" %}
           <div class="section__body">
-          {% if not tcdocs.length %}
-            {{ nothing.render('Oh, there is no clarification!') }}
-          {% else %}
-          <ul class="dczcomments__list">
-            {% for doc in tcdocs %}
-            <li class="dczcomments__item" id="clarification_{{ doc._id }}" data-did="{{ doc._id }}">
-              <div class="media">
-                <div class="media__body top" style="max-width:100%">
-                  <div class="clearfix">
-                    <div class="supplementary dczcomments__supplementary">
-                      {{_('Subject') }}: {{ contest.render_clarification_subject(tdoc,pdict,doc.subject) }} | {% if doc.owner == 0 %}<b>{{ _('Jury') }}</b>{% else %}{{ user.render_inline(udict[doc.owner], badge=false) }}{% endif %} @ {{ datetimeSpan(doc._id)|safe }}
-                    </div>
-                    {% if doc.owner %}
-                    <div class="dczcomments__operations nojs--hide">
-                      <a href="#reply_or_broadcast" name="reply" data-title="{{ _('Reply') }}#{{ doc._id }}" data-did="{{ doc._id }}"
-                      ><span class="icon icon-reply"></span>{{ _('Reply') }}</a>
-                    </div>
-                    {% endif %}
-                  </div>
-                  <div class="typo richmedia" data-emoji-enabled>
-                    {{ doc['content']|markdown|safe }}
-                  </div>
-                </div>
-              </div>
-              <ul class="dczcomments__replies">
-              {%- for rdoc in doc['reply'] -%}
-                <li class="dczcomments__reply">
-                  <div class="media">
-                    <div class="media__left top">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-                    <div class="media__body top">
-                      <div class="clearfix">
-                        <div class="supplementary dczcomments__supplementary">
-                          <b>{{ _('Jury') }}</b>
-                        </div>
-                      </div>
-                      <div class="typo richmedia" data-emoji-enabled>
-                        {{ rdoc['content']|markdown|safe }}
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              {%- endfor -%}
-              </ul>
-            </li>
-            {% endfor %}
-          </ul>
-          {% endif %}
-          </div>
-          <div id="reply_or_broadcast">
-            <div class="section__header">
-              <h1 class="section__title">{{ _('Send Broadcast Message') }}</h1>
-            </div>
-            <div class="section__body typo">
-              <form method="post">
-                <div class="clarification-container"></div>
-                <input type="hidden" name="operation" value="clarification">
-                <input type="hidden" name="did" value="">
-                <div class="row">
-                  <div class="medium-12 columns form__item_subject">
-                    <label>
-                      {{ _('Subject') }}
-                      <select name="subject" class="select">
-                        <option value="0">{{ _('General Issue') }}</option>
-                        <option value="-1">{{ _('Technical Issue') }}</option>
-                        {% for pid in tdoc.pids %}
-                        <option value="{{ pid }}">{{ utils.getAlphabeticId(loop.index0) }}. {{ pdict[pid].title }}</option>
-                        {% endfor %}
-                      </select>
-                    </label>
-                  </div>
-                  <div class="medium-12 columns form__item">
-                    <label>
-                      {{ _('Content') }}
-                      <textarea name="content" class="textbox" data-markdown required></textarea>
-                    </label>
-                  </div>
-                </div>
-                <button type="submit" class="rounded primary button">{{ _('Submit') }}</button>
-            </div>
+            <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
           </div>
         </div>
       </div>

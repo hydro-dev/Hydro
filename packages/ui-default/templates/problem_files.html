@@ -2,7 +2,7 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 <div class="row">
-  <div class="medium-5 columns">
+  <div class="medium-5 columns" data-type="testdata">
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('Testdata') }}</h1>
@@ -10,7 +10,7 @@
           {% if not reference and (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) %}
             <a href="{{ url('problem_config', pid=pdoc.docId) }}" class="primary rounded button">{{ _('Config') }}</a>
             <button class="primary rounded button" name="create_testdata">{{ _('Create') }}</button>
-            <button class="primary rounded button" name="upload_testdata">{{ _('Upload') }}</button>
+            <button class="primary rounded button" name="upload_file">{{ _('Upload') }}</button>
           {% elif reference %}
             <a href="{{ url('problem_detail', domainId=pdoc.reference.domainId, pid=pdoc.reference.pid) }}" class="primary rounded button">{{ _('Source') }}</a>
           {% endif %}
@@ -22,10 +22,10 @@
       {% include "partials/problem_files.html" %}
       {% if not reference and (handler.user.own(pdoc) or handler.user.hasPerm(perm.PERM_READ_PROBLEM_DATA) or handler.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) %}
         <div class="section__body">
-          <button class="rounded button" name="download_selected_testdata">{{ _('Download Selected') }}</button>
+          <button class="rounded button" name="download_selected">{{ _('Download Selected') }}</button>
           {% if handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM) %}
-            <button class="rounded button" name="remove_selected_testdata">{{ _('Remove Selected') }}</button>
-            <button class="rounded button" name="rename_selected_testdata">{{ _('Rename Selected') }}</button>
+            <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+            <button class="rounded button" name="rename_selected">{{ _('Rename Selected') }}</button>
           {% endif %}
         </div>
       {% endif %}
@@ -61,14 +61,14 @@
     </div>
     {% endif %}
   </div>
-  <div class="medium-4 columns">
+  <div class="medium-4 columns" data-type="additional_file">
     <div class="section">
       <div class="section__header">
-        <h1 class="section__title">{{ _('Files') }}</h1>
+        <h1 class="section__title">{{ _('Additional Files') }}</h1>
         <div class="section__tools">
           {% if (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
-            <button class="primary rounded button" name="create_file">{{ _('Create File') }}</button>
-            <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
+            <button class="primary rounded button" name="create_file">{{ _('Create') }}</button>
+            <button class="primary rounded button" name="upload_file">{{ _('Upload') }}</button>
           {% endif %}
         </div>
       </div>
@@ -76,10 +76,10 @@
       {% set can_edit = (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
       {% include "partials/problem_files.html" %}
       <div class="section__body">
-        <button class="rounded button" name="download_selected_file">{{ _('Download Selected') }}</button>
+        <button class="rounded button" name="download_selected">{{ _('Download Selected') }}</button>
         {% if (handler.user.own(pdoc, perm.PERM_EDIT_PROBLEM_SELF) or handler.user.hasPerm(perm.PERM_EDIT_PROBLEM)) and not reference %}
-          <button class="rounded button" name="remove_selected_file">{{ _('Remove Selected') }}</button>
-          <button class="rounded button" name="rename_selected_file">{{ _('Rename Selected') }}</button>
+          <button class="rounded button" name="remove_selected">{{ _('Remove Selected') }}</button>
+          <button class="rounded button" name="rename_selected">{{ _('Rename Selected') }}</button>
         {% endif %}
       </div>
     </div>
