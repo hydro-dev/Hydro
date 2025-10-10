@@ -112,10 +112,16 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
       setCurrentItem(null);
       return;
     }
-    queryCache[query] ||= await queryItems(query);
-    for (const item of queryCache[query]) valueCache[itemKey(item)] = item;
-    setItemList(queryCache[query]);
-    setCurrentItem((!freeSolo && queryCache[query].length) ? 0 : null);
+    try {
+      queryCache[query] ||= await queryItems(query);
+      for (const item of queryCache[query]) valueCache[itemKey(item)] = item;
+      setItemList(queryCache[query]);
+      setCurrentItem((!freeSolo && queryCache[query].length) ? 0 : null);
+    } catch (e) {
+      console.error('Failed to query items', e);
+      setItemList([]);
+      setCurrentItem(null);
+    }
   };
 
   useEffect(() => {
@@ -135,6 +141,8 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
     Promise.resolve(props.fetchItems(ids)).then((items) => {
       for (const item of items) valueCache[itemKey(item)] = item;
       setRerender(!rerender);
+    }).catch((e) => {
+      console.error('Failed to fetch items', e);
     });
   }, [selectedKeys, multi]);
 
@@ -287,9 +295,13 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
               e.preventDefault();
               const ids = text.replace(/，/g, ',').split(',').filter((v) => v?.trim().length && !selectedKeys.includes(v));
               if (!ids.length) return;
-              const fetched = await props.fetchItems(ids);
-              for (const item of fetched) valueCache[itemKey(item)] = item;
-              setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
+              try {
+                const fetched = await props.fetchItems(ids);
+                for (const item of fetched) valueCache[itemKey(item)] = item;
+                setSelectedKeys([...selectedKeys, ...fetched.map((val) => itemKey(val))]);
+              } catch (err) {
+                console.error('Failed to fetch items on paste', err);
+              }
             }}
             placeholder={props.placeholder}
             onBlur={() => setFocused(false)}
