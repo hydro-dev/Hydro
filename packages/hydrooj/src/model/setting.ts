@@ -404,6 +404,7 @@ export async function apply(ctx: Context) {
         LangSettingNode.range = range;
         ServerLangSettingNode.range = range;
     });
+    ctx.emit('system/setting-loaded');
 }
 
 global.Hydro.model.setting = {

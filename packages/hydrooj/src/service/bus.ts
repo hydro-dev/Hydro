@@ -35,6 +35,7 @@ export interface EventMap {
     'database/config': () => VoidReturn;
 
     'system/setting': (args: Record<string, any>) => VoidReturn;
+    'system/setting-loaded': () => VoidReturn;
     'bus/broadcast': (event: keyof EventMap, payload: any, trace?: string) => VoidReturn;
     'monitor/update': (type: 'server' | 'judge', $set: any) => VoidReturn;
     'monitor/collect': (info: any) => VoidReturn;

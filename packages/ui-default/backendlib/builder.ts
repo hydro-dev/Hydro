@@ -172,6 +172,7 @@ export async function apply(ctx: Context) {
     debouncedBuildUI();
   };
   ctx.on('system/setting', () => triggerHotUpdate());
+  ctx.on('system/setting-loaded', () => triggerHotUpdate());
   ctx.on('app/watch/change', triggerHotUpdate);
   ctx.on('app/watch/unlink', triggerHotUpdate);
   ctx.on('app/i18n/update', debouncedBuildUI);
