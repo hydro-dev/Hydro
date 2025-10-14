@@ -239,15 +239,6 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     if (UiContext.tdoc?._id && UiContext.tdoc.rule !== 'homework') cacheKey += `@${UiContext.tdoc._id}`;
 
     let setUpdate;
-    function ProblemNavigation() {
-      [, setUpdate] = React.useState(0);
-      return <div className="contest-problems" style={{ margin: '1em' }}>
-        {pids.map((i) => <a href={`#p${i}`} key={i} className={ans[i] ? 'pending ' : ''}>
-          <span className="id">{i}</span>
-        </a>)}
-      </div>;
-    }
-
     const db = await openDB;
     async function saveAns() {
       await db.put('solutions', {
@@ -256,9 +247,36 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       });
     }
     async function clearAns() {
+      if (!(await confirm(i18n('All changes will be lost. Are you sure to clear all answers?')))) return;
       await db.delete('solutions', `${cacheKey}#objective`);
       window.location.reload();
     }
+
+    function ProblemNavigation() {
+      [, setUpdate] = React.useState(0);
+      const update = React.useCallback(() => { setUpdate?.((v) => v + 1); }, []);
+      React.useEffect(() => {
+        $(document).on('click', update);
+        $(document).on('input', update);
+        return () => {
+          $(document).off('click', update);
+          $(document).off('input', update);
+        };
+      }, [update]);
+      return <>
+        <div className="contest-problems" style={{ margin: '1em' }}>
+          {pids.map((i) => <a href={`#p${i}`} key={i} className={ans[i] ? 'pending ' : ''}>
+            <span className="id">{i}</span>
+          </a>)}
+        </div>
+        <li className="menu__item">
+          <button className="menu__link" onClick={clearAns}>
+            <span className="icon icon-erase" /> {i18n('Clear answers')}
+          </button>
+        </li>
+      </>;
+    }
+
     async function loadAns() {
       const saved = await db.get('solutions', `${cacheKey}#objective`);
       if (typeof saved?.value !== 'string') return;
@@ -279,7 +297,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
 
     if (cnt) {
       await loadAns();
-      $('.problem-content .typo').append(document.getElementsByClassName('nav__item--round').length
+      $('.problem-content .typo').append(!document.getElementsByClassName('nav__item--round').length
         ? `<input type="submit" disabled class="button rounded primary disabled" value="${i18n('Login to Submit')}" />`
         : `<input type="submit" class="button rounded primary" value="${i18n('Submit')}" />`);
       $('.objective-input[type!=checkbox]').on('input', (e: JQuery.TriggeredEvent<HTMLInputElement>) => {
@@ -310,23 +328,16 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             Notification.error(err.message);
           });
       });
-      $('.section--problem-sidebar ol.menu').prepend(tpl(<li className="menu__item" id="clearAnswers">
-        <a className="menu__link" href="javascript:;">
-          <span className="icon icon-erase" /> {i18n('Clear answers')}
-        </a>
-      </li>));
-      $(document).on('click', '#clearAnswers', async () => {
-        if (await confirm(i18n('All changes will be lost. Are you sure to clear all answers?'))) await clearAns();
-      });
     }
-    const ele = document.createElement('div');
-    $('.section--problem-sidebar ol.menu').prepend(ele);
-    createRoot(ele).render(<ProblemNavigation />);
+    if (!document.getElementById('problem-navigation')) {
+      const ele = document.createElement('div');
+      ele.id = 'problem-navigation';
+      $('.section--problem-sidebar ol.menu').prepend(ele);
+      createRoot(document.getElementById('problem-navigation')).render(<ProblemNavigation />);
+    }
     $('.non-scratchpad--hide').hide();
     $('.scratchpad--hide').hide();
     $('.outer-loader-container').hide();
-    $(document).on('click', () => { setUpdate?.((v) => v + 1); });
-    $(document).on('input', () => { setUpdate?.((v) => v + 1); });
   }
 
   $(document).on('click', '[name="problem-sidebar__open-scratchpad"]', (ev) => {
