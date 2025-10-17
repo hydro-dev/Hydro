@@ -636,7 +636,7 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     @param('noDisposition', Types.Boolean)
     @param('type', Types.Range(['public', 'private']), true)
     async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false, type = 'private') {
-        if (type === 'private' && !this.user.own(this.tdoc)) {
+        if (type === 'private' && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
             if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
             if (!this.tsdoc.startAt) await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });

@@ -73,7 +73,7 @@ export class SonicService extends Service {
                     .then(() => this.push('problem', `${pdoc.domainId}@content`, id, pdoc.content.toString())),
             ]).catch((e) => logger.error(e));
         });
-        yield this.ctx.on('problem/del', async (domainId, docId) => {
+        yield this.ctx.on('problem/delete', async (domainId, docId) => {
             const id = `${domainId}/${docId}`;
             await Promise.all([
                 this.flusho('problem', `${domainId}@title`, id),

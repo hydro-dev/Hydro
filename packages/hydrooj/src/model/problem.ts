@@ -282,7 +282,6 @@ export class ProblemModel {
                 .then((items) => storage.del(items.map((item) => `problem/${domainId}/${docId}/${item.name}`))),
             bus.parallel('problem/delete', domainId, docId),
         ]);
-        await bus.emit('problem/del', domainId, docId);
         return !!res[0][0].deletedCount;
     }
 

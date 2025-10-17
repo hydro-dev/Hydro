@@ -72,7 +72,6 @@ export interface EventMap {
     'problem/before-edit': (doc: Partial<ProblemDoc>, $unset: OnlyFieldsOfType<ProblemDoc, any, true | '' | 1>) => VoidReturn;
     'problem/edit': (doc: ProblemDoc) => VoidReturn;
     'problem/before-del': (domainId: string, docId: number) => VoidReturn;
-    'problem/del': (domainId: string, docId: number) => VoidReturn;
     'problem/list': (query: Filter<ProblemDoc>, handler: any, sort?: string[]) => VoidReturn;
     'problem/get': (doc: ProblemDoc, handler: any) => VoidReturn;
     'problem/delete': (domainId: string, docId: number) => VoidReturn;
