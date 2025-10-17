@@ -21,6 +21,8 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 2
+    - name: Setup Corepack
+      run: corepack enable
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
@@ -28,7 +30,7 @@ jobs:
     - name: Get yarn cache directory path
       id: yarn-cache-dir-path
       run: echo "::set-output name=dir::$(yarn config get cacheFolder)"
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: |
           ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -45,7 +47,6 @@ jobs:
         rm -rf node_modules yarn.lock **/tsconfig.tsbuildinfo
     - name: Config And Install
       run: |
-        [[ ! -z "${{secrets.NPM_TOKEN}}" ]] && echo "npmAuthToken: ${{secrets.NPM_TOKEN}}" >> .yarnrc.yml
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
         yarn
@@ -76,8 +77,6 @@ jobs:
     - name: Publish
       if: ${{ github.event_name == 'push' }}
       run: node -r @hydrooj/register build/publish.ts
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     # - name: Benchmark
     #   run: yarn benchmark
     # - name: Benchmark result

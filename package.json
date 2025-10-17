@@ -62,5 +62,5 @@
         "typescript": "5.8.3",
         "wtfnode": "^0.10.0"
     },
-    "packageManager": "yarn@4.9.1"
+    "packageManager": "yarn@4.10.3"
 }
