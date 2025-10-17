@@ -89,6 +89,8 @@ class DomainModel {
         if (result) {
             await bus.parallel('domain/get', result);
             cache.set(key, result);
+        } else {
+            cache.set(key, null);
         }
         return result;
     }
@@ -305,12 +307,13 @@ export async function apply(ctx: Context) {
         for (const host of ddoc.host || []) {
             cache.delete(`host::${host}`);
         }
-        cache.delete(`id::${domainId}`);
+        cache.delete(`id::${ddoc.lower}`);
     });
     await Promise.all([
         db.ensureIndexes(
             coll,
             { key: { lower: 1 }, name: 'lower', unique: true },
+            { key: { host: 1 }, name: 'host', unique: true },
         ),
         db.ensureIndexes(
             collUser,
