@@ -43,10 +43,10 @@ export class StorageModel {
         return await storage.get(value?.link || value?._id || path, savePath);
     }
 
-    static async rename(path: string, newPath: string, operator = 1) {
+    static async rename(path: string, newPath: string, operator: null | number = 1) {
         return await StorageModel.coll.updateOne(
             { path, autoDelete: null },
-            { $set: { path: newPath }, $push: { operator } },
+            { $set: { path: newPath }, ...(operator !== null ? { $push: { operator } } : {}) },
         );
     }
 

@@ -38,11 +38,12 @@
       {% endif %}
       </div>
     </div>
-    {% if tdoc.files.length %}
+    {% if files.length %}
       <div class="section">
         <div class="section__header">
           <h1 class="section__title">{{ _('Files') }}</h1>
         </div>
+        {% set filetype = 'private' %}
         {% include "partials/files.html" %}
       </div>
     {% endif %}

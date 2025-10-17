@@ -87,9 +87,9 @@
       </div>
       <div class="section__body no-padding">
       {% if not canViewRecord %}
-        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.') }}
+        {{ nothing.render('According to the contest rules, you cannot view your submission details at current.', compact=true) }}
       {% elif not rdocs.length %}
-        {{ nothing.render('Oh, there is no submission!') }}
+        {{ nothing.render('Oh, there is no submission!', compact=true) }}
       {% else %}
         <table class="data-table record_main__table">
           <colgroup>
@@ -129,7 +129,7 @@
       </div>
       <div class="section__body">
       {% if not tcdocs.length %}
-        {{ nothing.render('Oh, there is no clarification!') }}
+        {{ nothing.render('Oh, there is no clarification!', compact=true) }}
       {% else %}
       <ul class="dczcomments__list">
         {% for doc in tcdocs %}
@@ -203,6 +203,20 @@
     </div>
   </div>
   <div class="medium-3 columns" data-sticky="large">
+    {% if tdoc.privateFiles.length %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{_('Materials')}}</h1>
+      </div>
+      <ol>
+        {% for file in tdoc.privateFiles %}
+        <li class="menu__item">
+          <a class="menu__link" href="{{ url('contest_file_download', { tid: tdoc.docId, filename: file.name, type: 'private' }) }}">{{ file.name }}</a>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% endif %}
     {% set owner_udoc = udict[tdoc.owner] %}
     {% include "partials/contest_sidebar.html" %}
   </div>

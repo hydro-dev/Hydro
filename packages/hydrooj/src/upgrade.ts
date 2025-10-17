@@ -617,4 +617,12 @@ export const coreScripts: MigrationScript[] = [
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
         return true;
     },
+    async function _95_96() {
+        const files = await StorageModel.list('contest/', true);
+        for (const file of files) {
+            const [, domainId, tid, type, name] = file.path.split('/');
+            if (!name) await StorageModel.rename(file.path, `contest/${domainId}/${tid}/public/${type}`);
+        }
+        return true;
+    },
 ];

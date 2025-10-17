@@ -1,7 +1,7 @@
 {% import "components/nothing.html" as nothing with context %}
 {% set _files = testdata if filetype == 'testdata' else additional_file %}
-<div class="section__body no-padding problem-{{ 'sidebar' if sidebar else 'files' }}-{{ filetype }}" data-fragment-id="problem-files-{{ filetype }}" 
-  {% if sidebar %}data-type="{{ filetype }}" data-sidebar{% endif %}>
+<div class="section__body files no-padding problem-{{ 'sidebar' if sidebar else 'files' }}-{{ filetype }}" data-fragment-id="problem-files-{{ filetype }}" 
+  data-type="{{ filetype }}" {% if sidebar %}data-sidebar{% endif %}>
   {% if reference %}
     <blockquote class="note">
       <p>{{ _('This is a copy of another problem.') }}</p>
@@ -49,8 +49,8 @@
           <td class="col--size">{{ size(file.size) }}</td>
           {% if can_edit %}
           <td class="col--operation">
-            <a href="javascript:;" name="{{ filetype }}__rename"><span class="icon icon-edit"></span></a>
-            <a href="javascript:;" name="{{ filetype }}__delete"><span class="icon icon-delete"></span></a>
+            <a href="javascript:;" name="file_rename"><span class="icon icon-edit"></span></a>
+            <a href="javascript:;" name="file_remove"><span class="icon icon-delete"></span></a>
           </td>
           {% endif %}
         </tr>
