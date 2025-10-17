@@ -313,7 +313,7 @@ export async function apply(ctx: Context) {
         db.ensureIndexes(
             coll,
             { key: { lower: 1 }, name: 'lower', unique: true },
-            { key: { host: 1 }, name: 'host', unique: true },
+            { key: { host: 1 }, name: 'host', sparse: true },
         ),
         db.ensureIndexes(
             collUser,
