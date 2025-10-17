@@ -85,6 +85,7 @@ export interface EventMap {
 
     'contest/before-add': (payload: Partial<Tdoc>) => VoidReturn;
     'contest/add': (payload: Partial<Tdoc>, id: ObjectId) => VoidReturn;
+    'contest/before-edit': (tdoc: Tdoc, $set: Partial<Tdoc>) => VoidReturn;
     'contest/edit': (payload: Tdoc) => VoidReturn;
     'contest/list': (query: Filter<Tdoc>, handler: any) => VoidReturn;
     'contest/scoreboard': (tdoc: Tdoc, rows: ScoreboardRow[], udict: BaseUserDict, pdict: ProblemDict) => VoidReturn;
