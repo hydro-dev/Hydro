@@ -24,7 +24,7 @@ export default class MigrationService extends Service {
     }
 
     async registerChannel(name: string, s: MigrationScript[]) {
-        if (this.called) logger.warn('MigrationService.registerChannel: called after doUpgrade');
+        if (this.called) logger.warn('MigrationService.registerChannel: called after doUpgrade with name: %s', name);
         this.channels[name] = s;
     }
 

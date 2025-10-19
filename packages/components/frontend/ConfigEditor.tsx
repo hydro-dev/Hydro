@@ -150,7 +150,7 @@ export default function ConfigEditor({
     setTimeout(() => {
       updateFromMonaco(stringConfig === '{}' ? 'dummy: 1' : `${stringConfig}\n\ndummy: 1`);
       setTimeout(() => {
-        setStringConfig(stringConfig);
+        setStringConfig(stringConfig || '\n');
         setValue(yaml.load(stringConfig));
       }, 300);
     }, 300);

@@ -130,6 +130,17 @@ export class ApiService extends Service {
         });
     }
 
+    serialize() {
+        const result = {};
+        for (const key in APIS) {
+            result[key] = {
+                type: APIS[key].type,
+                input: APIS[key].input.toJSON(),
+            };
+        }
+        return result;
+    }
+
     async execute(
         context: ApiExecutionContext, callOrName: ApiCall<ApiType, any, any> | string,
         rawArgs: any, emitHook?: any, project?: any, sendPayload?: (payload: any) => void,
@@ -255,9 +266,9 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
     }
 }
 
-export function applyApiHandler(ctx: Context, name: string, path: string) {
+export async function applyApiHandler(ctx: Context, name: string, path: string) {
     ctx.plugin(ApiService);
-    ctx.inject(['server', 'api'], ({ Route, Connection }) => {
+    await ctx.inject(['server', 'api'], ({ Route, Connection }) => {
         Route(name, path, ApiHandler);
         Connection(`${name}_conn`, `${path}/conn`, ApiConnectionHandler);
     });

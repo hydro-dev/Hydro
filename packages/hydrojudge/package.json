@@ -1,18 +1,18 @@
 {
     "name": "@hydrooj/hydrojudge",
     "bin": "bin/hydrojudge.js",
-    "version": "3.5.0-beta.8",
+    "version": "3.5.0-beta.9",
     "main": "./src/index.ts",
     "author": "undefined <i@undefined.moe>",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@zip.js/zip.js": "^2.8.2",
+        "@zip.js/zip.js": "^2.8.8",
         "cac": "^6.7.14",
-        "p-queue": "^8.1.1",
-        "schemastery": "^3.17.0",
-        "semver": "^7.7.2",
+        "p-queue": "^9.0.0",
+        "schemastery": "^3.17.1",
+        "semver": "^7.7.3",
         "shell-quote": "^1.8.3",
         "superagent": "^10.2.3",
         "ws": "^8.18.3"

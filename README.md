@@ -111,6 +111,20 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.10 / UI 4.58.0-beta.10
+
+- core&ui: 优化新设置页面
+- core: 修复乐多榜单尝试数为负
+- ui: 修复内置 qface 表情包链接
+- core: 修复编辑题号冲突提示
+- ui: 修复题目配置页语言选择
+- vjudge: 功能优化
+- judge: 稳定性修复
+- ui: 修复 css 动态加载
+- core: 支持比赛材料上传
+- core: 性能和内存占用优化
+- core: 重命名 PERM_VIEW_DISPLAYNAME 为 PERM_VIEW_USER_PRIVATE_INFO
+
 ## Hydro 5.0.0-beta.9 / UI 4.58.0-beta.9
 
 - core: 修复 OI/IOI 赛制一血计算

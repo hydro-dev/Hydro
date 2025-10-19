@@ -179,9 +179,6 @@ async function cleanFiles() {
 }
 
 export async function apply(ctx: Context) {
-    ctx.inject(['worker'], (c) => {
-        c.worker.addHandler('storage.prune', cleanFiles);
-    });
     ctx.on('domain/delete', async (domainId) => {
         const [problemFiles, contestFiles, trainingFiles] = await Promise.all([
             StorageModel.list(`problem/${domainId}`),
@@ -189,6 +186,9 @@ export async function apply(ctx: Context) {
             StorageModel.list(`training/${domainId}`),
         ]);
         await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
+    });
+    await ctx.inject(['worker'], (c) => {
+        c.worker.addHandler('storage.prune', cleanFiles);
     });
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     await db.ensureIndexes(

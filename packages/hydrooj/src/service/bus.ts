@@ -25,7 +25,7 @@ export interface EventMap {
     'subscription/init': (h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn;
     'subscription/subscribe': (channel: string, user: User, metadata: Record<string, string>) => VoidReturn;
     'subscription/enable': (
-        channel: string, h: ConnectionHandler<Context>, privileged: boolean, onDispose: (disposable: () => void) => void
+        channel: string, h: ConnectionHandler<Context>, privileged: boolean, onDispose: (disposable: () => void) => void,
     ) => VoidReturn;
 
     'app/watch/change': (path: string) => VoidReturn;
@@ -61,7 +61,7 @@ export interface EventMap {
     'document/add': (doc: any) => VoidReturn;
     'document/set': <T extends keyof DocType>(
         domainId: string, docType: T, docId: DocType[T],
-        $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>
+        $set: any, $unset: OnlyFieldsOfType<DocType[T], any, true | '' | 1>,
     ) => VoidReturn;
 
     'discussion/before-add': (payload: Partial<DiscussionDoc>) => VoidReturn;

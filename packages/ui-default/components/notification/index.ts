@@ -9,7 +9,7 @@ ToasterContainer.style.width = '100%';
 ToasterContainer.style.zIndex = '9999';
 document.body.append(ToasterContainer);
 
-const AppToaster = OverlayToaster.createAsync(
+const AppToaster = OverlayToaster.create(
   { position: Position.BOTTOM_LEFT, usePortal: false },
   { container: ToasterContainer },
 );

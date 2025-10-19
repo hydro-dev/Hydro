@@ -7,7 +7,7 @@
     "license": "AGPL-3.0-or-later",
     "dependencies": {
         "mariadb": "^3.4.5",
-        "mongodb": "^6.19.0",
+        "mongodb": "^6.20.0",
         "turndown": "^7.2.1",
         "xml2js": "^0.6.2"
     },

@@ -59,7 +59,9 @@ class ScheduleModel {
 }
 
 export async function apply(ctx: Context) {
-    ctx.inject(['worker'], (c) => {
+    ctx.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
+
+    await ctx.inject(['worker'], (c) => {
         c.worker.addHandler('task.daily', async (task) => {
             const pref: Record<string, number> = {};
             let start = Date.now();
@@ -87,8 +89,6 @@ export async function apply(ctx: Context) {
             ctx.emit('task/daily/finish', pref);
         });
     });
-
-    ctx.on('domain/delete', (domainId) => coll.deleteMany({ domainId }));
 
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     if (!await ScheduleModel.count({ type: 'schedule', subType: 'task.daily' })) {

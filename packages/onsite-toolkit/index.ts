@@ -199,7 +199,7 @@ export function apply(ctx: Context) {
                         ordinal: idx,
                         color: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].name : tdoc.balloon?.[idx]) || 'white',
                         rgb: (typeof (tdoc.balloon?.[idx]) === 'object' ? tdoc.balloon[idx].color : null) || '#ffffff',
-                        time_limit: (parseTimeMS((pdict[i].config as ProblemConfig).timeMax) / 1000).toFixed(1),
+                        time_limit: Math.floor(parseTimeMS((pdict[i].config as ProblemConfig).timeMax) / 100) / 10,
                         test_data_count: 20,
                     })),
                 ];
@@ -260,8 +260,10 @@ export function apply(ctx: Context) {
                     await zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
                 }));
                 await Promise.all(organizations.map(async (i) => {
+                    const avatarSrc = teams.find((j) => j.organization === i)?.avatar;
+                    if (!avatarSrc) return;
                     await zip.add(`organizations/${orgId[i]}/`, null, { directory: true });
-                    await zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(teams.find((j) => j.organization === i)?.avatar || 'no photo, find and download it yourself')));
+                    await zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(avatarSrc)));
                 }));
                 this.binary(await zip.close(), `contest-${tdoc._id}-cdp.zip`);
             },

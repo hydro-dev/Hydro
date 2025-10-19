@@ -11,6 +11,6 @@
     },
     "dependencies": {
         "crypto-js": "^4.2.0",
-        "semver": "^7.7.2"
+        "semver": "^7.7.3"
     }
 }

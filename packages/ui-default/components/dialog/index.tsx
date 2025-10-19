@@ -169,7 +169,7 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
         <h1>{title}</h1>
       </div></div>
       {layout.map((i) => <div className="row" key={i[0][0]}>
-        {i.map(([name, field]: [string, Field]) => <div className={`columns medium-${Math.abs(field.columns || 12)}`}>
+        {i.map(([name, field]: [string, Field]) => <div key={name} className={`columns medium-${Math.abs(field.columns || 12)}`}>
           {['text', 'user', 'userId', 'username', 'domain'].includes(field.type) && <label>
             {field.label}
             <div className="textbox-container">

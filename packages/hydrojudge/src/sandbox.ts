@@ -196,7 +196,8 @@ export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
 ): Promise<SandboxAdaptedResult[] & AsyncDisposable>;
-export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
+export function runQueued(
+    execute: string, params: Parameter, trace?: string, priority?: number,
 ): Promise<SandboxAdaptedResult & AsyncDisposable>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
