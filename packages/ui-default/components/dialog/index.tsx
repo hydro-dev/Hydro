@@ -125,14 +125,19 @@ export interface Field {
 }
 
 type Result<T extends string, R extends Record<T, Field>> = {
-  [K in keyof R]: ('text' | 'password' | 'username' | 'domain') extends R[K]['type'] ? string
+  [K in keyof R]: R[K]['type'] extends ('text' | 'password' | 'username' | 'domain') ? string
     : R[K]['type'] extends 'checkbox' ? boolean
       : R[K]['type'] extends 'userId' ? number
         : R[K]['type'] extends 'user' ? any
           : never;
 };
 
-export async function prompt<T extends string, R extends Record<T, Field>>(title: string, fields: R): Promise<Result<T, R>> {
+interface PromptOptions {
+  cancelByClickingBack: boolean;
+  cancelByEsc: boolean;
+}
+
+export async function prompt<T extends string, R extends Record<T, Field>>(title: string, fields: R, options?: PromptOptions): Promise<Result<T, R>> {
   let valueCache: Result<T, R> = {} as any;
   const defaultValues = Object.fromEntries(Object.entries(fields)
     .map(([name, field]: [T, Field]) => {
@@ -225,6 +230,8 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
   const res = await new Dialog({
     $body: $(div),
     $action: [buttonCancel, buttonOk].join('\n'),
+    cancelByClickingBack: options?.cancelByClickingBack ?? false,
+    cancelByEsc: options?.cancelByEsc ?? false,
     onDispatch(action) {
       if (action === 'ok') {
         for (const [name, field] of Object.entries(fields) as [string, Field][]) {

@@ -15,11 +15,12 @@ import {
   addSpeculationRules, delay, i18n, pjax, request,
 } from 'vj/utils';
 
+const keywords = ['category', 'difficulty', 'namespace'];
 const list = [];
 const filterTags = {};
-const pinned: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
-const selections = { category: {}, difficulty: {}, namespace: {} };
-const selectedTags: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
+const pinned: Record<string, string[]> = Object.fromEntries(keywords.map((keyword) => [keyword, []]));
+const selections = Object.fromEntries(keywords.map((keyword) => [keyword, {}]));
+const selectedTags: Record<string, string[]> = Object.fromEntries(keywords.map((keyword) => [keyword, []]));
 
 let selectedPids: string[] = [];
 let clearSelectionHandler: (() => void) | null = null;
@@ -35,7 +36,7 @@ function setDomSelected($dom, selected, icon?) {
 }
 
 const parserOptions = {
-  keywords: ['category', 'difficulty', 'namespace'],
+  keywords,
   offsets: true,
   alwaysArray: true,
   tokenize: true,
@@ -46,8 +47,7 @@ function writeSelectionToInput() {
   const parsedCurrentValue = parser.parse(currentValue, parserOptions) as SearchParserResult;
   const q = parser.stringify({
     ...parsedCurrentValue,
-    category: selectedTags.category,
-    difficulty: selectedTags.difficulty,
+    ...keywords.reduce((acc, keyword) => ({ ...acc, [keyword]: selectedTags[keyword] }), {}),
     text: parsedCurrentValue.text,
   }, parserOptions);
   $('[name="q"]').val(q);

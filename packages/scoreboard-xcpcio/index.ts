@@ -1,6 +1,6 @@
 import path from 'path';
 import {
-    ContestModel, Context, fs, getAlphabeticId, ObjectId, PERM, Schema, STATUS, Types, UserModel,
+    avatar, ContestModel, Context, fs, getAlphabeticId, ObjectId, PERM, Schema, STATUS, Types, UserModel,
 } from 'hydrooj';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
@@ -47,8 +47,9 @@ export async function apply(ctx: Context) {
                             team_id: `${udoc._id}`,
                             name: udoc.uname,
                             organization: udoc.school,
-                            members: [],
-                            coach: '',
+                            members: udoc.members?.split(',').filter((t) => t) || [],
+                            coach: udoc.coach,
+                            badge: { url: avatar(udoc.avatar) },
                             group: [
                                 ...(udoc.group || []),
                                 i.unrank ? 'unofficial' : 'official',

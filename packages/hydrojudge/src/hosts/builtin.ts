@@ -69,21 +69,19 @@ export async function apply(ctx: HydroContext) {
     const parallelism = getConfig('parallelism');
     async function collectInfo() {
         const coll = db.collection('status');
-        const compilers = await compilerVersions(langs);
+        const [compilers, size] = await Promise.all([
+            compilerVersions(langs),
+            stackSize(),
+        ]);
         await coll.updateOne(
             { mid: info.mid, type: 'server' },
-            { $set: { compilers } },
-            { upsert: true },
-        );
-        const size = await stackSize();
-        await coll.updateOne(
-            { mid: info.mid, type: 'server' },
-            { $set: { stackSize: size } },
+            { $set: { compilers, stackSize: size } },
             { upsert: true },
         );
     }
     ctx.effect(() => {
         const taskConsumer = TaskModel.consume({ type: 'judge' }, handle, true, parallelism);
+        collectInfo();
         const dispose = ctx.on('system/setting', () => {
             taskConsumer.setConcurrency(getConfig('parallelism'));
             collectInfo();

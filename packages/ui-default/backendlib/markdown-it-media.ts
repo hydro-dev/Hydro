@@ -102,10 +102,13 @@ export function Media(md: MarkdownIt) {
     }
     if (service === 'pdf') {
       if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
+      // A response with has content-disposition header causes the browser to download the file automatically.
+      // As we cannot control response header from external sites, we block embedding external PDFs.
+      else return '<p>Embedding an external PDF is no longer supported.</p>';
       return `\
         <object classid="clsid:${uuid().toUpperCase()}">
-          <param name="SRC" value="${src}" >
-          <embed width="100%" style="min-height: 100vh;border: none;" fullscreen="yes" src="${src}">
+          <param name="SRC" value="${src}">
+          <embed type="application/pdf" width="100%" style="min-height:100vh;border:none;" fullscreen="yes" src="${src}#toolbar=0&navpanes=0">
             <noembed></noembed>
           </embed>
         </object>`;

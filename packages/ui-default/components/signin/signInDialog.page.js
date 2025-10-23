@@ -2,12 +2,10 @@ import { browserSupportsWebAuthnAutofill, startAuthentication } from '@simpleweb
 import $ from 'jquery';
 import responsiveCutoff from 'vj/breakpoints.json';
 import DomDialog from 'vj/components/dialog/DomDialog';
-import { InfoDialog } from 'vj/components/dialog/index';
+import { alert } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
-import {
-  i18n, mediaQuery, request, tpl,
-} from 'vj/utils';
+import { i18n, mediaQuery, request } from 'vj/utils';
 
 const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   const signInDialog = DomDialog.getOrConstruct($('.dialog--signin'), {
@@ -18,7 +16,7 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
   let authnInitialized = false;
 
   async function initPasskey() {
-    if (authnInitialized) return;
+    if (authnInitialized || !window.isSecureContext) return;
     authnInitialized = true;
     const support = await browserSupportsWebAuthnAutofill();
     if (!support) return;
@@ -79,9 +77,7 @@ const signinDialogPage = new AutoloadPage('signinDialogPage', null, () => {
 
   $('[data-lostpass]').on('click', (e) => {
     e.preventDefault();
-    new InfoDialog({
-      $body: tpl.typoMsg(i18n('Relax and try to remember your password.')),
-    }).open();
+    alert(i18n('Relax and try to remember your password.'));
   });
 });
 
