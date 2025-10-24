@@ -1,6 +1,8 @@
 // https://github.com/waylonflinn/markdown-it-katex/blob/master/index.js
 import katex from 'katex';
 
+const limit = (typeof process !== 'undefined' && process.versions && process.versions.node) ? 50 : 1000;
+
 function isValidDelim(state, pos) {
   const max = state.posMax;
   const prevChar = pos > 0 ? state.src.charCodeAt(pos - 1) : -1;
@@ -120,12 +122,12 @@ export default function plugin(md) {
     }
   };
   const inlineRenderer = function (tokens, idx) {
-    if (tokens[idx].content.length > 50) return `$${tokens[idx].content}$`;
+    if (tokens[idx].content.length > limit) return `$${tokens[idx].content.trim()}$`;
     return render(tokens[idx].content);
   };
 
   const blockRenderer = function (tokens, idx) {
-    if (tokens[idx].content.length > 50) return `$$${tokens[idx].content}$$`;
+    if (tokens[idx].content.length > limit) return `$$${tokens[idx].content.trim()}$$`;
     return `${render(tokens[idx].content, true)}\n`;
   };
   md.inline.ruler.after('escape', 'math_inline', inline);
