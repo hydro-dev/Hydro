@@ -16,7 +16,7 @@ import { ArgMethod, buildProjection, randomstring, sleep } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
-import * as system from './system';
+import system from './system';
 import token from './token';
 
 export const coll: Collection<Udoc> = db.collection('user');

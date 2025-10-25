@@ -30,7 +30,7 @@ import DomainModel from './domain';
 import RecordModel from './record';
 import SolutionModel from './solution';
 import storage from './storage';
-import * as SystemModel from './system';
+import SystemModel from './system';
 
 export interface ProblemDoc extends Document { }
 export type Field = keyof ProblemDoc;

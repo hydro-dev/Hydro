@@ -5,7 +5,7 @@ import { DisposableList } from 'cordis';
 import inspector from 'inspector';
 import { randomstring } from '@hydrooj/utils';
 import { Context, Service } from '../context';
-import * as system from '../model/system';
+import system from '../model/system';
 import db from './db';
 import storage from './storage';
 

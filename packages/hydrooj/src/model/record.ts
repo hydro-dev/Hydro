@@ -14,7 +14,7 @@ import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
 import DomainModel from './domain';
 import problem from './problem';
-import * as SystemModel from './system';
+import SystemModel from './system';
 import task from './task';
 
 export default class RecordModel {

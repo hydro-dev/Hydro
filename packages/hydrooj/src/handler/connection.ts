@@ -1,6 +1,6 @@
 import { Context } from '../context';
 import { ForbiddenError } from '../error';
-import * as SystemModel from '../model/system';
+import SystemModel from '../model/system';
 import TokenModel from '../model/token';
 import UserModel from '../model/user';
 import { ConnectionHandler } from '../service/server';

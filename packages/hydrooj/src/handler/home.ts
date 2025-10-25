@@ -24,7 +24,7 @@ import message from '../model/message';
 import ProblemModel from '../model/problem';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import token from '../model/token';
 import * as training from '../model/training';
 import user from '../model/user';

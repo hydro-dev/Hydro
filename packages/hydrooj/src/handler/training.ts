@@ -10,7 +10,7 @@ import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import problem from '../model/problem';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import * as training from '../model/training';
 import user from '../model/user';
 import {

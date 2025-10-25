@@ -2,7 +2,7 @@
 import cac from 'cac';
 import { Logger } from '@hydrooj/utils';
 import { Context, Service } from '../context';
-import * as system from '../model/system';
+import system from '../model/system';
 
 const argv = cac().parse();
 

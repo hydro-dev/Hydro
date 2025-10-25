@@ -9,7 +9,7 @@ import {
 import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import user, { User } from '../model/user';
 import {
     Handler, param, post, requireSudo, Types,

@@ -17,7 +17,7 @@ import problem from './model/problem';
 import RecordModel from './model/record';
 import ScheduleModel from './model/schedule';
 import StorageModel from './model/storage';
-import * as system from './model/system';
+import system from './model/system';
 import TaskModel from './model/task';
 import * as training from './model/training';
 import user, { handleMailLower } from './model/user';

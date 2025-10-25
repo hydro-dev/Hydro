@@ -21,7 +21,7 @@ import problem from '../model/problem';
 import record from '../model/record';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import task, { Consumer } from '../model/task';
 import user from '../model/user';
 import bus from '../service/bus';

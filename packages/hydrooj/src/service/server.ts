@@ -16,7 +16,7 @@ import { Logger } from '../logger';
 import { PERM, PRIV } from '../model/builtin';
 import * as opcount from '../model/opcount';
 import * as OplogModel from '../model/oplog';
-import * as system from '../model/system';
+import system from '../model/system';
 import db from './db';
 import baseLayer from './layers/base';
 import domainLayer from './layers/domain';

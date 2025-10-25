@@ -4,6 +4,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { ObjectId } from 'mongodb';
 import { Context } from '../context';
+import SystemModel from '../model/system';
 import { load as loadOptions } from '../options';
 import { MongoService } from '../service/db';
 import { SettingService } from '../settings';
@@ -111,9 +112,9 @@ export async function load(ctx: Context) {
     const fail = [];
     await ctx.plugin(MongoService, loadOptions() || {});
     await ctx.plugin(SettingService);
-    await require('../model/system').runConfig();
+    await ctx.plugin(SystemModel.Service);
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader', 'setting', 'db'], (c) => {
+        ctx.inject(['loader', 'setting', 'db', 'model:system'], (c) => {
             resolve(c);
         });
     });

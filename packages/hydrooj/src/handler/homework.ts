@@ -13,7 +13,7 @@ import * as discussion from '../model/discussion';
 import problem from '../model/problem';
 import record from '../model/record';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     Handler, param, post, Types,

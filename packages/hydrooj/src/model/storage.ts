@@ -9,7 +9,7 @@ import mime from '../lib/mime';
 import db from '../service/db';
 import storage from '../service/storage';
 import ScheduleModel from './schedule';
-import * as system from './system';
+import system from './system';
 
 export class StorageModel {
     static coll = db.collection('storage');

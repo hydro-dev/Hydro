@@ -32,7 +32,7 @@ import record from '../model/record';
 import * as setting from '../model/setting';
 import solution from '../model/solution';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     Handler, param, post, Query, query, route, Types,

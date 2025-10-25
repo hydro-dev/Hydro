@@ -11,7 +11,7 @@ import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
 import record from '../model/record';
 import * as setting from '../model/setting';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,

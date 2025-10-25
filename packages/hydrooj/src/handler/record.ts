@@ -14,7 +14,7 @@ import problem, { ProblemDoc } from '../model/problem';
 import record from '../model/record';
 import { langs } from '../model/setting';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import TaskModel from '../model/task';
 import user from '../model/user';
 import {

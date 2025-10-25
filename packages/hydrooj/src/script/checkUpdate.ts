@@ -3,7 +3,7 @@ import Schema from 'schemastery';
 import * as semver from 'semver';
 import superagent from 'superagent';
 import MessageModel from '../model/message';
-import * as system from '../model/system';
+import system from '../model/system';
 
 async function getRemoteVersion(id: string) {
     try {

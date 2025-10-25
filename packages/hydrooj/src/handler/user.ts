@@ -23,7 +23,7 @@ import * as oplog from '../model/oplog';
 import problem, { ProblemDoc } from '../model/problem';
 import ScheduleModel from '../model/schedule';
 import SolutionModel from '../model/solution';
-import * as system from '../model/system';
+import system from '../model/system';
 import token from '../model/token';
 import user, { deleteUserCache } from '../model/user';
 import {

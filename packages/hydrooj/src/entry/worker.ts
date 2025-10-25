@@ -4,6 +4,7 @@ import cac from 'cac';
 import fs from 'fs-extra';
 import { Context } from '../context';
 import { Logger } from '../logger';
+import SystemModel from '../model/system';
 import { load } from '../options';
 import { MongoService } from '../service/db';
 import { SettingService } from '../settings';
@@ -30,10 +31,9 @@ export async function apply(ctx: Context) {
     await locale(pending, fail);
     await ctx.plugin(MongoService, load() || {});
     await ctx.plugin(SettingService);
-    const modelSystem = require('../model/system');
-    await modelSystem.runConfig();
+    await ctx.plugin(SystemModel.Service);
     ctx = await new Promise((resolve) => {
-        ctx.inject(['loader', 'setting', 'db'], (c) => {
+        ctx.inject(['loader', 'setting', 'db', 'model:system'], (c) => {
             resolve(c);
         });
     });
