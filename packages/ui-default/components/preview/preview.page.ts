@@ -46,10 +46,12 @@ const dialogAction = (id) => [
 ];
 
 function bindCopyLink(id, src: string) {
+  // Usually brackets are allowed in URLs, but in markdown there's need to escape them
+  src = src.replace(/\(/g, '%28').replace(/\)/g, '%29');
   const url = !['file', 'files'].some((i) => window.location.href.endsWith(i))
     || ['homework', 'training'].some((i) => window.location.href.match(`${i}/.*/file`))
     ? `file://${src.substring(src.lastIndexOf('/') + 1)}` : src;
-  const clip = new Clipboard(`#copy-${id}`, { text: () => `${url}` });
+  const clip = new Clipboard(`#copy-${id}`, { text: () => url });
   clip.on('success', () => Notification.success(i18n(`${url.startsWith('file://') ? 'Reference' : 'Download'} link copied to clipboard!`)));
   clip.on('error', () => Notification.error(i18n('Copy failed :(')));
 }
@@ -142,11 +144,7 @@ export async function previewFile(ev?, type = '') {
       const id = nanoid();
       const dialog = new ActionDialog({
         $body: tpl.typoMsg(i18n('Cannot preview this file. Download now?')),
-        $action: [
-          tpl`<button class="rounded button" data-action="copy" id="copy-${id}">${i18n('Copy Link')}</button>`,
-          tpl`<button class="rounded button" data-action="cancel">${i18n('Cancel')}</button>`,
-          tpl`<button class="primary rounded button" data-action="ok">${i18n('Ok')}</button>`,
-        ],
+        $action: dialogAction(id),
       });
       bindCopyLink(id, link);
       const action = await dialog.open();
