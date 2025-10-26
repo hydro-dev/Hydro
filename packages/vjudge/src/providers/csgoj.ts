@@ -123,8 +123,7 @@ export default class CSGOJProvider extends BasicFetcher implements IBasicProvide
         };
     }
 
-    async listProblem(page: number, resync = false) {
-        if (resync && page > 1) return [];
+    async listProblem(page: number) {
         const offset = (page - 1) * 100;
         const result = await this
             .get(`/csgoj/problemset/problemset_ajax?search=&sort=problem_id&order=asc&offset=${offset}&limit=100`)

@@ -230,10 +230,12 @@ export default class CodeforcesProvider extends BasicFetcher implements IBasicPr
 
     // TL;DR; add `gym` to this list to enable codeforces gym
     entryProblemLists = ['main'];
-    async listProblem(page: number, resync = false, listName: string) {
-        if (resync && page > 1) return [];
-        if (resync && listName.startsWith('GYM')) return [];
+    async listProblem(page: number, resyncFrom: number, listName: string) {
         if (listName.startsWith('GYM') && page > 1) return [];
+        if (resyncFrom) {
+            if (page > resyncFrom || listName.startsWith('GYM')) return [];
+            page = 1;
+        }
         const { document } = await this.html(listName === 'main'
             ? `/problemset/page/${page}`
             : listName === 'gym'

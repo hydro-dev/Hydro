@@ -161,8 +161,7 @@ export default class POJProvider extends BasicFetcher implements IBasicProvider 
         };
     }
 
-    async listProblem(page: number, resync = false) {
-        if (resync && page > 1) return [];
+    async listProblem(page: number) {
         const { text } = await this.get(`/problemlist?volume=${page}`);
         const $dom = new JSDOM(text);
         return Array.from($dom.window.document.querySelectorAll('.a>tbody>tr[align="center"]'))

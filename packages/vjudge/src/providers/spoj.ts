@@ -81,8 +81,7 @@ langs: ${JSON.stringify(langs)}`),
         };
     }
 
-    async listProblem(page: number, resync = false) {
-        if (resync) return [];
+    async listProblem(page: number) {
         const { document } = await this.html(`/problems/classical/sort=0,start=${page * 50 - 50}`);
         const index = document.querySelector('ul.pagination').querySelector('li.active').children[0].innerHTML.trim();
         if (index !== page.toString()) return [];

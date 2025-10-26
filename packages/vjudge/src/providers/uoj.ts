@@ -24,7 +24,12 @@ const MAPPING = {
 
 export default class UOJProvider extends BasicFetcher implements IBasicProvider {
     constructor(public account: RemoteAccount, private save: (data: any) => Promise<void>) {
-        super(account, 'https://uoj.ac', 'form', logger);
+        // UOJ WAF start blocking vjudge User-Agent
+        super(account, 'https://uoj.ac', 'form', logger, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            },
+        });
     }
 
     csrf: string;
@@ -131,8 +136,7 @@ export default class UOJProvider extends BasicFetcher implements IBasicProvider 
         };
     }
 
-    async listProblem(page: number, resync = false) {
-        if (resync && page > 1) return [];
+    async listProblem(page: number) {
         const { text } = await this.get(`/problems?page=${page}`);
         const $dom = new JSDOM(text);
         const index = $dom.window.document.querySelector('ul.pagination>li.active>a').innerHTML;

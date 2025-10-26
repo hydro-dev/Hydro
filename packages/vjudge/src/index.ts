@@ -80,12 +80,13 @@ class AccountService {
         }
     }
 
-    async sync(target: string, resync = false, list: string) {
-        let page = 1;
-        let pids = await this.api.listProblem(page, resync, list);
+    async sync(target: string, fromPage = 0, list: string) {
+        let page = Math.max(fromPage, 1);
+        let pids: string[] = [];
         const [domainId, namespaceId] = target.split('.');
-        while (pids.length) {
-            logger.info(`${domainId}: Syncing page ${page}`);
+        do {
+            pids = await this.api.listProblem(page, fromPage, list);
+            logger.info(`${target}: Syncing page ${page}`);
             for (const id of pids) {
                 if (id.startsWith('LIST::')) {
                     await this.addProblemList(id.split('::')[1]);
@@ -110,16 +111,16 @@ class AccountService {
                         await ProblemModel.addTestdata(domainId, docId, key, res.data[key]);
                     }
                     if (res.solution) await SolutionModel.add(domainId, docId, 1, res.solution);
-                    logger.info(`${domainId}: problem ${docId}(${pid}) sync done -> ${targetPid}(${docId})`);
+                    logger.info(`${domainId}: problem ${pid} sync done -> ${targetPid}(${docId})`);
                 } finally {
                     delete syncing[`${domainId}/${pid}`];
                 }
                 await sleep(5000);
             }
             page++;
-            if (this.stopped) return;
-            pids = await this.api.listProblem(page, resync, list);
-        }
+            if (this.stopped) return page - 1;
+        } while (pids.length);
+        return page - 2;
     }
 
     async login() {
@@ -141,11 +142,11 @@ class AccountService {
                 this.listUpdated = false;
                 for (const listName of this.problemLists) {
                     for (const mount of mounts) {
-                        if (!mount.syncDone?.[listName]) await this.sync(mount._id, false, listName);
-                        else await this.sync(mount._id, true, listName);
-                        await collMount.updateOne({ _id: mount._id }, { $set: { [`syncDone.${listName}`]: true } });
+                        const from = typeof mount.syncDone?.[listName] === 'number' ? mount.syncDone?.[listName] : 0;
+                        const page = await this.sync(mount._id, from, listName);
+                        await collMount.updateOne({ _id: mount._id }, { $set: { [`syncDone.${listName}`]: page } });
                         mount.syncDone ||= {};
-                        mount.syncDone[listName] = true;
+                        mount.syncDone[listName] = page;
                     }
                 }
             } while (this.listUpdated);
