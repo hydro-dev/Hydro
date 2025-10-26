@@ -158,7 +158,7 @@ class UserWebauthnHandler extends Handler {
             if (!udoc._id) throw new UserNotFoundError(uname || 'user');
             if (!udoc.authn) throw new AuthOperationError('authn', 'disabled');
             allowCredentials = udoc._authenticators.map((authenticator) => ({
-                id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
+                id: isoBase64URL.fromBuffer(new Uint8Array(authenticator.credentialID.buffer)),
             }));
             uid = udoc._id;
         }
@@ -194,8 +194,8 @@ class UserWebauthnHandler extends Handler {
             expectedRPID: this.getAuthnHost(),
             credential: {
                 ...authenticator,
-                id: isoBase64URL.fromBuffer(authenticator.credentialID.buffer),
-                publicKey: authenticator.credentialPublicKey.buffer,
+                id: isoBase64URL.fromBuffer(new Uint8Array(authenticator.credentialID.buffer)),
+                publicKey: new Uint8Array(authenticator.credentialPublicKey.buffer),
             },
         }).catch(() => null);
         if (!verification?.verified) throw new ValidationError('authenticator');

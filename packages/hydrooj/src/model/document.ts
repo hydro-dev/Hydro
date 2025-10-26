@@ -414,9 +414,9 @@ export async function apply(ctx: Context) {
         coll.deleteMany({ domainId }),
         collStatus.deleteMany({ domainId }),
     ]));
-    await db.clearIndexes(coll, ['tag', 'hidden']);
+    await ctx.db.clearIndexes(coll, ['tag', 'hidden']);
     const onlyFor = (docType: number) => ({ partialFilterExpression: { docType } });
-    await db.ensureIndexes(
+    await ctx.db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },

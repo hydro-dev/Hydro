@@ -105,10 +105,12 @@ export class ProblemMainHandler extends Handler {
     @param('limit', Types.PositiveInt, true)
     @param('pjax', Types.Boolean)
     @param('quick', Types.Boolean)
-    async get(domainId: string, page = 1, q = '', limit: number, pjax = false, quick = false) {
+    @param('sort', Types.Range(['default', 'recent']), true)
+    async get(domainId: string, page = 1, q = '', limit: number, pjax = false, quick = false, sortStrategy = 'default') {
         this.response.template = 'problem_main.html';
         if (!limit || limit > this.ctx.setting.get('pagination.problem') || page > 1) limit = this.ctx.setting.get('pagination.problem');
         this.queryContext.query = buildQuery(this.user);
+        if (sortStrategy === 'recent') this.queryContext.hint = 'basic';
         // eslint-disable-next-line ts/no-shadow
         const query = this.queryContext.query;
         const psdict = {};
@@ -145,11 +147,15 @@ export class ProblemMainHandler extends Handler {
         }
         const sort = this.queryContext.sort;
         await this.ctx.parallel('problem/list', query, this, sort);
+        const sortKey = ({
+            default: { sort: 1, docId: 1 },
+            recent: { docId: -1 },
+        } as const)[sortStrategy];
         let [pdocs, ppcount, pcount] = this.queryContext.fail
             ? [[], 0, 0]
             : await this.paginate(
                 problem.getMulti(domainId, query, quick ? ['title', 'pid', 'domainId', 'docId'] : undefined)
-                    .sort({ sort: 1, docId: 1 }).hint(this.queryContext.hint),
+                    .sort(sortKey).hint(this.queryContext.hint),
                 sort.length ? 1 : page, limit,
             );
         if (total) {
@@ -169,7 +175,7 @@ export class ProblemMainHandler extends Handler {
                 title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
                     this.renderHTML('partials/problem_list.html', {
-                        page, ppcount, pcount, pdocs, psdict, qs: q,
+                        page, ppcount, pcount, pdocs, psdict, qs: q, sort: sortStrategy,
                     }),
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation: this.queryContext.pcountRelation }),
                     this.renderHTML('partials/problem_lucky.html', { qs: q }),
@@ -184,6 +190,7 @@ export class ProblemMainHandler extends Handler {
                 pdocs,
                 psdict,
                 qs: q,
+                sort: sortStrategy,
             };
         }
     }

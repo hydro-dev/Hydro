@@ -310,7 +310,7 @@ class HomeSecurityHandler extends Handler {
             userName: `${this.user.uname}(${this.user.mail})`,
             attestationType: 'direct',
             excludeCredentials: this.user._authenticators.map((c) => ({
-                id: isoBase64URL.fromBuffer(c.credentialID.buffer),
+                id: isoBase64URL.fromBuffer(new Uint8Array(c.credentialID.buffer)),
                 type: 'public-key',
             })),
             authenticatorSelection: {
