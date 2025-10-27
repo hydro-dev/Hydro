@@ -117,9 +117,6 @@ async function main() {
     });
   } else {
     await runWebpack(argv.options as any);
-    if (fs.existsSync('public/theme.css')) {
-      fs.copyFileSync('public/theme.css', `public/theme-${pkg.version}.css`);
-    }
     await Promise.all(globbySync('public/**/*.map').map((i) => fs.remove(i)));
   }
   process.chdir(dir);

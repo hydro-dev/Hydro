@@ -30,7 +30,8 @@ const federationPlugin: esbuild.Plugin = {
   setup(b) {
     const packages = {
       react: 'React',
-      'react-dom': 'ReactDOM',
+      'react/jsx-runtime': 'jsxRuntime',
+      'react-dom/client': 'ReactDOM',
       jquery: '$',
     };
     b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
@@ -38,7 +39,7 @@ const federationPlugin: esbuild.Plugin = {
       namespace: 'ui-default',
     }));
     for (const key in packages) {
-      b.onResolve({ filter: new RegExp(`^${key}($|\\/)`) }, () => ({
+      b.onResolve({ filter: new RegExp(`^${key}$`) }, () => ({
         path: packages[key],
         namespace: 'ui-default',
       }));

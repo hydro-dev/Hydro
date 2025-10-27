@@ -177,6 +177,7 @@ class SystemConfigHandler extends SystemHandler {
         let value = this.ctx.setting.configSource;
 
         const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (!node) return;
             if (['union', 'intersect'].includes(schema.type)) {
                 for (const item of schema.list) processNode(node, item, parent, accessKey);
             }
@@ -193,7 +194,9 @@ class SystemConfigHandler extends SystemHandler {
             const temp = yaml.load(this.ctx.setting.configSource);
             for (const schema of this.ctx.setting.settings) processNode(temp, schema);
             value = yaml.dump(temp);
-        } catch (e) { }
+        } catch (e) {
+            logger.error('Failed to process config', e.message);
+        }
         this.response.body = {
             schema: Schema.intersect(this.ctx.setting.settings).toJSON(),
             value,

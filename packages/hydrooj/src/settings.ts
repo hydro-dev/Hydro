@@ -172,12 +172,10 @@ export class SettingService extends Service {
         });
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
-            if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+            if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error(`Invalid path: ${path.join('.')}`);
             let currentValue = curValue;
-            for (const p of path) {
-                currentValue = currentValue[p];
-            }
-            if (typeof currentValue !== 'object' || !currentValue) return currentValue;
+            for (const p of path) currentValue = currentValue[p];
+            if (typeof currentValue !== 'object' || !currentValue || Array.isArray(currentValue)) return currentValue;
             return new Proxy(currentValue, {
                 get(self, key: string) {
                     return getAccess(path.concat(key));

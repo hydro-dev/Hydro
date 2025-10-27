@@ -162,7 +162,16 @@ const codeFontRange = {
 
 const defaultAbout = (yaml.load(readFileSync(join(__dirname, 'setting.yaml'), 'utf-8')) as any).about.value;
 
-export function apply(ctx: Context) {
+export const name = 'ui-default';
+export const Config = Schema.object({
+  serviceWorker: Schema.object({
+    preload: Schema.string().default(''),
+    assets: Schema.array(Schema.string()).default([]),
+    domains: Schema.array(Schema.string()).default([]),
+  }).description('Service worker optimization settings').experimental(),
+});
+
+export function apply(ctx: Context, config: ReturnType<typeof Config>) {
   ctx.inject(['setting'], (c) => {
     c.setting.PreferenceSetting(
       SettingModel.Setting('setting_display', 'rounded', false, 'boolean', 'Rounded Corners'),
@@ -179,7 +188,6 @@ export function apply(ctx: Context) {
       'ui-default': Schema.object({
         footer_extra_html: Schema.string().role('textarea').default(''),
         nav_logo_dark: Schema.string().default('/components/navigation/nav-logo-small_dark.png'),
-        preload: Schema.string().default(''),
         domainNavigation: Schema.boolean().default(true).description('Show Domain Navigation'),
         about: Schema.string().role('markdown').default(defaultAbout),
         enableScratchpad: Schema.boolean().default(true).description('Enable Scratchpad Mode'),
@@ -202,15 +210,15 @@ export function apply(ctx: Context) {
   });
   ctx.on('handler/after', async (that) => {
     that.UiContext.SWConfig = {
-      preload: SystemModel.get('ui-default.preload'),
+      preload: config.serviceWorker.preload,
       hosts: [
         `http://${that.request.host}`,
         `https://${that.request.host}`,
         SystemModel.get('server.url'),
         SystemModel.get('server.cdn'),
       ],
-      assets: ((SystemModel.get('ui-default.assets') || '').split(',')).filter((i) => i) || [],
-      domains: SystemModel.get('ui-default.domains') || [],
+      assets: config.serviceWorker.assets,
+      domains: config.serviceWorker.domains,
     };
   });
   ctx.plugin(TemplateService);

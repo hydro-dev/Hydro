@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
@@ -136,6 +136,9 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         vj: root(),
         'react/jsx-runtime': require.resolve('react/jsx-runtime'),
         react: require.resolve('react'),
+        'react-dom/client': require.resolve('react-dom/client'),
+        'react-dom/server': join(dirname(require.resolve('react-dom/package.json')), 'server.browser.js'),
+        'react-dom': require.resolve('react-dom'),
       },
     },
     module: {
@@ -282,7 +285,8 @@ export default async function (env: { watch?: boolean, production?: boolean, mea
         monaco: 'monaco-editor/esm/vs/editor/editor.api',
       }),
       new ExtractCssPlugin({
-        filename: '[name].css?[fullhash:6]',
+        filename: `[name]-${version}.css?[fullhash:6]`,
+        chunkFilename: '[name]-[chunkhash:6].chunk.css',
       }),
       new WebpackManifestPlugin({}),
       new webpack.IgnorePlugin({ resourceRegExp: /(^\.\/locale$)/ }),
