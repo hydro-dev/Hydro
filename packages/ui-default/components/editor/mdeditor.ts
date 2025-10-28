@@ -40,6 +40,9 @@ config({
     // disable all default plugins
     return [];
   },
+  codeMirrorExtensions(extensions) {
+    return extensions.filter((i) => i.type !== 'linkShortener');
+  },
 });
 
 export { MdEditor };
