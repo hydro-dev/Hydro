@@ -63,7 +63,7 @@
               <button class="primary rounded button" name="upload_file">{{ _('Upload File') }}</button>
             </div>
           </div>
-          {% set files = tdoc.privateFiles %}
+          {% set files = privateFiles %}
           {% set filetype = "private" %}
           {% include "partials/files.html" %}
           <div class="section__body">

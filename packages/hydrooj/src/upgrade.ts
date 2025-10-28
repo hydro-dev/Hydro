@@ -617,12 +617,21 @@ export const coreScripts: MigrationScript[] = [
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
         return true;
     },
-    async function _95_96() {
+    null,
+    async function _96_97() {
         const files = await StorageModel.list('contest/', true);
+        const rename = async (path: string, newPath: string) => {
+            if (path === newPath) return;
+            console.log('Rename', path, '->', newPath);
+            await StorageModel.rename(path, newPath);
+        };
         for (const file of files) {
             const [, domainId, tid, type, name] = file.path.split('/');
-            if (!name) await StorageModel.rename(file.path, `contest/${domainId}/${tid}/public/${type}`);
+            const tdoc = await contest.get(domainId, new ObjectId(tid));
+            if (!tdoc) console.error('Contest not found', file.path);
+            if (tdoc.rule === 'homework' || !name) {
+                await rename(file.path, `contest/${domainId}/${tid}/public/${name || type}`);
+            }
         }
-        return true;
     },
 ];
