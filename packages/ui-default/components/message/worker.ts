@@ -40,16 +40,8 @@ function onMessage(payload: any) {
       console.log('Notification permission denied');
       return;
     }
-    // eslint-disable-next-line no-new
-    new Notification(
-      payload.udoc.uname || 'Hydro Notification',
-      {
-        tag: `message-${payload.mdoc._id}`,
-        icon: payload.udoc.avatarUrl || '/android-chrome-192x192.png',
-        body: payload.mdoc.content,
-      },
-    );
-  }, 5000);
+    ports[0]?.postMessage({ type: 'notification', payload });
+  }, 3000);
 }
 
 function initConn(path: string, port: MessagePort, cookie: any) {
@@ -95,6 +87,8 @@ self.onconnect = function (e) {
     if (msg.data.type === 'ack') ack[msg.data.id]?.();
     if (msg.data.type === 'unload') ports.delete(port);
   });
+  port.addEventListener('close', () => ports.delete(port));
+  port.addEventListener('error', () => ports.delete(port));
 
   port.start();
 };

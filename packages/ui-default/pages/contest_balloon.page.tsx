@@ -85,7 +85,8 @@ async function handleSetColor(tdoc) {
     Notification.error(`${e.message} ${e.params?.[0]}`);
   }
   Notification.info(i18n('Successfully updated.'));
-  pjax.request({ url: '', push: false });
+  if ($('[data-fragment-id="constest_balloon-tbody"]').length) pjax.request({ url: '', push: false });
+  else window.location.reload();
 }
 
 const page = new NamedPage('contest_balloon', () => {

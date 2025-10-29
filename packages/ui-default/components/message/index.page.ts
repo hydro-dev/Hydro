@@ -9,18 +9,19 @@ import { i18n, tpl } from 'vj/utils';
 import Sock from '../socket';
 
 let previous: VjNotification;
-const onmessage = (msg) => {
+const onmessage = (msg, systemNotification = false) => {
   console.log('Received message', msg);
   if (msg.mdoc.flag & FLAG_I18N) {
     try {
       msg.mdoc.content = JSON.parse(msg.mdoc.content);
       if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
+      if (msg.mdoc.content.avatar) msg.mdoc.avatar = msg.mdoc.content.avatar;
       msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
     } catch (e) {
       msg.mdoc.content = i18n(msg.mdoc.content);
     }
   }
-  if (msg.mdoc.flag & FLAG_ALERT) {
+  if (msg.mdoc.flag & FLAG_ALERT && !systemNotification) {
     // Is alert
     new InfoDialog({
       cancelByClickingBack: false,
@@ -32,7 +33,7 @@ const onmessage = (msg) => {
     }).open();
     return false;
   }
-  if (msg.mdoc.flag & FLAG_INFO) {
+  if (msg.mdoc.flag & FLAG_INFO && !systemNotification) {
     if (previous) previous.hide();
     previous = new VjNotification({
       message: msg.mdoc.content,
@@ -41,13 +42,31 @@ const onmessage = (msg) => {
     previous.show();
     return false;
   }
-  if (document.hidden) return false;
+
+  if (systemNotification) {
+    // eslint-disable-next-line no-new
+    new Notification(
+      msg.udoc._id === 1 ? msg.mdoc.content.split('\n')[0] : msg.udoc.uname || 'Hydro Notification',
+      msg.udoc._id === 1 ? {
+        tag: `notification-${msg.mdoc._id}`,
+        icon: msg.mdoc.avatar || '/android-chrome-192x192.png',
+        body: msg.mdoc.content.split('\n').slice(1).join('\n'),
+      } : {
+        tag: `message-${msg.mdoc._id}`,
+        icon: msg.udoc.avatarUrl || '/android-chrome-192x192.png',
+        body: msg.mdoc.content,
+      },
+    );
+    return true;
+  }
+
   // Is message
   new VjNotification({
     ...(msg.udoc._id === 1)
       ? {
         type: 'info',
         message: msg.mdoc.flag & FLAG_RICHTEXT ? i18n('You received a system message, click here to view.') : msg.mdoc.content,
+        ...(msg.mdoc.avatar ? { avatar: msg.mdoc.avatar } : {}),
       } : {
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
@@ -72,6 +91,8 @@ const initWorkerMode = (endpoint) => {
     const { payload, type } = message.data;
     if (type === 'message') {
       if (onmessage(payload)) worker.port.postMessage({ type: 'ack', id: payload.mdoc._id });
+    } else if (type === 'notification') {
+      onmessage(payload, true);
     } else if (type === 'open-page') {
       console.log('opening page');
       window.open('/home/messages');
