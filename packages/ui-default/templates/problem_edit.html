@@ -52,11 +52,9 @@
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header">
               <li class="section__tab-header-item tab--active" data-lang="{{ _('__id') }}">{{ _('__langname') }}</li>
-              {% for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range %}
-                {% if k != handler.user.viewLang %}
-                  <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
-                {% endif %}
-              {% endfor %}
+              {% for k, v in statementLangs %}{% if k != handler.user.viewLang %}
+                <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
+              {% endif %}{% endfor %}
             </ul>
           </div>
           </div>

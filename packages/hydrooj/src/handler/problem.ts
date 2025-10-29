@@ -608,6 +608,7 @@ export class ProblemManageHandler extends ProblemDetailHandler {
 export class ProblemEditHandler extends ProblemManageHandler {
     async get() {
         this.response.body.additional_file = sortFiles(this.pdoc.additional_file || []);
+        this.response.body.statementLangs = this.ctx.i18n.langs(false);
         this.response.template = 'problem_edit.html';
     }
 

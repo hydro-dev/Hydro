@@ -20,6 +20,15 @@ export class I18nService extends Service {
         this.load('ja', { __flag: '🇯🇵', __id: 'ja', __langname: '日本語' });
     }
 
+    langs(interfaceOnly = false) {
+        const langs: Record<string, string> = {};
+        for (const lang in translations) {
+            if (interfaceOnly && !translations[lang].find((i) => i.__interface)) continue;
+            langs[lang] = this.get('__langname', lang);
+        }
+        return langs;
+    }
+
     load(lang: string, content: Record<string, string>) {
         this.ctx.effect(() => {
             translations[lang] ||= [];
