@@ -21,7 +21,7 @@ const onmessage = (msg, systemNotification = false) => {
       msg.mdoc.content = i18n(msg.mdoc.content);
     }
   }
-  if (msg.mdoc.flag & FLAG_ALERT && !systemNotification) {
+  if ((msg.mdoc.flag & FLAG_ALERT) && !systemNotification) {
     // Is alert
     new InfoDialog({
       cancelByClickingBack: false,
@@ -33,7 +33,7 @@ const onmessage = (msg, systemNotification = false) => {
     }).open();
     return false;
   }
-  if (msg.mdoc.flag & FLAG_INFO && !systemNotification) {
+  if ((msg.mdoc.flag & FLAG_INFO) && !systemNotification) {
     if (previous) previous.hide();
     previous = new VjNotification({
       message: msg.mdoc.content,
@@ -42,8 +42,9 @@ const onmessage = (msg, systemNotification = false) => {
     previous.show();
     return false;
   }
-
+  if (document.hidden) return false;
   if (systemNotification) {
+    if (Notification.permission !== 'granted') return false;
     // eslint-disable-next-line no-new
     new Notification(
       msg.udoc._id === 1 ? msg.mdoc.content.split('\n')[0] : msg.udoc.uname || 'Hydro Notification',
