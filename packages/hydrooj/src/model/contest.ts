@@ -1123,7 +1123,7 @@ export async function apply(ctx: Context) {
                 message: 'Team {0} is the first to solve problem {1} ({2})',
                 avatar: avatar(team.avatar),
                 params: [team.uname, getAlphabeticId(tdoc.pids.indexOf(bdoc.pid)), pdoc.title],
-            }), MessageModel.FLAG_I18N | MessageModel.FLAG_RICHTEXT);
+            }), MessageModel.FLAG_I18N);
         })();
     });
     await ctx.db.ensureIndexes(

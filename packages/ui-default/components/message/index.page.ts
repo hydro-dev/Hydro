@@ -10,7 +10,7 @@ import Sock from '../socket';
 
 let previous: VjNotification;
 const onmessage = (msg, systemNotification = false) => {
-  console.log('Received message', msg);
+  console.log('Received message', msg, systemNotification);
   if (msg.mdoc.flag & FLAG_I18N) {
     try {
       msg.mdoc.content = JSON.parse(msg.mdoc.content);
@@ -21,7 +21,7 @@ const onmessage = (msg, systemNotification = false) => {
       msg.mdoc.content = i18n(msg.mdoc.content);
     }
   }
-  if ((msg.mdoc.flag & FLAG_ALERT) && !systemNotification) {
+  if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
     new InfoDialog({
       cancelByClickingBack: false,
@@ -33,7 +33,7 @@ const onmessage = (msg, systemNotification = false) => {
     }).open();
     return false;
   }
-  if ((msg.mdoc.flag & FLAG_INFO) && !systemNotification) {
+  if (msg.mdoc.flag & FLAG_INFO) {
     if (previous) previous.hide();
     previous = new VjNotification({
       message: msg.mdoc.content,
@@ -42,7 +42,6 @@ const onmessage = (msg, systemNotification = false) => {
     previous.show();
     return false;
   }
-  if (document.hidden) return false;
   if (systemNotification) {
     if (Notification.permission !== 'granted') return false;
     // eslint-disable-next-line no-new
@@ -60,6 +59,7 @@ const onmessage = (msg, systemNotification = false) => {
     );
     return true;
   }
+  if (document.hidden) return false;
 
   // Is message
   new VjNotification({

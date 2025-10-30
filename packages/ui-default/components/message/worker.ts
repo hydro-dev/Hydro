@@ -40,6 +40,7 @@ function onMessage(payload: any) {
       console.log('Notification permission denied');
       return;
     }
+    console.log('Sending as system notification');
     ports[0]?.postMessage({ type: 'notification', payload });
   }, 3000);
 }
