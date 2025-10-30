@@ -120,7 +120,11 @@ export class MongoService extends Service {
             index.background = true;
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
-                await coll.createIndexes([index]);
+                try {
+                    await coll.createIndexes([index]);
+                } catch (e) {
+                    logger.error('Failed to index %s.%s with key %o: %s', coll.collectionName, index.name, index.key, e);
+                }
                 continue;
             }
             const isDifferent = () => {
@@ -137,7 +141,11 @@ export class MongoService extends Service {
                 }
                 logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.dropIndex(i.name);
-                await coll.createIndexes([index]);
+                try {
+                    await coll.createIndexes([index]);
+                } catch (e) {
+                    logger.error('Failed to re-index %s.%s with key %o: %s', coll.collectionName, index.name, index.key, e);
+                }
             }
         }
     }

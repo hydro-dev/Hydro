@@ -9,17 +9,22 @@ import { i18n, tpl } from 'vj/utils';
 import Sock from '../socket';
 
 let previous: VjNotification;
-const onmessage = (msg) => {
-  console.log('Received message', msg);
+const processI18n = (msg) => {
   if (msg.mdoc.flag & FLAG_I18N) {
     try {
       msg.mdoc.content = JSON.parse(msg.mdoc.content);
       if (msg.mdoc.content.url) msg.mdoc.url = msg.mdoc.content.url;
+      if (msg.mdoc.content.avatar) msg.mdoc.avatar = msg.mdoc.content.avatar;
       msg.mdoc.content = i18n(msg.mdoc.content.message, ...msg.mdoc.content.params);
     } catch (e) {
       msg.mdoc.content = i18n(msg.mdoc.content);
     }
   }
+  return msg;
+};
+const onmessage = (msg) => {
+  console.log('Received message', msg);
+  msg = processI18n(msg);
   if (msg.mdoc.flag & FLAG_ALERT) {
     // Is alert
     new InfoDialog({
@@ -48,6 +53,7 @@ const onmessage = (msg) => {
       ? {
         type: 'info',
         message: msg.mdoc.flag & FLAG_RICHTEXT ? i18n('You received a system message, click here to view.') : msg.mdoc.content,
+        ...(msg.mdoc.avatar ? { avatar: msg.mdoc.avatar } : {}),
       } : {
         title: msg.udoc.uname,
         avatar: msg.udoc.avatarUrl,
@@ -72,6 +78,8 @@ const initWorkerMode = (endpoint) => {
     const { payload, type } = message.data;
     if (type === 'message') {
       if (onmessage(payload)) worker.port.postMessage({ type: 'ack', id: payload.mdoc._id });
+    } else if (type === 'i18n') {
+      worker.port.postMessage({ type: 'ack', id: `${payload.mdoc._id}-i18n`, payload: processI18n(payload) });
     } else if (type === 'open-page') {
       console.log('opening page');
       window.open('/home/messages');
