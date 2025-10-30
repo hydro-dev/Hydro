@@ -102,7 +102,7 @@ export default class Notification {
     });
   }
 
-  static async info(message: string, duration?: number) {
+  static info(message: string, duration?: number) {
     return notifications.show({
       title: message,
       color: '#2d72d2',
@@ -112,7 +112,7 @@ export default class Notification {
     });
   }
 
-  static async warn(message: string, duration?: number) {
+  static warn(message: string, duration?: number) {
     return notifications.show({
       title: message,
       color: '#fbb360',
@@ -122,7 +122,7 @@ export default class Notification {
     });
   }
 
-  static async error(message: string, duration?: number) {
+  static error(message: string, duration?: number) {
     return notifications.show({
       title: message,
       color: '#cd4246',

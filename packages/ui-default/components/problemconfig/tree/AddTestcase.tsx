@@ -102,7 +102,7 @@ export function AddTestcase() {
     <Modal
       opened={open}
       onClose={() => setOpen(false)}
-      title="Add testcase"
+      title={i18n('Add testcase')}
       styles={{ body: { overflow: 'visible' }, content: { overflow: 'visible' } }}
     >
       <div className="row" style={{ overflow: 'visible' }}>

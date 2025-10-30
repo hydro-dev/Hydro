@@ -19,10 +19,6 @@
     width: 100%;
 }
 
-.bp6-progress-bar:not(.bp6-no-animation):not(.bp6-no-stripes) .bp6-progress-meter {
-    animation: linear-progress-bar-stripes 300ms linear infinite reverse;
-}
-
 .bp6-progress-bar.bp6-no-stripes .bp6-progress-meter {
     background-image: none;
 }

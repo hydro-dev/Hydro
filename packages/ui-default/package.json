@@ -83,6 +83,7 @@
     "p-queue": "^9.0.0",
     "pickadate": "^3.6.4",
     "postcss-loader": "7.3.4",
+    "postcss-preset-mantine": "^1.18.0",
     "prism-themes": "^1.9.0",
     "prismjs": "^1.30.0",
     "prop-types": "^15.8.1",
