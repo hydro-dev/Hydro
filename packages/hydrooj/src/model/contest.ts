@@ -1120,7 +1120,7 @@ export async function apply(ctx: Context) {
                 ProblemModel.get(domainId, bdoc.pid),
             ]);
             await MessageModel.send(1, uids, JSON.stringify({
-                message: 'Team {0} is the first to solve problem {1} ({2})',
+                message: 'First Blood Notice\n{0} solved problem {1} ({2})',
                 avatar: avatar(team.avatar),
                 params: [team.uname, getAlphabeticId(tdoc.pids.indexOf(bdoc.pid)), pdoc.title],
             }), MessageModel.FLAG_I18N);

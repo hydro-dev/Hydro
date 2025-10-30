@@ -28,6 +28,7 @@ __langname: 简体中文
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
 'Discussion: Terms Of Service': 讨论区服务条款
+'First Blood Notice\n{0} solved problem {1} ({2})': '题目一血提示\n{0} 解决了题目 {1} ({2})'
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
 'Join {0}': '加入 {0}'
 'No': 否
