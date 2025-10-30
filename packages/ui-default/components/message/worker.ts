@@ -2,7 +2,6 @@
 /// <reference lib="webworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
 import { FLAG_I18N, FLAG_INFO } from 'vj/constant/message';
-import { i18n } from 'vj/utils/base';
 declare const self: SharedWorkerGlobalScope;
 
 console.log('SharedWorker init');
@@ -18,6 +17,7 @@ interface RequestInitSharedConnPayload {
 interface RequestAckPayload {
   type: 'ack';
   id: string;
+  payload?: any;
 }
 interface RequestUnloadPayload {
   type: 'unload';
@@ -29,30 +29,23 @@ function broadcastMsg(message: any) {
   for (const p of ports) p.postMessage(message);
 }
 
-function onMessage(payload: any) {
-  broadcastMsg({ type: 'message', payload });
+function onMessage(message: any) {
+  broadcastMsg({ type: 'message', payload: message });
   let acked = false;
-  ack[payload.mdoc._id] = () => { acked = true; };
+  let payload = message;
+  ack[message.mdoc._id] = () => { acked = true; };
+  ack[`${message.mdoc._id}-i18n`] = (v) => { payload = v; };
+  if (message.mdoc.flag & FLAG_I18N) broadcastMsg({ type: 'i18n', payload: message });
   setTimeout(() => {
-    delete ack[payload.mdoc._id];
+    delete ack[message.mdoc._id];
+    delete ack[`${message.mdoc._id}-i18n`];
     if (acked) return;
-    if (payload.mdoc.flag & FLAG_INFO) return;
+    if (message.mdoc.flag & FLAG_INFO) return;
     if (Notification?.permission !== 'granted') {
       console.log('Notification permission denied');
       return;
     }
     console.log('Sending as system notification');
-
-    if (payload.mdoc.flag & FLAG_I18N) {
-      try {
-        payload.mdoc.content = JSON.parse(payload.mdoc.content);
-        if (payload.mdoc.content.url) payload.mdoc.url = payload.mdoc.content.url;
-        if (payload.mdoc.content.avatar) payload.mdoc.avatar = payload.mdoc.content.avatar;
-        payload.mdoc.content = i18n(payload.mdoc.content.message, ...payload.mdoc.content.params);
-      } catch (e) {
-        payload.mdoc.content = i18n(payload.mdoc.content);
-      }
-    }
     // eslint-disable-next-line no-new
     new Notification(
       payload.udoc._id === 1 ? payload.mdoc.content.split('\n')[0] : payload.udoc.uname || 'Hydro Notification',
@@ -109,7 +102,7 @@ self.onconnect = function (e) {
 
   port.addEventListener('message', (msg: { data: RequestPayload }) => {
     if (msg.data.type === 'conn') initConn(msg.data.path, port, msg.data.cookie);
-    if (msg.data.type === 'ack') ack[msg.data.id]?.();
+    if (msg.data.type === 'ack') ack[msg.data.id]?.(msg.data.payload);
     if (msg.data.type === 'unload') ports.delete(port);
   });
 
