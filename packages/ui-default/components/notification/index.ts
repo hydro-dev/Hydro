@@ -38,11 +38,12 @@ export default class Notification {
     if (avatar) this.type += ' avatar';
     if (title) this.type += ' title';
     this.action = action || (() => { });
-    this.$dom = $(tpl`<div class="notification ${type} hide"></div>`);
-    if (avatar) $(tpl`<img width="64" height="64" class="avatar" src="${avatar}"></img>`).appendTo(this.$dom);
+    this.$dom = $(tpl`<div class="notification ${this.type} hide"></div>`);
+    if (avatar) $(tpl`<img width="32" height="32" class="avatar" src="${avatar}"></img>`).appendTo(this.$dom);
+    const content = message.split('\n').map((line) => tpl`<p>${line}</p>`).join('');
     if (title) {
-      $(tpl`<div class="notification-content"><h2>${title}</h2><p>${message}</p></div>`).appendTo(this.$dom);
-    } else $(tpl`<p>${message}</p>`).appendTo(this.$dom);
+      $(tpl`<div class="notification-content"><h2>${title}</h2>${{ templateRaw: true, html: content }}</div>`).appendTo(this.$dom);
+    } else $(`<div>${content}</div>`).appendTo(this.$dom);
     this.$dom.on('click', this.handleClick.bind(this));
     this.$n = this.$dom
       .css('z-index', zIndexManager.getNext())
