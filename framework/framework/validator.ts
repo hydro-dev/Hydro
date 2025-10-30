@@ -1,7 +1,7 @@
 import assert from 'assert';
+import saslprep from '@mongodb-js/saslprep';
 import emojiRegex from 'emoji-regex';
 import sanitize from 'sanitize-filename';
-import saslprep from 'saslprep';
 import Schema from 'schemastery';
 
 type InputType = string | number | Record<string, any> | any[];

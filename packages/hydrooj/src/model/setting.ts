@@ -1,10 +1,10 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
+import saslPrep from '@mongodb-js/saslprep';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
-import saslPrep from 'saslprep';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
 import { findFileSync, randomstring, retry } from '@hydrooj/utils';
