@@ -1,7 +1,8 @@
 /// <reference no-default-lib="true" />
 /// <reference lib="webworker" />
 import ReconnectingWebsocket from 'reconnecting-websocket';
-import { FLAG_INFO } from 'vj/constant/message';
+import { FLAG_I18N, FLAG_INFO } from 'vj/constant/message';
+import { i18n } from 'vj/utils/base';
 declare const self: SharedWorkerGlobalScope;
 
 console.log('SharedWorker init');
@@ -41,7 +42,30 @@ function onMessage(payload: any) {
       return;
     }
     console.log('Sending as system notification');
-    ports[0]?.postMessage({ type: 'notification', payload });
+
+    if (payload.mdoc.flag & FLAG_I18N) {
+      try {
+        payload.mdoc.content = JSON.parse(payload.mdoc.content);
+        if (payload.mdoc.content.url) payload.mdoc.url = payload.mdoc.content.url;
+        if (payload.mdoc.content.avatar) payload.mdoc.avatar = payload.mdoc.content.avatar;
+        payload.mdoc.content = i18n(payload.mdoc.content.message, ...payload.mdoc.content.params);
+      } catch (e) {
+        payload.mdoc.content = i18n(payload.mdoc.content);
+      }
+    }
+    // eslint-disable-next-line no-new
+    new Notification(
+      payload.udoc._id === 1 ? payload.mdoc.content.split('\n')[0] : payload.udoc.uname || 'Hydro Notification',
+      payload.udoc._id === 1 ? {
+        tag: `notification-${payload.mdoc._id}`,
+        icon: payload.mdoc.avatar || '/android-chrome-192x192.png',
+        body: payload.mdoc.content.split('\n').slice(1).join('\n'),
+      } : {
+        tag: `message-${payload.mdoc._id}`,
+        icon: payload.udoc.avatarUrl || '/android-chrome-192x192.png',
+        body: payload.mdoc.content,
+      },
+    );
   }, 3000);
 }
 
@@ -88,8 +112,6 @@ self.onconnect = function (e) {
     if (msg.data.type === 'ack') ack[msg.data.id]?.();
     if (msg.data.type === 'unload') ports.delete(port);
   });
-  port.addEventListener('close', () => ports.delete(port));
-  port.addEventListener('error', () => ports.delete(port));
 
   port.start();
 };
