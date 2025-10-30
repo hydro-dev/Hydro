@@ -137,6 +137,7 @@ export default function ProblemType() {
             <FormItem columns={6} label="Config" disableLabel>
               <Switch
                 checked={subType === 'multi'}
+                styles={{ body: { display: 'flex' } }}
                 label={i18n('Multi-file')}
                 onChange={() => {
                   dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'subType', value: subType === 'multi' ? 'single' : 'multi' });

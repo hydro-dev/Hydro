@@ -1,4 +1,4 @@
-import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils/lib/common';
+import { parseMemoryMB, parseTimeMS, sortFiles } from '@hydrooj/utils/lib/common';
 
 export function convertIniConfig(ini: string) {
     const f = ini.split('\n');
@@ -118,13 +118,16 @@ export function readSubtasksFromFiles(files: string[], config) {
                             id: sid,
                         };
                     } else if (!subtask[sid].cases) subtask[sid].cases = [c];
-                    else subtask[sid].cases.push(c);
+                    else if (!subtask[sid].cases.find((i) => i.input === c.input && i.output === c.output)) {
+                        subtask[sid].cases.push(c);
+                    }
                     break;
                 }
             }
             if (match) break;
         }
     }
+    for (const id in subtask) subtask[id].cases = sortFiles(subtask[id].cases, 'input');
     return Object.values(subtask);
 }
 

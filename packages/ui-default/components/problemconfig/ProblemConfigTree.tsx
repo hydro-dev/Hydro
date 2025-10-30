@@ -101,7 +101,7 @@ export function SubtaskConfigTree() {
   const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
   const dispatch = useDispatch();
   const store = useStore<RootState>();
-  function autoConfigure() {
+  const autoConfigure = React.useCallback(() => {
     const state = store.getState();
     const subtasks = readSubtasksFromFiles(state.testdata.map((t) => t.name), state.config);
     const cases = subtasks.reduce((a, b) => a.concat(b.cases), []);
@@ -113,7 +113,7 @@ export function SubtaskConfigTree() {
       type: 'problemconfig/delTestcases',
       cases,
     });
-  }
+  }, [dispatch, store]);
   const rootNodes = React.useMemo<any[]>(() => [
     { id: 'auto', label: i18n('Auto configure'), type: 'action' as const },
     { id: 'global', label: i18n('Global settings'), type: 'global' as const },
