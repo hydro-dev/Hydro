@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import { Popover } from '@blueprintjs/core';
+import { MantineProvider, Popover } from '@mantine/core';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
 import TimeAgo from 'timeago-react';
 import { InfoDialog } from 'vj/components/dialog';
 import { AutoloadPage } from 'vj/misc/Page';
@@ -22,21 +21,29 @@ async function historyDialog(payload, time, uid) {
   }).open();
 }
 
-const queryClient = new QueryClient();
-
 function History({ payload }) {
   const [load, setLoad] = React.useState(false);
-  const { isLoading, isError, data } = useQuery(['history', payload], async () => {
-    const { history } = await request.get(`${payload}?all=1`);
-    return history;
-  }, { enabled: !!load });
-  return (
-    <Popover
-      usePortal
-      interactionKind="hover"
-      position="bottom"
-      onOpening={() => setLoad(true)}
-      content={<ol className="menu">
+  const [data, setData] = React.useState([]);
+  const [isLoading, setLoading] = React.useState(true);
+  const [isError, setError] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!load) return;
+    request.get(`${payload}?all=1`).then(({ history }) => {
+      setData(history);
+    }).catch((e) => {
+      setError(e.message);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, [load]);
+
+  return <Popover onOpen={() => setLoad(true)}>
+    <Popover.Target>
+      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
+    </Popover.Target>
+    <Popover.Dropdown>
+      <ol className="menu">
         {(isLoading || isError) && (
           <li className="menu__item">
             <a className="menu__link">
@@ -53,11 +60,9 @@ function History({ payload }) {
             </a>
           </li>
         ))}
-      </ol>}
-    >
-      <span>{i18n('Edited')} <span className="icon icon-expand_more"></span></span>
-    </Popover>
-  );
+      </ol>
+    </Popover.Dropdown>
+  </Popover>;
 }
 
 const page = new AutoloadPage('discussionHistoryPage', () => {
@@ -65,9 +70,9 @@ const page = new AutoloadPage('discussionHistoryPage', () => {
     const url = $(e).data('raw-url');
     if (!url) return;
     ReactDOM.createRoot(e).render(
-      <QueryClientProvider client={queryClient}>
+      <MantineProvider>
         <History payload={url} />
-      </QueryClientProvider>,
+      </MantineProvider>,
     );
   });
 });

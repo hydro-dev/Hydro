@@ -1,4 +1,5 @@
 import { normalizeSubtasks, readSubtasksFromFiles, SubtaskType } from '@hydrooj/common';
+import { MantineProvider } from '@mantine/core';
 import $ from 'jquery';
 import yaml from 'js-yaml';
 import React from 'react';
@@ -114,6 +115,7 @@ const page = new NamedPage('problem_config', () => {
       type: 'CONFIG_LOAD',
       payload: request.get(''),
     });
+    let autoConfigTriggered = false;
     const unsubscribe = store.subscribe(() => {
       // TODO set yaml schema
       const state = store.getState();
@@ -129,7 +131,10 @@ const page = new NamedPage('problem_config', () => {
         delete state.config.cases;
         delete state.config.score;
       }
-      if (state.config.subtasks?.length) return;
+      if (state.config.subtasks?.length || autoConfigTriggered) {
+        autoConfigTriggered = true;
+        return;
+      }
       const testdata = (state.testdata || []).map((i) => i.name);
       unsubscribe();
       const subtasks = readSubtasksFromFiles(testdata, state.config);
@@ -138,11 +143,11 @@ const page = new NamedPage('problem_config', () => {
         subtasks: normalizeSubtasks(subtasks, (i) => i, state.config.time, state.config.memory, true),
       });
     });
-    createRoot(document.getElementById('ProblemConfig')!).render(
+    createRoot(document.getElementById('ProblemConfig')!).render(<MantineProvider>
       <Provider store={store}>
         <ProblemConfig onSave={() => uploadConfig(store.getState().config)} />
-      </Provider>,
-    );
+      </Provider>
+    </MantineProvider>);
   }
 
   mountComponent();

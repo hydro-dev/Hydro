@@ -4,7 +4,9 @@ import 'pickadate/lib/themes/classic.css';
 import 'pickadate/lib/themes/classic.date.css';
 import 'pickadate/lib/themes/classic.time.css';
 import 'katex/dist/katex.min.css';
-import '@blueprintjs/core/lib/css/blueprint.css';
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import 'mantine-contextmenu/styles.css';
 import '@fontsource/fira-code';
 import '@fontsource/source-code-pro';
 import '@fontsource/roboto-mono';
@@ -26,6 +28,7 @@ import 'vj/misc/nothing.styl';
 import 'vj/components/editor/cmeditor.styl';
 import 'vj/components/datepicker/datepicker.styl';
 import './dark.styl';
+import './bp6-compat.css';
 
 // load all page stylesheets
 const pageStyleReq = require.context('../', true, /\.page\.styl$/i);

@@ -1,6 +1,5 @@
-import {
-  Button, Dialog, DialogBody, DialogFooter, Tab, Tabs,
-} from '@blueprintjs/core';
+import { Button, Modal, Tabs } from '@mantine/core';
+import { ContextMenuProvider } from 'mantine-contextmenu';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
@@ -22,33 +21,37 @@ export default function ProblemConfig(props: Props) {
     if (valid) setOpen(false);
   }, [valid]);
 
-  return (<>
+  return (<ContextMenuProvider>
     <div className="row">
       <div className="medium-4 columns">
         <ProblemConfigEditor />
       </div>
       <div className="medium-8 columns">
-        <Tabs onChange={(t) => (t !== 'errors' && setSelected(t.toString()))} selectedTabId={valid ? selected : 'errors'}>
-          <Tab id="basic" disabled={!valid} title={i18n('Basic')} panel={<ProblemConfigForm />} />
-          <Tab id="subtasks" disabled={!valid} title={i18n('Subtasks')} panel={<ProblemConfigTree />} />
-          <Tab
-            id="errors"
-            disabled={valid}
-            title={errors.length ? `Errors(${errors.length})` : 'No Errors'}
-            panel={<div>{errors.map((i) => (<pre key={i}>{i}</pre>))}</div>}
-          />
+        <Tabs value={valid ? selected : 'errors'} keepMounted={false} onChange={(t) => (t !== 'errors' && t && setSelected(t.toString()))}>
+          <Tabs.List>
+            <Tabs.Tab value="basic" disabled={!valid}>{i18n('Basic')}</Tabs.Tab>
+            <Tabs.Tab value="subtasks" disabled={!valid}>{i18n('Subtasks')}</Tabs.Tab>
+            <Tabs.Tab value="errors" disabled={valid}>{errors.length ? `Errors(${errors.length})` : 'No Errors'}</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="basic">
+            <ProblemConfigForm />
+          </Tabs.Panel>
+          <Tabs.Panel value="subtasks">
+            <ProblemConfigTree />
+          </Tabs.Panel>
+          <Tabs.Panel value="errors">
+            <div>{errors.map((i) => (<pre key={i}>{i}</pre>))}</div>
+          </Tabs.Panel>
         </Tabs>
       </div>
     </div>
-    <Dialog isOpen={open && !valid} onClose={() => setOpen(false)}>
-      <DialogBody>
-        <p>{i18n('Errors detected in the config. Confirm save?')}</p>
-      </DialogBody>
-      <DialogFooter actions={<>
-        <Button onClick={() => setOpen(false)}>{i18n('Cancel')}</Button>
-        <Button intent="warning" onClick={props.onSave}>{i18n('Save')}</Button>
-      </>} />
-    </Dialog>
+    <Modal opened={open && !valid} onClose={() => setOpen(false)}>
+      <p>{i18n('Errors detected in the config. Confirm save?')}</p>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Button variant="default" onClick={() => setOpen(false)}>{i18n('Cancel')}</Button>
+        <Button color="yellow" onClick={props.onSave}>{i18n('Save')}</Button>
+      </div>
+    </Modal>
     <button className="rounded primary button" onClick={valid ? props.onSave : () => setOpen(true)}>{i18n('Save')}</button>
-  </>);
+  </ContextMenuProvider>);
 }
