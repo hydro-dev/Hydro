@@ -25,10 +25,11 @@ function History({ payload }) {
   const [load, setLoad] = React.useState(false);
   const [data, setData] = React.useState([]);
   const [isLoading, setLoading] = React.useState(true);
-  const [isError, setError] = React.useState(false);
+  const [error, setError] = React.useState('');
 
   React.useEffect(() => {
     if (!load) return;
+    setLoading(true);
     request.get(`${payload}?all=1`).then(({ history }) => {
       setData(history);
     }).catch((e) => {
@@ -44,7 +45,7 @@ function History({ payload }) {
     </Popover.Target>
     <Popover.Dropdown>
       <ol className="menu">
-        {(isLoading || isError) && (
+        {(isLoading || error) && (
           <li className="menu__item">
             <a className="menu__link">
               {isLoading ? i18n('Loading...') : i18n('Loading failed.')}

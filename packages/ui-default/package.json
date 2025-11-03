@@ -101,7 +101,7 @@
     "redux-promise-middleware": "^6.2.0",
     "redux-thunk": "^3.1.0",
     "rupture": "^0.7.1",
-    "sass": "^1.93.2",
+    "sass": "^1.93.3",
     "sass-loader": "^16.0.6",
     "schemastery": "^3.17.1",
     "shorty.js": "^1.0.1",
@@ -120,7 +120,7 @@
     "webpack": "^5.102.1",
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-dev-server": "^5.2.2",
-    "webpack-manifest-plugin": "^6.0.0",
+    "webpack-manifest-plugin": "^6.0.1",
     "webpackbar": "^7.0.0"
   },
   "dependencies": {
