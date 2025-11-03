@@ -204,6 +204,7 @@ const base = (option, ...args) => antfu(
             }],
             'style/jsx-closing-bracket-location': 'off',
             'style/jsx-closing-tag-location': 'off',
+            'style/jsx-curly-spacing': ['warn', { children: true, when: 'never' }],
             'style/jsx-function-call-newline': 'off',
             'style/jsx-indent-props': 'off',
             'style/jsx-one-expression-per-line': 'off',
@@ -332,13 +333,13 @@ const base = (option, ...args) => antfu(
     },
     github.getFlatConfigs().react,
     deMorgan.configs.recommended,
-    {
+    ...((option.vue ?? true) ? [{
         files: ['**/*.vue'],
         rules: {
             'vue/block-order': ['warn', { order: ['template', 'script[setup]', 'script:not([setup])', 'style[scoped]', 'style:not([scoped])'] }],
             'vue/singleline-html-element-content-newline': 'off',
         },
-    },
+    }] : []),
     {
         files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.cts', '**/*.mjs', '**/*.mts'],
 
