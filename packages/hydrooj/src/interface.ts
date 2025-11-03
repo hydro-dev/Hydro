@@ -311,7 +311,7 @@ export interface DomainDoc extends Record<string, any> {
 // Message
 export interface MessageDoc {
     from: number;
-    to: number;
+    to: number | number[];
     content: string;
     flag: number;
 }

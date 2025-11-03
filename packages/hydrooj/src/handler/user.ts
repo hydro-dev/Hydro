@@ -174,7 +174,7 @@ class UserWebauthnHandler extends Handler {
 
     async post({ domainId, result, redirect }) {
         const challenge = this.session.challenge;
-        if (!challenge) throw new ForbiddenError();
+        if (!challenge) throw new ForbiddenError('no-challenge');
         const tdoc = await token.get(challenge, token.TYPE_WEBAUTHN);
         if (!tdoc) throw new InvalidTokenError(token.TYPE_TEXTS[token.TYPE_WEBAUTHN]);
         const udoc = await (tdoc.uid === 'login'
