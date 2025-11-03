@@ -100,24 +100,25 @@
   name="form_item_{{ args.name }}"
   {{ container_attr('radiobox-container', args) }}
 >
-{%- for k, v in options -%}
+{%- for k, v in args.options -%}
   <label class="radiobox">
     <input
       value="{{ k }}"
       type="radio"
-      name="{{ v }}"
+      name="{{ args.name }}"
       {{ form_attr('radiobox__input', args) }}
-      {% if value == args.id %} checked{% endif %}
+      {% if args.value == k %} checked{% endif %}
     /> {{ _(v) }}
   </label>
 {%- endfor -%}
+
 </div>
 {% endmacro %}
 
 {% macro form_radio(args) %}
 {{ form_begin({columns:5, label_wrap:false}|assign(args)) }}
 {{ radio(args) }}
-{{ form_end({label_warp:false}|assign(args)) }}
+{{ form_end({label_wrap:false}|assign(args)) }}
 {% endmacro %}
 
 {% macro image_radio(args) %}
@@ -143,9 +144,9 @@
 {% endmacro %}
 
 {% macro form_image_radio(args) %}
-{{ form_begin({columns:8, label_warp:false}|assign(args)) }}
+{{ form_begin({columns:8, label_wrap:false}|assign(args)) }}
 {{ image_radio(args) }}
-{{ form_end({label_warp:false}|assign(args)) }}
+{{ form_end({label_wrap:false}|assign(args)) }}
 {% endmacro %}
 
 {% macro text(args) %}
@@ -154,10 +155,10 @@
   {{ container_attr('textbox-container', args) }}
 >
   <input
-    type="{{ 'number' if args.type === 'float' else args.type|default('text') }}"
+    type="{{ 'number' if args.type == 'float' else args.type|default('text') }}"
     name="{{ args.name }}"
     value="{{ args.value }}"
-    {% if args.type === 'float' %} step="any"{% endif %}
+    {% if args.type == 'float' %} step="any"{% endif %}
     placeholder="{{ args.placeholder }}"
     {{ form_attr('textbox', args) }}
   >
