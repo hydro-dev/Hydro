@@ -75,12 +75,6 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-
-  &>span.bp6-icon>svg {
-    font-size: 12px;
-    cursor: pointer;
-    padding: 4px;
-  }
 }
 
 .autocomplete-list {
@@ -104,26 +98,14 @@
       flex-grow: 1;
     }
 
-    &>span.bp6-icon>svg {
-      color: transparent;
-    }
-
     &[aria-selected='true'] {
       background-color: #fafafa;
       font-weight: 600;
-
-      &>span.bp6-icon>svg {
-        color: #1890ff;
-      }
     }
 
     &[data-focus='true'] {
       background-color: #e6f7ff;
       cursor: pointer;
-
-      &>span.bp6-icon>svg {
-        color: currentColor;
-      }
     }
   }
 }

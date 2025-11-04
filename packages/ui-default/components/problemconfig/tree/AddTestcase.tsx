@@ -1,7 +1,5 @@
 import { readSubtasksFromFiles } from '@hydrooj/common';
-import {
-  Button, Classes, Dialog, DialogBody, DialogFooter, Icon,
-} from '@blueprintjs/core';
+import { Button, Modal, Text } from '@mantine/core';
 import React, { useEffect, useRef } from 'react';
 import { useSelector, useStore } from 'react-redux';
 import { i18n } from 'vj/utils';
@@ -83,14 +81,14 @@ export function AddTestcase() {
   }
 
   return (<>
-    <li className={Classes.TREE_NODE} onClick={auto}>
-      <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
-        <Icon icon="clean" />&nbsp;
-        <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto detect')}</span>
-      </div>
-    </li>
-    <li
-      className={Classes.TREE_NODE}
+    <div
+      style={{ cursor: 'pointer', padding: '6px 0' }}
+      onClick={auto}
+    >
+      <Text><i className="icon icon-wrench" /> {i18n('Auto detect')}</Text>
+    </div>
+    <div
+      style={{ cursor: 'pointer', padding: '6px 0' }}
       onClick={() => {
         setInput('');
         setOutput('');
@@ -99,47 +97,41 @@ export function AddTestcase() {
         setOpen(true);
       }}
     >
-      <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
-        <Icon icon="clean" />&nbsp;
-        <span className={Classes.TREE_NODE_LABEL}>{i18n('Add testcase')}</span>
-      </div>
-    </li>
-    <Dialog title="Add testcase" icon="cog" isOpen={open} onClose={() => setOpen(false)}>
-      <DialogBody>
-        <div className="row">
-          <div className="columns medium-6">
-            <FileSelectAutoComplete
-              ref={refInput}
-              data={testdata}
-              label="Input"
-              width="100%"
-              onChange={(e) => setInput(e)}
-              placeholder={i18n('Input')}
-              value={input || ''}
-            />
-          </div>
-          <div className="columns medium-6">
-            <FileSelectAutoComplete
-              ref={refOutput}
-              data={testdata}
-              label="Output"
-              width="100%"
-              onChange={(e) => setOutput(e)}
-              placeholder={i18n('Output')}
-              value={input || ''}
-            />
-          </div>
+      <Text><i className="icon icon-add" /> {i18n('Add testcase')}</Text>
+    </div>
+    <Modal
+      opened={open}
+      onClose={() => setOpen(false)}
+      title={i18n('Add testcase')}
+      styles={{ body: { overflow: 'visible' }, content: { overflow: 'visible' } }}
+    >
+      <div className="row" style={{ overflow: 'visible' }}>
+        <div className="columns medium-6" style={{ overflow: 'visible' }}>
+          <FileSelectAutoComplete
+            ref={refInput}
+            data={testdata}
+            label="Input"
+            width="100%"
+            onChange={(e) => setInput(e)}
+            placeholder={i18n('Input')}
+            value={input || ''}
+          />
         </div>
-      </DialogBody>
-      <DialogFooter
-        actions={<Button
-          className={`primary rounded button${valid ? '' : ' disabled'}`}
-          onClick={onConfirm}
-          disabled={!valid}
-          intent="primary"
-          text="Save"
-        />}
-      />
-    </Dialog>
+        <div className="columns medium-6" style={{ overflow: 'visible' }}>
+          <FileSelectAutoComplete
+            ref={refOutput}
+            data={testdata}
+            label="Output"
+            width="100%"
+            onChange={(e) => setOutput(e)}
+            placeholder={i18n('Output')}
+            value={output || ''}
+          />
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
+        <Button onClick={onConfirm} disabled={!valid}> {i18n('Save')}</Button>
+      </div>
+    </Modal>
   </>);
 }

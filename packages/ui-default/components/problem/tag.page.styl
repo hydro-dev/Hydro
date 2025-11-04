@@ -19,11 +19,41 @@
   margin-left: rem(3px)
   margin-bottom: rem(5px)
   line-height: 30px !important
+  display: inline-flex
+  flex-direction: row
+  align-items: center
+  border: none
+  border-radius: 2px
+  box-shadow: none
+  font-size: 14px
+  line-height: 18px
+  max-width: 100%
+  min-height: 30px
+  min-width: 30px
+  padding: 6px 8px
+  position: relative
+  background-color: rgba(143, 153, 168, 0.15)
+  color: #1c2127
   &:hover
     text-decoration: none
   > span
     display: flex
     align-items: center
+  > *
+    flex-grow: 0
+    flex-shrink: 0
+    margin-right: 8px
+  > :last-child
+    margin-right: 0
+  &:focus
+    outline: rgba(33, 93, 176, 0.752) solid 2px
+    outline-offset: 0
+    -moz-outline-radius: 6px
+  &.interactive
+    cursor: pointer
+    &:hover
+      background: rgba(143, 153, 168, 0.3)
+      color: #111418
 
 .problem__tag-link
   display: inline-block

@@ -1,17 +1,43 @@
-import { Intent, OverlayToaster, Position } from '@blueprintjs/core';
+import { createTheme, MantineProvider, Notification as MantineNotification } from '@mantine/core';
+import { Notifications, notifications } from '@mantine/notifications';
 import $ from 'jquery';
+import React from 'react';
 import { tpl, zIndexManager } from 'vj/utils/base';
 
-const ToasterContainer = document.createElement('div');
-ToasterContainer.style.position = 'fixed';
-ToasterContainer.style.bottom = '0px';
-ToasterContainer.style.width = '100%';
-ToasterContainer.style.zIndex = '9999';
-document.body.append(ToasterContainer);
+const colorWhite = {
+  color: 'var(--mantine-color-white)',
+} as const;
 
-const AppToaster = OverlayToaster.create(
-  { position: Position.BOTTOM_LEFT, usePortal: false },
-  { container: ToasterContainer },
+const theme = createTheme({
+  components: {
+    Notification: MantineNotification.extend({
+      classNames: {
+        closeButton: 'mantine-notifications-close-button',
+      },
+      styles: {
+        root: {
+          backgroundColor: 'var(--notification-color, var(--mantine-primary-color-filled))',
+          paddingInlineStart: 'var(--mantine-spacing-xs)',
+        },
+        title: {
+          ...colorWhite,
+          fontSize: 'var(--mantine-font-size-md)',
+        },
+        icon: {
+          fontSize: '24px',
+          marginInlineEnd: 'var(--mantine-spacing-xs)',
+        },
+        description: colorWhite,
+        closeButton: colorWhite,
+      },
+    }),
+  },
+});
+
+document.body.append(tpl(
+  React.createElement(MantineProvider, { theme },
+    React.createElement(Notifications, { position: 'bottom-left', zIndex: 99999 }),
+  ), true),
 );
 
 interface NotificationOptions {
@@ -66,20 +92,44 @@ export default class Notification {
     setTimeout(() => this.$n.remove(), 200);
   }
 
-  static async success(message: string, duration?: number) {
-    return (await AppToaster).show({ message, timeout: duration, intent: Intent.SUCCESS });
+  static success(message: string, duration?: number) {
+    return notifications.show({
+      title: message,
+      color: '#238551',
+      message: '',
+      icon: React.createElement('i', { className: 'icon icon-check' }),
+      autoClose: duration,
+    });
   }
 
-  static async info(message: string, duration?: number) {
-    return (await AppToaster).show({ message, timeout: duration, intent: Intent.PRIMARY });
+  static info(message: string, duration?: number) {
+    return notifications.show({
+      title: message,
+      color: '#2d72d2',
+      message: '',
+      icon: React.createElement('i', { className: 'icon icon-info--circle' }),
+      autoClose: duration,
+    });
   }
 
-  static async warn(message: string, duration?: number) {
-    return (await AppToaster).show({ message, timeout: duration, intent: Intent.WARNING });
+  static warn(message: string, duration?: number) {
+    return notifications.show({
+      title: message,
+      color: '#fbb360',
+      message: '',
+      icon: React.createElement('i', { className: 'icon icon-warning' }),
+      autoClose: duration,
+    });
   }
 
-  static async error(message: string, duration?: number) {
-    return (await AppToaster).show({ message, timeout: duration, intent: Intent.DANGER });
+  static error(message: string, duration?: number) {
+    return notifications.show({
+      title: message,
+      color: '#cd4246',
+      message: '',
+      icon: React.createElement('i', { className: 'icon icon-close--circle' }),
+      autoClose: duration,
+    });
   }
 }
 

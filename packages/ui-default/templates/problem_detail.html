@@ -90,26 +90,26 @@
       <div class="section__body">
         <ul class="problem__tags">
           {% if not tdoc %}
-            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
+            <span class="problem__tag-item">{{ _('ID') }}: {{ pdoc.docId }}</span>
           {% endif %}
-          <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
+          <span class="problem__tag-item icon icon-book">{{ _('problem_type.' + pdoc.config.type).format(pdoc.config.subType) }}</span>
           {% if pdoc.config.type == 'default' and pdoc.config.subType %}
-            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-book">{{ _('File IO: {0}').format(pdoc.config.subType) }}</span>
+            <span class="problem__tag-item icon icon-book">{{ _('File IO: {0}').format(pdoc.config.subType) }}</span>
           {% endif %}
           {% if pdoc.config.type != 'objective' and pdoc.config.type != 'submit_answer' %}
-            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
-            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
+            <span class="problem__tag-item icon icon-stopwatch">{{ pdoc.config.timeMax if pdoc.config.timeMax == pdoc.config.timeMin else pdoc.config.timeMin+'~'+pdoc.config.timeMax }}ms</span>
+            <span class="problem__tag-item icon icon-comparison">{{ pdoc.config.memoryMax if pdoc.config.memoryMax == pdoc.config.memoryMin else pdoc.config.memoryMin+'~'+pdoc.config.memoryMax }}MiB</span>
           {% endif %}
           {% if not tdoc %}
-            <a class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
-            <a class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
-            <span class="bp6-tag bp6-large bp6-minimal problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
-            <span class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
+            <a class="problem__tag-item interactive" href="{{ url('record_main', query={pid:pdoc.docId}) }}">{{ _('Tried') }}: {{ pdoc.nSubmit }}</a>
+            <a class="problem__tag-item interactive" href="{{ url('record_main', query={pid:pdoc.docId, status:1}) }}">{{ _('Accepted') }}: {{ pdoc.nAccept if ((not tdoc) or showAccept) else '?' }}</a>
+            <span class="problem__tag-item">{{ _('Difficulty') }}: {{ pdoc['difficulty'] or lib.difficulty(pdoc.nSubmit, pdoc.nAccept) or _('(None)') }}</span>
+            <span class="problem__tag-item interactive">{{ _('Uploaded By') }}: {{ user.render_inline(udoc, badge=false) }}</span>
           {% endif %}
           {% if pdoc.tag.length %}
-            <span name="show_tags" class="bp6-tag bp6-large bp6-minimal bp6-interactive problem__tag-item nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
+            <span name="show_tags" class="problem__tag-item interactive nojs--hide icon icon-tag">{{ _('Tags') + '>' }}</span>
             {%- for tag in pdoc.tag -%}
-              <span class="bp6-tag bp6-large bp6-minimal problem__tag-item tags hasjs--hide">{{ tag }}</span>
+              <span class="problem__tag-item tags hasjs--hide">{{ tag }}</span>
             {%- endfor -%}
           {% endif %}
         </ul>

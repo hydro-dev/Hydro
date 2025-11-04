@@ -373,7 +373,7 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
   }, [pids]);
 
   return (<>
-    <a href="javascript:;" className="menu__link display-mode-hide" onClick={() => setDialogOpen(true)}>
+    <a className="menu__link display-mode-hide" onClick={() => setDialogOpen(true)}>
       <span className="icon icon-stack"></span>
       {' '}{i18n('{0} problem(s) selected', pids.length)}
     </a>

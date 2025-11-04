@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import 'jquery.easing';
 
-import { Popover } from '@blueprintjs/core';
+import { MantineProvider, Popover } from '@mantine/core';
 import $ from 'jquery';
 import { chunk } from 'lodash';
 import * as React from 'react';
@@ -36,21 +36,30 @@ function Reaction({ payload, ele }) {
   const emojiList: string[] = (UiContext.emojiList || '👍 👎 😄 😕 ❤️ 🤔 🤣 🌿 🍋 🕊️ 👀 🤡').split(' ');
   const elesPerRow = getRow(Math.sqrt(emojiList.length));
   const [focus, updateFocus] = React.useState(false);
-  const [finish, updateFinish] = React.useState(false);
-  if (finish) setTimeout(() => updateFinish(false), 1000);
+  const [open, updateOpen] = React.useState(false);
+  const [trigger, updateTrigger] = React.useState(false);
   return (
-    <Popover
-      usePortal
-      interactionKind="hover"
-      isOpen={finish ? false : (focus ? true : undefined)}
-      content={<div>
+    <Popover opened={trigger || open || focus}>
+      <Popover.Target>
+        <span
+          className="icon icon-emoji"
+          onMouseEnter={() => updateTrigger(true)}
+          onMouseLeave={() => {
+            setTimeout(() => updateTrigger(false), 300);
+          }}
+        />
+      </Popover.Target>
+      <Popover.Dropdown onMouseEnter={() => updateOpen(true)} onMouseLeave={() => updateOpen(false)}>
         {chunk(emojiList, elesPerRow).map((line, i) => (
           <div className="row" key={+i} style={{ paddingBottom: 4, paddingTop: 4 }}>
             {line.map((emoji) => (
               <div
                 key={emoji}
                 className={`medium-${12 / elesPerRow} small-${12 / elesPerRow} columns popover-reaction-item`}
-                onClick={() => handleEmojiClick(payload, emoji, ele).then(() => updateFinish(true))}
+                onClick={() => handleEmojiClick(payload, emoji, ele).then(() => {
+                  updateOpen(false);
+                  updateTrigger(false);
+                })}
               >
                 {emoji}
               </div>
@@ -62,9 +71,7 @@ function Reaction({ payload, ele }) {
             <input name="emojiSuggest" onFocus={() => updateFocus(true)} onBlur={() => updateFocus(false)}></input>
           </div>
         </div>
-      </div>}
-    >
-      <span className="icon icon-emoji"></span>
+      </Popover.Dropdown>
     </Popover>
   );
 }
@@ -72,9 +79,9 @@ function Reaction({ payload, ele }) {
 const reactionPage = new AutoloadPage('reactionPage', () => {
   const canUseReaction = $('[data-op="react"]').length > 0;
   $('[data-op="react"]').each((i, e) => {
-    ReactDOM.createRoot(e).render(
-      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').nodeType}='${$(e).data('form').id}']`)} />,
-    );
+    ReactDOM.createRoot(e).render(<MantineProvider>
+      <Reaction payload={$(e).data('form')} ele={$(`.reactions[data-${$(e).data('form').nodeType}='${$(e).data('form').id}']`)} />
+    </MantineProvider>);
   });
   $(document).on('click', '.reaction', async (e) => {
     if (!canUseReaction) {

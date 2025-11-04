@@ -1,13 +1,12 @@
 import { normalizeSubtasks, readSubtasksFromFiles } from '@hydrooj/common';
 import { TestCaseConfig } from 'hydrooj';
-import {
-  Button, Classes, Icon, Popover, TreeNode,
-} from '@blueprintjs/core';
+import { Button, Text, Tree } from '@mantine/core';
 import { isEqual } from 'lodash';
 import React from 'react';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDispatch, useSelector, useStore } from 'react-redux';
+import { confirm } from 'vj/components/dialog/index';
 import { i18n } from 'vj/utils';
 import { RootState } from './reducer';
 import { AddTestcase } from './tree/AddTestcase';
@@ -48,61 +47,53 @@ export function SubtaskNode(props: { subtaskId: number }) {
 
   function deleteSubtask() {
     dispatch({
-      type: 'problemconfig/moveTestcases',
-      payload: {
-        target: -1,
-        source: subtaskId,
-        cases,
-      },
-    });
-    dispatch({
       type: 'problemconfig/deleteSubtask',
       id: subtaskId,
     });
   }
 
   return (
-    <li className={`${Classes.TREE_NODE} ${Classes.TREE_NODE_EXPANDED}`}>
-      {subtaskId !== -1 && <div className={Classes.TREE_NODE_CONTENT} onClick={() => setExpand((e) => !e)}>
-        <Icon icon={expand ? 'folder-open' : 'folder-close'} />&nbsp;
-        <span className={Classes.TREE_NODE_LABEL}>{i18n('Subtask {0}', subtaskId)}</span>
-        <span className={Classes.TREE_NODE_SECONDARY_LABEL} onClick={(ev) => ev.stopPropagation()}>
-          <Popover
-            content={<div style={{ padding: 20 }}>
-              <b>{i18n('Are you sure you want to delete this subtask?')}</b>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
-                <Button intent="danger" onClick={deleteSubtask}>{i18n('Delete')}</Button>
-              </div>
-            </div>}
+    <div style={{ marginBottom: 8 }}>
+      {subtaskId !== -1 && (
+        <div style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={() => setExpand((e) => !e)}>
+          <Text fw={600} style={{ marginRight: 8 }}>
+            {expand ? <i className="icon icon-expand_more" /> : <i className="icon icon-expand_less" />}
+          </Text>
+          <Text>{i18n('Subtask {0}', subtaskId)}</Text>
+          <Button
+            variant="subtle"
+            size="sm"
+            color="black"
+            style={{ marginLeft: 'auto' }}
+            onClick={(ev) => {
+              ev.stopPropagation();
+              confirm(i18n('Are you sure you want to delete this subtask?')).then((yes) => {
+                if (yes) deleteSubtask();
+              });
+            }}
           >
-            <Icon icon="trash" />
-          </Popover>
-        </span>
-      </div>}
-      <ul className={Classes.TREE_NODE_LIST} ref={drop}>
-        {subtaskId !== -1 && <SubtaskSettings subtaskId={subtaskId} subtaskIds={subtaskIds} time={time} memory={memory} />}
+            <i className="icon icon-delete" />
+          </Button>
+        </div>
+      )}
+      <div ref={drop}>
+        {subtaskId !== -1 && expand && (
+          <SubtaskSettings subtaskId={subtaskId} subtaskIds={subtaskIds} time={time} memory={memory} />
+        )}
         {expand
           ? <SelectionManager subtaskId={subtaskId} subtaskIds={subtaskIds} />
-          : <TreeNode
-            depth={0}
-            id={`s${subtaskId}`}
-            onClick={() => setExpand(false)}
-            icon="layers"
-            label={<>&nbsp;{cases.length} testcases.</>}
-            path={[0]}
-          />}
+          : <div style={{ paddingLeft: 22 }}>
+            <Text>{cases.length} testcases.</Text>
+          </div>}
         {!cases.length && (
-          <li className={Classes.TREE_NODE}>
-            <div className={Classes.TREE_NODE_CONTENT}>
-              <span className={`${Classes.TREE_NODE_CARET_NONE} ${Classes.ICON_STANDARD}`}></span>
-              <span className={`${Classes.TREE_NODE_LABEL} text-gray`}>{subtaskId === -1
-                ? i18n('No testcase here')
-                : i18n('Drag and drop testcases here:')}</span>
-            </div>
-          </li>
+          <div style={{ paddingLeft: 22 }}>
+            <Text c="dimmed">{subtaskId === -1
+              ? i18n('No testcase here')
+              : i18n('Drag and drop testcases here:')}</Text>
+          </div>
         )}
-      </ul>
-    </li>
+      </div>
+    </div>
   );
 }
 
@@ -110,7 +101,7 @@ export function SubtaskConfigTree() {
   const ids = useSelector((s: RootState) => Object.values(s.config?.subtasks || []).map((i) => i.id), isEqual);
   const dispatch = useDispatch();
   const store = useStore<RootState>();
-  function autoConfigure() {
+  const autoConfigure = React.useCallback(() => {
     const state = store.getState();
     const subtasks = readSubtasksFromFiles(state.testdata.map((t) => t.name), state.config);
     const cases = subtasks.reduce((a, b) => a.concat(b.cases), []);
@@ -122,29 +113,34 @@ export function SubtaskConfigTree() {
       type: 'problemconfig/delTestcases',
       cases,
     });
-  }
+  }, [dispatch, store]);
+  const rootNodes = React.useMemo<any[]>(() => [
+    { id: 'auto', label: i18n('Auto configure'), type: 'action' as const },
+    { id: 'global', label: i18n('Global settings'), type: 'global' as const },
+    ...ids.map((id) => ({ id: `sub-${id}`, label: i18n('Subtask {0}', id), type: 'subtask' as const, subtaskId: id })),
+    { id: 'add', label: i18n('Add new subtask'), type: 'add' as const },
+  ], [ids]);
+
   return (
-    <div className={Classes.TREE}>
-      <ul className={`${Classes.TREE_NODE_LIST} ${Classes.TREE_ROOT}`}>
-        <li className={Classes.TREE_NODE} onClick={autoConfigure}>
-          <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
-            <Icon icon="clean" />&nbsp;
-            <span className={Classes.TREE_NODE_LABEL}>{i18n('Auto configure')}</span>
-          </div>
-        </li>
-        <GlobalSettings />
-        {ids.map((id) => <SubtaskNode key={id} subtaskId={id} />)}
-        <li
-          className={Classes.TREE_NODE}
-          onClick={() => dispatch({ type: 'problemconfig/addSubtask' })}
-        >
-          <div className={`${Classes.TREE_NODE_CONTENT} ${Classes.TREE_NODE_CONTENT}-0`}>
-            <Icon icon="folder-new" />&nbsp;
-            <span className={Classes.TREE_NODE_LABEL}>{i18n('Add new subtask')}</span>
-          </div>
-        </li>
-      </ul>
-    </div>
+    <Tree
+      data={rootNodes}
+      levelOffset={12}
+      renderNode={({ node }) => {
+        const n: any = node;
+        if (n.type === 'action') {
+          return <div style={{ padding: '6px 0' }} onClick={autoConfigure}>
+            <Text><i className="icon icon-settings" /> {i18n('Auto configure')}</Text>
+          </div>;
+        }
+        if (n.type === 'global') return <GlobalSettings />;
+        if (n.type === 'add') {
+          return <div style={{ padding: '6px 0' }} onClick={() => dispatch({ type: 'problemconfig/addSubtask' })}>
+            <Text><i className="icon icon-add" /> {i18n('Add new subtask')}</Text>
+          </div>;
+        }
+        return <SubtaskNode subtaskId={n.subtaskId} />;
+      }}
+    />
   );
 }
 
@@ -156,11 +152,9 @@ export function ProblemConfigTree() {
           <SubtaskConfigTree />
         </div>
         <div className="medium-6 columns">
-          <div className={Classes.TREE}>
-            <ul className={`${Classes.TREE_ROOT} ${Classes.TREE_NODE_LIST}`}>
-              <AddTestcase />
-              <SubtaskNode subtaskId={-1} />
-            </ul>
+          <div>
+            <AddTestcase />
+            <SubtaskNode subtaskId={-1} />
           </div>
         </div>
       </div>

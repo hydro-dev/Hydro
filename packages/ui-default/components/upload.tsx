@@ -1,4 +1,4 @@
-import { Classes } from '@blueprintjs/core';
+import { MantineProvider, Progress } from '@mantine/core';
 import $ from 'jquery';
 import React from 'react';
 import { Dialog } from 'vj/components/dialog/index';
@@ -19,36 +19,40 @@ interface UploadOptions {
   filenameCallback?: (file: File) => string;
 }
 export default async function uploadFiles(endpoint = '', files: File[] | FileList = [], options: UploadOptions = {}) {
-  const dialog = new Dialog({
-    $body: $(tpl(<>
+  let fileLabel = '';
+  let uploadLabel = '';
+  let fileProgress = 0;
+  let uploadProgress = 0;
+  let render = () => { };
+
+  function ProgressDialog() {
+    const [, setRender] = React.useState(0);
+    React.useEffect(() => {
+      render = () => setRender((r) => r + 1);
+    }, []);
+    return <MantineProvider>
       <div
-        className="file-label"
         style={{
           textAlign: 'center', marginBottom: '5px', color: 'gray', fontSize: 'small',
         }}
-      ></div>
-      <div className={`${Classes.PROGRESS_BAR} ${Classes.INTENT_PRIMARY} bp5-no-stripes`}>
-        <div className={`file-progress ${Classes.PROGRESS_METER}`} style={{ width: 0 }}></div>
-      </div>
+      >{uploadLabel}</div>
+      <Progress value={uploadProgress} />
       <div
-        className="upload-label"
         style={{
           textAlign: 'center', margin: '5px 0', color: 'gray', fontSize: 'small',
         }}
-      ></div>
-      <div className={`${Classes.PROGRESS_BAR} ${Classes.INTENT_PRIMARY} bp5-no-stripes`}>
-        <div className={`upload-progress ${Classes.PROGRESS_METER}`} style={{ width: 0 }}></div>
-      </div>
-    </>)),
+      >{fileLabel}</div>
+      <Progress value={fileProgress} />
+    </MantineProvider>;
+  }
+
+  const dialog = new Dialog({
+    $body: $(tpl(<ProgressDialog />, true)),
   });
   try {
     Notification.info(i18n('Uploading files...'));
     window.addEventListener('beforeunload', onBeforeUnload);
     dialog.open();
-    const $uploadLabel = dialog.$dom.find('.dialog__body .upload-label');
-    const $uploadProgress = dialog.$dom.find('.dialog__body .upload-progress');
-    const $fileLabel = dialog.$dom.find('.dialog__body .file-label');
-    const $fileProgress = dialog.$dom.find('.dialog__body .file-progress');
     for (const i in files) {
       if (Number.isNaN(+i)) continue;
       const file = files[i];
@@ -58,20 +62,22 @@ export default async function uploadFiles(endpoint = '', files: File[] | FileLis
       if (options.type) data.append('type', options.type);
       data.append('operation', 'upload_file');
       await request.postFile(endpoint, data, {
-        xhr() {
+        xhr() { // eslint-disable-line
           const xhr = new XMLHttpRequest();
           xhr.upload.addEventListener('loadstart', () => {
-            $fileLabel.text(`[${+i + 1}/${files.length}] ${file.name} `);
-            $fileProgress.width(`${Math.round((+i + 1) / files.length * 100)}% `);
-            $uploadLabel.text(i18n('Uploading... ({0}%)', 0));
-            $uploadProgress.width(0);
+            uploadLabel = `[${+i + 1}/${files.length}] ${file.name} `;
+            uploadProgress = Math.round((+i + 1) / files.length * 100);
+            fileLabel = i18n('Uploading... ({0}%)', 0);
+            fileProgress = 0;
+            render();
           });
           xhr.upload.addEventListener('progress', (e) => {
             if (e.lengthComputable) {
               const percentComplete = Math.round((e.loaded / e.total) * 100);
-              if (percentComplete === 100) $uploadLabel.text(i18n('Processing...'));
-              else $uploadLabel.text(i18n('Uploading... ({0}%)', percentComplete));
-              $uploadProgress.width(`${percentComplete}% `);
+              if (percentComplete === 100) fileLabel = i18n('Processing...');
+              else fileLabel = i18n('Uploading... ({0}%)', percentComplete);
+              fileProgress = percentComplete;
+              render();
             }
           }, false);
           return xhr;
