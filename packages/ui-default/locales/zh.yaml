@@ -48,7 +48,7 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
-'Tip: You are entering {0}.': '提示：您正在进入 {0}。'  
+'Tip: You are entering {0}.': '提示：您正在进行 {0}。'  
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
@@ -911,7 +911,7 @@ Submit: 递交
 Submitted: 已递交
 Subtask {0}: 子任务 {0}
 Subtasks: 子任务
-sudo mode: Sudo 模式
+sudo mode: 身份验证
 SuperUser: 超级管理员
 SuperUser's Password: 超级管理员的密码
 Support: 支持
