@@ -24,6 +24,7 @@ __langname: 简体中文
 '↓ Create Time': '↓ 创建时间'
 '↓ Update Time': '↓ 更新时间'
 'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
+'After you''ve performed a sudo-protected action, you''ll only be asked to re-authenticate again after a few hours of inactivity.': '在您执行受保护的操作后，只有账户连续数小时不活动时，系统才会再次要求您重新验证身份。'
 'Copy "{data}" failed :(': '复制“{data}”失败 :('
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
@@ -47,6 +48,7 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
+'Tip: You are entering {0}.': '提示：您正在进入 {0}。'  
 'Yes': 是
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
@@ -188,6 +190,7 @@ Compilers' Version and Parameters: 编译器版本及参数
 Complete: 完成
 Completed: 已完成
 Config: 配置
+Confirm Access: 确认授权
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this domain? This action cannot be undone.: '确认删除此域？此操作无法撤销。'
@@ -197,6 +200,7 @@ Confirm removing the selected users?: 您确定将所选用户移除吗？
 Confirm to delete the file?: 确认删除此文件吗？
 Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirm to delete the selected problems?: 确认要删除所选题目吗？
+Confirm: 确认
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
 Congratulations! Your submission is accepted.: 恭喜！您的递交已评测通过。
 Contact Us: 联系我们
@@ -527,6 +531,7 @@ Legacy mode: 兼容模式
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
 Limitations: 限制
+Linked Accounts: 关联账户
 Links: 链接
 List View: 列表视图
 Live: 正在进行
@@ -558,6 +563,7 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Red: 标红
+Mark user as joined using admin privilege: 使用管理员权限将用户标记为已加入
 Mark Yellow: 标黄
 Memory Cost: 内存占用
 Memory Info: 内存信息
@@ -905,6 +911,7 @@ Submit: 递交
 Submitted: 已递交
 Subtask {0}: 子任务 {0}
 Subtasks: 子任务
+sudo mode: Sudo 模式
 SuperUser: 超级管理员
 SuperUser's Password: 超级管理员的密码
 Support: 支持
