@@ -1,6 +1,4 @@
-import {
-  Card, InputGroup, Tag,
-} from '@blueprintjs/core';
+import { Card, Text, TextInput } from '@mantine/core';
 import { isEqual } from 'lodash';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -16,16 +14,18 @@ function FileIOConfig() {
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="FileIOConfig" disableLabel>
-      <Card style={{ padding: 10 }}>
+      <Card withBorder style={{ padding: 10, overflow: 'visible' }}>
         <div className="row">
           <FormItem columns={6} label="FileIO">
-            <InputGroup
-              rightElement={<Tag minimal>.in/.out</Tag>}
+            <TextInput
+              rightSection={<Text size="sm">.in/.out</Text>}
+              rightSectionWidth={100}
+              rightSectionPointerEvents="none"
               value={filename || ''}
               onChange={(ev) => {
                 dispatch({ type: 'problemconfig/updateFileIO', filename: ev.currentTarget.value });
               }}
-              fill
+              style={{ width: '100%' }}
             />
           </FormItem>
         </div>
@@ -41,7 +41,7 @@ function ExtraFilesConfig() {
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="ExtraFilesConfig" disableLabel>
-      <Card style={{ padding: 10 }}>
+      <Card withBorder style={{ padding: 10, overflow: 'visible' }}>
         <div className="row">
           <FormItem columns={12} label={i18n('user_extra_files')}>
             <FileSelectAutoComplete
@@ -70,7 +70,7 @@ function LangConfig() {
   const dispatch = useDispatch();
   return (
     <FormItem columns={12} label="langs" disableLabel>
-      <Card style={{ padding: 10 }}>
+      <Card withBorder style={{ padding: 10, overflow: 'visible' }}>
         <div className="row">
           <FormItem columns={12} label="langs">
             <LanguageSelectAutoComplete
