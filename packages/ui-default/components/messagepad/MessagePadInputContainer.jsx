@@ -55,7 +55,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadInpu
     );
     if (this.focusInput) {
       const { scrollX, scrollY } = window;
-      this.refs.input.focus();
+      this.state.ref?.focus();
       window.scrollTo(scrollX, scrollY);
     }
   }
@@ -81,7 +81,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadInpu
       <div className={cn}>
         <div className="messagepad__textarea-container">
           <textarea
-            ref="input"
+            ref={(ref) => this.setState({ ...this.state, ref })}
             data-markdown
             disabled={this.props.isPosting}
             value={this.props.inputValue}
