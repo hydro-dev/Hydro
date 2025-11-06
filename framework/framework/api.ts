@@ -190,7 +190,7 @@ export class ApiHandler<C extends Context> extends Handler<C> {
         if (!['get', 'post'].includes(this.request.method.toLowerCase())) {
             throw new MethodNotAllowedError(this.request.method);
         }
-        if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[op]) throw new BadRequestError(`Invalid API operation: ${op}`);
         if (APIS[op].type === 'Subscription') {
             throw new BadRequestError('Subscription operation cannot be called in HTTP handler');
         }
@@ -226,7 +226,7 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
             this.isRpc = true;
             return;
         }
-        if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[op]) throw new BadRequestError(`Invalid API operation: ${op}`);
         if (APIS[op].type !== 'Subscription') {
             throw new BadRequestError('Only subscription operations are supported');
         }
@@ -250,7 +250,7 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
                 throw new BadRequestError('Invalid message');
             }
         }
-        if (!APIS[message.op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[message.op]) throw new BadRequestError(`Invalid API operation: ${message.op}`);
         if (APIS[message.op].type !== 'Subscription') {
             throw new BadRequestError('Only subscription operations are supported');
         }
