@@ -412,6 +412,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 formLimit: '8mb',
                 formidable: {
                     uploadDir,
+                    allowEmptyFiles: true,
+                    minFileSize: 0,
                     maxFileSize: parseMemoryMB(this.config.upload) * 1024 * 1024,
                     keepExtensions: true,
                 },

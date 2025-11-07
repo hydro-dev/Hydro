@@ -18,12 +18,9 @@ const mapStateToProps = (state) => ({
 
 // eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
-  componentDidMount() {
-    $(this.refs.list).scrollLock({ strict: true });
-  }
-
   componentDidUpdate(prevProps) {
-    const node = this.refs.list;
+    const node = this.state.ref;
+
     if (this.props.activeId !== prevProps.activeId) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = false;
@@ -32,6 +29,8 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
       this.scrollWithAnimation = true;
     } else this.scrollToBottom = false;
 
+    if (!node) return;
+    $(this.state.ref).scrollLock({ strict: true });
     if (this.scrollToBottom) {
       const targetScrollTop = node.scrollHeight - node.offsetHeight;
       if (this.scrollWithAnimation) {
@@ -93,14 +92,13 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
     return (
       <>
         <div className="messagepad__header">
-          { this.props.item
-            && (
-              <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
-                {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
-              </a>
-            )}
+          {this.props.item && (
+            <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
+              {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
+            </a>
+          )}
         </div>
-        <ol className="messagepad__content" ref="list">
+        <ol className="messagepad__content" ref={(ref) => { this.setState({ ...this.state, ref }); }}>
           {this.renderInner()}
         </ol>
       </>
