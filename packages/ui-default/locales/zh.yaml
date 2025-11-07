@@ -24,7 +24,6 @@ __langname: 简体中文
 '↓ Create Time': '↓ 创建时间'
 '↓ Update Time': '↓ 更新时间'
 'A domain ID cannot be changed after creation. It is supposed to be:': '创建后将无法更改 ID。ID 必须满足以下条件：'
-'After you''ve performed a sudo-protected action, you''ll only be asked to re-authenticate again after a few hours of inactivity.': '在您执行受保护的操作后，只有账户连续数小时不活动时，系统才会再次要求您重新验证身份。'
 'Copy "{data}" failed :(': '复制“{data}”失败 :('
 'Copy failed :(': '复制失败 :('
 'Current dataset: {0}': '当前测试数据: {0}'
@@ -48,8 +47,9 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
-'Tip: You are entering {0}.': '提示：您正在进行 {0}。'  
+'Tip: You are entering sudo mode.': '提示：您正在进行<a href="https://docs.github.com/articles/sudo-mode">身份验证</a>。'
 'Yes': 是
+"After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.": 在您执行受保护的操作后，只有账户连续数小时不活动时，系统才会再次要求您重新验证身份。
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "View other's records": 查看他人的记录
@@ -911,7 +911,6 @@ Submit: 递交
 Submitted: 已递交
 Subtask {0}: 子任务 {0}
 Subtasks: 子任务
-sudo mode: 身份验证
 SuperUser: 超级管理员
 SuperUser's Password: 超级管理员的密码
 Support: 支持
