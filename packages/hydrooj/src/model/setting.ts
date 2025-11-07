@@ -7,7 +7,7 @@ import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
-import { findFileSync, randomstring, retry } from '@hydrooj/utils';
+import { findFileSync, randomstring } from '@hydrooj/utils';
 import { Context } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -386,7 +386,7 @@ export async function apply(ctx: Context) {
         if (!setting.value) continue;
         const current = await ctx.db.collection('system').findOne({ _id: setting.key });
         if (!current || current.value == null || current.value === '') {
-            await retry(system.set, setting.key, setting.value);
+            await system.set(setting.key, setting.value);
         }
     }
     try {

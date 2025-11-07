@@ -254,6 +254,7 @@ export class ProblemMainHandler extends Handler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
+            if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
             if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: true });
@@ -266,6 +267,7 @@ export class ProblemMainHandler extends Handler {
         for (const pid of pids) {
             // eslint-disable-next-line no-await-in-loop
             const pdoc = await problem.get(domainId, pid);
+            if (!pdoc) throw new ProblemNotFoundError(domainId, pid);
             if (!this.user.own(pdoc, PERM.PERM_EDIT_PROBLEM_SELF)) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
             // eslint-disable-next-line no-await-in-loop
             await problem.edit(domainId, pid, { hidden: false });

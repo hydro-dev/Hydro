@@ -312,7 +312,10 @@ class UserRegisterWithCodeHandler extends Handler {
         await token.del(code, token.TYPE_REGISTRATION);
         const [id, mailDomain] = this.tdoc.mail.split('@');
         const $set: any = this.tdoc.set || {};
-        if (mailDomain === 'qq.com' && !Number.isNaN(+id)) $set.avatar = `qq:${id}`;
+        if (mailDomain === 'qq.com' && !Number.isNaN(+id)) {
+            $set.avatar = `qq:${id}`;
+            $set.qq = `${id}`;
+        }
         if (this.session.viewLang) $set.viewLang = this.session.viewLang;
         if (Object.keys($set).length) await user.setById(uid, $set);
         if (Object.keys(this.tdoc.setInDomain || {}).length) await domain.setUserInDomain(domainId, uid, this.tdoc.setInDomain);
