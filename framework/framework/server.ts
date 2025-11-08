@@ -274,7 +274,7 @@ export class ConnectionHandler<C> extends HandlerCommon<C> {
     }
 
     send(data: any) {
-        let payload = JSON.stringify(data, serializer(false, this));
+        let payload = typeof data === 'string' ? data : JSON.stringify(data, serializer(false, this));
         if (this.compression) {
             if (this.counter > 1000) this.resetCompression();
             payload = this.compression.deflate(payload);
@@ -739,14 +739,19 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const savedContext = Object.hasOwn(this.ctx, Symbol.for('cordis.shadow'))
             ? Object.getPrototypeOf(this.ctx)
             : this.ctx;
+        const checker = Checker(permPrivChecker);
         if (type === 'route') {
-            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker), savedContext));
+            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, checker, savedContext));
         } else {
-            const checker = Checker(permPrivChecker);
             const layer = router.ws(path, async (conn, _req, ctx) => {
                 await this.handleWS(ctx as any, HandlerClass, checker, conn, layer, savedContext);
             });
-            if (this.config.enableSSE) router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
+            if (this.config.enableSSE) {
+                router.get(routeName, path, async (ctx) => {
+                    Object.assign(ctx.HydroContext.args, ctx.params);
+                    await this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext);
+                });
+            }
         }
         const dispose = router.disposeLastOp;
         // @ts-ignore
