@@ -293,9 +293,11 @@ export async function getVnode(domainId: string, type: number, id: string, uid?:
             ...tdoc, type, id: _id, hidden: false,
         };
     }
+    const resultNodeId = await getNode(domainId, id);
+    if (id !== undefined && resultNodeId === null) throw new DiscussionNodeNotFoundError(domainId, `node/${id}`);
     return {
         title: id,
-        ...await getNode(domainId, id),
+        ...resultNodeId,
         type,
         id,
         owner: 1,
