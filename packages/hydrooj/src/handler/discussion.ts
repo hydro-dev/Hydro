@@ -64,7 +64,7 @@ class DiscussionHandler extends Handler {
     }
 }
 
-class DiscussionMainHandler extends Handler {
+class DiscussionMainHandler extends DiscussionHandler {
     @param('page', Types.PositiveInt, true)
     @param('all', Types.Boolean)
     async get(domainId: string, page = 1, all = false) {
