@@ -56,7 +56,9 @@ class DiscussionHandler extends Handler {
         // TODO(twd2): exclude problem/contest discussions?
         // TODO(iceboy): continuation based pagination.
         this.vnode = await discussion.getVnode(domainId, typeMapper[type], name, this.user._id);
-        if (!discussion.checkVNodeVisibility(typeMapper[type], this.vnode, this.user)) throw new DiscussionNodeNotFoundError(this.vnode.id);
+        if (!discussion.checkVNodeVisibility(typeMapper[type], this.vnode, this.user)) {
+            throw new DiscussionNodeNotFoundError(domainId, this.vnode.id);
+        }
         if (this.ddoc) {
             this.ddoc.parentType ||= this.vnode.type;
             this.ddoc.parentId ||= this.vnode.id;
@@ -422,7 +424,7 @@ class DiscussionEditHandler extends DiscussionHandler {
 }
 
 export async function apply(ctx) {
-    ctx.Route('discussion_main', '/discuss', DiscussionMainHandler);
+    ctx.Route('discussion_main', '/discuss', DiscussionMainHandler, PERM.PERM_VIEW_DISCUSSION);
     ctx.Route('discussion_detail', '/discuss/:did', DiscussionDetailHandler);
     ctx.Route('discussion_edit', '/discuss/:did/edit', DiscussionEditHandler);
     ctx.Route('discussion_raw', '/discuss/:did/raw', DiscussionRawHandler);
