@@ -1,6 +1,8 @@
 import path from 'path';
+import { LRUCache } from 'lru-cache';
 import {
-    avatar, ContestModel, Context, fs, getAlphabeticId, ObjectId, PERM, Schema, STATUS, Types, UserModel,
+    avatar, ContestModel, Context, fs, getAlphabeticId, ObjectId, PERM,
+    RecordDoc, Schema, STATUS, Tdoc, Types, UserModel,
 } from 'hydrooj';
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
@@ -23,7 +25,90 @@ const status = {
     [STATUS.STATUS_CANCELED]: 'CANCELED',
 };
 
-export async function apply(ctx: Context) {
+function submissionBase(tdoc: Tdoc, rdoc: RecordDoc) {
+    // NOTE: rdoc can be either record, or a tsdoc detail entry
+    const submit = new ObjectId(rdoc._id || (rdoc as any).rid).getTimestamp().getTime();
+    return {
+        problem_id: tdoc.pids.indexOf(rdoc.pid),
+        team_id: `${rdoc.uid}`,
+        timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
+        language: rdoc.lang || '',
+        submission_id: rdoc._id,
+    };
+}
+
+async function loadContestState(tdoc: Tdoc, realtime: boolean) {
+    const tsdocs = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
+    const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
+    const teams = tsdocs.map((i) => {
+        const udoc = udict[i.uid];
+        return {
+            team_id: `${udoc._id}`,
+            name: udoc.uname,
+            organization: udoc.school,
+            members: udoc.members?.split(',').filter((t) => t) || [],
+            coach: udoc.coach,
+            badge: { url: avatar(udoc.avatar) },
+            group: [
+                ...(udoc.group || []),
+                i.unrank ? 'unofficial' : 'official',
+            ],
+        };
+    });
+    return {
+        submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
+            const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
+            const curStatus = status[j.status] || 'SYSTEM_ERROR';
+            return {
+                ...submissionBase(tdoc, j),
+                status: (ContestModel.isLocked(tdoc) && submit > tdoc.lockAt.getTime() && !realtime)
+                    ? 'PENDING'
+                    : curStatus,
+            };
+        })),
+        teams,
+    };
+}
+
+export const name = 'scoreboard-xcpcio';
+export const Config = Schema.object({
+    cacheTTL: Schema.number().default(0).description('Cache TTL in milliseconds'),
+    cacheSize: Schema.number().default(100).description('Cache size'),
+});
+
+export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
+    const lru = new LRUCache<string, Awaited<ReturnType<typeof loadContestState>>>({
+        max: config.cacheSize,
+        ttl: config.cacheTTL,
+        // NOTE: currently we force all entries to expire
+        // to make sure that any patch error won't last too long
+        // can use updateAgeOnGet=false,updateAgeOnHas=false later if this patching is fully tested.
+        noUpdateTTL: true,
+    });
+
+    if (config.cacheTTL) {
+        ctx.on('record/judge', async (rdoc) => {
+            if (!rdoc.contest) return;
+            const realtime = lru.get(`${rdoc.contest.toHexString()}/realtime`);
+            const pub = lru.get(`${rdoc.contest.toHexString()}/public`);
+            if (!realtime && !pub) return;
+            const tdoc = await ContestModel.get(rdoc.domainId, rdoc.contest);
+            const submit = new ObjectId(rdoc._id).getTimestamp().getTime();
+            const isLocked = ContestModel.isLocked(tdoc) && submit > tdoc.lockAt.getTime();
+            const statusStr = status[rdoc.status] || 'SYSTEM_ERROR';
+            if (realtime) {
+                const found = realtime.submissions.find((i) => i.submission_id === rdoc._id.toHexString());
+                if (found) found.status = statusStr;
+                else realtime.submissions.push({ ...submissionBase(tdoc, rdoc), status: statusStr });
+            }
+            if (pub) {
+                const found = pub.submissions.find((i) => i.submission_id === rdoc._id.toHexString());
+                if (found && !isLocked) found.status = statusStr;
+                else pub.submissions.push({ ...submissionBase(tdoc, rdoc), status: isLocked ? 'PENDING' : statusStr });
+            }
+        });
+    }
+
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('xcpcio', 'XCPCIO', {
             tdoc: 'tdoc',
@@ -39,24 +124,11 @@ export async function apply(ctx: Context) {
             }) {
                 if (realtime && !this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 if (json || this.request.json) {
-                    const tsdocs = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
-                    const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
-                    const teams = tsdocs.map((i) => {
-                        const udoc = udict[i.uid];
-                        return {
-                            team_id: `${udoc._id}`,
-                            name: udoc.uname,
-                            organization: udoc.school,
-                            members: udoc.members?.split(',').filter((t) => t) || [],
-                            coach: udoc.coach,
-                            badge: { url: avatar(udoc.avatar) },
-                            group: [
-                                ...(udoc.group || []),
-                                i.unrank ? 'unofficial' : 'official',
-                            ],
-                        };
-                    });
-                    const relatedGroups = teams.flatMap((i) => i.group);
+                    const isLocked = ContestModel.isLocked(tdoc);
+                    const cacheKey = `${tdoc.docId.toHexString()}/${(isLocked && realtime) ? 'realtime' : 'public'}`;
+                    const state = lru.get(cacheKey) || await loadContestState(tdoc, realtime);
+                    if (config.cacheTTL) lru.set(cacheKey, state);
+                    const relatedGroups = state.teams.flatMap((i) => i.group);
                     this.response.body = {
                         contest: {
                             contest_name: tdoc.title,
@@ -100,23 +172,7 @@ export async function apply(ctx: Context) {
                                 submission_timestamp_unit: 'millisecond',
                             },
                         },
-                        submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
-                            const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
-                            const curStatus = status[j.status] || 'SYSTEM_ERROR';
-                            return {
-                                problem_id: tdoc.pids.indexOf(j.pid),
-                                team_id: `${i.uid}`,
-                                timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
-                                status: realtime
-                                    ? curStatus
-                                    : ContestModel.isLocked(tdoc) && submit > tdoc.lockAt.getTime()
-                                        ? 'PENDING'
-                                        : curStatus,
-                                language: j.lang || '',
-                                submission_id: j.rid,
-                            };
-                        })),
-                        teams,
+                        ...state,
                     };
                 } else {
                     this.response.template = 'xcpcio_board.html';
