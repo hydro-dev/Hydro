@@ -824,6 +824,8 @@ Scoreboard (Hidden): 成绩表 (隐藏)
 Scoreboard: 成绩表
 Scoring method: 评分方式
 Scripts: 脚本
+Search contests...: 搜索比赛...
+Search homeworks...: 搜索作业...
 Search: 搜索
 Secret (visible to admins): 保密（对管理员可见）
 Secret: 保密
@@ -834,6 +836,7 @@ Select a role: 选择一个角色
 Select All: 全选
 Select Category: 选择标签
 Select None: 全不选
+Select Problems: 选择题目
 Select User: 选择用户
 Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
