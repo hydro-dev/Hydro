@@ -341,6 +341,7 @@ Download All: 下载全部
 Download Dataset: 下载数据集
 Download Selected: 下载选中
 Download: 下载
+Downloading...: 下载中...
 Downvote: 差评
 Duration (hours): 持续时间 (小时)
 Duration: 持续时间
@@ -686,6 +687,7 @@ Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
 Please follow the instructions on your device to complete the verification.: 请按照您设备上的指示完成验证。
 Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
+Please select at least one problem to perform this operation.: 请至少选择一道题目以执行此操作。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Please set the balloon color for each problem first.: 请先为每道题设置气球颜色。
@@ -842,6 +844,8 @@ Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
 Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
+Selected problems have been hided.: 所选题目已被隐藏。
+Selected problems have been unhided.: 所选题目已取消隐藏。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
 Send By: 递送者
