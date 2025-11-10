@@ -1,5 +1,6 @@
 __langname: English
 'File IO: {0}': 'File IO: {0}'
+'Tip: You are entering sudo mode.': 'Tip: You are entering <a href="https://docs.github.com/articles/sudo-mode">sudo mode</a>.'
 Can be Extended For: Extension
 Current Status: Status
 Handled Requests: Req

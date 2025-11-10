@@ -47,7 +47,9 @@ __langname: 简体中文
 'Solved {0} problems, RP: {1} (No. {2})': '解决了 {0} 道题目，RP: {1} (No. {2})'
 'The domain owner:': 域所有者：
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已经存在。'
+'Tip: You are entering sudo mode.': '提示：您正在进行<a href="https://docs.github.com/articles/sudo-mode">身份验证</a>。'
 'Yes': 是
+"After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.": 在您执行受保护的操作后，只有账户连续数小时不活动时，系统才会再次要求您重新验证身份。
 "Effects only when Difficulty is not 'Use algorithm calculated'.": 仅当难度不为“使用算法计算”时才起效。
 "Split by ', '.": 由“, ”或“，”分隔。
 "View other's records": 查看他人的记录
@@ -188,6 +190,7 @@ Compilers' Version and Parameters: 编译器版本及参数
 Complete: 完成
 Completed: 已完成
 Config: 配置
+Confirm Access: 确认授权
 Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this domain? This action cannot be undone.: '确认删除此域？此操作无法撤销。'
@@ -197,6 +200,7 @@ Confirm removing the selected users?: 您确定将所选用户移除吗？
 Confirm to delete the file?: 确认删除此文件吗？
 Confirm to delete the selected files?: 确认删除所选文件吗？
 Confirm to delete the selected problems?: 确认要删除所选题目吗？
+Confirm: 确认
 Confirmation mail has been sent to your new email.: 确认邮件已经发送到您的新电子邮箱。
 Congratulations! Your submission is accepted.: 恭喜！您的递交已评测通过。
 Contact Us: 联系我们
@@ -220,6 +224,8 @@ Contributions: 贡献
 Copy Email: 复制电子邮件
 Copy from: 复制自
 Copy Link: 复制链接
+Copy Problem: 复制题目
+Copy Problems: 复制题目
 Copy QQ Number: 复制QQ号
 Copy Selected: 复制选中
 Copy WeChat Account: 复制微信号
@@ -335,6 +341,7 @@ Download All: 下载全部
 Download Dataset: 下载数据集
 Download Selected: 下载选中
 Download: 下载
+Downloading...: 下载中...
 Downvote: 差评
 Duration (hours): 持续时间 (小时)
 Duration: 持续时间
@@ -527,6 +534,7 @@ Legacy mode: 兼容模式
 Light: 亮色
 Limit user to finish contest within N hours: 限制用户在N小时内完成比赛
 Limitations: 限制
+Linked Accounts: 关联账户
 Links: 链接
 List View: 列表视图
 Live: 正在进行
@@ -558,6 +566,7 @@ Manage: 管理
 Manager: 管理
 Mark Green: 标绿
 Mark Red: 标红
+Mark user as joined using admin privilege: 使用管理员权限将用户标记为已加入
 Mark Yellow: 标黄
 Memory Cost: 内存占用
 Memory Info: 内存信息
@@ -678,6 +687,7 @@ Please attend contest to see the problems.: 请参加比赛来查看题目。
 Please claim the assignment to see the problems.: 认领作业后才可以查看作业内容。
 Please follow the instructions on your device to complete the verification.: 请按照您设备上的指示完成验证。
 Please select at least one file to perform this operation.: 请选择至少一个文件来执行此操作。
+Please select at least one problem to perform this operation.: 请选择至少一道题目来执行此操作。
 Please select at least one role to perform this operation.: 请选择至少一个角色来进行操作。
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Please set the balloon color for each problem first.: 请先为每道题设置气球颜色。
@@ -816,6 +826,8 @@ Scoreboard (Hidden): 成绩表 (隐藏)
 Scoreboard: 成绩表
 Scoring method: 评分方式
 Scripts: 脚本
+Search contests...: 搜索比赛...
+Search homeworks...: 搜索作业...
 Search: 搜索
 Secret (visible to admins): 保密（对管理员可见）
 Secret: 保密
@@ -826,11 +838,14 @@ Select a role: 选择一个角色
 Select All: 全选
 Select Category: 选择标签
 Select None: 全不选
+Select Problems: 选择题目
 Select User: 选择用户
 Selected categories: 已选标签
 Selected files have been deleted.: 所选文件已被删除。
 Selected files have been renamed.: 所选文件已被重命名。
 Selected problems have been deleted.: 所选题目已被删除。
+Selected problems have been hided.: 所选题目已被隐藏。
+Selected problems have been unhided.: 所选题目已取消隐藏。
 Selected roles have been deleted.: 所选角色已删除。
 Selected users have been removed from the domain.: 所选用户已从此域中移除。
 Send By: 递送者
@@ -936,6 +951,7 @@ The user is too lazy to leave something here...: 该用户太懒，这里啥也�
 Their account will not be deleted and they will be with the guest role until they re-join the domain.: 他们的账号不会被删除，并且之后将以 guest 角色访问，直到他们重新加入域。
 Theme: 主题
 There are no contests...: 没有比赛…
+There are no files currently.: 目前还没有文件。
 There is no homework so far ╰(*°▽°*)╯: 目前还没有作业 ╰(*°▽°*)╯
 This contest is not live.: 比赛没有开始。
 This email was sent by {0} automatically, and please do not reply directly.: 这封邮件由 {0} 自动发送，请勿直接回复。

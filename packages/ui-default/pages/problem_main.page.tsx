@@ -382,7 +382,7 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
         <div className="dialog__body" style={{ height: 'calc(100% - 45px)' }}>
           <div className="row">
             <div className="columns">
-              <h1>Select Problems</h1>
+              <h1>{i18n('Select Problems')}</h1>
             </div>
           </div>
           <div className="row">
