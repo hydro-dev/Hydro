@@ -59,7 +59,7 @@ langs:
       display: C
       version: /usr/bin/gcc --version
     cc:
-      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -I/include
+      compile: /usr/bin/g++ -Wall {modifier:std} -o foo foo.cc -lm {modifier:optimize} -I/include
       code_file: foo.cc
       highlight: cpp
       monaco: cpp
@@ -67,35 +67,25 @@ langs:
       address_space_limit: true
       process_limit: 1
       version: /usr/bin/g++ --version
-    cc.cc98:
-      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
-      display: C++98
-    cc.cc98o2:
-      compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -O2 -I/include
-      display: C++98(O2)
-    cc.cc11:
-      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm -I/include
-      display: C++11
-    cc.cc11o2:
-      compile: /usr/bin/g++ -Wall -std=c++11 -o foo foo.cc -lm -O2 -I/include
-      display: C++11(O2)
-    cc.cc14:
-      display: C++14
-    cc.cc14o2:
-      compile: /usr/bin/g++ -Wall -std=c++14 -o foo foo.cc -lm -O2 -I/include
-      display: C++14(O2)
-    cc.cc17:
-      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -I/include
-      display: C++17
-    cc.cc17o2:
-      compile: /usr/bin/g++ -Wall -std=c++17 -o foo foo.cc -lm -O2 -I/include
-      display: C++17(O2)
-    cc.cc20:
-      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -I/include
-      display: C++20
-    cc.cc20o2:
-      compile: /usr/bin/g++ -Wall -std=c++20 -o foo foo.cc -lm -O2 -I/include
-      display: C++20(O2)
+      modifier:
+        optimize:
+          name: Optimize
+          type: single
+          values:
+            None: ''
+            O2: -O2
+            O3: -O3
+            Ofast: -Ofast
+        std:
+          name: Standard
+          type: single
+          values:
+            C++98: -std=c++98
+            C++11: -std=c++11
+            C++14: -std=c++14
+            C++17: -std=c++17
+            C++20: -std=c++20
+            C++23: -std=c++23
     pas:
       compile: /usr/bin/fpc -O2 -o/w/foo foo.pas
       highlight: pascal
@@ -113,39 +103,48 @@ langs:
       compile_time_limit: 30000
       version: /usr/bin/javac -version
     kt:
-      compile: echo "Invalid language selection"
+      compile: /usr/bin/kotlinc -include-runtime -d foo.jar foo.kt
       code_file: foo.kt
-      execute: echo "Invalid language selection"
+      execute: /usr/bin/java -jar foo.jar
+      target: foo.jar
+      version: /usr/bin/kotlinc -version
+      compile_time_limit: 30000
       time_limit_rate: 2
       highlight: kotlin
       monaco: kotlin
       display: Kotlin
-    kt.jvm:
-      compile: kotlinc -include-runtime -d foo.jar foo.kt
-      target: foo.jar
-      execute: /usr/bin/java -jar foo.jar
-      display: Kotlin/JVM
-      compile_time_limit: 30000
-      version: /usr/bin/kotlinc -version
+      modifier:
+        version:
+          name: Runtime
+          type: single
+          values:
+            JVM: jvm
+            Native:
+              value: native
+              disabled: true
     py:
       compile: /usr/bin/python -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
       code_file: foo.py
       execute: /usr/bin/python foo
+      version: /usr/bin/{modifier:version} --version
       highlight: python
       display: Python
-    py.py2:
-      display: Python 2
-      disabled: true
-    py.py3:
-      compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
-      execute: /usr/bin/python3 foo
-      display: Python 3
-      version: /usr/bin/python3 --version
-    py.pypy3:
-      compile: /bin/bash -c "/usr/bin/pypy3 -c \"import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)\" && mv foo.py foo"
-      execute: /bin/bash -c 'mv foo foo.py && /usr/bin/pypy3 -B foo.py'
-      display: PyPy3
-      version: /usr/bin/pypy3 --version
+      modifier:
+        version:
+          name: Version
+          type: single
+          values:
+            Python2: 
+              value: python2
+              disabled: true
+            Python 3:
+              value: python3
+              compile: /usr/bin/python3 -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"
+              execute: /usr/bin/python3 foo
+            PyPy3: 
+              value: pypy3
+              compile: /bin/bash -c "/usr/bin/pypy3 -c \"import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)\" && mv foo.py foo"
+              execute: /bin/bash -c 'mv foo foo.py && /usr/bin/pypy3 -B foo.py'
     php:
       execute: /usr/bin/php foo.php
       display: PHP
