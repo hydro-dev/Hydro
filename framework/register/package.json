@@ -3,8 +3,9 @@
     "version": "1.0.4",
     "license": "MIT",
     "main": "index.js",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "engines": {
-        "node": ">=16"
+        "node": ">=20"
     },
     "dependencies": {
         "esbuild": "0.25.2",
