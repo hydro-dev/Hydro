@@ -73,7 +73,7 @@ export function TestcaseGroup(props: TestcaseGroupProps) {
     item: { cases, subtaskId },
   }), [JSON.stringify(cases), subtaskId]);
   return <div
-    ref={drag}
+    ref={drag as any}
     onClick={onClick}
     onMouseDown={props.onMouseDown}
     onContextMenu={showContextMenu(
