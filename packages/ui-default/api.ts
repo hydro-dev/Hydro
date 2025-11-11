@@ -18,6 +18,7 @@ export { default as _ } from 'lodash';
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom/client';
 export * as redux from 'react-redux';
+export { default as jsxRuntime } from 'react/jsx-runtime';
 import { load } from './lazyload';
 
 export default load;

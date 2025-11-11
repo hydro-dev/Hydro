@@ -124,7 +124,7 @@ export class ProblemMainHandler extends Handler {
         const category = parsed.category || [];
         const text = (parsed.text || []).join(' ');
         if (parsed.difficulty?.every((i) => Number.isSafeInteger(+i))) {
-            query.difficulty = { $in: parsed.difficulty.map(Number) };
+            query.difficulty = { $in: parsed.difficulty.flatMap((i) => +i === 0 ? [0, undefined] : [+i]) };
         }
         if (category.length) query.$and = category.map((tag) => ({ tag }));
         if (parsed.namespace?.length) {

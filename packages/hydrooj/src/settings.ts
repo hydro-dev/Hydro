@@ -150,16 +150,16 @@ export class SettingService extends Service {
     }
 
     requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
-        if (dynamic) {
-            this.ctx.effect(() => {
-                this.settings.push(s);
+        this.ctx.effect(() => {
+            logger.debug('Loading config', s);
+            this.settings.push(s);
+            this._applySchema();
+            return () => {
+                logger.debug('Unloading config', s);
+                this.settings = this.settings.filter((v) => v !== s);
                 this._applySchema();
-                return () => {
-                    this.settings = this.settings.filter((v) => v !== s);
-                    this._applySchema();
-                };
-            });
-        }
+            };
+        });
         let curValue = s(this.systemConfig);
         if (!dynamic) return curValue;
         this.ctx.on('system/setting', () => {
@@ -175,7 +175,8 @@ export class SettingService extends Service {
             if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error(`Invalid path: ${path.join('.')}`);
             let currentValue = curValue;
             for (const p of path) currentValue = currentValue[p];
-            if (typeof currentValue !== 'object' || !currentValue || Array.isArray(currentValue)) return currentValue;
+            if ((typeof currentValue !== 'object') || !currentValue || Array.isArray(currentValue)) return currentValue;
+            if (path.some((p) => typeof p === 'symbol')) return currentValue;
             return new Proxy(currentValue, {
                 get(self, key: string) {
                     return getAccess(path.concat(key));

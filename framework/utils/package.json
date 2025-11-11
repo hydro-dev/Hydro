@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.4.37",
+    "version": "1.5.0",
     "description": "hydrooj utils",
     "main": "lib/utils.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
@@ -8,7 +8,7 @@
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true,
     "optionalPeerDependencies": {
-        "bson": "^6.17.0",
+        "bson": "^7.0.0",
         "moment-timezone": "^0.5.48"
     },
     "dependencies": {

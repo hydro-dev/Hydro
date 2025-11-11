@@ -458,7 +458,7 @@ export const coreScripts: MigrationScript[] = [
         return await iterateAllDomain(async ({ _id }) => {
             const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
             for await (const ddoc of cursor) {
-                const parentId = new ObjectId(ddoc.parentId);
+                const parentId = new ObjectId(ddoc.parentId as string);
                 await discussion.edit(_id, ddoc.docId, { parentId });
                 try {
                     await contest.get(_id, parentId);

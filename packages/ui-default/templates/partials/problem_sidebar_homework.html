@@ -8,7 +8,7 @@
   <div>
     <ol class="menu">
     {% if model.contest.isOngoing(tdoc, tsdoc) or model.contest.isExtended(tdoc, tsdoc) %}
-    {% if page_name == 'homework_detail_problem' %}
+    {% if page_name == 'homework_detail_problem' and handler.ctx.setting.get('ui-default.enableScratchpad') %}
       <li class="menu__item scratchpad--hide nojs--hide"><a class="menu__link highlight" name="problem-sidebar__open-scratchpad" href="javascript:;" data-global-hotkey="alt+e">
         <span class="icon icon-enlarge"></span> {{ _('Open Scratchpad') }} (Alt+E)
       </a></li>

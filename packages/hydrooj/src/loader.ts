@@ -19,6 +19,7 @@ import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
 import Schema from 'schemastery';
+import { isEqual } from 'lodash';
 
 const argv = cac().parse();
 const logger = new Logger('loader');
@@ -93,35 +94,47 @@ export class Loader extends Service {
         }
     }
 
-    async resolveConfig(plugin: any, configScope: string) {
+    async resolveConfig(plugin: any, configScope: string, dynamic = true) {
         const schema = plugin['Config'] || plugin['schema'];
-        if (!schema) return {};
+        if (!schema) return Object.freeze({});
         const schemaRequest = configScope ? Schema.object({
             [configScope]: schema,
         }) : schema;
         await this.ctx.setting._tryMigrateConfig(schemaRequest);
-        const res = this.ctx.setting.requestConfig(schemaRequest);
+        const res = this.ctx.setting.requestConfig(schemaRequest, dynamic);
         return configScope ? res[configScope] : res;
     }
 
     async reloadPlugin(key: string, configScope: string) {
         const plugin = this.resolvePlugin(key);
         if (!plugin) return;
-        const config = await this.resolveConfig(plugin, configScope);
+        // currently cordis validates config and converts proxy to plain object
+        // must do a full reload once config changed
+        const config = await this.resolveConfig(plugin, configScope, false);
         let fork = this.state[key];
         const displayPath = key.includes('node_modules')
             ? key.split('node_modules').pop()
             : path.relative(process.cwd(), key);
         logger.info(
             `%s plugin %c${configScope ? ' with scope %c' : ''}`,
-            fork ? 'reload' : 'apply', displayPath, configScope,
+            fork ? 'update' : 'apply', displayPath, configScope,
         );
         if (fork) {
-            fork.update(config);
+            fork.update(config, true);
         } else {
             fork = this.ctx.plugin(plugin, config);
             if (!fork) return;
-            this.state[key] = fork;
+            const inner = Object.getPrototypeOf(fork) !== Fiber.prototype
+                ? Object.getPrototypeOf(fork) : fork;
+            this.state[key] = inner;
+        }
+        if (!Object.isFrozen(config)) {
+            fork.ctx.on('system/setting', async () => {
+                if (!fork.uid || !this.state[key]) return;
+                const resolved = await this.resolveConfig(plugin, configScope, false);
+                if (isEqual(this.state[key].config, resolved)) return;
+                this.reloadPlugin(key, configScope);
+            });
         }
         return fork;
     }

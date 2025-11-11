@@ -11,7 +11,7 @@
     window.DATA_HOST = "/";
     window.DATA_REGION = "Hydro";
     window.DEFAULT_LANG = "{{ 'zh-CN' if _('__id').startsWith('zh') else 'en' }}";
-    window.DATA_SOURCE = "{{ dataSource }}";
+    window.DATA_SOURCE = "{{ dataSource|safe }}";
     if (document.documentElement.classList.contains("theme--dark")) document.documentElement.classList.toggle("dark", !0);
     setInterval(() => {
         const location = window.location.href;

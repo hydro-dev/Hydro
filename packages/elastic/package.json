@@ -6,7 +6,7 @@
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "@elastic/elasticsearch": "^9.1.1"
+        "@elastic/elasticsearch": "^9.2.0"
     },
     "engines": {
         "hydrooj": ">=5.0.0-alpha.1"

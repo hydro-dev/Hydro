@@ -1,16 +1,16 @@
 {
     "name": "@hydrooj/scoreboard-xcpcio",
     "license": "AGPL-3.0-or-later",
-    "version": "0.0.5-beta.4",
+    "version": "0.0.5-beta.5",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "scripts": {
         "postinstall": "node -r @hydrooj/register install.ts"
     },
     "dependencies": {
-        "@xcpcio/board-app": "^0.74.1"
+        "@xcpcio/board-app": "^0.75.1"
     },
     "devDependencies": {
-        "@xcpcio/types": "^0.74.1"
+        "@xcpcio/types": "^0.75.1"
     }
 }

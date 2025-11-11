@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/framework",
-    "version": "0.2.5",
+    "version": "0.2.6",
     "main": "index.ts",
     "license": "MIT",
     "repository": "https://github.com/hydro-dev/Hydro",
@@ -18,7 +18,7 @@
         "koa-compress": "^5.1.1",
         "path-to-regexp": "^8.3.0",
         "sanitize-filename": "^1.6.3",
-        "schemastery": "^3.17.1",
+        "schemastery": "^3.17.2",
         "shorty.js": "^1.0.1",
         "ws": "^8.18.3"
     },

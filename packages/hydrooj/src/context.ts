@@ -25,6 +25,7 @@ function provideModule<T extends keyof ModuleInterfaces>(type: T, id: string, mo
 }
 
 export type Fiber = cordis.Fiber<Context>;
+export const Fiber = cordis.Fiber;
 
 export { Disposable, FiberState, Plugin } from 'cordis';
 

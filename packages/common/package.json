@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/common",
     "main": "./index.ts",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "repository": "https://github.com/hydro-dev/Hydro",
     "sideEffects": false,
     "dependencies": {
