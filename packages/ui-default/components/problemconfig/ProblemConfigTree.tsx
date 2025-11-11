@@ -76,7 +76,7 @@ export function SubtaskNode(props: { subtaskId: number }) {
           </Button>
         </div>
       )}
-      <div ref={drop}>
+      <div ref={drop as any}>
         {subtaskId !== -1 && expand && (
           <SubtaskSettings subtaskId={subtaskId} subtaskIds={subtaskIds} time={time} memory={memory} />
         )}
