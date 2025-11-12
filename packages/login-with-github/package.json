@@ -2,7 +2,7 @@
     "name": "@hydrooj/login-with-github",
     "version": "0.3.0-beta.1",
     "main": "index.ts",
-    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "preferUnplugged": true
