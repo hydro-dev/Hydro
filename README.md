@@ -111,7 +111,7 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
-## Hydro 5.0.0-beta.12 / UI 4.58.0-beta.11
+## Hydro 5.0.0-beta.12 / UI 4.58.0-beta.12
 
 - framework: 修复 SSE 模式参数识别
 - ui: 记忆比赛计分板筛选状态
