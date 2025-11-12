@@ -25,12 +25,12 @@ const status = {
     [STATUS.STATUS_CANCELED]: 'CANCELED',
 };
 
-function submissionBase(tdoc: Tdoc, rdoc: RecordDoc) {
+function submissionBase(tdoc: Tdoc, rdoc: RecordDoc, uid?: number) {
     // NOTE: rdoc can be either record, or a tsdoc detail entry
     const submit = new ObjectId(rdoc._id || (rdoc as any).rid).getTimestamp().getTime();
     return {
         problem_id: tdoc.pids.indexOf(rdoc.pid),
-        team_id: `${rdoc.uid}`,
+        team_id: `${uid || rdoc.uid}`,
         timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
         language: rdoc.lang || '',
         submission_id: rdoc._id,
@@ -60,7 +60,7 @@ async function loadContestState(tdoc: Tdoc, realtime: boolean) {
             const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
             const curStatus = status[j.status] || 'SYSTEM_ERROR';
             return {
-                ...submissionBase(tdoc, j),
+                ...submissionBase(tdoc, j, i.uid),
                 status: (ContestModel.isLocked(tdoc) && submit > tdoc.lockAt.getTime() && !realtime)
                     ? 'PENDING'
                     : curStatus,
