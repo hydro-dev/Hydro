@@ -29,9 +29,10 @@ const federationPlugin: esbuild.Plugin = {
   name: 'federation',
   setup(b) {
     const packages = {
-      react: 'React',
       'react/jsx-runtime': 'jsxRuntime',
+      react: 'React',
       'react-dom/client': 'ReactDOM',
+      'react-dom': 'ReactDOM',
       jquery: '$',
     };
     b.onResolve({ filter: /^@hydrooj\/ui-default/ }, () => ({
