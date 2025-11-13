@@ -30,5 +30,3 @@ export default async function loadReactRedux<S, A extends Action = UnknownAction
     store,
   };
 }
-
-window.Hydro.utils.loadReactRedux = loadReactRedux;

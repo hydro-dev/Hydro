@@ -94,4 +94,3 @@ export async function load(features = ['markdown']) {
 }
 
 export default load;
-window.Hydro.components.loadMonaco = load;

@@ -132,5 +132,3 @@ export default class Notification {
     });
   }
 }
-
-window.Hydro.components.Notification = Notification;

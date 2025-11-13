@@ -1,7 +1,6 @@
 const lazyModules = {};
 const features: Record<string, string | (() => Promise<any>)> = {};
 export default async function load(name: string) {
-  if (window.node_modules[name]) return window.node_modules[name];
   if (name === 'echarts') return import('echarts');
   if (name === 'moment') return import('moment');
   if (!window.lazyloadMetadata?.[`${name}.lazy.js`]) throw new Error(`Module ${name} not found`);

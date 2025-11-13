@@ -5,8 +5,6 @@ import $ from 'jquery';
 window.Hydro = {
   extraPages: [],
   components: {},
-  utils: {},
-  node_modules: {},
   version: process.env.VERSION,
 };
 window.externalModules = {};

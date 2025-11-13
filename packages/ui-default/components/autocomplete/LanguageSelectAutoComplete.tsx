@@ -22,5 +22,3 @@ export default class LanguageSelectAutoComplete<Multi extends boolean> extends A
     });
   }
 }
-
-window.Hydro.components.LanguageSelectAutoComplete = LanguageSelectAutoComplete;

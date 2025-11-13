@@ -108,5 +108,3 @@ export default class AutoComplete<Options extends Record<string, any> = object, 
     this.ref.focus();
   }
 }
-
-window.Hydro.components.autocomplete = AutoComplete;

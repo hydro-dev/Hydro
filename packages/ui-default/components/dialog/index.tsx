@@ -262,11 +262,3 @@ export async function alert(text: string) {
     $body: tpl.typoMsg(text),
   }).open();
 }
-
-window.Hydro.components.Dialog = Dialog;
-window.Hydro.components.InfoDialog = InfoDialog;
-window.Hydro.components.ActionDialog = ActionDialog;
-window.Hydro.components.ConfirmDialog = ConfirmDialog;
-window.Hydro.components.prompt = prompt;
-window.Hydro.components.confirm = confirm;
-window.Hydro.components.alert = alert;

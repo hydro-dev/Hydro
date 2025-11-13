@@ -102,4 +102,3 @@ const Base64 = {
 };
 
 export default Base64;
-window.Hydro.utils.base64 = Base64;

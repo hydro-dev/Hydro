@@ -146,4 +146,3 @@ function handlePopState(ev) {
 $(window).on('popstate', handlePopState);
 
 export default pjax;
-window.Hydro.utils.pjax = pjax;

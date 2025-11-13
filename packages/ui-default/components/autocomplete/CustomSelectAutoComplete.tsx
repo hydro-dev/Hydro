@@ -21,5 +21,3 @@ export default class CustomSelectAutoComplete<Multi extends boolean> extends Aut
     });
   }
 }
-
-window.Hydro.components.CustomSelectAutoComplete = CustomSelectAutoComplete;

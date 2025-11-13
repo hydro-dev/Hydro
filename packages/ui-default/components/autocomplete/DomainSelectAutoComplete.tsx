@@ -16,5 +16,3 @@ export default class DomainSelectAutoComplete<Multi extends boolean> extends Aut
     });
   }
 }
-
-window.Hydro.components.DomainSelectAutoComplete = DomainSelectAutoComplete;

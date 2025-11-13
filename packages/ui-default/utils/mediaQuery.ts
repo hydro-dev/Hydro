@@ -11,5 +11,3 @@ export function isBelow(width) {
   }
   return window.innerWidth <= width;
 }
-
-Object.assign(window.Hydro.utils, { isAbove, isBelow });

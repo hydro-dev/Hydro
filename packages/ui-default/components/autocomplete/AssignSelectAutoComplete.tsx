@@ -20,5 +20,3 @@ export default class AssignSelectAutoComplete<Multi extends boolean> extends Aut
     return this.ref?.getSelectedItemKeys().join(',') ?? this.$dom.val();
   }
 }
-
-window.Hydro.components.AssignSelectAutoComplete = AssignSelectAutoComplete;

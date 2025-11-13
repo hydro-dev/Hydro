@@ -71,11 +71,3 @@ export { default as loadReactRedux } from './loadReactRedux';
 export * as mediaQuery from './mediaQuery';
 export { default as pjax } from './pjax';
 export * from './slide';
-
-const zip = { createZipStream, createZipBlob };
-Object.assign(window.Hydro.utils, {
-  zip,
-  pipeStream,
-  mongoId,
-  emulateAnchorClick,
-});
