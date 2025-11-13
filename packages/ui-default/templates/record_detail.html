@@ -88,7 +88,7 @@
           {% endif %}
           {% if rdoc.code %}
             <dt>{{ _('Code Length') }}</dt>
-            <dd>{{ size(rdoc.code|length) }}</dt>
+            <dd>{{ size(rdoc.code|length) }}</dd>
           {% endif %}
           <dt>{{ _('Submit At') }}</dt>
           <dd>{{ datetimeSpan(rdoc._id, false)|safe }}</dd>
