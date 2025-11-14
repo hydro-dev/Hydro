@@ -67,7 +67,7 @@ export const ProblemConfigError = Err('ProblemConfigError', BadRequestError, 'In
 export const ProblemIsReferencedError = Err('ProblemIsReferencedError', BadRequestError, 'Cannot {0} of a referenced problem.');
 export const AuthOperationError = Err('AuthOperationError', BadRequestError, '{0} is already {1}.');
 
-export const UserNotFoundError = Err('LoginError', NotFoundError, 'Invalid username or password.');
+export const UserNotFoundError = Err('LoginError', ForbiddenError, 'Invalid username or password.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
 export const RecordNotFoundError = Err('RecordNotFoundError', NotFoundError, 'Record {0} not found.');
 export const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFoundError, 'Data of problem {0} not found.');
