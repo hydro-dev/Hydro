@@ -805,7 +805,7 @@ export class ProblemFileDownloadHandler extends ProblemDetailHandler {
         if (this.pdoc.reference) {
             if (type === 'testdata') throw new ProblemIsReferencedError('download testdata');
             this.pdoc = await problem.get(this.pdoc.reference.domainId, this.pdoc.reference.pid);
-            if (!this.pdoc) throw new ProblemNotFoundError(this.pdoc.reference.domainId, this.pdoc.reference.pid);
+            if (!this.pdoc) throw new ProblemNotFoundError();
         }
         if (type === 'testdata' && !this.user.own(this.pdoc)) {
             if (!this.user.hasPriv(PRIV.PRIV_READ_PROBLEM_DATA)) this.checkPerm(PERM.PERM_READ_PROBLEM_DATA);
