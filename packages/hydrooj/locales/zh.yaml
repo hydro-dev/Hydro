@@ -425,6 +425,7 @@ Instead of copying the test data directly, the test data of the copied problems 
 Introduce must not exceed 500 characters and it will be shown in the list view.: 简介不能超过 500 个字符，将显示在列表页面中。
 Introduce: 简介
 Invalid password for user {0}.: 用户 {0} 的密码错误。
+Invalid username or password.: 用户名或密码错误。
 Invalid: 无效
 Invitation Code: 邀请码
 IO: 输入输出
