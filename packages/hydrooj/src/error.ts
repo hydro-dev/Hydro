@@ -12,7 +12,7 @@ export const SendMailError = Err('SendMailError', UserFacingError, 'Failed to se
 
 export const AlreadyVotedError = Err('AlreadyVotedError', ForbiddenError, "You've already voted.");
 export const BuiltinLoginError = Err('BuiltinLoginError', ForbiddenError, 'Builtin login is disabled.');
-export const LoginError = Err('LoginError', ForbiddenError, 'Invalid password for user {0}.');
+export const LoginError = Err('LoginError', ForbiddenError, 'Invalid username or password.');
 export const AccessDeniedError = Err('AccessDeniedError', ForbiddenError, 'Access denied.');
 export const UserAlreadyExistError = Err('UserAlreadyExistError', ForbiddenError, 'User {0} already exists.');
 export const InvalidTokenError = Err('InvalidTokenError', ForbiddenError, 'The {0} Token is invalid.');
@@ -67,7 +67,7 @@ export const ProblemConfigError = Err('ProblemConfigError', BadRequestError, 'In
 export const ProblemIsReferencedError = Err('ProblemIsReferencedError', BadRequestError, 'Cannot {0} of a referenced problem.');
 export const AuthOperationError = Err('AuthOperationError', BadRequestError, '{0} is already {1}.');
 
-export const UserNotFoundError = Err('UserNotFoundError', NotFoundError, 'User {0} not found.');
+export const UserNotFoundError = Err('LoginError', NotFoundError, 'Invalid username or password.');
 export const NoProblemError = Err('NoProblemError', NotFoundError, 'No problem.');
 export const RecordNotFoundError = Err('RecordNotFoundError', NotFoundError, 'Record {0} not found.');
 export const ProblemDataNotFoundError = Err('ProblemDataNotFoundError', NotFoundError, 'Data of problem {0} not found.');
