@@ -332,10 +332,10 @@ function handleDrop(e: JQuery.DropEvent<Document, undefined, HTMLElement, HTMLEl
 }
 
 const page = new NamedPage([
-  'problem_files', 'problem_edit', 'contest_edit', 'contest_manage',
+  'problem_config', 'problem_files', 'problem_edit', 'contest_edit', 'contest_manage',
   'home_files', 'training_files', 'homework_files',
 ], (pageName) => {
-  if (pageName === 'problem_edit') endpoint = './files';
+  if (pageName === 'problem_config' || pageName === 'problem_edit') endpoint = './files';
   $(document).on('click', '[name="file_rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="file_remove"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="upload_file"]', (ev) => handleClickUpload(ev));
