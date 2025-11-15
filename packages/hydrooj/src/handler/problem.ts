@@ -922,12 +922,14 @@ export class ProblemSolutionHandler extends ProblemDetailHandler {
 
     @param('psid', Types.ObjectId)
     async postUpvote(domainId: string, psid: ObjectId) {
+        this.checkPerm(PERM.PERM_VOTE_PROBLEM_SOLUTION);
         const psdoc = await solution.vote(domainId, psid, this.user._id, 1);
         this.back({ vote: psdoc.vote, user_vote: 1 });
     }
 
     @param('psid', Types.ObjectId)
     async postDownvote(domainId: string, psid: ObjectId) {
+        this.checkPerm(PERM.PERM_VOTE_PROBLEM_SOLUTION);
         const psdoc = await solution.vote(domainId, psid, this.user._id, -1);
         this.back({ vote: psdoc.vote, user_vote: -1 });
     }
