@@ -280,11 +280,44 @@ $hover-background-color = #424242
     color: #aaa!important
 
   .problem__tag-item
-    color: #d8dee3
+    color: #d8dee3!important
 
   .search-sort
     color: #eee!important
     background-color: #1f1f1f!important
+
+  .mantine-Button-label
+    color: #eee!important
+  
+  .mantine-Button-label::before
+    display: border: 0.7px solid #6e7276!important
+  
+  .mantine-Tabs-tab:hover
+    background-color: #000!important
+    border-color: #4e4e4e!important
+  
+  .mantine-Card-root
+    color: #fff!important
+    background-color: #000!important
+    border-color: #000!important
+  
+  .mantine-Switch-thumb
+    background-color: #000!important
+  
+  .mantine-SegmentedControl-root
+    background-color: #222!important
+  
+  .mantine-SegmentedControl-indicator
+    background-color: #000!important
+  
+  .mantine-Switch-input:not(:checked)+.mantine-Switch-track
+    background-color: #565e66!important
+  
+  .mantine-Switch-input:not(:checked)+.mantine-Switch-track .mantine-Switch-thumb:where([data-with-thumb-indicator]):before
+    background-color: #565e66!important
+  
+  .mantine-SegmentedControl-root[data-with-items-borders] :not(:first-of-type):where(.mantine-SegmentedControl-control):before
+    background-color: #777!important
 
   label.textbox.material input
     border-color: #333
