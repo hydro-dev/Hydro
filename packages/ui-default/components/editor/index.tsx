@@ -51,7 +51,7 @@ export default class Editor extends DOMAttachedObject {
     const hasFocus = $dom.is(':focus') || $dom.hasClass('autofocus');
     const origin = $dom.get(0);
     const ele = document.createElement('div');
-    $(ele).width('100%').addClass('textbox');
+    $(ele).width('100%').height('100%').addClass('textbox');
     if (!autoResize && $dom.height()) $(ele).height($dom.height());
     $dom.hide();
     origin.parentElement.appendChild(ele);
