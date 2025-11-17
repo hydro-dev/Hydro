@@ -50,7 +50,7 @@ export default function ProblemConfig(props: Props) {
     <div ref={setContainer}>
       <Allotment defaultSizes={[2, 3]}>
         <Allotment.Pane>
-          <div style={{ height: '100%', overflow: 'auto' }}>
+          <div style={{ height: '100%', overflow: 'hidden' }}>
             <ProblemConfigEditor ref={setEditor} />
           </div>
         </Allotment.Pane>
