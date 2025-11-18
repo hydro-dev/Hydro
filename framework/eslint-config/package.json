@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/eslint-config",
-    "version": "3.0.4",
+    "version": "3.0.5",
     "license": "MIT",
     "main": "base.mjs",
     "repository": "https://github.com/hydro-dev/Hydro",

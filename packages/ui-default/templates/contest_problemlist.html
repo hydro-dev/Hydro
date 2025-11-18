@@ -79,7 +79,7 @@
                   <span class="problem__tag-item icon icon-comparison" style="font-size: .75rem;margin: 0;padding: 0 5px!important;">{{ pdict[pid].config.memoryMax if pdict[pid].config.memoryMax == pdict[pid].config.memoryMin else pdict[pid].config.memoryMin+'~'+pdict[pid].config.memoryMax }}MiB</span>
                 {% endif %}
                 {% if pdict[pid].config.type != 'objective' %}
-                  <a href="{{ url('problem_submit', pid=pdict[pid].pid, query={tid:tdoc.docId}) }}" target="_blank" class="typo-a" style="float: right;"><span class="icon icon-send">提交</span></a>
+                  <a href="{{ url('problem_submit', pid=pdict[pid].pid, query={tid:tdoc.docId}) }}" target="_blank" class="typo-a" style="float: right;"><span class="icon icon-send">{{ _('Submit') }}</span></a>
                 {% endif %}
               </td>
             </tr>
