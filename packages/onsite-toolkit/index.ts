@@ -1,9 +1,11 @@
 /* eslint-disable max-len */
+import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
-    avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
-    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
-    STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS, Time, UserModel, Zip,
+    _, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, PRIV, ProblemConfig, ProblemModel,
+    randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
+    Time, Types, UserModel, Zip,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
 
@@ -18,31 +20,79 @@ declare module 'hydrooj' {
     }
 }
 const coll = db.collection('iplogin');
+const ipLoginCache = new LRUCache<string, IpLoginInfo>({ max: 1000, ttl: 60 * 1000 });
 
 function normalizeIp(ip: string) {
     if (ip.startsWith('::ffff:')) return ip.slice(7);
     return ip;
 }
 
-export function apply(ctx: Context) {
-    ctx.on('handler/init', async (that) => {
-        const iplogin = await coll.findOne({ _id: normalizeIp(that.request.ip) });
-        if (iplogin) {
+const QuickImportSchema = Schema.array(Schema.object({
+    id: Schema.union([Schema.string().required(), Schema.number().required()]),
+    name: Schema.string().required(),
+    password: Schema.string(),
+    school: Schema.string(),
+    members: Schema.array(Schema.string()).default([]),
+    member1: Schema.string(),
+    member2: Schema.string(),
+    member3: Schema.string(),
+    member4: Schema.string(),
+    coach: Schema.string(),
+    seat: Schema.string(),
+    rank: Schema.boolean(),
+    ip: Schema.string(),
+}));
+
+export const Config = Schema.object({
+    ipLogin: Schema.boolean().default(false),
+    extraFields: Schema.boolean().default(false),
+    submit: Schema.boolean().default(false).description('Enable submit script'),
+});
+
+export function apply(ctx: Context, config: ReturnType<typeof Config>) {
+    if (config.ipLogin) {
+        ctx.on('handler/init', async (that) => {
+            const iplogin = ipLoginCache.get(normalizeIp(that.request.ip)) || await coll.findOne({ _id: normalizeIp(that.request.ip) });
+            if (!iplogin) {
+                if (that.session.ipLoggedIn && that.session.ipLoggedIn !== normalizeIp(that.request.ip)) {
+                    that.session.uid = 0;
+                    that.session.user = await UserModel.getById(that.domain._id, 0);
+                }
+                return;
+            }
+            ipLoginCache.set(normalizeIp(that.request.ip), iplogin);
             that.user = await UserModel.getById(that.domain._id, iplogin.uid);
             if (!that.user) {
                 that.user = await UserModel.getById(that.domain._id, 0);
-                throw new ForbiddenError(`User ${iplogin.uid}not found`);
+                throw new ForbiddenError(`User ${iplogin.uid} not found`);
             }
-            that.session.ipLoggedIn = true;
+            that.session.ipLoggedIn = that.request.ip;
             that.session.uid = iplogin.uid;
             that.session.user = that.user;
-        }
-    });
+        });
+
+        const disable = (that) => {
+            if (!that.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) throw new ForbiddenError('Not available');
+        };
+        ctx.on('handler/before/HomeDomain', disable);
+        ctx.on('handler/before/DomainUser', disable);
+        ctx.on('handler/before/HomeMessages#post', disable);
+        ctx.on('handler/before/Files', disable);
+        ctx.on('handler/before/HomeAvatar', disable);
+        ctx.on('handler/before/HomeSecurity', disable);
+        ctx.on('handler/before/UserDetail', disable);
+        ctx.on('handler/before/UserLostPass', disable);
+
+        ctx.on('handler/before/HomeSettings', (that) => {
+            if (that.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) return;
+            if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
+        });
+    }
 
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('resolver-tiny', 'Resolver(Tiny)', { tdoc: 'tdoc' }, {
             async display({ tdoc }) {
-                if (!this.user.own(tdoc) && ContestModel.isLocked(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
+                if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 const teams = await ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc.docId }).toArray();
                 const udict = await UserModel.getList(tdoc.domainId, teams.map((i) => i.uid));
                 const teamIds: Record<number, number> = {};
@@ -82,9 +132,7 @@ export function apply(ctx: Context) {
 
         scoreboard.addView('cdp', 'CDP', { tdoc: 'tdoc' }, {
             async display({ tdoc }) {
-                if (ContestModel.isLocked(tdoc) && !this.user.own(tdoc)) {
-                    this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
-                }
+                if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
                 let token = 0;
                 const getFeed = (type: string, data: any) => ({
@@ -100,7 +148,7 @@ export function apply(ctx: Context) {
                     return {
                         team_id: `team-${udoc._id}`,
                         name: udoc.uname,
-                        displayName: (i.unrank ? '⭐' : '') + udoc.displayName,
+                        displayName: (i.unrank ? '⭐' : '') + (udoc.displayName || udoc.uname),
                         organization: udoc.school || udoc.uname,
                         avatar: avatar(udoc.avatar),
                         group: [
@@ -269,5 +317,72 @@ export function apply(ctx: Context) {
             },
             supportedRules: ['acm'],
         });
+    });
+
+    /* eslint-disable no-await-in-loop */
+    // @ts-ignore
+    Hydro.model.system.onsiteImport = async function (filepath: string, tidsInput: string, format = 'webp') {
+        const data = QuickImportSchema(JSON.parse(fs.readFileSync(filepath, 'utf-8')));
+        const tids = tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
+        const tdocs = await Promise.all(tids.map((i) => ContestModel.get('system', i)));
+        const convertUname = Types.Username[0];
+        for (const line of data) {
+            const uname = convertUname(line.name);
+            const email = `${line.id}@onsite.local`;
+            let team = await UserModel.getByEmail('system', email);
+            if (!team) {
+                const uid = await UserModel.create(email, uname, line.password || randomstring());
+                team = await UserModel.getById('system', uid);
+            } else {
+                await UserModel.setById(team._id, { uname });
+                if (line.password) await UserModel.setPassword(team._id, line.password);
+            }
+            if (line.member1) line.members.push(line.member1);
+            if (line.member2) line.members.push(line.member2);
+            if (line.member3) line.members.push(line.member3);
+            if (line.member4) line.members.push(line.member4);
+            const set: any = _.pick(line, 'school', 'members', 'coach', 'seat');
+            if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
+            if (Object.keys(set).length) await UserModel.setById(team._id, set);
+            for (const tdoc of tdocs) {
+                const tsdoc = await ContestModel.getStatus('system', tdoc.docId, team._id);
+                if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank } : {});
+                else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus('system', tdoc.docId, team._id, { unrank: !line.rank });
+            }
+            if (line.ip) await coll.updateOne({ _id: normalizeIp(line.ip) }, { $set: { uid: team._id } }, { upsert: true });
+        }
+    };
+
+    // @ts-ignore
+    Hydro.model.system.setIpLogin = async function (filepath: string) {
+        const data = fs.readFileSync(filepath, 'utf-8').split('\n').filter((i) => i);
+        for (const line of data) {
+            const [seat, ip] = line.split(',').map((i) => i.trim());
+            const user = await UserModel.coll.findOne({ seat });
+            if (!user) {
+                console.warn(`User ${seat} not found`);
+                continue;
+            }
+            await coll.updateOne({ _id: normalizeIp(ip) }, { $set: { uid: user._id } }, { upsert: true });
+        }
+    };
+
+    if (config.submit) ctx.plugin(require('./submit'));
+
+    if (config.extraFields) {
+        ctx.inject(['setting'], (c) => {
+            c.setting.AccountSetting(
+                SettingModel.Setting('setting_info', 'coach', null, 'text', 'coach', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+                SettingModel.Setting('setting_info', 'members', null, 'text', 'members', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+                SettingModel.Setting('setting_info', 'seat', null, 'text', 'seat', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+            );
+        });
+    }
+
+    ctx.on('handler/before/ContestScoreboard#get', (that) => {
+        if (that.request.path.endsWith('/scoreboard')) {
+            that.response.redirect = `${that.request.path}/xcpcio`;
+            return 'cleanup';
+        }
     });
 }

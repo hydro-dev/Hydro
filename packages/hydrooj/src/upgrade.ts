@@ -627,7 +627,12 @@ export const coreScripts: MigrationScript[] = [
         };
         for (const file of files) {
             const [, domainId, tid, type, name] = file.path.split('/');
-            const tdoc = await contest.get(domainId, new ObjectId(tid));
+            let tdoc;
+            try {
+                tdoc = await contest.get(domainId, new ObjectId(tid));
+            } catch (e) {
+                continue;
+            }
             if (!tdoc) console.error('Contest not found', file.path);
             if (tdoc.rule === 'homework' || !name) {
                 await rename(file.path, `contest/${domainId}/${tid}/public/${name || type}`);

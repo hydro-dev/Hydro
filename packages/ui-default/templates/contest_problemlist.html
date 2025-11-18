@@ -74,6 +74,13 @@
             {% endif %}
               <td class="col--problem col--problem-name">
                 {{ problem.render_problem_title(pdict[pid], tdoc, alphabetic=true) }}
+                {% if pdict[pid].config.type != 'objective' and pdict[pid].config.type != 'submit_answer' %}
+                  <span class="problem__tag-item icon icon-stopwatch" style="font-size: .75rem;margin: 0;padding: 0 5px!important;">{{ pdict[pid].config.timeMax if pdict[pid].config.timeMax == pdict[pid].config.timeMin else pdict[pid].config.timeMin+'~'+pdict[pid].config.timeMax }}ms</span>
+                  <span class="problem__tag-item icon icon-comparison" style="font-size: .75rem;margin: 0;padding: 0 5px!important;">{{ pdict[pid].config.memoryMax if pdict[pid].config.memoryMax == pdict[pid].config.memoryMin else pdict[pid].config.memoryMin+'~'+pdict[pid].config.memoryMax }}MiB</span>
+                {% endif %}
+                {% if pdict[pid].config.type != 'objective' %}
+                  <a href="{{ url('problem_submit', pid=pdict[pid].pid, query={tid:tdoc.docId}) }}" target="_blank" class="typo-a" style="float: right;"><span class="icon icon-send">提交</span></a>
+                {% endif %}
               </td>
             </tr>
           {%- endfor -%}

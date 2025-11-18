@@ -4,6 +4,7 @@
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
         "@react-spring/web": "^10.0.3",
+        "lru-cache": "^11.2.2",
         "react-use": "^17.6.0"
     }
 }

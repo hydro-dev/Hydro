@@ -30,6 +30,22 @@
 </style>
 <script type="module" crossorigin src="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ js }}.js"></script>
 <link rel="stylesheet" crossorigin href="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ css }}.css">
+{% if realtime and model.contest.isLocked(tdoc) and model.contest.isDone(tdoc) and handler.user.own(tdoc) %}
+<div class="main">
+  <div class="row typo">
+    <blockquote class="note">
+      {{ _('You are viewing the realtime scoreboard while the scoreboard is currently frozen.') }} <br>
+      {{ _('To allow contestants to view the scoreboard, you can unfreeze the scoreboard.') }} <br>
+      <form method="POST">
+        <input type="hidden" name="operation" value="unlock">
+        <button type="submit" class="button">
+          <span class="icon icon-feeling-lucky"></span> {{ _('Unlock scoreboard') }}
+        </button>
+      </form>
+    </blockquote>
+  </div>
+</div>
+{% endif %}
 <div id="app"></div>
 <noscript>This website requires JavaScript to function properly. Please enable JavaScript tocontinue.</noscript>
 {% endblock %}

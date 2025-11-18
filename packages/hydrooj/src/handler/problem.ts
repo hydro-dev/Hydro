@@ -519,7 +519,10 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 await storage.put(`submission/${this.user._id}/${id}`, file.filepath, this.user._id);
                 files.code = `${this.user._id}/${id}#${file.originalFilename}`;
             }
-        } else if (code.length > lengthLimit) throw new ValidationError('code');
+        } else {
+            code = code.replace(/\r\n/g, '\n');
+            if (code.length > lengthLimit) throw new ValidationError('code');
+        }
         const rid = await record.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
             pretest ? { input, type: 'pretest' } : { contest: tid, files, type: 'judge' },

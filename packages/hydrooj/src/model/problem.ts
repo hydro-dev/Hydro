@@ -75,21 +75,25 @@ interface ProblemCreateOptions {
     reference?: { domainId: string, pid: number };
 }
 
+const PROJECTION_BASE: Field[] = [
+    '_id', 'domainId', 'docType', 'docId', 'pid',
+    'owner', 'title',
+];
+
 export class ProblemModel {
     static PROJECTION_CONTEST_LIST: Field[] = [
-        '_id', 'domainId', 'docType', 'docId', 'pid',
-        'owner', 'title',
+        ...PROJECTION_BASE, 'config',
     ];
 
     static PROJECTION_LIST: Field[] = [
-        ...ProblemModel.PROJECTION_CONTEST_LIST,
+        ...PROJECTION_BASE,
         'nSubmit', 'nAccept', 'difficulty', 'tag', 'hidden',
         'stats',
     ];
 
     static PROJECTION_CONTEST_DETAIL: Field[] = [
         ...ProblemModel.PROJECTION_CONTEST_LIST,
-        'content', 'html', 'data', 'config', 'additional_file',
+        'content', 'html', 'data', 'additional_file',
         'reference', 'maintainer',
     ];
 
@@ -198,7 +202,7 @@ export class ProblemModel {
                 .project(buildProjection(projection)).limit(1).toArray())[0];
         if (!res) return null;
         try {
-            if (!rawConfig) res.config = await parseConfig(res.config);
+            if (!rawConfig) res.config = await parseConfig(res.config, res.data?.map((i) => i.name) || []);
         } catch (e) {
             res.config = `Cannot parse: ${e.message}`;
         }
@@ -390,7 +394,7 @@ export class ProblemModel {
         }
         for (const pdoc of pdocs) {
             try {
-                pdoc.config = await parseConfig(pdoc.config as string);
+                pdoc.config = await parseConfig(pdoc.config as string, pdoc.data?.map((i) => i.name) || []);
             } catch (e) {
                 pdoc.config = `Cannot parse: ${e.message}`;
             }
@@ -552,16 +556,29 @@ export class ProblemModel {
                 const tag = (pdoc.tag || []).map((t) => t.toString());
                 let configChanged = false;
                 let config: ProblemConfigFile = {};
-                if (await fs.exists('testdata/config.yaml')) {
+                if (await fs.exists(path.join(tmpdir, i, 'testdata/config.yaml'))) {
                     try {
-                        config = yaml.load(await fs.readFile('testdata/config.yaml', 'utf-8'));
+                        config = yaml.load(await fs.readFile(path.join(tmpdir, i, 'testdata/config.yaml'), 'utf-8'));
                     } catch (e) {
                         // TODO: report this as a warning
                     }
                 }
+                if (await fs.exists(path.join(tmpdir, i, 'domjudge-problem.ini'))) {
+                    const djConfig = (await fs.readFile(path.join(tmpdir, i, 'domjudge-problem.ini'), 'utf-8') as string)
+                        .split('\n').map((line: string) => line.split('=').map((lines: string) => lines.trim()));
+                    const djConfigJson: any = {};
+                    for (const [key, value] of djConfig) {
+                        djConfigJson[key] = value;
+                    }
+                    if (djConfigJson.timelimit) {
+                        config.time = `${djConfigJson.timelimit * 1000}ms`;
+                        configChanged = true;
+                    }
+                    if (djConfigJson.externalid) pid = djConfigJson.externalid;
+                }
                 if ((pdoc as any).limits) {
-                    config.time = (pdoc as any).limits.time_limit;
-                    config.memory = (pdoc as any).limits.memory;
+                    config.time = (pdoc as any).limits.time_limit ? `${(pdoc as any).limits.time_limit * 1000}ms` : config.time || undefined;
+                    config.memory = (pdoc as any).limits.memory ? `${(pdoc as any).limits.memory}m` : config.memory || undefined;
                     configChanged = true;
                 }
                 const docId = overridePid
@@ -587,9 +604,8 @@ export class ProblemModel {
                     if (!f.isDirectory()) continue;
                     const sub = await fs.readdir(loc);
                     for (const file of sub) {
-                        await (f.name === 'sample' ? ProblemModel.addAdditionalFile
-                            : f.name === 'secret' ? ProblemModel.addTestdata
-                                : null)?.(domainId, docId, file, path.join(loc, file));
+                        if (f.name === 'sample') await ProblemModel.addAdditionalFile(domainId, docId, file, path.join(loc, file));
+                        await ProblemModel.addTestdata(domainId, docId, file, path.join(loc, file));
                     }
                 }
                 for (const [f, loc] of await getFiles('output_validators')) {
@@ -598,10 +614,10 @@ export class ProblemModel {
                     for (const file of sub) {
                         if (file === 'testlib.h') continue;
                         await ProblemModel.addTestdata(domainId, docId, file, path.join(loc, file));
-                        if (file === 'checker') {
+                        if (f.name === 'checker') {
                             config.checker_type = 'testlib';
                             config.checker = file;
-                        } else if (file === 'interactor') {
+                        } else if (f.name === 'interactor') {
                             config.type = ProblemType.Interactive;
                             config.interactor = file;
                         }
@@ -624,6 +640,7 @@ export class ProblemModel {
                     config.judge_extra_files = Array.from(new Set(config.judge_extra_files.concat(f.name)));
                     configChanged = true;
                 }
+                if (configChanged) await ProblemModel.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
                 let count = 0;
                 for (const [f, loc] of await getFiles('std')) {
                     if (!f.isFile()) continue;
@@ -631,7 +648,16 @@ export class ProblemModel {
                     if (count > 5) continue;
                     await RecordModel.add(domainId, docId, operator, f.name.split('.')[1], await fs.readFile(loc, 'utf-8'), true);
                 }
-                if (configChanged) await ProblemModel.addTestdata(domainId, docId, 'config.yaml', yaml.dump(config));
+                for (const [f, loc] of await getFiles('submissions')) {
+                    if (f.isFile()) continue;
+                    const sub = await fs.readdir(loc);
+                    for (const file of sub) {
+                        if (file.endsWith('.zip')) continue;
+                        const code = await fs.readFile(path.join(loc, file), 'utf-8');
+                        await RecordModel.add(domainId, docId, operator, file.split('.')[1], `// ${file}: ${loc}\n${code}`, true);
+                    }
+                }
+                if (configChanged) await ProblemModel.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
                 const message = `${overridePid ? 'Updated' : 'Imported'} problem ${pdoc.pid || docId} (${title})`;
                 (process.env.HYDRO_CLI ? logger.info : progress)?.(message);
             } catch (e) {

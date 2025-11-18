@@ -98,7 +98,7 @@ export function buildContestRule<T>(def: Partial<ContestRule<T>>, baseRule: Cont
 }
 
 const acm = buildContestRule({
-    TEXT: 'ACM/ICPC',
+    TEXT: 'XCPC',
     check: () => { },
     statusSort: { accept: -1, time: 1 },
     submitAfterAccept: false,
@@ -276,6 +276,7 @@ const acm = buildContestRule({
         delete rdoc.memory;
         rdoc.testCases = [];
         rdoc.judgeTexts = [];
+        delete rdoc.progress;
         delete rdoc.subtasks;
         delete rdoc.score;
         return rdoc;
@@ -908,7 +909,7 @@ export async function updateStatus(
     }: { status?: STATUS, score?: number, subtasks?: Record<number, SubtaskResult>, lang?: string } = {},
 ) {
     const tdoc = await get(domainId, tid);
-    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED) await addBalloon(domainId, tid, uid, rid, pid);
+    if (tdoc.balloon && status === STATUS.STATUS_ACCEPTED && !isLocked(tdoc)) await addBalloon(domainId, tid, uid, rid, pid);
     const tsdoc = await document.revPushStatus(tdoc.domainId, document.TYPE_CONTEST, tdoc.docId, uid, 'journal', {
         rid, pid, status, score, subtasks, lang,
     }, 'rid');
