@@ -91,6 +91,7 @@ export const name = 'scoreboard-xcpcio';
 export const Config = Schema.object({
     cacheTTL: Schema.number().default(0).description('Cache TTL in milliseconds'),
     cacheSize: Schema.number().default(100).description('Cache size'),
+    asDefault: Schema.boolean().default(false).description('As default scoreboard'),
 });
 
 export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
@@ -122,6 +123,16 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 const found = pub.submissions.find((i) => i.submission_id === rdoc._id.toHexString());
                 if (found && !isLocked) found.status = statusStr;
                 else pub.submissions.push({ ...submissionBase(tdoc, rdoc), status: isLocked ? 'FROZEN' : statusStr });
+            }
+        });
+    }
+
+    if (config.asDefault) {
+        // eslint-disable-next-line consistent-return
+        ctx.on('handler/before/ContestScoreboard#get', (that) => {
+            if (that.request.path.endsWith('/scoreboard') && that.tdoc?.rule === 'acm') {
+                that.response.redirect = `${that.request.path}/xcpcio`;
+                return 'cleanup';
             }
         });
     }

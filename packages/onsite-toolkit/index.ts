@@ -378,11 +378,4 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             );
         });
     }
-
-    ctx.on('handler/before/ContestScoreboard#get', (that) => {
-        if (that.request.path.endsWith('/scoreboard')) {
-            that.response.redirect = `${that.request.path}/xcpcio`;
-            return 'cleanup';
-        }
-    });
 }
