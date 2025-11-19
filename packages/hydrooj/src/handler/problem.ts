@@ -180,7 +180,7 @@ export class ProblemMainHandler extends Handler {
                         page, ppcount, pcount, pdocs, psdict, qs, q, sort: sortStrategy,
                     }),
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation: this.queryContext.pcountRelation }),
-                    this.renderHTML('partials/problem_lucky.html', { qs, q }),
+                    this.renderHTML('partials/problem_lucky.html', { q }),
                 ])).map((i) => ({ html: i })),
             };
         } else {
