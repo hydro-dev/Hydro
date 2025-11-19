@@ -1,38 +1,9 @@
-import { createTheme, MantineProvider, Notification as MantineNotification } from '@mantine/core';
+import { MantineProvider } from '@mantine/core';
 import { Notifications, notifications } from '@mantine/notifications';
 import $ from 'jquery';
 import React from 'react';
+import { theme } from 'vj/components/mantine.page';
 import { tpl, zIndexManager } from 'vj/utils/base';
-
-const colorWhite = {
-  color: 'var(--mantine-color-white)',
-} as const;
-
-const theme = createTheme({
-  components: {
-    Notification: MantineNotification.extend({
-      classNames: {
-        closeButton: 'mantine-notifications-close-button',
-      },
-      styles: {
-        root: {
-          backgroundColor: 'var(--notification-color, var(--mantine-primary-color-filled))',
-          paddingInlineStart: 'var(--mantine-spacing-xs)',
-        },
-        title: {
-          ...colorWhite,
-          fontSize: 'var(--mantine-font-size-md)',
-        },
-        icon: {
-          fontSize: '24px',
-          marginInlineEnd: 'var(--mantine-spacing-xs)',
-        },
-        description: colorWhite,
-        closeButton: colorWhite,
-      },
-    }),
-  },
-});
 
 document.body.append(tpl(
   React.createElement(MantineProvider, { theme },
