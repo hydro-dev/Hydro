@@ -101,7 +101,7 @@ export function Media(md: MarkdownIt) {
       if (result) return result;
     }
     if (service === 'pdf') {
-      if (src.startsWith('file://') || src.startsWith('./')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
+      if (src.startsWith('file://') || src.startsWith('./') || (src[1] === '/' && src[2] !== '/')) src += src.includes('?') ? '&noDisposition=1' : '?noDisposition=1';
       // A response with has content-disposition header causes the browser to download the file automatically.
       // As we cannot control response header from external sites, we block embedding external PDFs.
       else return '<p>Embedding an external PDF is no longer supported.</p>';
