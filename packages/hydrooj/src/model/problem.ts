@@ -202,7 +202,7 @@ export class ProblemModel {
                 .project(buildProjection(projection)).limit(1).toArray())[0];
         if (!res) return null;
         try {
-            if (!rawConfig) res.config = await parseConfig(res.config, res.data?.map((i) => i.name) || []);
+            if (!rawConfig && projection.includes('config')) res.config = await parseConfig(res.config, res.data?.map((i) => i.name) || []);
         } catch (e) {
             res.config = `Cannot parse: ${e.message}`;
         }
@@ -387,20 +387,30 @@ export class ProblemModel {
         const r: Record<number, ProblemDoc> = {};
         const l: Record<string, ProblemDoc> = {};
         const q: any = { docId: { $in: pids } };
+        const projectionExpr = buildProjection(projection.includes('config') ? [...projection, 'data', 'reference'] : projection);
         let pdocs = await document.getMulti(domainId, document.TYPE_PROBLEM, q)
-            .project<ProblemDoc>(buildProjection(projection)).toArray();
+            .project<ProblemDoc>(projectionExpr).toArray();
         if (canViewHidden !== true) {
             pdocs = pdocs.filter((i) => i.owner === canViewHidden || i.maintainer?.includes(canViewHidden as any) || !i.hidden);
         }
-        for (const pdoc of pdocs) {
-            try {
-                pdoc.config = await parseConfig(pdoc.config as string, pdoc.data?.map((i) => i.name) || []);
-            } catch (e) {
-                pdoc.config = `Cannot parse: ${e.message}`;
+        await Promise.all(pdocs.map(async (pdoc) => {
+            if (projection.includes('config')) {
+                if (pdoc.reference) {
+                    const src = await ProblemModel.get(pdoc.reference.domainId, pdoc.reference.pid);
+                    pdoc.config = src ? src.config : 'Cannot find source problem';
+                } else {
+                    try {
+                        pdoc.config = await parseConfig(pdoc.config as string, pdoc.data?.map((i) => i.name) || []);
+                    } catch (e) {
+                        pdoc.config = `Cannot parse: ${e.message}`;
+                    }
+                }
             }
+            if (!projection.includes('data')) delete pdoc.data;
+            if (!projection.includes('reference')) delete pdoc.reference;
             r[pdoc.docId] = pdoc;
             if (pdoc.pid) l[pdoc.pid] = pdoc;
-        }
+        }));
         // TODO enhance
         if (pdocs.length !== pids.length) {
             for (const pid of pids) {
