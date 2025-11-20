@@ -314,6 +314,7 @@ SystemSetting(Schema.object({
         verify: Schema.boolean().default(true).description('Verify register email'),
     }).extra('family', 'setting_smtp'),
     server: Schema.object({
+        allowInvite: Schema.boolean().default(true).description('Allow invite users'),
         center: Schema.string().default('https://hydro.ac/center').description('Server Center').role('url').hidden(),
         name: Schema.string().default('Hydro').description('Server Name'),
         url: Schema.string().default('/').description('Server BaseURL'),
