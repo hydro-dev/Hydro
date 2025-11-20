@@ -6,7 +6,7 @@
 {% if not pdocs.length %}
   {{ nothing.render('Sorry, there are no problems in the problem set.') }}
 {% else %}
-  {{ paginator.render(page, ppcount, position='top', add_qs=('q=' + qs if qs else '')) }}
+  {{ paginator.render(page, ppcount, position='top', add_qs=qs) }}
   <table class="data-table hide-problem-tag">
     <colgroup>
       <col class="col--checkbox display-mode-hide">
@@ -63,6 +63,6 @@
     {%- endfor -%}
     </tbody>
   </table>
-  {{ paginator.render(page, ppcount, add_qs=('q=' + qs if qs else '')) }}
+  {{ paginator.render(page, ppcount, add_qs=qs) }}
 {% endif %}
 </div>

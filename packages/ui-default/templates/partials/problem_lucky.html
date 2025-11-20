@@ -1,6 +1,6 @@
 <div data-fragment-id="problem_lucky">
   <p>
-    <a href="{{ url('problem_random', query={q:qs}) if qs else url('problem_random') }}" class="expanded button" target="_blank">
+    <a href="{{ url('problem_random', query={q:q}) if q else url('problem_random') }}" class="expanded button" target="_blank">
       <span class="icon icon-feeling-lucky"></span> {{ _('Lucky') }}
     </a>
   </p>
