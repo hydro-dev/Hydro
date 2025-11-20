@@ -76,13 +76,13 @@ export function register(cli: CAC) {
                     exec('zip', ['-r', target, item], { cwd, stdio: 'inherit' });
                     if (!keepSource) fs.removeSync(path.join(cwd, item));
                 };
-            addFile(dir, 'dump', false);
-            if (!argv.options.dbOnly) addFile('/data', 'file');
             if (argv.options.withAddons) {
                 if (fs.existsSync(path.join(hydroPath, 'addons'))) addFile(hydroPath, 'addons');
                 if (fs.existsSync(path.join(hydroPath, 'addon.json'))) addFile(hydroPath, 'addon.json');
             }
             if (argv.options.withLogs && fs.existsSync('/data/access.log')) addFile('/data', 'access.log');
+            addFile(dir, 'dump', false);
+            if (!argv.options.dbOnly) addFile('/data', 'file');
             if (argv.options.r) {
                 await withPasswordFile(argv.options.p, async (file) => {
                     exec('restic', ['backup', '-r', argv.options.r.toString(), '-p', file, ...filesToAdd], { stdio: 'inherit', cwd: '/data' });
