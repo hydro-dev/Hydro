@@ -73,7 +73,7 @@ export function register(cli: CAC) {
                     filesToRemove.push(path.join(cwd, item));
                 }
                 : (cwd: string, item: string, keepSource = true) => {
-                    exec('zip', ['-r', target, item], { cwd, stdio: 'inherit' });
+                    exec('zip', ['-gr', target, item], { cwd, stdio: 'inherit' });
                     if (!keepSource) fs.removeSync(path.join(cwd, item));
                 };
             addFile(dir, 'dump', false);
