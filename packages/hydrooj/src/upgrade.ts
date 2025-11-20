@@ -638,5 +638,6 @@ export const coreScripts: MigrationScript[] = [
                 await rename(file.path, `contest/${domainId}/${tid}/public/${name || type}`);
             }
         }
+        return true;
     },
 ];

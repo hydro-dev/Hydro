@@ -129,6 +129,9 @@ export function bufferToStream(buffer: Buffer): NodeJS.ReadableStream {
     return stream;
 }
 
+let ObjectId: typeof import('bson').ObjectId; // eslint-disable-line
+let isMoment: (x: any) => x is Moment;
+
 export namespace Time {
     export const second = 1000;
     export const minute = second * 60;
@@ -145,15 +148,13 @@ export namespace Time {
     }
 
     export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
-        let isMoment: (x: any) => x is Moment;
-        let ObjectId: typeof import('bson').ObjectId; // eslint-disable-line
         try {
-            ({ ObjectId } = require('bson'));
+            ObjectId ||= require('bson').ObjectId;
         } catch (e) {
             throw new Error('No bson module found');
         }
         try {
-            ({ isMoment } = require('moment'));
+            isMoment ||= require('moment');
         } catch (e) {
             throw new Error('No moment module found');
         }
