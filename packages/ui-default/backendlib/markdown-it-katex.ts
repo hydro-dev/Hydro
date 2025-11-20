@@ -122,12 +122,12 @@ export default function plugin(md) {
     }
   };
   const inlineRenderer = function (tokens, idx) {
-    if (tokens[idx].content.length > limit) return `$${tokens[idx].content.trim()}$`;
+    if (tokens[idx].content.length > limit) return `$${escapeHtml(tokens[idx].content.trim())}$`;
     return render(tokens[idx].content);
   };
 
   const blockRenderer = function (tokens, idx) {
-    if (tokens[idx].content.length > limit) return `$$${tokens[idx].content.trim()}$$`;
+    if (tokens[idx].content.length > limit) return `$$${escapeHtml(tokens[idx].content.trim())}$$`;
     return `${render(tokens[idx].content, true)}\n`;
   };
   md.inline.ruler.after('escape', 'math_inline', inline);
