@@ -92,7 +92,7 @@ declare module 'hydrooj' {
   }
 }
 
-export function Media(md: MarkdownIt) {
+export function Media(md: MarkdownIt, { pdfToolbar = false }: { pdfToolbar?: boolean } = {}) {
   const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku', 'msoffice'];
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
@@ -109,7 +109,7 @@ export function Media(md: MarkdownIt) {
       return `\
         <object classid="clsid:${uuid().toUpperCase()}">
           <param name="SRC" value="${src}">
-          <embed type="application/pdf" width="100%" style="min-height:100vh;border:none;" fullscreen="yes" src="${src}#toolbar=0&navpanes=0">
+          <embed type="application/pdf" width="100%" style="min-height:100vh;border:none;" fullscreen="yes" src="${src}#toolbar=${pdfToolbar ? '0' : '1'}&navpanes=0&view=FitH">
             <noembed></noembed>
           </embed>
         </object>`;

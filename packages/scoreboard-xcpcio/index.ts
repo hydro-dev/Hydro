@@ -92,6 +92,7 @@ export const Config = Schema.object({
     cacheTTL: Schema.number().default(0).description('Cache TTL in milliseconds'),
     cacheSize: Schema.number().default(100).description('Cache size'),
     asDefault: Schema.boolean().default(false).description('As default scoreboard'),
+    override: Schema.any().default({}).description('Scoreboard contest override'),
 });
 
 export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
@@ -200,6 +201,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                             options: {
                                 submission_timestamp_unit: 'millisecond',
                             },
+                            ...(typeof config.override === 'object' ? config.override || {} : {}),
                         },
                         ...state,
                     };
@@ -216,6 +218,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                         js: indexJs,
                         css: indexCss,
                         realtime,
+                        tdoc: this.tdoc,
                     };
                 }
             },

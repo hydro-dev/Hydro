@@ -139,7 +139,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                     type, id: data.id, data, token: `t${token++}`,
                 });
                 const [pdict, tsdocs] = await Promise.all([
-                    ProblemModel.getList(tdoc.domainId, tdoc.pids, true, false, ProblemModel.PROJECTION_LIST, true),
+                    ProblemModel.getList(tdoc.domainId, tdoc.pids, true, false, ProblemModel.PROJECTION_LIST.concat('config'), true),
                     ContestModel.getMultiStatus(tdoc.domainId, { docId: tdoc._id }).toArray(),
                 ]);
                 const udict = await UserModel.getList(tdoc.domainId, tsdocs.map((i) => i.uid));
@@ -326,15 +326,18 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
         const tids = tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
         const tdocs = await Promise.all(tids.map((i) => ContestModel.get('system', i)));
         const convertUname = Types.Username[0];
+        let cnt = 0;
         for (const line of data) {
+            cnt++;
+            const id = line.id || cnt;
             const uname = convertUname(line.name);
-            const email = `${line.id}@onsite.local`;
+            const email = `${id}@onsite.local`;
             let team = await UserModel.getByEmail('system', email);
             if (!team) {
                 const uid = await UserModel.create(email, uname, line.password || randomstring());
                 team = await UserModel.getById('system', uid);
             } else {
-                await UserModel.setById(team._id, { uname });
+                await UserModel.setUname(team._id, uname);
                 if (line.password) await UserModel.setPassword(team._id, line.password);
             }
             if (line.member1) line.members.push(line.member1);
@@ -346,7 +349,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (Object.keys(set).length) await UserModel.setById(team._id, set);
             for (const tdoc of tdocs) {
                 const tsdoc = await ContestModel.getStatus('system', tdoc.docId, team._id);
-                if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank } : {});
+                if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
                 else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus('system', tdoc.docId, team._id, { unrank: !line.rank });
             }
             if (line.ip) await coll.updateOne({ _id: normalizeIp(line.ip) }, { $set: { uid: team._id } }, { upsert: true });

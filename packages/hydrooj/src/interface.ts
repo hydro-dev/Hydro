@@ -213,6 +213,7 @@ export type RecordDoc = {
     [K in keyof RecordPayload]: K extends 'hackTarget' | 'contest' ? ObjectId : RecordPayload[K];
 } & {
     _id: ObjectId;
+    notify?: boolean;
 };
 
 export interface RecordHistoryDoc extends RecordJudgeInfo {

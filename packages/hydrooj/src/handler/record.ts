@@ -333,8 +333,8 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (!this.all) {
                 if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
                 if (this.tid && rdoc.contest?.toString() !== '0'.repeat(24)) {
-                    if (contest.isLocked(this.tdoc) && !this.pretest) return;
-                    if (!contest.canShowSelfRecord.call(this, this.tdoc, true)) return;
+                    if (rdoc.uid !== this.user._id && !contest.canShowRecord.call(this, this.tdoc, true)) return;
+                    if (rdoc.uid === this.user._id && !contest.canShowSelfRecord.call(this, this.tdoc, true)) return;
                 }
             }
         }
@@ -345,7 +345,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             user.getById(this.args.domainId, rdoc.uid),
             problem.get(rdoc.domainId, rdoc.pid),
         ]);
-        const tdoc = this.tid ? this.tdoc || await contest.get(rdoc.domainId, new ObjectId(this.tid)) : null;
+        const tdoc = this.tid ? this.tdoc : null;
         if (pdoc && !rdoc.contest) {
             if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;

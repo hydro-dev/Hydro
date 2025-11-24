@@ -154,7 +154,7 @@ export namespace Time {
             throw new Error('No bson module found');
         }
         try {
-            isMoment ||= require('moment');
+            isMoment ||= require('moment').isMoment;
         } catch (e) {
             throw new Error('No moment module found');
         }

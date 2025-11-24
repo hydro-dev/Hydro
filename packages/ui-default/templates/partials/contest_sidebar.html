@@ -103,9 +103,16 @@
         <span class="icon icon-comment--text"></span> {{ _('Discussion') }}
       </a></li>
     {% endif %}
+    {% if handler.user.own(tdoc) or handler.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE) or handler.user.hasPerm(perm.PERM_READ_RECORD_CODE) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId}) }}">
         <span class="icon icon-flag"></span> {{ _('All Submissions') }}
       </a></li>
+    {% endif %}
+    {% if tsdoc.attend and model.contest.canShowSelfRecord.call(handler, tdoc) %}
+      <li class="menu__item"><a class="menu__link" href="{{ url('record_main', query={tid:tdoc.docId, uidOrName:handler.user._id}) }}">
+        <span class="icon icon-flag"></span> {{ _('My Submissions') }}
+      </a></li>
+    {% endif %}
       <li class="menu__item"><a class="menu__link" href="{{ url('wiki_help', anchor='contest') }}">
         <span class="icon icon-help"></span> {{ _('Help') }}
       </a></li>

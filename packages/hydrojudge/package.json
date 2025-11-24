@@ -8,9 +8,9 @@
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@zip.js/zip.js": "^2.8.10",
+        "@zip.js/zip.js": "^2.8.11",
         "cac": "^6.7.14",
-        "p-queue": "^9.0.0",
+        "p-queue": "^9.0.1",
         "schemastery": "^3.17.2",
         "semver": "^7.7.3",
         "shell-quote": "^1.8.3",

@@ -68,7 +68,7 @@ Language ${SettingModel.langs[lang].display} (${lang})
 
         const rid = await RecordModel.add(
             domainId, this.pdoc.docId, this.user._id, lang, code, true,
-            { contest: this.tdoc.docId, files, type: 'judge' },
+            { contest: this.tdoc.docId, files, type: 'judge', notify: true },
         );
         await Promise.all([
             ProblemModel.inc(domainId, this.pdoc.docId, 'nSubmit', 1),

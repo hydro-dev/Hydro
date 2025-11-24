@@ -4,7 +4,7 @@ import {
     Filter, FindOptions, MatchKeysAndValues,
     ObjectId, OnlyFieldsOfType, PushOperator, UpdateFilter,
 } from 'mongodb';
-import { ProblemConfigFile } from '@hydrooj/common';
+import { ProblemConfigFile, STATUS_TEXTS } from '@hydrooj/common';
 import { Context } from '../context';
 import { ProblemNotFoundError } from '../error';
 import { JudgeMeta, RecordDoc } from '../interface';
@@ -13,6 +13,7 @@ import { MaybeArray, NumberKeys } from '../typeutils';
 import { ArgMethod, buildProjection, Time } from '../utils';
 import { STATUS } from './builtin';
 import DomainModel from './domain';
+import MessageModel from './message';
 import problem from './problem';
 import SystemModel from './system';
 import task from './task';
@@ -137,6 +138,7 @@ export default class RecordModel {
             files?: Record<string, string>;
             hackTarget?: ObjectId;
             type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate';
+            notify?: boolean;
         } = { type: 'judge' },
     ) {
         const data: RecordDoc = {
@@ -161,6 +163,7 @@ export default class RecordModel {
         if (args.contest) data.contest = args.contest;
         if (args.files) data.files = args.files;
         if (args.hackTarget) data.hackTarget = args.hackTarget;
+        if (args.notify) data.notify = true;
         if (args.type === 'rejudge') {
             args.type = 'judge';
             data.rejudged = true;
@@ -290,6 +293,14 @@ export async function apply(ctx: Context) {
     ]));
     ctx.on('domain/delete', (domainId) => RecordModel.coll.deleteMany({ domainId }));
     ctx.on('record/judge', async (rdoc, updated) => {
+        if (rdoc.contest?.toHexString().startsWith('0'.repeat(23))) return;
+        if (rdoc.notify) {
+            const pdoc = await Hydro.model.problem.get(rdoc.domainId, rdoc.pid);
+            await MessageModel.send(1, rdoc.uid, JSON.stringify({
+                message: 'Judge Result\n{0}: {1}',
+                params: [pdoc.title, STATUS_TEXTS[rdoc.status]],
+            }), MessageModel.FLAG_I18N);
+        }
         if (rdoc.status === STATUS.STATUS_ACCEPTED && updated) {
             if (SystemModel.get('record.statMode') === 'unique') {
                 await RecordModel.collStat.deleteMany({

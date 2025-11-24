@@ -111,6 +111,22 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.13 / UI 4.58.0-beta.14
+
+- ui: 比赛页面添加打印快捷入口
+- ui: 比赛题目列表显示时空限制和提交按钮
+- core: 检查提解投票权限
+- ui: 修复题目配置页文件操作
+- ui: 移除旧的 window.Hydro.util 和 window.Hydro.component 对象
+- onsite-toolkit: 添加导入工具
+- onsite-toolkit: 添加 submit 和 printfile 支持
+- onsite-toolkit: 支持限制通信功能
+- core: backup: 速度优化
+- ui: 优化超长公式显示
+- core&ui: 添加允许所有人邀请的选项 
+- ui: 优化题目配置页暗色模式
+- scoreboard-xcpcio: 支持注册为默认榜单
+
 ## Hydro 5.0.0-beta.12 / UI 4.58.0-beta.12
 
 - framework: 修复 SSE 模式参数识别
@@ -121,7 +137,6 @@ Hydro 用户群：1085853538
 - core: 添加 hydrooj diag 快速诊断工具
 - ui: 禁用链接自动折叠，复制链接自动转义括号
 - ui: 优化资源缓存
-- ui: 优化超长公式显示
 - core&ui: 支持题目排序
 
 *Breaking API Changes*
