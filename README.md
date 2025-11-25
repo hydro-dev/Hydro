@@ -115,7 +115,7 @@ Hydro 用户群：1085853538
 
 - ui: 比赛页面添加打印快捷入口
 - ui: 比赛题目列表显示时空限制和提交按钮
-- core: 检查提解投票权限
+- core: 检查题解投票权限
 - ui: 修复题目配置页文件操作
 - ui: 移除旧的 window.Hydro.util 和 window.Hydro.component 对象
 - onsite-toolkit: 添加导入工具
