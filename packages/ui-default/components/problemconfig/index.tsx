@@ -48,7 +48,9 @@ export default function ProblemConfig(props: Props) {
 
   return <ContextMenuProvider>
     <div ref={setContainer}>
-      <Allotment defaultSizes={[2, 3]}>
+      <Allotment
+        defaultSizes={[2, 3]}
+        className="problem-config-allotment">
         <Allotment.Pane>
           <div style={{ height: '100%', overflow: 'auto' }}>
             <ProblemConfigEditor ref={setEditor} />
