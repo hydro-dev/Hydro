@@ -124,15 +124,13 @@ class HomeworkDetailHandler extends Handler {
                 await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
                 tsdoc.startAt = new Date();
             }
-            for (const pdetail of tsdoc.journal || []) {
+            const valid = (tsdoc.journal || []).filter((p) => this.tdoc.pids.includes(p.pid));
+            for (const pdetail of valid) {
                 psdict[pdetail.pid] = pdetail;
                 rdict[pdetail.rid] = { _id: pdetail.rid };
             }
-            if (contest.canShowSelfRecord.call(this, this.tdoc) && tsdoc.journal) {
-                rdict = await record.getList(
-                    domainId,
-                    tsdoc.journal.map((pdetail) => pdetail.rid),
-                );
+            if (contest.canShowSelfRecord.call(this, this.tdoc) && valid.length) {
+                rdict = await record.getList(domainId, valid.map((pdetail) => pdetail.rid));
             }
         }
         Object.assign(this.response.body, { pdict, psdict, rdict });

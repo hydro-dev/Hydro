@@ -12,6 +12,7 @@
     window.DATA_REGION = "Hydro";
     window.DEFAULT_LANG = "{{ 'zh-CN' if _('__id').startsWith('zh') else 'en' }}";
     window.DATA_SOURCE = "{{ dataSource|safe }}";
+    {% if refreshInterval %}window.REFRESH_INTERVAL = {{ refreshInterval }};{% endif %}
     if (document.documentElement.classList.contains("theme--dark")) document.documentElement.classList.toggle("dark", !0);
     setInterval(() => {
         const location = window.location.href;
@@ -30,7 +31,7 @@
 </style>
 <script type="module" crossorigin src="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ js }}.js"></script>
 <link rel="stylesheet" crossorigin href="{{ '/' if process.env.DEV else UiContext.cdn_prefix }}assets/index-{{ css }}.css">
-{% if realtime and model.contest.isLocked(tdoc) and model.contest.isDone(tdoc) and handler.user.own(tdoc) %}
+{% if tdoc and realtime and model.contest.isLocked(tdoc) and model.contest.isDone(tdoc) and handler.user.own(tdoc) %}
 <div class="main">
   <div class="row typo">
     <blockquote class="note">

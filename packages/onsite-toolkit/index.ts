@@ -2,10 +2,10 @@
 import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
-    _, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    _, avatar, BadRequestError, ContestModel, ContestNotEndedError, Context, db, findFileSync,
     ForbiddenError, fs, ObjectId, parseTimeMS, PERM, PRIV, ProblemConfig, ProblemModel,
     randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
-    Time, Types, UserModel, Zip,
+    SystemModel, Time, Types, UserModel, Zip,
 } from 'hydrooj';
 import { ResolverInput } from './interface';
 
@@ -118,7 +118,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                             exclude: t.unrank,
                         })),
                         submissions: submissions.map((i) => ({
-                            team: i.uid.toString(),
+                            team: udict[i.uid]?.seat || i.uid.toString(),
                             problem: i.pid.toString(),
                             verdict: STATUS_SHORT_TEXTS[i.status],
                             time: time(i.rid),
@@ -134,6 +134,11 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             async display({ tdoc }) {
                 if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
+                try {
+                    new URL(SystemModel.get('server.url')); // eslint-disable-line no-new
+                } catch (e) {
+                    throw new BadRequestError('Server URL not set');
+                }
                 let token = 0;
                 const getFeed = (type: string, data: any) => ({
                     type, id: data.id, data, token: `t${token++}`,
@@ -146,7 +151,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 const teams = tsdocs.map((i) => {
                     const udoc = udict[i.uid];
                     return {
-                        team_id: `team-${udoc._id}`,
+                        team_id: udoc.seat || `team-${udoc._id}`,
                         name: udoc.uname,
                         displayName: (i.unrank ? '⭐' : '') + (udoc.displayName || udoc.uname),
                         organization: udoc.school || udoc.uname,
@@ -239,6 +244,13 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                             width: 1920,
                             height: 1080,
                         }],
+                        logo: [{
+                            href: new URL(i.avatar, SystemModel.get('server.url')).toString(),
+                            filename: 'logo.webp',
+                            mime: 'image/webp',
+                            width: 128,
+                            height: 128,
+                        }],
                     })),
                     ...tdoc.pids.map((i, idx) => getFeed('problems', {
                         id: `${i}`,
@@ -265,7 +277,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                         const judgeAt = moment().startOf('day').seconds(judgeDelta).format('HH:mm:ss.SSS');
                         result.push(getFeed('submissions', {
                             id: s.rid,
-                            team_id: `team-${i.uid}`,
+                            team_id: udict[i.uid]?.seat || `team-${i.uid}`,
                             problem_id: `${s.pid}`,
                             language_id: s.lang?.split('.')[0] || 'cpp',
                             files: [],
@@ -305,13 +317,13 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 ]);
                 await Promise.all(teams.map(async (i) => {
                     await zip.add(`teams/${i.team_id}/`, null, { directory: true });
-                    await zip.add(`teams/${i.team_id}/photo.download.txt`, new Zip.TextReader(i.avatar));
+                    await zip.add(`teams/${i.team_id}/photo.url`, new Zip.TextReader(`URL=${i.avatar}`));
                 }));
                 await Promise.all(organizations.map(async (i) => {
                     const avatarSrc = teams.find((j) => j.organization === i)?.avatar;
                     if (!avatarSrc) return;
                     await zip.add(`organizations/${orgId[i]}/`, null, { directory: true });
-                    await zip.add(`organizations/${orgId[i]}/photo.download.txt`, new Zip.TextReader(avatar(avatarSrc)));
+                    await zip.add(`organizations/${orgId[i]}/photo.url`, new Zip.TextReader(`URL=${avatar(avatarSrc)}`));
                 }));
                 this.binary(await zip.close(), `contest-${tdoc._id}-cdp.zip`);
             },

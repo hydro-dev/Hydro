@@ -331,6 +331,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
             if (rdoc.domainId !== this.args.domainId) return;
             if (!this.pretest && typeof rdoc.input === 'string') return;
             if (!this.all) {
+                if (!rdoc.contest && this.tid) return;
                 if (rdoc.contest && ![this.tid, '000000000000000000000000'].includes(rdoc.contest.toString())) return;
                 if (this.tid && rdoc.contest?.toString() !== '0'.repeat(24)) {
                     if (rdoc.uid !== this.user._id && !contest.canShowRecord.call(this, this.tdoc, true)) return;

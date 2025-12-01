@@ -38,7 +38,7 @@ const page = new NamedPage('domain_user', () => {
         options: UiContext.roles.filter((i) => !['default', 'guest'].includes(i)),
         columns: -6,
       },
-      ...(UiContext.canForceJoin ? {
+      ...((UiContext.canForceJoin && UiContext.domain._id !== 'system') ? {
         join: {
           type: 'checkbox',
           label: i18n('Mark user as joined using admin privilege'),

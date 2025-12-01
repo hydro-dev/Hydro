@@ -485,8 +485,11 @@ export class ContestCodeHandler extends Handler {
     async get(domainId: string, tid: ObjectId, all: boolean) {
         await this.limitRate('contest_code', 60, 10);
         const [tdoc, tsdocs] = await contest.getAndListStatus(domainId, tid);
-        if (!this.user.own(tdoc) && !this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
-            this.checkPerm(PERM.PERM_READ_RECORD_CODE);
+        if (!this.user.own(tdoc)) {
+            if (!this.user.hasPriv(PRIV.PRIV_READ_RECORD_CODE)) {
+                this.checkPerm(PERM.PERM_READ_RECORD_CODE);
+            }
+            if (!contest.isDone(tdoc)) throw new ContestNotEndedError(domainId, tid);
         }
         if (!contest.canShowRecord.call(this, tdoc as any, true)) {
             throw new PermissionError(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
@@ -754,7 +757,7 @@ export class ContestBalloonHandler extends ContestManagementBaseHandler {
     async postDone(domainId: string, tid: ObjectId, bid: ObjectId) {
         const balloon = await contest.getBalloon(domainId, tid, bid);
         if (!balloon) throw new ValidationError('balloon');
-        if (balloon.sent) throw new ValidationError('balloon', null, 'Balloon already sent');
+        if (balloon.sent) throw new ValidationError('Balloon already sent');
         await contest.updateBalloon(domainId, tid, bid, { sent: this.user._id, sentAt: new Date() });
         this.back();
     }

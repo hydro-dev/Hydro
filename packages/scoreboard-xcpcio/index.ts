@@ -1,9 +1,11 @@
 import path from 'path';
 import { LRUCache } from 'lru-cache';
 import {
-    avatar, ContestModel, Context, fs, getAlphabeticId, ObjectId, PERM,
-    RecordDoc, Schema, STATUS, Tdoc, Types, UserModel,
+    avatar, ContestModel, Context, fs, getAlphabeticId, Logger, ObjectId,
+    PERM, RecordDoc, Schema, STATUS, superagent, Tdoc, Types, UserModel,
 } from 'hydrooj';
+
+const logger = new Logger('scoreboard-xcpcio');
 
 const file = fs.readFileSync(path.join(__dirname, 'public/assets/board.html'), 'utf8');
 const indexJs = file.match(/index-([\w-]+)\.js"/)?.[1];
@@ -88,11 +90,28 @@ async function loadContestState(tdoc: Tdoc, realtime: boolean) {
 }
 
 export const name = 'scoreboard-xcpcio';
+
+const PublishConfig = Schema.object({
+    domainId: Schema.string().required(),
+    contestId: Schema.string().required(),
+    publishToken: Schema.string().required(),
+    publishPath: Schema.string().required(),
+    publishEndpoint: Schema.string().default('https://scoreboard.hydrooj.com/_publish'),
+    medals: Schema.object({
+        gold: Schema.number().required(),
+        silver: Schema.number().required(),
+        bronze: Schema.number().required(),
+    }),
+    banner: Schema.string().default(''),
+    badge: Schema.boolean().default(false),
+    override: Schema.any().default({}).description('Scoreboard contest override'),
+});
 export const Config = Schema.object({
     cacheTTL: Schema.number().default(0).description('Cache TTL in milliseconds'),
     cacheSize: Schema.number().default(100).description('Cache size'),
     asDefault: Schema.boolean().default(false).description('As default scoreboard'),
     override: Schema.any().default({}).description('Scoreboard contest override'),
+    publish: Schema.array(PublishConfig).description('Scoreboard publish config'),
 });
 
 export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
@@ -138,6 +157,80 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
         });
     }
 
+    const getJson = async (tdoc, realtime: boolean, cfg: Partial<ReturnType<typeof PublishConfig>>) => {
+        const isLocked = ContestModel.isLocked(tdoc);
+        const cacheKey = `${tdoc.docId.toHexString()}/${(isLocked && realtime) ? 'realtime' : 'public'}`;
+        const state = lru.get(cacheKey) || await loadContestState(tdoc, realtime);
+        if (cfg.cacheTTL) lru.set(cacheKey, state);
+        const relatedGroups = state.teams.flatMap((i) => i.group);
+        return {
+            contest: {
+                contest_name: tdoc.title,
+                start_time: Math.floor(tdoc.beginAt.getTime() / 1000),
+                end_time: Math.floor(tdoc.endAt.getTime() / 1000),
+                frozen_time: tdoc.lockAt ? Math.floor((tdoc.endAt.getTime() - tdoc.lockAt.getTime()) / 1000) : 0,
+                penalty: 1200,
+                problem_quantity: tdoc.pids.length,
+                problem_id: tdoc.pids.map((i, idx) => getAlphabeticId(idx)),
+                group: {
+                    official: '正式队伍',
+                    unofficial: '打星队伍',
+                    ...Object.fromEntries(cfg.groups?.filter((i) => relatedGroups.includes(i.name)).map((i) => [i.name, i.name]) || []),
+                },
+                ...(cfg.badge ? { badge: 'Badge' } : {}),
+                organization: 'School',
+                status_time_display: {
+                    correct: true,
+                    incorrect: true,
+                    pending: true,
+                },
+                medal: {
+                    official: cfg.medals,
+                },
+                balloon_color: tdoc.balloon
+                    ? tdoc.pids.filter((i) => tdoc.balloon[i]).map((i) => ({
+                        color: '#000',
+                        background_color: typeof tdoc.balloon[i] === 'string' ? tdoc.balloon[i] : tdoc.balloon[i].color,
+                    }))
+                    : [],
+                logo: {
+                    preset: 'ICPC',
+                },
+                ...(cfg.banner ? { banner: { url: 'banner.jpg' } } : {}),
+                options: {
+                    submission_timestamp_unit: 'millisecond',
+                },
+                ...(typeof cfg.override === 'object' ? cfg.override || {} : {}),
+            },
+            ...state,
+        };
+    };
+
+    if (config.publish?.length && process.env.NODE_APP_INSTANCE === '0') {
+        const done = [];
+        const unlocked = [];
+        logger.debug('Will publish scoreboards', config.publish);
+        ctx.effect(() => ctx.setInterval(() => {
+            Promise.allSettled(config.publish.map(async (i) => {
+                const key = `${i.domainId}/${i.contestId}`;
+                if (unlocked.includes(key)) return;
+                const tdoc = await ContestModel.get(i.domainId, new ObjectId(i.contestId));
+                if (ContestModel.isDone(tdoc) && ContestModel.isLocked(tdoc) && done.includes(key)) return;
+                if (ContestModel.isDone(tdoc) && !ContestModel.isLocked(tdoc)) unlocked.push(key);
+                if (ContestModel.isDone(tdoc)) done.push(key);
+                const groups = await UserModel.listGroup(i.domainId);
+                const json = await getJson(tdoc, false, { ...i, groups });
+                logger.info(`Publishing scoreboard ${i.domainId}/${i.contestId} to ${i.publishEndpoint}`);
+                const res = await superagent.post(i.publishEndpoint).send({
+                    path: i.publishPath,
+                    token: i.publishToken,
+                    json,
+                });
+                logger.info(`Published scoreboard ${i.domainId}/${i.contestId} to ${i.publishEndpoint}`, res.body);
+            })).catch(console.error);
+        }, 30000));
+    }
+
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('xcpcio', 'XCPCIO', {
             tdoc: 'tdoc',
@@ -155,56 +248,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
             }) {
                 if (realtime && !this.user.own(tdoc)) this.checkPerm(PERM.PERM_VIEW_CONTEST_HIDDEN_SCOREBOARD);
                 if (json || this.request.json) {
-                    const isLocked = ContestModel.isLocked(tdoc);
-                    const cacheKey = `${tdoc.docId.toHexString()}/${(isLocked && realtime) ? 'realtime' : 'public'}`;
-                    const state = lru.get(cacheKey) || await loadContestState(tdoc, realtime);
-                    if (config.cacheTTL) lru.set(cacheKey, state);
-                    const relatedGroups = state.teams.flatMap((i) => i.group);
-                    this.response.body = {
-                        contest: {
-                            contest_name: tdoc.title,
-                            start_time: Math.floor(tdoc.beginAt.getTime() / 1000),
-                            end_time: Math.floor(tdoc.endAt.getTime() / 1000),
-                            frozen_time: tdoc.lockAt ? Math.floor((tdoc.endAt.getTime() - tdoc.lockAt.getTime()) / 1000) : 0,
-                            penalty: 1200,
-                            problem_quantity: tdoc.pids.length,
-                            problem_id: tdoc.pids.map((i, idx) => getAlphabeticId(idx)),
-                            group: {
-                                official: '正式队伍',
-                                unofficial: '打星队伍',
-                                ...Object.fromEntries(groups.filter((i) => relatedGroups.includes(i.name)).map((i) => [i.name, i.name])),
-                            },
-                            ...(badge ? { badge: 'Badge' } : {}),
-                            organization: 'School',
-                            status_time_display: {
-                                correct: true,
-                                incorrect: true,
-                                pending: true,
-                            },
-                            medal: {
-                                official: {
-                                    gold,
-                                    silver,
-                                    bronze,
-                                },
-                            },
-                            balloon_color: tdoc.balloon
-                                ? tdoc.pids.filter((i) => tdoc.balloon[i]).map((i) => ({
-                                    color: '#000',
-                                    background_color: typeof tdoc.balloon[i] === 'string' ? tdoc.balloon[i] : tdoc.balloon[i].color,
-                                }))
-                                : [],
-                            logo: {
-                                preset: 'ICPC',
-                            },
-                            ...(banner ? { banner: { url: 'banner.jpg' } } : {}),
-                            options: {
-                                submission_timestamp_unit: 'millisecond',
-                            },
-                            ...(typeof config.override === 'object' ? config.override || {} : {}),
-                        },
-                        ...state,
-                    };
+                    this.response.body = await getJson(tdoc, realtime, { badge, banner, groups, medals: { gold, silver, bronze } });
                 } else {
                     this.response.template = 'xcpcio_board.html';
                     let query = '';

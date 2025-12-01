@@ -6,9 +6,9 @@
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
         "@antfu/eslint-config": "^6.2.0",
-        "@eslint-react/eslint-plugin": "^2.3.7",
-        "@typescript-eslint/eslint-plugin": "^8.47.0",
-        "@typescript-eslint/parser": "^8.47.0",
+        "@eslint-react/eslint-plugin": "^2.3.9",
+        "@typescript-eslint/eslint-plugin": "^8.48.0",
+        "@typescript-eslint/parser": "^8.48.0",
         "eslint-plugin-de-morgan": "^2.0.0",
         "eslint-plugin-github": "^6.0.0",
         "eslint-plugin-react-hooks": "^7.0.1",
