@@ -255,9 +255,11 @@ export class ProblemModel {
         if (original.reference) throw new ValidationError('reference');
         if (pid && (/^[0-9]+$/.test(pid) || await ProblemModel.get(target, pid))) pid = '';
         if (!pid && original.pid && !await ProblemModel.get(target, original.pid)) pid = original.pid;
+        const $set = { hidden: hidden || original.hidden, reference: { domainId, pid: _id } } as any;
+        if (typeof original.difficulty === 'number') $set.difficulty = original.difficulty;
         return await ProblemModel.add(
             target, pid, original.title, original.content,
-            original.owner, original.tag, { hidden: hidden || original.hidden, reference: { domainId, pid: _id } },
+            original.owner, original.tag, $set,
         );
     }
 
