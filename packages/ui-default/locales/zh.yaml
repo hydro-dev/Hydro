@@ -413,6 +413,7 @@ First of Problem: 题目一血
 fontFamily: 字体
 Footer: 页脚
 Footnote: 脚注
+For better problem version management and validation, we suggest using Polyhedron to prepare problems.: 为了更好的题目版本管理和检查，我们推荐使用 Polyhedron 来准备算法竞赛题目。
 Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
@@ -640,6 +641,7 @@ Only A-Z, a-z, 0-9 and _ are accepted: 只接受 A-Z, a-z, 0-9 和 _
 Oops, there are no results.: 呀，没有结果。
 Oops!: Oops!
 Open in Problem Set: 在题库中打开
+Open Polyhedron: 打开 Polyhedron
 Open Scratchpad: 进入在线编程模式
 Open Since: 开始时间
 Open Source: 开源
@@ -693,6 +695,7 @@ Please select at least one role to perform this operation.: 请选择至少一�
 Please select at least one user to perform this operation.: 请选择至少一个用户来进行操作。
 Please set the balloon color for each problem first.: 请先为每道题设置气球颜色。
 Please wait until contest host unfreeze the scoreboard.: 请等待比赛主办方解除封榜。
+Polyhedron supports managing problem version history, testing solutions, checking time limits, composing contest statements, cooperation and much more.: Polyhedron 支持题目版本管理，代码测试，时限检验，制作比赛题面，多人协作等等功能。
 Preference Settings: 偏好设置
 preferredPrefix_hint: 此选项用于重排题号。例如，若题目包中所给的题号分别是 P1001, P1002, P1003，而此选项填写了 T，则导入后三道题的题号分别为 T1001, T1002 和 T1003。
 Preparing Upload...: 准备上传...
@@ -742,6 +745,7 @@ problem.stats.sort.date: 提交时间
 problem.stats.sort.length: 代码长度
 problem.stats.sort.memory: 内存占用
 problem.stats.sort.time: 运行时间
+Problems created in polyhedron can be directly imported into any Hydro based online judge system.: Polyhedron 中的题目可以直接导入任何基于 Hydro 的在线测评系统。
 Problems Sets: 题库
 Problems: 题目
 Processing...: 处理中...

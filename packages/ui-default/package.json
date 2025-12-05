@@ -23,7 +23,7 @@
     "@mantine/core": "^8.3.9",
     "@mantine/hooks": "^8.3.9",
     "@mantine/notifications": "^8.3.9",
-    "@sentry/browser": "^10.27.0",
+    "@sentry/browser": "^10.28.0",
     "@sentry/webpack-plugin": "^4.6.1",
     "@simplewebauthn/browser": "13.2.2",
     "@svgr/webpack": "^8.1.0",

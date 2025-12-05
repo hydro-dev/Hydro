@@ -1,11 +1,12 @@
 import $ from 'jquery';
 import _ from 'lodash';
+import ReactDOM from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';
 import Dropdown from 'vj/components/dropdown/Dropdown';
 import Editor from 'vj/components/editor/index';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
-import { i18n, request } from 'vj/utils';
+import { i18n, request, tpl } from 'vj/utils';
 
 const categories = {};
 const dirtyCategories = [];
@@ -210,4 +211,19 @@ export default new NamedPage(['problem_create', 'problem_edit'], () => {
       ev.preventDefault();
     }
   });
+
+  if (localStorage.getItem('polyhedron-hint') === 'dismiss') return;
+  $(tpl`<div name="hint" class="typo"></div>`).prependTo('.medium-9.columns .section__body');
+  const root = ReactDOM.createRoot(document.querySelector('[name="hint"]'));
+  function ignore() {
+    root.unmount();
+    localStorage.setItem('polyhedron-hint', 'dismiss');
+  }
+  /* eslint-disable max-len */
+  root.render(<blockquote className="note">
+    <p>{i18n('For better problem version management and validation, we suggest using Polyhedron to prepare problems.')}</p>
+    <p>{i18n('Polyhedron supports managing problem version history, testing solutions, checking time limits, composing contest statements, cooperation and much more.')}</p>
+    <p>{i18n('Problems created in polyhedron can be directly imported into any Hydro based online judge system.')}</p>
+    <a href="https://polyhedron.hydro.ac/" target="_blank">{i18n('Open Polyhedron')}</a> / <a onClick={() => root.unmount()}>{i18n('Dismiss')}</a> / <a onClick={ignore}>{i18n("Don't show again")}</a>
+  </blockquote>);
 });

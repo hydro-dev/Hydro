@@ -97,22 +97,17 @@ const PublishConfig = Schema.object({
     publishToken: Schema.string().required(),
     publishPath: Schema.string().required(),
     publishEndpoint: Schema.string().default('https://scoreboard.hydrooj.com/_publish'),
-    medals: Schema.object({
-        gold: Schema.number().required(),
-        silver: Schema.number().required(),
-        bronze: Schema.number().required(),
-    }),
+    preset: Schema.union(['ICPC', 'CCPC']).default('ICPC'),
     banner: Schema.string().default(''),
     badge: Schema.boolean().default(false),
-    override: Schema.any().default({}).description('Scoreboard contest override'),
 });
 export const Config = Schema.object({
     cacheTTL: Schema.number().default(0).description('Cache TTL in milliseconds'),
     cacheSize: Schema.number().default(100).description('Cache size'),
     asDefault: Schema.boolean().default(false).description('As default scoreboard'),
     override: Schema.any().default({}).description('Scoreboard contest override'),
-    publish: Schema.array(PublishConfig).description('Scoreboard publish config'),
-});
+    publish: Schema.array(PublishConfig).role('table').description('Scoreboard publish config'),
+}).description('XCPCIO Scoreboard Config');
 
 export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
     const lru = new LRUCache<string, Awaited<ReturnType<typeof loadContestState>>>({
@@ -184,9 +179,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                     incorrect: true,
                     pending: true,
                 },
-                medal: {
-                    official: cfg.medals,
-                },
+                medal: (cfg.preset || 'ICPC').toLowerCase(),
                 balloon_color: tdoc.balloon
                     ? tdoc.pids.filter((i) => tdoc.balloon[i]).map((i) => ({
                         color: '#000',
@@ -194,9 +187,9 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                     }))
                     : [],
                 logo: {
-                    preset: 'ICPC',
+                    preset: cfg.preset || 'ICPC',
                 },
-                ...(cfg.banner ? { banner: { url: 'banner.jpg' } } : {}),
+                ...(cfg.banner ? { banner: { url: cfg.banner } } : {}),
                 options: {
                     submission_timestamp_unit: 'millisecond',
                 },
@@ -238,7 +231,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
             json: Types.Boolean,
             realtime: Types.Boolean,
             badge: Types.Boolean,
-            banner: Types.Boolean,
+            banner: Types.String,
             gold: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             silver: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             bronze: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
@@ -262,6 +255,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
                         js: indexJs,
                         css: indexCss,
                         realtime,
+                        refreshInterval: ContestModel.isOngoing(tdoc) ? 30000 : 0,
                         tdoc: this.tdoc,
                     };
                 }
