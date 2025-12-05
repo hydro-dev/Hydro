@@ -55,6 +55,12 @@
             <p>{{ _('page.training_detail.invalid_when_not_enrolled') }}</p>
           </blockquote>
         {% endif %}
+        {% if missing.length %}
+          <blockquote class="warn">
+            <p>{{ _('Some problems in the training are missing or you do not have permission to view them.') }}</p>
+            <p>{{ missing|join(', ') }}</p>
+          </blockquote>
+        {% endif %}
         {{ tdoc.description|default('')|markdown|safe }}
       </div>
     </div>

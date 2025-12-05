@@ -112,10 +112,11 @@ class TrainingDetailHandler extends Handler {
         const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO)),
-            problem.getList(domainId, pids, canViewHidden, true),
+            problem.getList(domainId, pids, canViewHidden, false),
             problem.getListStatus(domainId, uid, pids),
             shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
         ]);
+        const missing = pids.filter((pid) => !pdict[pid]?.docId);
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
@@ -151,7 +152,7 @@ class TrainingDetailHandler extends Handler {
         const groups = this.user.hasPerm(PERM.PERM_EDIT_DOMAIN)
             ? await user.listGroup(domainId) : [];
         this.response.body = {
-            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict, groups,
+            tdoc, tsdoc, pids, pdict, psdict, ndict, nsdict, udoc, udict, selfPsdict, groups, missing,
         };
         this.response.body.tdoc.description = this.response.body.tdoc.description
             .replace(/\(file:\/\//g, `(./${tdoc.docId}/file/`)
