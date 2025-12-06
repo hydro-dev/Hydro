@@ -2,6 +2,7 @@
 export * from './components/dialog';
 export { default as loadMonaco } from './components/monaco/loader';
 export { default as Notification } from './components/notification';
+export { default as Rotator } from './components/rotator';
 export { default as selectUser } from './components/selectUser';
 export { default as Socket } from './components/socket/index';
 export { default as uploadFiles } from './components/upload';

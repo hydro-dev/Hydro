@@ -24,7 +24,7 @@ import { buildProjection, Time } from '../utils';
 import { ContestDetailBaseHandler } from './contest';
 import { postJudge } from './judge';
 
-class RecordListHandler extends ContestDetailBaseHandler {
+export class RecordListHandler extends ContestDetailBaseHandler {
     @param('page', Types.PositiveInt, true)
     @param('pid', Types.ProblemId, true)
     @param('tid', Types.ObjectId, true)
@@ -127,7 +127,7 @@ class RecordListHandler extends ContestDetailBaseHandler {
     }
 }
 
-class RecordDetailHandler extends ContestDetailBaseHandler {
+export class RecordDetailHandler extends ContestDetailBaseHandler {
     rdoc: RecordDoc;
 
     @param('rid', Types.ObjectId)
@@ -250,7 +250,7 @@ class RecordDetailHandler extends ContestDetailBaseHandler {
     }
 }
 
-class RecordMainConnectionHandler extends ConnectionHandler {
+export class RecordMainConnectionHandler extends ConnectionHandler {
     all = false;
     allDomain = false;
     tid: string;
@@ -376,7 +376,7 @@ class RecordMainConnectionHandler extends ConnectionHandler {
     }
 }
 
-class RecordDetailConnectionHandler extends ConnectionHandler {
+export class RecordDetailConnectionHandler extends ConnectionHandler {
     pdoc: ProblemDoc;
     tdoc?: Tdoc;
     rid: string = '';
