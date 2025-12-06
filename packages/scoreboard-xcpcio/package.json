@@ -1,7 +1,7 @@
 {
     "name": "@hydrooj/scoreboard-xcpcio",
     "license": "AGPL-3.0-or-later",
-    "version": "0.0.5-beta.9",
+    "version": "0.0.5-beta.10",
     "main": "index.ts",
     "repository": "https://github.com/hydro-dev/Hydro.git",
     "scripts": {

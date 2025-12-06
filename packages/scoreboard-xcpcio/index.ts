@@ -231,7 +231,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
             json: Types.Boolean,
             realtime: Types.Boolean,
             badge: Types.Boolean,
-            banner: Types.String,
+            banner: [...Types.String, true],
             gold: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             silver: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
             bronze: Schema.transform(Schema.union([Schema.string(), Schema.number().step(1).min(0)]), (v) => +v).default(0),
