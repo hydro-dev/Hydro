@@ -101,7 +101,7 @@ export class User {
         this.role = dudoc.role || 'default';
         this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
-        this.authn = (udoc.authenticators || []).length > 0;
+        this.authn = !!udoc.authenticators?.length;
         if (dudoc.group) this.group = dudoc.group;
         const load = (settings: Record<string, ReturnType<typeof setting.Setting>>, source: any) => {
             for (const key in settings) {
@@ -163,7 +163,7 @@ export class User {
     }
 
     getFields(type: 'public' | 'private' = 'public') {
-        const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn', 'avatar'].concat(this._publicFields);
+        const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'avatar'].concat(this._publicFields);
         return type === 'public' ? fields : fields.concat(this._privateFields);
     }
 
