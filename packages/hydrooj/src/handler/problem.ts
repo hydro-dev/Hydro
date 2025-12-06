@@ -170,17 +170,15 @@ export class ProblemMainHandler extends Handler {
                 pdocs.map((i) => i.docId),
             ));
         }
-        let qs = sortStrategy !== 'default' ? `sort=${sortStrategy}` : '';
-        if (q) qs += `${qs ? '&' : ''}q=${encodeURIComponent(q)}`;
         if (pjax) {
             this.response.body = {
                 title: this.renderTitle(this.translate('problem_main')),
                 fragments: (await Promise.all([
                     this.renderHTML('partials/problem_list.html', {
-                        page, ppcount, pcount, pdocs, psdict, qs, q, sort: sortStrategy,
+                        page, ppcount, pcount, pdocs, psdict, qs: q, sort: sortStrategy,
                     }),
                     this.renderHTML('partials/problem_stat.html', { pcount, pcountRelation: this.queryContext.pcountRelation }),
-                    this.renderHTML('partials/problem_lucky.html', { q }),
+                    this.renderHTML('partials/problem_lucky.html', { qs: q }),
                 ])).map((i) => ({ html: i })),
             };
         } else {
@@ -191,8 +189,7 @@ export class ProblemMainHandler extends Handler {
                 pcountRelation: this.queryContext.pcountRelation,
                 pdocs,
                 psdict,
-                qs,
-                q,
+                qs: q,
                 sort: sortStrategy,
             };
         }
