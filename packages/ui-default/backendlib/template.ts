@@ -130,7 +130,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addGlobal('instanceof', (a, b) => a instanceof b);
     this.addGlobal('paginate', misc.paginate);
     this.addGlobal('size', misc.size);
-    this.addGlobal('utils', { status, getAlphabeticId });
+    this.addGlobal('utils', { status, getAlphabeticId, buildQueryString: misc.buildQueryString });
     this.addGlobal('avatarUrl', avatar);
     this.addGlobal('formatSeconds', misc.formatSeconds);
     this.addGlobal('model', global.Hydro.model);
