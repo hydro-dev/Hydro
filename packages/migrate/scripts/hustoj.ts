@@ -297,7 +297,7 @@ hydrooj install https://hydro.ac/hydroac-client.zip
                 description = description.replace(`/upload/${fileWithPath}`, `file://${filename}`);
             }
             // WHY you allow contest with end time BEFORE start time? WHY???
-            const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.end_time).add(1, 'minute').toDate() : tdoc.end_time;
+            const endAt = moment(tdoc.end_time).isSameOrBefore(tdoc.start_time) ? moment(tdoc.start_time).add(1, 'minute').toDate() : tdoc.end_time;
             let isAssignMode = false;
             if (tdoc.private === 1 && tdoc.password === '') {
                 isAssignMode = true;

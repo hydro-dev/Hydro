@@ -1,8 +1,7 @@
 import crypto from 'crypto';
+import { compareSync } from 'bcryptjs';
 import {
-    Context, md5, Schema, sha1,
-    SystemError,
-    SystemModel,
+    Context, md5, Schema, sha1, SystemError, SystemModel,
 } from 'hydrooj';
 
 const RE_MD5 = /^[\da-f]{32}$/;
@@ -31,6 +30,21 @@ export function apply(ctx: Context) {
             withContest: Schema.boolean().default(true),
         }),
         checkLock((...args) => require('./scripts/hustoj').run(...args)),
+    );
+    ctx.addScript(
+        'migrateJnoj', 'migrate from jnoj',
+        Schema.object({
+            host: Schema.string().default('localhost'),
+            port: Schema.number().default(3306),
+            name: Schema.string().default('jnoj'),
+            username: Schema.string().required(),
+            password: Schema.string().required(),
+            domainId: Schema.string().default('system'),
+            dataDir: Schema.string().default('/www/jnoj/jnoj/judge/data/'),
+            uploadDir: Schema.string().default('/www/jnoj/jnoj/web/uploads/'),
+            withContest: Schema.boolean().default(true),
+        }),
+        checkLock((...args) => require('./scripts/jnoj').run(...args)),
     );
     ctx.addScript(
         'migrateSyzoj', 'migrate from syzoj',
@@ -105,6 +119,7 @@ export function apply(ctx: Context) {
     });
     ctx.provideModule('hash', 'syzoj', (password: string) => md5(`${password}syzoj2_xxx`));
     ctx.provideModule('hash', 'uoj', (password, salt, { uname }) => md5(`${uname}${crypto.createHmac('md5', salt).update(password).digest('hex')}`));
+    ctx.provideModule('hash', 'jnoj', (password, salt) => compareSync(password, salt));
 
     ctx.i18n.load('zh', {
         'migrate from hustoj': '从 HustOJ 导入',
