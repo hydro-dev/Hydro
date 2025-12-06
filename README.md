@@ -111,6 +111,19 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.14 / UI 4.58.0-beta.15
+
+- core: 修复题目创建页面多语言切换
+- ui: 修复比赛题目列表显示
+- scoreboard-xcpcio: 内置外榜推送功能
+- onsite-toolkit: 优先使用座位号作为 cdp id
+- scoreboard-xcpcio: 支持定时刷新
+- onsite-toolkit: 支持从 URL 加载头像
+- onsite-toolkit: 支持展平的队伍照片目录
+- core: 复制题目时同时复制难度
+- core&ui: 训练页面题目缺失不影响正常显示
+- migrate: add jnoj support
+
 ## Hydro 5.0.0-beta.13 / UI 4.58.0-beta.14
 
 - ui: 比赛页面添加打印快捷入口
