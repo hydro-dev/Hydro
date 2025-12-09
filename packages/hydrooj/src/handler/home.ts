@@ -449,6 +449,8 @@ class HomeSettingsHandler extends Handler {
 }
 
 class HomeAvatarHandler extends Handler {
+    noCheckPermView = true;
+
     @param('avatar', Types.String, true)
     async post({ }, input: string) {
         if (input) {
