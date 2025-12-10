@@ -3,7 +3,7 @@ import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
     _, avatar, BadRequestError, ContestModel, ContestNotEndedError, Context, db, findFileSync,
-    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, PRIV, ProblemConfig, ProblemModel,
+    ForbiddenError, fs, ObjectId, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
     SystemModel, Time, Types, UserModel, Zip,
 } from 'hydrooj';
@@ -47,6 +47,7 @@ export const Config = Schema.object({
     ipLogin: Schema.boolean().default(false),
     extraFields: Schema.boolean().default(false),
     submit: Schema.boolean().default(false).description('Enable submit script'),
+    contestMode: Schema.boolean().default(false).description('Enable contest mode'),
 });
 
 export function apply(ctx: Context, config: ReturnType<typeof Config>) {
@@ -70,24 +71,23 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             that.session.uid = iplogin.uid;
             that.session.user = that.user;
         });
-
-        const disable = (that) => {
-            if (!that.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) throw new ForbiddenError('Not available');
-        };
-        ctx.on('handler/before/HomeDomain', disable);
-        ctx.on('handler/before/DomainUser', disable);
-        ctx.on('handler/before/HomeMessages#post', disable);
-        ctx.on('handler/before/Files', disable);
-        ctx.on('handler/before/HomeAvatar', disable);
-        ctx.on('handler/before/HomeSecurity', disable);
-        ctx.on('handler/before/UserDetail', disable);
-        ctx.on('handler/before/UserLostPass', disable);
-
-        ctx.on('handler/before/HomeSettings', (that) => {
-            if (that.user.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) return;
-            if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
-        });
     }
+
+    const disable = (that) => {
+        if (that.user.contestMode) throw new ForbiddenError('Not available');
+    };
+    ctx.on('handler/before/HomeDomain', disable);
+    ctx.on('handler/before/DomainUser', disable);
+    ctx.on('handler/before/HomeMessages#post', disable);
+    ctx.on('handler/before/Files', disable);
+    ctx.on('handler/before/HomeAvatar', disable);
+    ctx.on('handler/before/HomeSecurity', disable);
+    ctx.on('handler/before/UserDetail', disable);
+    ctx.on('handler/before/UserLostPass', disable);
+    ctx.on('handler/before/HomeSettings', (that) => {
+        if (that.user.contestMode) return;
+        if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
+    });
 
     ctx.inject(['scoreboard'], ({ scoreboard }) => {
         scoreboard.addView('resolver-tiny', 'Resolver(Tiny)', { tdoc: 'tdoc' }, {
@@ -358,7 +358,8 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (line.member4) line.members.push(line.member4);
             const set: any = _.pick(line, 'school', 'members', 'coach', 'seat');
             if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
-            if (Object.keys(set).length) await UserModel.setById(team._id, set);
+            set.contestMode = true;
+            await UserModel.setById(team._id, set);
             for (const tdoc of tdocs) {
                 const tsdoc = await ContestModel.getStatus('system', tdoc.docId, team._id);
                 if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
@@ -390,6 +391,13 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 SettingModel.Setting('setting_info', 'coach', null, 'text', 'coach', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
                 SettingModel.Setting('setting_info', 'members', null, 'text', 'members', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
                 SettingModel.Setting('setting_info', 'seat', null, 'text', 'seat', '', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+            );
+        });
+    }
+    if (config.contestMode) {
+        ctx.inject(['setting'], (c) => {
+            c.setting.AccountSetting(
+                SettingModel.Setting('setting_info', 'contestMode', null, 'boolean', 'contestMode', 'Contest Mode', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
             );
         });
     }
