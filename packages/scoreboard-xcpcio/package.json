@@ -8,9 +8,9 @@
         "postinstall": "node -r @hydrooj/register install.ts"
     },
     "dependencies": {
-        "@xcpcio/board-app": "^0.76.1"
+        "@xcpcio/board-app": "^0.76.4"
     },
     "devDependencies": {
-        "@xcpcio/types": "^0.76.1"
+        "@xcpcio/types": "^0.76.4"
     }
 }

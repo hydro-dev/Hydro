@@ -21,7 +21,7 @@
         "@hydrooj/common": "workspace:^",
         "@hydrooj/framework": "workspace:^",
         "@hydrooj/utils": "workspace:^",
-        "@mongodb-js/saslprep": "^1.3.2",
+        "@mongodb-js/saslprep": "^1.4.0",
         "@simplewebauthn/server": "13.2.2",
         "@undefined-moe/require-resolve-hook": "^1.1.0",
         "@zip.js/zip.js": "^2.8.11",

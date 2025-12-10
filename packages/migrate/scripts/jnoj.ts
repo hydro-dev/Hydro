@@ -165,13 +165,13 @@ export async function run({
         current ||= await UserModel.getByUname(domainId, udoc.username);
         if (current) {
             report({ message: `duplicate user with email ${udoc.email}: ${current.uname},${udoc.username}` });
-            uidMap[udoc.username] = current._id;
+            uidMap[udoc.id] = current._id;
         } else {
             const uid = await UserModel.create(
                 udoc.email || `${udoc.username}@jnoj.local`, udoc.username, '',
                 null, '127.0.0.1', udoc.status === 10 ? SystemModel.get('default.priv') : 0,
             );
-            uidMap[udoc.username] = uid;
+            uidMap[udoc.id] = uid;
             await UserModel.setById(uid, {
                 loginat: udoc.updated_at,
                 regat: udoc.created_at,
@@ -445,6 +445,7 @@ memory: ${pdoc.memory_limit}m
             : ddoc.entity_id === 'problem' ? pidMap[ddoc.entity_id] : new ObjectId(tidMap[ddoc.entity_id]);
         if (!parentId) continue;
         const payload = {
+            _id,
             domainId,
             content: ddoc.content,
             owner: uidMap[ddoc.created_by] || 1,
