@@ -85,7 +85,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     ctx.on('handler/before/UserDetail', disable);
     ctx.on('handler/before/UserLostPass', disable);
     ctx.on('handler/before/HomeSettings', (that) => {
-        if (that.user.contestMode) return;
+        if (!that.user.contestMode) return;
         if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
     });
 
