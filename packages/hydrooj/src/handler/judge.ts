@@ -7,6 +7,7 @@ import sanitize from 'sanitize-filename';
 import {
     JudgeMeta, JudgeResultBody, ProblemConfigFile, TestCase,
 } from '@hydrooj/common';
+import { sleep } from '@hydrooj/utils';
 import { Context } from '../context';
 import {
     BadRequestError, FileLimitExceededError, ForbiddenError, ProblemIsReferencedError, ValidationError,
@@ -281,7 +282,18 @@ export class JudgeConnectionHandler extends ConnectionHandler {
 
     async newTask(t: Task) {
         const rid = t.rid.toHexString();
-        this.tasks[rid] = new JudgeResultCallbackContext(this.ctx, t);
+        const context = new JudgeResultCallbackContext(this.ctx, t);
+        if (this.tasks[rid]) {
+            for (let i = 1; i <= 300; i++) {
+                if (!this.tasks[rid]) break;
+                if (i === 300) {
+                    context.end({ message: 'Wait for previous judge timeout', status: STATUS.STATUS_SYSTEM_ERROR });
+                    return;
+                }
+                await sleep(1000); // eslint-disable-line no-await-in-loop
+            }
+        }
+        this.tasks[rid] = context;
         this.send({ task: t });
         this.tasks[rid].next({ status: STATUS.STATUS_FETCHED });
         await this.tasks[rid];
@@ -296,7 +308,10 @@ export class JudgeConnectionHandler extends ConnectionHandler {
         }
         if (['next', 'end'].includes(msg.key)) {
             const t = this.tasks[msg.rid];
-            if (!t) return;
+            if (!t) {
+                logger.warn('Unknown judge rid reported: %s', msg.rid);
+                return;
+            }
             if (msg.key === 'next') t.next(msg);
             if (msg.key === 'end') t.end(msg.nop ? undefined : { judger: this.user._id, ...msg });
         } else if (msg.key === 'status') {
