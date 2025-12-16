@@ -43,6 +43,8 @@ export function apply(ctx: Context) {
             dataDir: Schema.string().default('/www/jnoj/jnoj/judge/data/'),
             uploadDir: Schema.string().default('/www/jnoj/jnoj/web/uploads/'),
             withContest: Schema.boolean().default(true),
+            keepGroups: Schema.string().default(''),
+            hideExtraGroup: Schema.boolean().default(false),
         }),
         checkLock((...args) => require('./scripts/jnoj').run(...args)),
     );
