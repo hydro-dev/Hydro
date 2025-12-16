@@ -134,7 +134,7 @@ export default class RecordModel {
         lang: string, code: string, addTask: boolean,
         args: {
             contest?: ObjectId;
-            input?: string;
+            input?: string[];
             files?: Record<string, string>;
             hackTarget?: ObjectId;
             type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate';
@@ -168,7 +168,7 @@ export default class RecordModel {
             args.type = 'judge';
             data.rejudged = true;
         } else if (args.type === 'pretest') {
-            data.input = args.input || '';
+            data.input = args.input || [];
             isContest = false;
             data.contest = RecordModel.RECORD_PRETEST;
         } else if (args.type === 'generate') {

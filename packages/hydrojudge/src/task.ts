@@ -30,7 +30,7 @@ export class JudgeTask {
     rid: string;
     lang: string;
     code: CopyInFile;
-    input?: string;
+    input?: string[];
     finished: boolean = false;
     clean: (() => Promise<any>)[] = [];
     data: FileInfo[];
@@ -60,7 +60,7 @@ export class JudgeTask {
             this.source = this.request.source;
             this.meta = this.request.meta;
             this.files = this.request.files;
-            this.input = this.request.input;
+            this.input = Array.isArray(this.request.input) ? this.request.input : [this.request.input];
             let tid = this.request.contest?.toString() || '';
             if (tid === '000000000000000000000000') tid = '';
             this.env = {

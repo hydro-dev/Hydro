@@ -483,9 +483,9 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.Name)
     @param('code', Types.String, true)
     @param('pretest', Types.Boolean)
-    @param('input', Types.String, true)
+    @param('input', Types.ArrayOf(Types.String), true)
     @param('tid', Types.ObjectId, true)
-    async post(domainId: string, lang: string, code: string, pretest = false, input = '', tid?: ObjectId) {
+    async post(domainId: string, lang: string, code: string, pretest = false, input: string[] = [], tid?: ObjectId) {
         const config = this.pdoc.config;
         if (typeof config === 'string' || config === null) throw new ProblemConfigError();
         if (['submit_answer', 'objective'].includes(config.type)) {
@@ -498,6 +498,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
             if (!['default', 'remote_judge'].includes(this.response.body.pdoc.config?.type)) {
                 throw new ProblemNotAllowPretestError('type');
             }
+            if (!input.length) throw new ValidationError('input');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
         await this.limitRate('add_record', 60, pretest ? system.get('limit.pretest') : system.get('limit.submission'));
