@@ -30,7 +30,7 @@ export const judge = async (ctx: JudgeTask) => {
         await using res = await runQueued(
             `${executeGenerator.execute} ${i}`,
             {
-                stdin: { content: ctx.input || '' },
+                stdin: { content: (ctx.input || [])[i - 1] || '' },
                 copyIn: executeGenerator.copyIn,
                 copyOut: ['stderr'],
                 copyOutCached: ['stdout'],
