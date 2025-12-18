@@ -7,7 +7,7 @@ __langname: 正體中文
   {2}。'
 '{0} comments': '{0} 條評論'
 '{0} discussions': '{0} 條討論'
-'{0} is a moderator of this domain.': '{0}是這個域的管理者之一。'
+'{0} is a moderator of this domain.': '{}是這個域的管理者之一。'
 '{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過頻率限制。限制：{1} 秒內最多
   {2} 次操作。'
 '{0} problems': '{0} 道題'
