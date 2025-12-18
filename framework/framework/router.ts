@@ -1,5 +1,5 @@
 import { IncomingMessage } from 'http';
-import KoaRouter from '@koa/router';
+import KoaRouter, { type RouterInstance } from '@koa/router';
 import { Keys, pathToRegexp } from 'path-to-regexp';
 import type WebSocket from 'ws';
 import type { KoaContext } from './server';
@@ -51,7 +51,7 @@ export class Router extends KoaRouter {
     /**
      * hack into router methods to make sure that koa middlewares are disposable
      */
-    register(...args: Parameters<KoaRouter['register']>) {
+    register(...args: Parameters<RouterInstance['register']>) {
         const layer = super.register(...args);
         this.disposeLastOp = () => remove(this.stack, layer);
         return layer;

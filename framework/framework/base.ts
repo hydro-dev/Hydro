@@ -18,12 +18,15 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         method: ctx.request.method.toLowerCase(),
         host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
         ip: (ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip).split(',')[0].trim(),
-        ...pick(ctx, ['cookies', 'query', 'path', 'params', 'originalPath', 'querystring']),
+        ...pick(ctx, ['cookies', 'query', 'path', 'originalPath', 'querystring']),
         ...pick(ctx.request, ['headers', 'body', 'hostname']),
         files: ctx.request.files as any,
         referer: ctx.request.headers.referer || '',
         json: (ctx.request.headers.accept || '').includes('application/json'),
         websocket: ctx.request.headers.upgrade === 'websocket',
+        get params() {
+            return ctx.params;
+        },
     };
     const response: HydroResponse = {
         body: {},

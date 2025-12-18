@@ -9,13 +9,13 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.1.2",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1"
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.2",
-    "vite": "^7.2.7"
+    "vite": "^7.3.0"
   }
 }

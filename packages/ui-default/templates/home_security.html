@@ -148,8 +148,7 @@
               </div>
               <div class="media__body medium typo">
                 <p>{{ _('Authenticator') }}: {{ authenticator.name }} ({{ authenticator.credentialID.buffer.toString('base64')|truncate(6, end='') }})</p>
-                <p>{{ _('Type') }}: {{ authenticator.fmt }} </p>
-                <p>{{ _('Device Type') }}: {{ authenticator.credentialDeviceType }} </p>
+                <p>{{ _('Type') }}: {{ authenticator.credentialDeviceType }}:{{ authenticator.fmt }}</p>
                 <p>{{ _('Registered at') }}: {{ datetimeSpan(authenticator.regat)|safe }}</p>
               </div>
               <div class="media__right medium">
