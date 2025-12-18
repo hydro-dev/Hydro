@@ -1,6 +1,6 @@
 __flag: 🇹🇼
 __id: zh_TW
-__interface: true
+__interface: 'yes'
 __langname: 正體中文
 '"{data}" copied to clipboard!': “{data}”已複製到剪貼簿！
 '{0} {1} delete your discussion reply {2} in "{3}"({4}).': '{0} {1} 從討論 {3}({4}) 刪除了你的回覆
