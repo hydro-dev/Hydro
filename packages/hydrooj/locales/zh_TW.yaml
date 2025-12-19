@@ -42,7 +42,7 @@ Role {1} already exists in domain {0}.: 域 {0} 中已存在角色 {1}。
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已經存在。'
 'Yes': '是'
 Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
-Split by ',' '.': 由“, ”或“，”分隔。
+Split by ',' '.': 由", "、"，"或"."分隔。
 What's file?: 什麼是檔案？
 (All Problems): (所有題目)
 (None): (無)
