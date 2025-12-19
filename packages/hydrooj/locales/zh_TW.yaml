@@ -17,33 +17,30 @@ __langname: 正體中文
 '{0}: Permissions': '{0}: 許可權'
 '{0}: Roles': '{0}: 角色'
 '{0}: Users': '{0}: 使用者'
-'# My Submissions': 我的遞交數
-'# Submissions': 遞交數
-'↓ # Comments': ↓ 評論數
-'↓ # Enrollees': ↓ 參與人數
-'↓ # Likes': ↓ 贊數
-'↓ # Stars': ↓ 收藏數
+'# My Submissions': '我的遞交數'
+'# Submissions': '遞交數'
+'↓ # Comments': '↓ 評論數'
+'↓ # Enrollees': '↓ 參與人數'
+'↓ # Likes': '↓ 贊數'
+'↓ # Stars': '↓ 收藏數'
 ↓ Create Time: ↓ 建立時間
 ↓ Update Time: ↓ 更新時間
-'A domain ID cannot be changed after creation. It is supposed to be:': 建立後將無法更改 ID。ID
-  必須滿足以下條件：
+'A domain ID cannot be changed after creation. It is supposed to be:': '建立後將無法更改 ID。ID 必須滿足以下條件：'
 Copy "{data}" failed :(: 複製“{data}”失敗 :(
 Copy failed :(: 複製失敗 :(
 'Current dataset: {0}': '當前測試資料: {0}'
-'Discussion: Terms Of Service': 討論區服務條款
+'Discussion: Terms Of Service': '討論區服務條款'
 First Blood Notice\n{0} solved problem {1} ({2}): 題目一血提示\n{0} 解決了題目 {1} ({2})
-? 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x,
-  ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...'
-: 格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...
+'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
 Join {0}: 加入 {0}
-'No': 否
-'Note: Problem title may not be hidden.': 注意：題目標題可能不會被隱藏。
-'Or upload a file:': 或者上傳一個檔案：
+'No': '否'
+'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
+'Or upload a file:': '或者上傳一個檔案：'
 'Original score: {0}': '原得分: {0}'
-Role {1} already exists in domain {0}.: 域 {0} 中已存在角色 {1}。
+Role {1} already exists in domain {0}.: 域 {0} 中已存在用戶 {1}。
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
-The value `{1}` of {0} already exists.: '{0} 的值 `{1}` 已經存在。'
-'Yes': 是
+The value `{1}` of {0} already exists.: {0} 的值 `{1}` 已經存在。
+'Yes': '是'
 Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
 Split by ',' '.': 由“, ”或“，”分隔。
 What's file?: 什麼是檔案？
@@ -71,8 +68,7 @@ Add User: 新增使用者
 Add: 新增
 Additional File: 附加檔案
 Admin {0} delete your discussion "{1}".: 管理員 {0} 刪除了你的討論 "{1}"。
-Admin {0} delete your discussion tail reply {1} in "{2}"({3}).: 管理員 {0} 從討論 {2}({3})
-  中刪除了你的樓中樓回覆 {1}。
+Admin {0} delete your discussion tail reply {1} in "{2}"({3}).: 管理員 {0} 從討論 {2}({3}) 中刪除了你的討論串回覆 {1}。
 All {0} Contests: 所有 {0} 比賽
 All Contests: 所有比賽
 All Homeworks: 所有功課
@@ -81,8 +77,7 @@ All Training Plans: 所有訓練計劃
 All: 全部
 Allow builtin-login: 啟用內建登入
 Allow users send messages: 允許使用者使用私信
-Allow using gravatar:email qq:id github:name url:link format.: 允許使用 gravatar:email，qq:id，github:name，url:link
-  格式。
+Allow using gravatar:email qq:id github:name url:link format.: 允許使用 gravatar:email，qq:id，github:name，url:link 格式。
 Allowed langs: 域內允許使用的提交語言
 Always granted all privileges: 總是擁有所有域許可權
 An error has occurred.: 發生了一個錯誤。
