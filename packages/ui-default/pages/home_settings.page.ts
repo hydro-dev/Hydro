@@ -10,7 +10,7 @@ export default new NamedPage('home_account', () => {
   const $type = $(tpl`
     <select id="type" class="select">
       <option value="gravatar">${i18n('Gravatar')}</option>
-      <option value="github">${i18n('Github')}</option>
+      <option value="github">${i18n('GitHub')}</option>
       <option value="qq">${i18n('QQ')}</option>
       <option value="upload">${i18n('Upload')}</option>
     </select>
@@ -46,7 +46,7 @@ export default new NamedPage('home_account', () => {
       const placeholder = $type.val() === 'gravatar'
         ? 'Email address'
         : $type.val() === 'github'
-          ? 'Github username'
+          ? 'GitHub username'
           : 'QQ ID';
       $text.attr('placeholder', i18n(placeholder));
     }
