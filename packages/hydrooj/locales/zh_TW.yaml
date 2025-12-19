@@ -1,15 +1,15 @@
 __flag: 🇹🇼
 __id: zh_TW
-__interface: 'yes'
+__interface: yes
 __langname: 正體中文
-'"{data}" copied to clipboard!': “{data}”已複製到剪貼簿！
+'"{data}" copied to clipboard!': '“{data}”已複製到剪貼簿！'
 '{0} {1} delete your discussion reply {2} in "{3}"({4}).': '{0} {1} 從討論 {3}({4}) 刪除了你的回覆
   {2}。'
 '{0} comments': '{0} 條評論'
 '{0} discussions': '{0} 條討論'
 '{0} is a moderator of this domain.': '{0}是這個域的管理者之一。'
-'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過頻率限制。限制：{1} 秒內最多
-  {2} 次操作。'
+'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過限制。(限制：{1} 秒內最多
+  {2} 次操作。)'
 '{0} problems': '{0} 道題'
 '{0} sections': '{0} 小節'
 '{0} solutions': '{0} 條題解'
