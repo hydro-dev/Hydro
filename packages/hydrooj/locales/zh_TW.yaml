@@ -23,21 +23,21 @@ __langname: 正體中文
 '↓ # Enrollees': '↓ 參與人數'
 '↓ # Likes': '↓ 贊數'
 '↓ # Stars': '↓ 收藏數'
-↓ Create Time: ↓ 建立時間
-↓ Update Time: ↓ 更新時間
+'↓ Create Time': '↓ 建立時間'
+'↓ Update Time': '↓ 更新時間'
 'A domain ID cannot be changed after creation. It is supposed to be:': '建立後將無法更改 ID。ID 必須滿足以下條件：'
-Copy "{data}" failed :(: 複製“{data}”失敗 :(
-Copy failed :(: 複製失敗 :(
+'Copy "{data}" failed :(': '複製“{data}”失敗 :('
+'Copy failed :(': '複製失敗 :('
 'Current dataset: {0}': '當前測試資料: {0}'
 'Discussion: Terms Of Service': '討論區服務條款'
-First Blood Notice\n{0} solved problem {1} ({2}): 題目一血提示\n{0} 解決了題目 {1} ({2})
-? 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
+'First Blood Notice\n{0} solved problem {1} ({2})': '題目首殺提示\n{0} 解決了題目 {1} ({2})'
+'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
 Join {0}: 加入 {0}
 'No': '否'
 'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
 'Or upload a file:': '或者上傳一個檔案：'
 'Original score: {0}': '原得分: {0}'
-Role {1} already exists in domain {0}.: 域 {0} 中已存在角色 {1}。
+'Role {1} already exists in domain {0}.': '域 {0} 中已存在角色 {1}。'
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已經存在。'
 'Yes': '是'
@@ -157,10 +157,8 @@ Contact Us: 聯絡我們
 Contact: 聯絡
 content: 內容
 Content: 內容
-Contest {0} has a new clarification about {1}, please go to contest clarifications page to reply.: 比賽
-  {0} 有一條關於 {1} 的新答疑，請前往比賽答疑頁面回覆。
-Contest {0} jury replied to your clarification, please go to contest page to view.: 比賽
-  {0} 的裁判回覆了您的答疑，請前往比賽頁面檢視。
+Contest {0} has a new clarification about {1}, please go to contest clarifications page to reply.: 比賽 {0} 有一條關於 {1} 的新答疑，請前往比賽答疑頁面回覆。
+Contest {0} jury replied to your clarification, please go to contest page to view.: 比賽 {0} 的裁判回覆了您的答疑，請前往比賽頁面檢視。
 Contest Clarifications: 賽時答疑
 Contest Management: 比賽管理
 Contest scoreboard is not visible.: 當前比賽成績表隱藏，暫不可顯示。
@@ -426,15 +424,8 @@ Insert Code: 插入程式碼
 Insert Image: 插入影象
 Installed Modules: 已安裝的模組
 Instant Rendering: 即時渲染
-? Instead of copying the test data directly, the test data of the copied problems
-  will be linked to the test data of the source problems (called the source test data).
-  Thus, the copied problems can observe the changes in the source test data. The permissions
-  of the test data of the copied problems follow the source test data, e.g., you still
-  might not download them but the judges can. By uploading some new test data, the
-  link will be broken and the new test data will be used.
-: 雖然測試資料不會被複制，但是系統會將題目的測試資料連結到原題。因此在原題的資料被改動的時候，複製後的題目的資料也會同時改動。連結後的測試資料的許可權以原題為準，比如您可能依舊無法下載資料，但是評測機可以。在題目設定頁面中可以透過上傳新的測試資料的方式，這個資料連結會被刪除，以後將使用您的新測試資料。
-Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過
-  500 個字元，將顯示在列表頁面中。
+Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 雖然測試資料不會被複制，但是系統會將題目的測試資料連結到原題。因此在原題的資料被改動的時候，複製後的題目的資料也會同時改動。連結後的測試資料的許可權以原題為準，比如您可能依舊無法下載資料，但是評測機可以。在題目設定頁面中可以透過上傳新的測試資料的方式，這個資料連結會被刪除，以後將使用您的新測試資料。
+Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過 500 個字元，將顯示在列表頁面中。
 Introduce: 簡介
 Invalid password for user {0}.: 使用者 {0} 的密碼錯誤。
 Invalid: 無效
@@ -816,8 +807,7 @@ theme: 主題
 There are no contests...: 沒有比賽…
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
-This email was sent by {0} automatically, and please do not reply directly.: 這封郵件由
-  {0} 自動傳送，請勿直接回復。
+This email was sent by {0} automatically, and please do not reply directly.: 這封郵件由 {0} 自動傳送，請勿直接回復。
 This homework is not open and you cannot view problems.: 功課尚未開放，不能檢視題目。
 This homework is not open.: 功課尚未開放遞交。
 This is the current session: 這是當前的會話
@@ -939,17 +929,9 @@ What's this?: 這是什麼？
 Whether to show tags in the problem list.: 是否在題目列表中顯示題目的標籤。
 wiki_about: 關於
 Will be used as the domain icon.: 將被用作圖示。
-? With this feature, you can copy problems that you can view from a domain to some
-  other domain. Their title, content, tags and categories will be copied. However,
-  their test data are not copied directly.
-: 您可以透過這個功能將某域下您能檢視的題目複製到其它域中，題目的標題、描述、標籤與分類將被複制過來。但是測試資料不會被直接複製。
-? With this feature, you can import problems that you can view from a site to here.
-  Their title, content, tags and categories will be imported. However, their test
-  data are not copied directly.
-: 您可以透過這個功能將其他 OJ 的題目匯入到本站。題目的標題、題面、標籤和分類將會被直接匯入，測試資料將會在後臺自動匯入。
-? With this feature, you can import problems that you can view from a site to here.
-  Their title, content, tags and categories will be imported.
-: 您可以透過這個功能將其他 OJ 的題目匯入到本站。題目的標題、題面、標籤和分類都將會被自動匯入。
+With this feature, you can copy problems that you can view from a domain to some other domain. Their title, content, tags and categories will be copied. However, their test data are not copied directly.: 您可以透過這個功能將某域下您能檢視的題目複製到其它域中，題目的標題、描述、標籤與分類將被複制過來。但是測試資料不會被直接複製。
+With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported. However, their test data are not copied directly.: 您可以透過這個功能將其他 OJ 的題目匯入到本站。題目的標題、題面、標籤和分類將會被直接匯入，測試資料將會在後臺自動匯入。
+With this feature, you can import problems that you can view from a site to here. Their title, content, tags and categories will be imported.: 您可以透過這個功能將其他 OJ 的題目匯入到本站。題目的標題、題面、標籤和分類都將會被自動匯入。
 Write Your Comment: 發表您的評論
 Write Your Solution: 發表您的題解
 WYSIWYG: 所見即所得
@@ -957,9 +939,7 @@ Year: 年
 You are banned by the domain moderator.: 您被該域的管理員封禁。
 You are not allowed to join domain {0}. {1}: 您無法加入 {0}。{1}
 You can create your own training plans and share them with others.: 您可以建立您自己的訓練計劃並且與他人分享。
-? You cannot submit for this problem because the contest is ended. You can click "Open
-  in Problem Set" to view this problem in normal mode.
-: 該比賽已結束，您無法在比賽模式下遞交該題目。您可以點選“在題庫中開啟”以普通模式檢視和遞交本題。
+You cannot submit for this problem because the contest is ended. You can click "Open in Problem Set" to view this problem in normal mode.: 該比賽已結束，您無法在比賽模式下遞交該題目。您可以點選“在題庫中開啟”以普通模式檢視和遞交本題。
 You cannot submit for this problem because the homework's deadline is due.: 功課已到達截止時間，您無法遞交了。
 You cannot visit this domain.: 您不能訪問此域。
 You don't have the required permission ({0}) in this domain.: 您在該域中無相應許可權 ({0})。
