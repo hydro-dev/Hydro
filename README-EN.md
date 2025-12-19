@@ -45,6 +45,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 In dictionary order:
 
-- [Github](https://github.com/) Code hosting and workflow.  
+- [GitHub](https://github.com/) Code hosting and workflow.  
 - [criyle](https://github.com/criyle) Sandbox.  
 - [Vijos](https://github.com/vijos/vj4) UI framework.  
