@@ -49,9 +49,7 @@ Role {1} already exists in domain {0}.: 域 {0} 中已存在身分組 {1}。
 The value `{1}` of {0} already exists.: '{0} 的值 `{1}` 已經存在。'
 'Tip: You are entering sudo mode.': 提示：您正在進行<a href="https://docs.github.com/articles/sudo-mode">身份驗證</a>。
 'Yes': 是
-? After you've performed a sudo-protected action, you'll only be asked to re-authenticate
-  again after a few hours of inactivity.
-: 在您執行受保護的操作後，只有賬戶連續數小時不活動時，系統才會再次要求您重新驗證身份。
+"After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.": 在您執行受保護的操作後，只有賬戶連續數小時不活動時，系統才會再次要求您重新驗證身份。
 Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
 Split by ', '.: 由“, ”或“，”分隔。
 View other's records: 檢視他人的記錄
@@ -415,8 +413,7 @@ First of Problem: 題目一血
 fontFamily: 字型
 Footer: 頁尾
 Footnote: 腳註
-For better problem version management and validation, we suggest using Polyhedron to prepare problems.: 為了更好的題目版本管理和檢查，我們推薦使用
-  Polyhedron 來準備演算法競賽題目。
+For better problem version management and validation, we suggest using Polyhedron to prepare problems.: 為了更好的題目版本管理和檢查，我們推薦使用 Polyhedron 來準備演算法競賽題目。
 Forgot Password and/or Username: 忘記密碼和/或使用者名稱
 Forgot password or username?: 忘記密碼或者使用者名？
 Formula blocks: 公式區塊
@@ -497,8 +494,7 @@ Insert Code: 插入程式碼
 Insert Image: 插入影象
 Installed Modules: 已安裝的模組
 Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 雖然測試資料不會被複制，但是系統會將題目的測試資料連結到原題。因此在原題的資料被改動的時候，複製後的題目的資料也會同時改動。連結後的測試資料的許可權以原題為準，比如您可能依舊無法下載資料，但是評測機可以。在題目設定頁面中可以透過上傳新的測試資料的方式，這個資料連結會被刪除，以後將使用您的新測試資料。
-Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過
-  500 個字元，將顯示在列表頁面中。
+Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過 500 個字元，將顯示在列表頁面中。
 Introduce: 簡介
 Invalid password for user {0}.: 使用者 {0} 的密碼錯誤。
 Invalid RegExp: 無效的正規表示式。
