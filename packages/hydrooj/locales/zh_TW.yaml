@@ -37,9 +37,9 @@ Join {0}: 加入 {0}
 'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
 'Or upload a file:': '或者上傳一個檔案：'
 'Original score: {0}': '原得分: {0}'
-Role {1} already exists in domain {0}.: 域 {0} 中已存在用戶 {1}。
+Role {1} already exists in domain {0}.: 域 {0} 中已存在角色 {1}。
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
-The value `{1}` of {0} already exists.: {0} 的值 `{1}` 已經存在。
+'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已經存在。'
 'Yes': '是'
 Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
 Split by ',' '.': 由“, ”或“，”分隔。
@@ -560,7 +560,7 @@ Open Source: 開源
 Open: 開放
 Operating System: 作業系統
 Ops: 運維
-Or, with automatically filled invitation code: 或者，這是可以自動填寫邀請碼的
+Or, with automatically filled invitation code: 或者，可以使用自動填寫邀請碼
 Ordered List: 有序列表
 Original Score: 原始得分
 OS Info: 系統資訊
