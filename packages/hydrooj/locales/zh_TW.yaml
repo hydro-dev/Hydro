@@ -3,13 +3,11 @@ __id: zh_TW
 __interface: yes
 __langname: 正體中文
 '"{data}" copied to clipboard!': '“{data}”已複製到剪貼簿！'
-'{0} {1} delete your discussion reply {2} in "{3}"({4}).': '{0} {1} 從討論 {3}({4}) 刪除了你的回覆
-  {2}。'
+'{0} {1} delete your discussion reply {2} in "{3}"({4}).': '{0} {1} 從討論 {3}({4}) 刪除了你的回覆 {2}。'
 '{0} comments': '{0} 條評論'
 '{0} discussions': '{0} 條討論'
 '{0} is a moderator of this domain.': '{0}是這個域的管理者之一。'
-'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過限制。(限制：{1} 秒內最多
-  {2} 次操作。)'
+'{0} limit exceeded (limit: {2} operations in {1} seconds).': '{0} 超過限制。(限制：{1} 秒內最多 {2} 次操作。)'
 '{0} problems': '{0} 道題'
 '{0} sections': '{0} 小節'
 '{0} solutions': '{0} 條題解'
@@ -110,8 +108,7 @@ Boom!: 炸了！
 Browser: 瀏覽器
 Built-in: 內建
 Bulletin: 公告
-By clicking the button, you will become a member of the domain {0}.: 點選按鈕，您將成為域 {0}
-  的成員。
+By clicking the button, you will become a member of the domain {0}.: 點選按鈕，您將成為域 {0} 的成員。
 By Contest: 由比賽
 By Problem: 由題目
 By Username / UID: 由使用者名稱或 UID
@@ -793,9 +790,7 @@ Testdata Config: 測試資料配置
 Text: 文字
 The discussion is locked, you can not reply anymore.: 此討論已經鎖定，您不能再回復。
 The homework's deadline is due but in extension. You can still submit for this problem but your score will be penalized.: 功課已經截止，但處於延期時間內。您此時遞交的題目無法獲得全部分數。
-? The invitation code to enter to successfully join the domain. You can only use letters
-  and numbers in the code and it should not be longer than 64 characters.
-: 加入此域的邀請碼。您只能使用字母和數字，並且不能長於 64 個字元。
+The invitation code to enter to successfully join the domain. You can only use letters and numbers in the code and it should not be longer than 64 characters.: 加入此域的邀請碼。您只能使用字母和數字，並且不能長於 64 個字元。
 The invitation code you provided is invalid.: 您提供的邀請碼無效。
 The link is either invalid or expired.: 加域連結無效或已過期。
 The link will be expired at {0}: 連結將於 {0} 過期
