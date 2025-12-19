@@ -31,7 +31,7 @@ Copy failed :(: 複製失敗 :(
 'Current dataset: {0}': '當前測試資料: {0}'
 'Discussion: Terms Of Service': '討論區服務條款'
 First Blood Notice\n{0} solved problem {1} ({2}): 題目一血提示\n{0} 解決了題目 {1} ({2})
-'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
+? 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
 Join {0}: 加入 {0}
 'No': '否'
 'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
@@ -399,8 +399,7 @@ Homework: 功課
 Homeworks per page: 每頁展示的作業數量
 Host: 主持人
 hour(s): 小時
-If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您透過題目後，原始碼會以
-  Email 的形式傳送給您。
+If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您透過題目後，原始碼會以 Email 的形式傳送給您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，則將使用對應語言的內建程式碼模板。
 Images: 圖片
 Import From Hydro: 從 Hydro 匯入
