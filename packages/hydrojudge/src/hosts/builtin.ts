@@ -16,6 +16,7 @@ import { Context } from '../judge/interface';
 import logger from '../log';
 import { versionCheck } from '../sandbox';
 import { JudgeTask } from '../task';
+import { initTracing } from '../tracing';
 
 const session: Session = {
     config: { detail: getConfig('detail') },
@@ -56,6 +57,13 @@ export async function apply(ctx: HydroContext) {
             await versionCheck(warn, error);
         });
     });
+    const tracing = getConfig('tracing');
+    if (tracing?.endpoint && tracing?.samplePercentage) {
+        ctx.effect(() => {
+            const sdk = initTracing(tracing.endpoint, tracing.samplePercentage);
+            return () => sdk.shutdown();
+        });
+    }
     await fs.ensureDir(getConfig('tmp_dir'));
     const info = await sysinfo.get();
     const handle = async (t) => {
