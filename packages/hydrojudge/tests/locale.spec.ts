@@ -10,7 +10,7 @@ describe('hydrojudge locales', () => {
 
     describe('zh_TW.yaml', () => {
         let zhTWContent: any;
-        let allLocales: Record<string, any> = {};
+        const allLocales: Record<string, any> = {};
 
         it('should exist and be readable', () => {
             expect(fs.existsSync(zhTWPath)).to.be.true;
