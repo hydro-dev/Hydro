@@ -15,7 +15,7 @@ describe('Locale Files Validation', () => {
         if (!fs.existsSync(pkg.path)) continue;
 
         describe(`${pkg.name} locales`, () => {
-            const localeFiles = fs.readdirSync(pkg.path).filter(f => f.endsWith('.yaml'));
+            const localeFiles = fs.readdirSync(pkg.path).filter((f) => f.endsWith('.yaml'));
 
             for (const file of localeFiles) {
                 const locale = file.replace('.yaml', '');
