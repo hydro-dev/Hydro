@@ -63,15 +63,16 @@
               </button>
             </form>
           {% endif %}
+          {%- if not tdoc or tdoc.pids|length > 1 -%}
           {%- if tdoc -%}
             {{ utils.getAlphabeticId(tdoc.pids.indexOf(pdoc.docId)) }}
           {%- elif pdoc.pid and pdoc.pid.includes('-') -%}
             {{ pdoc.pid.split('-').join('#') }}
           {%- else -%}
             #{{ pdoc.pid|default(pdoc.docId) }}
-          {%- endif -%}. {{ pdoc.title }}
+          {%- endif -%}. {% endif %}{{ pdoc.title }}
         </h1>
-        {% if tdoc and tdoc.pids|length <= 26 %}
+        {% if tdoc and tdoc.pids|length <= 26 and tdoc.pids|length > 1 %}
           <div class="section__tools contest-problems">
             {% for pid in tdoc.pids -%}
               {% set status = tsdoc.detail[pid].status %}
