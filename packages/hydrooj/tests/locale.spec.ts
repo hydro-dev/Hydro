@@ -55,7 +55,7 @@ describe('Locale Files Validation', () => {
                             }
                         }
 
-                        expect(duplicates).to.be.empty;
+                        expect(duplicates).to.have.lengthOf(0);
                     });
 
                     it('should have consistent parameter placeholders', () => {
