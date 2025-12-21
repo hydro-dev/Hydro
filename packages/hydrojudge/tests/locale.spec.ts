@@ -141,8 +141,7 @@ describe('hydrojudge locales', () => {
                 
                 // If key ends with period, Chinese translation might use Chinese period or keep English period
                 if (key.endsWith('.')) {
-                    expect(value.endsWith('。') || value.endsWith('.')).to.be.true,
-                        `Key "${key}" ends with period but value "${value}" doesn't end with proper punctuation`);
+                    expect(value.endsWith('。') || value.endsWith('.')).to.be.true;
                 }
             }
         });
