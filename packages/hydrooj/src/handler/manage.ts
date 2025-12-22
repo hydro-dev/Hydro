@@ -302,9 +302,8 @@ class SystemUserImportHandler extends SystemHandler {
                         const binds = parseOauthBindings(data);
                         if (binds.length) {
                             for (const bind of binds) {
-                                console.log(bind);
                                 if (await this.ctx.oauth.get(bind.platform, bind.id)) {
-                                    messages.push(`Line ${+i + 1}: OAuth ${bind.platform}:${bind.id} already binded.`);
+                                    messages.push(`Line ${+i + 1}: OAuth ${bind.platform}:${bind.id} already bound.`);
                                 }
                             }
                             oauthBindings[email] ||= [];
