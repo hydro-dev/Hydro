@@ -231,6 +231,33 @@ class SystemConfigHandler extends SystemHandler {
     }
 }
 
+// Support multiple formats for oauth bindings:
+// 1. Array of {platform, id} objects
+// 2. Object with platform as key and id as value
+// 3. Object with 'platform' and 'id' keys
+const parseOauthBindings = (data: any) => {
+    const result: { platform: string, id: string }[] = [];
+    const push = (platform: any, id: any) => {
+        if (!platform || !id) return;
+        result.push({ platform: String(platform), id: String(id) });
+    };
+
+    const oauth = data?.oauth;
+    if (Array.isArray(oauth)) {
+        for (const item of oauth) push(item?.platform, item?.id);
+    } else if (oauth && typeof oauth === 'object') {
+        if ('platform' in oauth && 'id' in oauth) {
+            push((oauth as any).platform, (oauth as any).id);
+        } else {
+            for (const platform of Object.keys(oauth)) {
+                push(platform, (oauth as any)[platform]);
+            }
+        }
+    }
+
+    return result;
+};
+
 /* eslint-disable no-await-in-loop */
 class SystemUserImportHandler extends SystemHandler {
     async get() {
@@ -246,6 +273,7 @@ class SystemUserImportHandler extends SystemHandler {
         const messages = [];
         const mapping = Object.create(null);
         const groups: Record<string, string[]> = Object.create(null);
+        const oauthBindings: Record<string, { platform: string, id: string }[]> = Object.create(null);
         for (const i in users) {
             const u = users[i];
             if (!u.trim()) continue;
@@ -271,6 +299,17 @@ class SystemUserImportHandler extends SystemHandler {
                             groups[data.group] ||= [];
                             groups[data.group].push(email);
                         }
+                        const binds = parseOauthBindings(data);
+                        if (binds.length) {
+                            for (const bind of binds) {
+                                console.log(bind);
+                                if (await this.ctx.oauth.get(bind.platform, bind.id)) {
+                                    messages.push(`Line ${+i + 1}: OAuth ${bind.platform}:${bind.id} already binded.`);
+                                }
+                            }
+                            oauthBindings[email] ||= [];
+                            oauthBindings[email].push(...binds);
+                        }
                         Object.assign(payload, data);
                     } catch (e) { }
                     Object.assign(payload, {
@@ -290,6 +329,12 @@ class SystemUserImportHandler extends SystemHandler {
                     if (udoc.displayName) await domain.setUserInDomain(domainId, uid, { displayName: udoc.displayName });
                     if (udoc.school) await user.setById(uid, { school: udoc.school });
                     if (udoc.studentId) await user.setById(uid, { studentId: udoc.studentId });
+                    const binds = oauthBindings[udoc.email] || [];
+                    for (const bind of binds) {
+                        const existing = await this.ctx.oauth.get(bind.platform, bind.id);
+                        if (existing && existing !== uid) continue;
+                        if (existing !== uid) await this.ctx.oauth.set(bind.platform, bind.id, uid);
+                    }
                     await this.ctx.serial('user/import/create', uid, udoc);
                 } catch (e) {
                     messages.push(e.message);
@@ -349,7 +394,7 @@ class SystemUserPrivHandler extends SystemHandler {
     }
 }
 
-export const inject = ['setting', 'check'];
+export const inject = ['setting', 'check', 'oauth'];
 export async function apply(ctx) {
     ctx.Route('manage', '/manage', SystemMainHandler);
     ctx.Route('manage_dashboard', '/manage/dashboard', SystemDashboardHandler);
