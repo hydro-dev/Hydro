@@ -846,7 +846,7 @@ export async function del(domainId: string, tid: ObjectId) {
 
 export async function get(domainId: string, tid: ObjectId): Promise<Tdoc> {
     const tdoc = await document.get(domainId, document.TYPE_CONTEST, tid);
-    if (!tdoc) throw new ContestNotFoundError(tid);
+    if (!tdoc) throw new ContestNotFoundError(domainId, tid);
     return tdoc;
 }
 
