@@ -131,6 +131,4 @@ export const runFlow = async (ctx: Context, task: Task) => {
             subtasks: infos,
         });
     }
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
 };

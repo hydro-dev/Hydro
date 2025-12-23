@@ -8,6 +8,9 @@
     "dependencies": {
         "@hydrooj/common": "workspace:^",
         "@hydrooj/utils": "workspace:^",
+        "@opentelemetry/api": "^1.9.0",
+        "@opentelemetry/exporter-trace-otlp-http": "^0.208.0",
+        "@opentelemetry/sdk-node": "^0.208.0",
         "@zip.js/zip.js": "^2.8.11",
         "cac": "^6.7.14",
         "p-queue": "^9.0.1",

@@ -32,6 +32,10 @@ export const JudgeSettings = Schema.object({
     host: Schema.any(),
     secret: Schema.string().description('Judge Token Secret').default(randomstring(32)),
     disable: Schema.boolean().description('Disable builtin judge').default(false),
+    tracing: Schema.object({
+        endpoint: Schema.string().role('url').description('Tempo endpoint').default('http://localhost:4318'),
+        samplePercentage: Schema.number().description('Sample percentage').default(0).min(0).max(1),
+    }),
     detail: Schema.union([
         Schema.const('full'),
         Schema.const('case'),

@@ -5,7 +5,6 @@ import signals from '../signals';
 import { JudgeTask } from '../task';
 
 export const judge = async (ctx: JudgeTask) => {
-    ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     const execute = await ctx.compile(ctx.lang, ctx.code);
     ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
@@ -57,8 +56,6 @@ export const judge = async (ctx: JudgeTask) => {
     if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
         await ctx.runAnalysis(execute, { content: ctx.input });
     }
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status,
         time: Math.floor(time * 1000000) / 1000000,
