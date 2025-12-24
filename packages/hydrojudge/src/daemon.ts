@@ -20,6 +20,7 @@ import HydroHost from './hosts/hydro';
 import Vj4Host from './hosts/vj4';
 import log from './log';
 import { versionCheck } from './sandbox';
+import { initTracing } from './tracing';
 
 const hosts: Record<string, HydroHost | Vj4Host> = {};
 let exit = false;
@@ -46,6 +47,8 @@ process.on('unhandledRejection', (reason, p) => {
 async function daemon() {
     const shouldRun = await versionCheck((msg) => log.error(msg));
     if (!shouldRun) process.exit(1);
+    const tracing = getConfig('tracing');
+    if (tracing?.endpoint && tracing?.samplePercentage) initTracing(tracing.endpoint, tracing.samplePercentage);
     const _hosts = getConfig('hosts');
     const queue = new PQueue({ concurrency: Infinity });
     await fs.ensureDir(getConfig('tmp_dir'));

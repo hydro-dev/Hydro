@@ -135,7 +135,7 @@ export async function apply(ctx: Context) {
                 for (const kwargs of kwargsList) {
                     for (const key in kwargs) {
                         if (kwargs[key] instanceof ObjectId) args[key] = kwargs[key].toHexString();
-                        else args[key] = kwargs[key].toString().replace(/\//g, '%2F');
+                        else if (key !== 'query') args[key] = kwargs[key].toString().replace(/\//g, '%2F');
                     }
                     for (const key in kwargs.query || {}) {
                         if (query[key] instanceof ObjectId) query[key] = kwargs.query[key].toHexString();
@@ -153,6 +153,7 @@ export async function apply(ctx: Context) {
                             ? (!host.includes(this.request.host))
                             : this.request.host !== host)
                     )) withDomainId ||= domainId;
+                    delete args.query;
                     res = server.router.url(name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
                     if (withDomainId) res = `/d/${withDomainId}${res}`;

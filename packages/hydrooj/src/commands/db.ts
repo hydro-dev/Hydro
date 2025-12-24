@@ -61,7 +61,8 @@ export function register(cli: CAC) {
                 '--excludeCollection=opcount', '--excludeCollection=event',
                 ...(argv.options.withLogs ? [] : ['--excludeCollection=oplog']),
             ], { stdio: 'inherit' });
-            const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
+            const timestamp = new Date().toISOString().replace(':', '-').split(':')[0];
+            const target = `${process.cwd()}/backup-${timestamp}${argv.options.dbOnly ? '-db-only' : ''}.zip`;
             const filesToAdd = [];
             const filesToRemove = [];
             const addFile = argv.options.r

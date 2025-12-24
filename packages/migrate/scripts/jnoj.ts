@@ -96,8 +96,9 @@ export async function run({
     host = 'localhost', port = 3306, name = 'jnoj',
     username, password, domainId, dataDir = '/www/jnoj/jnoj/judge/data/',
     uploadDir = '/www/jnoj/jnoj/web/uploads/', rerun = true, randomMail = false,
-    withContest = true,
+    withContest = true, keepGroups = '', hideExtraGroup = false,
 }, report: (data: any) => void) {
+    const _keepGroups = keepGroups.split(',').map((i) => i.trim());
     const src = await mariadb.createConnection({
         host,
         port,
@@ -112,7 +113,7 @@ export async function run({
     const target = await DomainModel.get(domainId);
     if (!target) throw new NotFoundError(domainId);
     report({ message: 'Connected to database' });
-    await SystemModel.set('migrate.lock', 'jnoj');
+    // await SystemModel.set('migrate.lock', 'jnoj');
     /*  User
         +----------------------+--------------+------+-----+---------+----------------+
         | Field                | Type         | Null | Key | Default | Extra          |
@@ -322,15 +323,24 @@ memory: ${pdoc.memory_limit}m
     const groupMap: Record<number, string> = {};
     const groupMembers: Record<string, number[]> = {};
     const escapeGroupName = (s: string) => {
-        let val = s.replace(/[_:/\\[\] %$^&!=();'".,<>?*@#-]/g, '_') || Math.random().toString(36).substring(2, 15);
+        let val = s.replace(/[_:/\\[\] %$^&!=();'".,<>?*@#-]/g, '_').replace(/（/g, '(').replace(/）/g, ')')
+            || Math.random().toString(36).substring(2, 15);
         while (Number.isSafeInteger(+val)) val = Math.random().toString(36).substring(2, 15);
         return val;
     };
+    const groupsToRemove = [];
     for (const group of groups) {
-        const n = escapeGroupName(group.name);
+        let n = escapeGroupName(group.name);
+        if (_keepGroups.length && !_keepGroups.includes(n) && !_keepGroups.includes(group.name)) {
+            if (hideExtraGroup) n = 'deleted';
+            else {
+                groupsToRemove.push(group.id);
+                continue;
+            }
+        }
         const members = await query(`SELECT * FROM \`group_user\` WHERE \`group_id\` = ${group.id} AND \`role\` > 3`);
         groupMap[group.id] = n;
-        groupMembers[n] = members.map((i) => uidMap[i.user_id]);
+        groupMembers[n] = Array.from(new Set((groupMembers[n] || []).concat(members.map((i) => uidMap[i.user_id]))));
         await UserModel.updateGroup(domainId, n, groupMembers[n]);
     }
 
@@ -368,11 +378,16 @@ memory: ${pdoc.memory_limit}m
         const TYPE_IOI         = 5;
     */
     const tidMap: Record<string, string> = {};
+    const contestsToRemove = [];
     if (withContest) {
         const typeMap = ['acm', 'acm', 'acm', 'homework', 'oi', 'ioi'];
         const tdocs = await query('SELECT * FROM `contest`');
         for (let tidx = 0; tidx < tdocs.length; tidx += 1) {
             const tdoc = tdocs[tidx];
+            if (tdoc.group_id && groupsToRemove.includes(tdoc.group_id)) {
+                contestsToRemove.push(tdoc.id);
+                continue;
+            }
             const pdocs = await query(`SELECT * FROM \`contest_problem\` WHERE \`contest_id\` = ${tdoc.id} ORDER BY \`num\` ASC`);
             const pids = pdocs.map((i) => pidMap[i.problem_id]).filter((i) => i);
             const files = {};
@@ -412,7 +427,7 @@ memory: ${pdoc.memory_limit}m
                 });
             }
         }
-        report({ message: 'contest finished' });
+        report({ message: `contest finished, ${contestsToRemove.length} contests skipped (from removed groups)` });
     }
 
     /*
@@ -434,6 +449,7 @@ memory: ${pdoc.memory_limit}m
     const ddocs = await query('SELECT * FROM `discuss` WHERE `parent_id` = 0 AND `status` > 0');
     const discussRoots: Record<number, ObjectId> = {};
     const discussMap: Record<number, ObjectId> = {};
+    const discussionsToRemove = [];
     for (const ddoc of ddocs) {
         const _id = Time.getObjectID(ddoc.created_at, false);
         const parentType = {
@@ -441,6 +457,10 @@ memory: ${pdoc.memory_limit}m
             contest: DocumentModel.TYPE_CONTEST,
             news: DocumentModel.TYPE_DISCUSSION_NODE,
         }[ddoc.entity];
+        if (parentType === DocumentModel.TYPE_CONTEST && contestsToRemove.includes(ddoc.entity_id)) {
+            discussionsToRemove.push(ddoc.id);
+            continue;
+        }
         const parentId = ddoc.entity === 'news' ? 'News'
             : ddoc.entity_id === 'problem' ? pidMap[ddoc.entity_id] : new ObjectId(tidMap[ddoc.entity_id]);
         if (!parentId) continue;
@@ -473,15 +493,19 @@ memory: ${pdoc.memory_limit}m
         discussRoots[ddoc.id] = payload.docId;
         discussMap[ddoc.id] = payload.docId;
     }
-    report({ message: 'discuss finished' });
     const drdocs = await query('SELECT * FROM `discuss` WHERE `parent_id` > 0 AND `status` > 0');
     for (const drdoc of drdocs) {
+        if (discussionsToRemove.includes(drdoc.parent_id)) {
+            discussionsToRemove.push(drdoc.id);
+            continue;
+        }
         const drid = await DiscussionModel.addReply(
             domainId, discussRoots[drdoc.parent_id], uidMap[drdoc.created_by] || 1,
             `${drdoc.title}\n${drdoc.content}`, '127.0.0.1',
         );
         discussRoots[drdoc.id] = drid;
     }
+    report({ message: `discuss finished, ${discussionsToRemove.length} discussions skipped (from removed contests)` });
 
     /*
         +-------------+------------------+------+-----+---------+----------------+
@@ -575,11 +599,16 @@ memory: ${pdoc.memory_limit}m
 
     const [{ 'count(*)': rcount }] = await query('SELECT count(*) FROM `solution` WHERE `problem_id` > 0 AND `status` != 2');
     const attended = {};
+    let recordSkipped = 0n;
     await iterate(rcount, 50n, async (pageId: bigint) => {
         const rdocs = await query(`SELECT * FROM \`solution\` WHERE \`problem_id\` > 0 LIMIT ${pageId * BigInt(step)}, ${step}`);
         const solInfos = await query(`SELECT * FROM \`solution_info\` WHERE \`solution_id\` IN (${rdocs.map((i) => i.id).join(',')})`);
         const solInfoMap = _.keyBy(solInfos, 'solution_id');
         for (const rdoc of rdocs) {
+            if (rdoc.contest_id && contestsToRemove.includes(rdoc.contest_id)) {
+                recordSkipped++;
+                continue;
+            }
             const data: RecordDoc = {
                 status: statusMap[rdoc.result] || STATUS.STATUS_WAITING,
                 _id: Time.getObjectID(rdoc.created_at, false),
@@ -617,7 +646,7 @@ memory: ${pdoc.memory_limit}m
             });
         }
     }, { every: 10n, namespace: 'record', report });
-    report({ message: 'record finished' });
+    report({ message: `record finished, ${recordSkipped} records skipped (from removed contests)` });
 
     src.end();
 

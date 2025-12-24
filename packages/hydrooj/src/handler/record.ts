@@ -94,14 +94,15 @@ export class RecordListHandler extends ContestDetailBaseHandler {
         let rdocs = invalid
             ? [] as RecordDoc[]
             : await cursor.skip((page - 1) * limit).limit(limit).toArray();
-        const canViewProblem = tid || this.user.hasPerm(PERM.PERM_VIEW_PROBLEM);
         const canViewHiddenProblem = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
         const [udict, pdict] = full ? [{}, {}]
             : await Promise.all([
                 user.getList(domainId, rdocs.map((rdoc) => rdoc.uid)),
-                canViewProblem
-                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false, problem.PROJECTION_LIST)
-                    : Object.fromEntries(uniqBy(rdocs, 'pid').map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])),
+                tid
+                    ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), true, false, problem.PROJECTION_CONTEST_LIST)
+                    : this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)
+                        ? problem.getList(domainId, rdocs.map((rdoc) => rdoc.pid), canViewHiddenProblem, false, problem.PROJECTION_LIST)
+                        : Object.fromEntries(uniqBy(rdocs, 'pid').map((rdoc) => [rdoc.pid, { ...problem.default, pid: rdoc.pid }])),
             ]);
         if (this.tdoc && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             rdocs = rdocs.map((i) => contest.applyProjection(tdoc, i, this.user));
@@ -190,12 +191,12 @@ export class RecordDetailHandler extends ContestDetailBaseHandler {
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE);
         canViewCode ||= this.user.hasPerm(PERM.PERM_READ_RECORD_CODE_ACCEPT) && self?.status === STATUS.STATUS_ACCEPTED;
         if (this.tdoc) {
-            const tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
+            this.tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             canViewCode ||= this.user.own(this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
-                canViewCode ||= tsdoc?.attend;
+                canViewCode ||= this.tsdoc?.attend;
             }
-            if (!tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
+            if (!this.tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         if (!canViewCode) {
             rdoc.code = '';

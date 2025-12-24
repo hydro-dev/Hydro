@@ -146,7 +146,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
         // eslint-disable-next-line consistent-return
         ctx.on('handler/before/ContestScoreboard#get', (that) => {
             if (that.request.path.endsWith('/scoreboard') && that.tdoc?.rule === 'acm') {
-                that.response.redirect = `${that.request.path}/xcpcio`;
+                that.response.redirect = `${that.request.originalPath}/xcpcio`;
                 return 'cleanup';
             }
         });
@@ -199,7 +199,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof Config>) {
         };
     };
 
-    if (config.publish?.length && process.env.NODE_APP_INSTANCE === '0') {
+    if (config.publish?.length && process.env.NODE_APP_INSTANCE === '0' && !process.env.HYDRO_CLI) {
         const done = [];
         const unlocked = [];
         logger.debug('Will publish scoreboards', config.publish);

@@ -48,7 +48,7 @@ const judgeCase = (c: NormalizedCase) => async (ctx: Context) => {
         score: 1,
         time,
         memory,
-        message: message.join('\n').substring(0, 1024),
+        message: message.join('\n').substring(0, 102400),
     };
 };
 

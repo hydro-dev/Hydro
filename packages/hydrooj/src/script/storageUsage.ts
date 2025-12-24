@@ -11,21 +11,18 @@ export async function run(_, report) {
         { $match: { size: { $gt: 10 * 1024 * 1024 } } },
         { $sort: { size: -1 } },
     ]).toArray();
-    for (let i = 0; i < m.length; i++) {
-        const message = m[i]._id;
-        report({
-            case: {
-                id: i + 1,
-                message,
-                memory: Math.floor(m[i].size / 102.4) / 10,
-                time: 0,
-                status: STATUS.STATUS_ACCEPTED,
-                score: 0,
-            },
-        });
-        totalProblemSize += m[i].size;
-    }
-    report({ message: `Problem total ${totalProblemSize / 1024 / 1024} MB` });
+    const cases = m.map((val, i) => {
+        totalProblemSize += val.size;
+        return {
+            id: i + 1,
+            message: val._id,
+            memory: Math.floor(val.size / 102.4) / 10,
+            time: 0,
+            status: STATUS.STATUS_ACCEPTED,
+            score: 0,
+        };
+    });
+    report({ cases, message: `Problem total ${totalProblemSize / 1024 / 1024} MB` });
     return true;
 }
 

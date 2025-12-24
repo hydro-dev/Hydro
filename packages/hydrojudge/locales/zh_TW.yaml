@@ -1,0 +1,39 @@
+'Error parsing memory: {0}': 無法解析記憶體：{0}
+'Error parsing time: {0}': 無法解析時間：{0}
+Cannot find checker {0}.: 找不到比較器 {0}。
+Cannot find input file {0}.: 找不到輸入檔案 {0}。
+Cannot find judge extra file {0}.: 找不到評測額外檔案 {0}。
+Cannot find output file {0}.: 找不到輸出檔案 {0}。
+Cannot find user extra file {0}.: 找不到使用者額外檔案 {0}。
+Cannot parse testdata.: 無法解析測試資料。
+Checker returned {0}.: 比較器返回了{0}。
+Disable builtin judge: 禁用內建評測機
+Executable file not found.: 沒有找到可執行檔案。
+Found {0} testcases.: 識別到 {0} 個測試點。
+Invalid judge_extra_files config.: 無效的 judge_extra_files 配置。
+Invalid user_extra_files config.: 無效的 user_extra_files 配置。
+Max testcases per problem: 單題最多測試點數量
+Problem data not found.: 沒有找到測試資料。
+Re-Run testcase if time-limit-exceeded (max per submission): 每個提交最多重測 TLE 測試點的次數
+Read {0}, expect {1}.: 讀取到 {0}，應為 {1}。
+Retry delay sec: 重試間隔（秒）
+Runner parallelism: 評測機執行程序數
+Sandbox Error: 沙箱錯誤
+Sandbox Host: 沙箱地址
+Standard answer longer than user output.: 標準輸出比選手輸出長。
+Stdout/Stderr size: 標準輸出/錯誤流輸出大小限制
+Strict Memory Mode: 嚴格記憶體限制
+Syncing testdata, please wait...: 正在同步測試資料，請稍候...
+Temp directory: 臨時目錄
+Testdata cache directory: 測試資料快取目錄
+Testdata configuration incorrect.: 題目配置錯誤。
+Too many files.: 檔案過多。
+Too many testcases. Cancelled.: 測試資料過多。評測取消。
+Total time limit longer than {0}s. Cancelled.: 總時限超過{0}s。評測取消。
+Total time limit per problem: 單題最多總評測時長
+Unknown checker type {0}.: 未知的比較器型別 {0}。
+Unknown language type.: 未知的語言型別。
+Unsupported language {0}.: 不支援的語言 {0}。
+User output longer than standard answer.: 選手輸出比標準輸出長。
+You did not specify a checker.: 你沒有指定比較器檔案。
+Your program returned {0}.: 您的程式返回了{0}。
