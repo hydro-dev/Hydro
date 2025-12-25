@@ -2,10 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import importMetaUrlPlugin from '@codingame/esbuild-import-meta-url-plugin';
 import react from '@vitejs/plugin-react-swc';
-import c2k from 'koa2-connect';
+import c2k from 'koa2-connect/ts';
 import { createServer } from 'vite';
 import { } from '@hydrooj/framework';
 import { Context } from 'hydrooj';
+
+const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
@@ -49,7 +51,15 @@ export async function apply(ctx: Context) {
         output: 'html',
         asFallback: false,
         priority: 100,
-        render: async (name, args, context) => await vite.transformIndexHtml(context.handler.context.req.url, html),
+        async render(name, args, context) {
+            const htmlToRender = html.replace(INJECT_MARKER, `<script id="__HYDRO_INJECTION__" type="application/json">${JSON.stringify({
+                HYDRO_INJECTED: true,
+                name,
+                args,
+                url: context.handler.context.req.url,
+            })}</script>`);
+            return await vite.transformIndexHtml(context.handler.context.req.url!, htmlToRender);
+        },
     });
 
     // eslint-disable-next-line consistent-return
