@@ -141,7 +141,7 @@ export class SettingService extends Service {
 
     get(key: string) {
         return (this.ctx ? this.ctx.domain?.config?.[key.replace(/\./g, '$')] : null)
-            ?? (this._get(key) || global.Hydro?.model?.system?.get?.(key));
+            ?? (this._get(key) ?? global.Hydro?.model?.system?.get?.(key));
     }
 
     async setConfig(key: string, value: any) {
