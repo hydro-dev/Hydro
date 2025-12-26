@@ -484,13 +484,9 @@ class OauthCallbackHandler extends Handler {
         }
         const udoc = await user.getByEmail('system', r.email);
         if (udoc) {
-            const existing = await this.ctx.oauth.get(args.type, r._id);
-            if (existing && existing !== udoc._id) {
-                throw new BadRequestError('Already binded to another account');
-            }
+            await this.ctx.oauth.set(args.type, r._id, udoc._id);
             await successfulAuth.call(this, udoc);
             this.response.redirect = '/';
-            if (existing !== udoc._id) await this.ctx.oauth.set(args.type, r._id, udoc._id);
             return;
         }
         if (!provider.canRegister) throw new ForbiddenError('No binded account found');
