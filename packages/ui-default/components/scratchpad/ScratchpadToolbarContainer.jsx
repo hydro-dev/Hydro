@@ -39,7 +39,7 @@ const mapDispatchToProps = (dispatch) => ({
     const req = request.post(UiContext.postSubmitUrl, {
       lang: props.editorLang,
       code: props.editorCode,
-      input: props.pretestInput,
+      input: [props.pretestInput],
       pretest: true,
     });
     dispatch({

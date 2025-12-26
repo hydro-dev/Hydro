@@ -103,7 +103,7 @@ class SystemScriptHandler extends SystemHandler {
         if (typeof global.Hydro.script[id].validate === 'function') {
             args = global.Hydro.script[id].validate(args);
         }
-        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: [raw], type: 'pretest' });
         const c = new JudgeResultCallbackContext(this.ctx, { type: 'judge', domainId, rid });
         c.next({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
