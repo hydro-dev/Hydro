@@ -4,10 +4,11 @@ import importMetaUrlPlugin from '@chialab/esbuild-plugin-meta-url';
 import react from '@vitejs/plugin-react';
 import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
-import { } from '@hydrooj/framework';
+import { serializer } from '@hydrooj/framework';
 import { Context, getNodes } from 'hydrooj';
 
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
+const buildInject = (str: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${str}</script>`;
 
 function hydroPlugins(): Plugin {
     const virtualModuleId = 'virtual:hydro-plugins';
@@ -44,7 +45,7 @@ export async function apply(ctx: Context) {
                 'Cross-Origin-Opener-Policy': 'same-origin',
                 'Cross-Origin-Embedder-Policy': 'require-corp',
             },
-            allowedHosts: ['beta.hydro.ac'],
+            // allowedHosts: ['beta.hydro.ac'],
         },
         appType: 'custom',
         root: __dirname,
@@ -54,7 +55,7 @@ export async function apply(ctx: Context) {
             esbuildOptions: {
                 plugins: [
                     // @ts-ignore
-                    importMetaUrlPlugin,
+                    importMetaUrlPlugin(),
                 ],
             },
         },
@@ -75,12 +76,14 @@ export async function apply(ctx: Context) {
         asFallback: false,
         priority: 100,
         async render(name, args, context) {
-            const htmlToRender = html.replace(INJECT_MARKER, `<script id="__HYDRO_INJECTION__" type="application/json">${JSON.stringify({
+            const data = {
                 HYDRO_INJECTED: true,
                 name,
                 args,
                 url: context.handler.context.req.url,
-            })}</script>`);
+            };
+            const serialized = JSON.stringify(data, serializer(false, context.handler));
+            const htmlToRender = html.replace(INJECT_MARKER, buildInject(serialized));
             return await vite.transformIndexHtml(context.handler.context.req.url!, htmlToRender);
         },
     });
