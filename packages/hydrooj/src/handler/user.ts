@@ -476,9 +476,16 @@ class OauthCallbackHandler extends Handler {
             return;
         }
 
-        const uid = await this.ctx.oauth.get(args.type, r._id) || await this.ctx.oauth.get('mail', r.email);
+        const uid = await this.ctx.oauth.get(args.type, r._id);
         if (uid) {
             await successfulAuth.call(this, await user.getById('system', uid));
+            this.response.redirect = '/';
+            return;
+        }
+        const udoc = await user.getByEmail('system', r.email);
+        if (udoc) {
+            await this.ctx.oauth.set(args.type, r._id, udoc._id);
+            await successfulAuth.call(this, udoc);
             this.response.redirect = '/';
             return;
         }
