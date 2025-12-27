@@ -107,7 +107,7 @@ export interface RecordPayload extends RecordJudgeInfo {
     source?: string;
     progress?: number;
     /** pretest */
-    input?: string;
+    input?: string | string[];
     /** hack target rid */
     hackTarget?: string;
     /** 0 if pretest&script */
