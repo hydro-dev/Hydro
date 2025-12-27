@@ -1,10 +1,6 @@
 import { Context } from '../context';
 import { PRIV } from '../model/builtin';
-import * as DocumentModel from '../model/document';
-import DomainModel from '../model/domain';
-import RecordModel from '../model/record';
 import * as SettingModel from '../model/setting';
-import UserModel from '../model/user';
 import db from '../service/db';
 import { Handler } from '../service/server';
 
@@ -71,45 +67,22 @@ class StatusHandler extends Handler {
     }
 }
 
-class AdminStatusHandler extends Handler {
-    async get() {
-        const record = await RecordModel.stat();
-        const status = await getStatus();
-        const [domainCount, userCount, problemCount, discussionCount, recordCount] = await Promise.all([
-            DomainModel.coll.count(),
-            UserModel.coll.count(),
-            DocumentModel.coll.count({ docType: DocumentModel.TYPE_PROBLEM }),
-            DocumentModel.coll.count({ docType: DocumentModel.TYPE_DISCUSSION }),
-            RecordModel.coll.count(),
-        ]);
-        this.response.body = {
-            record,
-            status,
-            domainCount,
-            userCount,
-            problemCount,
-            discussionCount,
-            recordCount,
-        };
-    }
-}
-
 class StatusUpdateHandler extends Handler {
     async post(args) {
         this.checkPriv(PRIV.PRIV_JUDGE);
         args.type = 'judge';
         args.updateAt = new Date();
-        return coll.updateOne(
+        await coll.updateOne(
             { mid: args.mid, type: 'judge' },
             { $set: args },
             { upsert: true },
         );
+        this.response.body = { ok: 1 };
     }
 }
 
 export async function apply(ctx: Context) {
     ctx.Route('status', '/status', StatusHandler);
-    ctx.Route('status_admin', '/.status', AdminStatusHandler);
     ctx.Route('status_update', '/status/update', StatusUpdateHandler);
     await db.ensureIndexes(coll, { name: 'expire', key: { updateAt: 1 }, expireAfterSeconds: 24 * 2600 });
 }
