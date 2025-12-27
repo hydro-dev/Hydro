@@ -12,7 +12,7 @@
         "@koa/router": "^15.1.1",
         "@mongodb-js/saslprep": "^1.4.4",
         "emoji-regex": "^10.6.0",
-        "fs-extra": "^11.3.2",
+        "fs-extra": "^11.3.3",
         "koa": "^3.1.1",
         "koa-body": "^7.0.1",
         "koa-compress": "^5.1.1",
