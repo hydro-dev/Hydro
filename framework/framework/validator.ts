@@ -61,7 +61,7 @@ export interface Types {
     CommaSeperatedArray: Type<string[]>;
     Set: Type<Set<any>>;
     Any: Type<any>;
-    ArrayOf: <T extends Type<any>>(type: T) => (T extends Type<infer R> ? Type<R[]> : never);
+    ArrayOf: <T extends Type<any>>(type: T, isOptional?: boolean) => (T extends Type<infer R> ? Type<R[]> : never);
     AnyOf: <T extends Type<any>>(...type: T[]) => (T extends Type<infer R> ? Type<R> : never);
 }
 
@@ -175,15 +175,21 @@ export const Types = {
         (v) => emojiRegex().test(v.toString()),
     ],
     Any: [(v) => v, null],
-    ArrayOf: (type) => [
+    ArrayOf: (type, isOptional = false) => [
         (v) => {
             const arr = v instanceof Array ? v : [v];
-            return arr.map((i) => type[0](i));
+            return arr.map((i) => {
+                if (isOptional && [undefined, null, ''].includes(i)) return undefined;
+                return type[0](i);
+            });
         },
         (v) => {
             if (!type[1]) return true;
             const arr = v instanceof Array ? v : [v];
-            return arr.every((i) => type[1](i));
+            return arr.every((i) => {
+                if ([undefined, null, ''].includes(i)) return isOptional;
+                return type[1](i);
+            });
         },
     ] as any,
     AnyOf: (...types) => [
@@ -195,10 +201,4 @@ export const Types = {
 try {
     const { ObjectId } = require('mongodb');
     Types.ObjectId = [((v) => new ObjectId(v)) as any, ObjectId.isValid];
-} catch (e) {
-
-}
-
-// @ts-ignore
-Types.ObjectID = Types.ObjectId;
-// backward compatibility
+} catch (e) { }

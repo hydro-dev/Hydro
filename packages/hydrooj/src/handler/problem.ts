@@ -483,7 +483,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
     @param('lang', Types.Name)
     @param('code', Types.String, true)
     @param('pretest', Types.Boolean)
-    @param('input', Types.ArrayOf(Types.String), true)
+    @param('input', Types.ArrayOf(Types.String, true), true)
     @param('tid', Types.ObjectId, true)
     async post(domainId: string, lang: string, code: string, pretest = false, input: string[] = [], tid?: ObjectId) {
         const config = this.pdoc.config;
@@ -499,6 +499,7 @@ export class ProblemSubmitHandler extends ProblemDetailHandler {
                 throw new ProblemNotAllowPretestError('type');
             }
             if (!input.length) throw new ValidationError('input');
+            input = input.map((i) => i || '');
         }
         await this.limitRate('add_record', 60, system.get('limit.submission_user'), '{{user}}');
         await this.limitRate('add_record', 60, pretest ? system.get('limit.pretest') : system.get('limit.submission'));
