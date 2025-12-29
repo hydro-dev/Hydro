@@ -1,4 +1,5 @@
 import path from 'path';
+import { SpanStatusCode } from '@opentelemetry/api';
 import PQueue from 'p-queue';
 import superagent from 'superagent';
 import WebSocket from 'ws';
@@ -49,7 +50,7 @@ export default class Hydro implements Session {
         setInterval(() => { this.get(''); }, 30000000); // Cookie refresh only
     }
 
-    async fetchFile<T extends string | null>(namespace: T, files: Record<string, string>): Promise<T extends null ? string : null> {
+    async fetchFile<T extends string | null>(namespace: T, files: Record<string, string>, ctx: JudgeTask): Promise<T extends null ? string : null> {
         if (!namespace) { // record-related resource (code)
             const name = Object.keys(files)[0].split('#')[0];
             const res = await this.post('judge/files', { id: name });
@@ -71,9 +72,11 @@ export default class Hydro implements Session {
         });
         for (const name in res.body.links) {
             queue.add(async () => {
+                using span = ctx.startChildSpan('judge.fetchFile', { name });
                 if (name.includes('/')) await fs.ensureDir(path.dirname(files[name]));
                 const w = fs.createWriteStream(files[name]);
                 await pipeRequest(this.get(res.body.links[name]), w, 60000, name);
+                span.setStatus({ code: SpanStatusCode.OK });
             });
         }
         await queue.onIdle();
