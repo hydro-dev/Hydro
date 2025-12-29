@@ -219,12 +219,14 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     let sandboxVersion: string;
     let sandboxCgroup: number;
     let sandboxCgroupControllers: string[] | null;
+    let fixSymlinkEscape: boolean;
     try {
         const version = await client.version();
         sandboxVersion = version.buildVersion.split('v')[1];
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
         sandboxCgroupControllers = config.runnerConfig?.cgroupControllers || null;
+        fixSymlinkEscape = config.fixSymlinkEscape ?? false;
     } catch (e) {
         if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
@@ -241,6 +243,9 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         if (!sandboxCgroupControllers.includes('memory') && gte(sandboxVersion, '1.8.6')) {
             reportWarn('The memory cgroup controller is not enabled. This could result in inaccurate memory usage measurements.');
         }
+    }
+    if (!fixSymlinkEscape) {
+        reportError('Your sandbox version is vulnerable to symlink escape issue, please upgrade!');
     }
     return true;
 }
