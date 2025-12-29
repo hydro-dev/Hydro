@@ -65,6 +65,5 @@
     "resolutions": {
         "mongodb": "^7.0.0",
         "@types/express-serve-static-core": "patch:@types/express-serve-static-core@npm%3A4.19.6#~/.yarn/patches/@types-express-serve-static-core-npm-4.19.6-cc0017aaf4.patch"
-    },
-    "packageManager": "yarn@4.10.3"
+    }
 }
