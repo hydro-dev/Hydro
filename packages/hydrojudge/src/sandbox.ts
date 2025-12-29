@@ -245,7 +245,7 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         }
     }
     if (!fixSymlinkEscape) {
-        reportError('Your sandbox version is vulnerable of symlink escape issue, please upgrade!')
+        reportError('Your sandbox version is vulnerable to symlink escape issue, please upgrade!');
     }
     return true;
 }
