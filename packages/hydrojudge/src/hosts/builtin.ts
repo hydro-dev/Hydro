@@ -60,7 +60,12 @@ export async function apply(ctx: HydroContext) {
     const tracing = getConfig('tracing');
     if (tracing?.endpoint && tracing?.samplePercentage) {
         ctx.effect(() => {
-            const sdk = initTracing(tracing.endpoint, tracing.samplePercentage);
+            const sdk = initTracing({
+                exporter: tracing.exporter,
+                endpoint: tracing.endpoint,
+                samplePercentage: tracing.samplePercentage,
+                attributes: tracing.attributes,
+            });
             return () => sdk.shutdown();
         });
     }
