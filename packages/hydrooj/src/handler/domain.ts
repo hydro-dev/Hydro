@@ -218,11 +218,11 @@ class DomainPermissionHandler extends ManageHandler {
     @requireSudo
     async post({ domainId }) {
         const roles = {};
-        for (const role in this.request.body) {
+        for (const [role, list] of Object.entries(this.request.body)) {
             if (role === 'root') continue; // root role is not editable
-            const perms = this.request.body[role] instanceof Array
-                ? this.request.body[role]
-                : [this.request.body[role]];
+            const perms = Array.isArray(list) ? list
+                : (typeof list === 'object' && list)
+                    ? Object.values(list) : [list];
             roles[role] = 0n;
             for (const r of perms) roles[role] |= 1n << BigInt(r);
         }
