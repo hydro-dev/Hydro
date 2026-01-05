@@ -30,7 +30,6 @@ __langname: 正體中文
 'Discussion: Terms Of Service': '討論區服務條款'
 'First Blood Notice\n{0} solved problem {1} ({2})': '題目首殺提示\n{0} 解決了題目 {1} ({2})'
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
-Join {0}: 加入 {0}
 'No': '否'
 'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
 'Or upload a file:': '或者上傳一個檔案：'
@@ -39,9 +38,6 @@ Join {0}: 加入 {0}
 'Solved {0} problems, RP: {1} (No. {2})': '解決了 {0} 道題目，RP: {1} (No. {2})'
 'The value `{1}` of {0} already exists.': '{0} 的值 `{1}` 已經存在。'
 'Yes': '是'
-Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
-Split by ',' '.': 由"，"、"、"或"。"分隔。
-What's file?: 什麼是檔案？
 (All Problems): (所有題目)
 (None): (無)
 (Not changed): 未更改
@@ -96,6 +92,7 @@ Auto format code: 自動格式化程式碼
 Auto organize input: 自動整理輸入
 Avatar: 頭像
 Back to contest list: 返回比賽列表
+Background: 背景
 Be Copied: 被複制
 Begin at: 開始於
 Begin Date: 開始日期
@@ -321,6 +318,7 @@ Edit problems: 修改題目
 Edit Profile: 編輯個人資訊
 Edit training plans: 修改訓練計劃
 Edit: 編輯
+Effects only when Difficulty is not 'Use algorithm calculated'.: 僅當難度不為“使用演算法計算”時才起效。
 Email Visibility: Email 可見性
 Email: 電子郵件
 Enabled: 開啟
@@ -431,6 +429,7 @@ IO: 輸入輸出
 Is rated: 計入排名
 It works!: 它成了！
 Italic: 斜體
+Join {0}: 加入 {0}
 Join: 加入
 Judge Status: 評測狀態
 judge_playground: 評測遊樂場
@@ -756,6 +755,7 @@ Solutions per page: 每頁展示的題解數量
 Sorry: 對不起
 Sort by: 排序
 Source type: 來源型別
+Split by ',' '.': 由"，"、"、"或"。"分隔。
 Split View: 分屏預覽
 Star Topic: 收藏討論
 Star: 收藏
@@ -919,6 +919,7 @@ Week: 周
 What is domain?: 什麼是域?
 What is this?: 這是什麼？
 What's domain?: 什麼是域？
+What's file?: 什麼是檔案？
 What's script?: 什麼是指令碼？
 What's this?: 這是什麼？
 Whether to show tags in the problem list.: 是否在題目列表中顯示題目的標籤。

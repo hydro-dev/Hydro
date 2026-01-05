@@ -9,7 +9,7 @@ import { load as loadOptions } from '../options';
 import { MongoService } from '../service/db';
 import { SettingService } from '../settings';
 import {
-    addon, builtinModel, model, service,
+    addon, builtinModel, locale, model, service,
 } from './common';
 
 const argv = cac().parse();
@@ -110,6 +110,7 @@ export async function load(ctx: Context) {
     require('../service/bus').apply(ctx);
     const pending = global.addons;
     const fail = [];
+    await locale(pending, fail);
     await ctx.plugin(MongoService, loadOptions() || {});
     await ctx.plugin(SettingService);
     await ctx.plugin(SystemModel.Service);
