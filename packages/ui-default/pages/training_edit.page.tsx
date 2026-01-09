@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import Notification from 'vj/components/notification';
-import { TrainingEditor } from 'vj/components/training/editor';
-import type { TrainingFormData, TrainingNode } from 'vj/components/training/editor/types';
+import { TrainingEditor } from 'vj/components/training';
+import type { TrainingFormData, TrainingNode } from 'vj/components/training/types';
 import { NamedPage } from 'vj/misc/Page';
 import { i18n, request } from 'vj/utils';
 
