@@ -31,7 +31,10 @@ function parseDag(dag: TrainingNode[] | string | undefined, defaultDag: Training
 
 const page = new NamedPage(['training_edit', 'training_create'], () => {
   const container = document.getElementById('TrainingEditor');
+  const fallbackForm = document.getElementById('TrainingForm');
   if (!container) return;
+
+  if (fallbackForm) fallbackForm.style.display = 'none';
 
   const isEdit = window.location.pathname.includes('/edit');
   const defaultDag = UiContext.defaultDag || [];
