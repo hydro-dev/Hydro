@@ -1,15 +1,17 @@
 import type { ProblemDoc } from 'hydrooj/src/interface';
 import React from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import Notification from 'vj/components/notification';
 import { i18n } from 'vj/utils';
 import ProblemItem from './ProblemItem';
 import ProblemSelector from './ProblemSelector';
-import { DND_TYPES, TrainingNode } from './types';
+import { DND_TYPES, TrainingNode, wouldCreateCycle } from './types';
 
 interface SectionItemProps {
   node: TrainingNode;
   index: number;
   pdict: Record<number | string, ProblemDoc>;
+  allSections: TrainingNode[];
   onUpdate: (nodeId: number, updates: Partial<TrainingNode>) => void;
   onDelete: (nodeId: number) => void;
   onMove: (dragIndex: number, hoverIndex: number) => void;
@@ -24,12 +26,15 @@ interface DragItem {
 }
 
 export default function SectionItem({
-  node, index, pdict, onUpdate, onDelete, onMove, onMoveProblem, onPdictUpdate,
+  node, index, pdict, allSections, onUpdate, onDelete, onMove, onMoveProblem, onPdictUpdate,
 }: SectionItemProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(node.title);
+  const [prereqsExpanded, setPrereqsExpanded] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
+
+  const PREREQS_COLLAPSE_THRESHOLD = 8;
 
   const [{ isDragging }, drag, preview] = useDrag({
     type: DND_TYPES.SECTION,
@@ -90,6 +95,25 @@ export default function SectionItem({
     newPids.splice(toIndex, 0, removed);
     onUpdate(node._id, { pids: newPids });
   };
+
+  const handleRequireNidsChange = (sectionId: number, checked: boolean) => {
+    if (checked && wouldCreateCycle(allSections, node._id, sectionId)) {
+      Notification.error(i18n('Cannot add this prerequisite: it would create a circular dependency'));
+      return;
+    }
+    const newRequireNids = checked
+      ? [...node.requireNids, sectionId]
+      : node.requireNids.filter((id) => id !== sectionId);
+    onUpdate(node._id, { requireNids: newRequireNids });
+  };
+
+  const availablePrereqs = allSections.filter((s) => s._id !== node._id);
+  const selectedPrereqs = availablePrereqs.filter((s) => node.requireNids.includes(s._id));
+  const unselectedPrereqs = availablePrereqs.filter((s) => !node.requireNids.includes(s._id));
+  const shouldCollapsePrereqs = availablePrereqs.length > PREREQS_COLLAPSE_THRESHOLD;
+  const visiblePrereqs = shouldCollapsePrereqs && !prereqsExpanded
+    ? [...selectedPrereqs, ...unselectedPrereqs.slice(0, Math.max(0, PREREQS_COLLAPSE_THRESHOLD - selectedPrereqs.length))]
+    : availablePrereqs;
 
   const [{ isOverProblemZone }, dropProblem] = useDrop<
     { type: string, sectionId: number, index: number, pid: number | string },
@@ -184,6 +208,63 @@ export default function SectionItem({
 
       {!isCollapsed && (
         <div className="training-section__body" style={{ padding: '16px' }}>
+          {availablePrereqs.length > 0 && (
+            <div className="training-section__prereqs" style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', color: '#666' }}>
+                {i18n('Prerequisite Sections')}
+                {node.requireNids.length > 0 && (
+                  <span style={{ marginLeft: '8px', color: '#2196f3' }}>
+                    ({node.requireNids.length} {i18n('selected')})
+                  </span>
+                )}
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {visiblePrereqs.map((s) => {
+                  const isChecked = node.requireNids.includes(s._id);
+                  const sectionLabel = s.title || `${i18n('Section')} ${allSections.findIndex((x) => x._id === s._id) + 1}`;
+                  return (
+                    <label
+                      key={s._id}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        background: isChecked ? '#e3f2fd' : '#f5f5f5',
+                        border: isChecked ? '1px solid #2196f3' : '1px solid #ddd',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => handleRequireNidsChange(s._id, e.target.checked)}
+                        style={{ margin: 0 }}
+                      />
+                      {sectionLabel}
+                    </label>
+                  );
+                })}
+                {shouldCollapsePrereqs && (
+                  <button
+                    type="button"
+                    className="link"
+                    onClick={() => setPrereqsExpanded(!prereqsExpanded)}
+                    style={{ fontSize: '13px', padding: '4px 8px' }}
+                  >
+                    {prereqsExpanded
+                      ? i18n('Show less')
+                      : i18n('{0} more sections', availablePrereqs.length - visiblePrereqs.length)}
+                  </button>
+                )}
+              </div>
+              <p className="help-text" style={{ margin: '8px 0 0', fontSize: '12px', color: '#999' }}>
+                {i18n('Users must complete selected sections before accessing this one.')}
+              </p>
+            </div>
+          )}
           <div
             ref={dropProblem as any}
             className="training-problems-zone"

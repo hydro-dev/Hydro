@@ -1020,6 +1020,13 @@ Invalid JSON format: JSON 格式無效
 'Edit JSON and click "Apply to Editor" to update the visual editor above. This does not save to server - use "Update" or "Create" button below to save.': 編輯 JSON 後點擊「套用到編輯器」更新上方的視覺化編輯器。此操作不會儲存到伺服器，請使用下方的「更新」或「建立」按鈕儲存。
 Basic Information: 基本資訊
 'Confirm deleting this training? Its files and status will be deleted as well.': 確認刪除此訓練計畫嗎？其檔案和狀態也將被刪除。
+Prerequisite Sections: 前置章節
+'Users must complete selected sections before accessing this one.': 用戶必須完成所選章節後才能訪問本章節。
+This problem already exists in the target section: 該題目已存在於目標章節中
+'Cannot add this prerequisite: it would create a circular dependency': 無法新增此前置章節：會產生循環依賴
+selected: 已選
+Show less: 收起
+'{0} more sections': 還有 {0} 個章節
 Transports: 支援型別
 Tried: 嘗試
 Two Factor Authentication Code: 兩步驗證碼

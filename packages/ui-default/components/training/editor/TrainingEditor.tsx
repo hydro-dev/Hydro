@@ -6,7 +6,7 @@ import { confirm } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { api, i18n } from 'vj/utils';
 import SectionItem from './SectionItem';
-import { TrainingFormData, TrainingNode } from './types';
+import { hasProblem, TrainingFormData, TrainingNode } from './types';
 
 interface TrainingEditorProps {
   initialData: TrainingFormData;
@@ -127,19 +127,39 @@ export default function TrainingEditor({
     fromIndex: number,
     toIndex: number,
   ) => {
+    // Same section reorder - no dedup needed
+    if (fromSectionId === toSectionId) {
+      const newDag = formData.dag.map((node) => {
+        if (node._id === fromSectionId) {
+          const newPids = [...node.pids];
+          const [pid] = newPids.splice(fromIndex, 1);
+          newPids.splice(toIndex, 0, pid);
+          return { ...node, pids: newPids };
+        }
+        return node;
+      });
+      updateFormField('dag', newDag);
+      return;
+    }
+
+    // Cross-section move - check for duplicates
+    const fromNode = formData.dag.find((n) => n._id === fromSectionId);
+    const toNode = formData.dag.find((n) => n._id === toSectionId);
+    if (!fromNode || !toNode) return;
+
+    const pid = fromNode.pids[fromIndex];
+    if (hasProblem(toNode.pids, pid, pdict)) {
+      Notification.warn(i18n('This problem already exists in the target section'));
+      return;
+    }
+
     const newDag = formData.dag.map((node) => {
       if (node._id === fromSectionId) {
         const newPids = [...node.pids];
-        const [pid] = newPids.splice(fromIndex, 1);
-        if (node._id === toSectionId) {
-          newPids.splice(toIndex, 0, pid);
-        }
+        newPids.splice(fromIndex, 1);
         return { ...node, pids: newPids };
       }
-      if (node._id === toSectionId && fromSectionId !== toSectionId) {
-        const fromNode = formData.dag.find((n) => n._id === fromSectionId);
-        if (!fromNode) return node;
-        const pid = fromNode.pids[fromIndex];
+      if (node._id === toSectionId) {
         const newPids = [...node.pids];
         newPids.splice(toIndex, 0, pid);
         return { ...node, pids: newPids };
@@ -290,7 +310,16 @@ export default function TrainingEditor({
         </div>
         <div className="section__body">
           {formData.dag.length === 0 ? (
-            <div className="training-empty-state" style={{ textAlign: 'center', padding: '2rem', background: '#f8f9fa', borderRadius: '4px', border: '2px dashed #ddd' }}>
+            <div
+              className="training-empty-state"
+              style={{
+                textAlign: 'center',
+                padding: '2rem',
+                background: '#f8f9fa',
+                borderRadius: '4px',
+                border: '2px dashed #ddd',
+              }}
+            >
               <p style={{ color: '#666', marginBottom: '1rem' }}>
                 {i18n('No sections yet. Click the button above to add your first section.')}
               </p>
@@ -310,6 +339,7 @@ export default function TrainingEditor({
                   node={node}
                   index={idx}
                   pdict={pdict}
+                  allSections={formData.dag}
                   onUpdate={updateSection}
                   onDelete={deleteSection}
                   onMove={moveSection}
@@ -348,7 +378,10 @@ export default function TrainingEditor({
                       data-json
                     />
                   </div>
-                  <p className="help-text">{i18n('Edit JSON and click "Apply to Editor" to update the visual editor above. This does not save to server - use "Update" or "Create" button below to save.')}</p>
+                  <p className="help-text">
+                    {i18n('Edit JSON and click "Apply to Editor" to update the visual editor above. '
+                      + 'This does not save to server - use "Update" or "Create" button below to save.')}
+                  </p>
                 </label>
                 <button
                   type="button"

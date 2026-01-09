@@ -744,6 +744,13 @@ Invalid JSON format: 잘못된 JSON 형식
 'Edit JSON and click "Apply to Editor" to update the visual editor above. This does not save to server - use "Update" or "Create" button below to save.': JSON을 편집하고 "편집기에 적용"을 클릭하여 위의 시각적 편집기를 업데이트하세요. 이것은 서버에 저장되지 않습니다 - 저장하려면 아래의 "갱신" 또는 "만들기" 버튼을 사용하세요.
 Basic Information: 기본 정보
 'Confirm deleting this training? Its files and status will be deleted as well.': 이 학습을 삭제하시겠습니까? 파일과 상태도 함께 삭제됩니다.
+Prerequisite Sections: 선수 섹션
+'Users must complete selected sections before accessing this one.': 사용자는 이 섹션에 액세스하기 전에 선택한 섹션들을 완료해야 합니다.
+This problem already exists in the target section: 이 문제는 대상 섹션에 이미 존재합니다
+'Cannot add this prerequisite: it would create a circular dependency': '이 선수 섹션을 추가할 수 없습니다: 순환 의존성이 발생합니다'
+selected: 선택됨
+Show less: 접기
+'{0} more sections': '{0}개 더 보기'
 Type: Type
 UI Language: UI 언어
 Uncompleted: 미완료

@@ -69,9 +69,14 @@ const page = new NamedPage(['training_edit', 'training_create'], () => {
 
   const handleDelete = async () => {
     try {
-      const res = await request.post('', { operation: 'delete' });
+      const path = window.location.pathname;
+      const tidMatch = path.match(/\/training\/([^/]+)\/edit/);
+      if (!tidMatch) throw new Error('Training ID not found');
+      const tid = tidMatch[1];
+      const baseUrl = path.replace(/\/training\/[^/]+\/edit.*$/, '');
+      const res = await request.post(`${baseUrl}/training/${tid}`, { operation: 'delete' });
       Notification.success(i18n('Training deleted successfully'));
-      window.location.href = res.url || './training';
+      window.location.href = res.url || `${baseUrl}/training`;
     } catch (error: any) {
       Notification.error(error.message || i18n('Failed to delete training'));
     }
