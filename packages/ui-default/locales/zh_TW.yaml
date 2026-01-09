@@ -994,6 +994,32 @@ training_create: 建立訓練
 training_edit: 編輯訓練
 training_main: 訓練
 Training: 訓練
+Training Sections: 訓練章節
+Add Section: 新增章節
+Add First Section: 新增第一個章節
+No sections yet. Click the button above to add your first section.: 暫無章節。點擊上方按鈕新增第一個章節。
+No problems in this section. Add problems below or drag from other sections.: 該章節暫無題目。在下方新增題目或從其他章節拖曳。
+Add Problem: 新增題目
+Remove Problem: 移除題目
+Problem already added: 題目已新增
+'Problem {0} not found': 題目 {0} 不存在
+Delete Section: 刪除章節
+Untitled Section: 未命名章節
+Are you sure you want to delete this section?: 確定要刪除此章節嗎？
+Please add at least one section: 請至少新增一個章節
+Each section must have at least one problem: 每個章節必須包含至少一道題目
+Pin level: 置頂等級
+Collapse: 收起
+Expand: 展開
+Advanced: 進階
+JSON Editor: JSON 編輯器
+Apply to Editor: 套用到編輯器
+JSON applied to editor: 已套用到編輯器
+Invalid JSON format: JSON 格式無效
+'Invalid JSON format: must be an array': JSON 格式無效：必須是陣列
+'Edit JSON and click "Apply to Editor" to update the visual editor above. This does not save to server - use "Update" or "Create" button below to save.': 編輯 JSON 後點擊「套用到編輯器」更新上方的視覺化編輯器。此操作不會儲存到伺服器，請使用下方的「更新」或「建立」按鈕儲存。
+Basic Information: 基本資訊
+'Confirm deleting this training? Its files and status will be deleted as well.': 確認刪除此訓練計畫嗎？其檔案和狀態也將被刪除。
 Transports: 支援型別
 Tried: 嘗試
 Two Factor Authentication Code: 兩步驗證碼

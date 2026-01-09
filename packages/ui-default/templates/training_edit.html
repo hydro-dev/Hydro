@@ -3,61 +3,18 @@
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
-      <div class="section__body">
-        <form method="post">
-          <div class="row">
-            <div class="medium-9 columns">
-              <label>
-                {{ _('Title') }}
-                <input name="title" placeholder="{{ _('title') }}" value="{{ tdoc.title|default('') }}" class="textbox" autofocus>
-              </label>
-            </div>
-            <div class="medium-3 columns">
-              <label>
-                {{ _('Pin') }}
-                <input name="pin" placeholder="{{ _('Pin level') }}" value="{{ tdoc.pin|default(0) }}" class="textbox">
-              </label>
-            </div>
-          </div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Introduce') }}
-              <textarea name="content" class="textbox">{{ tdoc['content']|default('') }}</textarea>
-              <p class="help-text">{{ _('Introduce must not exceed 500 characters and it will be shown in the list view.') }}</p>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Description') }}
-              <textarea name="description" class="textbox" data-markdown style="height: 200px">{{ tdoc['description']|default('') }}</textarea>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Plan') }}
-              <textarea data-json name="dag" class="textbox" style="height: 500px">{% if tdoc %}{{ dag }}{% else %}{% include 'partials/training_default.json' %}{% endif %}</textarea>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
+      <div class="section__header">
+        <h1 class="section__title">
           {% if page_name == 'training_edit' %}
-            <button type="submit" class="rounded primary button">
-              {{ _('Update') }}
-            </button>
-            {% if handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING) %}
-              <button name="operation" value="delete" type="submit" class="rounded button">
-                {{ _('Delete') }}
-              </button>
-            {% endif %}
+            {{ _('Edit Training') }}
           {% else %}
-            <button type="submit" class="rounded primary button">
-              {{ _('Create') }}
-            </button>
+            {{ _('Create Training') }}
           {% endif %}
-            <button type="button" class="rounded button" onclick="window.history.go(-1)">
-              {{ _('Cancel') }}
-            </button>
-          </div></div>
-        </form>
+        </h1>
+      </div>
+      <div id="TrainingEditor" class="section__body">
+        {{ noscript_note.render() }}
+        <div class="loader-container"><div class="loader"></div></div>
       </div>
     </div>
   </div>
@@ -65,4 +22,13 @@
     {% include 'components/md_hint.html' %}
   </div>
 </div>
+{% endblock %}
+
+{% block script %}
+<script>
+  UiContext.tdoc = {{ tdoc|json|safe if tdoc else 'null' }};
+  UiContext.dag = {{ dag|safe if dag else '[]' }};
+  UiContext.canDelete = {{ 'true' if tdoc and (handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING)) else 'false' }};
+  UiContext.defaultDag = {% include 'partials/training_default.json' %};
+</script>
 {% endblock %}
