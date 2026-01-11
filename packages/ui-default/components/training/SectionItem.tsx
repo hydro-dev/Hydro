@@ -1,5 +1,7 @@
+import { AutoCompleteHandle } from '@hydrooj/components';
+import type { ProblemDoc } from 'hydrooj/src/interface';
 import React from 'react';
-import ProblemSelectAutoComplete from 'vj/components/autocomplete/ProblemSelectAutoComplete';
+import ProblemSelectAutoComplete from 'vj/components/autocomplete/components/ProblemSelectAutoComplete';
 import Notification from 'vj/components/notification';
 import { i18n } from 'vj/utils';
 import { TrainingNode, wouldCreateCycle } from './types';
@@ -25,35 +27,15 @@ function SectionItem({
   const [isEditingTitle, setIsEditingTitle] = React.useState(false);
   const [titleValue, setTitleValue] = React.useState(node.title);
   const [prereqExpanded, setPrereqExpanded] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const autocompleteRef = React.useRef<any>(null);
-  const autocompleteInitialized = React.useRef(false);
+  const autocompleteRef = React.useRef<AutoCompleteHandle<ProblemDoc>>(null);
 
-  // Lazy init autocomplete only when section is expanded and input is visible
-  React.useEffect(() => {
-    if (!isCollapsed && inputRef.current && !autocompleteInitialized.current) {
-      autocompleteInitialized.current = true;
-      const $ = (window as any).$;
-      autocompleteRef.current = ProblemSelectAutoComplete.getOrConstruct(
-        $(inputRef.current),
-        { multi: true, clearDefaultValue: false },
-      );
-      autocompleteRef.current.onChange((val: string) => {
-        const pids = val.split(',').map((v) => v.trim()).filter((v) => v).map((v) => {
-          const num = Number.parseInt(v, 10);
-          return Number.isNaN(num) ? v : num;
-        });
-        onUpdate(node._id, { pids });
-      });
-    }
-  }, [isCollapsed, node._id, onUpdate]);
-
-  React.useEffect(() => () => {
-    if (autocompleteRef.current) {
-      autocompleteRef.current.detach();
-      autocompleteRef.current = null;
-    }
-  }, []);
+  const handlePidsChange = React.useCallback((val: string) => {
+    const pids = val.split(',').map((v) => v.trim()).filter((v) => v).map((v) => {
+      const num = Number.parseInt(v, 10);
+      return Number.isNaN(num) ? v : num;
+    });
+    onUpdate(node._id, { pids });
+  }, [node._id, onUpdate]);
 
   // Sync title value when node.title changes externally
   React.useEffect(() => {
@@ -216,12 +198,11 @@ function SectionItem({
           <div className="row"><div className="columns form__item">
             <label>
               {i18n('Problems')}
-              <input
-                ref={inputRef}
-                type="text"
-                className="textbox"
-                defaultValue={node.pids.join(',')}
-                placeholder={i18n("Separated with ','")}
+              <ProblemSelectAutoComplete
+                ref={autocompleteRef}
+                multi
+                selectedKeys={node.pids.map(String)}
+                onChange={handlePidsChange}
               />
             </label>
           </div></div>

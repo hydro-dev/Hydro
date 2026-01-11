@@ -12,21 +12,16 @@ declare const UiContext: {
     description: string;
     pin: number;
   };
-  dag: TrainingNode[] | string;
-  defaultDag: TrainingNode[];
   canDelete: boolean;
 };
 
-function parseDag(dag: TrainingNode[] | string | undefined, defaultDag: TrainingNode[]): TrainingNode[] {
-  if (!dag) return defaultDag;
-  if (typeof dag === 'string') {
-    try {
-      return JSON.parse(dag);
-    } catch {
-      return defaultDag;
-    }
+function parseDag(dagStr: string | undefined, defaultDag: TrainingNode[]): TrainingNode[] {
+  if (!dagStr) return defaultDag;
+  try {
+    return JSON.parse(dagStr);
+  } catch {
+    return defaultDag;
   }
-  return dag;
 }
 
 const page = new NamedPage(['training_edit', 'training_create'], () => {
@@ -37,8 +32,12 @@ const page = new NamedPage(['training_edit', 'training_create'], () => {
   if (fallbackForm) fallbackForm.style.display = 'none';
 
   const isEdit = window.location.pathname.includes('/edit');
-  const defaultDag = UiContext.defaultDag || [];
-  const dag = parseDag(UiContext.dag, defaultDag);
+
+  // Parse dag and defaultDag from existing HTML elements
+  const defaultDagEl = document.getElementById('defaultDag') as HTMLTextAreaElement | null;
+  const dagEl = document.querySelector('textarea[name="dag"]') as HTMLTextAreaElement | null;
+  const defaultDag = parseDag(defaultDagEl?.value, []);
+  const dag = parseDag(dagEl?.value, defaultDag);
 
   const initialData: TrainingFormData = {
     title: UiContext.tdoc?.title || '',

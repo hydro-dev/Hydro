@@ -1,10 +1,13 @@
 {% extends "layout/basic.html" %}
 {% block content %}
+{{ set(UiContext, 'tdoc', tdoc) }}
+{{ set(UiContext, 'canDelete', tdoc and (handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING))) }}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
       <div class="section__body">
         <div id="TrainingEditor"></div>
+        <textarea id="defaultDag" style="display:none">{% include 'partials/training_default.json' %}</textarea>
         <form method="post" id="TrainingForm">
           <div class="row">
             <div class="medium-9 columns">
@@ -66,13 +69,4 @@
     {% include 'components/md_hint.html' %}
   </div>
 </div>
-{% endblock %}
-
-{% block script %}
-<script>
-  UiContext.tdoc = {{ tdoc|json|safe if tdoc else 'null' }};
-  UiContext.dag = {{ dag|safe if dag else '[]' }};
-  UiContext.canDelete = {{ 'true' if tdoc and (handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING)) else 'false' }};
-  UiContext.defaultDag = {% include 'partials/training_default.json' %};
-</script>
 {% endblock %}
