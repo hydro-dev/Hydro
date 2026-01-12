@@ -274,6 +274,11 @@ export class ContestPrintHandler extends ContestDetailBaseHandler {
 
 export class ContestProblemListHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
+    async prepare(domainId: string, tid: ObjectId) {
+        if (contest.RULES[this.tdoc.rule].hidden) throw new ContestNotFoundError(domainId, tid);
+    }
+
+    @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
         if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         if (!this.tsdoc?.attend && !contest.isDone(this.tdoc)) throw new ContestNotAttendedError(domainId, tid);
@@ -663,6 +668,9 @@ export class ContestFileDownloadHandler extends ContestDetailBaseHandler {
     @param('noDisposition', Types.Boolean)
     @param('type', Types.Range(['public', 'private']), true)
     async get(domainId: string, tid: ObjectId, filename: string, noDisposition = false, type = 'private') {
+        if (contest.RULES[this.tdoc.rule].hidden && !contest.RULES[this.tdoc.rule].features?.includes('download')) {
+            throw new ContestNotFoundError(domainId, tid);
+        }
         if (type === 'private' && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_EDIT_CONTEST)) {
             if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
             if (!contest.isOngoing(this.tdoc) && !contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
@@ -785,6 +793,9 @@ export class ContestScoreboardHandler extends ContestDetailBaseHandler {
     @param('tid', Types.ObjectId)
     @param('view', Types.String, true)
     async get(domainId: string, tid: ObjectId, viewId = 'default') {
+        if (contest.RULES[this.tdoc.rule].hidden && !contest.RULES[this.tdoc.rule].features?.includes('scoreboard')) {
+            throw new ContestNotFoundError(domainId, tid);
+        }
         if (!this.user.own(this.tdoc)) {
             if (!contest.canShowScoreboard.call(this, this.tdoc, true)) throw new ContestScoreboardHiddenError(tid);
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
