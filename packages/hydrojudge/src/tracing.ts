@@ -1,17 +1,39 @@
+import { OTLPTraceExporter as OTLPTraceExporterGrpc } from '@opentelemetry/exporter-trace-otlp-grpc';
 import { OTLPTraceExporter as OTLPTraceExporterHttp } from '@opentelemetry/exporter-trace-otlp-http';
+import { OTLPTraceExporter as OTLPTraceExporterProto } from '@opentelemetry/exporter-trace-otlp-proto';
 import { NodeSDK, resources, tracing } from '@opentelemetry/sdk-node';
 import { Logger } from './log';
 
 const logger = new Logger('tracing');
 
-export function initTracing(endpoint: string, samplePercentage = 1.0) {
-    const traceExporter = new OTLPTraceExporterHttp({
-        url: endpoint.includes('/v1/traces') ? endpoint : `${endpoint}/v1/traces`,
-    });
+interface TracingConfig {
+    exporter?: 'grpc' | 'http' | 'proto';
+    endpoint: string;
+    samplePercentage?: number;
+    attributes?: Record<string, any>;
+}
+
+export function initTracing(config: TracingConfig) {
+    const { endpoint, samplePercentage = 1.0, attributes = {}, exporter = 'http' } = config;
+    let traceExporter;
+    if (exporter === 'grpc') {
+        traceExporter = new OTLPTraceExporterGrpc({
+            url: endpoint,
+        });
+    } else if (exporter === 'proto') {
+        traceExporter = new OTLPTraceExporterProto({
+            url: endpoint,
+        });
+    } else {
+        traceExporter = new OTLPTraceExporterHttp({
+            url: endpoint.includes('/v1/traces') ? endpoint : `${endpoint}/v1/traces`,
+        });
+    }
     const sdk = new NodeSDK({
         resource: resources.resourceFromAttributes({
             'service.name': 'hydrojudge',
             'service.version': require('../package.json').version,
+            ...attributes,
         }),
         traceExporter,
         sampler: new tracing.TraceIdRatioBasedSampler(samplePercentage),
