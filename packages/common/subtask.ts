@@ -94,7 +94,7 @@ interface ParsedSubtask {
 
 export function readSubtasksFromFiles(files: string[], config) {
     const subtask: Record<number, ParsedSubtask> = {};
-    for (const s of config.subtasks || []) if (s.id) subtask[s.id] = s;
+    for (const s of config.subtasks || []) if (s.id && Number.isSafeInteger(s.id)) subtask[s.id] = s;
     for (const file of files) {
         let match = false;
         for (const rule of SubtaskMatcher) {

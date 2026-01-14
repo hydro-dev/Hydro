@@ -1,0 +1,40 @@
+.collapsible-content
+  position: relative
+
+  &::after
+    content: ""
+    position: absolute
+    bottom: rem(16px)
+    left: 0
+    right: 0
+    height: rem(55px)
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1))
+    pointer-events: none
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+    opacity: 1
+    z-index: 1
+
+  &__inner
+    overflow: hidden
+    max-height: rem(300px)
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1)
+
+  .collapsible-toggle
+    text-align: center
+    opacity: 0
+
+    &.visible
+      opacity: 1
+
+    &__link
+      color: $primary-color
+      text-decoration: none
+      display: inline-block
+      position: relative
+      overflow: hidden
+
+.collapsible-content.expanded
+  &::after
+    opacity: 0 !important
+  .collapsible-content__inner
+    max-height: none
