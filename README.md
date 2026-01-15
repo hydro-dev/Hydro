@@ -111,6 +111,15 @@ Hydro 用户群：1085853538
 <details>
 <summary><h2>更新日志（点击展开）</h2></summary>
 
+## Hydro 5.0.0-beta.17 / UI 4.58.0-beta.18
+
+- ui: 自动折叠过长的题解内容
+- core: 添加比赛功能白名单
+- core: 支持多文件 patch
+- core: buildContent: 支持 background 字段
+- core: 排名：排除不在本域内的用户
+- core: 其他 bug 修复
+
 ## Hydro 5.0.0-beta.16 / UI 4.58.0-beta.17
 
 - core: 修复繁体中文 i18n 自动检测
