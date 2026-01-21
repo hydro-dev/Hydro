@@ -1,3 +1,20 @@
 {
-   "signedContributors": []
+  "signedContributors": [
+    {
+      "name": "DrSmoothl",
+      "id": 101514345,
+      "comment_id": 3729743418,
+      "created_at": "2026-01-09T16:42:05Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1115
+    },
+    {
+      "name": "DrSmoothl",
+      "id": 101514345,
+      "comment_id": 3778256885,
+      "created_at": "2026-01-21T13:54:31Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1115
+    }
+  ]
 }
