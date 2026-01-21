@@ -1,7 +1,6 @@
 {% extends "layout/basic.html" %}
 {% block content %}
 {{ set(UiContext, 'tdoc', tdoc) }}
-{{ set(UiContext, 'canDelete', tdoc and (handler.user.own(tdoc) or handler.user.hasPerm(perm.PERM_EDIT_TRAINING))) }}
 <div class="row">
   <div class="medium-9 columns">
     <div class="section">
@@ -9,39 +8,13 @@
         <div id="TrainingEditor"></div>
         <textarea id="defaultDag" style="display:none">{% include 'partials/training_default.json' %}</textarea>
         <form method="post" id="TrainingForm">
-          <div class="row">
-            <div class="medium-9 columns">
-              <label>
-                {{ _('Title') }}
-                <input name="title" placeholder="{{ _('title') }}" value="{{ tdoc.title|default('') }}" class="textbox" autofocus>
-              </label>
-            </div>
-            <div class="medium-3 columns">
-              <label>
-                {{ _('Pin') }}
-                <input name="pin" placeholder="{{ _('Pin level') }}" value="{{ tdoc.pin|default(0) }}" class="textbox">
-              </label>
-            </div>
+          <div style="display:none">
+            <input name="title" value="{{ tdoc.title|default('') }}">
+            <input name="pin" value="{{ tdoc.pin|default(0) }}">
+            <textarea name="content">{{ tdoc['content']|default('') }}</textarea>
+            <textarea name="description">{{ tdoc['description']|default('') }}</textarea>
+            <textarea name="dag">{% if tdoc %}{{ dag }}{% else %}{% include 'partials/training_default.json' %}{% endif %}</textarea>
           </div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Introduce') }}
-              <textarea name="content" class="textbox">{{ tdoc['content']|default('') }}</textarea>
-              <p class="help-text">{{ _('Introduce must not exceed 500 characters and it will be shown in the list view.') }}</p>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Description') }}
-              <textarea name="description" class="textbox" data-markdown style="height: 200px">{{ tdoc['description']|default('') }}</textarea>
-            </label>
-          </div></div>
-          <div class="row"><div class="columns">
-            <label>
-              {{ _('Plan') }}
-              <textarea data-json name="dag" class="textbox" style="height: 500px">{% if tdoc %}{{ dag }}{% else %}{% include 'partials/training_default.json' %}{% endif %}</textarea>
-            </label>
-          </div></div>
           <div class="row"><div class="columns">
           {% if page_name == 'training_edit' %}
             <button type="submit" class="rounded primary button">

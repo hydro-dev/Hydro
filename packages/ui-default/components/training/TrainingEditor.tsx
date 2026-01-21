@@ -9,15 +9,10 @@ const LARGE_TRAINING_THRESHOLD = 20;
 
 interface TrainingEditorProps {
   initialData: TrainingFormData;
-  isEdit: boolean;
-  onSubmit: (data: TrainingFormData) => void;
-  onDelete?: () => void;
-  canDelete?: boolean;
 }
 
-export default function TrainingEditor({ initialData, isEdit, onSubmit, onDelete, canDelete }: TrainingEditorProps) {
+export default function TrainingEditor({ initialData }: TrainingEditorProps) {
   const [formData, setFormData] = React.useState<TrainingFormData>(initialData);
-  const [loading, setLoading] = React.useState(false);
   const [showAdvanced, setShowAdvanced] = React.useState(false);
   const [advancedJson, setAdvancedJson] = React.useState('');
 
@@ -29,6 +24,48 @@ export default function TrainingEditor({ initialData, isEdit, onSubmit, onDelete
   const advancedEditorInitialized = React.useRef(false);
 
   const isLargeTraining = initialData.dag.length >= LARGE_TRAINING_THRESHOLD;
+
+  React.useEffect(() => {
+    const form = document.getElementById('TrainingForm') as HTMLFormElement | null;
+    if (!form) return;
+    const titleInput = form.querySelector('input[name="title"]') as HTMLInputElement | null;
+    const pinInput = form.querySelector('input[name="pin"]') as HTMLInputElement | null;
+    const contentTextarea = form.querySelector('textarea[name="content"]') as HTMLTextAreaElement | null;
+    const dagTextarea = form.querySelector('textarea[name="dag"]') as HTMLTextAreaElement | null;
+    if (titleInput) titleInput.value = formData.title;
+    if (pinInput) pinInput.value = String(formData.pin);
+    if (contentTextarea) contentTextarea.value = formData.content;
+    if (dagTextarea) dagTextarea.value = JSON.stringify(formData.dag);
+  }, [formData]);
+
+  React.useEffect(() => {
+    const syncDescription = () => {
+      const form = document.getElementById('TrainingForm') as HTMLFormElement | null;
+      if (!form) return;
+      const descTextarea = form.querySelector('textarea[name="description"]') as HTMLTextAreaElement | null;
+      if (descTextarea && descriptionRef.current) {
+        descTextarea.value = descriptionRef.current.value;
+      }
+    };
+    const descEl = descriptionRef.current;
+    if (descEl) {
+      descEl.addEventListener('blur', syncDescription);
+      descEl.addEventListener('change', syncDescription);
+    }
+    const form = document.getElementById('TrainingForm') as HTMLFormElement | null;
+    if (form) {
+      form.addEventListener('submit', syncDescription);
+    }
+    return () => {
+      if (descEl) {
+        descEl.removeEventListener('blur', syncDescription);
+        descEl.removeEventListener('change', syncDescription);
+      }
+      if (form) {
+        form.removeEventListener('submit', syncDescription);
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     if (descriptionContainerRef.current && !editorInitialized.current) {
@@ -99,66 +136,54 @@ export default function TrainingEditor({ initialData, isEdit, onSubmit, onDelete
     }
   }, []);
 
-  const handleSubmit = React.useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    const currentDescription = descriptionRef.current?.value ?? formData.description;
-    const submitData = { ...formData, description: currentDescription };
-    if (submitData.dag.length === 0) {
-      Notification.error(i18n('Please add at least one section'));
-      return;
-    }
-    if (submitData.dag.find((node) => node.pids.length === 0)) {
-      Notification.error(i18n('Each section must have at least one problem'));
-      return;
-    }
-    setLoading(true);
-    try {
-      await onSubmit(submitData);
-    } finally {
-      setLoading(false);
-    }
-  }, [formData, onSubmit]);
-
-  const handleDelete = React.useCallback(async () => {
-    if (!onDelete) return;
-    if (!await confirm(i18n('Confirm deleting this training? Its files and status will be deleted as well.'))) return;
-    onDelete();
-  }, [onDelete]);
-
   const toggleAdvanced = React.useCallback(() => setShowAdvanced((s) => !s), []);
 
   return (
-    <form onSubmit={handleSubmit}>
+    <>
       <div className="section__header"><h2 className="section__title">{i18n('Basic Information')}</h2></div>
       <div className="section__body">
         <div className="row">
           <div className="medium-9 columns form__item">
             <label>
               {i18n('Title')}
-              <input type="text" className="textbox" name="title" value={formData.title}
-                onChange={(e) => updateFormField('title', e.target.value)} placeholder={i18n('title')} required autoFocus />
+              <input
+              type="text"
+              className="textbox"
+              value={formData.title}
+                onChange={(e) => updateFormField('title', e.target.value)}
+                placeholder={i18n('title')}
+                required
+                autoFocus />
             </label>
           </div>
           <div className="medium-3 columns form__item end">
             <label>
               {i18n('Pin')}
-              <input type="number" className="textbox" name="pin" value={formData.pin}
-                onChange={(e) => updateFormField('pin', Number.parseInt(e.target.value, 10) || 0)} min={0} />
+              <input
+              type="number"
+              className="textbox"
+              value={formData.pin}
+                onChange={(e) => updateFormField('pin', Number.parseInt(e.target.value, 10) || 0)}
+                min={0} />
             </label>
           </div>
         </div>
         <div className="row"><div className="columns form__item">
           <label>
             {i18n('Introduce')}
-            <textarea className="textbox" name="content" value={formData.content} onChange={(e) => updateFormField('content', e.target.value)} />
+            <textarea className="textbox" value={formData.content} onChange={(e) => updateFormField('content', e.target.value)} />
             <p className="help-text">{i18n('Introduce must not exceed 500 characters and it will be shown in the list view.')}</p>
           </label>
         </div></div>
         <div className="row"><div className="columns form__item" ref={descriptionContainerRef}>
           <label>
             {i18n('Description')}
-            <textarea ref={descriptionRef} className="textbox" name="description" defaultValue={initialData.description}
-              style={{ height: '200px' }} data-markdown />
+            <textarea
+            ref={descriptionRef}
+            className="textbox"
+            defaultValue={initialData.description}
+              style={{ height: '200px' }}
+              data-markdown />
           </label>
         </div></div>
       </div>
@@ -173,8 +198,8 @@ export default function TrainingEditor({ initialData, isEdit, onSubmit, onDelete
       </div>
       <div className="section__body">
         {formData.dag.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', background: '#f8f9fa', borderRadius: '4px', border: '2px dashed #ddd' }}>
-            <p style={{ color: '#666', marginBottom: '1rem' }}>{i18n('No sections yet. Click the button above to add your first section.')}</p>
+          <div className="training-editor__empty">
+            <p className="training-editor__empty-text">{i18n('No sections yet. Click the button above to add your first section.')}</p>
             <button type="button" className="rounded primary button" onClick={addSection}>
               <span className="icon icon-add" /> {i18n('Add First Section')}
             </button>
@@ -219,14 +244,6 @@ export default function TrainingEditor({ initialData, isEdit, onSubmit, onDelete
           </div></div>
         </div>
       )}
-
-      <div className="row" style={{ marginTop: '1.5rem' }}><div className="columns">
-        <button type="submit" className="rounded primary button" disabled={loading}>
-          {loading ? i18n('Processing...') : i18n(isEdit ? 'Update' : 'Create')}
-        </button>
-        {isEdit && canDelete && <button type="button" className="rounded button" onClick={handleDelete}>{i18n('Delete')}</button>}
-        <button type="button" className="rounded button" onClick={() => window.history.back()}>{i18n('Cancel')}</button>
-      </div></div>
-    </form>
+    </>
   );
 }

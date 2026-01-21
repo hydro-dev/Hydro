@@ -86,35 +86,28 @@ function SectionItem({
     [allSections, node._id],
   );
 
+  const headerClassName = `training-section__header ${isCollapsed ? 'training-section__header--collapsed' : 'training-section__header--expanded'}`;
+
   return (
-    <div className="training-section" style={{ border: '1px solid #ddd', borderRadius: '4px', marginBottom: '12px', background: '#fff' }}>
-      <div
-        className="training-section__header"
-        style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '12px 16px', borderBottom: isCollapsed ? 'none' : '1px solid #eee',
-          background: '#fafafa', borderRadius: isCollapsed ? '4px' : '4px 4px 0 0',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+    <div className="training-section">
+      <div className={headerClassName}>
+        <div className="training-section__header-left">
+          <div className="training-section__move-buttons">
             <button
               type="button"
-              className="link"
+              className={`link training-section__move-btn ${index === 0 ? 'disabled' : ''}`}
               onClick={onMoveUp}
               disabled={index === 0}
-              style={{ padding: '0 4px', opacity: index === 0 ? 0.3 : 1 }}
             >
-              <span className="icon icon-expand_less" style={{ fontSize: '14px' }} />
+              <span className="icon icon-expand_less training-section__move-icon" />
             </button>
             <button
               type="button"
-              className="link"
+              className={`link training-section__move-btn ${index === totalSections - 1 ? 'disabled' : ''}`}
               onClick={onMoveDown}
               disabled={index === totalSections - 1}
-              style={{ padding: '0 4px', opacity: index === totalSections - 1 ? 0.3 : 1 }}
             >
-              <span className="icon icon-expand_more" style={{ fontSize: '14px' }} />
+              <span className="icon icon-expand_more training-section__move-icon" />
             </button>
           </div>
           <span className="user-profile-badge badge--lv5">
@@ -123,36 +116,32 @@ function SectionItem({
           {isEditingTitle ? (
             <input
               type="text"
-              className="textbox"
+              className="textbox training-section__title-input"
               value={titleValue}
               onChange={(e) => setTitleValue(e.target.value)}
               onBlur={handleTitleSave}
               onKeyDown={handleTitleKeyDown}
               autoFocus
-              style={{ width: '300px' }}
             />
           ) : (
-            <span
-              style={{ fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-              onClick={handleStartEditTitle}
-            >
+            <span className="training-section__title" onClick={handleStartEditTitle}>
               {node.title || i18n('Untitled Section')}
-              <span className="icon icon-edit" style={{ fontSize: '14px', opacity: 0.6 }} />
+              <span className="icon icon-edit training-section__edit-icon" />
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="training-section__header-right">
           <button type="button" className="link" onClick={handleToggleCollapse}>
             <span className={isCollapsed ? 'icon icon-expand_more' : 'icon icon-expand_less'} />
           </button>
-          <button type="button" className="link" onClick={handleDeleteClick} style={{ color: '#e74c3c' }}>
+          <button type="button" className="link training-section__delete-btn" onClick={handleDeleteClick}>
             <span className="icon icon-delete" />
           </button>
         </div>
       </div>
 
       {!isCollapsed && (
-        <div className="training-section__body" style={{ padding: '16px' }}>
+        <div className="training-section__body">
           {availablePrereqs.length > 0 && (
             <div className="row"><div className="columns form__item">
               <label>{i18n('Prerequisite Sections')}</label>
@@ -162,12 +151,12 @@ function SectionItem({
                 const prereqsToShow = needsCollapse && !prereqExpanded ? selectedPrereqs : availablePrereqs;
                 return (
                   <>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '8px' }}>
+                    <div className="training-section__prereqs">
                       {prereqsToShow.map((s) => {
                         const isChecked = node.requireNids.includes(s._id);
                         const sectionNum = (sectionIndexMap.get(s._id) ?? 0) + 1;
                         return (
-                          <label key={s._id} className="checkbox" style={{ flexDirection: 'row-reverse', gap: '4px' }}>
+                          <label key={s._id} className="checkbox training-section__prereq-label">
                             <input
                               type="checkbox"
                               checked={isChecked}
@@ -181,9 +170,8 @@ function SectionItem({
                     {needsCollapse && (
                       <button
                         type="button"
-                        className="link"
+                        className="link training-section__prereq-toggle"
                         onClick={() => setPrereqExpanded((v) => !v)}
-                        style={{ marginTop: '8px', fontSize: '12px' }}
                       >
                         {prereqExpanded
                           ? i18n('Show less')

@@ -1,9 +1,9 @@
 import { createRoot } from 'react-dom/client';
-import Notification from 'vj/components/notification';
 import { TrainingEditor } from 'vj/components/training';
 import type { TrainingFormData, TrainingNode } from 'vj/components/training/types';
 import { NamedPage } from 'vj/misc/Page';
-import { i18n, request } from 'vj/utils';
+
+import './training_edit.page.styl';
 
 declare const UiContext: {
   tdoc?: {
@@ -12,7 +12,6 @@ declare const UiContext: {
     description: string;
     pin: number;
   };
-  canDelete: boolean;
 };
 
 function parseDag(dagStr: string | undefined, defaultDag: TrainingNode[]): TrainingNode[] {
@@ -26,16 +25,13 @@ function parseDag(dagStr: string | undefined, defaultDag: TrainingNode[]): Train
 
 const page = new NamedPage(['training_edit', 'training_create'], () => {
   const container = document.getElementById('TrainingEditor');
-  const fallbackForm = document.getElementById('TrainingForm');
-  if (!container) return;
-
-  if (fallbackForm) fallbackForm.style.display = 'none';
+  const form = document.getElementById('TrainingForm') as HTMLFormElement | null;
+  if (!container || !form) return;
 
   const isEdit = window.location.pathname.includes('/edit');
 
-  // Parse dag and defaultDag from existing HTML elements
   const defaultDagEl = document.getElementById('defaultDag') as HTMLTextAreaElement | null;
-  const dagEl = document.querySelector('textarea[name="dag"]') as HTMLTextAreaElement | null;
+  const dagEl = form.querySelector('textarea[name="dag"]') as HTMLTextAreaElement | null;
   const defaultDag = parseDag(defaultDagEl?.value, []);
   const dag = parseDag(dagEl?.value, defaultDag);
 
@@ -47,51 +43,8 @@ const page = new NamedPage(['training_edit', 'training_create'], () => {
     dag: isEdit ? dag : (dag.length > 0 ? dag : defaultDag),
   };
 
-  const handleSubmit = async (data: TrainingFormData) => {
-    try {
-      const payload = {
-        title: data.title,
-        content: data.content,
-        description: data.description,
-        pin: data.pin,
-        dag: JSON.stringify(data.dag),
-      };
-      const res = await request.post('', payload);
-      Notification.success(i18n(isEdit ? 'Training updated successfully' : 'Training created successfully'));
-      if (res.url) {
-        window.location.href = res.url;
-      } else if (res.tid) {
-        window.location.href = `./training/${res.tid}`;
-      }
-    } catch (error: any) {
-      Notification.error(error.message || i18n('Failed to save training'));
-      throw error;
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const path = window.location.pathname;
-      const tidMatch = path.match(/\/training\/([^/]+)\/edit/);
-      if (!tidMatch) throw new Error('Training ID not found');
-      const tid = tidMatch[1];
-      const baseUrl = path.replace(/\/training\/[^/]+\/edit.*$/, '');
-      const res = await request.post(`${baseUrl}/training/${tid}`, { operation: 'delete' });
-      Notification.success(i18n('Training deleted successfully'));
-      window.location.href = res.url || `${baseUrl}/training`;
-    } catch (error: any) {
-      Notification.error(error.message || i18n('Failed to delete training'));
-    }
-  };
-
   createRoot(container).render(
-    <TrainingEditor
-      initialData={initialData}
-      isEdit={isEdit}
-      onSubmit={handleSubmit}
-      onDelete={isEdit ? handleDelete : undefined}
-      canDelete={UiContext.canDelete}
-    />,
+    <TrainingEditor initialData={initialData} />,
   );
 });
 
