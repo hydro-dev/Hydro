@@ -13,9 +13,9 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "@types/react": "^19.2.8",
+    "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.2",
-    "vite": "^8.0.0-beta.7"
+    "vite": "^8.0.0-beta.10"
   }
 }
