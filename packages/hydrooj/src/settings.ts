@@ -152,6 +152,8 @@ export class SettingService extends Service {
     requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
         this.ctx.effect(() => {
             logger.debug('Loading config', s);
+            const exist = this.settings.findIndex((v) => v.meta?.description === s.meta?.description);
+            if (exist !== -1) this.settings.splice(exist, 1);
             this.settings.push(s);
             this._applySchema();
             return () => {
