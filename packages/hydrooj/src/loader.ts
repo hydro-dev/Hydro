@@ -99,7 +99,7 @@ export class Loader extends Service {
         if (!schema) return Object.freeze({});
         const schemaRequest = configScope ? Schema.object({
             [configScope]: schema,
-        }) : schema;
+        }).description(configScope) : schema;
         await this.ctx.setting._tryMigrateConfig(schemaRequest);
         const res = this.ctx.setting.requestConfig(schemaRequest, dynamic);
         return configScope ? res[configScope] : res;
