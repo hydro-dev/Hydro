@@ -41,8 +41,8 @@ async function startEdit(filename, value, fileCategory = 'file') {
 
 const dialogAction = (id) => [
   tpl`<button class="rounded button" data-action="copy" id="copy-${id}">${i18n('Copy Link')}</button>`,
-  tpl`<button class="rounded button" data-action="download">${i18n('Download')}</button>`,
-  tpl`<button class="primary rounded button" data-action="cancel">${i18n('Cancel')}</button>`,
+  tpl`<button class="rounded button" data-action="cancel">${i18n('Cancel')}</button>`,
+  tpl`<button class="primary rounded button" data-action="download">${i18n('Download')}</button>`,
 ];
 
 function bindCopyLink(id, src: string) {
