@@ -152,6 +152,13 @@ export async function downloadProblemSet(pids, name = 'Export') {
     await download(`${name}.zip`, targets);
   } catch (e) {
     window.captureException?.(e);
-    Notification.error(`${e.message} ${e.params?.[0]}`);
+    const err = e as { message?: string; params?: unknown };
+    const params = Array.isArray(err.params)
+      ? err.params
+      : err.params
+        ? [String(err.params)]
+        : [];
+    const message = [err.message, ...params].filter(Boolean).join(' ') || i18n('Unknown error');
+    Notification.error(message);
   }
 }

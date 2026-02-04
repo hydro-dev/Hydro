@@ -26,10 +26,21 @@ const page = new NamedPage('problem_files', () => {
     const type = $(ev.currentTarget).closest('[data-type]').attr('data-type');
     const files = ensureAndGetSelectedFiles(type);
     if (files === null) return;
-    const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
-    const targets = [];
-    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
-    await download(`${pdoc.docId} ${pdoc.title} ${type}.zip`, targets);
+    try {
+      const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
+      const targets = [];
+      for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+      await download(`${pdoc.docId} ${pdoc.title} ${type}.zip`, targets);
+    } catch (error) {
+      const err = error as { message?: string; params?: unknown };
+      const params = Array.isArray(err.params)
+        ? err.params
+        : err.params
+          ? [String(err.params)]
+          : [];
+      const message = [err.message, ...params].filter(Boolean).join(' ') || i18n('Unknown error');
+      Notification.error(message);
+    }
   }
 
   async function handleGenerateTestdata(ev) {
@@ -74,7 +85,14 @@ const page = new NamedPage('problem_files', () => {
         await pjax.request({ push: false });
       }
     } catch (error) {
-      Notification.error([error.message, ...error.params].join(' '));
+      const err = error as { message?: string; params?: unknown };
+      const params = Array.isArray(err.params)
+        ? err.params
+        : err.params
+          ? [String(err.params)]
+          : [];
+      const message = [err.message, ...params].filter(Boolean).join(' ') || i18n('Unknown error');
+      Notification.error(message);
     }
   }
 

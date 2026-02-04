@@ -1,62 +1,19 @@
 import $ from 'jquery';
-import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog } from 'vj/components/dialog';
+import { confirm, prompt } from 'vj/components/dialog/index';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
-  i18n, pjax, request, tpl,
+  i18n, pjax, request,
 } from 'vj/utils';
 
-const page = new NamedPage('contest_user', () => {
-  const addUserDialogContent = $(tpl`
-    <div>
-      <div class="row"><div class="columns">
-        <h1>${i18n('Add User')}</h1>
-      </div></div>
-      <div class="row"><div class="columns">
-        <label>
-          ${i18n('Users')}
-          <input name="add_user_users" type="text" class="textbox" autocomplete="off">
-        </label>
-      </div></div>
-      <div class="row"><div class="columns">
-        <label>
-          ${i18n('Rank')} 
-          <br />
-          <label class="checkbox">
-            <input type="checkbox" name="unrank" class="checkbox">${i18n('UnRank')} 
-          </label>
-        </label>
-      </div></div>
-    </div>
-  `);
-  addUserDialogContent.appendTo(document.body);
-  const userSelect = UserSelectAutoComplete.getOrConstruct<UserSelectAutoComplete<true>>(
-    addUserDialogContent.find('[name="add_user_users"]'),
-    { multi: true, height: 'auto' },
-  );
-
-  const addUserDialog = new ActionDialog({
-    $body: addUserDialogContent,
-    onDispatch(action) {
-      if (action === 'ok' && !userSelect.value()) {
-        userSelect.focus();
-        return false;
-      }
-      return true;
-    },
-  });
-  addUserDialog.clear = function () {
-    userSelect.clear();
-    addUserDialog.$dom.find('[name="unrank"]').prop('checked', false);
-    return this;
-  };
-
+const page = new NamedPage(['contest_user', 'homework_user'], () => {
   async function handleClickAddUser() {
-    const action = await addUserDialog.clear().open();
-    if (action !== 'ok') return;
-    const unrank = addUserDialog.$dom.find('[name="unrank"]').prop('checked');
-    const uids = userSelect.value();
+    let uids = $('[name="uids"]').val() as string;
+    uids = uids.trim().split(' ');
+    if (uids.length === 0) return;
+    uids = uids.filter((i) => i && i !== '');
+    if (uids.length === 0) return;
+    const unrank = $('[name="unrank"]').prop('checked');
     try {
       const res = await request.post('', {
         operation: 'add_user',
@@ -69,7 +26,14 @@ const page = new NamedPage('contest_user', () => {
         pjax.request({ push: false });
       }
     } catch (error) {
-      Notification.error([error.message, ...error.params].join(' '));
+      const err = error as { message?: string; params?: unknown };
+      const params = Array.isArray(err.params)
+        ? err.params
+        : err.params
+          ? [String(err.params)]
+          : [];
+      const message = [err.message, ...params].filter(Boolean).join(' ') || i18n('Unknown error');
+      Notification.error(message);
     }
   }
 
@@ -86,7 +50,14 @@ const page = new NamedPage('contest_user', () => {
         pjax.request({ push: false });
       }
     } catch (error) {
-      Notification.error([error.message, ...error.params].join(' '));
+      const err = error as { message?: string; params?: unknown };
+      const params = Array.isArray(err.params)
+        ? err.params
+        : err.params
+          ? [String(err.params)]
+          : [];
+      const message = [err.message, ...params].filter(Boolean).join(' ') || i18n('Unknown error');
+      Notification.error(message);
     }
   }
 
