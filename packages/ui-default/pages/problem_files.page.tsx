@@ -26,10 +26,15 @@ const page = new NamedPage('problem_files', () => {
     const type = $(ev.currentTarget).closest('[data-type]').attr('data-type');
     const files = ensureAndGetSelectedFiles(type);
     if (files === null) return;
-    const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
-    const targets = [];
-    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
-    await download(`${pdoc.docId} ${pdoc.title} ${type}.zip`, targets);
+    try {
+      const { links, pdoc } = await request.post('', { operation: 'get_links', files, type });
+      const targets = [];
+      for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+      await download(`${pdoc.docId} ${pdoc.title} ${type}.zip`, targets);
+    } catch (error) {
+      const err = error as any;
+      Notification.error(err.params ? [err.message, ...err.params].join(' ') : err.message);
+    }
   }
 
   async function handleGenerateTestdata(ev) {

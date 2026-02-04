@@ -82,10 +82,15 @@ const page = new NamedPage('problem_config', () => {
 
   async function handleClickDownloadAll() {
     const files = reduxStore.getState().testdata.map((i) => i.name);
-    const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'testdata' });
-    const targets: { filename: string, url: string }[] = [];
-    for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
-    await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
+    try {
+      const { links, pdoc } = await request.post('./files', { operation: 'get_links', files, type: 'testdata' });
+      const targets: { filename: string, url: string }[] = [];
+      for (const filename of Object.keys(links)) targets.push({ filename, url: links[filename] });
+      await download(`${pdoc.docId} ${pdoc.title}.zip`, targets);
+    } catch (error) {
+      const err = error as any;
+      Notification.error(err.params ? [err.message, ...err.params].join(' ') : err.message);
+    }
   }
 
   async function uploadConfig(config: object) {
