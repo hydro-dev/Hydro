@@ -19,17 +19,15 @@ config({
     mdit.options.html = true;
     mdit.options.linkify = true;
     mdit.linkify.tlds('.py', false);
-    mdit.linkify.tlds('.zip', false);
-    mdit.linkify.tlds('.mov', false);
     mdit.use(Media);
+    mdit.use(Imsize);
     mdit.use(Footnote);
     mdit.use(Mark);
-    mdit.use(Imsize);
     mdit.use(Anchor);
     mdit.use(TOC);
+    mdit.use(katex);
     mdit.use(MergeCells);
     mdit.use(xssProtector);
-    mdit.use(katex);
     if (isProblemPage) {
       mdit.core.ruler.before('normalize', 'xss', (state) => {
         state.src = state.src.replace(/file:\/\//g, pagename === 'problem_create' ? `/file/${UserContext._id}/` : './file/');
