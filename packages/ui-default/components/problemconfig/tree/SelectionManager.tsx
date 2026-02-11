@@ -34,14 +34,14 @@ export function SelectionManager(props: SelectionManagerProps) {
     setEnd(0);
   }, [JSON.stringify(cases)]);
 
+  const selecting = React.useRef(false);
+
   const handleMouseDown = React.useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     pos.x = event.pageX;
     pos.y = event.pageY;
-    // Check if clicking on a selected testcase
-    const selected = Array.from($('[data-selected="true"]'));
-    for (const el of selected) {
-      if (collide(el, { ...pos, width: 1, height: 1 })) return;
-    }
+    // Check if clicking on a selected testcase (let drag handle it)
+    if ((event.target as HTMLElement).closest?.('[data-selected="true"]')) return;
+    selecting.current = true;
     // eslint-disable-next-line ts/no-use-before-define
     document.body.addEventListener('mousemove', handleMouseMove);
     // eslint-disable-next-line ts/no-use-before-define
@@ -55,6 +55,7 @@ export function SelectionManager(props: SelectionManagerProps) {
     }).fadeTo(12, 0.2);
   }, [JSON.stringify(cases)]);
   const handleMouseMove = React.useCallback((event) => {
+    if (!selecting.current) return;
     pos.endX = event.pageX;
     pos.endY = event.pageY;
     $('#divSelectArea').css({
@@ -64,9 +65,19 @@ export function SelectionManager(props: SelectionManagerProps) {
       width: Math.abs(event.pageX - pos.x),
     });
   }, [JSON.stringify(cases)]);
-  const handleMouseUp = React.useCallback(() => {
+  const cleanupSelection = React.useCallback(() => {
+    selecting.current = false;
     document.body.removeEventListener('mousemove', handleMouseMove);
     document.body.removeEventListener('mouseup', handleMouseUp);
+    $('#divSelectArea').remove();
+    $('body').css('cursor', 'default');
+    pos.x = pos.y = pos.endX = pos.endY = 0;
+  }, [JSON.stringify(cases)]);
+  const handleMouseUp = React.useCallback(() => {
+    if (!selecting.current) {
+      cleanupSelection();
+      return;
+    }
     const caseEntries = Array.from($(`[data-subtaskid="${subtaskId}"]`));
     const selected = [];
     for (let i = 0; i < caseEntries.length; i += 1) {
@@ -75,9 +86,7 @@ export function SelectionManager(props: SelectionManagerProps) {
       }
     }
     const sorted = selected.sort((a, b) => a - b);
-    $('#divSelectArea').remove();
-    $('body').css('cursor', 'default');
-    pos.x = pos.y = pos.endX = pos.endY = 0;
+    cleanupSelection();
     if (!sorted.length) return;
     setStart(sorted[0]);
     setEnd(sorted[selected.length - 1] + 1);
