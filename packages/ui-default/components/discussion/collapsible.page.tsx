@@ -9,7 +9,7 @@ function initCollapsibleContent() {
     const $content = $(this);
     let $inner = $content.find('.collapsible-content__inner');
     if ($inner.length) return;
-    const $children = $content.children().detach();
+    const $children = $content.contents().detach();
     $inner = $('<div class="collapsible-content__inner"></div>');
     $inner.append($children);
     $content.append($inner);
