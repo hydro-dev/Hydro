@@ -30,6 +30,20 @@ import {
     Handler, param, post, Query, Types,
 } from '../service/server';
 
+function safeRedirect(target: string, host: string) {
+    if (!target) return '';
+    if (target.startsWith('//') || target.startsWith('\\')) return '';
+    if (target.startsWith('/')) return target;
+    try {
+        const parsed = new URL(target);
+        if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+        if (parsed.host !== host) return '';
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (e) {
+        return '';
+    }
+}
+
 async function successfulAuth(this: Handler, udoc: User) {
     await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
     this.context.HydroContext.user = udoc;
@@ -91,8 +105,12 @@ class UserLoginHandler extends Handler {
         if (!udoc.hasPriv(PRIV.PRIV_USER_PROFILE)) throw new BlacklistedError(uname, udoc.banReason);
         await successfulAuth.call(this, udoc);
         this.session.save = rememberme;
-        this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
-            ? this.url('homepage') : this.request.referer);
+        const safeTarget = safeRedirect(redirect, this.request.host);
+        const safeReferer = safeRedirect(this.request.referer || '', this.request.host);
+        const fallback = safeReferer.endsWith('/login') || !safeReferer
+            ? this.url('homepage')
+            : safeReferer;
+        this.response.redirect = safeTarget || fallback;
     }
 }
 
@@ -204,8 +222,12 @@ class UserWebauthnHandler extends Handler {
         if (tdoc.uid === 'login') {
             await successfulAuth.call(this, await user.getById(domainId, udoc._id));
             await token.del(challenge, token.TYPE_WEBAUTHN);
-            this.response.redirect = redirect || ((this.request.referer || '/login').endsWith('/login')
-                ? this.url('homepage') : this.request.referer);
+            const safeTarget = safeRedirect(redirect, this.request.host);
+            const safeReferer = safeRedirect(this.request.referer || '', this.request.host);
+            const fallback = safeReferer.endsWith('/login') || !safeReferer
+                ? this.url('homepage')
+                : safeReferer;
+            this.response.redirect = safeTarget || fallback;
         } else {
             await token.update(challenge, token.TYPE_WEBAUTHN, 60, { verified: true });
             this.back();

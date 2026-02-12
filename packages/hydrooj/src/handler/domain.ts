@@ -22,6 +22,20 @@ import {
 } from '../service/server';
 import { log2 } from '../utils';
 
+function safeRedirect(target: string, host: string) {
+    if (!target) return '';
+    if (target.startsWith('//') || target.startsWith('\\')) return '';
+    if (target.startsWith('/')) return target;
+    try {
+        const parsed = new URL(target);
+        if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+        if (parsed.host !== host) return '';
+        return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch (e) {
+        return '';
+    }
+}
+
 class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
@@ -400,7 +414,9 @@ class DomainJoinHandler extends Handler {
             }),
             oplog.log(this, 'domain.join', {}),
         ]);
-        this.response.redirect = redirect || this.url('homepage', { domainId: target, query: { notification: 'Successfully joined domain.' } });
+        const safeTarget = safeRedirect(redirect, this.request.host);
+        this.response.redirect = safeTarget
+            || this.url('homepage', { domainId: target, query: { notification: 'Successfully joined domain.' } });
     }
 }
 

@@ -1,7 +1,8 @@
+import { randomBytes } from 'crypto';
 import { sign } from 'jsonwebtoken';
 import { } from '@hydrooj/ui-default/backendlib/markdown-it-media';
 import {
-    Context, Handler, Schema, superagent, SystemModel, UiContextBase, ValidationError,
+    Context, Handler, PRIV, Schema, superagent, SystemModel, UiContextBase, ValidationError,
 } from 'hydrooj';
 
 declare module 'hydrooj' {
@@ -11,26 +12,56 @@ declare module 'hydrooj' {
 }
 
 class OnlyofficeJWTHandler extends Handler {
-    noCheckPermView = true;
     notUsage = true;
 
+    private isUrlAllowed(url: URL) {
+        const allowedHosts = SystemModel.get('onlyoffice.allowedHosts') || [];
+        const serverUrl = SystemModel.get('server.url');
+        const candidates = allowedHosts.length ? allowedHosts.slice() : [];
+        if (!allowedHosts.length) {
+            if (serverUrl) {
+                try {
+                    candidates.push(new URL(serverUrl).host);
+                } catch (e) { }
+            }
+            if (this.request.host) candidates.push(this.request.host);
+            if (this.request.hostname) candidates.push(this.request.hostname);
+        }
+        const host = url.host.toLowerCase();
+        const hostname = url.hostname.toLowerCase();
+        return candidates.some((entry) => {
+            const normalized = `${entry}`.toLowerCase().trim();
+            if (!normalized) return false;
+            const suffix = normalized.startsWith('*.') ? normalized.slice(2) : normalized.startsWith('.') ? normalized.slice(1) : '';
+            if (suffix) return hostname === suffix || hostname.endsWith(`.${suffix}`);
+            if (normalized.includes(':')) return host === normalized;
+            return hostname === normalized;
+        });
+    }
+
     async get({ url }) {
+        this.checkPriv(PRIV.PRIV_USER_PROFILE);
+        const jwtSecret = SystemModel.get('onlyoffice.jwtsecret');
+        if (!jwtSecret || jwtSecret === 'secret') throw new ValidationError('onlyoffice.jwtsecret');
+        let parsedUrl: URL;
+        try {
+            parsedUrl = new URL(url);
+        } catch (e) {
+            throw new ValidationError('url');
+        }
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new ValidationError('url');
+        if (!this.isUrlAllowed(parsedUrl)) throw new ValidationError('url');
         if (SystemModel.get('onlyoffice.externalSign')) {
             const res = await superagent.get(SystemModel.get('onlyoffice.externalSign')).query({ url });
             this.response.body = res.body;
             return;
         }
-        let path: string;
-        try {
-            path = new URL(url).pathname;
-        } catch (e) {
-            throw new ValidationError('url');
-        }
+        const path = parsedUrl.pathname;
         const allowDownload = !!SystemModel.get('onlyoffice.allowDownload');
         const payload = {
             document: {
                 fileType: path.split('.').pop(),
-                key: Math.random().toString(36).substring(2),
+                key: randomBytes(16).toString('hex'),
                 title: decodeURIComponent(path.split('/').pop()),
                 url,
                 permissions: {
@@ -63,7 +94,7 @@ class OnlyofficeJWTHandler extends Handler {
                 },
             },
         };
-        const token = sign(payload, SystemModel.get('onlyoffice.jwtsecret'));
+        const token = sign(payload, jwtSecret);
         this.response.body = {
             ...payload,
             token,
@@ -95,6 +126,7 @@ export function apply(ctx: Context) {
         onlyoffice: Schema.object({
             api: Schema.string().description('OnlyOffice API URL').role('url').default('https://documentserver/web-apps/apps/api/documents/api.js'),
             jwtsecret: Schema.string().description('JWT Secret').default('secret'),
+            allowedHosts: Schema.array(Schema.string()).description('Allowed document hosts').default([]),
             pdf: Schema.boolean().description('Handle pdf documents').default(false),
             externalSign: Schema.string().description('External Sign URL').default(''),
         }),

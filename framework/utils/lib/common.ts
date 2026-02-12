@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 declare global {
     interface String {
         format: (...args: Array<any>) => string;
@@ -17,8 +19,10 @@ declare global {
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
 export function randomstring(digit = 32, dict = defaultDict) {
+    if (digit <= 0 || !dict?.length) return '';
+    const bytes = randomBytes(digit);
     let str = '';
-    for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
+    for (let i = 0; i < digit; i++) str += dict[bytes[i] % dict.length];
     return str;
 }
 try {
