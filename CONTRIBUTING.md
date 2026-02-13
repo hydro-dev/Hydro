@@ -1,3 +1,16 @@
+## Usage of Generative AI
+
+We welcome contributions, including those developed with the assistance of generative AI tools. However, the use of such tools does not change our expectations for contributor responsibility, engagement, or code quality. The following apply to all contributions.
+
+1. Human ownership and accountability
+   1. Contributors are responsible for all submitted content, regardless of whether generative AI tools were used.
+   2. Contributors must review all the changes before submitting the pull request and be able to explain all changes during review.
+   3. Auto submissions are not allowed.
+   4. Repeated violations will lead to an account block.
+2. Authentic engagement. The pull request process is collaborative and iterative. Contributors are expected to actively engage with reviewer feedback.
+3. Consistency with existing style. In the context of Generative AI, this particularly means conveying information (comments, documentation, etc) in a style the reviewer and user will understand.
+4. Always keep things simple. Use minimal changes to do the job.
+
 ## Source Code
 
 ### Backend
