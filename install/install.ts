@@ -69,7 +69,7 @@ const locales = {
 建议参照文档 ${link('FAQS', shmFAQ)} 进行调整。`,
         'info.skip': '步骤已跳过。',
         'error.bt': `检测到宝塔面板，安装脚本很可能无法正常工作。建议您使用纯净的 Debian 12 系统进行安装。
-要忽略该警告，请使用 --shamefully-unsafe-bt-panel 参数重新运行此脚本。`,
+请卸载宝塔面板后重试。`,
         'warn.bt': `检测到宝塔面板，这会对系统安全性与稳定性造成影响。建议使用纯净 Debian 12 系统进行安装。
 开发者对因为使用宝塔面板的数据丢失不承担任何责任。
 要取消安装，请使用 Ctrl-C 退出。安装程序将在五秒后继续。`,
@@ -110,7 +110,7 @@ It is strongly recommended to use other systems. If you really need it, please u
 Please refer to ${link('FAQS', shmFAQ)} for adjustments.`,
         'info.skip': 'Step skipped.',
         'error.bt': `BT-Panel detected, this script may not work properly. It is recommended to use a clean Debian 12 OS.
-To ignore this warning, please run this script again with '--shamefully-unsafe-bt-panel' flag.`,
+Please uninstall BT-Panel and try again.`,
         'warn.bt': `BT-Panel detected, this will affect system security and stability. It is recommended to use a clean Debian 12 OS.
 The developer is not responsible for any data loss caused by using BT-Panel.
 To cancel the installation, please use Ctrl-C to exit. The installation program will continue in five seconds.`,
@@ -345,15 +345,8 @@ const Steps = () => [
                 if (process.env.IGNORE_BT) return;
                 const res = exec('bt default');
                 if (!res.code) {
-                    if (!process.argv.includes('--shamefully-unsafe-bt-panel')) {
-                        log.warn('error.bt');
-                        process.exit(1);
-                    } else {
-                        log.warn('warn.bt');
-                        warnings.push(['warn.bt']);
-                        log.info('install.wait', 5);
-                        await sleep(5000);
-                    }
+                    log.warn('error.bt');
+                    process.exit(1);
                 }
             },
             async () => {
