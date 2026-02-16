@@ -13,7 +13,6 @@ interface ScratchpadOptions {
   commandDone?: () => void;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect((state: any) => ({
   value: state.editor.code,
   language: window.LANGS[state.editor.lang]?.monaco,

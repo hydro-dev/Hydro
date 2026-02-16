@@ -1,4 +1,3 @@
-import 'jquery-scroll-lock';
 import 'jquery.easing';
 
 import $ from 'jquery';
@@ -16,7 +15,6 @@ const mapStateToProps = (state) => ({
     : null,
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
   componentDidUpdate(prevProps) {
     const node = this.state.ref;
@@ -24,13 +22,12 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
     if (this.props.activeId !== prevProps.activeId) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = false;
-    } else if (node.scrollTop + node.offsetHeight === node.scrollHeight) {
+    } else if (Math.abs(node.scrollTop + node.offsetHeight - node.scrollHeight) < 200) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = true;
     } else this.scrollToBottom = false;
 
     if (!node) return;
-    $(this.state.ref).scrollLock({ strict: true });
     if (this.scrollToBottom) {
       const targetScrollTop = node.scrollHeight - node.offsetHeight;
       if (this.scrollWithAnimation) {
@@ -98,7 +95,7 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
             </a>
           )}
         </div>
-        <ol className="messagepad__content" ref={(ref) => { this.setState({ ...this.state, ref }); }}>
+        <ol className="messagepad__content" style={{ overscrollBehavior: 'contain' }} ref={(ref) => { this.setState({ ...this.state, ref }); }}>
           {this.renderInner()}
         </ol>
       </>

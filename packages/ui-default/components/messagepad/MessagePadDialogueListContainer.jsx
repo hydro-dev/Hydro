@@ -1,5 +1,3 @@
-import 'jquery-scroll-lock';
-
 import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
@@ -21,7 +19,6 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDialogueListContainer extends React.PureComponent {
   render() {
     const orderedDialogues = _.orderBy(

@@ -68,6 +68,7 @@ export function SelectionManager(props: SelectionManagerProps) {
   const cleanupSelection = React.useCallback(() => {
     selecting.current = false;
     document.body.removeEventListener('mousemove', handleMouseMove);
+    // eslint-disable-next-line ts/no-use-before-define
     document.body.removeEventListener('mouseup', handleMouseUp);
     $('#divSelectArea').remove();
     $('body').css('cursor', 'default');
