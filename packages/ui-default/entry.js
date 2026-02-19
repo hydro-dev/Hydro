@@ -31,13 +31,20 @@ try {
   __webpack_public_path__ = UiContext.cdn_prefix;
 } catch (e) { }
 if ('serviceWorker' in navigator) {
+  const sendConfig = () => fetch('/service-worker-config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(UiContext.SWConfig),
+  });
   navigator.serviceWorker.register('/service-worker.js').then((registration) => {
     console.log('SW registered: ', registration);
-    fetch('/service-worker-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(UiContext.SWConfig),
-    });
+    const sw = registration.active || registration.waiting || registration.installing;
+    if (sw.state === 'activated') sendConfig();
+    else {
+      sw.addEventListener('statechange', (e) => {
+        if (e.target.state === 'activated') sendConfig();
+      });
+    }
   }).catch((registrationError) => {
     console.log('SW registration failed: ', registrationError);
   });

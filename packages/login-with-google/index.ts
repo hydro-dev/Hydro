@@ -63,7 +63,7 @@ export default class GoogleOAuthService extends Service {
                     _id: payload.sub.toString(),
                     email: payload.email,
                     uname: [`${payload.given_name} ${payload.family_name}`, payload.name],
-                    viewLang: payload.locale.replace('-', '_'),
+                    ...(payload.locale ? { viewLang: payload.locale.replace('-', '_') } : {}),
                 };
             },
             get: async function get(this: Handler) {
