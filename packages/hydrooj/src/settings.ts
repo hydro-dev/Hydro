@@ -150,16 +150,18 @@ export class SettingService extends Service {
     }
 
     requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
-        this.ctx.effect(() => {
-            logger.debug('Loading config', s);
-            this.settings.push(s);
-            this._applySchema();
-            return () => {
-                logger.debug('Unloading config', s);
-                this.settings = this.settings.filter((v) => v !== s);
+        if (!this.settings.includes(s)) {
+            this.ctx.effect(() => {
+                logger.debug('Loading config', s);
+                this.settings.push(s);
                 this._applySchema();
-            };
-        });
+                return () => {
+                    logger.debug('Unloading config', s);
+                    this.settings = this.settings.filter((v) => v !== s);
+                    this._applySchema();
+                };
+            });
+        }
         let curValue = s(this.systemConfig);
         if (!dynamic) return curValue;
         this.ctx.on('system/setting', () => {
