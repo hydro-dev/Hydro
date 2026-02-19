@@ -7,6 +7,27 @@ import db from '../service/db';
 const sumStatus = (status) => ({ $sum: { $cond: [{ $eq: ['$status', status] }, 1, 0] } });
 
 export async function udoc(report) {
+    const userStats = new Map<string, { nLiked?: number, nAccept?: number, nSubmit?: number }>();
+
+    report({ message: 'Udoc nLiked' });
+    const likedPipeline = [
+        {
+            $match: {
+                docType: document.TYPE_PROBLEM_SOLUTION,
+                vote: { $gt: 0 },
+            },
+        },
+        {
+            $group: {
+                _id: { domainId: '$domainId', uid: '$owner' },
+                nLiked: { $sum: '$vote' },
+            },
+        },
+    ];
+    for await (const adoc of document.coll.aggregate<any>(likedPipeline, { allowDiskUse: true })) {
+        userStats.set(`${adoc._id.domainId}/${adoc._id.uid}`, { nLiked: adoc.nLiked });
+    }
+
     report({ message: 'Udoc' });
     const pipeline = [
         {
@@ -31,20 +52,26 @@ export async function udoc(report) {
             },
         },
     ];
+    for await (const adoc of db.collection('record').aggregate<any>(pipeline, { allowDiskUse: true })) {
+        const key = `${adoc._id.domainId}/${adoc._id.uid}`;
+        const stat = userStats.get(key) || {};
+        stat.nSubmit = adoc.nSubmit;
+        stat.nAccept = adoc.nAccept;
+        userStats.set(key, stat);
+    }
+
     let bulk = db.collection('domain.user').initializeUnorderedBulkOp();
-    const cursor = db.collection('record').aggregate<any>(pipeline, { allowDiskUse: true });
-    for await (const adoc of cursor) {
-        bulk.find({
-            domainId: adoc._id.domainId,
-            uid: adoc._id.uid,
-        }).updateOne({
+    for (const [key, stat] of userStats) {
+        const [domainId, uid] = key.split('/');
+        bulk.find({ domainId, uid: +uid }).updateOne({
             $set: {
-                nSubmit: adoc.nSubmit,
-                nAccept: adoc.nAccept,
+                nSubmit: stat.nSubmit || 0,
+                nAccept: stat.nAccept || 0,
+                nLiked: stat.nLiked || 0,
             },
         });
         if (bulk.batches.length > 100) {
-            await bulk.execute();
+            await bulk.execute(); // eslint-disable-line no-await-in-loop
             bulk = db.collection('domain.user').initializeUnorderedBulkOp();
         }
     }
