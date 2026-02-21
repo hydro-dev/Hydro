@@ -233,7 +233,11 @@ export async function apply(ctx: Context) {
                     this.response.template = error instanceof UserFacingError ? 'error.html' : 'bsod.html';
                     this.response.body = {
                         UserFacingError,
-                        error: { message: error.msg(), params: error.params, stack: errorMessage(error.stack || '') },
+                        error: {
+                            message: error.msg(), stack: errorMessage(error.stack || ''),
+                            params: error.params, name: error.name, code: error.code,
+                        },
+                        _rawError: error,
                     };
                 }
             },
