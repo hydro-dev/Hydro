@@ -3,6 +3,9 @@ import { NamedPage } from 'vj/misc/Page';
 import { i18n, mongoId } from 'vj/utils';
 
 const page = new NamedPage('homework_main', async () => {
+  $('[name="filter-form"] select').on('change', () => {
+    $('[name="filter-form"]').trigger('submit');
+  });
   // Homework Calendar
   const { default: Calendar } = await import('vj/components/calendar');
   if (UiContext.docs) {
