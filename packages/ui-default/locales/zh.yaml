@@ -994,6 +994,31 @@ training_create: 创建训练
 training_edit: 编辑训练
 training_main: 训练
 Training: 训练
+Training Sections: 训练章节
+Add Section: 添加章节
+Add First Section: 添加第一个章节
+No sections yet. Click the button above to add your first section.: 暂无章节。点击上方按钮添加第一个章节。
+Untitled Section: 未命名章节
+Are you sure you want to delete this section?: 确定要删除此章节吗？
+Please add at least one section: 请至少添加一个章节
+Each section must have at least one problem: 每个章节必须包含至少一道题目
+Training deleted successfully: 训练删除成功
+Failed to save training: 保存训练失败
+Failed to delete training: 删除训练失败
+Advanced: 高级
+JSON Editor: JSON 编辑器
+Apply to Editor: 应用到编辑器
+JSON applied to editor: 已应用到编辑器
+Invalid JSON format: JSON 格式无效
+'Invalid JSON format: must be an array': JSON 格式无效：必须是数组
+'Edit JSON and click "Apply to Editor" to update the visual editor above.': 编辑 JSON 后点击「应用到编辑器」更新上方的可视化编辑器。
+Basic Information: 基础信息
+'Confirm deleting this training? Its files and status will be deleted as well.': 确认删除此训练计划吗？其文件和状态也将被删除。
+Prerequisite Sections: 前置章节
+'Cannot add this prerequisite: it would create a circular dependency': 无法添加此前置章节：会产生循环依赖
+Show less: 收起
+'Show all {0} sections': 显示全部 {0} 个章节
+Hide: 隐藏
 Transports: 支持类型
 Tried: 尝试
 Two Factor Authentication Code: 两步验证码
