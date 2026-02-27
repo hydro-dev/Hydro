@@ -336,6 +336,7 @@ const page = new NamedPage([
   'home_files', 'training_files', 'homework_files',
 ], (pageName) => {
   if (pageName === 'problem_config' || pageName === 'problem_edit') endpoint = './files';
+  if (pageName === 'contest_edit') endpoint = './management';
   $(document).on('click', '[name="file_rename"]', (ev) => handleClickRename(ev));
   $(document).on('click', '[name="file_remove"]', (ev) => handleClickRemove(ev));
   $(document).on('click', '[name="upload_file"]', (ev) => handleClickUpload(ev));

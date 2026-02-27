@@ -20,7 +20,7 @@
     "devDependencies": {
         "@types/diff": "^8.0.0",
         "@types/js-yaml": "^4.0.9",
-        "@types/lodash": "^4.17.23",
+        "@types/lodash": "^4.17.24",
         "sass": "^1.97.3"
     },
     "peerDependencies": {

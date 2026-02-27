@@ -538,7 +538,9 @@ export class ContestCodeHandler extends Handler {
 
 export class ContestManagementHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
-    async get(domainId: string, tid: ObjectId) {
+    @param('d', Types.Range(['public', 'private']), true)
+    @param('sidebar', Types.Boolean)
+    async get(domainId: string, tid: ObjectId, d?: string, sidebar?: boolean) {
         this.response.body = {
             tdoc: this.tdoc,
             tsdoc: this.tsdoc,
@@ -549,11 +551,12 @@ export class ContestManagementHandler extends ContestManagementBaseHandler {
             urlForFile: (filename: string, type: string) => this.url('contest_file_download', { tid, filename, type }),
         };
         this.response.pjax = [
-            ['partials/files.html', { filetype: 'public' }],
-            ['partials/files.html', {
+            ...((!d || d === 'public') ? [['partials/files.html', { filetype: 'public', sidebar }] as const] : []),
+            ...((!d || d === 'private') ? [['partials/files.html', {
                 files: this.response.body.privateFiles,
                 filetype: 'private',
-            }],
+                sidebar,
+            }] as const] : []),
         ];
         this.response.template = 'contest_manage.html';
     }

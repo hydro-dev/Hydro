@@ -1,0 +1,13 @@
+diff --git a/lib/picker.js b/lib/picker.js
+index 88fef537f38b4cc45d10cec3774363e2c5a007c9..79a097cc0b2d5bcc1eaf108c16430b5950034fe6 100644
+--- a/lib/picker.js
++++ b/lib/picker.js
+@@ -1079,7 +1079,7 @@ PickerConstructor._ = {
+         if ( !item ) return ''
+ 
+         // If the item is an array, do a join
+-        item = $.isArray( item ) ? item.join( '' ) : item
++        item = Array.isArray( item ) ? item.join( '' ) : item
+ 
+         // Check for the class
+         klass = klass ? ' class="' + klass + '"' : ''

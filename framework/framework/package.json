@@ -13,7 +13,7 @@
         "@mongodb-js/saslprep": "^1.4.6",
         "emoji-regex": "^10.6.0",
         "fs-extra": "^11.3.3",
-        "koa": "^3.1.1",
+        "koa": "^3.1.2",
         "koa-body": "^7.0.1",
         "koa-compress": "5.1.1",
         "path-to-regexp": "^8.3.0",
