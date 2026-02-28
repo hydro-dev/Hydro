@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable import/no-dynamic-require */
 /* eslint-disable no-sequences */
 import { execSync, ExecSyncOptions } from 'child_process';
 import crypto from 'crypto';
@@ -76,6 +75,9 @@ const locales = {
         'migrate.hustojFound': `检测到 HustOJ。安装程序可以将 HustOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 HustOJ）
 该功能支持原版 HustOJ 和部分修改版，输入 y 确认该操作。
 迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
+        'migrate.uojFound': `检测到 UOJ。安装程序可以将 UOJ 中的全部数据导入到 Hydro。（原有数据不会丢失，您可随时切换回 UOJ）
+该功能支持原版 UOJ 和部分修改版，输入 y 确认该操作。
+迁移过程有任何问题，欢迎加QQ群 1085853538 咨询管理员。`,
         'install.restartRequired': '安装完成，请使用 sudo reboot 重启系统。在此之前系统的部分功能可能无法正常使用。',
         'install.warnings': '安装过程中产生了以下警告：',
     },
@@ -117,6 +119,10 @@ To cancel the installation, please use Ctrl-C to exit. The installation program 
         'migrate.hustojFound': `HustOJ detected. The installation program can migrate all data from HustOJ to Hydro.
 The original data will not be lost, and you can switch back to HustOJ at any time.
 This feature supports the original version of HustOJ and some modified versions. Enter y to confirm this operation.
+If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
+        'migrate.uojFound': `UOJ detected. The installation program can migrate all data from UOJ to Hydro.
+The original data will not be lost, and you can switch back to UOJ at any time.
+This feature supports the original version of UOJ and some modified versions. Enter y to confirm this operation.
 If you have any questions about the migration process, please add QQ group 1085853538 to consult the administrator.`,
         'install.restartRequired': 'Please reboot the system. Some functions may not work properly before the restart.',
         'install.warnings': 'The following warnings occurred during the installation:',
