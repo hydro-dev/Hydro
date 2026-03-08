@@ -464,6 +464,7 @@ class OauthCallbackHandler extends Handler {
     async get(args: any) {
         const provider = this.ctx.oauth.providers[args.type];
         if (!provider) throw new UserFacingError('Oauth type');
+        await this.limitRate('oauth_callback', 60, 5);
         const r = await provider.callback.call(this, args);
         if (this.session.oauthBind === args.type) {
             delete this.session.oauthBind;
