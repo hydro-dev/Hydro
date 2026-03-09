@@ -42,7 +42,7 @@ export * as JudgeHandler from './handler/judge';
 export { JudgeResultCallbackContext, postJudge } from './handler/judge';
 export { Collections } from './service/db';
 export { ConnectionHandler, Handler, requireSudo } from './service/server';
-export { Context, Service } from './context';
+export { Context, Fiber, FiberState, Service } from './context';
 export { buildContent } from './lib/content';
 export { default as mime } from './lib/mime';
 export { default as difficultyAlgorithm } from './lib/difficulty';
