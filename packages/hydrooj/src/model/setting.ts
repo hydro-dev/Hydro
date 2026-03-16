@@ -24,7 +24,7 @@ for (const country of countries) {
     const tz = moment.tz.zonesForCountry(country);
     for (const t of tz) tzs.add(t);
 }
-const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
+const timezones = [...tzs].sort().map((tz) => [tz, tz]) as [string, string][];
 const langRange: Dictionary<string> = {};
 
 export const FLAG_HIDDEN = 1;
@@ -320,6 +320,7 @@ SystemSetting(Schema.object({
         url: Schema.string().default('/').description('Server BaseURL'),
         upload: Schema.string().default('256m').description('Max upload file size'),
         cdn: Schema.string().default('/').description('CDN Prefix'),
+        cdn_dynamic: Schema.boolean().default(false).description('Dynamic CDN'),
         ws: Schema.string().default('/').description('WebSocket Prefix'),
         host: Schema.string().default('127.0.0.1').description('Listen host'),
         port: Schema.number().step(1).min(1).max(65535).default(8888).description('Server Port'),
