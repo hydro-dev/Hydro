@@ -40,6 +40,7 @@ async function successfulAuth(this: Handler, udoc: User) {
     this.session.scope = PERM.PERM_ALL.toString();
     this.session.oauthBind = null;
     this.session.recreate = true;
+    await oplog.log(this, 'user.loginSuccess', { uid: udoc._id });
 }
 
 class UserLoginHandler extends Handler {
