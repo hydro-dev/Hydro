@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
 import { serializer } from '@hydrooj/framework';
-import { Context, getNodes } from 'hydrooj';
+import { Context } from 'hydrooj';
 
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (str: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${str}</script>`;
@@ -23,10 +23,14 @@ function hydroPlugins(): Plugin {
         },
         load(id) {
             if (id === resolvedVirtualModuleId) {
-                const plugins = getNodes('Route');
-                if (!plugins) return 'export default [];';
-                const imports = plugins.map((p, i) => `import plugin${i} from '${p.args.entry}';`).join('\n');
-                const exports = `export default [${plugins.map((p, i) => `plugin${i}`).join(', ')}];`;
+                const entries: string[] = [];
+                for (const addon of Object.values(global.addons)) {
+                    const uiEntry = path.resolve(addon, 'ui', 'index.ts');
+                    if (fs.existsSync(uiEntry)) entries.push(uiEntry);
+                }
+                if (!entries.length) return 'export default [];';
+                const imports = entries.map((e, i) => `import plugin${i} from '${e}';`).join('\n');
+                const exports = `export default [${entries.map((_, i) => `plugin${i}`).join(', ')}];`;
                 return `${imports}\n${exports}`;
             }
         },
