@@ -622,7 +622,7 @@ export interface ProblemSearchOptions {
 
 export type ProblemSearch = (domainId: string, q: string, options?: ProblemSearchOptions) => Promise<ProblemSearchResponse>;
 
-export type UIInjectableFields = 'ProblemAdd' | 'Notification' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel' | 'Route';
+export type UIInjectableFields = 'ProblemAdd' | 'Notification' | 'Nav' | 'UserDropdown' | 'DomainManage' | 'ControlPanel';
 export interface UI {
     nodes: Record<UIInjectableFields, any[]>;
     getNodes: typeof import('./lib/ui').getNodes;
