@@ -75,7 +75,7 @@ export async function apply(ctx: Context) {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf-8');
     ctx.server.registerRenderer('next', {
         name: 'next',
-        accept: ['main.html'],
+        accept: [],
         output: 'html',
         asFallback: false,
         priority: 100,
