@@ -2,6 +2,8 @@
   "name": "@hydrooj/ui-next",
   "version": "0.0.0",
   "type": "module",
+  "main": "index.ts",
+  "types": "api.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

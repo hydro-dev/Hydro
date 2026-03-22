@@ -1,5 +1,5 @@
-function App() {
-  return <div></div>;
-}
+import { Component } from './registry';
 
-export default App;
+const AppInner = Component('page:app', () => <div>app</div>);
+
+export default AppInner;

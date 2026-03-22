@@ -29,7 +29,7 @@ function hydroPlugins(): Plugin {
                     if (fs.existsSync(uiEntry)) entries.push(uiEntry);
                 }
                 if (!entries.length) return 'export default [];';
-                const imports = entries.map((e, i) => `import plugin${i} from '${e}';`).join('\n');
+                const imports = entries.map((e, i) => `import * as plugin${i} from '${e}';`).join('\n');
                 const exports = `export default [${entries.map((_, i) => `plugin${i}`).join(', ')}];`;
                 return `${imports}\n${exports}`;
             }
@@ -39,6 +39,7 @@ function hydroPlugins(): Plugin {
 
 export async function apply(ctx: Context) {
     if (process.env.HYDRO_CLI) return;
+    // 现在只是开发环境的实现，生产环境的实现还未完成
     const vite = await createServer({
         server: {
             middlewareMode: true,
