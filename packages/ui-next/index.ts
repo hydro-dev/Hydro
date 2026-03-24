@@ -69,7 +69,7 @@ export async function apply(ctx: Context) {
         },
     });
     const middleware = c2k(vite.middlewares);
-    const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs'];
+    const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs', '/@id/'];
     for (const route of capture) {
         ctx.server.addCaptureRoute(route, middleware);
     }
@@ -78,7 +78,7 @@ export async function apply(ctx: Context) {
         name: 'next',
         accept: [],
         output: 'html',
-        asFallback: false,
+        asFallback: true,
         priority: 100,
         async render(name, args, context) {
             const data = {
