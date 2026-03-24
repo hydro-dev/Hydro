@@ -1,8 +1,8 @@
-import { usePageData } from './pageData';
+import { usePageData } from './context/pageData';
 import { Component } from './registry';
 
 const AppInner = Component('page:app', () => {
-  const { data } = usePageData();
+  const data = usePageData();
 
   return <div>app, page:{data.name}</div>;
 });
