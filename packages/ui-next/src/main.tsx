@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import plugins from 'virtual:hydro-plugins';
 import App from './App';
 import { createContext } from './context';
-import { type PageData, PageDataProvider } from './pageData';
+import { type PageData, PageDataProvider } from './context/pageData';
 
 const ctx = createContext();
 for (const plugin of plugins) {

@@ -24,8 +24,8 @@ export function PageDataProvider({ initial, children }: { initial: PageData, chi
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function usePageData(): PageDataContextValue {
+export function usePageData(): PageData {
   const ctx = useContext(PageDataContext);
   if (!ctx) throw new Error('usePageData must be used within PageDataProvider');
-  return ctx;
+  return ctx.data;
 }

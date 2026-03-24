@@ -1,6 +1,6 @@
 import {
   after, before, Component, patch,
-} from './registry';
+} from '../registry';
 
 export interface Context {
   before: typeof before;
