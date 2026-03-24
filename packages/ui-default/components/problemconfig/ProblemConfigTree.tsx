@@ -146,7 +146,7 @@ export function SubtaskConfigTree() {
 
 export function ProblemConfigTree() {
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndProvider backend={HTML5Backend} context={window}>
       <div className="row">
         <div className="medium-6 columns">
           <SubtaskConfigTree />

@@ -1,5 +1,6 @@
 import 'md-editor-rt/lib/style.css';
 
+import zh_TW from '@vavt/cm-extension/dist/locale/zh-TW';
 import Anchor from 'markdown-it-anchor';
 import Footnote from 'markdown-it-footnote';
 import Mark from 'markdown-it-mark';
@@ -42,6 +43,11 @@ config({
   },
   codeMirrorExtensions(extensions) {
     return extensions.filter((i) => i.type !== 'linkShortener');
+  },
+  editorConfig: {
+    languageUserDefined: {
+      'zh-TW': zh_TW,
+    },
   },
 });
 

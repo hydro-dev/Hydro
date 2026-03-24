@@ -13,11 +13,11 @@
     "@chialab/esbuild-plugin-meta-url": "^0.19.0",
     "@vitejs/plugin-react": "^5.1.2",
     "koa2-connect": "^1.0.2",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "vite": "^7.3.0"
   }

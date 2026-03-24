@@ -8,11 +8,13 @@ import token from '../../model/token';
 
 export interface UiContextBase {
     cdn_prefix: string;
+    cdn_dynamic: boolean;
     url_prefix: string;
     ws_prefix: string;
 }
 export const UiContextBase: UiContextBase = {
     cdn_prefix: '/',
+    cdn_dynamic: false,
     url_prefix: '/',
     ws_prefix: '/',
 };
@@ -29,6 +31,7 @@ export default async (ctx: KoaContext, next: Next) => {
         if (UiContext.cdn_prefix.includes(',')) UiContext.cdn_prefix = randomPick(UiContext.cdn_prefix.split(','));
         UiContext.ws_prefix = system.get('server.ws');
         if (UiContext.ws_prefix.includes(',')) UiContext.ws_prefix = randomPick(UiContext.ws_prefix.split(','));
+        UiContext.cdn_dynamic = system.get('server.cdn_dynamic');
     }
     UiContext.domainId = domainId;
     UiContext.domain = domainInfo;

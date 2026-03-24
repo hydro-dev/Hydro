@@ -1,11 +1,11 @@
 import 'jquery.easing';
 
 import $ from 'jquery';
-import { ConfirmDialog } from 'vj/components/dialog';
+import { confirm } from 'vj/components/dialog';
 import CommentBox from 'vj/components/discussion/CommentBox';
 import { AutoloadPage } from 'vj/misc/Page';
 import {
-  delay, i18n, request, slideDown, slideUp, tpl,
+  delay, i18n, request, slideDown, slideUp,
 } from 'vj/utils';
 
 const $replyTemplate = $('.commentbox-container').eq(0).clone();
@@ -162,10 +162,7 @@ async function onCommentClickDelete(type, ev) {
   const message = (type === 'comment')
     ? 'Confirm deleting this comment? Its replies will be deleted as well.'
     : 'Confirm deleting this reply?';
-  const action = await new ConfirmDialog({
-    $body: tpl.typoMsg(i18n(message)),
-  }).open();
-  if (action !== 'yes') return;
+  if (!await confirm(i18n(message))) return;
 
   const $evTarget = $(ev.currentTarget);
   const form = JSON.parse($evTarget.attr('data-form'));

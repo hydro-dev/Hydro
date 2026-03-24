@@ -1,4 +1,3 @@
-// @ts-nocheck
 /* eslint-disable */
 import Picker from 'pickadate/lib/picker';
 
@@ -22,6 +21,11 @@ export default class TimePicker {
     interval: 15,
     disable: [],
     enable: 1,
+    select: undefined,
+    highlight: undefined,
+    min: undefined,
+    max: undefined,
+    view: undefined,
   };
 
   key = {
@@ -38,6 +42,8 @@ export default class TimePicker {
       this.render();
     },
   };
+
+  $node: any;
 
   constructor(picker, public settings) {
     const clock = this;
@@ -131,15 +137,15 @@ export default class TimePicker {
     },
   };
 
-  create(type, value, options) {
+  create(type, value?, options?) {
     const clock = this;
     value = value === undefined ? type : value;
     if (_.isDate(value)) {
       value = [value.getHours(), value.getMinutes()];
     }
-    if ($.isPlainObject(value) && _.isInteger(value.pick)) {
+    if (value && typeof value === 'object' && _.isInteger(value.pick)) {
       value = value.pick;
-    } else if ($.isArray(value)) {
+    } else if (Array.isArray(value)) {
       value = +value[0] * MINUTES_IN_HOUR + (+value[1]);
     }
     if (type == 'max' && value < clock.item.min.pick) {
@@ -157,7 +163,7 @@ export default class TimePicker {
     };
   }
 
-  normalize(type, value/* , options */) {
+  normalize(type, value, _options) {
     const { interval } = this.item;
     const minTime = this.item.min && this.item.min.pick || 0;
     value -= type == 'min' ? 0 : (value - minTime) % interval;
@@ -165,17 +171,12 @@ export default class TimePicker {
   }
 
   measure(type, value, options) {
-    const clock = this;
-    if (!value) {
-      value = type == 'min' ? [0, 0] : [HOURS_IN_DAY - 1, MINUTES_IN_HOUR - 1];
-    }
-
+    value ||= type == 'min' ? [0, 0] : [HOURS_IN_DAY - 1, MINUTES_IN_HOUR - 1];
     if (typeof value === 'string') {
-      value = clock.parse(type, value);
-    } else if ($.isPlainObject(value) && _.isInteger(value.pick)) {
-      value = clock.normalize(type, value.pick, options);
+      value = this.parse(type, value);
+    } else if (value && typeof value === 'object' && _.isInteger(value.pick)) {
+      value = this.normalize(type, value.pick, options);
     }
-
     return value;
   }
 
@@ -185,7 +186,7 @@ export default class TimePicker {
     return this.create(timeObject.pick > maxLimit ? maxLimit : timeObject.pick < minLimit ? minLimit : timeObject);
   }; // TimePicker.prototype.scope
 
-  parse(type, value, options) {
+  parse(type, value, options?) {
     let hour; let minutes; let item; let parseValue;
     const clock = this;
     const parsingObject = {};

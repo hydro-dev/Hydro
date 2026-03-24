@@ -48,6 +48,7 @@ export class Loader extends Service {
     public state: Record<string, Fiber> = Object.create(null);
     public suspend = false;
     public cache: Record<string, string> = Object.create(null);
+    private schemaCache = new WeakMap<Schema<any>, Record<string, Schema<any>>>();
     // public warnings: Record<string, string> = Object.create(null);
 
     static inject = ['setting', 'timer', 'i18n', 'logger'];
@@ -94,12 +95,18 @@ export class Loader extends Service {
         }
     }
 
+    buildSchema(schema: Schema<any>, scope?: string) {
+        if (!scope) return schema;
+        const cache = this.schemaCache.get(schema) || {};
+        cache[scope] ||= Schema.object({ [scope]: schema });
+        this.schemaCache.set(schema, cache);
+        return cache[scope];
+    }
+
     async resolveConfig(plugin: any, configScope: string, dynamic = true) {
         const schema = plugin['Config'] || plugin['schema'];
         if (!schema) return Object.freeze({});
-        const schemaRequest = configScope ? Schema.object({
-            [configScope]: schema,
-        }) : schema;
+        const schemaRequest = this.buildSchema(schema, configScope);
         await this.ctx.setting._tryMigrateConfig(schemaRequest);
         const res = this.ctx.setting.requestConfig(schemaRequest, dynamic);
         return configScope ? res[configScope] : res;

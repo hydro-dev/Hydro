@@ -62,17 +62,14 @@ export default class RecordModel {
 
     @ArgMethod
     static async stat(domainId?: string) {
-        // INFO:
-        // using .count() for a much better performace
-        // @see https://www.mongodb.com/docs/manual/reference/command/count/
         const [d5min, d1h, day, week, month, year, total] = await Promise.all([
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }).count(),
-            RecordModel.coll.find(domainId ? { domainId } : {}).count(),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-5, 'minutes')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'hour')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'day')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'week')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'month')) }, ...domainId ? { domainId } : {} }),
+            RecordModel.coll.countDocuments({ _id: { $gte: Time.getObjectID(moment().add(-1, 'year')) }, ...domainId ? { domainId } : {} }),
+            domainId ? RecordModel.coll.countDocuments({ domainId }) : RecordModel.coll.estimatedDocumentCount(),
         ]);
         return {
             d5min, d1h, day, week, month, year, total,
@@ -134,7 +131,7 @@ export default class RecordModel {
         lang: string, code: string, addTask: boolean,
         args: {
             contest?: ObjectId;
-            input?: string;
+            input?: string[];
             files?: Record<string, string>;
             hackTarget?: ObjectId;
             type: 'judge' | 'rejudge' | 'pretest' | 'hack' | 'generate';
@@ -168,7 +165,7 @@ export default class RecordModel {
             args.type = 'judge';
             data.rejudged = true;
         } else if (args.type === 'pretest') {
-            data.input = args.input || '';
+            data.input = args.input || [];
             isContest = false;
             data.contest = RecordModel.RECORD_PRETEST;
         } else if (args.type === 'generate') {

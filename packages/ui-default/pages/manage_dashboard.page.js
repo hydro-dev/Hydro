@@ -11,16 +11,14 @@ const page = new NamedPage('manage_dashboard', async () => {
 
   sock.onmessage = (message) => {
     const msg = JSON.parse(message.data);
-    if (msg.type === 'log') {
-      const div = $('<blockquote class="blue">').appendTo('#messages');
-      $(`<p>${msg.payload}</p>`).appendTo(div);
-    } else if (msg.type === 'warn') {
-      const div = $('<blockquote class="yellow">').appendTo('#messages');
-      $(`<p>${msg.payload}</p>`).appendTo(div);
-    } else if (msg.type === 'error') {
-      const div = $('<blockquote class="red">').appendTo('#messages');
-      $(`<p>${msg.payload}</p>`).appendTo(div);
-    }
+    const color = {
+      log: 'blue',
+      warn: 'yellow',
+      error: 'red',
+    };
+    const div = $(`<blockquote class="${color[msg.type]}">`).appendTo('#messages');
+    // message come from backend checks, mark as trusted
+    for (const line of (msg.payload || '').split('\n')) $(`<p>${line}</p>`).appendTo(div);
   };
 
   sock.onclose = (message) => {

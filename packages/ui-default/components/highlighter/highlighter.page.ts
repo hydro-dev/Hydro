@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import Notification from 'vj/components/notification';
 import { AutoloadPage } from 'vj/misc/Page';
 import { i18n, tpl } from 'vj/utils';
 
@@ -33,6 +34,31 @@ const highlighterPage = new AutoloadPage('highlighterPage', () => {
               $output.parent().prepend($(tpl`<h2>${i18n('Sample Output')} ${id}</h2>`))
                 .addClass('medium-6 columns sample').appendTo($c);
             }
+            if ($root.find('.scratchpad-fill-button').length) return;
+            const $toolbar = $root.find('.toolbar');
+            const $button = $(tpl`
+              <div class="toolbar-item scratchpad-fill-button">
+                <a href="javascript:;">${i18n('Fill to Pretest')}</a>
+              </div>
+            `);
+            $button.on('click', (e) => {
+              const store = (window as any).store;
+              if (!store) return;
+              e.preventDefault();
+              try {
+                store.dispatch({
+                  type: 'SCRATCHPAD_PRETEST_DATA_CHANGE',
+                  payload: {
+                    type: 'input',
+                    value: $code.text(),
+                  },
+                });
+                Notification.success(i18n('Input filled to pretest!'), 2000);
+              } catch (err) {
+                Notification.error(i18n('Failed to fill input'));
+              }
+            });
+            $toolbar.append($button);
           }
         }
       });

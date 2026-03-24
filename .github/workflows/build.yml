@@ -21,8 +21,6 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 2
-    - name: Setup Corepack
-      run: corepack enable
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
@@ -49,6 +47,7 @@ jobs:
       run: |
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
+        yarn set version stable
         yarn
         yarn dedupe
       env:

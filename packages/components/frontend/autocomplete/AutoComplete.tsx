@@ -266,7 +266,7 @@ const AutoComplete = forwardRef(function Impl<T>(props: AutoCompleteProps<T>, re
         className={focused ? 'autocomplete-wrapper focused' : 'autocomplete-wrapper'}
         style={{ width, height }}
       >
-        <DndProvider backend={HTML5Backend}>
+        <DndProvider backend={HTML5Backend} context={window}>
           {multi && selectedKeys.map((key) => {
             const item = valueCache[key];
             return (

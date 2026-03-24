@@ -124,7 +124,7 @@
         {% endif %}
         </div>
       </div>
-      <div class="typo richmedia" data-emoji-enabled data-raw-url="{{ url('problem_solution_raw', pid=doc.parentId, psid=doc._id) }}">
+      <div class="typo richmedia collapsible-content" data-emoji-enabled data-raw-url="{{ url('problem_solution_raw', pid=doc.parentId, psid=doc._id) }}">
         {{ doc['content']|markdown|safe }}
       </div>
       <div class="commentbox-edit-target"></div>
@@ -154,7 +154,7 @@
                 {% endif %}
                 </div>
               </div>
-              <div class="typo richmedia" data-emoji-enabled data-raw-url="{{ url('problem_solution_reply_raw', pid=doc.parentId, psid=doc._id, psrid=rdoc._id) }}">
+              <div class="typo richmedia collapsible-content" data-emoji-enabled data-raw-url="{{ url('problem_solution_reply_raw', pid=doc.parentId, psid=doc._id, psrid=rdoc._id) }}">
                 {{ rdoc['content']|markdown|safe }}
               </div>
               <div class="commentbox-edit-target"></div>

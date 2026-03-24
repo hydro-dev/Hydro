@@ -1,20 +1,20 @@
 {
     "name": "@hydrooj/eslint-config",
-    "version": "3.0.6",
+    "version": "3.1.0",
     "license": "MIT",
     "main": "base.mjs",
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
-        "@antfu/eslint-config": "^6.7.1",
-        "@eslint-react/eslint-plugin": "^2.3.13",
-        "@typescript-eslint/eslint-plugin": "^8.50.0",
-        "@typescript-eslint/parser": "^8.50.0",
+        "@antfu/eslint-config": "^7.6.1",
+        "@eslint-react/eslint-plugin": "^2.13.0",
+        "@typescript-eslint/eslint-plugin": "^8.56.1",
+        "@typescript-eslint/parser": "^8.56.1",
         "eslint-plugin-de-morgan": "^2.0.0",
         "eslint-plugin-github": "^6.0.0",
         "eslint-plugin-react-hooks": "^7.0.1",
-        "eslint-plugin-react-refresh": "^0.4.26",
+        "eslint-plugin-react-refresh": "^0.5.2",
         "eslint-plugin-simple-import-sort": "^12.1.1",
-        "globals": "^16.5.0"
+        "globals": "^17.3.0"
     },
     "peerDependencies": {
         "eslint": ">= 9"

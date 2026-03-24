@@ -10,7 +10,7 @@ const defaultEnv = `\
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 HOME=/w
 # modify to your python version installed
-PYTHONPATH=/lib/python3.12/site-packages
+PYTHONPATH=/lib/python3.13/site-packages
 `;
 
 export const JudgeSettings = Schema.object({
@@ -28,7 +28,7 @@ export const JudgeSettings = Schema.object({
     singleTaskParallelism: Schema.number().default(2).min(1).step(1),
     rerun: Schema.number().description('Re-Run testcase if time-limit-exceeded (max per submission)').default(0).min(0).step(1),
     rate: Schema.number().default(1),
-    env: Schema.string().default(defaultEnv),
+    env: Schema.string().default(defaultEnv).role('textarea'),
     host: Schema.any(),
     secret: Schema.string().description('Judge Token Secret').default(randomstring(32)),
     disable: Schema.boolean().description('Disable builtin judge').default(false),

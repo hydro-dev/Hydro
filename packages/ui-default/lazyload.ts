@@ -1,12 +1,13 @@
 const lazyModules = {};
 const features: Record<string, string | (() => Promise<any>)> = {};
+const host = UiContext.cdn_dynamic ? UiContext.cdn_prefix : '/';
 export default async function load(name: string) {
   if (name === 'echarts') return import('echarts');
   if (name === 'moment') return import('moment');
   if (!window.lazyloadMetadata?.[`${name}.lazy.js`]) throw new Error(`Module ${name} not found`);
   if (lazyModules[name]) return lazyModules[name];
   const tag = document.createElement('script');
-  tag.src = `/lazy/${window.lazyloadMetadata[`${name}.lazy.js`]}/${name}.lazy.js`;
+  tag.src = `${host}lazy/${window.lazyloadMetadata[`${name}.lazy.js`]}/${name}.lazy.js`;
   console.log('loading module: ', name);
   lazyModules[name] = new Promise((resolve, reject) => {
     tag.onerror = reject;
@@ -42,7 +43,7 @@ export async function getFeatures(name: string) {
   const c = Object.keys(features).filter((i) => i === name || i.startsWith(`${name}@`))
     .map((i) => features[i]);
   console.log('query features for:', name, 'legacy:', legacy, 'selected:', c, 'all:', features);
-  return c.concat(legacy);
+  return [...c, ...legacy];
 }
 
 export const loaded = [];

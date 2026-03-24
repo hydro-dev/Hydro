@@ -1,6 +1,3 @@
-import 'jquery-scroll-lock';
-
-import $ from 'jquery';
 import _ from 'lodash';
 import React from 'react';
 import { connect } from 'react-redux';
@@ -21,7 +18,6 @@ const mapDispatchToProps = (dispatch) => ({
   },
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDialogueListContainer extends React.PureComponent {
   render() {
     const orderedDialogues = _.orderBy(
@@ -32,7 +28,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(class MessagePadDial
       'desc',
     );
     return (
-      <ol className="messagepad__list" ref={(ref) => $(ref).scrollLock({ strict: true })}>
+      <ol className="messagepad__list" style={{ overscrollBehavior: 'contain' }}>
         {_.map(orderedDialogues, (dialogue) => (
           <ListItem
             key={dialogue._id}

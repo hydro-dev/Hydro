@@ -37,8 +37,8 @@ const problemConfigSchema: JSONSchema7 = {
       required: ['score'],
       additionalProperties: false,
     },
-    time: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([mu]?)s?$' },
-    memory: { type: 'string', pattern: '^([0-9]+(?:\\.[0-9]*)?)([kKmMgG])[bB]?$' },
+    time: { type: 'string', pattern: '^([1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)([mu]?)s?$' },
+    memory: { type: 'string', pattern: '^([1-9][0-9]*(?:\\.[0-9]+)?|0\\.[0-9]*[1-9][0-9]*)([kKmMgG])[bB]?$' },
     score: { type: 'integer', maximum: 100, minimum: 1 },
     rateConfig: {
       type: 'object',

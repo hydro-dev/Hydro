@@ -1,4 +1,5 @@
 export interface ProblemSource {
+    background?: string;
     description?: string;
     input?: string;
     output?: string;
@@ -43,36 +44,33 @@ export function buildContent(source: ProblemSource, type: 'markdown' | 'html' = 
                 '',
             ]).join('\n');
     }
-    return type === 'html'
-        ? [
-            ...source.description ? [`<h2>${_('Description')}</h2>`, source.description] : [],
-            ...source.input ? [`<h2>${_('Input Format')}</h2>`, source.input] : [],
-            ...source.output ? [`<h2>${_('Output Format')}</h2>`, source.output] : [],
-            ...(source.samples || []).map((sample, i) => [
+    const line = (title: string, s: string) => s ? (type === 'html' ? [`<h2>${_(title)}</h2>`, s] : [`## ${_(title)}`, '', s, '']) : [];
+    return [
+        line('Background', source.background),
+        line('Problem Description', source.description),
+        line('Input Format', source.input),
+        line('Output Format', source.output),
+        type === 'html'
+            ? (source.samples || []).map((sample, i) => [
                 `<pre><code class="language-input${i + 1}">`,
                 sample[0],
                 `</code></pre><pre><code class="language-output${i + 1}">`,
                 sample[1],
                 '</code></pre>',
-            ].join('')),
-            ...source.samplesRaw ? [source.samplesRaw] : [],
-            ...source.hint ? [`<h2>${_('Hint')}</h2>`, source.hint] : [],
-            ...source.source ? [`<h2>${_('Source')}</h2>`, source.source] : [],
-        ].join('\n')
-        : [
-            ...source.description ? [`## ${_('Description')}`, '', source.description, ''] : [],
-            ...source.input ? [`## ${_('Input Format')}`, '', source.input, ''] : [],
-            ...source.output ? [`## ${_('Output Format')}`, '', source.output, ''] : [],
-            ...(source.samples || []).flatMap((sample, i) => [
+            ].join(''))
+            : (source.samples || []).flatMap((sample, i) => [
+                '',
                 `\`\`\`input${i + 1}`,
                 sample[0],
                 '```',
+                '',
                 `\`\`\`output${i + 1}`,
                 sample[1],
                 '```',
+                '',
             ]),
-            ...source.samplesRaw ? [source.samplesRaw] : [],
-            ...source.hint ? [`## ${_('Hint')}`, '', source.hint, ''] : [],
-            ...source.source ? [`## ${_('Source')}`, '', source.source, ''] : [],
-        ].join('\n');
+        ...source.samplesRaw ? [source.samplesRaw] : [],
+        line('Hint', source.hint),
+        line('Source', source.source),
+    ].flat().join('\n');
 }

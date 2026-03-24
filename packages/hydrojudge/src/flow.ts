@@ -45,7 +45,12 @@ function judgeSubtask(subtask: NormalizedSubtask, sid: string, judgeCase: Task['
                         time: 0,
                         memory: 0,
                         message: '',
-                    } : await runner(ctx, ctxSubtask, runner);
+                    } : await (async () => {
+                        using span = ctx.startChildSpan('judge.case', { id: subtask.cases[cid].id, subtaskId: subtask.id });
+                        const r = await runner(ctx, ctxSubtask, runner);
+                        span.setAttributes({ status: r?.status, time: r?.time, memory: r?.memory });
+                        return r;
+                    })();
                 if (res?.status !== STATUS.STATUS_CANCELED) {
                     ctxSubtask.score = Score[ctxSubtask.subtask.type](ctxSubtask.score, res.score);
                     ctxSubtask.status = Math.max(ctxSubtask.status, res.status);

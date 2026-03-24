@@ -16,6 +16,7 @@ benchmark.json
 globalConfig.json
 *.out
 .clinic/
+.direnv/
 .yarn/cache
 .yarn/build-state.yml
 .yarn/unplugged

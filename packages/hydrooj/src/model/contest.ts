@@ -636,6 +636,7 @@ const ledo = buildContestRule({
 const homework = buildContestRule({
     TEXT: 'Assignment',
     hidden: true,
+    features: ['scoreboard', 'download'],
     check: () => { },
     submitAfterAccept: false,
     statusSort: { penaltyScore: -1, time: 1 },

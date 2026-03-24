@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { pick } from 'lodash';
+import { escapeRegExp, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
@@ -59,11 +59,13 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
 
 class TrainingMainHandler extends Handler {
     @param('page', Types.PositiveInt, true)
-    async get(domainId: string, page = 1) {
+    @param('q', Types.String, true)
+    async get(domainId: string, page = 1, q = '') {
         const query: Filter<TrainingDoc> = {};
+        if (q) query.title = { $regex: new RegExp(escapeRegExp(q), 'i') };
         await this.ctx.parallel('training/list', query, this);
         const [tdocs, tpcount] = await this.paginate(
-            training.getMulti(domainId),
+            training.getMulti(domainId, query),
             page,
             'training',
         );
@@ -89,7 +91,7 @@ class TrainingMainHandler extends Handler {
         for (const tdoc of tdocs) tdict[tdoc.docId.toHexString()] = tdoc;
         this.response.template = 'training_main.html';
         this.response.body = {
-            tdocs, page, tpcount, tsdict, tdict,
+            tdocs, page, tpcount, tsdict, tdict, q,
         };
     }
 }

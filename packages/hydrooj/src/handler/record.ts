@@ -34,10 +34,11 @@ export class RecordListHandler extends ContestDetailBaseHandler {
     @param('fullStatus', Types.Boolean)
     @param('all', Types.Boolean)
     @param('allDomain', Types.Boolean)
+    @param('stat', Types.Boolean)
     async get(
         domainId: string, page = 1, pid?: string | number, tid?: ObjectId,
         uidOrName?: string, lang?: string, status?: number, full = false,
-        all = false, allDomain = false,
+        all = false, allDomain = false, stat = false,
     ) {
         const notification = [];
         let tdoc = null;
@@ -122,7 +123,7 @@ export class RecordListHandler extends ContestDetailBaseHandler {
             filterStatus: status,
             notification,
         };
-        if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && !full) {
+        if (this.user.hasPriv(PRIV.PRIV_VIEW_JUDGE_STATISTICS) && stat) {
             this.response.body.statistics = await record.stat(allDomain ? undefined : domainId);
         }
     }
@@ -352,7 +353,7 @@ export class RecordMainConnectionHandler extends ConnectionHandler {
             if (!problem.canViewBy(pdoc, this.user)) pdoc = null;
             if (!this.user.hasPerm(PERM.PERM_VIEW_PROBLEM)) pdoc = null;
         }
-        if (this.applyProjection && typeof rdoc.input !== 'string') rdoc = contest.applyProjection(tdoc, rdoc, this.user);
+        if (this.applyProjection && rdoc.contest?.toString() !== '0'.repeat(24)) rdoc = contest.applyProjection(tdoc, rdoc, this.user);
         if (this.pretest) {
             this.queueSend(rdoc._id.toHexString(), async () => ({ rdoc: omit(rdoc, ['code', 'input']) }));
         } else if (this.noTemplate) {

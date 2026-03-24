@@ -184,9 +184,7 @@ export const request = {
 };
 
 export async function withTransitionCallback(callback: () => (Promise<void> | void)) {
-  // @ts-ignore
-  if (!document.startViewTransition) return callback?.();
-  // @ts-ignore
+  if (!document.startViewTransition || document.visibilityState === 'hidden') return callback?.();
   const transition = document.startViewTransition(callback);
   return await transition.finished;
 }

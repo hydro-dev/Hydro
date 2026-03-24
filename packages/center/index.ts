@@ -13,6 +13,14 @@ function decrypt(encrypted: string) {
     ).toString(crypto.enc.Utf8);
 }
 
+const safeLt = (a: string, b: string) => {
+    try {
+        return lt(a, b);
+    } catch (e) {
+        return false;
+    }
+};
+
 declare module 'hydrooj' {
     interface Collections {
         dataReport: any;
@@ -64,7 +72,7 @@ class DataReportHandler extends Handler {
             dbVersion: payload.dbVersion,
         };
         if (old?.notification) setPayload.notification = '';
-        if (old && lt(payload.version, old.version)) {
+        if (old && safeLt(payload.version, old.version)) {
             await coll.updateOne(
                 { _id: installId },
                 {

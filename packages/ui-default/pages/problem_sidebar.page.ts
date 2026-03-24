@@ -32,7 +32,7 @@ const page = new NamedPage([
     try {
       const { url } = await request.post('.', {
         operation: 'copy',
-        pids: [UiContext.pdoc.docId],
+        pids: [UiContext.problemNumId],
         target: res.target,
         redirect: true,
       });

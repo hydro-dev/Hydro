@@ -517,15 +517,18 @@ class HomeDomainHandler extends Handler {
         this.response.body = { ddocs, canManage, role };
     }
 
-    @param('id', Types.String)
+    @param('id', Types.DomainId)
     @param('star', Types.Boolean)
     async postStar({ }, id: string, star = false) {
-        if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
-        else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        if (star) {
+            const ddoc = await domain.get(id);
+            if (!ddoc) throw new NotFoundError(id);
+            await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
+        } else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
         this.back({ star });
     }
 
-    @param('id', Types.String)
+    @param('id', Types.DomainId)
     async postLeave({ }, id: string) {
         if (id === 'system') throw new BadRequestError();
         const ddoc = await domain.get(id);
