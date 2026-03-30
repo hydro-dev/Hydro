@@ -57,6 +57,10 @@ const base = (option, ...args) => antfu(
             curly: ['error', 'multi-line'],
             'default-param-last': 'off',
             'dot-notation': 0,
+
+            'e18e/prefer-array-some': 'off',
+            'e18e/prefer-array-to-sorted': 'off',
+            'e18e/prefer-static-regex': 'off',
             'eslint-comments/no-unlimited-disable': 'off',
             'func-names': 0,
             'function-call-argument-newline': 0,
