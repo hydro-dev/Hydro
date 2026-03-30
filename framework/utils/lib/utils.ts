@@ -9,7 +9,8 @@ import type { Moment } from 'moment';
 import { Exporter, Factory, Logger as Reggol } from 'reggol';
 import type * as superagent from 'superagent';
 
-export * from '@hydrooj/utils/lib/common';
+// @ts-ignore
+export * from '@hydrooj/utils/lib/common.ts';
 export * as fs from 'fs-extra';
 
 Factory.formatters['d'] = (value, exporter) => Reggol.color(exporter, 3, value);
@@ -132,22 +133,23 @@ export function bufferToStream(buffer: Buffer): NodeJS.ReadableStream {
 let ObjectId: typeof import('bson').ObjectId; // eslint-disable-line
 let isMoment: (x: any) => x is Moment;
 
-export namespace Time {
-    export const second = 1000;
-    export const minute = second * 60;
-    export const hour = minute * 60;
-    export const day = hour * 24;
-    export const week = day * 7;
-    export function formatTimeShort(ms: number) {
-        const abs = Math.abs(ms);
-        if (abs >= day - hour / 2) return `${Math.round(ms / day)}d`;
-        if (abs >= hour - minute / 2) return `${Math.round(ms / hour)}h`;
-        if (abs >= minute - second / 2) return `${Math.round(ms / minute)}m`;
-        if (abs >= second) return `${Math.round(ms / second)}s`;
-        return `${ms}ms`;
-    }
+export const Time = {
+    second: 1000,
+    minute: 60 * 1000,
+    hour: 60 * 60 * 1000,
+    day: 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
 
-    export function getObjectID(timestamp: string | Date | Moment, allZero = true) {
+    formatTimeShort(ms: number) {
+        const abs = Math.abs(ms);
+        if (abs >= Time.day - Time.hour / 2) return `${Math.round(ms / Time.day)}d`;
+        if (abs >= Time.hour - Time.minute / 2) return `${Math.round(ms / Time.hour)}h`;
+        if (abs >= Time.minute - Time.second / 2) return `${Math.round(ms / Time.minute)}m`;
+        if (abs >= Time.second) return `${Math.round(ms / Time.second)}s`;
+        return `${ms}ms`;
+    },
+
+    getObjectID(timestamp: string | Date | Moment, allZero = true) {
         try {
             ObjectId ||= require('bson').ObjectId;
         } catch (e) {
@@ -164,8 +166,8 @@ export namespace Time {
         else _timestamp = timestamp.getTime();
         const hexSeconds = Math.floor(_timestamp / 1000).toString(16);
         return new ObjectId(`${hexSeconds}${allZero ? '0000000000000000' : new ObjectId().toHexString().substring(8)}`);
-    }
-}
+    },
+};
 
 export function errorMessage(err: Error | string) {
     const t = typeof err === 'string' ? err : err.stack;
@@ -358,7 +360,7 @@ export async function pipeRequest(req: superagent.Request, w: fs.WriteStream, ti
                 }
             }).catch(reject);
         });
-    } catch (e) {
+    } catch (e: any) {
         throw new Error(`Download${e.errno === 'ETIMEDOUT' ? 'Timedout' : 'Error'}(${name ? `${name}, ` : ''}${e.message})`);
     }
 }
