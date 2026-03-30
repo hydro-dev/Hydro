@@ -68,9 +68,15 @@ let config = global.Hydro
         }
         const configFilePath = (process.env.CONFIG_FILE || argv.options.config)
             ? path.resolve(process.env.CONFIG_FILE || argv.options.config)
-            : fs.existsSync(oldPath) ? oldPath : newPath;
+            : fs.existsSync(newPath) ? newPath : oldPath;
         const configFile = fs.readFileSync(configFilePath, 'utf-8');
         Object.assign(base, yaml.load(configFile) as any);
+        if (process.env.OVERRIDE_CONFIG) {
+            if (fs.existsSync(process.env.OVERRIDE_CONFIG)) {
+                const overrideConfigFile = fs.readFileSync(process.env.OVERRIDE_CONFIG, 'utf-8');
+                Object.assign(base, yaml.load(overrideConfigFile) as any);
+            } else console.warn('Override config file not found');
+        }
         const cfg = JudgeSettings(base);
         return JudgeSettings(cfg);
     })();
