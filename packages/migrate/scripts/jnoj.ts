@@ -65,7 +65,7 @@ function fixFileName(fileName: string) {
         const dotAt = fileName.lastIndexOf('.');
         const name = fileName.slice(0, dotAt);
         const suffix = fileName.slice(dotAt + 1);
-        if (!name.match(/[0-9]/)) {
+        if (!/[0-9]/.test(name)) {
             fileName = `${name}0.${suffix}`;
         }
     }

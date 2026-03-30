@@ -121,6 +121,8 @@ const config = react({
         // FIXME A bug with eslint-parser
         // 'template-curly-spacing': 'off',
 
+        'e18e/prefer-array-at': 'off',
+
         'style/indent': ['warn', 2, {
             ArrayExpression: 1,
             CallExpression: {
