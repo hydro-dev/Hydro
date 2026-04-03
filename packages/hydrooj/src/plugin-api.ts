@@ -56,6 +56,7 @@ export * from '@hydrooj/framework/validator';
 export * as StorageService from './service/storage';
 export { EventMap } from './service/bus';
 export { db, pwsh };
+export { getNodes } from './lib/ui';
 
 // to load services into to context
 export { } from './handler/contest';

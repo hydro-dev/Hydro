@@ -1,5 +1,10 @@
-function App() {
-  return <div></div>;
-}
+import { usePageData } from './context/pageData';
+import { Component } from './registry';
 
-export default App;
+const AppInner = Component('page:app', () => {
+  const data = usePageData();
+
+  return <div>app, page:{data.name}</div>;
+});
+
+export default AppInner;

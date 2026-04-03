@@ -105,15 +105,21 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
-export interface TextRenderer {
+interface RendererContext<C> {
+    handler: HandlerCommon<C>;
+    UserContext: UserModel;
+    url: HandlerCommon<C>['url'];
+    _: HandlerCommon<C>['translate'];
+}
+export interface TextRenderer<C = any> {
     output: 'html' | 'json' | 'text';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => string | Promise<string>;
+    render: (name: string, args: Record<string, any>, context: RendererContext<C>) => string | Promise<string>;
 }
-export interface BinaryRenderer {
+export interface BinaryRenderer<C = any> {
     output: 'binary';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => Buffer | Promise<Buffer>;
+    render: (name: string, args: Record<string, any>, context: RendererContext<C>) => Buffer | Promise<Buffer>;
 }
-export type Renderer = (BinaryRenderer | TextRenderer) & {
+export type Renderer<C = any> = (BinaryRenderer<C> | TextRenderer<C>) & {
     name: string;
     accept: readonly string[];
     priority: number;
@@ -199,7 +205,7 @@ export class HandlerCommon<C> {
     }
 
     renderHTML(templateName: string, args: Record<string, any>) {
-        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer<C>>)
             .filter((r) => r.accept.includes(templateName) || r.asFallback);
         const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
         const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
@@ -350,7 +356,7 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     private customDefaultContext: C;
     private activeHandlers: Map<Handler<C>, { start: number, name: string }> = new Map();
 
-    renderers: Record<string, Renderer> = Object.create(null);
+    renderers: Record<string, Renderer<C>> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
@@ -874,7 +880,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
-    public registerRenderer(name: string, func: Renderer) {
+    public registerRenderer(name: string, func: Renderer<C>) {
         if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
         this.ctx.effect(() => {
             this.renderers[name] = func;
