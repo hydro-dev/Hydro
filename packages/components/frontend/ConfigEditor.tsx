@@ -109,7 +109,7 @@ function MonacoContainer({
     }
     model.pushEditOperations([], ops, undefined);
   }, [editor, config]);
-  return <div ref={initializeEditor} style={{ width: '100%', height: '500px' }} />;
+  return <div ref={initializeEditor} style={{ width: '100%', height: '80vh' }} />;
 }
 
 export default function ConfigEditor({

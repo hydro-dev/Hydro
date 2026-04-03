@@ -33,6 +33,7 @@ const base = (option, ...args) => antfu(
         lessOpinionated: true,
         plugins: {
             '@eslint-react': eslintReact,
+            github,
             'react-refresh': reactRefresh,
             'simple-import-sort': simpleImportSort,
             ...(option.plugins || {}),
@@ -68,7 +69,6 @@ const base = (option, ...args) => antfu(
             'func-names': 0,
             'function-call-argument-newline': 0,
             'function-paren-newline': 0,
-            'github/a11y-svg-has-accessible-name': 0,
             'github/array-foreach': 1,
             'global-require': 0,
             'guard-for-in': 0,
@@ -338,7 +338,6 @@ const base = (option, ...args) => antfu(
             ...(typeof option.stylistic === 'object' ? option.stylistic : {}),
         },
     },
-    github.getFlatConfigs().react,
     deMorgan.configs.recommended,
     ...((option.vue ?? true) ? [{
         files: ['**/*.vue'],

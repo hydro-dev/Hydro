@@ -4,13 +4,15 @@ import { findFileSync, getAlphabeticId } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
+import { cac } from 'cac';
 import { convert } from 'html-to-text';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
 import markdown from './markdown';
 import { ensureTag, xss } from './markdown-it-xss';
 import * as misc from './misc';
-const argv = require('cac')().parse();
+
+const argv = cac().parse();
 
 let { template } = argv.options;
 if (!template || typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
@@ -251,7 +253,7 @@ export class TemplateService extends Service {
     });
   }
 
-  async [Context.init]() {
+  async [Service.init]() {
     const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {

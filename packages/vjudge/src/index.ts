@@ -191,7 +191,7 @@ class VJudgeService extends Service {
     accounts: RemoteAccount[] = [];
     private providers: Record<string, any> = {};
     private pool: Record<string, AccountService> = {};
-    async [Context.init]() {
+    async [Service.init]() {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
         if (process.env.HYDRO_CLI) return;
         this.accounts = await coll.find().toArray();

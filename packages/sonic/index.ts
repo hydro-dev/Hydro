@@ -51,7 +51,7 @@ export class SonicService extends Service {
         super(ctx, 'sonic');
     }
 
-    *[Context.init]() {
+    *[Service.init]() {
         this.search = new Search(this.config);
         this.ingest = new Ingest(this.config);
         this.search.connect(getHandler('search', this));

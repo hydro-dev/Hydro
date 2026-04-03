@@ -8,8 +8,8 @@
     "dependencies": {
         "bcryptjs": "^3.0.3",
         "mariadb": "3.4.5",
-        "mongodb": "^7.1.0",
-        "turndown": "^7.2.2",
+        "mongodb": "^7.1.1",
+        "turndown": "^7.2.4",
         "xml2js": "^0.6.2"
     },
     "devDependencies": {

@@ -64,3 +64,4 @@ __*
 .monokle
 
 packages/*/public/assets
+node_modules.*

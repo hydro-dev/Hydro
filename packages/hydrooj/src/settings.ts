@@ -44,7 +44,7 @@ export class SettingService extends Service {
         super(ctx, 'setting');
     }
 
-    async [Context.init]() {
+    async [Service.init]() {
         const payload = await this.ctx.db.collection('system').find({}).toArray();
         this.initialValues = Object.fromEntries(payload.map((v) => [v._id, v.value]));
         return await this.loadConfig();
