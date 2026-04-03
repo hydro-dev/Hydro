@@ -111,14 +111,17 @@ class TrainingDetailHandler extends Handler {
             shouldCompare = uid !== this.user._id;
         } else uid = this.user._id;
         const canViewHidden = this.user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN) || this.user._id;
-        const [udoc, udict, pdict, psdict, selfPsdict] = await Promise.all([
+        const [udoc, udict, pdict] = await Promise.all([
             user.getById(domainId, tdoc.owner),
             user.getListForRender(domainId, enrollUsers, this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO)),
             problem.getList(domainId, pids, canViewHidden, false),
-            problem.getListStatus(domainId, uid, pids),
-            shouldCompare ? problem.getListStatus(domainId, this.user._id, pids) : {},
         ]);
         const missing = pids.filter((pid) => !pdict[pid]?.docId);
+        const exist = pids.filter((pid) => pdict[pid]?.docId);
+        const [psdict, selfPsdict] = await Promise.all([
+            problem.getListStatus(domainId, uid, exist),
+            shouldCompare ? problem.getListStatus(domainId, this.user._id, exist) : {},
+        ]);
         const donePids = new Set<number>();
         const progPids = new Set<number>();
         for (const pid in psdict) {
