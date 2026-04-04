@@ -50,22 +50,32 @@ const page = new NamedPage('home_messages', () => {
     (window as any).store = reduxStore;
     ctx.plugin(MessagePadService, { store, WebSocket });
 
-    const sock = new WebSocket(`${UiContext.ws_prefix}home/messages-conn`);
+    const sock = new WebSocket(`${UiContext.ws_prefix}websocket`);
+    sock.onopen = () => {
+      sock.send(JSON.stringify({
+        operation: 'subscribe',
+        request_id: Math.random().toString(16).substring(2),
+        credential: document.cookie.split('sid=')[1].split(';')[0],
+        channels: ['message'],
+      }));
+    }
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
+      if (msg.operation !== 'event') return;
       store.dispatch({
         type: 'DIALOGUES_MESSAGE_PUSH',
-        payload: msg,
+        payload: msg.payload,
       });
+      const udoc = msg.payload.udoc;
       const notification = new VjNotification({
-        title: msg.udoc.uname,
-        avatar: msg.udoc.avatarUrl,
-        message: msg.mdoc.content,
+        title: udoc.uname,
+        avatar: udoc.avatarUrl,
+        message: msg.payload.mdoc.content,
         duration: 15000,
         action: () => {
           store.dispatch({
             type: 'DIALOGUES_SWITCH_TO',
-            payload: msg.udoc._id,
+            payload: udoc._id,
           });
           notification.hide();
         },
