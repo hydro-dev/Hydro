@@ -365,14 +365,18 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
         const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
         this.server.use(async (c, next) => {
-            if (c.request.headers.origin && this.config.cors) {
+            if ((c.request.headers.origin || c.request.headers.referer) && this.config.cors) {
                 try {
-                    const host = new URL(c.request.headers.origin).host;
+                    const host = new URL(c.request.headers.origin || c.request.headers.referer).host;
                     if (host !== c.request.headers.host && `,${this.config.cors},`.includes(`,${host},`)) {
                         c.set('Access-Control-Allow-Credentials', 'true');
-                        c.set('Access-Control-Allow-Origin', c.request.headers.origin);
                         c.set('Access-Control-Allow-Headers', corsAllowHeaders);
-                        c.set('Vary', 'Origin');
+                        if (c.request.headers.origin) {
+                            c.set('Access-Control-Allow-Origin', c.request.headers.origin);
+                            c.set('Vary', 'Origin');
+                        } else {
+                            c.set('Vary', 'Referer');
+                        }
                         c.cors = true;
                     }
                 } catch (e) {
