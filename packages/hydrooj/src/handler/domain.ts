@@ -261,7 +261,7 @@ class DomainRoleHandler extends ManageHandler {
     @requireSudo
     @param('roles', Types.ArrayOf(Types.Role))
     async postDelete(domainId: string, roles: string[]) {
-        if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
+        if (new Set(roles).intersection(new Set(['root', 'default', 'guest'])).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await Promise.all([

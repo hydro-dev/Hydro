@@ -88,7 +88,7 @@ export class ContestDetailBaseHandler extends Handler {
         ]);
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)) {
             const groups = await user.listGroup(domainId, this.user._id);
-            if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
+            if (!new Set(this.tdoc.assign).intersection(new Set(groups.map((i) => i.name))).size) {
                 throw new NotAssignedError('contest', tid);
             }
         }

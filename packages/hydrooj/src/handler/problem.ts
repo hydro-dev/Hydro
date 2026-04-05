@@ -418,7 +418,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                 contest.getRelated(this.args.domainId, this.pdoc.docId),
                 contest.getRelated(this.args.domainId, this.pdoc.docId, 'homework'),
             ])).map((tdocs) => tdocs.filter((tdoc) =>
-                this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) || !tdoc.assign?.length || Set.intersection(tdoc.assign, this.user.group).size,
+                this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST) || !tdoc.assign?.length || new Set(tdoc.assign).intersection(new Set(this.user.group)).size,
             ));
         }
     }

@@ -16,7 +16,7 @@ const withoutTypes = (data) => ({
 /** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
     target: 'es2022',
-    lib: ['es2022'],
+    lib: ['esnext'],
     module: 'preserve',
     esModuleInterop: true,
     moduleResolution: 'bundler',
@@ -106,7 +106,7 @@ const UIConfig = {
         outDir: path.join(baseOutDir, 'ui'),
 
         useDefineForClassFields: true,
-        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+        lib: ['esnext', 'DOM', 'DOM.Iterable'],
 
         /* Bundler mode */
         moduleResolution: 'bundler',
@@ -143,7 +143,7 @@ const UINextConfig = {
         noImplicitAny: false,
 
         useDefineForClassFields: true,
-        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+        lib: ['esnext', 'DOM', 'DOM.Iterable'],
 
         /* Bundler mode */
         moduleResolution: 'bundler',

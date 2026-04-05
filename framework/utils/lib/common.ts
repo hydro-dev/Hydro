@@ -7,11 +7,6 @@ declare global {
     interface Math {
         sum: (...args: Array<number[] | number>) => number;
     }
-    interface SetConstructor {
-        isSuperset: (set: Set<any>, subset: Set<any> | Array<any>) => boolean;
-        intersection: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
-        union: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
-    }
 }
 
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -21,10 +16,6 @@ export function randomstring(digit = 32, dict = defaultDict) {
     for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
     return str;
 }
-try {
-    // @ts-ignore
-    String.random = randomstring;
-} catch (e) { } // Cannot add property random, object is not extensible
 
 String.prototype.format ||= function formatStr(...args) {
     let result = this;
@@ -68,11 +59,6 @@ export function diffArray(a, b) {
     return false;
 }
 
-try {
-    // @ts-ignore
-    Array.isDiff = diffArray;
-} catch (e) { } // Cannot add property isDiff, object is not extensible
-
 export function formatDate(date: Date, fmt = '%Y-%m-%d %H:%M:%S') {
     let m = (date.getMonth() + 1).toString();
     if (m.length < 2) m = `0${m}`;
@@ -105,6 +91,9 @@ Math.sum = function sum(...args) {
     return s;
 };
 
+// TODO: remove these
+
+// @ts-ignore
 Set.isSuperset = function isSuperset(set, subset) {
     for (const elem of subset) {
         if (!set.has(elem)) return false;
@@ -112,12 +101,14 @@ Set.isSuperset = function isSuperset(set, subset) {
     return true;
 };
 
+// @ts-ignore
 Set.union = function Union<T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) {
     const union = new Set(setA);
     for (const elem of setB) union.add(elem);
     return union;
 };
 
+// @ts-ignore
 Set.intersection = function Intersection<T>(A: Set<T> | Array<T> = [], B: Set<T> | Array<T> = []) {
     const intersection = new Set<T>();
     if (A instanceof Array) A = new Set(A);
