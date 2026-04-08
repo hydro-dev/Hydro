@@ -17,7 +17,7 @@ declare module '../context' {
 }
 
 export interface OAuthUserResponse {
-    _id: string;
+    _id: string | string[];
     email: string;
     avatar?: string;
     bio?: string;
