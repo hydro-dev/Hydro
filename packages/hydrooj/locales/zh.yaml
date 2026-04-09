@@ -30,6 +30,7 @@ __langname: 简体中文
 'Discussion: Terms Of Service': 讨论区服务条款
 'First Blood Notice\n{0} solved problem {1} ({2})': '题目一血提示\n{0} 解决了题目 {1} ({2})'
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': 格式：分类1, 子分类1.1, 子分类1.2, ..., 子分类1.x, ..., 分类n, 子分类n.1, 子分类n.2, ..., 子分类n.m, ...
+'Format: one group per line, CSV: groupName,uid1,uid2,...': '格式：每行一个小组，CSV：组名,UID1,UID2,...'
 'Join {0}': '加入 {0}'
 'No': 否
 'Note: Problem title may not be hidden.': 注意：题目标题可能不会被隐藏。
@@ -181,6 +182,7 @@ Continue: 继续
 Contributed Problems: 贡献的题目
 Contributions: 贡献
 Copy Email: 复制电子邮件
+Copy the content below: 复制下方的内容
 Copy from: 复制自
 Copy QQ Number: 复制QQ号
 Copy WeChat Account: 复制微信号
@@ -340,6 +342,7 @@ expand: 展开
 Expire: 过期
 Export All Code: 导出所有代码
 Export as {0}: 导出为 {0}
+Export Groups: 批量导出小组
 Extension (days): 最长延期 (日)
 Extension Score Penalty: 延期递交扣分规则
 Failed to join the domain. You are already a member.: 加入域失败，您已是该域的成员。
@@ -400,9 +403,11 @@ If left blank, the built-in template of the corresponding language will be used.
 Images: 图片
 Import From Hydro: 从 Hydro 导入
 Import from: 导入自
+Import Groups: 批量导入小组
 Import Problem: 导入题目
 Import User: 导入用户
 Import: 导入
+Imported successfully.: 导入成功。
 In 1 day: 一天后
 In 1 month: 一个月后
 In 1 week: 一周后
@@ -549,6 +554,7 @@ Open Source: 开源
 Open: 开放
 Operating System: 操作系统
 Ops: 运维
+Or paste CSV content: 或粘贴 CSV 内容
 Or, with automatically filled invitation code: 或者，这是可以自动填写邀请码的
 Ordered List: 有序列表
 Original Score: 原始分数
@@ -850,6 +856,7 @@ Unstar: 取消收藏
 Update Permission: 更新权限
 Update Settings: 更新设置
 Update: 更新
+Upload CSV File: 上传 CSV 文件
 Upload File: 上传文件
 Upload Problem: 上传题目
 Upload: 上传

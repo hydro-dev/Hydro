@@ -114,7 +114,7 @@ export class ConfirmDialog extends Dialog {
 }
 
 export interface Field {
-  type: 'text' | 'checkbox' | 'user' | 'userId' | 'username' | 'domain';
+  type: 'text' | 'textarea' | 'checkbox' | 'user' | 'userId' | 'username' | 'domain';
   options?: string[] | Record<string, string>;
   placeholder?: string;
   label?: string;
@@ -122,10 +122,11 @@ export interface Field {
   required?: boolean;
   default?: string;
   columns?: number;
+  rows?: number;
 }
 
 type Result<T extends string, R extends Record<T, Field>> = {
-  [K in keyof R]: R[K]['type'] extends ('text' | 'password' | 'username' | 'domain') ? string
+  [K in keyof R]: R[K]['type'] extends ('text' | 'password' | 'username' | 'domain' | 'textarea') ? string
     : R[K]['type'] extends 'checkbox' ? boolean
       : R[K]['type'] extends 'userId' ? number
         : R[K]['type'] extends 'user' ? any
@@ -175,6 +176,18 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
       </div></div>
       {layout.map((i) => <div className="row" key={i[0][0]}>
         {i.map(([name, field]: [string, Field]) => <div key={name} className={`columns medium-${Math.abs(field.columns || 12)}`}>
+          {field.type === 'textarea' && <label>
+            {field.label}
+            <textarea
+              className="textbox"
+              rows={field.rows || 6}
+              placeholder={field.placeholder}
+              defaultValue={field.default}
+              data-autofocus={field.autofocus}
+              style={{ fontFamily: 'monospace' }}
+              onChange={(e) => setValues({ ...values, [name]: e.target.value })}
+            />
+          </label>}
           {['text', 'user', 'userId', 'username', 'domain'].includes(field.type) && <label>
             {field.label}
             <div className="textbox-container">
