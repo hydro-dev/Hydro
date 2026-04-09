@@ -123,6 +123,7 @@ export interface Field {
   default?: string;
   columns?: number;
   rows?: number;
+  multi?: boolean;
 }
 
 type Result<T extends string, R extends Record<T, Field>> = {
@@ -211,11 +212,18 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
                 />)}
               {['userId', 'username', 'user'].includes(field.type) && <UserSelectAutoComplete
                 data-autofocus={field.autofocus}
+                multi={field.multi}
                 ref={(el) => { refs.current[name] = el; }}
-                selectedKeys={selected[name] ? [selected[name].toString()] : []}
+                selectedKeys={selected[name]
+                  ? (field.multi
+                    ? String(selected[name]).split(',').filter(Boolean)
+                    : [selected[name].toString()])
+                  : []}
                 onChange={(e) => {
-                  const val = refs.current[name].getSelectedItems()[0];
-                  setValues({ ...values, [name]: field.type === 'username' ? val?.uname : field.type === 'userId' ? val?._id : val });
+                  if (e === selected[name]) return;
+                  const items = refs.current[name].getSelectedItems();
+                  const extract = (v) => (field.type === 'username' ? v?.uname : field.type === 'userId' ? v?._id : v);
+                  setValues({ ...values, [name]: field.multi ? items.map(extract) : extract(items[0]) });
                   setSelected({ ...selected, [name]: e });
                 }}
               />}
