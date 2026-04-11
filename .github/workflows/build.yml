@@ -50,6 +50,7 @@ jobs:
         yarn set version stable
         yarn
         yarn dedupe
+        node build/prepare.js
       env:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files

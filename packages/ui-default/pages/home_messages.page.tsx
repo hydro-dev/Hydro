@@ -58,7 +58,7 @@ const page = new NamedPage('home_messages', () => {
         credential: document.cookie.split('sid=')[1].split(';')[0],
         channels: ['message'],
       }));
-    }
+    };
     sock.onmessage = (message) => {
       const msg = JSON.parse(message.data);
       if (msg.operation !== 'event') return;
