@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import Slideout from 'slideout';
 import Notification from 'vj/components/notification';
 import selectUser from 'vj/components/selectUser';
 import { AutoloadPage } from 'vj/misc/Page';
@@ -88,23 +87,76 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
   $(document).on('click', '[name="nav_logout"]', handleNavLogoutClick);
   $(document).on('click', '[name="nav_switch_account"]', handlerSwitchAccount);
 
-  const slideout = new Slideout({
-    panel: document.getElementById('panel'),
-    menu: document.getElementById('menu'),
-    padding: 200,
-    tolerance: 70,
-    side: 'right',
-  });
-  [['beforeopen', 'add'], ['beforeclose', 'remove']].forEach(([event, action]) => {
-    slideout.on(event, () => $('.header__hamburger .hamburger')[`${action}Class`]('is-active'));
-  });
-
+  let isOpen = false;
+  const panel = document.getElementById('panel');
   const $slideoutOverlay = $('.slideout-overlay');
-  $slideoutOverlay.on('click', () => slideout.close());
-  slideout.on('beforeopen', () => $slideoutOverlay.show());
-  slideout.on('beforeclose', () => $slideoutOverlay.hide());
+  const $hamburger = $('.header__hamburger .hamburger');
+  const PADDING = 200;
+  const TOLERANCE = 70;
 
-  $('.header__hamburger').on('click', () => slideout.toggle());
+  function setTranslateX(x) {
+    panel.style.transform = x ? `translateX(${x}px)` : '';
+  }
+
+  function open() {
+    isOpen = true;
+    $('html').addClass('slideout-open');
+    setTranslateX(-PADDING);
+    $hamburger.addClass('is-active');
+    $slideoutOverlay.show();
+  }
+
+  function close() {
+    isOpen = false;
+    setTranslateX(0);
+    $hamburger.removeClass('is-active');
+    $slideoutOverlay.hide();
+    $('html').removeClass('slideout-open');
+  }
+
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchCurrentX = 0;
+  let isSwiping = false;
+
+  panel.addEventListener('touchstart', (e) => {
+    if (e.target.closest('[data-slideout-ignore]')) return;
+    touchStartX = e.touches[0].clientX;
+    touchCurrentX = touchStartX;
+    isSwiping = false;
+  }, { passive: true });
+
+  panel.addEventListener('touchmove', (e) => {
+    touchCurrentX = e.touches[0].clientX;
+    const dx = touchStartX - touchCurrentX;
+    if (!isSwiping) {
+      if (Math.abs(dx) < 10) return;
+      isSwiping = true;
+      if (!isOpen) $slideoutOverlay.show();
+      $('html').addClass('slideout-open');
+      panel.style.transition = 'none';
+    }
+    setTranslateX(isOpen
+      ? Math.max(-PADDING, Math.min(0, -PADDING - dx))
+      : Math.max(-PADDING, Math.min(0, -dx)));
+  }, { passive: true });
+
+  panel.addEventListener('touchend', () => {
+    if (!isSwiping) return;
+    panel.style.transition = '';
+    const dx = touchStartX - touchCurrentX;
+    if (isOpen) {
+      if (-dx > TOLERANCE) close();
+      else open();
+    } else {
+      if (dx > TOLERANCE) open();
+      else close();
+    }
+    isSwiping = false;
+  });
+
+  $slideoutOverlay.on('click', close);
+  $('.header__hamburger').on('click', () => (isOpen ? close() : open()));
   $(window).on('resize', handleNavbar);
   setInterval(handleNavbar, 3000);
 }, () => {
