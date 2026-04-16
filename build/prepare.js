@@ -90,6 +90,8 @@ const UIConfig = {
         'packages/ui-default/backendlib/misc.ts',
         'packages/ui-default/backendlib/template.ts',
         'packages/ui-default/backendlib/markdown.js',
+        'packages/ui-default/service-worker.ts',
+        'packages/ui-default/components/message/worker.ts',
         '**/node_modules',
     ],
     include: ['ts', 'tsx', 'vue', 'json']

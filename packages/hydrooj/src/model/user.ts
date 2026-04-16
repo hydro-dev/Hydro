@@ -1,7 +1,6 @@
 import { escapeRegExp, omit, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
-import { serializer } from '@hydrooj/framework';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -167,11 +166,16 @@ export class User {
         return type === 'public' ? fields : fields.concat(this._privateFields);
     }
 
-    serialize(h) {
-        if (!this._isPrivate) {
-            return pick(this, this.getFields(h?.user?.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? 'private' : 'public'));
+    serialize(h?) {
+        if (this._isPrivate) {
+            const result: any = {};
+            for (const key of Object.keys(this)) {
+                if (key.startsWith('_') && key !== '_id') continue;
+                result[key] = this[key];
+            }
+            return result;
         }
-        return JSON.stringify(this, serializer(true, h));
+        return pick(this, this.getFields(h?.user?.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? 'private' : 'public'));
     }
 }
 
