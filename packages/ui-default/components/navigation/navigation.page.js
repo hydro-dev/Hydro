@@ -116,21 +116,34 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
 
   // Touch swipe support
   let touchStartX = 0;
+  let touchStartY = 0;
   let touchCurrentX = 0;
   let isSwiping = false;
+  let isScrolling = false;
 
   panel.addEventListener('touchstart', (e) => {
     if (e.target.closest('[data-slideout-ignore]')) return;
     touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
     touchCurrentX = touchStartX;
     isSwiping = false;
+    isScrolling = false;
   }, { passive: true });
 
   panel.addEventListener('touchmove', (e) => {
     touchCurrentX = e.touches[0].clientX;
     const dx = touchStartX - touchCurrentX;
     if (!isSwiping) {
-      if (Math.abs(dx) < 10) return;
+      if (isScrolling) return;
+      const dy = touchStartY - e.touches[0].clientY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx < 10 && absDy < 10) return;
+      // Lock to scroll if vertical movement dominates
+      if (absDy > absDx) {
+        isScrolling = true;
+        return;
+      }
       isSwiping = true;
       if (!isOpen) $slideoutOverlay.show();
       $('html').addClass('slideout-open');
