@@ -51,7 +51,7 @@
     "clean-webpack-plugin": "^4.0.0",
     "clipboard": "^2.0.11",
     "copy-webpack-plugin": "^14.0.0",
-    "cordis": "4.0.0-rc.2",
+    "cordis": "4.0.0-rc.3",
     "core-js": "^3.49.0",
     "core-js-compat": "^3.49.0",
     "css-loader": "^7.1.4",

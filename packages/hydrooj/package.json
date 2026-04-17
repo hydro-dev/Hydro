@@ -28,7 +28,7 @@
         "@zip.js/zip.js": "^2.8.26",
         "adm-zip": "0.5.16",
         "cac": "^7.0.0",
-        "cordis": "4.0.0-rc.2",
+        "cordis": "4.0.0-rc.3",
         "csv-stringify": "^6.7.0",
         "emoji-regex": "^10.6.0",
         "emojis-list": "2.1.0",

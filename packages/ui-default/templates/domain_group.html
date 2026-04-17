@@ -36,7 +36,7 @@
               <input type="checkbox" data-checkbox-group="group" data-checkbox-range>
             </label>
           </td>
-          <td class="col--group">{{ gdoc.name }}</td>
+          <td class="col--group">{{ gdoc.name }}<br><small class="supplementary group-member-count">{{ gdoc.uids.length }} {{ _('members') }}</small></td>
           <td class="col--user"><input type="text" value="{{ gdoc.uids.join(',') }}" data-gid="{{ gdoc.name }}"></input></td>
         </tr>
         {%- endfor -%}

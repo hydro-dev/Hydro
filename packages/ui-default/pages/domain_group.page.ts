@@ -51,13 +51,16 @@ const page = new NamedPage('domain_group', () => {
     const gid = ele.getAttribute('data-gid');
     targets[gid] = input;
     let loaded = false;
+    const save = _.debounce(() => update(gid, input.value()), 500);
     input.onChange(() => {
       if (input.value().length && !loaded) {
         loaded = true;
+        $(ele).closest('tr').find('.group-member-count').text(`${input.value().length} ${i18n('members')}`);
         return;
       }
       if (!loaded) return;
-      update(gid, input.value());
+      $(ele).closest('tr').find('.group-member-count').text(`${input.value().length} ${i18n('members')}`);
+      save();
     });
   });
 

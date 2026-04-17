@@ -41,7 +41,7 @@ function initTimePicker(input: HTMLInputElement) {
       }).on('mousedown', (e) => {
         e.preventDefault();
         $input.val(time).trigger('change');
-        closeDropdown();
+        closeDropdown(); // eslint-disable-line no-use-before-define
       }).on('mouseenter', function () {
         $(this).css('background', 'var(--highlight-color, #e8f0fe)');
       }).on('mouseleave', function () {
