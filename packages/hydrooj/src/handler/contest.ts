@@ -876,7 +876,7 @@ class ScoreboardService extends Service {
     }
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         scoreboard: ScoreboardService;
     }

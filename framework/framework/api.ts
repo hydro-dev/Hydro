@@ -187,7 +187,7 @@ declare module 'cordis' {
     }
 }
 
-export class ApiHandler<C extends Context> extends Handler<C> {
+export class ApiHandler extends Handler {
     @param('op', Types.String)
     async all({ }, op: string) {
         if (!['get', 'post'].includes(this.request.method.toLowerCase())) {
@@ -219,7 +219,7 @@ export class ApiHandler<C extends Context> extends Handler<C> {
     }
 }
 
-export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C> {
+export class ApiConnectionHandler extends ConnectionHandler {
     dispose: () => Promise<void> | void;
     isRpc: boolean;
 

@@ -7,7 +7,7 @@ import {
     Logger, ProblemModel, Schema, Service, SystemModel,
 } from 'hydrooj';
 
-declare module 'hydrooj' {
+declare module 'cordis' {
     interface Context {
         sonic?: SonicService;
     }

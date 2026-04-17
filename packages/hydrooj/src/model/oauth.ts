@@ -10,7 +10,7 @@ export interface OauthMap {
     uid: number;
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         oauth: OauthModel;
     }

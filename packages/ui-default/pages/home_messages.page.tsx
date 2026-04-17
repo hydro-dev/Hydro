@@ -18,7 +18,7 @@ class MessagePadService extends Service {
   }
 }
 
-declare module '../context' {
+declare module 'cordis' {
   interface Context {
     messagepad: MessagePadService;
   }

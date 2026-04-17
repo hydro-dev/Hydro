@@ -3,6 +3,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { PassThrough } from 'stream';
+import type { } from '@cordisjs/plugin-timer';
 import { Context as CordisContext, Service } from 'cordis';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
@@ -43,7 +44,7 @@ export function encodeRFC5987ValueChars(str: string) {
     );
 }
 
-async function forkContextWithScope<C extends CordisContext>(ctx: C) {
+async function forkContextWithScope(ctx: CordisContext) {
     const scope = ctx.plugin(() => { });
     await scope;
     const dispose = () => scope.dispose();
@@ -141,8 +142,8 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon<C> { } // eslint-disable-line ts/no-unused-vars
-export class HandlerCommon<C> {
+export interface HandlerCommon { }
+export class HandlerCommon {
     static [kHandler]: string | boolean = 'HandlerCommon';
     session: Record<string, any>;
     args: Record<string, any>;
@@ -151,7 +152,7 @@ export class HandlerCommon<C> {
     UiContext: Record<string, any>;
     user: UserModel;
 
-    constructor(public context: KoaContext, public ctx: C) {
+    constructor(public context: KoaContext, public ctx: CordisContext) {
         this.renderHTML = this.renderHTML.bind(this);
         this.url = this.url.bind(this);
         this.session = context.session;
@@ -212,7 +213,7 @@ export class HandlerCommon<C> {
     }
 }
 
-export class Handler<C = CordisContext> extends HandlerCommon<C> {
+export class Handler extends HandlerCommon {
     static [kHandler] = 'Handler';
 
     loginMethods: any;
@@ -260,7 +261,7 @@ export class Handler<C = CordisContext> extends HandlerCommon<C> {
     }
 }
 
-export class ConnectionHandler<C> extends HandlerCommon<C> {
+export class ConnectionHandler extends HandlerCommon {
     static [kHandler] = 'ConnectionHandler';
 
     conn: WebSocket;
@@ -300,7 +301,7 @@ export class ConnectionHandler<C> extends HandlerCommon<C> {
     }
 }
 
-export class NotFoundHandler extends Handler<CordisContext> {
+export class NotFoundHandler extends Handler {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
@@ -328,7 +329,7 @@ function executeMiddlewareStack(context: any, middlewares: { name: string, func:
     return dispatch(0);
 }
 
-export class WebService<C extends CordisContext = CordisContext> extends Service<never, C> {
+export class WebService extends Service<never> {
     static Config = Schema.object({
         keys: Schema.array(Schema.string()),
         proxy: Schema.boolean(),
@@ -347,8 +348,8 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     private handlerLayers = [];
     private wsLayers = [];
     private captureAllRoutes = Object.create(null);
-    private customDefaultContext: C;
-    private activeHandlers: Map<Handler<C>, { start: number, name: string }> = new Map();
+    private customDefaultContext: CordisContext;
+    private activeHandlers: Map<Handler, { start: number, name: string }> = new Map();
 
     renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
@@ -357,7 +358,7 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: C, public config: ReturnType<typeof WebService.Config>) {
+    constructor(ctx: CordisContext, public config: ReturnType<typeof WebService.Config>) {
         super(ctx, 'server');
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
@@ -503,7 +504,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: C) {
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: CordisContext) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
         await using sub = await forkContextWithScope(savedContext);
@@ -589,7 +590,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?) {
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?: CordisContext) {
         const { args } = ctx.HydroContext;
         const sub = await forkContextWithScope(savedContext);
         const h = new HandlerClass(ctx, sub.ctx);
@@ -731,7 +732,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     perm = item;
                 }
             }
-            return function check(this: Handler<C>) {
+            return function check(this: Handler) {
                 checker();
                 if (perm) this.checkPerm(perm);
                 if (priv) this.checkPriv(priv);
@@ -767,7 +768,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public setDefaultContext(ctx: C) {
+    public setDefaultContext(ctx: CordisContext) {
         try {
             if (!ctx.server) throw new Error();
         } catch (e) {
@@ -783,7 +784,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     public withHandlerClass<T extends string>(
-        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
+        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any,
     ) {
         name = name.replace(/Handler$/, '') as any;
         if (this.registry[name]) callback(this.registry[name]);
@@ -792,7 +793,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     // eslint-disable-next-line ts/naming-convention
-    public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
+    public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
         // if (name === 'contest_scoreboard') {
         //     console.log('+++', this.ctx);
         //     console.log(this.ctx.scoreboard);
@@ -801,7 +802,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     // eslint-disable-next-line ts/naming-convention
-    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler<C>, ...permPrivChecker) {
+    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
@@ -866,15 +867,15 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon<C>> | ((s: HandlerCommon<C>) => Partial<HandlerCommon<C>>)) {
+    public handlerMixin(MixinClass: Partial<HandlerCommon> | ((s: HandlerCommon) => Partial<HandlerCommon>)) {
         return this._applyMixin(HandlerCommon, MixinClass);
     }
 
-    public httpHandlerMixin(MixinClass: Partial<Handler<C>> | ((s: Handler<C>) => Partial<Handler<C>>)) {
+    public httpHandlerMixin(MixinClass: Partial<Handler> | ((s: Handler) => Partial<Handler>)) {
         return this._applyMixin(Handler, MixinClass);
     }
 
-    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>> | ((s: ConnectionHandler<C>) => Partial<ConnectionHandler<C>>)) {
+    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler> | ((s: ConnectionHandler) => Partial<ConnectionHandler>)) {
         return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
@@ -891,9 +892,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
 declare module 'cordis' {
     interface Context {
-        server: WebService<this>;
-        Route: WebService<this>['Route'];
-        Connection: WebService<this>['Connection'];
-        withHandlerClass: WebService<this>['withHandlerClass'];
+        server: WebService;
+        Route: WebService['Route'];
+        Connection: WebService['Connection'];
+        withHandlerClass: WebService['withHandlerClass'];
     }
 }

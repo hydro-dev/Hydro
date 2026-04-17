@@ -177,7 +177,7 @@ class AccountService {
     }
 }
 
-declare module 'hydrooj' {
+declare module 'cordis' {
     interface Context {
         vjudge: VJudgeService;
     }

@@ -26,7 +26,7 @@ interface MongoConfig {
     collectionMap?: Record<string, string>;
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         db: MongoService;
     }

@@ -1,20 +1,11 @@
-/* eslint-disable ts/no-unsafe-declaration-merging */
-
-import * as cordis from 'cordis';
+import { Context } from 'cordis';
 import type { EventMap } from './api';
 
-export interface Events<C extends Context = Context> extends cordis.Events<C>, EventMap { }
-
-export type { Disposable, FiberState, Plugin } from 'cordis';
-
-export interface Context {
-  [Context.events]: Events<this>;
-  broadcast: Context['emit'];
+declare module 'cordis' {
+  export interface Events extends EventMap { }
 }
 
-export class Context extends cordis.Context { }
-export type Fiber = cordis.Fiber<Context>;
+export type { Disposable, Plugin } from 'cordis';
+export { Context, Fiber, FiberState, Service } from 'cordis';
 
-export class Service<C extends Context = Context> extends cordis.Service<C> {
-}
 export const ctx = new Context();

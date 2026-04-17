@@ -22,10 +22,10 @@ export interface EventMap {
     'app/before-reload': (entries: Set<string>) => VoidReturn;
     'app/reload': (entries: Set<string>) => VoidReturn;
 
-    'subscription/init': (h: ConnectionHandler<Context>, privileged: boolean) => VoidReturn;
+    'subscription/init': (h: ConnectionHandler, privileged: boolean) => VoidReturn;
     'subscription/subscribe': (channel: string, user: User, metadata: Record<string, string>) => VoidReturn;
     'subscription/enable': (
-        channel: string, h: ConnectionHandler<Context>, privileged: boolean, onDispose: (disposable: () => void) => void,
+        channel: string, h: ConnectionHandler, privileged: boolean, onDispose: (disposable: () => void) => void,
     ) => VoidReturn;
 
     'app/watch/change': (path: string) => VoidReturn;
@@ -91,7 +91,7 @@ export interface EventMap {
     'contest/balloon': (domainId: string, tid: ObjectId, bdoc: ContestBalloonDoc) => VoidReturn;
     'contest/del': (domainId: string, tid: ObjectId) => VoidReturn;
 
-    'oplog/log': (type: string, handler: Handler<Context> | ConnectionHandler<Context>, args: any, data: any) => VoidReturn;
+    'oplog/log': (type: string, handler: Handler | ConnectionHandler, args: any, data: any) => VoidReturn;
 
     'training/list': (query: Filter<TrainingDoc>, handler: any) => VoidReturn;
     'training/get': (tdoc: TrainingDoc, handler: any) => VoidReturn;

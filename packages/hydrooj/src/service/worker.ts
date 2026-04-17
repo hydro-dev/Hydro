@@ -4,7 +4,7 @@ import { sleep } from '@hydrooj/utils';
 import { Context, Service } from '../context';
 import db from './db';
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         worker: WorkerService;
     }
