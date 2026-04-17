@@ -184,7 +184,7 @@ app.plugin(Loader);
 async function preload() {
     global.app = await new Promise((resolve) => {
         app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
-            resolve(c);
+            c.inject({ domain: { required: false } }, resolve);
         });
     });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {
