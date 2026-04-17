@@ -268,6 +268,7 @@ export interface Tdoc extends Document {
     privateFiles?: FileInfo[];
     allowViewCode?: boolean;
     allowPrint?: boolean;
+    keepScoreboardHidden?: boolean;
 
     // For contest
     lockAt?: Date;

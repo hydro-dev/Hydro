@@ -403,12 +403,14 @@ export class ContestEditHandler extends Handler {
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean)
     @param('allowPrint', Types.Boolean)
+    @param('keepScoreboardHidden', Types.Boolean)
     @param('langs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
-        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false, langs: string[] = [],
+        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false,
+        keepScoreboardHidden = false, langs: string[] = [],
     ) {
         if (!Object.keys(contest.RULES).includes(rule) || contest.RULES[rule].hidden) throw new ValidationError('rule');
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -450,7 +452,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, langs,
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, keepScoreboardHidden, langs,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });

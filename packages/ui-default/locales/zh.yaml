@@ -419,6 +419,7 @@ Forgot Password and/or Username: 忘记密码和/或用户名
 Forgot password or username?: 忘记密码或者用户名？
 Formula blocks: 公式区块
 Freeze scoreboard with N minutes remaining: 在赛事剩余N分钟时封榜
+Keep scoreboard hidden even after contest ends: 即使比赛结束后也保持成绩表隐藏
 fs_upload: 上传文件
 Gender Visibility: 性别可见性
 Gender: 性别

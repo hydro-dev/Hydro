@@ -2,7 +2,7 @@
 import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
-    _, avatar, BadRequestError, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    _, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
     ForbiddenError, fs, Handler, InvalidTokenError, ObjectId, param, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
     SystemModel, TokenModel, Types, UserModel, Zip,
@@ -89,12 +89,6 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     });
 
     async function generateCdpZip(tdoc) {
-        const serverUrl = SystemModel.get('server.url');
-        try {
-            new URL(serverUrl);
-        } catch (e) {
-            throw new BadRequestError('Server URL not set');
-        }
         let token = 0;
         const getFeed = (type: string, data: any) => ({
             type, id: data.id, data, token: `t${token++}`,
@@ -168,7 +162,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 group_ids: i.group.map((j) => groupId[j]),
                 organization_id: orgId[i.organization],
                 photo: [{ href: `contest/${tdoc._id}/teams/${i.team_id}/photo`, filename: 'photo.png', mime: 'image/png', width: 1920, height: 1080 }],
-                logo: [{ href: new URL(i.avatar, serverUrl).toString(), filename: 'logo.webp', mime: 'image/webp', width: 128, height: 128 }],
+                logo: [{ href: new URL(i.avatar, SystemModel.get('server.url')).toString(), filename: 'logo.webp', mime: 'image/webp', width: 128, height: 128 }],
             })),
             ...tdoc.pids.map((i, idx) => getFeed('problems', {
                 id: `${i}`, label: String.fromCharCode(65 + idx), name: pdict[i].title, ordinal: idx,
@@ -268,17 +262,11 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             async display({ tdoc }) {
                 if (!this.user.own(tdoc)) this.checkPerm(PERM.PERM_EDIT_CONTEST);
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
-                const serverUrl = SystemModel.get('server.url');
-                try {
-                    new URL(serverUrl);
-                } catch (e) {
-                    throw new BadRequestError('Server URL not set');
-                }
                 const [tokenId] = await TokenModel.add(
                     TokenModel.TYPE_EXPORT, 600,
                     { domainId: tdoc.domainId, contestId: tdoc._id },
                 );
-                const source = new URL(`/d/${tdoc.domainId}/contest/${tdoc._id}/resolver-cdp/${tokenId}`, serverUrl).toString();
+                const source = new URL(`/d/${tdoc.domainId}/contest/${tdoc._id}/resolver-cdp/${tokenId}`, SystemModel.get('server.url')).toString();
                 const target = new URL('https://resolver.hydrooj.com');
                 target.searchParams.set('source', source);
                 target.searchParams.set('mode', tdoc.rule === 'oi' ? 'oi' : 'acm');
