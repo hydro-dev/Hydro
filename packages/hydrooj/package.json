@@ -51,6 +51,7 @@
         "semver": "^7.7.4",
         "shorty.js": "^1.0.1",
         "superagent": "^10.3.0",
+        "superagent-proxy": "^3.0.0",
         "tar": "6.2.1",
         "thirty-two": "^1.0.2",
         "ua-parser-js": "1.0.41"
@@ -68,6 +69,7 @@
         "@types/notp": "^2.0.5",
         "@types/semver": "^7.7.1",
         "@types/superagent": "^8.1.9",
+        "@types/superagent-proxy": "^3.0.4",
         "@types/ua-parser-js": "^0.7.39",
         "chokidar": "^5.0.0",
         "moment": "^2.30.1"
