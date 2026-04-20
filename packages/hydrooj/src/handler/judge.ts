@@ -363,7 +363,7 @@ export async function apply(ctx: Context) {
             assert(Array.isArray(config.subtasks));
             const file = await storage.get(`submission/${rdoc.files.hack.split('#')[0]}`);
             assert(file);
-            const hackSubtask = config.subtasks[config.subtasks.length - 1];
+            const hackSubtask = config.subtasks.at(-1);
             hackSubtask.cases ||= [];
             const input = `hack-${rdoc._id}-${hackSubtask.cases.length + 1}.in`;
             hackSubtask.cases.push({ input, output: '/dev/null' });

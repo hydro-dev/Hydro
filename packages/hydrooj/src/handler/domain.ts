@@ -224,7 +224,10 @@ class DomainPermissionHandler extends ManageHandler {
                 : (typeof list === 'object' && list)
                     ? Object.values(list) : [list];
             roles[role] = 0n;
-            for (const r of perms) roles[role] |= 1n << BigInt(r);
+            for (const r of perms) {
+                if (+r === 1000) continue; // skip placeholder value
+                roles[role] |= 1n << BigInt(r);
+            }
         }
         await Promise.all([
             domain.setRoles(domainId, roles),
@@ -258,7 +261,7 @@ class DomainRoleHandler extends ManageHandler {
     @requireSudo
     @param('roles', Types.ArrayOf(Types.Role))
     async postDelete(domainId: string, roles: string[]) {
-        if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
+        if (new Set(roles).intersection(new Set(['root', 'default', 'guest'])).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await Promise.all([
@@ -391,7 +394,7 @@ class DomainJoinHandler extends Handler {
             const groups = await user.listGroup(target);
             const entry = groups.find((i) => i.name === this.joinSettings.group);
             if (!entry) throw new ValidationError('group');
-            await user.updateGroup(target, entry.name, entry.uids.concat(this.user._id));
+            await user.updateGroup(target, entry.name, [...entry.uids, this.user._id]);
         }
         await Promise.all([
             domain.setUserInDomain(target, this.user._id, {

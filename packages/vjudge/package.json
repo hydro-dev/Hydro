@@ -9,12 +9,12 @@
     "preferUnplugged": true,
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
-        "jsdom": "^28.1.0",
+        "jsdom": "^29.0.2",
         "superagent-charset": "^1.2.0",
         "superagent-proxy": "^3.0.0"
     },
     "devDependencies": {
-        "@types/jsdom": "^27.0.0",
+        "@types/jsdom": "^28.0.1",
         "@types/superagent-proxy": "^3.0.4"
     }
 }

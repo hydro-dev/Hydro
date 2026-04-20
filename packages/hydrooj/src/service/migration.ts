@@ -9,7 +9,7 @@ const argv = cac().parse();
 export type MigrationScript = null | ((ctx: Context) => Promise<boolean | void>);
 const logger = new Logger('migration');
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         migration: MigrationService;
     }

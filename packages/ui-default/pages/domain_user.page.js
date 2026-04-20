@@ -28,15 +28,14 @@ const page = new NamedPage('domain_user', () => {
         type: 'userId',
         required: true,
         autofocus: true,
+        multi: true,
         label: i18n('Username / UID'),
-        columns: 6,
       },
       role: {
         type: 'text',
         required: true,
         label: 'Role',
         options: UiContext.roles.filter((i) => !['default', 'guest'].includes(i)),
-        columns: -6,
       },
       ...((UiContext.canForceJoin && UiContext.domain._id !== 'system') ? {
         join: {
@@ -45,11 +44,11 @@ const page = new NamedPage('domain_user', () => {
         },
       } : {}),
     });
-    if (!res?.user || !res?.role) return;
+    if (!res?.user?.length || !res?.role) return;
     try {
       await request.post('', {
         operation: 'set_users',
-        uids: [res.user],
+        uids: res.user,
         role: res.role,
         join: res.join,
       });

@@ -30,6 +30,7 @@ __langname: 正體中文
 'Discussion: Terms Of Service': '討論區服務條款'
 'First Blood Notice\n{0} solved problem {1} ({2})': '題目首殺提示\n{0} 解決了題目 {1} ({2})'
 'Format: category 1, sub category 1.1, sub category 1.2, ..., sub category 1.x, ..., category n, sub category n.1, sub category n.2, ..., sub category n.m, ...': '格式：分類1, 子分類1.1, 子分類1.2, ..., 子分類1.x, ..., 分類n, 子分類n.1, 子分類n.2, ..., 子分類n.m, ...'
+'Format: one group per line, CSV: groupName,uid1,uid2,...': '格式：每行一個小組，CSV：組名,UID1,UID2,...'
 'No': '否'
 'Note: Problem title may not be hidden.': '注意：題目標題可能不會被隱藏。'
 'Or upload a file:': '或者上傳一個檔案：'
@@ -177,6 +178,7 @@ Continue: 繼續
 Contributed Problems: 貢獻的題目
 Contributions: 貢獻
 Copy Email: 複製電子郵件
+Copy the content below: 複製下方的內容
 Copy from: 複製自
 Copy QQ Number: 複製QQ號
 Copy WeChat Account: 複製微訊號
@@ -337,6 +339,7 @@ expand: 展開
 Expire: 過期
 Export All Code: 匯出所有原始碼
 Export as {0}: 匯出為 {0}
+Export Groups: 批量匯出小組
 Extension (days): 最長延期（日）
 Extension Score Penalty: 延期遞交扣分規則
 Failed to join the domain. You are already a member.: 加入域失敗，您已是該域的成員。
@@ -397,9 +400,11 @@ If left blank, the built-in template of the corresponding language will be used.
 Images: 圖片
 Import From Hydro: 從 Hydro 匯入
 Import from: 匯入自
+Import Groups: 批量匯入小組
 Import Problem: 匯入題目
 Import User: 匯入使用者
 Import: 匯入
+Imported successfully.: 匯入成功。
 In 1 day: 一天後
 In 1 month: 一個月後
 In 1 week: 一週後
@@ -547,6 +552,7 @@ Open Source: 開源
 Open: 開放
 Operating System: 作業系統
 Ops: 運維
+Or paste CSV content: 或貼上 CSV 內容
 Or, with automatically filled invitation code: 或者，可以使用自動填寫邀請碼
 Ordered List: 有序列表
 Original Score: 原始得分
@@ -849,6 +855,7 @@ Unstar: 取消收藏
 Update Permission: 更新許可權
 Update Settings: 更新設定
 Update: 更新
+Upload CSV File: 上傳 CSV 檔案
 Upload File: 上傳檔案
 Upload Problem: 上傳題目
 Upload: 上傳

@@ -31,7 +31,7 @@ import {
 } from '../service/server';
 
 async function successfulAuth(this: Handler, udoc: User) {
-    await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
+    if (udoc._id !== 0) await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
     this.context.HydroContext.user = udoc;
     this.session.viewLang = '';
     this.session.uid = udoc._id;
@@ -40,7 +40,7 @@ async function successfulAuth(this: Handler, udoc: User) {
     this.session.scope = PERM.PERM_ALL.toString();
     this.session.oauthBind = null;
     this.session.recreate = true;
-    await oplog.log(this, 'user.loginSuccess', { uid: udoc._id });
+    if (udoc._id !== 0) await oplog.log(this, 'user.loginSuccess', { uid: udoc._id });
 }
 
 class UserLoginHandler extends Handler {
@@ -467,26 +467,27 @@ class OauthCallbackHandler extends Handler {
         if (!provider) throw new UserFacingError('Oauth type');
         await this.limitRate('oauth_callback', 60, 5);
         const r = await provider.callback.call(this, args);
+        const ids = Array.isArray(r._id) ? r._id : [r._id];
+        const existing = await Promise.all(ids.map((id) => this.ctx.oauth.get(args.type, id)));
         if (this.session.oauthBind === args.type) {
             delete this.session.oauthBind;
-            const existing = await this.ctx.oauth.get(args.type, r._id);
-            if (existing && existing !== this.user._id) {
+            if (existing.some((id) => id && id !== this.user._id)) {
                 throw new BadRequestError('Already binded to another account');
             }
             this.response.redirect = '/home/security';
-            if (existing !== this.user._id) await this.ctx.oauth.set(args.type, r._id, this.user._id);
+            await Promise.all(ids.map((i) => this.ctx.oauth.set(args.type, i, this.user._id)));
             return;
         }
+        const effective = existing.find((i) => i);
 
-        const uid = await this.ctx.oauth.get(args.type, r._id);
-        if (uid) {
-            await successfulAuth.call(this, await user.getById('system', uid));
+        if (effective) {
+            await successfulAuth.call(this, await user.getById('system', effective));
             this.response.redirect = '/';
             return;
         }
         const udoc = await user.getByEmail('system', r.email);
         if (udoc) {
-            await this.ctx.oauth.set(args.type, r._id, udoc._id);
+            await Promise.all(ids.map((i) => this.ctx.oauth.set(args.type, i, udoc._id)));
             await successfulAuth.call(this, udoc);
             this.response.redirect = '/';
             return;

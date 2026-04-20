@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog, ConfirmDialog } from 'vj/components/dialog';
+import { ActionDialog, ConfirmDialog, prompt } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -51,13 +51,16 @@ const page = new NamedPage('domain_group', () => {
     const gid = ele.getAttribute('data-gid');
     targets[gid] = input;
     let loaded = false;
+    const save = _.debounce(() => update(gid, input.value()), 500);
     input.onChange(() => {
       if (input.value().length && !loaded) {
         loaded = true;
+        $(ele).closest('tr').find('.group-member-count').text(`${input.value().length} ${i18n('members')}`);
         return;
       }
       if (!loaded) return;
-      update(gid, input.value());
+      $(ele).closest('tr').find('.group-member-count').text(`${input.value().length} ${i18n('members')}`);
+      save();
     });
   });
 
@@ -132,7 +135,76 @@ const page = new NamedPage('domain_group', () => {
     Notification.success(i18n('Saved.'));
   }
 
+  async function handleClickImportGroups() {
+    const result = await prompt(i18n('Import Groups'), {
+      groups: {
+        type: 'textarea',
+        label: i18n('Format: one group per line, CSV: groupName,uid1,uid2,...'),
+        rows: 10,
+        required: true,
+        placeholder: 'group1,1001,1002,1003\ngroup2,1004,1005',
+      },
+    });
+    if (!result) return;
+    const lines = String(result.groups || '').replace(/^\uFEFF/, '').split('\n');
+    const parsed = new Map<string, number[]>();
+    const errors: string[] = [];
+    lines.forEach((raw, idx) => {
+      const line = raw.trim();
+      if (!line) return;
+      const [name, ...rest] = line.split(',').map((t) => t.trim());
+      if (!name) return;
+      const uids: number[] = [];
+      for (const t of rest) {
+        if (!t) continue;
+        const uid = +t;
+        if (!Number.isInteger(uid)) {
+          errors.push(i18n('Line {0}: Invalid UID "{1}".', idx + 1, t));
+          return;
+        }
+        uids.push(uid);
+      }
+      parsed.set(name, Array.from(new Set(uids)));
+    });
+    if (errors.length) {
+      Notification.error(errors.join('\n'));
+      return;
+    }
+    if (!parsed.size) {
+      Notification.error(i18n('No groups to import.'));
+      return;
+    }
+    try {
+      for (const [name, uids] of parsed) {
+        await update(name, uids);
+      }
+      Notification.success(i18n('Imported successfully.'));
+      await delay(1500);
+      window.location.reload();
+    } catch (error) {
+      Notification.error(error.message);
+    }
+  }
+
+  async function handleClickExportGroups() {
+    const rows: string[] = [];
+    for (const gid of Object.keys(targets)) {
+      const uids = targets[gid].value() as number[];
+      rows.push([gid, ...uids].join(','));
+    }
+    await prompt(i18n('Export Groups'), {
+      groups: {
+        type: 'textarea',
+        label: i18n('Copy the content below'),
+        rows: 15,
+        default: rows.join('\n'),
+      },
+    });
+  }
+
   $('[name="create_group"]').click(() => handleClickCreateGroup());
+  $('[name="import_groups"]').click(() => handleClickImportGroups());
+  $('[name="export_groups"]').click(() => handleClickExportGroups());
   $('[name="remove_selected"]').click(() => handleClickDeleteSelected());
   $('[name="save_all"]').on('click', () => handleClickSaveAll());
 });

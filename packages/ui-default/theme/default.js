@@ -1,8 +1,5 @@
 import 'normalize.css/normalize.css';
 import 'allotment/dist/style.css';
-import 'pickadate/lib/themes/classic.css';
-import 'pickadate/lib/themes/classic.date.css';
-import 'pickadate/lib/themes/classic.time.css';
 import 'katex/dist/katex.min.css';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -26,7 +23,6 @@ import 'vj/misc/structure.styl';
 import 'vj/misc/section.styl';
 import 'vj/misc/nothing.styl';
 import 'vj/components/editor/cmeditor.styl';
-import 'vj/components/datepicker/datepicker.styl';
 import './dark.styl';
 import './bp6-compat.css';
 

@@ -78,7 +78,7 @@ export function isLocked(tdoc: Tdoc, time = new Date()) {
 }
 
 export function isExtended(tdoc: Tdoc) {
-    const now = new Date().getTime();
+    const now = Date.now();
     return tdoc.penaltySince.getTime() <= now && now < tdoc.endAt.getTime();
 }
 
@@ -312,9 +312,9 @@ const oi = buildContestRule({
         }
         return { score, detail, display };
     },
-    showScoreboard: (tdoc, now) => now > tdoc.endAt,
-    showSelfRecord: (tdoc, now) => now > tdoc.endAt,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
+    showScoreboard: (tdoc, now) => now > tdoc.endAt && !tdoc.keepScoreboardHidden,
+    showSelfRecord: (tdoc, now) => now > tdoc.endAt && !tdoc.keepScoreboardHidden,
+    showRecord: (tdoc, now) => now > tdoc.endAt && !tdoc.keepScoreboardHidden,
     async scoreboardHeader(config, _, tdoc, pdict) {
         const columns: ScoreboardNode[] = [
             { type: 'rank', value: '#' },
@@ -477,9 +477,9 @@ const ioi = buildContestRule({
 const strictioi = buildContestRule({
     TEXT: 'IOI(Strict)',
     submitAfterAccept: false,
-    showRecord: (tdoc, now) => now > tdoc.endAt,
-    showSelfRecord: () => true,
-    showScoreboard: (tdoc, now) => now > tdoc.endAt,
+    showRecord: (tdoc, now) => now > tdoc.endAt && !tdoc.keepScoreboardHidden,
+    showSelfRecord: (tdoc) => !tdoc.keepScoreboardHidden || !isDone(tdoc),
+    showScoreboard: (tdoc, now) => now > tdoc.endAt && !tdoc.keepScoreboardHidden,
     stat(tdoc, journal) {
         const detail = {};
         let score = 0;

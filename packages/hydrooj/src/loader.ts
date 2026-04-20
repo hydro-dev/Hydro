@@ -12,12 +12,14 @@ import { I18nService } from './lib/i18n';
 
 import { Logger } from './logger';
 import {
-    Context, Service, FiberState, Fiber,
+    Context, Service, FiberState, Fiber, ApiMixin,
 } from './context';
 // eslint-disable-next-line import/no-duplicates
 import { sleep, unwrapExports } from './utils';
 import { PRIV } from './model/builtin';
 import { getAddons } from './options';
+import { TimerService } from '@cordisjs/plugin-timer';
+import LoggerService from '@cordisjs/plugin-logger';
 import Schema from 'schemastery';
 import { isEqual } from 'lodash';
 
@@ -162,13 +164,27 @@ export class Loader extends Service {
     }
 }
 
+app.plugin(ApiMixin);
+app.plugin(TimerService);
+app.plugin(LoggerService, {
+    console: {
+        showDiff: false,
+        showTime: 'dd hh:mm:ss',
+        label: {
+            align: 'right',
+            width: 9,
+            margin: 1,
+        },
+        levels: { default: process.env.DEV ? 3 : 2 },
+    },
+});
 app.plugin(I18nService);
 app.plugin(Loader);
 
 async function preload() {
     global.app = await new Promise((resolve) => {
         app.inject(['timer', 'i18n', 'logger', '$api'], (c) => {
-            resolve(c);
+            c.inject({ domain: { required: false } }, resolve);
         });
     });
     for (const a of [path.resolve(__dirname, '..'), ...getAddons()]) {

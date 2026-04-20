@@ -44,7 +44,7 @@ export class SettingService extends Service {
         super(ctx, 'setting');
     }
 
-    async [Context.init]() {
+    async [Service.init]() {
         const payload = await this.ctx.db.collection('system').find({}).toArray();
         this.initialValues = Object.fromEntries(payload.map((v) => [v._id, v.value]));
         return await this.loadConfig();
@@ -103,7 +103,7 @@ export class SettingService extends Service {
     async _actualMigrate(schema: Schema<any>) {
         const processNode = async (path: string[], node: Schema<any, any>) => {
             for (const item of node.list || []) await processNode(path, item); // eslint-disable-line no-await-in-loop
-            for (const key in node.dict || {}) await processNode(path.concat(key), node.dict[key]); // eslint-disable-line no-await-in-loop
+            for (const key in node.dict || {}) await processNode([...path, ...key], node.dict[key]); // eslint-disable-line no-await-in-loop
             if (['string', 'number', 'boolean'].includes(node.type)) {
                 const value = this.initialValues[path.join('.')];
                 const migrated = this.initialValues[`${path.join('.')}__migrated`];
@@ -181,10 +181,10 @@ export class SettingService extends Service {
             if (path.some((p) => typeof p === 'symbol')) return currentValue;
             return new Proxy(currentValue, {
                 get(self, key: string) {
-                    return getAccess(path.concat(key));
+                    return getAccess([...path, ...key]);
                 },
                 set(self, p: string | symbol, newValue: any) {
-                    that.setConfig(path.concat(p).join(','), newValue);
+                    that.setConfig([...path, p].join(','), newValue);
                     return true;
                 },
             });

@@ -2,7 +2,7 @@ import { Context, Service } from '../context';
 
 const translations: Record<string, Record<string, string>[]> = {};
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         i18n: I18nService;
     }

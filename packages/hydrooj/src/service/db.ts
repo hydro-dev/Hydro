@@ -26,7 +26,7 @@ interface MongoConfig {
     collectionMap?: Record<string, string>;
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         db: MongoService;
     }
@@ -55,7 +55,7 @@ export class MongoService extends Service {
         return mongourl;
     }
 
-    async *[Context.init]() {
+    async *[Service.init]() {
         const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
         this.client = await MongoClient.connect(mongourl);

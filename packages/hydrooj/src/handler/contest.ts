@@ -88,7 +88,7 @@ export class ContestDetailBaseHandler extends Handler {
         ]);
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_CONTEST)) {
             const groups = await user.listGroup(domainId, this.user._id);
-            if (!Set.intersection(this.tdoc.assign, groups.map((i) => i.name)).size) {
+            if (!new Set(this.tdoc.assign).intersection(new Set(groups.map((i) => i.name))).size) {
                 throw new NotAssignedError('contest', tid);
             }
         }
@@ -403,12 +403,14 @@ export class ContestEditHandler extends Handler {
     @param('maintainer', Types.NumericArray, true)
     @param('allowViewCode', Types.Boolean)
     @param('allowPrint', Types.Boolean)
+    @param('keepScoreboardHidden', Types.Boolean)
     @param('langs', Types.CommaSeperatedArray, true)
     async postUpdate(
         domainId: string, tid: ObjectId, beginAtDate: string, beginAtTime: string, duration: number,
         title: string, content: string, rule: string, _pids: string, rated = false,
         _code = '', autoHide = false, assign: string[] = [], lock: number = null,
-        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false, langs: string[] = [],
+        contestDuration: number = null, maintainer: number[] = [], allowViewCode = false, allowPrint = false,
+        keepScoreboardHidden = false, langs: string[] = [],
     ) {
         if (!Object.keys(contest.RULES).includes(rule) || contest.RULES[rule].hidden) throw new ValidationError('rule');
         if (autoHide) this.checkPerm(PERM.PERM_EDIT_PROBLEM);
@@ -450,7 +452,7 @@ export class ContestEditHandler extends Handler {
             });
         }
         await contest.edit(domainId, tid, {
-            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, langs,
+            assign, _code, autoHide, lockAt, maintainer, allowViewCode, allowPrint, keepScoreboardHidden, langs,
         });
         this.response.body = { tid };
         this.response.redirect = this.url('contest_detail', { tid });
@@ -876,7 +878,7 @@ class ScoreboardService extends Service {
     }
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         scoreboard: ScoreboardService;
     }

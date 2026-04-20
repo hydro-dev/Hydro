@@ -1,6 +1,6 @@
 import type { HandlerCommon } from './server';
 
-export default function serializer<T>(ignoreSerializeFunction = false, h?: HandlerCommon<T>) {
+export default function serializer(ignoreSerializeFunction = false, h?: HandlerCommon) {
     return (k: string, v: any) => {
         if (k.startsWith('_') && k !== '_id') return undefined;
         if (typeof v === 'bigint') return `BigInt::${v.toString()}`;

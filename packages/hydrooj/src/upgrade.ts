@@ -431,7 +431,7 @@ export const coreScripts: MigrationScript[] = [
             let pinnedDomains = new Set<string>();
             for (const d of udoc.pinnedDomains) {
                 if (typeof d === 'string') pinnedDomains.add(d);
-                else pinnedDomains = Set.union(pinnedDomains, d);
+                else pinnedDomains = pinnedDomains.union(new Set(d));
             }
             await user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
         });

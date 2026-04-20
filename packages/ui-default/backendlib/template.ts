@@ -4,21 +4,24 @@ import { findFileSync, getAlphabeticId } from '@hydrooj/utils/lib/utils';
 import {
   avatar, Context, difficultyAlgorithm, fs, PERM, PRIV, Service, STATUS, yaml,
 } from 'hydrooj';
+import { cac } from 'cac';
 import { convert } from 'html-to-text';
 import jsesc from 'jsesc';
 import nunjucks from 'nunjucks';
 import markdown from './markdown';
 import { ensureTag, xss } from './markdown-it-xss';
 import * as misc from './misc';
-const argv = require('cac')().parse();
+
+const argv = cac().parse();
 
 let { template } = argv.options;
 if (!template || typeof template !== 'string') template = findFileSync('@hydrooj/ui-default/templates');
 else template = findFileSync(template);
 
-const replacer = (k, v) => {
+const replacer = (s) => (k, v) => {
   if (k.startsWith('_') && k !== '_id') return undefined;
   if (typeof v === 'bigint') return `BigInt::${v.toString()}`;
+  if (v && typeof v === 'object' && 'serialize' in v && typeof v.serialize === 'function') return v.serialize(s);
   return v;
 };
 
@@ -66,7 +69,7 @@ class Nunjucks extends nunjucks.Environment {
         callback(error);
       }
     }, true);
-    this.addFilter('json', (self) => (self ? JSON.stringify(self, replacer) : ''));
+    this.addFilter('json', (self, s) => (self ? JSON.stringify(self, replacer(s)) : ''));
     this.addFilter('parseYaml', (self) => yaml.load(self));
     this.addFilter('dumpYaml', (self) => yaml.dump(self));
     this.addFilter('assign', (self, data) => Object.assign(self, data));
@@ -77,7 +80,7 @@ class Nunjucks extends nunjucks.Environment {
     this.addFilter('base64_decode', (s) => Buffer.from(s, 'base64').toString());
     this.addFilter('jsesc', (self) => jsesc(self, { isScriptContext: true }));
     this.addFilter('bitand', (self, val) => self & val);
-    this.addFilter('toString', (self) => (typeof self === 'string' ? self : JSON.stringify(self, replacer)));
+    this.addFilter('toString', (self, s) => (typeof self === 'string' ? self : JSON.stringify(self, replacer(s))));
     this.addFilter('content', (content, language, html) => {
       let s: any = '';
       try {
@@ -251,7 +254,7 @@ export class TemplateService extends Service {
     });
   }
 
-  async [Context.init]() {
+  async [Service.init]() {
     const pending = Object.values(global.addons);
     const logger = this.ctx.logger('template');
     for (const i of pending) {

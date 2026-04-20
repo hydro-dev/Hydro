@@ -27,7 +27,7 @@ class AccountService {
         this.api = new Provider(account, async (data) => {
             await coll.updateOne({ _id: account._id }, { $set: data });
         });
-        this.problemLists = Set.union(this.api.entryProblemLists || ['main'], this.account.problemLists || []);
+        this.problemLists = new Set(this.api.entryProblemLists || ['main']).union(new Set(this.account.problemLists || []));
         this.main().catch((e) => {
             logger.error(`Error occured in ${account.type}/${account.handle}`);
             this.working = false;
@@ -58,7 +58,7 @@ class AccountService {
             if (langConfig.validAs?.[this.account.type]) task.lang = langConfig.validAs[this.account.type];
             const comment = langConfig.comment;
             if (comment && !this.Provider.noComment) {
-                const msg = `Hydro submission #${task.rid}@${new Date().getTime()}`;
+                const msg = `Hydro submission #${task.rid}@${Date.now()}`;
                 if (typeof comment === 'string') task.code = `${comment} ${msg}\n${task.code}`;
                 else if (comment instanceof Array) task.code = `${comment[0]} ${msg} ${comment[1]}\n${task.code}`;
             }
@@ -177,7 +177,7 @@ class AccountService {
     }
 }
 
-declare module 'hydrooj' {
+declare module 'cordis' {
     interface Context {
         vjudge: VJudgeService;
     }
@@ -191,7 +191,7 @@ class VJudgeService extends Service {
     accounts: RemoteAccount[] = [];
     private providers: Record<string, any> = {};
     private pool: Record<string, AccountService> = {};
-    async [Context.init]() {
+    async [Service.init]() {
         if (process.env.NODE_APP_INSTANCE !== '0') return;
         if (process.env.HYDRO_CLI) return;
         this.accounts = await coll.find().toArray();

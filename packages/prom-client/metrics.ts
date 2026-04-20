@@ -3,7 +3,7 @@ import {
 } from 'prom-client';
 import { Context, db } from 'hydrooj';
 
-declare module 'hydrooj' {
+declare module 'cordis' {
     interface Context {
         metrics: Registry;
     }

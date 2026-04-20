@@ -47,9 +47,10 @@ jobs:
       run: |
         git config --global user.name undefined
         git config --global user.email i@undefined.moe
-        yarn set version stable
+        yarn set version 4.13.0
         yarn
         yarn dedupe
+        node build/prepare.js
       env:
         LICENSE_KEY: ${{ secrets.MAXMIND_KEY }}
     - name: Get specific changed files

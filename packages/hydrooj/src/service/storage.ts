@@ -423,7 +423,7 @@ export async function apply(ctx: Context, config: ReturnType<typeof FileSetting>
     ctx.provide('storage', service);
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         storage: RemoteStorageService | LocalStorageService;
     }

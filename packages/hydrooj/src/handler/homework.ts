@@ -84,7 +84,7 @@ class HomeworkDetailHandler extends Handler {
         this.tdoc = await contest.get(domainId, tid);
         if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
-            if (!Set.intersection(this.tdoc.assign, this.user.group).size) {
+            if (!new Set(this.tdoc.assign).intersection(new Set(this.user.group)).size) {
                 throw new NotAssignedError('homework', this.tdoc.docId);
             }
         }

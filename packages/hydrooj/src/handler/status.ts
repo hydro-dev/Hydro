@@ -10,7 +10,7 @@ async function getStatus() {
     const stats = await coll.find().sort({ type: 1, updateAt: -1 }).toArray();
     for (const stat of stats) {
         let desc = '';
-        const online = new Date(stat.updateAt).getTime() > new Date().getTime() - 300000;
+        const online = new Date(stat.updateAt).getTime() > Date.now() - 300000;
         if (!online) desc = 'Offline';
         desc ||= 'Online';
         stat.isOnline = online;

@@ -16,13 +16,14 @@ const withoutTypes = (data) => ({
 /** @type {import('typescript/lib/typescript').CompilerOptions} */
 const compilerOptionsBase = {
     target: 'es2022',
-    lib: ['es2022'],
+    lib: ['esnext'],
     module: 'preserve',
     esModuleInterop: true,
     moduleResolution: 'bundler',
     jsx: 'react-jsx',
     sourceMap: false,
     composite: true,
+    strict: false,
     strictBindCallApply: true,
     resolveJsonModule: true,
     experimentalDecorators: true,
@@ -89,6 +90,8 @@ const UIConfig = {
         'packages/ui-default/backendlib/misc.ts',
         'packages/ui-default/backendlib/template.ts',
         'packages/ui-default/backendlib/markdown.js',
+        'packages/ui-default/service-worker.ts',
+        'packages/ui-default/components/message/worker.ts',
         '**/node_modules',
     ],
     include: ['ts', 'tsx', 'vue', 'json']
@@ -105,7 +108,7 @@ const UIConfig = {
         outDir: path.join(baseOutDir, 'ui'),
 
         useDefineForClassFields: true,
-        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+        lib: ['esnext', 'DOM', 'DOM.Iterable'],
 
         /* Bundler mode */
         moduleResolution: 'bundler',
@@ -142,7 +145,7 @@ const UINextConfig = {
         noImplicitAny: false,
 
         useDefineForClassFields: true,
-        lib: ['es2022', 'DOM', 'DOM.Iterable'],
+        lib: ['esnext', 'DOM', 'DOM.Iterable'],
 
         /* Bundler mode */
         moduleResolution: 'bundler',
