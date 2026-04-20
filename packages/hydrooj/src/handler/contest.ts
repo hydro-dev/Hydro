@@ -93,14 +93,16 @@ export class ContestDetailBaseHandler extends Handler {
             }
         }
         if (this.tdoc.duration && this.tsdoc?.startAt) {
-            const endAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
-            this.tsdoc.endAt = endAt < this.tdoc.endAt ? endAt : this.tdoc.endAt;
+            const computedEndAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
+            const cappedEndAt = computedEndAt < this.tdoc.endAt ? computedEndAt : this.tdoc.endAt;
+            this.tsdoc.endAt = (this.tsdoc.endAt && this.tsdoc.endAt < cappedEndAt)
+                ? this.tsdoc.endAt : cappedEndAt;
         }
     }
 
     tsdocAsPublic() {
         if (!this.tsdoc) return null;
-        return pick(this.tsdoc, ['attend', 'subscribe', 'startAt', ...(this.tdoc.duration ? ['endAt'] : [])]);
+        return pick(this.tsdoc, ['attend', 'subscribe', 'startAt', ...(this.tdoc.duration || this.tsdoc.endAt ? ['endAt'] : [])]);
     }
 
     @param('tid', Types.ObjectId, true)
@@ -184,6 +186,15 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
     async postSubscribe(domainId: string, tid: ObjectId, subscribe = false) {
         if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
         await contest.setStatus(domainId, tid, this.user._id, { subscribe: subscribe ? 1 : 0 });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    async postEnd(domainId: string, tid: ObjectId) {
+        if (this.tdoc.rule === 'homework') throw new ContestNotLiveError(tid);
+        if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
+        if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(tid);
+        await contest.setStatus(domainId, tid, this.user._id, { endAt: new Date() });
         this.back();
     }
 }
@@ -698,10 +709,15 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
     @param('tid', Types.ObjectId)
     async get(domainId: string, tid: ObjectId) {
         const tsdocs = await contest.getMultiStatus(domainId, { docId: tid }).project({
-            uid: 1, attend: 1, startAt: 1, unrank: 1,
+            uid: 1, attend: 1, startAt: 1, unrank: 1, endAt: 1,
         }).toArray();
         for (const tsdoc of tsdocs) {
-            tsdoc.endAt = (this.tdoc.duration && tsdoc.startAt) ? moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
+            const computedEndAt = (this.tdoc.duration && tsdoc.startAt)
+                ? moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
+            if (computedEndAt) {
+                const cappedEndAt = computedEndAt < this.tdoc.endAt ? computedEndAt : this.tdoc.endAt;
+                tsdoc.endAt = (tsdoc.endAt && tsdoc.endAt < cappedEndAt) ? tsdoc.endAt : cappedEndAt;
+            }
         }
         const udict = await user.getListForRender(
             domainId, [this.tdoc.owner, ...tsdocs.map((i) => i.uid)],
@@ -726,6 +742,20 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         const tsdoc = await contest.getStatus(domainId, tid, uid);
         if (!tsdoc) throw new ContestNotAttendedError(uid);
         await contest.setStatus(domainId, tid, uid, { unrank: !tsdoc.unrank });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('uid', Types.PositiveInt)
+    async postResume(domainId: string, tid: ObjectId, uid: number) {
+        const tsdoc = await contest.getStatus(domainId, tid, uid);
+        if (!tsdoc) throw new ContestNotAttendedError(uid);
+        if (this.tdoc.endAt <= new Date()) throw new ContestNotLiveError(tid);
+        if (this.tdoc.duration && tsdoc.startAt) {
+            const durationEnd = moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
+            if (durationEnd <= new Date()) throw new ContestNotLiveError(tid);
+        }
+        await contest.clearEarlyEnd(domainId, tid, uid);
         this.back();
     }
 }

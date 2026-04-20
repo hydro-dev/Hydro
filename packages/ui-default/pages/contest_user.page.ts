@@ -90,8 +90,26 @@ const page = new NamedPage('contest_user', () => {
     }
   }
 
+  async function handleResume(ev) {
+    const uid = $(ev.target).data('uid');
+    try {
+      const res = await request.post('', {
+        operation: 'resume',
+        uid,
+      });
+      if (res.url && res.url !== window.location.href) window.location.href = res.url;
+      else {
+        Notification.success(i18n('Contest resumed.'));
+        pjax.request({ push: false });
+      }
+    } catch (error) {
+      Notification.error([error.message, ...error.params].join(' '));
+    }
+  }
+
   $('[name="add_user"]').on('click', () => handleClickAddUser());
   $(document).on('click', '[name="edit_rank"]', handleEditRank);
+  $(document).on('click', '[name="resume_contest"]', handleResume);
 });
 
 export default page;

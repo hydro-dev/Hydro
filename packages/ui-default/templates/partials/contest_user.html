@@ -10,6 +10,9 @@
     <td class="col--rank">{{ _('UnRank') if tsdoc.unrank else _('Rank') }}</td>
     <td class="col--actions">
       <a name="edit_rank" data-uid="{{ tsdoc.uid }}">{{ _('Rank') if tsdoc.unrank else _('UnRank') }}</a>
+      {% if tsdoc.endAt and tsdoc.endAt < tdoc.endAt %}
+      | <a name="resume_contest" data-uid="{{ tsdoc.uid }}">{{ _('Resume') }}</a>
+      {% endif %}
     </td>
   </tr>
   {%- endfor -%}

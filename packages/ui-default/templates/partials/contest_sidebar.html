@@ -68,6 +68,13 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_problemlist', tid=tdoc.docId) }}">
         <span class="icon icon-unordered_list"></span> {{ _('Problem List') }}
       </a></li>
+      {% if tsdoc.attend and model.contest.isOngoing(tdoc, tsdoc) and tdoc.rule !== 'homework' %}
+      <li class="menu__item">
+        <a class="menu__link" name="end_contest" data-tid="{{ tdoc.docId }}">
+          <span class="icon icon-delete"></span> {{ _('End Contest Early') }}
+        </a>
+      </li>
+      {% endif %}
     {% endif %}{# not attend and not done #}
     {% if model.contest.canShowScoreboard.call(handler, tdoc, False) %}
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_scoreboard', tid=tdoc.docId) }}">
