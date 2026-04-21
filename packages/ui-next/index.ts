@@ -6,6 +6,7 @@ import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
 import { serializer } from '@hydrooj/framework';
 import { Context } from 'hydrooj';
+import type { PageData } from './src/context/pageData';
 
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (str: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${str}</script>`;
@@ -81,11 +82,12 @@ export async function apply(ctx: Context) {
         asFallback: true,
         priority: 100,
         async render(name, args, context) {
-            const data = {
+            const data: PageData = {
                 HYDRO_INJECTED: true,
                 name,
                 args,
                 url: context.handler.context.req.url,
+                routeMap: ctx.server.routeMap,
             };
             const serialized = JSON.stringify(data, serializer(false, context.handler));
             const htmlToRender = html.replace(INJECT_MARKER, buildInject(serialized));

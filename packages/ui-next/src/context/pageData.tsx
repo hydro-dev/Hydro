@@ -4,6 +4,7 @@ export interface PageData {
   name: string;
   args: Record<string, any>;
   url: string;
+  routeMap: Record<string, string>;
   [key: string]: any;
 }
 
