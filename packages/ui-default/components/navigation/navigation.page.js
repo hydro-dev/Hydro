@@ -112,6 +112,13 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
     $slideoutOverlay.show();
   }
 
+  // Touch swipe support
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchCurrentX = 0;
+  let isSwiping = false;
+  let isScrolling = false;
+
   function close() {
     isOpen = false;
     isSwiping = false;
@@ -122,13 +129,6 @@ const navigationPage = new AutoloadPage('navigationPage', () => {
     $slideoutOverlay.hide();
     $('html').removeClass('slideout-open');
   }
-
-  // Touch swipe support
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchCurrentX = 0;
-  let isSwiping = false;
-  let isScrolling = false;
 
   panel.addEventListener('touchstart', (e) => {
     if (!isMobileLayout() || e.target.closest('[data-slideout-ignore]')) return;
