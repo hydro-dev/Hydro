@@ -25,14 +25,27 @@ const registry = {
 let idCounter = 0;
 function genId() { return `__auto_${++idCounter}`; }
 
+function upsert<T extends { id: string }>(list: T[], entry: T) {
+  const idx = list.findIndex((e) => e.id === entry.id);
+  if (idx !== -1) list[idx] = entry;
+  else list.push(entry);
+}
+
 export function Component<P extends Record<string, any>>(
   name: ComponentName,
   Inner: React.FC<P>,
 ): React.FC<P> {
+  if (registry.components[name]) {
+    console.warn(`[Registry] Component "${name}" is being re-registered.`);
+  }
   const Wrapped: React.FC<P> = (props) => {
     let patched = props;
     for (const { cb } of registry.patch[name] ?? []) {
-      patched = cb(patched);
+      try {
+        patched = cb(patched);
+      } catch (e) {
+        console.error(`[Registry] patch error in "${name}":`, e);
+      }
     }
     return (
       <>
@@ -48,25 +61,16 @@ export function Component<P extends Record<string, any>>(
 }
 
 export function before(name: ComponentName, Comp: React.FC<any>, id?: string) {
-  const entryId = id ?? genId();
   const list = registry.before[name] ??= [];
-  const idx = list.findIndex((e) => e.id === entryId);
-  if (idx !== -1) list[idx] = { id: entryId, Comp };
-  else list.push({ id: entryId, Comp });
+  upsert(list, { id: id ?? genId(), Comp });
 }
 
 export function after(name: ComponentName, Comp: React.FC<any>, id?: string) {
-  const entryId = id ?? genId();
   const list = registry.after[name] ??= [];
-  const idx = list.findIndex((e) => e.id === entryId);
-  if (idx !== -1) list[idx] = { id: entryId, Comp };
-  else list.push({ id: entryId, Comp });
+  upsert(list, { id: id ?? genId(), Comp });
 }
 
 export function patch(name: ComponentName, cb: (props: any) => any, id?: string) {
-  const entryId = id ?? genId();
   const list = registry.patch[name] ??= [];
-  const idx = list.findIndex((e) => e.id === entryId);
-  if (idx !== -1) list[idx] = { id: entryId, cb };
-  else list.push({ id: entryId, cb });
+  upsert(list, { id: id ?? genId(), cb });
 }
