@@ -11,9 +11,19 @@ for (const plugin of plugins) {
 }
 
 const injectionEl = document.getElementById('__HYDRO_INJECTION__');
-const initialData: PageData = injectionEl
-  ? JSON.parse(injectionEl.textContent!)
-  : { name: 'invalid_init', args: {}, url: window.location.pathname };
+let initialData: PageData = {
+  name: '',
+  args: {},
+  url: window.location.pathname,
+  routeMap: {},
+};
+if (injectionEl) {
+  try {
+    initialData = JSON.parse(injectionEl.textContent!);
+  } catch (e) {
+    console.error('[Hydro] Failed to parse injection data:', e);
+  }
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
