@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "koa2-connect": "^1.0.2",
+    "path-to-regexp": "^8.4.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },
