@@ -93,10 +93,11 @@ export class ContestDetailBaseHandler extends Handler {
             }
         }
         if (this.tdoc.duration && this.tsdoc?.startAt) {
-            const computedEndAt = moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
-            const cappedEndAt = computedEndAt < this.tdoc.endAt ? computedEndAt : this.tdoc.endAt;
-            this.tsdoc.endAt = (this.tsdoc.endAt && this.tsdoc.endAt < cappedEndAt)
-                ? this.tsdoc.endAt : cappedEndAt;
+            this.tsdoc.endAt = moment.min([
+                moment(this.tsdoc.startAt).add(this.tdoc.duration, 'hours'),
+                moment(this.tdoc.endAt),
+                ...(this.tsdoc.endAt ? [moment(this.tsdoc.endAt)] : []),
+            ]).toDate();
         }
     }
 
@@ -712,11 +713,12 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
             uid: 1, attend: 1, startAt: 1, unrank: 1, endAt: 1,
         }).toArray();
         for (const tsdoc of tsdocs) {
-            const computedEndAt = (this.tdoc.duration && tsdoc.startAt)
-                ? moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate() : null;
-            if (computedEndAt) {
-                const cappedEndAt = computedEndAt < this.tdoc.endAt ? computedEndAt : this.tdoc.endAt;
-                tsdoc.endAt = (tsdoc.endAt && tsdoc.endAt < cappedEndAt) ? tsdoc.endAt : cappedEndAt;
+            if (this.tdoc.duration && tsdoc.startAt) {
+                tsdoc.endAt = moment.min([
+                    moment(tsdoc.startAt).add(this.tdoc.duration, 'hours'),
+                    moment(this.tdoc.endAt),
+                    ...(tsdoc.endAt ? [moment(tsdoc.endAt)] : []),
+                ]).toDate();
             }
         }
         const udict = await user.getListForRender(
