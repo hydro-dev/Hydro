@@ -724,6 +724,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
+        this.routeMap[routeName] = path as string;
 
         const Checker = (args) => {
             let perm: bigint;
@@ -776,6 +777,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
+            delete this.routeMap[routeName];
             dispose();
         });
     }
