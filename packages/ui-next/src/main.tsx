@@ -2,10 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import plugins from 'virtual:hydro-plugins';
 import App from './App';
-import { createContext } from './context';
 import { type PageData, PageDataProvider } from './context/pageData';
+import { createRegistryContext } from './registry';
 
-const ctx = createContext();
+const ctx = createRegistryContext();
 for (const plugin of plugins) {
   plugin.apply(ctx);
 }

@@ -74,3 +74,16 @@ export function patch(name: ComponentName, cb: (props: any) => any, id?: string)
   const list = registry.patch[name] ??= [];
   upsert(list, { id: id ?? genId(), cb });
 }
+
+export interface RegistryContext {
+  before: typeof before;
+  after: typeof after;
+  patch: typeof patch;
+  register: typeof Component;
+}
+
+export function createRegistryContext(): RegistryContext {
+  return {
+    before, after, patch, register: Component,
+  };
+}
