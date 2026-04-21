@@ -176,7 +176,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
     @param('code', Types.String, true)
     async postAttend(domainId: string, tid: ObjectId, code = '') {
         this.checkPerm(PERM.PERM_ATTEND_CONTEST);
-        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(tid);
+        if (contest.isDone(this.tdoc)) throw new ContestNotLiveError(domainId, tid);
         if (this.tdoc._code && code !== this.tdoc._code) throw new InvalidTokenError('Contest Invitation', code);
         await contest.attend(domainId, tid, this.user._id, { subscribe: 1 });
         this.back();
@@ -192,9 +192,9 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
 
     @param('tid', Types.ObjectId)
     async postEnd(domainId: string, tid: ObjectId) {
-        if (this.tdoc.rule === 'homework') throw new ContestNotLiveError(tid);
+        if (this.tdoc.rule === 'homework') throw new ContestNotFoundError(domainId, tid);
         if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
-        if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(tid);
+        if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(domainId, tid);
         await contest.setStatus(domainId, tid, this.user._id, { endAt: new Date() });
         this.back();
     }
@@ -752,10 +752,10 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
     async postResume(domainId: string, tid: ObjectId, uid: number) {
         const tsdoc = await contest.getStatus(domainId, tid, uid);
         if (!tsdoc) throw new ContestNotAttendedError(uid);
-        if (this.tdoc.endAt <= new Date()) throw new ContestNotLiveError(tid);
+        if (this.tdoc.endAt <= new Date()) throw new ContestNotLiveError(domainId, tid);
         if (this.tdoc.duration && tsdoc.startAt) {
             const durationEnd = moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
-            if (durationEnd <= new Date()) throw new ContestNotLiveError(tid);
+            if (durationEnd <= new Date()) throw new ContestNotLiveError(domainId, tid);
         }
         await contest.clearEarlyEnd(domainId, tid, uid);
         this.back();
