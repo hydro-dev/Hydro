@@ -67,6 +67,7 @@ const config = react({
         '**/{public,frontend}/**/*.{ts,tsx,page.js}',
         '**/plugins/**/*.page.{ts,js,tsx,jsx}',
         'packages/ui-default/**/*.{ts,tsx,js,jsx}',
+        'packages/ui-next/**/*.{ts,tsx,js,jsx}',
     ],
 
     languageOptions: {
