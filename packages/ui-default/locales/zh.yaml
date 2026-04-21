@@ -195,6 +195,7 @@ Confirm deleting the selected roles?: 您确定删除所选角色吗？
 Confirm deleting this comment? Its replies will be deleted as well.: 确认删除这个评论吗？回复会被同时删除。
 Confirm deleting this domain? This action cannot be undone.: '确认删除此域？此操作无法撤销。'
 Confirm deleting this reply?: 确认删除这个回复吗？
+Confirm end contest early? You will not be able to submit after this.: 确认提前结束比赛吗？之后您将无法提交代码。
 Confirm rejudge this problem?: 确定要重测这道题吗？
 Confirm removing the selected users?: 您确定将所选用户移除吗？
 Confirm to delete the file?: 确认删除此文件吗？
@@ -376,6 +377,7 @@ Email Visibility: Email 可见性
 Email: 电子邮件
 Enabled: 开启
 End at: 结束于
+End Contest Early: 提前结束比赛
 End Date: 结束日期
 End Time: 结束时间
 Enroll Training: 参加训练

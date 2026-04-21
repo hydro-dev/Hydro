@@ -191,7 +191,7 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
     }
 
     @param('tid', Types.ObjectId)
-    async postEnd(domainId: string, tid: ObjectId) {
+    async postEarlyEnd(domainId: string, tid: ObjectId) {
         if (this.tdoc.rule === 'homework') throw new ContestNotFoundError(domainId, tid);
         if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
         if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(domainId, tid);

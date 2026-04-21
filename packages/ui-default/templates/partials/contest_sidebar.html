@@ -68,11 +68,14 @@
       <li class="menu__item"><a class="menu__link" href="{{ url('contest_problemlist', tid=tdoc.docId) }}">
         <span class="icon icon-unordered_list"></span> {{ _('Problem List') }}
       </a></li>
-      {% if tsdoc.attend and model.contest.isOngoing(tdoc, tsdoc) and tdoc.rule !== 'homework' %}
+      {% if page_name == 'contest_detail' and tsdoc.attend and model.contest.isOngoing(tdoc, tsdoc) and tdoc.rule !== 'homework' %}
       <li class="menu__item">
-        <a class="menu__link" name="end_contest" data-tid="{{ tdoc.docId }}">
-          <span class="icon icon-delete"></span> {{ _('End Contest Early') }}
-        </a>
+        <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST" onsubmit='return confirm({{ _("Confirm end contest early? You will not be able to submit after this.")|json|safe }});'>
+          <input type="hidden" name="operation" value="early_end">
+          <button class="menu__link" type="submit">
+            <span class="icon icon-delete"></span> {{ _('End Contest Early') }}
+          </button>
+        </form>
       </li>
       {% endif %}
     {% endif %}{# not attend and not done #}
