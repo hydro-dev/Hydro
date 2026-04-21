@@ -1,6 +1,7 @@
-import { createContext, type ReactNode, useContext, useState } from 'react';
+import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 export interface PageData {
+  HYDRO_INJECTED?: boolean;
   name: string;
   args: Record<string, any>;
   url: string;
@@ -8,20 +9,24 @@ export interface PageData {
   [key: string]: any;
 }
 
+type PageDataSetter = (data: PageData) => void;
+
 interface PageDataContextValue {
   data: PageData;
-  setData: (data: PageData) => void;
+  setData: PageDataSetter;
 }
-
 const PageDataContext = createContext<PageDataContextValue | null>(null);
 
-export function PageDataProvider({ initial, children }: { initial: PageData, children: ReactNode }) {
+interface PageDataProviderProps {
+  initial: PageData;
+  children: ReactNode;
+}
+
+export function PageDataProvider({ initial, children }: PageDataProviderProps) {
   const [data, setData] = useState<PageData>(initial);
-  return (
-    <PageDataContext.Provider value={{ data, setData }}>
-      {children}
-    </PageDataContext.Provider>
-  );
+  const value = useMemo(() => ({ data, setData }), [data]);
+
+  return <PageDataContext.Provider value={value}>{children}</PageDataContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
