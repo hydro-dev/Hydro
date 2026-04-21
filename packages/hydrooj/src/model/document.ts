@@ -295,11 +295,16 @@ export function getMultiStatusWithoutDomain<K extends keyof DocStatusType>(
 
 export async function setStatus<K extends keyof DocStatusType>(
     domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
-    args: UpdateFilter<DocStatusType[K]>['$set'], returnDocument: 'before' | 'after' = 'after',
+    $set: UpdateFilter<DocStatusType[K]>['$set'] | null,
+    $unset?: UpdateFilter<DocStatusType[K]>['$unset'] | null,
+    returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[K]> {
+    const op: UpdateFilter<DocStatusType[K]> = {};
+    if ($set && Object.keys($set).length) op.$set = $set;
+    if ($unset && Object.keys($unset).length) op.$unset = $unset;
     return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
-        { $set: args },
+        op,
         {
             upsert: true,
             returnDocument,

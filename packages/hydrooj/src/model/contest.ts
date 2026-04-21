@@ -942,15 +942,8 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
-export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
-    return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
-}
-
-export function clearEarlyEnd(domainId: string, tid: ObjectId, uid: number) {
-    return document.collStatus.findOneAndUpdate(
-        { domainId, docType: document.TYPE_CONTEST, docId: tid, uid },
-        { $unset: { endAt: '' } },
-    );
+export function setStatus(domainId: string, tid: ObjectId, uid: number, $set?: any, $unset?: any) {
+    return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set, $unset);
 }
 
 export function count(domainId: string, query: any) {

@@ -757,7 +757,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
             const durationEnd = moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
             if (durationEnd <= new Date()) throw new ContestNotLiveError(domainId, tid);
         }
-        await contest.clearEarlyEnd(domainId, tid, uid);
+        await contest.setStatus(domainId, tid, uid, null, { endAt: '' });
         this.back();
     }
 }
