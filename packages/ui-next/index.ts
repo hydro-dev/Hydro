@@ -21,6 +21,7 @@ function hydroPlugins(): Plugin {
             if (id === virtualModuleId) {
                 return resolvedVirtualModuleId;
             }
+            return undefined;
         },
         load(id) {
             if (id === resolvedVirtualModuleId) {
@@ -34,6 +35,7 @@ function hydroPlugins(): Plugin {
                 const exports = `export default [${entries.map((_, i) => `plugin${i}`).join(', ')}];`;
                 return `${imports}\n${exports}`;
             }
+            return undefined;
         },
     };
 }
