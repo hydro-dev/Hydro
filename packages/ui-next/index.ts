@@ -88,7 +88,7 @@ export async function apply(ctx: Context) {
         HYDRO_INJECTED: true,
         name,
         args,
-        url: context.handler.context.req.url,
+        url: context.handler.context.req.url!,
         routeMap: ctx.server.routeMap,
       };
       const serialized = JSON.stringify(data, serializer(false, context.handler));
