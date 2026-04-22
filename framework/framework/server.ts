@@ -312,7 +312,12 @@ export class NotFoundHandler extends Handler {
     all() { }
 }
 
-function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+export interface LayerEntry {
+    name: string;
+    func: (ctx: any, next: () => Promise<void>) => any;
+}
+
+function executeMiddlewareStack(context: any, middlewares: LayerEntry[]): Promise<void> {
     let index = -1;
     context.__timers ||= {};
     function dispatch(i) {
@@ -351,9 +356,9 @@ export class WebService extends Service<never> {
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
     public routeMap: Record<string, string> = Object.create(null);
-    private serverLayers = [];
-    private handlerLayers = [];
-    private wsLayers = [];
+    private serverLayers: LayerEntry[] = [];
+    private handlerLayers: LayerEntry[] = [];
+    private wsLayers: LayerEntry[] = [];
     private captureAllRoutes = Object.create(null);
     private customDefaultContext: CordisContext;
     private activeHandlers: Map<Handler, { start: number, name: string }> = new Map();
@@ -811,7 +816,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
-    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
+    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: LayerEntry) {
         this.ctx.effect(() => {
             this[name].push(layer);
             return () => {
@@ -820,19 +825,19 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public addServerLayer(name: string, func: any) {
+    public addServerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('serverLayers', { name, func });
     }
 
-    public addHandlerLayer(name: string, func: any) {
+    public addHandlerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('handlerLayers', { name, func });
     }
 
-    public addWSLayer(name: string, func: any) {
+    public addWSLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('wsLayers', { name, func });
     }
 
-    public addLayer(name: string, layer: any) {
+    public addLayer(name: LayerEntry['name'], layer: LayerEntry['func']) {
         this.addHandlerLayer(name, layer);
         this.addWSLayer(name, layer);
     }
