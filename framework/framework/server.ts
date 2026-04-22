@@ -106,21 +106,21 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
-interface RendererContext<C> {
-    handler: HandlerCommon<C>;
+interface RendererContext {
+    handler: HandlerCommon;
     UserContext: UserModel;
-    url: HandlerCommon<C>['url'];
-    _: HandlerCommon<C>['translate'];
+    url: HandlerCommon['url'];
+    _: HandlerCommon['translate'];
 }
-export interface TextRenderer<C = any> {
+export interface TextRenderer {
     output: 'html' | 'json' | 'text';
-    render: (name: string, args: Record<string, any>, context: RendererContext<C>) => string | Promise<string>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => string | Promise<string>;
 }
-export interface BinaryRenderer<C = any> {
+export interface BinaryRenderer {
     output: 'binary';
-    render: (name: string, args: Record<string, any>, context: RendererContext<C>) => Buffer | Promise<Buffer>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => Buffer | Promise<Buffer>;
 }
-export type Renderer<C = any> = (BinaryRenderer<C> | TextRenderer<C>) & {
+export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
     accept: readonly string[];
     priority: number;
@@ -206,7 +206,7 @@ export class HandlerCommon {
     }
 
     renderHTML(templateName: string, args: Record<string, any>) {
-        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer<C>>)
+        const renderers = Object.values((this.ctx as any).server.renderers as Record<string, Renderer>)
             .filter((r) => r.accept.includes(templateName) || r.asFallback);
         const topPrio = renderers.sort((a, b) => b.priority - a.priority)[0];
         const engine = topPrio?.render || (() => JSON.stringify(args, serializer(false, this)));
@@ -358,7 +358,7 @@ export class WebService extends Service<never> {
     private customDefaultContext: CordisContext;
     private activeHandlers: Map<Handler, { start: number, name: string }> = new Map();
 
-    renderers: Record<string, Renderer<C>> = Object.create(null);
+    renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
@@ -803,10 +803,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     // eslint-disable-next-line ts/naming-convention
     public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
-        // if (name === 'contest_scoreboard') {
-        //     console.log('+++', this.ctx);
-        //     console.log(this.ctx.scoreboard);
-        // }
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
@@ -888,7 +884,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
-    public registerRenderer(name: string, func: Renderer<C>) {
+    public registerRenderer(name: string, func: Renderer) {
         if (this.renderers[name]) logger.warn('Renderer %s already exists.', name);
         this.ctx.effect(() => {
             this.renderers[name] = func;
