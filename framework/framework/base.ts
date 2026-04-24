@@ -76,13 +76,23 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
                 response.type = 'application/json';
             } else if (
                 request.json || response.redirect
-                || request.query.noTemplate || !response.template) {
+                || request.query.noTemplate || !response.template // no template, send raw data
+                || request.query._ui_next) { // for ui-next, we always send json
                 // Send raw data
                 try {
                     if (typeof response.body === 'object' && request.headers['x-hydro-inject']) {
                         const inject = request.headers['x-hydro-inject'].toString().toLowerCase().split(',').map((i) => i.trim());
                         if (inject.includes('uicontext')) response.body.UiContext = UiContext;
                         if (inject.includes('usercontext')) response.body.UserContext = user;
+                    }
+                    if (request.query._ui_next) {
+                        response.body = {
+                            // `_matchedRouteName` is koa-router's internal property, but it works,
+                            // maybe we should migrate to a more official solution in the future.
+                            name: ctx._matchedRouteName,
+                            args: response.body || {},
+                            url: ctx.req.url,
+                        };
                     }
                     response.body = JSON.stringify(response.body, serializer(false, handler));
                 } catch (e) {

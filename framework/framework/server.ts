@@ -106,13 +106,19 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
+interface RendererContext {
+    handler: HandlerCommon;
+    UserContext: UserModel;
+    url: HandlerCommon['url'];
+    _: HandlerCommon['translate'];
+}
 export interface TextRenderer {
     output: 'html' | 'json' | 'text';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => string | Promise<string>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => string | Promise<string>;
 }
 export interface BinaryRenderer {
     output: 'binary';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => Buffer | Promise<Buffer>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => Buffer | Promise<Buffer>;
 }
 export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
@@ -306,7 +312,12 @@ export class NotFoundHandler extends Handler {
     all() { }
 }
 
-function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+export interface LayerEntry {
+    name: string;
+    func: (ctx: any, next: () => Promise<void>) => any;
+}
+
+function executeMiddlewareStack(context: any, middlewares: LayerEntry[]): Promise<void> {
     let index = -1;
     context.__timers ||= {};
     function dispatch(i) {
@@ -344,9 +355,10 @@ export class WebService extends Service<never> {
 
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
-    private serverLayers = [];
-    private handlerLayers = [];
-    private wsLayers = [];
+    public routeMap: Record<string, string> = Object.create(null);
+    private serverLayers: LayerEntry[] = [];
+    private handlerLayers: LayerEntry[] = [];
+    private wsLayers: LayerEntry[] = [];
     private captureAllRoutes = Object.create(null);
     private customDefaultContext: CordisContext;
     private activeHandlers: Map<Handler, { start: number, name: string }> = new Map();
@@ -712,6 +724,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
+        this.routeMap[routeName] = path as string;
 
         const Checker = (args) => {
             let perm: bigint;
@@ -764,6 +777,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
+            delete this.routeMap[routeName];
             dispose();
         });
     }
@@ -794,10 +808,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
     // eslint-disable-next-line ts/naming-convention
     public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
-        // if (name === 'contest_scoreboard') {
-        //     console.log('+++', this.ctx);
-        //     console.log(this.ctx.scoreboard);
-        // }
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
@@ -806,7 +816,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
-    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
+    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: LayerEntry) {
         this.ctx.effect(() => {
             this[name].push(layer);
             return () => {
@@ -815,19 +825,19 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public addServerLayer(name: string, func: any) {
+    public addServerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('serverLayers', { name, func });
     }
 
-    public addHandlerLayer(name: string, func: any) {
+    public addHandlerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('handlerLayers', { name, func });
     }
 
-    public addWSLayer(name: string, func: any) {
+    public addWSLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('wsLayers', { name, func });
     }
 
-    public addLayer(name: string, layer: any) {
+    public addLayer(name: LayerEntry['name'], layer: LayerEntry['func']) {
         this.addHandlerLayer(name, layer);
         this.addWSLayer(name, layer);
     }
