@@ -1,12 +1,14 @@
+import { compile } from 'path-to-regexp';
 import { useCallback } from 'react';
 import { useRouteMap } from './use-route-map';
 
 function buildUrl(pattern: string, params: Record<string, string> = {}): string {
-  let url = pattern;
-  for (const [key, value] of Object.entries(params)) {
-    url = url.replace(`:${key}`, encodeURIComponent(value));
+  try {
+    return compile(pattern)(params);
+  } catch (err) {
+    console.warn(`[Hydro] Failed to build URL for pattern "${pattern}":`, err);
+    return '#';
   }
-  return url;
 }
 
 export function useUrl() {
