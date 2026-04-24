@@ -86,7 +86,7 @@ export async function apply(ctx: Context) {
     async render(name, args, context) {
       const data: PageData = {
         HYDRO_INJECTED: true,
-        name,
+        name: context.handler.context._matchedRouteName,
         args,
         url: context.handler.context.req.url!,
         routeMap: ctx.server.routeMap,
