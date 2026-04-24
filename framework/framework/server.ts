@@ -355,7 +355,6 @@ export class WebService extends Service<never> {
 
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
-    public routeMap: Record<string, string> = Object.create(null);
     private serverLayers: LayerEntry[] = [];
     private handlerLayers: LayerEntry[] = [];
     private wsLayers: LayerEntry[] = [];
@@ -367,6 +366,22 @@ export class WebService extends Service<never> {
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
+    private _routeMap: Record<string, string> = Object.create(null);
+
+    get routeMap(): Record<string, string> {
+        return this._routeMap;
+    }
+
+    private rebuildRouteMap() {
+        const map: Record<string, string> = Object.create(null);
+        for (const layer of this.router.stack) {
+            if (layer.name && typeof layer.path === 'string') {
+                map[layer.name] = layer.path;
+            }
+        }
+        this._routeMap = map;
+    }
+
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
@@ -724,7 +739,6 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
         this.registry[name] = HandlerClass;
         this.registrationCount[name]++;
-        this.routeMap[routeName] = path as string;
 
         const Checker = (args) => {
             let perm: bigint;
@@ -772,13 +786,14 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
             }
         }
         const dispose = router.disposeLastOp;
+        this.rebuildRouteMap();
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
         this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
-            delete this.routeMap[routeName];
             dispose();
+            this.rebuildRouteMap();
         });
     }
 
