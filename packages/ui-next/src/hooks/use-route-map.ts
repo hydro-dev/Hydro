@@ -1,4 +1,4 @@
-import { usePageData } from '../context/pageData';
+import { usePageData } from '../context/page-data';
 
 export function useRouteMap(): Record<string, string> {
   const data = usePageData();

@@ -6,7 +6,7 @@ import importMetaUrlPlugin from '@chialab/esbuild-plugin-meta-url';
 import react from '@vitejs/plugin-react';
 import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
-import type { PageData } from './src/context/pageData';
+import type { PageData } from './src/context/page-data';
 
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (str: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${str}</script>`;
