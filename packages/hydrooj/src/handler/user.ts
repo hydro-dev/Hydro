@@ -45,12 +45,10 @@ async function successfulAuth(this: Handler, udoc: User) {
 
 class UserLoginHandler extends Handler {
     noCheckPermView = true;
-    async prepare() {
-        if (!system.get('server.login')) throw new BuiltinLoginError();
-    }
 
     async get() {
         this.response.template = 'user_login.html';
+        this.response.body.loginMethods = this.loginMethods;
     }
 
     @param('uname', Types.Username)
@@ -63,6 +61,7 @@ class UserLoginHandler extends Handler {
         domainId: string, uname: string, password: string, rememberme = false, redirect = '',
         tfa = '', authnChallenge = '',
     ) {
+        if (!system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
         if (!udoc) throw new UserNotFoundError(uname);
