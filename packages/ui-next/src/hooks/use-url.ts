@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useRouteMap } from './useRouteMap';
+import { useRouteMap } from './use-route-map';
 
 function buildUrl(pattern: string, params: Record<string, string> = {}): string {
   let url = pattern;
