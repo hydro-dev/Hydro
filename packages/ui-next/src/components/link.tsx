@@ -15,31 +15,27 @@ function isModifiedEvent(e: React.MouseEvent): boolean {
   return e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
 }
 
-export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ href, to, params, onClick, children, ...rest }, ref) => {
-    const buildUrl = useUrl();
-    const navigate = useNavigate();
+export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, params, onClick, children, ...rest }) => {
+  const buildUrl = useUrl();
+  const navigate = useNavigate();
 
-    const resolvedHref = useMemo(() => (to ? buildUrl(to, params) : (href ?? '#')), [href, to, params]);
+  const resolvedHref = useMemo(() => (to ? buildUrl(to, params) : (href ?? '#')), [href, to, params]);
 
-    const handleClick = useCallback(
-      (e: React.MouseEvent<HTMLAnchorElement>) => {
-        onClick?.(e);
-        if (e.defaultPrevented || isModifiedEvent(e)) return;
-        // Let the browser handle external links and javascript/mailto URIs
-        if (!resolvedHref.startsWith('/') && !resolvedHref.startsWith(window.location.origin)) return;
-        e.preventDefault();
-        navigate(resolvedHref);
-      },
-      [resolvedHref],
-    );
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      onClick?.(e);
+      if (e.defaultPrevented || isModifiedEvent(e)) return;
+      // Let the browser handle external links and javascript/mailto URIs
+      if (!resolvedHref.startsWith('/') && !resolvedHref.startsWith(window.location.origin)) return;
+      e.preventDefault();
+      navigate(resolvedHref);
+    },
+    [onClick, resolvedHref, navigate],
+  );
 
-    return (
-      <a ref={ref} href={resolvedHref} onClick={handleClick} {...rest}>
-        {children}
-      </a>
-    );
-  },
-);
-
-Link.displayName = 'Link';
+  return (
+    <a href={resolvedHref} onClick={handleClick} {...rest}>
+      {children}
+    </a>
+  );
+};
