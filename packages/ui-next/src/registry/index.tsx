@@ -15,14 +15,25 @@ interface PatchEntry {
   cb: (props: any) => any;
 }
 
-const registry = {
-  components: {} as Record<string, React.FC<any>>,
-  before: {} as Record<string, BeforeAfterEntry[]>,
-  after: {} as Record<string, BeforeAfterEntry[]>,
-  patch: {} as Record<string, PatchEntry[]>,
-};
+function createRegistry() {
+  return {
+    components: {} as Record<string, React.FC<any>>,
+    before: {} as Record<string, BeforeAfterEntry[]>,
+    after: {} as Record<string, BeforeAfterEntry[]>,
+    patch: {} as Record<string, PatchEntry[]>,
+  };
+}
 
-let idCounter = 0;
+const registry: ReturnType<typeof createRegistry> = import.meta.hot?.data?.registry ?? createRegistry();
+if (import.meta.hot) import.meta.hot.data.registry = registry;
+
+let idCounter = import.meta.hot?.data?.idCounter ?? 0;
+if (import.meta.hot) {
+  Object.defineProperty(import.meta.hot.data, 'idCounter', {
+    get: () => idCounter,
+    set: (v: number) => { idCounter = v; },
+  });
+}
 function genId() { return `__auto_${++idCounter}`; }
 
 function upsert<T extends { id: string }>(list: T[], entry: T) {
