@@ -44,6 +44,7 @@ export async function apply(ctx: Context) {
   if (process.env.HYDRO_CLI) return;
   // 现在只是开发环境的实现，生产环境的实现还未完成
   const vite = await createServer({
+    clearScreen: false,
     server: {
       middlewareMode: true,
       hmr: {
