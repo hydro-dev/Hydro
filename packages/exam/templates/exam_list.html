@@ -1,0 +1,27 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Exams') }}</h1>
+      </div>
+      <div class="section__body">
+        {% if not tdocs or not tdocs.length %}
+          <p>当前没有可用的试卷。</p>
+        {% else %}
+        <ul class="section__list">
+          {% for tdoc in tdocs %}
+          <li class="section__list__item">
+            <h3><a href="{{ url('exam_detail', eid=tdoc._id) }}">{{ tdoc.title }}</a></h3>
+            <p>{{ tdoc.content|truncate(200) }}</p>
+            <p><span class="icon icon-schedule"></span> 开始: {{ tdoc.beginAt }} &nbsp; <span class="icon icon-timer"></span> 持续: {{ tdoc.duration }} min</p>
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

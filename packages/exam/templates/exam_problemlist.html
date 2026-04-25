@@ -1,0 +1,79 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ tdoc.title }}</h1>
+      </div>
+      <div class="section__body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th width="50">#</th>
+              <th>{{ _('Problem') }}</th>
+              <th width="120">{{ _('Status') }}</th>
+              <th width="100"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pdoc in pdocs %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ pdoc.title }}</strong></td>
+              <td>
+                {% if psdict[pdoc._id].status %}
+                  <span class="rem1 icon icon-check-circle" style="color: #52c41a"> 已提交</span>
+                {% else %}
+                  <span class="rem1 icon icon-circle-outline" style="color: #faad14"> 未完成</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="/d/{{ tdoc.domainId or domainId or 'system' }}/exam/{{ tdoc._id }}/submit/{{ pdoc._id }}" 
+                   class="button small secondary">进入</a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="text-center">题单为空。请确认比赛 ID {{ tdoc._id }} 中已添加题目。</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="medium-3 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">考试状态</h1></div>
+      <div class="section__body">
+        <p><b>剩余时间:</b> <br><span id="timer" style="font-size: 1.5rem; font-weight: bold; color: #ff4d4f;">--:--:--</span></p>
+        <hr>
+        <a href="/d/{{ tdoc.domainId or domainId or 'system' }}/exam/{{ tdoc._id }}/end" 
+           class="button forbidden block" onclick="return confirm('确定要交卷吗？')">
+            确认交卷
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    const endAt = new Date("{{ endAt }}").getTime();
+    function updateTimer() {
+        const now = new Date().getTime();
+        const diff = endAt - now;
+        if (diff <= 0) {
+            document.getElementById('timer').innerHTML = "00:00:00";
+            window.location.href = "/d/{{ tdoc.domainId or domainId or 'system' }}/exam/{{ tdoc._id }}/end";
+            return;
+        }
+        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        document.getElementById('timer').innerHTML = `${h}:${m}:${s}`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+</script>

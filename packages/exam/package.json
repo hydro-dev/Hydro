@@ -1,0 +1,9 @@
+{
+  "name": "hydro-exam",
+  "version": "1.0.0",
+  "description": "HydroOJ 考试模式插件",
+  "main": "index.ts",
+  "hydro": {
+    "name": "考试模式"
+  }
+}

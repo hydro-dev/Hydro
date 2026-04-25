@@ -1,0 +1,18 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">{{ tdoc.title }}</h1></div>
+      <div class="section__body typo richmedia">{{ tdoc['content']|markdown|safe }}</div>
+    </div>
+    <div class="section">
+      <div class="section__body">
+        <form method="POST" action="{{ url('exam_start', tid=tdoc._id) }}">
+          <button type="submit" class="button primary">开始考试</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
