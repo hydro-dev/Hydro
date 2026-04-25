@@ -62,12 +62,14 @@ export function isNotStarted(tdoc: Tdoc) {
 
 export function isOngoing(tdoc: Tdoc, tsdoc?: any) {
     const now = new Date();
+    if (tsdoc?.endAt && tsdoc.endAt <= now) return false;
     if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return false;
     return (tdoc.beginAt <= now && now < tdoc.endAt);
 }
 
 export function isDone(tdoc: Tdoc, tsdoc?: any) {
     if (tdoc.endAt <= new Date()) return true;
+    if (tsdoc?.endAt && tsdoc.endAt <= new Date()) return true;
     if (tsdoc && tdoc.duration && tsdoc.startAt <= new Date(Date.now() - Math.floor(tdoc.duration * Time.hour))) return true;
     return false;
 }
@@ -940,8 +942,8 @@ export function getMultiStatus(domainId: string, query: any) {
     return document.getMultiStatus(domainId, document.TYPE_CONTEST, query);
 }
 
-export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
-    return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set);
+export function setStatus(domainId: string, tid: ObjectId, uid: number, $set?: any, $unset?: any) {
+    return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set, $unset);
 }
 
 export function count(domainId: string, query: any) {
