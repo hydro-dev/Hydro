@@ -751,7 +751,7 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
     @param('uid', Types.PositiveInt)
     async postResume(domainId: string, tid: ObjectId, uid: number) {
         const tsdoc = await contest.getStatus(domainId, tid, uid);
-        if (!tsdoc) throw new ContestNotAttendedError(uid);
+        if (!tsdoc?.attend) throw new ContestNotAttendedError(uid);
         if (this.tdoc.endAt <= new Date()) throw new ContestNotLiveError(domainId, tid);
         if (this.tdoc.duration && tsdoc.startAt) {
             const durationEnd = moment(tsdoc.startAt).add(this.tdoc.duration, 'hours').toDate();
