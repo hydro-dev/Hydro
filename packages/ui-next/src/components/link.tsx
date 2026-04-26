@@ -20,7 +20,7 @@ export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, p
   const buildUrl = useUrl();
   const navigate = useNavigate();
 
-  const resolvedHref = useMemo(() => (to ? buildUrl(to, params) : (href ?? '#')), [href, to, params]);
+  const resolvedHref = useMemo(() => (to ? buildUrl(to, params) : (href ?? '#')), [buildUrl, href, to, params]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
