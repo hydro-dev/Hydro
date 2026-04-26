@@ -1,0 +1,36 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header"><h1 class="section__title">{{ _('Create / Edit Exam') }}</h1></div>
+      <div class="section__body">
+        <form method="post">
+          <label>Title
+            <input name="title" value="{{ tdoc.title|default('') }}" class="textbox" required>
+          </label>
+          <label>Content
+            <textarea name="content" class="textbox" style="height:200px">{{ tdoc.content|default('') }}</textarea>
+          </label>
+          <label>Begin At (ISO)
+            <input name="beginAt" value="{{ tdoc.beginAt|default('') }}" class="textbox">
+          </label>
+          <label>End At (ISO)
+            <input name="endAt" value="{{ tdoc.endAt|default('') }}" class="textbox">
+          </label>
+          <label>Duration (minutes)
+            <input name="duration" value="{{ tdoc.duration|default('') }}" class="textbox">
+          </label>
+          <label>Problem IDs (comma separated)
+            <input name="pids" value="{{ tdoc.pids ? (tdoc.pids|join(',')) : '' }}" class="textbox">
+          </label>
+          <div style="margin-top:10px">
+            <button type="submit" class="button primary">Save</button>
+            <a href="{{ url('exam_admin') }}" class="button secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

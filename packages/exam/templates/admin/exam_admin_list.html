@@ -1,0 +1,41 @@
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Exam Management') }}</h1>
+        <div class="section__tools">
+          <a href="{{ url('exam_admin_create') }}" class="button primary">Create Exam</a>
+        </div>
+      </div>
+      <div class="section__body">
+        {% if not tdocs or not tdocs.length %}
+          <p>No exams found.</p>
+        {% else %}
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Title</th><th>Begin</th><th>End</th><th>Duration</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for tdoc in tdocs %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ tdoc.title }}</td>
+              <td>{{ tdoc.beginAt }}</td>
+              <td>{{ tdoc.endAt }}</td>
+              <td>{{ tdoc.duration|default('-') }}</td>
+              <td>
+                <a href="{{ url('exam_admin_edit', eid=tdoc._id) }}" class="button small">Edit</a>
+                <form method="post" action="{{ url('exam_admin_delete', eid=tdoc._id) }}" style="display:inline" onsubmit="return confirm('Delete exam?')">
+                  <button type="submit" class="button small alert">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
