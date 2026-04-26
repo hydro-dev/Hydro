@@ -1,4 +1,4 @@
-import { Context, Handler, param, Types, BadRequestError, ValidationError, ui } from 'hydrooj';
+import { Context, Handler, param, Types, BadRequestError, ValidationError, ui, PRIV } from 'hydrooj';
 
 function getModel(name: string) {
     // 更稳健的获取 model 的方式：优先使用 core.model / global.Hydro.model，再尝试其他变体
@@ -54,6 +54,62 @@ export function apply(ctx: Context) {
             applyProjection: (_: any, rdoc: any) => rdoc,
         };
         console.log('[Exam Plugin] 核心逻辑已加固');
+    });
+
+    // i18n: 简单加载中/英文词条
+    ctx.i18n.load('zh', {
+        'Exam': '考试',
+        'Exams': '考试',
+        'Exam Management': '考试管理',
+        'Create Exam': '创建试卷',
+        'Create / Edit Exam': '创建 / 编辑试卷',
+        'No exams found.': '未找到试卷。',
+        'Delete exam?': '确认删除试卷？',
+        'Title': '标题',
+        'Content': '内容',
+        'Begin At (ISO)': '开始时间（ISO）',
+        'End At (ISO)': '结束时间（ISO）',
+        'Duration (minutes)': '持续时长（分钟）',
+        'Problem IDs (comma separated)': '题目 ID（用逗号分隔）',
+        'Save': '保存',
+        'Cancel': '取消',
+        'Exams': '试卷列表',
+        'You have not started this exam yet. Click the button below to begin.': '您尚未开始考试。点击下方按钮开始。',
+        'Start Exam Now': '立即开始考试',
+        'Final Score': '最终得分',
+        'Details': '详情',
+        'Problem': '题目',
+        'Score': '得分',
+        'Status': '状态',
+        'Rank': '排名',
+        'Result': '成绩',
+    });
+    ctx.i18n.load('en', {
+        'Exam': 'Exam',
+        'Exams': 'Exams',
+        'Exam Management': 'Exam Management',
+        'Create Exam': 'Create Exam',
+        'Create / Edit Exam': 'Create / Edit Exam',
+        'No exams found.': 'No exams found.',
+        'Delete exam?': 'Delete exam?',
+        'Title': 'Title',
+        'Content': 'Content',
+        'Begin At (ISO)': 'Begin At (ISO)',
+        'End At (ISO)': 'End At (ISO)',
+        'Duration (minutes)': 'Duration (minutes)',
+        'Problem IDs (comma separated)': 'Problem IDs (comma separated)',
+        'Save': 'Save',
+        'Cancel': 'Cancel',
+        'Exams': 'Exams',
+        'You have not started this exam yet. Click the button below to begin.': 'You have not started this exam yet. Click the button below to begin.',
+        'Start Exam Now': 'Start Exam Now',
+        'Final Score': 'Final Score',
+        'Details': 'Details',
+        'Problem': 'Problem',
+        'Score': 'Score',
+        'Status': 'Status',
+        'Rank': 'Rank',
+        'Result': 'Result',
     });
 
     // 路由与 Handler 定义
@@ -229,6 +285,69 @@ export function apply(ctx: Context) {
         }
     }
 
+    // 管理后台 handlers（仅系统管理员可访问）
+    class ExamAdminListHandler extends Handler {
+        async get() {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const db = getModel('db');
+            const tdocs = await db.collection('contest').find({ rule: 'exam' }).toArray();
+            this.response.template = 'admin/exam_admin_list.html';
+            this.response.body = { tdocs };
+        }
+    }
+
+    class ExamAdminEditHandler extends Handler {
+        @param('eid', Types.ObjectId, true)
+        async get(domainId: string, eid: any) {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const db = getModel('db');
+            let tdoc = {} as any;
+            if (eid) {
+                tdoc = await db.collection('contest').findOne({ _id: eid });
+            }
+            this.response.template = 'admin/exam_admin_edit.html';
+            this.response.body = { tdoc };
+        }
+
+        @param('eid', Types.ObjectId, true)
+        @param('title', Types.String)
+        @param('content', Types.String, true)
+        @param('beginAt', Types.String, true)
+        @param('endAt', Types.String, true)
+        @param('duration', Types.Int, true)
+        @param('pids', Types.String, true)
+        async post(domainId: string, eid: any, title: string, content: string, beginAt: string, endAt: string, duration: number, pids: string) {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const db = getModel('db');
+            const payload: any = {
+                title,
+                content,
+                beginAt: beginAt ? new Date(beginAt) : null,
+                endAt: endAt ? new Date(endAt) : null,
+                duration: duration || null,
+                pids: pids ? pids.split(',').map((x) => x.trim()).filter((x) => x) : [],
+                rule: 'exam',
+                owner: this.user._id,
+            };
+            if (eid) {
+                await db.collection('contest').updateOne({ _id: eid }, { $set: payload });
+            } else {
+                await db.collection('contest').insertOne(payload);
+            }
+            this.response.redirect = this.url('exam_admin');
+        }
+    }
+
+    class ExamAdminDeleteHandler extends Handler {
+        @param('eid', Types.ObjectId)
+        async post(domainId: string, eid: any) {
+            this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const db = getModel('db');
+            await db.collection('contest').deleteOne({ _id: eid });
+            this.response.redirect = this.url('exam_admin');
+        }
+    }
+
     ctx.Route('exam_list', '/exam', ExamListHandler);
     ctx.Route('exam_detail', '/exam/:eid', ExamDetailHandler);
     ctx.Route('exam_start', '/exam/:tid/start', ExamStartHandler);
@@ -236,4 +355,10 @@ export function apply(ctx: Context) {
     ctx.Route('exam_submit', '/exam/:tid/submit/:pid', ExamSubmitHandler);
     ctx.Route('exam_end', '/exam/:tid/end', ExamEndHandler);
     ctx.Route('exam_result', '/exam/:tid/result', ExamResultHandler);
+
+    // Admin routes
+    ctx.Route('exam_admin', '/admin/exam', ExamAdminListHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Route('exam_admin_create', '/admin/exam/create', ExamAdminEditHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Route('exam_admin_edit', '/admin/exam/:eid/edit', ExamAdminEditHandler, PRIV.PRIV_EDIT_SYSTEM);
+    ctx.Route('exam_admin_delete', '/admin/exam/:eid/delete', ExamAdminDeleteHandler, PRIV.PRIV_EDIT_SYSTEM);
 }
