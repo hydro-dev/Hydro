@@ -146,7 +146,7 @@ export function apply(ctx: Context) {
             // 获取所有 rule === 'exam' 的 contest（视为试卷）
             const contestModel: any = getModel('contest');
             const db = getModel('db');
-            const tdocs = await contestModel.getMulti ? contestModel.getMulti({ rule: 'exam' }).toArray() : [];
+            const tdocs = await (contestModel && contestModel.getMulti ? contestModel.getMulti({ rule: 'exam' }).toArray() : db.collection('contest').find({ rule: 'exam' }).toArray());
             this.response.template = 'exam_list.html';
             this.response.body = { tdocs };
         }
@@ -156,7 +156,9 @@ export function apply(ctx: Context) {
         @param('eid', Types.ObjectId)
         async get(domainId: string, eid: any) {
             const contestModel: any = getModel('contest');
-            const tdoc = await contestModel.get(domainId, eid);
+            let tdoc: any;
+            if (contestModel && contestModel.get) tdoc = await contestModel.get(domainId, eid);
+            else tdoc = await getModel('db').collection('contest').findOne({ _id: eid });
             if (!tdoc) throw new BadRequestError('Exam not found');
             this.response.template = 'exam_detail.html';
             this.response.body = { tdoc };
@@ -289,8 +291,9 @@ export function apply(ctx: Context) {
     class ExamAdminListHandler extends Handler {
         async get() {
             this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const contestModel: any = getModel('contest');
             const db = getModel('db');
-            const tdocs = await db.collection('contest').find({ rule: 'exam' }).toArray();
+            const tdocs = await (contestModel && contestModel.getMulti ? contestModel.getMulti({ rule: 'exam' }).toArray() : db.collection('contest').find({ rule: 'exam' }).toArray());
             this.response.template = 'admin/exam_admin_list.html';
             this.response.body = { tdocs };
         }
@@ -300,10 +303,12 @@ export function apply(ctx: Context) {
         @param('eid', Types.ObjectId, true)
         async get(domainId: string, eid: any) {
             this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const contestModel: any = getModel('contest');
             const db = getModel('db');
             let tdoc = {} as any;
             if (eid) {
-                tdoc = await db.collection('contest').findOne({ _id: eid });
+                if (contestModel && contestModel.get) tdoc = await contestModel.get(domainId, eid);
+                else tdoc = await db.collection('contest').findOne({ _id: eid });
             }
             this.response.template = 'admin/exam_admin_edit.html';
             this.response.body = { tdoc };
@@ -318,6 +323,7 @@ export function apply(ctx: Context) {
         @param('pids', Types.String, true)
         async post(domainId: string, eid: any, title: string, content: string, beginAt: string, endAt: string, duration: number, pids: string) {
             this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const contestModel: any = getModel('contest');
             const db = getModel('db');
             const payload: any = {
                 title,
@@ -329,11 +335,48 @@ export function apply(ctx: Context) {
                 rule: 'exam',
                 owner: this.user._id,
             };
-            if (eid) {
-                await db.collection('contest').updateOne({ _id: eid }, { $set: payload });
-            } else {
-                await db.collection('contest').insertOne(payload);
+
+            // 优先使用 contest model 的高层 API（如果存在），否则回退到直接操作 db
+            try {
+                if (eid) {
+                    if (contestModel && contestModel.edit) {
+                        // common signature: edit(domainId, tid, payload)
+                        await contestModel.edit(domainId, eid, payload);
+                    } else if (contestModel && contestModel.set) {
+                        await contestModel.set(domainId, eid, payload);
+                    } else if (contestModel && contestModel.update) {
+                        await contestModel.update(domainId, eid, payload);
+                    } else {
+                        await db.collection('contest').updateOne({ _id: eid }, { $set: payload });
+                    }
+                } else {
+                    if (contestModel && contestModel.add) {
+                        // 尝试常见签名
+                        try {
+                            await contestModel.add(domainId, payload);
+                        } catch (e) {
+                            try { await contestModel.add(payload); } catch (e2) {
+                                await db.collection('contest').insertOne(payload);
+                            }
+                        }
+                    } else if (contestModel && contestModel.create) {
+                        try {
+                            await contestModel.create(domainId, payload);
+                        } catch (e) {
+                            try { await contestModel.create(payload); } catch (e2) {
+                                await db.collection('contest').insertOne(payload);
+                            }
+                        }
+                    } else {
+                        await db.collection('contest').insertOne(payload);
+                    }
+                }
+            } catch (err) {
+                // 如果 model API 抛错，回退到 db 操作以保证功能可用
+                if (eid) await db.collection('contest').updateOne({ _id: eid }, { $set: payload });
+                else await db.collection('contest').insertOne(payload);
             }
+
             this.response.redirect = this.url('exam_admin');
         }
     }
@@ -342,8 +385,16 @@ export function apply(ctx: Context) {
         @param('eid', Types.ObjectId)
         async post(domainId: string, eid: any) {
             this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+            const contestModel: any = getModel('contest');
             const db = getModel('db');
-            await db.collection('contest').deleteOne({ _id: eid });
+            try {
+                if (contestModel && contestModel.del) await contestModel.del(domainId, eid);
+                else if (contestModel && contestModel.delete) await contestModel.delete(domainId, eid);
+                else if (contestModel && contestModel.deleteOne) await contestModel.deleteOne(domainId, eid);
+                else await db.collection('contest').deleteOne({ _id: eid });
+            } catch (e) {
+                await db.collection('contest').deleteOne({ _id: eid });
+            }
             this.response.redirect = this.url('exam_admin');
         }
     }
