@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable ts/naming-convention */
 import path from 'node:path';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import react from '@hydrooj/eslint-config';
 
@@ -194,12 +195,16 @@ const config = react({
     },
 }, {
     files: ['packages/ui-next/src/**/*.{ts,tsx}'],
+    plugins: {
+        'react-hooks': reactHooks,
+    },
     languageOptions: {
         globals: {
             ...globals.browser,
         },
     },
     rules: {
+        ...reactHooks.configs.recommended.rules,
         'style/indent': ['warn', 2],
         'style/indent-binary-ops': ['warn', 2],
     },

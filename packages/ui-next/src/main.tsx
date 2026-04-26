@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import plugins from 'virtual:hydro-plugins';
 import App from './app';
 import { type PageData, PageDataProvider } from './context/page-data';
+import { RouterProvider } from './context/router';
 import { createRegistryContext } from './registry';
 
 const ctx = createRegistryContext();
@@ -20,6 +21,7 @@ let initialData: PageData = {
 if (injectionEl) {
   try {
     initialData = JSON.parse(injectionEl.textContent!);
+    console.log('[Hydro] initial data:', initialData);
   } catch (e) {
     console.error('[Hydro] Failed to parse injection data:', e);
   }
@@ -28,7 +30,9 @@ if (injectionEl) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PageDataProvider initial={initialData}>
-      <App />
+      <RouterProvider>
+        <App />
+      </RouterProvider>
     </PageDataProvider>
   </StrictMode>,
 );

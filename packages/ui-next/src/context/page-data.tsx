@@ -11,18 +11,11 @@ export interface PageData {
   [key: string]: any;
 }
 
-type PageDataSetter = React.Dispatch<React.SetStateAction<PageData>>;
-
 interface PageDataContextValue {
   data: PageData;
-  setData: PageDataSetter;
-
-  loading: boolean;
-  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
-
-  error: Error | null;
-  setError: React.Dispatch<React.SetStateAction<Error | null>>;
+  setData: React.Dispatch<React.SetStateAction<PageData>>;
 }
+
 const PageDataContext = createContext<PageDataContextValue | null>(null);
 
 interface PageDataProviderProps {
@@ -32,9 +25,7 @@ interface PageDataProviderProps {
 
 export function PageDataProvider({ initial, children }: PageDataProviderProps) {
   const [data, setData] = useState<PageData>(initial);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const value = useMemo(() => ({ data, setData, loading, setLoading, error, setError }), [data, loading, error]);
+  const value = useMemo(() => ({ data, setData }), [data]);
 
   return <PageDataContext.Provider value={value}>{children}</PageDataContext.Provider>;
 }
@@ -49,17 +40,6 @@ export function usePageData(): PageData {
   return usePageDataContext().data;
 }
 
-export interface NavigationState {
-  loading: PageDataContextValue['loading'];
-  error: PageDataContextValue['error'];
-}
-
-export function useNavigationState(): NavigationState {
-  const { loading, error } = usePageDataContext();
-  return { loading, error };
-}
-
-export function useNavigationControls() {
-  const { setData, setLoading, setError } = usePageDataContext();
-  return { setData, setLoading, setError };
+export function useSetPageData(): React.Dispatch<React.SetStateAction<PageData>> {
+  return usePageDataContext().setData;
 }
