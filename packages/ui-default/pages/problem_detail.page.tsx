@@ -194,15 +194,15 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
     const ans = {};
     const pids = [];
     let cnt = 0;
-    const reg = /\{\{ (input|select|multiselect|textarea)\(\d+(-\d+)?\) \}\}/g;
+    const reg = /\{\{ (input|select|multiselect|textarea|dropdown)\(\d+(-\d+)?\)(?:\[([^\]]*)\])? \}\}/g;
     $('.problem-content .typo').children().each((i, e) => {
       if (e.tagName === 'PRE' && !e.children[0].className.includes('#input')) return;
       const questions = [];
       let q;
       while (q = reg.exec(e.textContent)) questions.push(q); // eslint-disable-line no-cond-assign
-      for (const [info, type] of questions) {
+      for (const [info, type, , options] of questions) {
         cnt++;
-        const id = info.replace(/\{\{ (input|select|multiselect|textarea)\((\d+(-\d+)?)\) \}\}/, '$2');
+        const id = info.replace(/\{\{ (input|select|multiselect|textarea|dropdown)\((\d+(-\d+)?)\)(?:\[([^\]]*)\])? \}\}/, '$2');
         pids.push(id);
         if (type === 'input') {
           $(e).html($(e).html().replace(info, tpl`
@@ -214,6 +214,16 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
           $(e).html($(e).html().replace(info, tpl`
             <div class="objective_${id} medium-6" id="p${id}">
               <textarea name="${id}" class="textbox objective-input"></textarea>
+            </div>
+          `));
+        } else if (type === 'dropdown') {
+          const opts = (options || '').split(',').map((s) => s.trim()).filter(Boolean);
+          $(e).html($(e).html().replace(info, tpl`
+            <div class="objective_${id} medium-3 select-container" id="p${id}" style="display: inline-block;">
+              <select name="${id}" class="objective-input select">
+                <option value=""></option>
+                ${{ templateRaw: true, html: opts.map((o) => tpl`<option value="${o}">${o}</option>`).join('') }}
+              </select>
             </div>
           `));
         } else {
@@ -288,7 +298,7 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
             if (isValidOption(v)) $(`.objective_${id} input[value="${v}"]`).prop('checked', true);
           }
         } else if (val) {
-          $(`.objective_${id} input[type=text], .objective_${id} textarea`).val(val.toString());
+          $(`.objective_${id} input[type=text], .objective_${id} textarea, .objective_${id} select`).val(val.toString());
           if (isValidOption(val)) $(`.objective_${id}.radiobox [value="${val}"]`).prop('checked', true);
         }
       }

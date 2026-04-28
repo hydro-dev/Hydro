@@ -307,7 +307,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
             if (contest.isNotStarted(this.tdoc)) throw new ContestNotLiveError(tid);
             if (!contest.isDone(this.tdoc, this.tsdoc) && (!this.tsdoc?.attend || !this.tsdoc.startAt)) throw new ContestNotAttendedError(tid);
             // Delete problem-related info in contest mode
-            this.pdoc.tag.length = 0;
+            if (this.pdoc.tag) this.pdoc.tag.length = 0;
             delete this.pdoc.nAccept;
             delete this.pdoc.nSubmit;
             delete this.pdoc.difficulty;

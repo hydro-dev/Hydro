@@ -40,7 +40,7 @@ export default function ProblemType() {
           />
         </div>
 
-        {Type === 'default' && (
+        {['default', 'submit_answer'].includes(Type) && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
               <div>{i18n('CheckerType')}</div>
