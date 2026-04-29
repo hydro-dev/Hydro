@@ -60,6 +60,7 @@ const compareSh = `#!/bin/bash
 set -e
 process_file() {
   cat $1 | awk '
+    {sub(/\\r+$/,"")}
     /^$/{n=n RS};
     /./{
       printf "%s",n; n="";
