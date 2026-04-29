@@ -103,13 +103,13 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('format', Types.Range(['default', 'raw']), true)
     async get({ domainId }, format = 'default') {
+        const showDefault = system.get('server.showDefaultRole');
         const [dudocs, roles] = await Promise.all([
             domain.collUser.aggregate([
                 {
                     $match: {
-                        // TODO: add a page to display users who joined but with default role
                         role: {
-                            $nin: ['default', 'guest'],
+                            $nin: (showDefault || domainId !== 'system') ? ['guest'] : ['default', 'guest'],
                             $ne: null,
                         },
                         domainId,

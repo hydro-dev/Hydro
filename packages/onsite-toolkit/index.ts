@@ -107,7 +107,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 organization: udoc.school || udoc.uname,
                 avatar: avatar(udoc.avatar),
                 group: [
-                    ...(udoc.group.filter((g) => g !== `${udoc._id}`)),
+                    ...(udoc.group?.filter((g) => g !== `${udoc._id}`) || []),
                     i.unrank ? 'observers' : 'participants',
                 ],
             };
