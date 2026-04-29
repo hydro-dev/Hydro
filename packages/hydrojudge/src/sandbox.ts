@@ -161,7 +161,7 @@ export async function runPiped(
         const body = {
             cmd: execute.map((exe) => proc({ ...exe, ...params })),
             pipeMapping: pipeMapping.map((pipe) => ({
-                proxy: true,
+                proxy: getConfig('pipe_proxy'),
                 max: 1024 * 1024 * size,
                 ...pipe,
             })),

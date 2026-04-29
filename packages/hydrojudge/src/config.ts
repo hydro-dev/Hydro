@@ -36,6 +36,7 @@ export const JudgeSettings = Schema.object({
         endpoint: Schema.string().role('url').description('Tempo endpoint').default('http://localhost:4318'),
         samplePercentage: Schema.number().description('Sample percentage').default(0).min(0).max(1),
     }),
+    pipe_proxy: Schema.boolean().description('Enable pipe proxy').default(true),
     detail: Schema.union([
         Schema.const('full'),
         Schema.const('case'),
