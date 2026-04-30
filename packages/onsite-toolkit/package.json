@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/onsite-toolkit",
-    "version": "0.1.0-beta.6",
+    "version": "0.1.0",
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
         "lru-cache": "^11.3.5"

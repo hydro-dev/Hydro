@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.5.4",
+    "version": "1.5.5",
     "description": "hydrooj utils",
     "type": "module",
     "main": "lib/utils.ts",
