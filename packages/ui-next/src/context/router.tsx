@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { buildReqUrl, isSameOrigin } from '../utils/url';
-import { type PageData, useSetPageData } from './page-data';
+import { useSetPageData } from './page-data';
 
 interface InternalState {
   status: 'idle' | 'loading' | 'error';
@@ -58,7 +58,7 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           signal: controller.signal,
           headers: {
             Accept: 'application/json',
-            'x-hydro-inject': 'uicontext,usercontext',
+            'x-hydro-inject': 'uicontext,usercontext,pagename',
           },
         });
         if (res.redirected) {
@@ -66,13 +66,19 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           return false;
         }
         if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
-        const data: PageData = await res.json();
-        console.log('[Hydro] data from', fetchUrl, 'received:', data);
+        const body = await res.json();
+        const pageName = res.headers.get('x-hydro-page') || '';
+        console.log('[Hydro] data from', fetchUrl, 'received:', body, 'pageName:', pageName);
 
         // If a newer fetch has started, ignore this result
         if (gen !== genRef.current) return false;
 
-        setData((prev) => (data.HYDRO_INJECTED ? data : { ...prev, ...data }));
+        setData((prev) => ({
+          ...prev,
+          args: body,
+          name: pageName,
+          url,
+        }));
         dispatch({ type: 'FETCH_SUCCESS' });
         return true;
       } catch (e) {

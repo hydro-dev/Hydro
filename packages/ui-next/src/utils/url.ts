@@ -9,10 +9,10 @@ export function isSameOrigin(url: string): boolean {
 export function buildReqUrl(url: string): string {
   try {
     const u = new URL(url, window.location.origin);
-    u.searchParams.set('_ui_next', '1');
+    u.searchParams.set('noTemplate', 'true');
     return u.pathname + u.search + u.hash;
   } catch {
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}_ui_next=1`;
+    return `${url}${sep}noTemplate=true`;
   }
 }
