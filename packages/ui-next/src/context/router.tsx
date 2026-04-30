@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
 import { isSameOrigin } from '../utils/url';
-import { type PageData, useSetPageData } from './page-data';
+import { useSetPageData } from './page-data';
 
 interface InternalState {
   status: 'idle' | 'loading' | 'error';
@@ -57,7 +57,7 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           signal: controller.signal,
           headers: {
             Accept: 'application/json',
-            'x-hydro-inject': 'uicontext,usercontext',
+            'x-hydro-inject': 'uicontext,usercontext,pagename',
           },
         });
         if (res.redirected) {
@@ -72,7 +72,12 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
         // If a newer fetch has started, ignore this result
         if (gen !== genRef.current) return false;
 
-        setData((prev) => (body.HYDRO_INJECTED ? body : { ...prev, ...body }));
+        setData((prev) => ({
+          ...prev,
+          args: body,
+          name: pageName,
+          url,
+        }));
         dispatch({ type: 'FETCH_SUCCESS' });
         return true;
       } catch (e) {
