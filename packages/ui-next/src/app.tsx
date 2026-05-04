@@ -1,8 +1,8 @@
 import { Link } from './components/link';
 import { usePageData } from './context/page-data';
-import { Component } from './registry';
+import { before, defineSlot } from './registry';
 
-const AppInner = Component('page:app', () => {
+const AppInner = defineSlot('page:app', () => {
   const data = usePageData();
 
   return (
@@ -11,6 +11,15 @@ const AppInner = Component('page:app', () => {
       <div>
         <Link to="homepage">homepage</Link> <Link to="problem_main">problem_main</Link>
       </div>
+    </>
+  );
+});
+
+before('page:app', () => {
+  console.log('before app');
+  return (
+    <>
+      <div>before app</div>
     </>
   );
 });

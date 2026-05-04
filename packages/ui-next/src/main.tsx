@@ -4,11 +4,10 @@ import plugins from 'virtual:hydro-plugins';
 import App from './app';
 import { type PageData, PageDataProvider } from './context/page-data';
 import { RouterProvider } from './context/router';
-import { createRegistryContext } from './registry';
+import { installPlugin } from './registry';
 
-const ctx = createRegistryContext();
 for (const plugin of plugins) {
-  plugin.apply(ctx);
+  installPlugin(plugin);
 }
 
 const injectionEl = document.getElementById('__HYDRO_INJECTION__');

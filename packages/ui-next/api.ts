@@ -7,4 +7,9 @@ export { type RouterState, useNavigate, useRouterState } from './src/context/rou
 export { useUrl } from './src/hooks/use-url';
 
 // Registry
-export type { ComponentName, RegistryContext } from './src/registry';
+export type {
+    Interceptor, InterceptorEntry, InterceptorOptions,
+    PluginAPI, PluginDefinition,
+    SlotName,
+} from './src/registry';
+export { defineSlot } from './src/registry';
