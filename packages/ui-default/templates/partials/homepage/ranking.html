@@ -3,36 +3,34 @@
     <div class="section__header">
       <h1 class="section__title">{{ _('Ranking') }}</h1>
     </div>
-    <div class="section__body no-padding">
-      <div>
-        <table class="data-table">
-          <colgroup>
-            <col class="col--rank">
-            <col class="col--user">
-            <col class="col--rp">
-            <col class="col--bio">
-          </colgroup>
-          <thead>
+    <div class="section__body no-padding" style="overflow: hidden">
+      <table class="data-table">
+        <colgroup>
+          <col class="col--rank">
+          <col class="col--user">
+          <col class="col--rp">
+          <col class="col--bio">
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="col--rank">{{ _('Rank') }}</th>
+            <th class="col--user">{{ _('Username') }}</th>
+            <th class="col--rp">{{ _('RP') }}</th>
+            <th class="col--bio">{{ _('Bio') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for uid in payload -%}
+            {% set udoc = udict[uid] %}
             <tr>
-              <th class="col--rank">{{ _('Rank') }}</th>
-              <th class="col--user">{{ _('Username') }}</th>
-              <th class="col--rp">{{ _('RP') }}</th>
-              <th class="col--bio">{{ _('Bio') }}</th>
+              <td class="col--rank">{{ loop.index }}</td>
+              <td class="col--user">{{ user.render_inline(udoc, levelbadge=false) }}</td>
+              <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
+              <td class="col--bio">{{ udoc.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
             </tr>
-          </thead>
-          <tbody>
-            {%- for uid in payload -%}
-              {% set udoc = udict[uid] %}
-              <tr>
-                <td class="col--rank">{{ loop.index }}</td>
-                <td class="col--user">{{ user.render_inline(udoc, levelbadge=false) }}</td>
-                <td class="col--rp">{{ udoc.rp|default(0)|round(0) }}</td>
-                <td class="col--bio">{{ udoc.bio|default('')|truncate(64, true)|markdownInline|safe }}</td>
-              </tr>
-            {%- endfor -%}
-          </tbody>
-        </table>
-      </div>
+          {%- endfor -%}
+        </tbody>
+      </table>
     </div>
     <ul class="pager pager-bottom"><li>
       <a class="pager__item next link" href="{{ url('ranking') }}">{{ _('More') }} ></a>
