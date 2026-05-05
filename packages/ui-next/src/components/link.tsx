@@ -16,7 +16,7 @@ function isModifiedEvent(e: React.MouseEvent): boolean {
   return e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
 }
 
-export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, params, onClick, children, ...rest }) => {
+export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, params, onClick, target, download = false, children, ...rest }) => {
   const buildUrl = useUrl();
   const navigate = useNavigate();
 
@@ -26,6 +26,8 @@ export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, p
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       onClick?.(e);
       if (e.defaultPrevented || isModifiedEvent(e)) return;
+      if (target && target !== '_self') return;
+      if (download) return;
       if (!isSameOrigin(resolvedHref)) return;
       if (resolvedHref.startsWith('#')) return;
       const resolved = new URL(resolvedHref, window.location.href);
@@ -33,11 +35,11 @@ export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, p
       e.preventDefault();
       navigate(resolvedHref);
     },
-    [onClick, resolvedHref, navigate],
+    [onClick, resolvedHref, navigate, target, download],
   );
 
   return (
-    <a href={resolvedHref} onClick={handleClick} {...rest}>
+    <a href={resolvedHref} onClick={handleClick} target={target} download={download} {...rest}>
       {children}
     </a>
   );
