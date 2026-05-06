@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "is-relative-url": "^4.1.0",
     "path-to-regexp": "^8.4.2",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"

@@ -3,12 +3,9 @@
 import { createContext, type ReactNode, useContext, useMemo, useState } from 'react';
 
 export interface PageData {
-  HYDRO_INJECTED?: boolean;
   name: string;
   args: Record<string, any>;
   url: string;
-  routeMap: Record<string, string>;
-  [key: string]: any;
 }
 
 interface PageDataContextValue {

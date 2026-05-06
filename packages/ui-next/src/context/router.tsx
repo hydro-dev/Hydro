@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from 'react';
-import { isSameOrigin } from '../utils/url';
+import { endpointOrigins, endpoints, isInjected, routeMapStore } from '../globals';
 import { useSetPageData } from './page-data';
 
 interface InternalState {
@@ -43,8 +43,16 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
   const genRef = useRef(0);
   const setData = useSetPageData();
 
+  const isSameOrigin = useCallback((url: string) => {
+    try {
+      return endpointOrigins.has(new URL(url, endpoints[0]).origin);
+    } catch {
+      return false;
+    }
+  }, []);
+
   const fetchPage = useCallback(
-    async (url: string) => {
+    async (url: string, init = false) => {
       abortRef.current?.abort();
       const gen = ++genRef.current;
       const controller = new AbortController();
@@ -52,50 +60,66 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
 
       dispatch({ type: 'FETCH_START' });
 
-      try {
-        const res = await fetch(url, {
-          signal: controller.signal,
-          headers: {
-            Accept: 'application/json',
-            'x-hydro-inject': 'uicontext,usercontext,pagename',
-          },
-        });
-        if (res.redirected) {
-          window.location.href = res.url;
-          return false;
+      let lastError: Error | null = null;
+      for (const ep of endpoints) {
+        try {
+          const signal = endpoints.length > 1
+            ? AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])
+            : controller.signal;
+          const reqUrl = new URL(url, ep).href;
+          const res = await fetch(reqUrl, {
+            signal,
+            headers: {
+              Accept: 'application/json',
+              'x-hydro-inject': [
+                'uicontext', 'usercontext', 'pagename',
+                ...(init ? ['routemap'] : []),
+              ].join(','),
+            },
+          });
+          if (res.redirected) {
+            window.location.href = res.url;
+            return false;
+          }
+          if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
+          const body = await res.json();
+          const pageName = res.headers.get('x-hydro-page') || '';
+          console.log('[Hydro] data from', reqUrl, 'received:', body, 'pageName:', pageName);
+
+          if (gen !== genRef.current) return false;
+
+          if (init && body.routeMap && typeof body.routeMap === 'object') {
+            routeMapStore.set(body.routeMap);
+          }
+          setData((prev) => ({
+            ...prev,
+            args: body,
+            name: pageName,
+            url,
+          }));
+          dispatch({ type: 'FETCH_SUCCESS' });
+          return true;
+        } catch (e) {
+          if (e instanceof DOMException && e.name === 'AbortError') {
+            dispatch({ type: 'FETCH_ABORT' });
+            console.log('[Hydro] navigation to', url, 'aborted');
+            return false;
+          }
+          lastError = e instanceof Error ? e : new Error(String(e));
+          console.warn('[Hydro] endpoint', ep, 'failed:', lastError.message);
+          if (controller.signal.aborted) {
+            // User-initiated abort propagated through AbortSignal.any
+            dispatch({ type: 'FETCH_ABORT' });
+            return false;
+          }
         }
-        if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
-        const body = await res.json();
-        const pageName = res.headers.get('x-hydro-page') || '';
-        console.log('[Hydro] data from', url, 'received:', body, 'pageName:', pageName);
-
-        // If a newer fetch has started, ignore this result
-        if (gen !== genRef.current) return false;
-
-        setData((prev) => ({
-          ...prev,
-          args: body,
-          name: pageName,
-          url,
-        }));
-        dispatch({ type: 'FETCH_SUCCESS' });
-        return true;
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') {
-          dispatch({ type: 'FETCH_ABORT' });
-          console.log('[Hydro] navigation to', url, 'aborted');
-          return false;
-        }
-
-        const err = e instanceof Error ? e : new Error(String(e));
-        console.error('[Hydro] navigation error:', err);
-
-        if (gen !== genRef.current) return false;
-
-        dispatch({ type: 'FETCH_ERROR', error: err });
-        window.location.href = url;
-        return false;
       }
+
+      console.error('[Hydro] all endpoints failed:', lastError);
+      if (gen !== genRef.current) return false;
+      dispatch({ type: 'FETCH_ERROR', error: lastError! });
+      window.location.href = url;
+      return false;
     },
     [setData],
   );
@@ -111,10 +135,19 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
     return () => window.removeEventListener('popstate', handler);
   }, [fetchPage]);
 
+  // If no server-side injection, fetch initial page data from the API
+  useEffect(() => {
+    if (!isInjected) {
+      console.log('[Hydro] no initial data injection found, fetching page data for current URL');
+      fetchPage(window.location.pathname + window.location.search, true);
+    }
+  }, [fetchPage]);
+
   const stateValue = useMemo(
     () => ({ loading: state.status === 'loading', error: state.error }),
     [state.status, state.error],
   );
+
   const navigate = useCallback(async (url: string) => {
     if (!isSameOrigin(url)) {
       window.location.href = url;
@@ -122,7 +155,7 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
     }
     const ok = await fetchPage(url);
     if (ok) history.pushState({ url }, '', url);
-  }, [fetchPage]);
+  }, [fetchPage, isSameOrigin]);
 
   const navigateValue = useMemo<RouterNavigateContextValue>(() => ({ navigate }), [navigate]);
 

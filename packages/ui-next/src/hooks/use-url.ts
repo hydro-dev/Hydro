@@ -14,7 +14,7 @@ function buildUrl(pattern: string, params: Record<string, string> = {}): string 
 export function useUrl() {
   const routeMap = useRouteMap();
 
-  const url = useCallback((name: string, params: Record<string, string> = {}): string => {
+  return useCallback((name: string, params: Record<string, string> = {}): string => {
     const pattern = routeMap[name];
     if (!pattern) {
       console.warn(`[Hydro] Unknown route: ${name}`);
@@ -22,6 +22,4 @@ export function useUrl() {
     }
     return buildUrl(pattern, params);
   }, [routeMap]);
-
-  return url;
 }

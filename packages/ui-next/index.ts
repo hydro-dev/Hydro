@@ -5,10 +5,9 @@ import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
 import { serializer } from '@hydrooj/framework';
 import type { Context } from 'hydrooj';
-import type { PageData } from './src/context/page-data';
 
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
-const buildInject = (str: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${str}</script>`;
+const buildInject = (data: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${data}</script>`;
 
 function hydroPlugins(): Plugin {
     const virtualModuleId = 'virtual:hydro-plugins';
@@ -75,15 +74,16 @@ export async function apply(ctx: Context) {
         output: 'html',
         asFallback: true,
         priority: 100,
-        async render(name, args, context) {
-            const data: PageData = {
+        async render(_name, args, context) {
+            const serialized = JSON.stringify({
                 HYDRO_INJECTED: true,
                 name: context.handler.context._matchedRouteName,
                 args,
                 url: context.handler.context.req.url!,
-                routeMap: ctx.server.routeMap,
-            };
-            const serialized = JSON.stringify(data, serializer(false, context.handler));
+                route_map: ctx.server.routeMap,
+                endpoint: ctx.setting.get('server.url') || undefined,
+                // hydro_domains: [],
+            }, serializer(false, context.handler));
             const htmlToRender = html.replace(INJECT_MARKER, buildInject(serialized));
             return await vite.transformIndexHtml(context.handler.context.req.url!, htmlToRender);
         },

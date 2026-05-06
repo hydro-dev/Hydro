@@ -1,6 +1,6 @@
-import { usePageData } from '../context/page-data';
+import { useSyncExternalStore } from 'react';
+import { routeMapStore } from '../globals';
 
-export function useRouteMap(): Record<string, string> {
-  const data = usePageData();
-  return data.routeMap;
+export function useRouteMap() {
+  return useSyncExternalStore(routeMapStore.subscribe, routeMapStore.getSnapshot);
 }

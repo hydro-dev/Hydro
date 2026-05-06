@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from '../context/router';
 import { useUrl } from '../hooks/use-url';
-import { isSameOrigin } from '../utils/url';
 
 export interface LinkProps extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   /** Pre-built href. Use this or `to`, not both. */
@@ -28,7 +27,6 @@ export const Link: React.FC<React.PropsWithChildren<LinkProps>> = ({ href, to, p
       if (e.defaultPrevented || isModifiedEvent(e)) return;
       if (target && target !== '_self') return;
       if (download) return;
-      if (!isSameOrigin(resolvedHref)) return;
       if (resolvedHref.startsWith('#')) return;
       const resolved = new URL(resolvedHref, window.location.href);
       if (resolved.pathname === window.location.pathname && resolved.hash) return;
