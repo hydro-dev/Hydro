@@ -5,7 +5,7 @@ import { isBelow } from 'vj/utils/mediaQuery';
 
 const navHeight = isBelow(responsiveCutoff.mobile)
   ? 0
-  : $('.nav').height();
+  : ($('.nav').height() || 0);
 
 export default class StyledTable extends DOMAttachedObject {
   static DOMAttachKey = 'vjStyledTableInstance';
@@ -13,13 +13,20 @@ export default class StyledTable extends DOMAttachedObject {
   static DOMAttachSelector = '.data-table';
 
   constructor($dom) {
-    if ($dom.closest('.section__body').length === 0) {
+    const $body = $dom.closest('.section__body');
+    if ($body.length === 0) {
       super(null);
       return;
     }
 
     super($dom);
 
+    // Scroll container only wraps the data table
+    this.$container = $('<div>').addClass('section__table-container');
+    this.$container.insertBefore(this.$dom);
+    this.$container.append(this.$dom);
+
+    if ($body[0].style.overflow === 'hidden') return;
     // Sentinel to detect when header becomes stuck
     this.$sentinel = $('<div>').css({ height: 0, margin: 0, padding: 0 });
 
@@ -31,12 +38,8 @@ export default class StyledTable extends DOMAttachedObject {
       top: `${navHeight}px`,
     });
 
-    // Scroll container only wraps the data table
-    this.$container = $('<div>').addClass('section__table-container');
-    this.$sentinel.insertBefore(this.$dom);
-    this.$header.insertBefore(this.$dom);
-    this.$container.insertBefore(this.$dom);
-    this.$container.append(this.$dom);
+    this.$sentinel.insertBefore(this.$container);
+    this.$header.insertBefore(this.$container);
 
     this.$header.empty();
     this.$dom.children('colgroup').clone().appendTo(this.$header);

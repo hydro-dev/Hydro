@@ -4,10 +4,6 @@ import responsiveCutoff from 'vj/breakpoints.json';
 import { AutoloadPage } from 'vj/misc/Page';
 import { isAbove, isBelow } from 'vj/utils/mediaQuery';
 
-const navHeight = isBelow(responsiveCutoff.mobile)
-  ? 0
-  : $('.nav').height();
-
 function getCutoff(str) {
   if (str === 'medium') return responsiveCutoff.mobile;
   if (str === 'large') return responsiveCutoff.desktop;
@@ -15,15 +11,21 @@ function getCutoff(str) {
 }
 
 function updateStickies($stickies) {
+  const navHeight = isBelow(responsiveCutoff.mobile) ? 0 : ($('.nav').height() || 0);
   $stickies.get().forEach((element) => {
     const $sticky = $(element);
     const shouldEnableSticky = isAbove($sticky.data('sticky-cutoff-min'));
+    const topOffset = 10 + navHeight;
     if (shouldEnableSticky) {
       element.style.position = 'sticky';
-      element.style.top = `${10 + navHeight}px`;
+      element.style.top = `${topOffset}px`;
+      element.style.maxHeight = `calc(100vh - ${topOffset + 10}px)`;
+      element.style.overflowY = 'auto';
     } else {
       element.style.position = '';
       element.style.top = '';
+      element.style.maxHeight = '';
+      element.style.overflowY = '';
     }
   });
 }
