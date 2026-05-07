@@ -103,13 +103,13 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('format', Types.Range(['default', 'raw']), true)
     async get({ domainId }, format = 'default') {
-        const showDefault = system.get('server.showDefaultRole');
+        const showDefault = system.get('server.showDefaultRole') || domainId !== 'system';
         const [dudocs, roles] = await Promise.all([
             domain.collUser.aggregate([
                 {
                     $match: {
-                        role: {
-                            $nin: (showDefault || domainId !== 'system') ? ['guest'] : ['default', 'guest'],
+                        role: showDefault ? { $ne: 'guest' } : {
+                            $nin: ['default', 'guest'],
                             $ne: null,
                         },
                         domainId,
@@ -158,7 +158,7 @@ class DomainUserHandler extends ManageHandler {
             return u;
         });
         const rudocs = {};
-        for (const role of roles) rudocs[role._id] = users.filter((udoc) => udoc.role === role._id);
+        for (const role of roles) rudocs[role._id] = users.filter((udoc) => (udoc.role || 'default') === role._id);
         this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
             roles, rudocs, domain: this.domain,
