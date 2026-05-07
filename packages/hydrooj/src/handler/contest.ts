@@ -195,7 +195,8 @@ export class ContestDetailHandler extends ContestDetailBaseHandler {
         if (this.tdoc.rule === 'homework') throw new ContestNotFoundError(domainId, tid);
         if (!this.tsdoc?.attend) throw new ContestNotAttendedError(domainId, tid);
         if (!contest.isOngoing(this.tdoc, this.tsdoc)) throw new ContestNotLiveError(domainId, tid);
-        await contest.setStatus(domainId, tid, this.user._id, { endAt: new Date() });
+        const now = new Date();
+        await contest.setStatus(domainId, tid, this.user._id, { endAt: now, ...(!this.tsdoc.startAt ? { startAt: now } : {}) });
         this.back();
     }
 }

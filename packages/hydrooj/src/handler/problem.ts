@@ -366,8 +366,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
                         : problem.canViewBy(this.pdoc, this.user) ? 'correction' : 'none',
         };
         if (this.tdoc && this.tsdoc) {
-            const fields = ['attend', 'startAt'];
-            if (this.tdoc.duration) fields.push('endAt');
+            const fields = ['attend', 'startAt', 'endAt'];
             if (contest.canShowSelfRecord.call(this, this.tdoc, true)) fields.push('detail');
             this.tsdoc = pick(this.tsdoc, fields);
             this.response.body.tsdoc = this.tsdoc;
