@@ -17,6 +17,7 @@ globalConfig.json
 *.out
 .clinic/
 .direnv/
+.omc/
 .yarn/cache
 .yarn/build-state.yml
 .yarn/unplugged
