@@ -57,15 +57,15 @@ class UserLoginHandler extends Handler {
     @param('redirect', Types.String, true)
     @param('tfa', Types.String, true)
     @param('authnChallenge', Types.String, true)
-    @param('judger', Types.Boolean, true)
+    @param('judge', Types.Boolean, true)
     async post(
         domainId: string, uname: string, password: string, rememberme = false, redirect = '',
-        tfa = '', authnChallenge = '', judger = false,
+        tfa = '', authnChallenge = '', judge = false,
     ) {
-        if (!judger && !system.get('server.login')) throw new BuiltinLoginError();
+        if (!judge && !system.get('server.login')) throw new BuiltinLoginError();
         let udoc = await user.getByEmail(domainId, uname);
         udoc ||= await user.getByUname(domainId, uname);
-        if (judger && !system.get('server.login') && !udoc?.hasPriv(PRIV.PRIV_JUDGE)) throw new BuiltinLoginError();
+        if (judge && !system.get('server.login') && !udoc?.hasPriv(PRIV.PRIV_JUDGE)) throw new BuiltinLoginError();
         if (!udoc) throw new UserNotFoundError(uname);
         if (system.get('system.contestmode') && !udoc.hasPriv(PRIV.PRIV_EDIT_SYSTEM)) {
             if (udoc._loginip && udoc._loginip !== this.request.ip) throw new ValidationError('ip');

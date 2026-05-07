@@ -222,7 +222,7 @@ export default class Hydro implements Session {
         log.info('[%s] Updating session', this.config.host);
         const res = await this.post('login', {
             uname: this.config.uname, password: this.config.password,
-            rememberme: 'on', judger: 'on',
+            rememberme: 'on', judge: 'on',
         });
         const setCookie = res.headers['set-cookie'];
         await this.setCookie(Array.isArray(setCookie) ? setCookie.join(';') : setCookie);
