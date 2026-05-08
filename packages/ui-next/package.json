@@ -1,15 +1,31 @@
 {
   "name": "@hydrooj/ui-next",
   "version": "0.0.0",
+  "author": "Baoshuo <i@baoshuo.ren>",
+  "license": "AGPL-3.0",
   "type": "module",
   "main": "index.ts",
   "types": "api.ts",
+  "preferUnplugged": true,
+  "hydro": {
+    "cli": false
+  },
+  "files": [
+    "index.ts",
+    "api.ts",
+    "src/",
+    "index.html",
+    "public/",
+    "tsconfig.json",
+    "vite.config.ts"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "esbuild": "0.25.2",
     "is-relative-url": "^4.1.0",
     "path-to-regexp": "^8.4.2",
     "react": "^19.2.5",

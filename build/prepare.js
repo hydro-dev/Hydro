@@ -137,7 +137,6 @@ const UINextConfig = {
         module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        baseUrl: '.',
         jsx: 'react-jsx',
         outDir: path.join(baseOutDir, 'ui-next'),
 

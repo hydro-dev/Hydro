@@ -48,6 +48,7 @@ packages/**/*.js
 packages/ui-default/public
 packages/ui-default/misc/.iconfont
 packages/ui-default/static/locale
+packages/ui-next/public
 plugins/
 modules/
 

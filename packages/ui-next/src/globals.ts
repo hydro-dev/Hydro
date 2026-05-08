@@ -14,6 +14,7 @@ if (injectionEl) {
 
 export const isInjected: boolean = !!injectionData.HYDRO_INJECTED;
 export const hydroDomains: string[] = injectionData.hydro_domains ?? [];
+export const pluginsUrl: string | undefined = injectionData.plugins_url;
 
 // routeMap as an external store for useSyncExternalStore, with HMR state preservation
 interface RouteMapStore {
