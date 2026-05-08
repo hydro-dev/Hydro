@@ -44,7 +44,7 @@
         "mongodb-uri": "^0.9.7",
         "nanoid": "^5.1.11",
         "nodemailer": "^8.0.7",
-        "notp": "^2.0.3",
+        "otpauth": "^9.5.1",
         "p-queue": "^9.2.0",
         "sanitize-filename": "^1.6.4",
         "schemastery": "^3.18.0",
@@ -53,7 +53,6 @@
         "superagent": "^10.3.0",
         "superagent-proxy": "^3.0.0",
         "tar": "6.2.1",
-        "thirty-two": "^1.0.2",
         "ua-parser-js": "1.0.41"
     },
     "devDependencies": {
@@ -66,7 +65,6 @@
         "@types/mime-types": "^3.0.1",
         "@types/mongodb-uri": "^0.9.4",
         "@types/nodemailer": "^8.0.0",
-        "@types/notp": "^2.0.5",
         "@types/semver": "^7.7.1",
         "@types/superagent": "^8.1.9",
         "@types/superagent-proxy": "^3.0.4",
