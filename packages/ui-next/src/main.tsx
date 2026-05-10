@@ -32,7 +32,11 @@ async function loadPlugins() {
 
   for (const plugin of plugins) {
     console.log(`[Hydro] Installing plugin: ${plugin.name}`);
-    installPlugin(plugin);
+    try {
+      installPlugin(plugin);
+    } catch (e) {
+      console.error(`[Hydro] Failed to install plugin ${plugin.name}:`, e);
+    }
   }
 }
 
