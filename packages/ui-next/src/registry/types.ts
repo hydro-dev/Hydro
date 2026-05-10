@@ -1,4 +1,4 @@
-type Scope = 'page' | 'component' | 'layout' | string;
+type Scope = 'app' | 'page' | 'component' | string;
 export type SlotName = `${Scope}:${string}`;
 
 export type Interceptor<P = any> = (

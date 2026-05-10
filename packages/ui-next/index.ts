@@ -49,7 +49,10 @@ function hydroPlugins(): Plugin {
                 }
                 if (!entries.length) return 'export default [];';
                 const imports = entries.map((e, i) => `import * as plugin${i} from '${e}';`).join('\n');
-                const exports = `export default [${entries.map((_, i) => `plugin${i}`).join(', ')}];`;
+                const exports = `export default [${entries.map((e, i) => {
+                    const addonName = path.basename(path.resolve(e, '..', '..'));
+                    return `{ name: '${addonName}', ...plugin${i} }`;
+                }).join(', ')}];`;
                 return `${imports}\n${exports}`;
             }
             return undefined;
