@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import react from '@vitejs/plugin-react';
 import esbuild from 'esbuild';
 import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
@@ -158,7 +157,7 @@ export async function apply(ctx: Context) {
 
     if (process.env.DEV) {
         const vite = await createServer({
-            configFile: false,
+            root: __dirname,
             clearScreen: false,
             server: {
                 middlewareMode: true,
@@ -171,12 +170,7 @@ export async function apply(ctx: Context) {
                 },
             },
             appType: 'custom',
-            root: __dirname,
-            base: '/',
-            plugins: [react(), hydroPlugins()],
-            worker: {
-                format: 'es',
-            },
+            plugins: [hydroPlugins()],
         });
         const middleware = c2k(vite.middlewares);
         const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs', '/@id/'];
