@@ -4,7 +4,11 @@ import { createContext, type ReactNode, useContext, useMemo, useState } from 're
 
 export interface PageData {
   name: string;
-  args: Record<string, any>;
+  args: {
+    UserContext: Record<string, any>;
+    UiContext: Record<string, any>;
+    [key: string]: any;
+  };
   url: string;
 }
 

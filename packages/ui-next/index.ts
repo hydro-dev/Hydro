@@ -188,7 +188,11 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
-                    args,
+                    args: {
+                        UserContext: context.UserContext,
+                        UiContext: context.handler.UiContext,
+                        ...args,
+                    },
                     url: context.handler.context.req.url!,
                     route_map: ctx.server.routeMap,
                     endpoint: ctx.setting.get('server.url') || undefined,
@@ -217,7 +221,11 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
-                    args,
+                    args: {
+                        UserContext: context.handler.user,
+                        UiContext: context.handler.UiContext,
+                        ...args,
+                    },
                     url: context.handler.context.req.url!,
                     route_map: ctx.server.routeMap,
                     endpoint: ctx.setting.get('server.url') || undefined,
