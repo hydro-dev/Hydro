@@ -1,5 +1,11 @@
 {
   "name": "@hydrooj/ui-next-plugin-sample",
+  "version": "0.0.0",
+  "author": "Baoshuo <i@baoshuo.ren>",
+  "license": "AGPL-3.0",
+  "hydro": {
+    "cli": false
+  },
   "dependencies": {
     "@hydrooj/ui-next": "workspace:*"
   }
