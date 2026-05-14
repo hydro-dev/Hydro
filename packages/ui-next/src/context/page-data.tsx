@@ -44,3 +44,11 @@ export function usePageData(): PageData {
 export function useSetPageData(): React.Dispatch<React.SetStateAction<PageData>> {
   return usePageDataContext().setData;
 }
+
+export function useUiContext(): PageData['args']['UiContext'] {
+  return usePageDataContext().data.args.UiContext;
+}
+
+export function useUserContext(): PageData['args']['UserContext'] {
+  return usePageDataContext().data.args.UserContext;
+}

@@ -4,7 +4,7 @@ export { Link, type LinkProps } from './components/link';
 // Context
 export { type PageData, usePageData } from './context/page-data';
 export { type RouterState, useNavigate, useRouterState } from './context/router';
-export { useUrl } from './hooks/use-url';
+export { useBuildUrl } from './hooks/use-build-url';
 
 // Registry
 export type {
