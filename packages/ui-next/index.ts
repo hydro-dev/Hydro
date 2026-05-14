@@ -225,7 +225,7 @@ export async function apply(ctx: Context) {
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
                     args: {
-                        UserContext: context.handler.user,
+                        UserContext: context.UserContext,
                         UiContext: context.handler.UiContext,
                         ...args,
                     },
