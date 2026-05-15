@@ -1,0 +1,92 @@
+.page--training_edit, .page--training_create
+  .training-section
+    border: 1px solid #ddd
+    border-radius: 4px
+    margin-bottom: 12px
+    background: #fff
+
+  .training-section__header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    padding: 12px 16px
+    background: #fafafa
+
+    &.training-section__header--expanded
+      border-bottom: 1px solid #eee
+      border-radius: 4px 4px 0 0
+
+    &.training-section__header--collapsed
+      border-radius: 4px
+
+  .training-section__header-left
+    display: flex
+    align-items: center
+    gap: 12px
+
+  .training-section__header-right
+    display: flex
+    align-items: center
+    gap: 8px
+
+  .training-section__move-buttons
+    display: flex
+    flex-direction: column
+    gap: 2px
+
+  .training-section__move-btn
+    padding: 0 4px
+
+    &.disabled
+      opacity: 0.3
+
+  .training-section__move-icon
+    font-size: 14px
+
+  .training-section__title
+    font-weight: 600
+    cursor: pointer
+    display: inline-flex
+    align-items: center
+    gap: 4px
+
+  .training-section__title-input
+    width: 300px
+
+  .training-section__edit-icon
+    font-size: 14px
+    opacity: 0.6
+
+  .training-section__delete-btn
+    color: #e74c3c
+
+  .training-section__body
+    padding: 16px
+
+  .training-section__prereqs
+    display: flex
+    flex-wrap: wrap
+    gap: 12px
+    margin-top: 8px
+
+  .training-section__prereq-label
+    flex-direction: row-reverse
+    gap: 4px
+
+  .training-section__prereq-toggle
+    margin-top: 8px
+    font-size: 12px
+
+  .training-editor__empty
+    text-align: center
+    padding: 2rem
+    background: #f8f9fa
+    border-radius: 4px
+    border: 2px dashed #ddd
+
+  .training-editor__empty-text
+    color: #666
+    margin-bottom: 1rem
+
+  .training-editor__actions
+    margin-top: 1.5rem

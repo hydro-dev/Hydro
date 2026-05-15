@@ -718,6 +718,30 @@ training_create: 학습 만들기
 training_edit: 학습 수정
 training_main: 학습
 Training: 학습
+Training Sections: 학습 섹션
+Add Section: 섹션 추가
+Add First Section: 첫 번째 섹션 추가
+No sections yet. Click the button above to add your first section.: 섹션이 없습니다. 위의 버튼을 클릭하여 첫 번째 섹션을 추가하세요.
+Untitled Section: 제목 없는 섹션
+Are you sure you want to delete this section?: 이 섹션을 삭제하시겠습니까?
+Please add at least one section: 최소한 하나의 섹션을 추가하세요
+Each section must have at least one problem: 각 섹션에는 최소한 하나의 문제가 있어야 합니다
+Training deleted successfully: 학습이 성공적으로 삭제되었습니다
+Failed to save training: 학습 저장 실패
+Failed to delete training: 학습 삭제 실패
+Advanced: 고급
+JSON Editor: JSON 편집기
+Apply to Editor: 편집기에 적용
+JSON applied to editor: 편집기에 적용됨
+Invalid JSON format: 잘못된 JSON 형식
+'Invalid JSON format: must be an array': '잘못된 JSON 형식: 배열이어야 합니다'
+'Edit JSON and click "Apply to Editor" to update the visual editor above.': JSON을 편집하고 "편집기에 적용"을 클릭하여 위의 시각적 편집기를 업데이트하세요.
+Basic Information: 기본 정보
+'Confirm deleting this training? Its files and status will be deleted as well.': 이 학습을 삭제하시겠습니까? 파일과 상태도 함께 삭제됩니다.
+Prerequisite Sections: 선수 섹션
+'Cannot add this prerequisite: it would create a circular dependency': '이 선수 섹션을 추가할 수 없습니다: 순환 의존성이 발생합니다'
+Show less: 접기
+'Show all {0} sections': '전체 {0}개 섹션 보기'
 Type: Type
 UI Language: UI 언어
 Uncompleted: 미완료
