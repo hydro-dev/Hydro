@@ -258,7 +258,7 @@ export class JudgeTask {
                 langId = `${s.pop()}.${langId}`;
             }
         } else lang = this.session.getLang(langId, false);
-        if (!lang) throw new FormatError(`Unknown ${type} language.`);
+        if (!lang) throw new FormatError(`Unknown ${type} language: ${langId}.`);
         span.setAttribute('lang', langId);
         // TODO cache compiled binary
         const result = await compile(lang, { src: file }, copyIn);
