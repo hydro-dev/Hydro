@@ -46,20 +46,21 @@
     font-size: rem($font-size-small)
 
 .section__table-container
+  overflow: hidden
   overflow-x: auto
 
 .section__table-header
   background: $table-header-bg-color
   box-shadow: $table-header-shadow
+  position: relative
   z-index: 100
-  overflow: hidden
   transition: box-shadow .2s linear
-
-  &.is_stuck
-    box-shadow: $table-header-shadow-floating
 
   thead > tr
     border-bottom: 0
+
+  &.is_stuck
+    box-shadow: $table-header-shadow-floating
 
 .section__table-container,
 .section__body
