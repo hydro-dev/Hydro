@@ -144,15 +144,14 @@ export async function apply(ctx: Context) {
                 }
                 try {
                     const { anchor } = args;
-                    let withDomainId = args.domainId || false;
-                    const domainId = this.args.domainId;
-                    const host = this.domain?.host;
-                    if (domainId !== 'system' && (
-                        !this.request.host
-                        || (host instanceof Array
-                            ? (!host.includes(this.request.host))
-                            : this.request.host !== host)
-                    )) withDomainId ||= domainId;
+                    const { host } = this.domain || {};
+                    // args.domainId: explicitly provided target domain from caller
+                    // this.args.domainId: current domain from context
+                    const targetDomainId = args.domainId || this.args.domainId;
+                    const rootDomainId = this.request.host && host
+                        && (host instanceof Array ? host.includes(this.request.host) : this.request.host === host)
+                        ? this.args.domainId : 'system';
+                    const withDomainId = targetDomainId !== rootDomainId && targetDomainId;
                     delete args.query;
                     res = server.router.url(name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
