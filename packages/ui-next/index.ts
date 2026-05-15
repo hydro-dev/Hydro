@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import react from '@vitejs/plugin-react';
 import esbuild from 'esbuild';
 import c2k from 'koa2-connect/ts';
 import { createServer, type Plugin } from 'vite';
@@ -28,6 +27,20 @@ const PENDING_HTML = `<html>
 const INJECT_MARKER = '<!-- __HYDRO_INJECTION__DO_NOT_REMOVE_THIS__ -->';
 const buildInject = (data: string) => `<script id="__HYDRO_INJECTION__" type="application/json">${data}</script>`;
 
+function getAddonEntries(): Record<string, string> {
+    const entries: Record<string, string> = {};
+    for (const [name, addon] of Object.entries(global.addons)) {
+        const uiEntry = ['ui/index.ts', 'ui/index.tsx', 'ui/index.js', 'ui/index.jsx']
+            .map((f) => path.resolve(addon as string, f))
+            .find((f) => fs.existsSync(f));
+        if (uiEntry) {
+            logger.info('UI entry for addon %s: %s', name, uiEntry);
+            entries[name] = uiEntry;
+        }
+    }
+    return entries;
+}
+
 function hydroPlugins(): Plugin {
     const virtualModuleId = 'virtual:hydro-plugins';
     const resolvedVirtualModuleId = `\0${virtualModuleId}`;
@@ -42,14 +55,12 @@ function hydroPlugins(): Plugin {
         },
         load(id) {
             if (id === resolvedVirtualModuleId) {
-                const entries: string[] = [];
-                for (const addon of Object.values(global.addons)) {
-                    const uiEntry = path.resolve(addon, 'ui', 'index.ts');
-                    if (fs.existsSync(uiEntry)) entries.push(uiEntry);
-                }
-                if (!entries.length) return 'export default [];';
-                const imports = entries.map((e, i) => `import * as plugin${i} from '${e}';`).join('\n');
-                const exports = `export default [${entries.map((_, i) => `plugin${i}`).join(', ')}];`;
+                const entries = getAddonEntries();
+                if (!Object.keys(entries).length) return 'export default [];';
+                const imports = Object.entries(entries).map(([_, e], i) => `import * as plugin${i} from '${e}';`).join('\n');
+                const exports = `export default [${Object.entries(entries).map(([addon, _], i) => {
+                    return `{ name: '${addon}', ...plugin${i} }`;
+                }).join(', ')}];`;
                 return `${imports}\n${exports}`;
             }
             return undefined;
@@ -105,12 +116,9 @@ class UiNextConstantHandler extends Handler {
 export async function buildPlugins() {
     const start = Date.now();
     let totalSize = 0;
-    const entries: string[] = [];
-    for (const addon of Object.values(global.addons)) {
-        const uiEntry = path.resolve(addon as string, 'ui', 'index.ts');
-        if (fs.existsSync(uiEntry)) entries.push(uiEntry);
-    }
-    if (!entries.length) {
+    const entries = getAddonEntries();
+
+    if (!Object.keys(entries).length) {
         vfs['plugins.js'] = 'window.__hydroPlugins = [];';
         hashes['plugins.js'] = '00000000';
         logger.info('No plugins to build');
@@ -121,11 +129,8 @@ export async function buildPlugins() {
         const result = await esbuild.build({
             stdin: {
                 contents: [
-                    ...entries.map((e, i) => `import * as plugin${i} from '${e}';`),
-                    `window.__hydroPlugins = [${entries.map((e, i) => {
-                        const addonName = path.basename(path.resolve(e, '..', '..'));
-                        return `{ name: '${addonName}', ...plugin${i} }`;
-                    }).join(', ')}];`,
+                    ...Object.entries(entries).map(([_, e], i) => `import * as plugin${i} from '${e}';`),
+                    `window.__hydroPlugins = [${Object.entries(entries).map(([n], i) => `{ name: '${n}', ...plugin${i} }`).join(', ')}];`,
                 ].join('\n'),
                 resolveDir: process.cwd(),
                 loader: 'ts',
@@ -155,7 +160,7 @@ export async function apply(ctx: Context) {
 
     if (process.env.DEV) {
         const vite = await createServer({
-            configFile: false,
+            root: __dirname,
             clearScreen: false,
             server: {
                 middlewareMode: true,
@@ -168,12 +173,7 @@ export async function apply(ctx: Context) {
                 },
             },
             appType: 'custom',
-            root: __dirname,
-            base: '/',
-            plugins: [react(), hydroPlugins()],
-            worker: {
-                format: 'es',
-            },
+            plugins: [hydroPlugins()],
         });
         const middleware = c2k(vite.middlewares);
         const capture = ['/@vite/', '/src/', '/node_modules/', '/@react-refresh', '/@fs', '/@id/'];
@@ -191,7 +191,11 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
-                    args,
+                    args: {
+                        UserContext: context.UserContext,
+                        UiContext: context.handler.UiContext,
+                        ...args,
+                    },
                     url: context.handler.context.req.url!,
                     route_map: ctx.server.routeMap,
                     endpoint: ctx.setting.get('server.url') || undefined,
@@ -220,7 +224,11 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
-                    args,
+                    args: {
+                        UserContext: context.UserContext,
+                        UiContext: context.handler.UiContext,
+                        ...args,
+                    },
                     url: context.handler.context.req.url!,
                     route_map: ctx.server.routeMap,
                     endpoint: ctx.setting.get('server.url') || undefined,

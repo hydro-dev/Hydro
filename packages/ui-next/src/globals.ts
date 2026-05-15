@@ -16,7 +16,6 @@ export const isInjected: boolean = !!injectionData.HYDRO_INJECTED;
 export const hydroDomains: string[] = injectionData.hydro_domains ?? [];
 export const pluginsUrl: string | undefined = injectionData.plugins_url;
 
-// routeMap as an external store for useSyncExternalStore, with HMR state preservation
 interface RouteMapStore {
   _routeMap: Record<string, string>;
   _listeners: Set<() => void>;
@@ -65,6 +64,6 @@ export const endpointOrigins = new Set(endpoints.map((ep) => new URL(ep).origin)
 
 export const initialPage: PageData = {
   name: (injectionData.name as string) || '',
-  args: (injectionData.args as Record<string, any>) || {},
+  args: (injectionData.args as any) || {},
   url: (injectionData.url as string) || (window.location.pathname + window.location.search),
 };
