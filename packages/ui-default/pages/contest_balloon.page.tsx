@@ -3,6 +3,7 @@ import { getAlphabeticId } from '@hydrooj/utils/lib/common';
 import yaml from 'js-yaml';
 import React from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
+import { createPortal } from 'react-dom';
 import { ActionDialog } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
@@ -12,17 +13,46 @@ import {
 
 function Balloon({ tdoc, val }) {
   const [color, setColor] = React.useState('');
-  const [now, setNow] = React.useState('');
+  const [now, setNow] = React.useState<number | null>(null);
+  const [pickerTarget, setPickerTarget] = React.useState<HTMLElement | null>(null);
+  const [pickerStyle, setPickerStyle] = React.useState<React.CSSProperties>({});
+  const updatePickerStyle = React.useCallback((target: HTMLElement) => {
+    const row = target.closest('tr');
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    setPickerStyle({
+      position: 'fixed',
+      left: rect.right,
+      top: rect.top + rect.height / 2,
+      transform: 'translateY(-50%)',
+      zIndex: 10000,
+    });
+  }, []);
+  const showPicker = (pid: number, c: string, target: HTMLElement) => {
+    setNow(pid);
+    setColor(c);
+    setPickerTarget(target);
+    updatePickerStyle(target);
+  };
+  React.useEffect(() => {
+    if (!pickerTarget) return undefined;
+    const update = () => updatePickerStyle(pickerTarget);
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [pickerTarget, updatePickerStyle]);
   return (
     <div className="row">
-      <div className="medium-12 columns">
+      <div className="medium-8 columns">
         <table className="data-table">
           <thead>
             <tr>
-              <th>{i18n('Problem')}</th>
-              <th>{i18n('Color')}</th>
-              <th>{i18n('Name')}</th>
-              <th><span className="icon icon-wrench"></span></th>
+              <th style={{ width: 70 }}>{i18n('Problem')}</th>
+              <th style={{ width: 130 }}>{i18n('Color')}</th>
+              <th style={{ width: 130 }}>{i18n('Name')}</th>
             </tr>
           </thead>
           <tbody>
@@ -31,7 +61,7 @@ function Balloon({ tdoc, val }) {
               return (
                 <tr key={pid}>
                   <td>
-                    {now === pid
+                    {now === +pid
                       ? (<b>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</b>)
                       : (<span>{getAlphabeticId(tdoc.pids.indexOf(+pid))}</span>)}
                   </td>
@@ -39,7 +69,7 @@ function Balloon({ tdoc, val }) {
                     <HexColorInput
                       className="textbox"
                       color={c}
-                      onFocus={() => { setNow(pid); setColor(c); }}
+                      onFocus={(e) => showPicker(+pid, c, e.currentTarget)}
                       onChange={(e) => { val[+pid].color = e; setColor(e); }}
                     />
                   </td>
@@ -48,18 +78,23 @@ function Balloon({ tdoc, val }) {
                       type="text"
                       className="textbox"
                       defaultValue={name}
-                      onFocus={() => { setNow(pid); setColor(c); }}
+                      onFocus={(e) => showPicker(+pid, c, e.currentTarget)}
                       onChange={(e) => { val[+pid].name = e.target.value; }}
                     />
                   </td>
-                  {tdoc.pids.indexOf(+pid) === 0 && <td rowSpan={0}>
-                    {now && <HexColorPicker color={color} onChange={(e) => { val[+now].color = e; setColor(e); }} style={{ padding: '1rem' }} />}
-                  </td>}
                 </tr>
               );
             })}
           </tbody>
         </table>
+      </div>
+      <div className="medium-4 columns">
+        {now !== null && createPortal(
+          <div style={pickerStyle}>
+            <HexColorPicker color={color} onChange={(e) => { val[now].color = e; setColor(e); }} style={{ padding: '1rem' }} />
+          </div>,
+          document.body,
+        )}
       </div>
     </div>
   );

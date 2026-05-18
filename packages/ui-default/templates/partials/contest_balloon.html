@@ -27,8 +27,8 @@
       {% endif %}
       <b>{{ utils.getAlphabeticId(tdoc.pids.indexOf(bdoc.pid)) }}</b>&nbsp;&nbsp;({{ tdoc.balloon[bdoc.pid].name }})
     </td>
-    <td class="col--submit-by" data-tooltip="{{ bdoc._id.getTimestamp().format() }}">{{ user.render_inline(udict[bdoc.uid], badge=false) }}</td>
-    <td class="col--send-by"{% if bdoc.sent %} data-tooltip="{{ bdoc.sentAt.format() }}"{% endif %}>
+    <td class="col--submit-by" data-tooltip="{{ bdoc._id.getTimestamp() }}">{{ user.render_inline(udict[bdoc.uid], badge=false) }}</td>
+    <td class="col--send-by"{% if bdoc.sent %} data-tooltip="{{ bdoc.sentAt }}"{% endif %}>
       {% if bdoc.sent %}{{ user.render_inline(udict[bdoc.sent], avatar=false, badge=false) }}{% else %}-{% endif %}
     </td>
     <td class="col--awards">{% if bdoc.first %}{{ _('First of Problem') }}{% endif %}</td>
