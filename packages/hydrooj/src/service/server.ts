@@ -144,18 +144,14 @@ export async function apply(ctx: Context) {
                 }
                 try {
                     const { anchor } = args;
-                    const { host } = this.domain || {};
-                    // args.domainId: explicitly provided target domain from caller
-                    // this.args.domainId: current domain from context
-                    const targetDomainId = args.domainId || this.args.domainId;
-                    const rootDomainId = this.request.host && host
-                        && (host instanceof Array ? host.includes(this.request.host) : this.request.host === host)
+                    const host = this.domain?.host || [];
+                    const target = args.domainId || this.args.domainId;
+                    const rootDomainId = (this.request.host && host?.length && host?.includes(this.request.host))
                         ? this.args.domainId : 'system';
-                    const withDomainId = targetDomainId !== rootDomainId && targetDomainId;
                     delete args.query;
                     res = server.router.url(name, args, { query }).toString();
                     if (anchor) res = `${res}#${anchor}`;
-                    if (withDomainId) res = `/d/${withDomainId}${res}`;
+                    if (target !== rootDomainId) res = `/d/${target}${res}`;
                 } catch (e) {
                     logger.warn(e.message);
                     logger.info('%s %o', name, args);
