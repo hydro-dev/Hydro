@@ -1,14 +1,14 @@
 import { flatten } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { TrainingAlreadyEnrollError, TrainingNotFoundError } from '../error';
-import { TrainingDoc, TrainingNode } from '../interface';
+import { TrainingDoc, TrainingNode, TrainingStatusDoc } from '../interface';
 import * as document from './document';
 
 export function getStatus(domainId: string, tid: ObjectId, uid: number) {
     return document.getStatus(domainId, document.TYPE_TRAINING, tid, uid);
 }
 
-export function getMultiStatus(domainId: string, query: Filter<TrainingDoc>) {
+export function getMultiStatus(domainId: string, query: Filter<TrainingStatusDoc>) {
     return document.getMultiStatus(domainId, document.TYPE_TRAINING, query);
 }
 
@@ -16,8 +16,8 @@ export async function getListStatus(domainId: string, uid: number, tids: ObjectI
     const tsdocs = await getMultiStatus(
         domainId, { uid, docId: { $in: Array.from(new Set(tids)) } },
     ).toArray();
-    const r = {};
-    for (const tsdoc of tsdocs) r[tsdoc.docId] = tsdoc;
+    const r: Record<string, TrainingStatusDoc> = {};
+    for (const tsdoc of tsdocs) r[tsdoc.docId.toHexString()] = tsdoc;
     return r;
 }
 
@@ -30,7 +30,7 @@ export async function enroll(domainId: string, tid: ObjectId, uid: number) {
     return await document.inc(domainId, document.TYPE_TRAINING, tid, 'attend', 1);
 }
 
-export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: any) {
+export function setStatus(domainId: string, tid: ObjectId, uid: number, $set: Partial<TrainingStatusDoc>) {
     return document.setStatus(domainId, document.TYPE_TRAINING, tid, uid, $set);
 }
 

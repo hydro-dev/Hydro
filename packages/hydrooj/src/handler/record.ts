@@ -195,7 +195,7 @@ export class RecordDetailHandler extends ContestDetailBaseHandler {
             this.tsdoc = await contest.getStatus(domainId, this.tdoc.docId, this.user._id);
             canViewCode ||= this.user.own(this.tdoc);
             if (this.tdoc.allowViewCode && contest.isDone(this.tdoc)) {
-                canViewCode ||= this.tsdoc?.attend;
+                canViewCode ||= !!this.tsdoc?.attend;
             }
             if (!this.tsdoc?.attend && pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
         } else if (pdoc && !problem.canViewBy(pdoc, this.user)) throw new PermissionError(PERM.PERM_VIEW_PROBLEM_HIDDEN);
