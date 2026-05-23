@@ -74,6 +74,7 @@ function createRegistryStore() {
 
   function setDefault(name: SlotName, comp: React.FC<any>) {
     state.defaults[name] = comp;
+    bumpVersion(name);
   }
 
   function getDefault(name: SlotName): React.FC<any> | undefined {

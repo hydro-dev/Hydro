@@ -4,7 +4,11 @@ import { createContext, type ReactNode, useContext, useMemo, useState } from 're
 
 export interface PageData {
   name: string;
-  args: Record<string, any>;
+  args: {
+    UserContext: Record<string, any>;
+    UiContext: Record<string, any>;
+    [key: string]: any;
+  };
   url: string;
 }
 
@@ -39,4 +43,12 @@ export function usePageData(): PageData {
 
 export function useSetPageData(): React.Dispatch<React.SetStateAction<PageData>> {
   return usePageDataContext().setData;
+}
+
+export function useUiContext(): PageData['args']['UiContext'] {
+  return usePageDataContext().data.args.UiContext;
+}
+
+export function useUserContext(): PageData['args']['UserContext'] {
+  return usePageDataContext().data.args.UserContext;
 }

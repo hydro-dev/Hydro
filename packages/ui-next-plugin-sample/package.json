@@ -1,6 +1,0 @@
-{
-  "name": "@hydrooj/ui-next-plugin-sample",
-  "dependencies": {
-    "@hydrooj/ui-next": "workspace:*"
-  }
-}
