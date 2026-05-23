@@ -5,7 +5,8 @@
         "packages/*",
         "framework/*",
         "plugins/*",
-        "modules/*"
+        "modules/*",
+        "samples/**/*"
     ],
     "main": "package.json",
     "scripts": {
