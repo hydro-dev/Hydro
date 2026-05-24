@@ -48,7 +48,10 @@ class UserLoginHandler extends Handler {
 
     async get() {
         this.response.template = 'user_login.html';
-        this.response.body.loginMethods = this.loginMethods;
+        this.response.body = {
+            builtInLogin: system.get('server.login'),
+            loginMethods: this.loginMethods,
+        };
     }
 
     @param('uname', Types.Username)
