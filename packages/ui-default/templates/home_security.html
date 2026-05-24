@@ -70,7 +70,7 @@
           <form method="post">
             <input type="hidden" name="operation" value="unlink_account">
             {%- for relation in relations -%}{% if relation.platform != 'mail' %}
-            {% set platform = handler.loginMethods.find(eval("r => r.id === '" + relation.platform + "'")) %}
+            {% set platform = loginMethods.find(eval("r => r.id === '" + relation.platform + "'")) %}
             <li class="platform-list__item">
               <div class="media">
                 {% if platform.icon %}
@@ -88,7 +88,7 @@
           </form>
           <form method="post">
             <input type="hidden" name="operation" value="link_account">
-            {%- for method in handler.loginMethods -%}
+            {%- for method in loginMethods -%}
               {%- if not relations.some(eval("r => r.platform === '" + method.id + "'")) -%}
               <li class="platform-list__item">
                 <div class="media">

@@ -204,6 +204,7 @@ class HomeSecurityHandler extends Handler {
             ])),
             geoipProvider: this.ctx.get('geoip')?.provider,
             relations,
+            loginMethods: this.loginMethods,
         };
     }
 

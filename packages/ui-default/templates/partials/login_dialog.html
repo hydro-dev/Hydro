@@ -40,7 +40,7 @@
           <input type="submit" value="{{ _('Login') }}" name="login_submit" class="expanded rounded primary button">
         </div></div>
         {% endif %}
-        {%- for v in handler.loginMethods -%}
+        {%- for v in loginMethods -%}
         <div class="row"><div class="columns">
           <a href="{{ url('user_oauth', type=v.id) }}" class="expanded rounded button">{{ _(v.text) }}</a>
         </div></div>
