@@ -5,16 +5,6 @@ import signals from '../signals';
 import { parse } from '../testlib';
 import { Context, ContextSubTask } from './interface';
 
-function withPassMessage(message: any, from: number, to: number) {
-    const tag = from === to ? `pass ${from}` : `pass ${from} - pass ${to}`;
-    if (!message) return tag;
-    if (typeof message === 'string') return `${tag}: ${message}`;
-    if (typeof message === 'object' && message.message) {
-        return { ...message, message: `${tag}: ${message.message}` };
-    }
-    return { message: `${tag}: ${message}` };
-}
-
 function judgeCase(c: NormalizedCase) {
     const mp = {
         i: 0,
@@ -26,6 +16,7 @@ function judgeCase(c: NormalizedCase) {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         const maxPasses = Math.min(ctx.config.multi_pass || 0, 10);
         const multiPass = maxPasses > 1;
+        const passNo = mp.i + 1;
 
         const [{
             code, signalled, time, memory,
@@ -49,28 +40,28 @@ function judgeCase(c: NormalizedCase) {
                 time: c.time * 2,
                 memory: c.memory * 2,
                 copyOut: ['nextpass.in?', 'state.txt?', '/w/tout?'],
-                env: { ...ctx.env, HYDRO_TESTCASE: c.id.toString() },
+                env: {
+                    ...ctx.env,
+                    HYDRO_TESTCASE: c.id.toString(),
+                    ...(multiPass ? { HYDRO_MULTI_PASS: maxPasses.toString() } : {}),
+                },
             },
         ], [
             { in: { index: 0, fd: 1 }, out: { index: 1, fd: 0 }, name: 'userToInteractor' },
             { in: { index: 1, fd: 1 }, out: { index: 0, fd: 0 }, name: 'interactorToUser' },
         ]);
         // TODO handle tout (maybe pass to checker?)
-        const passNo = mp.i + 1;
         let status: number;
         let score = 0;
-        let message: any = '';
+        let message: any = multiPass ? `Pass ${passNo}` : '';
         if (time > c.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
-            if (multiPass) message = withPassMessage(message, passNo, passNo);
         } else if (memory > c.memory * 1024) {
             status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
-            if (multiPass) message = withPassMessage(message, passNo, passNo);
         } else if (ctx.config.detail === 'full' && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code))) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32 && signalled) message = signals[code];
             else message = { message: 'Your program returned {0}.', params: [code] };
-            if (multiPass) message = withPassMessage(message, passNo, passNo);
         } else {
             const result = parse(resInteractor.stderr, c.score, ctx.config.detail);
             status = result.status;
@@ -90,16 +81,8 @@ function judgeCase(c: NormalizedCase) {
                     }
                     status = STATUS.STATUS_WRONG_ANSWER;
                     score = 0;
-                    message = withPassMessage(
-                        { message: 'Exceeded maximum number of passes ({0}).', params: [maxPasses > 1 ? maxPasses : 1] },
-                        passNo,
-                        passNo,
-                    );
-                } else if (multiPass && mp.i > 0) {
-                    message = withPassMessage(message, 1, passNo);
+                    message = { message: 'Exceeded maximum number of passes ({0}).', params: [maxPasses > 1 ? maxPasses : 1] };
                 }
-            } else if (multiPass) {
-                message = withPassMessage(message, passNo, passNo);
             }
         }
         return {
