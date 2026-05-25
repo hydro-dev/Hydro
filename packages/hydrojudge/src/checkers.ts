@@ -268,13 +268,12 @@ const checkers: Record<string, Checker> = new Proxy({
             };
         }
         const result = parse(stderr, config.score, config.detail);
-        if (result.status === STATUS.STATUS_ACCEPTED && fileIds['nextpass.in'] !== undefined) {
+        if (result.status === STATUS.STATUS_ACCEPTED && fileIds['nextpass.in']) {
             return {
                 ...result,
                 nextPass: {
                     input: { fileId: fileIds['nextpass.in'] },
-                    state: fileIds['state.txt'] !== undefined
-                        ? { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
+                    state: fileIds['state.txt'] ? { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
                 },
             };
         }
@@ -319,14 +318,14 @@ const checkers: Record<string, Checker> = new Proxy({
                 ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
                 : '';
 
-        if (status === STATUS.STATUS_ACCEPTED && fileIds['feedback_dir/nextpass.in'] !== undefined) {
+        if (status === STATUS.STATUS_ACCEPTED && fileIds['feedback_dir/nextpass.in']) {
             return {
                 status,
                 score,
                 message,
                 nextPass: {
                     input: { fileId: fileIds['feedback_dir/nextpass.in'] },
-                    state: fileIds['feedback_dir/state.txt'] !== undefined
+                    state: fileIds['feedback_dir/state.txt']
                         ? { 'feedback_dir/state.txt': { fileId: fileIds['feedback_dir/state.txt'] } }
                         : undefined,
                 },

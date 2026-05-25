@@ -43,7 +43,7 @@ function judgeCase(c: NormalizedCase) {
         ], [
             { in: { index: 0, fd: 1 }, out: { index: 1, fd: 0 }, name: 'userToInteractor' },
             { in: { index: 1, fd: 1 }, out: { index: 0, fd: 0 }, name: 'interactorToUser' },
-        ]);
+        ], undefined, `judgeCase[${c.id}]${mp.i ? `[pass=${mp.i}]` : ''}<${ctx.rid}>`);
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;
@@ -63,12 +63,10 @@ function judgeCase(c: NormalizedCase) {
             message += result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
             if (status === STATUS.STATUS_ACCEPTED) {
-                if (resInteractor.fileIds['nextpass.in'] !== undefined) {
+                if (resInteractor.fileIds['nextpass.in']) {
                     if (mp.i < ctx.config.multi_pass) {
                         mp.input = { fileId: resInteractor.fileIds['nextpass.in'] };
-                        mp.state = resInteractor.fileIds['state.txt'] !== undefined
-                            ? { 'state.txt': { fileId: resInteractor.fileIds['state.txt'] } }
-                            : undefined;
+                        mp.state = resInteractor.fileIds['state.txt'] ? { 'state.txt': { fileId: resInteractor.fileIds['state.txt'] } } : undefined;
                         mp.i++;
                         return await runner!(ctx, ctxSubtask, runner);
                     }
