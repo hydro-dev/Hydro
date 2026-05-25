@@ -11,45 +11,11 @@ export default function ProblemType() {
   const checkerType = useSelector((state: RootState) => state.config.checker_type);
   const filename = useSelector((state: RootState) => state.config.filename);
   const numProcesses = useSelector((state: RootState) => state.config.num_processes);
-  const multiPass = useSelector((state: RootState) => state.config.multi_pass);
   const subType = useSelector((state: RootState) => state.config.subType);
   const checker = useSelector((state: RootState) => state.config.checker);
   const [category, setCategory] = React.useState('');
   const dispatch = useDispatch();
   const dispatcher = (base) => (value) => dispatch({ ...base, value });
-  const multiPassEnabled = (multiPass || 0) > 1;
-  const multiPassFields = (
-    <>
-      <FormItem columns={4} label="Multi-pass" disableLabel>
-        <Switch
-          styles={{ body: { display: 'flex' } }}
-          checked={multiPassEnabled}
-          label={i18n('Enable Multi-pass')}
-          onChange={() => dispatch({
-            type: 'CONFIG_FORM_UPDATE',
-            key: 'multi_pass',
-            value: multiPassEnabled ? 0 : 2,
-          })}
-        />
-      </FormItem>
-      {multiPassEnabled && (
-        <FormItem columns={4} label={i18n('Max passes')}>
-          <input
-            type="number"
-            min={2}
-            max={10}
-            value={multiPass || 2}
-            onChange={(ev) => dispatch({
-              type: 'CONFIG_FORM_UPDATE',
-              key: 'multi_pass',
-              value: Math.min(10, Math.max(2, +ev.currentTarget.value || 2)),
-            })}
-            className="textbox"
-          />
-        </FormItem>
-      )}
-    </>
-  );
   useEffect(() => {
     if (category || !checker) return;
     const name = typeof checker === 'string' ? checker : checker.file;
@@ -143,19 +109,12 @@ export default function ProblemType() {
                 <SingleFileSelect formKey="checker" label="Checker" withLang />
               </div>
             )}
-
-            {Type === 'default' && (
-              <div className="row">
-                {multiPassFields}
-              </div>
-            )}
           </>
         )}
 
         {Type === 'interactive' && (
           <div className="row">
             <SingleFileSelect formKey="interactor" label="Interactor" withLang />
-            {multiPassFields}
           </div>
         )}
 

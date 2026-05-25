@@ -16,14 +16,12 @@ export interface CheckConfig {
     env?: Record<string, string>;
 }
 
-type CheckerResult = {
+type Checker = (config: CheckConfig) => Promise<{
     status: number;
     score: number;
     message: string;
     nextPass?: { input: CopyInFile, state?: CopyInFile };
-};
-
-type Checker = (config: CheckConfig) => Promise<CheckerResult>;
+}>;
 
 function parseDiffMsg(msg: string) {
     msg = msg.trim();
