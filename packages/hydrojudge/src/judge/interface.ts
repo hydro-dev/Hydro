@@ -23,14 +23,16 @@ export interface RuntimeContext {
     executeInteractor?: Execute;
     executeManager?: Execute;
     executeUser?: Execute;
-
-    multiPassRun?: number;
-    multiPassInput?: CopyInFile;
-    multiPassState?: CopyInFile;
 }
 
 export interface ContextSubTask {
     subtask: NormalizedSubtask;
     score: number;
     status: number;
+}
+
+export interface MultiPassContext {
+    i: number;
+    input?: CopyInFile;
+    state?: Record<string, CopyInFile>;
 }

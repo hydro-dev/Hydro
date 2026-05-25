@@ -20,7 +20,7 @@ type Checker = (config: CheckConfig) => Promise<{
     status: number;
     score: number;
     message: string;
-    nextPass?: { input: CopyInFile, state?: CopyInFile };
+    nextPass?: { input: CopyInFile, state?: Record<string, CopyInFile> };
 }>;
 
 function parseDiffMsg(msg: string) {
@@ -273,7 +273,8 @@ const checkers: Record<string, Checker> = new Proxy({
                 ...result,
                 nextPass: {
                     input: { fileId: fileIds['nextpass.in'] },
-                    state: fileIds['state.txt'] !== undefined ? { fileId: fileIds['state.txt'] } : undefined,
+                    state: fileIds['state.txt'] !== undefined ? 
+                    { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
                 },
             };
         }
@@ -298,7 +299,7 @@ const checkers: Record<string, Checker> = new Proxy({
             ],
             copyOutCached: [
                 'feedback_dir/nextpass.in?',
-                'feedback_dir/state.txt?'
+                'feedback_dir/state.txt?',
             ],
         });
 
@@ -326,7 +327,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 nextPass: {
                     input: { fileId: fileIds['feedback_dir/nextpass.in'] },
                     state: fileIds['feedback_dir/state.txt'] !== undefined
-                        ? { fileId: fileIds['feedback_dir/state.txt'] }
+                        ? { 'feedback_dir/state.txt': { fileId: fileIds['feedback_dir/state.txt'] } }
                         : undefined,
                 },
             };

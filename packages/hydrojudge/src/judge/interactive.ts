@@ -1,20 +1,22 @@
 import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { runFlow } from '../flow';
-import { CopyInFile, runPiped } from '../sandbox';
+import { runPiped } from '../sandbox';
 import signals from '../signals';
 import { parse } from '../testlib';
-import { Context, ContextSubTask } from './interface';
+import { Context, ContextSubTask, MultiPassContext } from './interface';
 
 function judgeCase(c: NormalizedCase) {
+    const mp: MultiPassContext = { i: 0 };
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
+        if (ctx.config.multi_pass && !mp.i) mp.i = 1;
 
         const [{
             code, signalled, time, memory,
         }, resInteractor] = await runPiped([
             {
                 execute: ctx.executeUser.execute,
-                copyIn: ctx.executeUser.copyIn,
+                copyIn: {...ctx.executeUser.copyIn, ...mp.state },
                 time: c.time,
                 memory: c.memory,
                 addressSpaceLimit: address_space_limit,
@@ -23,10 +25,10 @@ function judgeCase(c: NormalizedCase) {
             {
                 execute: `${ctx.executeInteractor.execute} /w/in /w/tout /w/out`,
                 copyIn: {
-                    in: ctx.multiPassInput ?? (c.input ? { src: c.input } : { content: '' }),
+                    in: mp.input ?? { src: c.input },
                     out: c.output ? { src: c.output } : { content: '' },
                     ...ctx.executeInteractor.copyIn,
-                    ...(ctx.multiPassState ? { [ctx.config.interactor === 'testlib' ? 'state.txt' : 'feedback_dir/state.txt']: ctx.multiPassState } : {}),
+                    ...mp.state ?? {},
                 },
                 time: c.time * 2,
                 memory: c.memory * 2,
@@ -34,7 +36,7 @@ function judgeCase(c: NormalizedCase) {
                 env: {
                     ...ctx.env,
                     HYDRO_TESTCASE: c.id.toString(),
-                    ...(ctx.multiPassRun ? { HYDRO_MULTI_PASS: ctx.multiPassRun.toString() } : {}),
+                    ...(mp.i ? { HYDRO_MULTI_PASS: mp.i.toString() } : {}),
                 },
             },
         ], [
@@ -44,7 +46,7 @@ function judgeCase(c: NormalizedCase) {
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;
-        let message: any = ctx.multiPassRun ? `Pass ${ctx.multiPassRun}` : '';
+        let message: any = mp.i ? `Pass ${mp.i}` : '';
         if (time > c.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > c.memory * 1024) {
@@ -62,17 +64,17 @@ function judgeCase(c: NormalizedCase) {
             if (status === STATUS.STATUS_ACCEPTED) {
                 const files = resInteractor.files || {};
                 if (files['nextpass.in'] !== undefined) {
-                    if (ctx.multiPassRun && ctx.multiPassRun < ctx.config.multi_pass - 1) {
-                        ctx.multiPassInput = { fileId: files['nextpass.in'] };
-                        ctx.multiPassState = files['state.txt'] !== undefined
-                            ? { fileId: files['state.txt'] }
+                    if (mp.i < ctx.config.multi_pass) {
+                        mp.input = { fileId: files['nextpass.in'] };
+                        mp.state = files['state.txt'] !== undefined
+                            ? { 'state.txt': { fileId: files['state.txt'] } }
                             : undefined;
-                        ctx.multiPassRun++;
+                        mp.i++;
                         return await runner!(ctx, ctxSubtask, runner);
                     }
-                    status = STATUS.STATUS_WRONG_ANSWER;
+                    status = STATUS.STATUS_SYSTEM_ERROR;
                     score = 0;
-                    message = { message: 'Exceeded maximum number of passes ({0}).', params: [ctx.multiPassRun] };
+                    message = { message: 'Exceeded maximum number of passes ({0}).', params: [ctx.config.multi_pass] };
                 }
             }
         }

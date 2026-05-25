@@ -1,19 +1,21 @@
 import { NormalizedCase, STATUS } from '@hydrooj/common';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { runQueued } from '../sandbox';
+import { CopyInFile, runQueued } from '../sandbox';
 import signals from '../signals';
 import { Context, ContextSubTask } from './interface';
 
 function judgeCase(c: NormalizedCase) {
+    const mp: { i: number, input?: CopyInFile, state?: Record<string, CopyInFile> } = { i: 0 };
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
+        if (ctx.config.multi_pass && !mp.i) mp.i = 1;
 
         await using res = await runQueued(
             ctx.execute.execute,
             {
-                stdin: ctx.multiPassInput ?? { src: c.input },
-                copyIn: ctx.execute.copyIn,
+                stdin: mp.input ?? { src: c.input },
+                copyIn: {...ctx.execute.copyIn, ...mp.state },
                 filename: ctx.config.filename,
                 time: c.time,
                 memory: c.memory,
@@ -21,13 +23,13 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
-            `judgeCase[${c.id}]${ctx.multiPassRun ? `[pass=${ctx.multiPassRun}]` : ''}<${ctx.rid}>`,
+            `judgeCase[${c.id}]${mp.i ? `[pass=${mp.i + 1}]` : ''}<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,
         } = res;
         let { status } = res;
-        let message: any = ctx.multiPassRun ? `Pass ${ctx.multiPassRun}` : '';
+        let message: any = mp.i ? `Pass ${mp.i}` : '';
         let score = 0;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
@@ -39,10 +41,10 @@ function judgeCase(c: NormalizedCase) {
                     execute: ctx.checker.execute,
                     copyIn: {
                         ...ctx.checker.copyIn,
-                        ...(ctx.multiPassState ? { [ctx.config.checker_type === 'testlib' ? 'state.txt' : 'feedback_dir/state.txt']: ctx.multiPassState } : {}),
+                        ...mp.state ?? {},
                     },
                     code: ctx.code,
-                    input: ctx.multiPassInput ?? { src: c.input },
+                    input: mp.input ?? { src: c.input },
                     output: { src: c.output },
                     user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
                     user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
@@ -53,17 +55,17 @@ function judgeCase(c: NormalizedCase) {
                         HYDRO_TESTCASE: c.id.toString(),
                         HYDRO_TIME_USAGE: time.toString(),
                         HYDRO_MEMORY_USAGE: Math.floor(memory / 1024).toString(),
-                        ...(ctx.multiPassRun ? { HYDRO_MULTI_PASS: ctx.multiPassRun.toString() } : {}),
+                        ...(mp.i ? { HYDRO_MULTI_PASS: mp.i.toString() } : {}),
                     },
                 });
-                if (ctx.multiPassRun && checkResult.nextPass && ctx.multiPassRun < ctx.config.multi_pass - 1) {
-                    ctx.multiPassInput = checkResult.nextPass.input;
-                    ctx.multiPassState = checkResult.nextPass.state ?? undefined;
-                    ctx.multiPassRun++;
-                    return await runner!(ctx, ctxSubtask, runner);
-                }
-                if (ctx.multiPassRun === ctx.config.multi_pass && checkResult.nextPass) {
-                    status = STATUS.STATUS_WRONG_ANSWER;
+                if (checkResult.nextPass) {
+                    if (mp.i < ctx.config.multi_pass) {
+                        mp.input = checkResult.nextPass.input;
+                        mp.state = checkResult.nextPass.state ?? undefined;
+                        mp.i++;
+                        return await runner!(ctx, ctxSubtask, runner);
+                    }
+                    status = STATUS.STATUS_SYSTEM_ERROR;
                     score = 0;
                     message = { message: 'Exceeded maximum number of passes ({0}).', params: [ctx.config.multi_pass] };
                 } else {
