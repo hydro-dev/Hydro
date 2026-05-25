@@ -1,12 +1,12 @@
 import { NormalizedCase, STATUS } from '@hydrooj/common';
 import checkers from '../checkers';
 import { runFlow } from '../flow';
-import { CopyInFile, runQueued } from '../sandbox';
+import { runQueued } from '../sandbox';
 import signals from '../signals';
-import { Context, ContextSubTask } from './interface';
+import { Context, ContextSubTask, MultiPassContext } from './interface';
 
 function judgeCase(c: NormalizedCase) {
-    const mp: { i: number, input?: CopyInFile, state?: Record<string, CopyInFile> } = { i: 0 };
+    const mp: MultiPassContext = { i: 0 };
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
         if (ctx.config.multi_pass && !mp.i) mp.i = 1;
