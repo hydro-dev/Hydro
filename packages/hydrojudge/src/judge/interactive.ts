@@ -16,7 +16,7 @@ function judgeCase(c: NormalizedCase) {
         }, resInteractor] = await runPiped([
             {
                 execute: ctx.executeUser.execute,
-                copyIn: {...ctx.executeUser.copyIn, ...mp.state },
+                copyIn: { ...ctx.executeUser.copyIn, ...mp.state },
                 time: c.time,
                 memory: c.memory,
                 addressSpaceLimit: address_space_limit,

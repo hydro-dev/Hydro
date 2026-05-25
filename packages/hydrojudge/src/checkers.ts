@@ -273,8 +273,8 @@ const checkers: Record<string, Checker> = new Proxy({
                 ...result,
                 nextPass: {
                     input: { fileId: fileIds['nextpass.in'] },
-                    state: fileIds['state.txt'] !== undefined ? 
-                    { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
+                    state: fileIds['state.txt'] !== undefined
+                        ? { 'state.txt': { fileId: fileIds['state.txt'] } } : undefined,
                 },
             };
         }

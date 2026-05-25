@@ -15,7 +15,7 @@ function judgeCase(c: NormalizedCase) {
             ctx.execute.execute,
             {
                 stdin: mp.input ?? { src: c.input },
-                copyIn: {...ctx.execute.copyIn, ...mp.state },
+                copyIn: { ...ctx.execute.copyIn, ...mp.state },
                 filename: ctx.config.filename,
                 time: c.time,
                 memory: c.memory,
