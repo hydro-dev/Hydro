@@ -47,7 +47,7 @@ function judgeCase(c: NormalizedCase) {
         // TODO handle tout (maybe pass to checker?)
         let status: number;
         let score = 0;
-        let message: any = mp.i ? `Pass ${mp.i}` : '';
+        let message: any = mp.i ? `[Pass ${mp.i}] ` : '';
         if (time > c.time) {
             status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
         } else if (memory > c.memory * 1024) {
@@ -55,12 +55,12 @@ function judgeCase(c: NormalizedCase) {
         } else if (ctx.config.detail === 'full' && ((code && code !== 13/* Broken Pipe */) || (code === 13 && !resInteractor.code))) {
             status = STATUS.STATUS_RUNTIME_ERROR;
             if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [code] };
+            else message = { message: `${message}Your program returned {0}.`, params: [code] };
         } else {
             const result = parse(resInteractor.stderr, c.score, ctx.config.detail);
             status = result.status;
             score = result.score;
-            message = result.message;
+            message += result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
             if (status === STATUS.STATUS_ACCEPTED) {
                 if (resInteractor.fileIds['nextpass.in'] !== undefined) {

@@ -80,7 +80,7 @@ const problemConfigSchema: JSONSchema7 = {
     interactor: { $ref: '#/definitions/compilableFile' },
     manager: { $ref: '#/definitions/compilableFile' },
     num_processes: { type: 'integer', maximum: 5, minimum: 1 },
-    multi_pass: { type: 'integer', maximum: 10, minimum: 2 },
+    multi_pass: { type: 'integer', maximum: 20, minimum: 2 },
     validator: { $ref: '#/definitions/compilableFile' },
     user_extra_files: { type: 'array', items: { type: 'string' } },
     judge_extra_files: { type: 'array', items: { type: 'string' } },
