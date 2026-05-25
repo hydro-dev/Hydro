@@ -46,7 +46,7 @@ function MultiPassConfig() {
             <Switch
               styles={{ body: { display: 'flex', height: '36px', alignItems: 'center' } }}
               checked={enabled}
-              label={i18n('Enable')}
+              label={i18n('Enabled')}
               onChange={() => {
                 setEnabled(!enabled);
                 dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'multi_pass', value: enabled ? 0 : 2 });
