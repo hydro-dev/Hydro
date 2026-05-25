@@ -735,6 +735,8 @@ problem_type.interactive: 交互题
 problem_type.objective: 客观题
 problem_type.remote_judge: 远端评测题
 problem_type.submit_answer: 提交答案题
+Enable Multi-pass: 启用 Multi-pass
+Max passes: 最大轮次
 problem-category-delim: '|'
 problem-subcategory-delim: 、
 Problem: 题目

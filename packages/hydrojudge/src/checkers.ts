@@ -16,11 +16,14 @@ export interface CheckConfig {
     env?: Record<string, string>;
 }
 
-type Checker = (config: CheckConfig) => Promise<{
+type CheckerResult = {
     status: number;
     score: number;
     message: string;
-}>;
+    nextPass?: { input: CopyInFile, state?: CopyInFile };
+};
+
+type Checker = (config: CheckConfig) => Promise<CheckerResult>;
 
 function parseDiffMsg(msg: string) {
     msg = msg.trim();
@@ -236,7 +239,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status, code } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { stderr, status, code, files } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -245,6 +248,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 ...config.copyIn,
             },
             env: config.env,
+            copyOut: ['nextpass.in?', 'state.txt?'],
         });
         if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
             const message = {
@@ -265,7 +269,17 @@ const checkers: Record<string, Checker> = new Proxy({
                 message: `Checker exited with code ${code}`,
             };
         }
-        return parse(stderr, config.score, config.detail);
+        const result = parse(stderr, config.score, config.detail);
+        if (result.status === STATUS.STATUS_ACCEPTED && files['nextpass.in'] !== undefined) {
+            return {
+                ...result,
+                nextPass: {
+                    input: { content: files['nextpass.in'] },
+                    state: files['state.txt'] !== undefined ? { content: files['state.txt'] } : undefined,
+                },
+            };
+        }
+        return result;
     },
 
     // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
@@ -283,6 +297,8 @@ const checkers: Record<string, Checker> = new Proxy({
                 'feedback_dir/judgemessage.txt?',
                 'feedback_dir/teammessage.txt?',
                 'feedback_dir/judgeerror.txt?',
+                'feedback_dir/nextpass.in?',
+                'feedback_dir/state.txt?',
             ],
         });
 
@@ -301,6 +317,20 @@ const checkers: Record<string, Checker> = new Proxy({
             : config.detail === 'full'
                 ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
                 : '';
+
+        if (status === STATUS.STATUS_ACCEPTED && files['feedback_dir/nextpass.in'] !== undefined) {
+            return {
+                status,
+                score,
+                message,
+                nextPass: {
+                    input: { content: files['feedback_dir/nextpass.in'] },
+                    state: files['feedback_dir/state.txt'] !== undefined
+                        ? { content: files['feedback_dir/state.txt'] }
+                        : undefined,
+                },
+            };
+        }
 
         return { status, score, message };
     },

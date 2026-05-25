@@ -34,6 +34,8 @@ problem_type.interactive: 'Type: Interactive'
 problem_type.objective: 'Type: Objective'
 problem_type.remote_judge: 'Type: RemoteJudge'
 problem_type.submit_answer: 'Type: SubmitAnswer'
+Enable Multi-pass: Enable Multi-pass
+Max passes: Max passes
 problem-category-delim: '|'
 problem-subcategory-delim: ', '
 problem.import.additional_file: '## Additional Files'
