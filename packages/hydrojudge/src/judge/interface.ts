@@ -2,6 +2,7 @@ import PQueue from 'p-queue';
 import { NormalizedSubtask } from '@hydrooj/common';
 import { Execute } from '../interface';
 import { JudgeTask } from '../task';
+import { CopyInFile } from '../sandbox';
 
 export type Context = JudgeTask & RuntimeContext;
 
@@ -22,6 +23,10 @@ export interface RuntimeContext {
     executeInteractor?: Execute;
     executeManager?: Execute;
     executeUser?: Execute;
+
+    multiPassRun?: number;
+    multiPassInput?: CopyInFile;
+    multiPassState?: CopyInFile;
 }
 
 export interface ContextSubTask {

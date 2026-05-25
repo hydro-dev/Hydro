@@ -237,7 +237,7 @@ const checkers: Record<string, Checker> = new Proxy({
     },
 
     async testlib(config) {
-        const { stderr, status, code, files } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
+        const { stderr, status, code, fileIds } = await runQueued(`${config.execute} /w/in /w/user_out /w/answer`, {
             copyIn: {
                 in: config.input,
                 user_out: config.user_stdout,
@@ -246,7 +246,7 @@ const checkers: Record<string, Checker> = new Proxy({
                 ...config.copyIn,
             },
             env: config.env,
-            copyOut: ['nextpass.in?', 'state.txt?'],
+            copyOutCached: ['nextpass.in?', 'state.txt?'],
         });
         if ([STATUS.STATUS_SYSTEM_ERROR, STATUS.STATUS_TIME_LIMIT_EXCEEDED, STATUS.STATUS_MEMORY_LIMIT_EXCEEDED].includes(status)) {
             const message = {
@@ -268,12 +268,12 @@ const checkers: Record<string, Checker> = new Proxy({
             };
         }
         const result = parse(stderr, config.score, config.detail);
-        if (result.status === STATUS.STATUS_ACCEPTED && files['nextpass.in'] !== undefined) {
+        if (result.status === STATUS.STATUS_ACCEPTED && fileIds['nextpass.in'] !== undefined) {
             return {
                 ...result,
                 nextPass: {
-                    input: { content: files['nextpass.in'] },
-                    state: files['state.txt'] !== undefined ? { content: files['state.txt'] } : undefined,
+                    input: { fileId: fileIds['nextpass.in'] },
+                    state: fileIds['state.txt'] !== undefined ? { fileId: fileIds['state.txt'] } : undefined,
                 },
             };
         }
@@ -282,7 +282,7 @@ const checkers: Record<string, Checker> = new Proxy({
 
     // https://www.kattis.com/problem-package-format/spec/2023-07-draft.html#output-validator
     async kattis(config) {
-        const { files, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
+        const { files, fileIds, code } = await runQueued(`${config.execute} input answer_file feedback_dir`, {
             copyIn: {
                 input: config.input,
                 answer_file: config.output,
@@ -295,8 +295,10 @@ const checkers: Record<string, Checker> = new Proxy({
                 'feedback_dir/judgemessage.txt?',
                 'feedback_dir/teammessage.txt?',
                 'feedback_dir/judgeerror.txt?',
+            ],
+            copyOutCached: [
                 'feedback_dir/nextpass.in?',
-                'feedback_dir/state.txt?',
+                'feedback_dir/state.txt?'
             ],
         });
 
@@ -316,15 +318,15 @@ const checkers: Record<string, Checker> = new Proxy({
                 ? files['feedback_dir/teammessage.txt'] || files['feedback_dir/judgemessage.txt'] || ''
                 : '';
 
-        if (status === STATUS.STATUS_ACCEPTED && files['feedback_dir/nextpass.in'] !== undefined) {
+        if (status === STATUS.STATUS_ACCEPTED && fileIds['feedback_dir/nextpass.in'] !== undefined) {
             return {
                 status,
                 score,
                 message,
                 nextPass: {
-                    input: { content: files['feedback_dir/nextpass.in'] },
-                    state: files['feedback_dir/state.txt'] !== undefined
-                        ? { content: files['feedback_dir/state.txt'] }
+                    input: { fileId: fileIds['feedback_dir/nextpass.in'] },
+                    state: fileIds['feedback_dir/state.txt'] !== undefined
+                        ? { fileId: fileIds['feedback_dir/state.txt'] }
                         : undefined,
                 },
             };
