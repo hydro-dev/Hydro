@@ -69,7 +69,7 @@ function judgeCase(c: NormalizedCase) {
                 mp.input = nextPass.input;
                 mp.state = nextPass.state ?? undefined;
                 mp.i++;
-                return await runner!(ctx, ctxSubtask, runner);
+                return await runner(ctx, ctxSubtask, runner);
             }
             status = STATUS.STATUS_SYSTEM_ERROR;
             score = 0;
@@ -77,7 +77,7 @@ function judgeCase(c: NormalizedCase) {
         }
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
-            return await runner(ctx, ctxSubtask);
+            return await runner(ctx, ctxSubtask, runner);
         }
         if (!ctx.request.rejudged && !ctx.analysis && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             ctx.analysis = true;

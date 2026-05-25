@@ -32,7 +32,8 @@ function judgeCase(c: NormalizedCase) {
                 },
                 time: c.time * 2,
                 memory: c.memory * 2,
-                copyOut: ['nextpass.in?', 'state.txt?', '/w/tout?'],
+                copyOut: ['/w/tout?'],
+                copyOutCached: ['nextpass.in?', 'state.txt?'],
                 env: {
                     ...ctx.env,
                     HYDRO_TESTCASE: c.id.toString(),
@@ -62,12 +63,11 @@ function judgeCase(c: NormalizedCase) {
             message = result.message;
             if (resInteractor.code && !(resInteractor.stderr || '').trim().length) message += ` (Interactor exited with code ${resInteractor.code})`;
             if (status === STATUS.STATUS_ACCEPTED) {
-                const files = resInteractor.files || {};
-                if (files['nextpass.in'] !== undefined) {
+                if (resInteractor.fileIds['nextpass.in'] !== undefined) {
                     if (mp.i < ctx.config.multi_pass) {
-                        mp.input = { fileId: files['nextpass.in'] };
-                        mp.state = files['state.txt'] !== undefined
-                            ? { 'state.txt': { fileId: files['state.txt'] } }
+                        mp.input = { fileId: resInteractor.fileIds['nextpass.in'] };
+                        mp.state = resInteractor.fileIds['state.txt'] !== undefined
+                            ? { 'state.txt': { fileId: resInteractor.fileIds['state.txt'] } }
                             : undefined;
                         mp.i++;
                         return await runner!(ctx, ctxSubtask, runner);

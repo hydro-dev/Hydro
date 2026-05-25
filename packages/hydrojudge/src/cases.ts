@@ -35,8 +35,8 @@ function isValidConfig(config) {
     if (config.type === 'interactive' && !config.interactor) {
         throw new FormatError('Interactive problems require an interactor.');
     }
-    if (config.multi_pass && (!Number.isInteger(config.multi_pass) || config.multi_pass < 0 || config.multi_pass > 10)) {
-        throw new FormatError('Multi Pass must be between 0 and 10.');
+    if (config.multi_pass && (!Number.isInteger(config.multi_pass) || config.multi_pass < 2 || config.multi_pass > 10)) {
+        throw new FormatError('Multi Pass must be between 2 and 10.');
     }
     if (config.multi_pass > 1 && config.type === 'default' && !['testlib', 'kattis'].includes(config.checker_type)) {
         throw new FormatError('Multi Pass on default problems requires a testlib or kattis checker.');

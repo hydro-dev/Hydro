@@ -54,7 +54,7 @@ function MultiPassConfig() {
             />
           </FormItem>
           {enabled && (
-            <FormItem columns={6} label={i18n('Max passes')}>
+            <FormItem columns={6} label={i18n('Max Passes')}>
               <TextInput
                 type="number"
                 min={2}
