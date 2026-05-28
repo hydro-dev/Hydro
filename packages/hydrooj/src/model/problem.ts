@@ -524,7 +524,7 @@ export class ProblemModel {
                         const [prefix] = id.split('-');
                         if (!ddoc?.namespaces?.[prefix]) return false;
                     }
-                    const doc = await ProblemModel.get(domainId, id);
+                    const doc = await ProblemModel.get(ddoc._id, id);
                     if (doc) {
                         if (!override) return false;
                         overridePid = doc.docId;
@@ -594,7 +594,7 @@ export class ProblemModel {
                     configChanged = true;
                 }
                 const docId = overridePid
-                    ? (await ProblemModel.edit(domainId, overridePid, {
+                    ? (await ProblemModel.edit(ddoc._id, overridePid, {
                         title: title.trim(),
                         content: overrideContent || pdoc.content?.toString() || 'No content',
                         tag,
@@ -602,14 +602,14 @@ export class ProblemModel {
                         ...(options.hidden ? { hidden: true } : {}),
                     })).docId
                     : await ProblemModel.add(
-                        domainId, pid, title.trim(), overrideContent || pdoc.content?.toString() || 'No content',
+                        ddoc._id, pid, title.trim(), overrideContent || pdoc.content?.toString() || 'No content',
                         operator || pdoc.owner, tag, { hidden: options.hidden || pdoc.hidden, difficulty: pdoc.difficulty },
                     );
                 // TODO delete unused file when updating pdoc
                 for (const [f, loc] of await getFiles('testdata', 'attachments', 'generators', 'include')) {
                     if (f.isDirectory()) {
                         const sub = await fs.readdir(loc);
-                        for (const s of sub) await ProblemModel.addTestdata(domainId, docId, s, path.join(loc, s));
+                        for (const s of sub) await ProblemModel.addTestdata(ddoc._id, docId, s, path.join(loc, s));
                     } else if (f.isFile()) await ProblemModel.addTestdata(domainId, docId, f.name, loc);
                 }
                 for (const [f, loc] of await getFiles('data')) {
@@ -617,7 +617,7 @@ export class ProblemModel {
                     const sub = await fs.readdir(loc);
                     for (const file of sub) {
                         if (f.name === 'sample') await ProblemModel.addAdditionalFile(domainId, docId, file, path.join(loc, file));
-                        await ProblemModel.addTestdata(domainId, docId, file, path.join(loc, file));
+                        await ProblemModel.addTestdata(ddoc._id, docId, file, path.join(loc, file));
                     }
                 }
                 for (const [f, loc] of await getFiles('output_validators')) {
@@ -625,7 +625,7 @@ export class ProblemModel {
                     const sub = await fs.readdir(loc);
                     for (const file of sub) {
                         if (file === 'testlib.h') continue;
-                        await ProblemModel.addTestdata(domainId, docId, file, path.join(loc, file));
+                        await ProblemModel.addTestdata(ddoc._id, docId, file, path.join(loc, file));
                         if (f.name === 'checker') {
                             config.checker_type = 'testlib';
                             config.checker = file;
@@ -638,11 +638,11 @@ export class ProblemModel {
                 }
                 for (const [f, loc] of await getFiles('additional_file', 'attachments', 'statement', 'problem_statement')) {
                     if (!f.isFile()) continue;
-                    await ProblemModel.addAdditionalFile(domainId, docId, f.name, loc);
+                    await ProblemModel.addAdditionalFile(ddoc._id, docId, f.name, loc);
                 }
                 for (const [f, loc] of await getFiles('solution')) {
                     if (!f.isFile()) continue;
-                    await SolutionModel.add(domainId, docId, operator, await fs.readFile(loc, 'utf-8'));
+                    await SolutionModel.add(ddoc._id, docId, operator, await fs.readFile(loc, 'utf-8'));
                 }
                 for (const [f] of await getFiles('attachments', 'include')) {
                     if (!f.isFile()) continue;
@@ -652,13 +652,13 @@ export class ProblemModel {
                     config.judge_extra_files = Array.from(new Set(config.judge_extra_files.concat(f.name)));
                     configChanged = true;
                 }
-                if (configChanged) await ProblemModel.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+                if (configChanged) await ProblemModel.addTestdata(ddoc._id, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
                 let count = 0;
                 for (const [f, loc] of await getFiles('std')) {
                     if (!f.isFile()) continue;
                     count++;
                     if (count > 5) continue;
-                    await RecordModel.add(domainId, docId, operator, f.name.split('.')[1], await fs.readFile(loc, 'utf-8'), true);
+                    await RecordModel.add(ddoc._id, docId, operator, f.name.split('.')[1], await fs.readFile(loc, 'utf-8'), true);
                 }
                 for (const [f, loc] of await getFiles('submissions')) {
                     if (f.isFile()) continue;
@@ -666,10 +666,10 @@ export class ProblemModel {
                     for (const file of sub) {
                         if (file.endsWith('.zip')) continue;
                         const code = await fs.readFile(path.join(loc, file), 'utf-8');
-                        await RecordModel.add(domainId, docId, operator, file.split('.')[1], `// ${file}: ${loc}\n${code}`, true);
+                        await RecordModel.add(ddoc._id, docId, operator, file.split('.')[1], `// ${file}: ${loc}\n${code}`, true);
                     }
                 }
-                if (configChanged) await ProblemModel.addTestdata(domainId, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
+                if (configChanged) await ProblemModel.addTestdata(ddoc._id, docId, 'config.yaml', Buffer.from(yaml.dump(config)));
                 const message = `${overridePid ? 'Updated' : 'Imported'} problem ${pdoc.pid || docId} (${title})`;
                 (process.env.HYDRO_CLI ? logger.info : progress)?.(message);
             } catch (e) {
