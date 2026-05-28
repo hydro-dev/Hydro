@@ -67,11 +67,11 @@ About Markdown: 關於 Markdown
 About test data: 關於測試資料
 about: 關於
 About: 關於
-AC Message: 透過訊息
-Accept: 透過
-Accepted Problems: 透過的題目
-Accepted Ratio: 透過率
-Accepted: 已透過
+AC Message: 通過訊息
+Accept: 通過
+Accepted Problems: 通過的題目
+Accepted Ratio: 通過率
+Accepted: 已通過
 Access Control: 訪問控制
 According to the contest rules, you cannot view your submission details at current.: 根據比賽規則，你現在不能檢視你的評測記錄詳情。
 Account Settings: 賬戶設定
@@ -202,7 +202,7 @@ Confirm to delete the selected files?: 確認刪除所選檔案嗎？
 Confirm to delete the selected problems?: 確認要刪除所選題目嗎？
 Confirm: 確認
 Confirmation mail has been sent to your new email.: 確認郵件已經傳送到您的新電子郵箱。
-Congratulations! Your submission is accepted.: 恭喜！您的遞交已評測透過。
+Congratulations! Your submission is accepted.: 恭喜！您的遞交已評測通過。
 Contact Us: 聯絡我們
 Contact: 聯絡
 Content copied to clipboard!: 內容已複製到剪貼簿！
@@ -441,7 +441,7 @@ Hide tags: 隱藏標籤
 Highlight discussions: 高亮討論
 Highlight: 高亮討論
 Hint: 提示
-Hint::icon::difficulty: Hydro 中題目的難度，根據遞交數、透過率以及每個遞交的遞交時間和評測結果，綜合計算得出，可能不準確。
+Hint::icon::difficulty: Hydro 中題目的難度，根據遞交數、通過率以及每個遞交的遞交時間和評測結果，綜合計算得出，可能不準確。
 Hint::icon::switch_account: 作為超級管理員，您可以直接切換到其他人的賬戶。
 Hint::icon::testdata: <a href="https://hydro.js.org/docs/Hydro/user/testdata" target="_blank">請參照文件說明</a>
 Hint::page::main: 歡迎來到 Hydro！ 您可在右上角註冊或登入。此類提示僅會顯示一次。
@@ -469,7 +469,7 @@ homework_status: 作業成績表
 Homework: 功課
 Host: 主持人
 hour(s): 小時
-If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您透過題目後，原始碼會以 Email 的形式傳送給您。
+If enabled, source code will be emailed to you after the submission is accepted.: 如果啟用，在您通過題目後，原始碼會以 Email 的形式傳送給您。
 If left blank, the built-in template of the corresponding language will be used.: 若留空，則將使用對應語言的內建程式碼模板。
 Ignore trailing space and enter.: 忽略行末空格與檔案尾回車。
 Images With Size: 指定大小的圖片
@@ -494,7 +494,7 @@ Input: 輸入
 Insert Code: 插入程式碼
 Insert Image: 插入影象
 Installed Modules: 已安裝的模組
-Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 雖然測試資料不會被複制，但是系統會將題目的測試資料連結到原題。因此在原題的資料被改動的時候，複製後的題目的資料也會同時改動。連結後的測試資料的許可權以原題為準，比如您可能依舊無法下載資料，但是評測機可以。在題目設定頁面中可以透過上傳新的測試資料的方式，這個資料連結會被刪除，以後將使用您的新測試資料。
+Instead of copying the test data directly, the test data of the copied problems will be linked to the test data of the source problems (called the source test data). Thus, the copied problems can observe the changes in the source test data. The permissions of the test data of the copied problems follow the source test data, e.g., you still might not download them but the judges can. By uploading some new test data, the link will be broken and the new test data will be used.: 雖然測試資料不會被複制，但是系統會將題目的測試資料連結到原題。因此在原題的資料被改動的時候，複製後的題目的資料也會同時改動。連結後的測試資料的許可權以原題為準，比如您可能依舊無法下載資料，但是評測機可以。在題目設定頁面中可以通過上傳新的測試資料的方式，這個資料連結會被刪除，以後將使用您的新測試資料。
 Introduce must not exceed 500 characters and it will be shown in the list view.: 簡介不能超過 500 個字元，將顯示在列表頁面中。
 Introduce: 簡介
 Invalid password for user {0}.: 使用者 {0} 的密碼錯誤。
@@ -856,7 +856,7 @@ Selected problems have been unhided.: 所選題目已取消隱藏。
 Selected roles have been deleted.: 所選身分組已刪除。
 Selected users have been removed from the domain.: 所選使用者已從此域中移除。
 Send By: 遞送者
-Send Code after acceptance: 透過題目後傳送原始碼
+Send Code after acceptance: 通過題目後傳送原始碼
 Send Message: 傳送站內資訊
 Send Password Reset Email: 傳送密碼重置郵件
 Send Verification Email: 傳送驗證郵件
@@ -966,7 +966,7 @@ This email was sent by {0} automatically, and please do not reply directly.: 這
 This homework is not open and you cannot view problems.: 功課尚未開放，不能檢視題目。
 This homework is not open.: 功課尚未開放遞交。
 This is the current session: 這是當前的會話
-This message will be presented to those whose submissions are accepted.: 這條訊息將會被展示給透過此題的使用者。
+This message will be presented to those whose submissions are accepted.: 這條訊息將會被展示給通過此題的使用者。
 This page is only for pasting code from other sources.: 此頁面僅用於貼上程式碼。
 This page needs JavaScript to work.: 這個頁面需要 Javascript。
 This section cannot be challenged at present, so please complete the following sections first: 該章節目前不可挑戰，請先完成以下章節
