@@ -276,7 +276,7 @@ class SystemUserImportHandler extends SystemHandler {
                     Object.assign(payload, {
                         email, username, password, displayName,
                     });
-                    await this.ctx.serial('user/import/parse', payload);
+                    await this.ctx.serial('user/import/parse', payload, messages);
                     udocs.push(payload);
                 }
             } else messages.push(`Line ${+i + 1}: Input invalid.`);
