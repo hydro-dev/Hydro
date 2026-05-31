@@ -47,7 +47,7 @@ export interface EventMap {
     'user/get': (udoc: User) => void;
     'user/delcache': (content: string | true) => void;
 
-    'user/import/parse': (payload: any) => VoidReturn;
+    'user/import/parse': (payload: any, messages: string[]) => VoidReturn;
     'user/import/create': (uid: number, udoc: any) => VoidReturn;
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn;
