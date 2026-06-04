@@ -439,12 +439,16 @@ export const DomainApi = {
     groups: Query(
         Schema.object({
             domainId: Schema.string().required(),
+            uid: Schema.number().step(1),
             names: Schema.array(Schema.string()),
             search: Schema.string(),
             limit: Schema.number().step(1).max(100),
         }),
         async (ctx, args) => {
             if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
+            if (args.uid) {
+                return user.listGroup(args.domainId, args.uid, args.names);
+            }
             if (args.names?.length) {
                 return user.listGroup(args.domainId, undefined, args.names);
             }
@@ -452,16 +456,6 @@ export const DomainApi = {
                 return user.searchGroups(args.domainId, args.search, args.limit ?? 10);
             }
             return user.listGroup(args.domainId);
-        },
-    ),
-    userGroups: Query(
-        Schema.object({
-            domainId: Schema.string().required(),
-            uid: Schema.number().step(1).required(),
-        }),
-        async (ctx, args) => {
-            if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
-            return user.listGroup(args.domainId, args.uid);
         },
     ),
     'domain.group': Mutation(
