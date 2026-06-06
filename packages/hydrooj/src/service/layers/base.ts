@@ -57,6 +57,7 @@ export default async (ctx: KoaContext, next: Next) => {
     if (ctx.session._id && !ctx.session.recreate) {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     } else {
+        if (ctx.session._id) await token.del(ctx.session._id, token.TYPE_SESSION);
         Object.assign(ctx.session, { createIp: request.ip, createUa: ua, createHost: request.host });
         [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     }
