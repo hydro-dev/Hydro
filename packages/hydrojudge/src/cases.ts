@@ -32,6 +32,18 @@ function isValidConfig(config) {
     if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
         throw new FormatError('You did not specify a checker.');
     }
+    if (config.type === 'interactive' && !config.interactor) {
+        throw new FormatError('Interactive problems require an interactor.');
+    }
+    if (config.multi_pass && (!Number.isInteger(config.multi_pass) || config.multi_pass < 2 || config.multi_pass > 20)) {
+        throw new FormatError('Multi Pass must be between 2 and 20.');
+    }
+    if (config.multi_pass > 1 && !['default', 'interactive'].includes(config.type)) {
+        throw new FormatError('Multi Pass only supported on default and interactive problems.');
+    }
+    if (config.multi_pass > 1 && config.type === 'default' && !['testlib', 'kattis'].includes(config.checker_type)) {
+        throw new FormatError('Multi Pass on default problems requires a testlib or kattis checker.');
+    }
 }
 
 async function collectFiles(folder: string) {

@@ -1,6 +1,6 @@
-import { Card, Text, TextInput } from '@mantine/core';
+import { Card, Switch, Text, TextInput } from '@mantine/core';
 import { isEqual } from 'lodash';
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { i18n } from 'vj/utils';
 import FileSelectAutoComplete from '../autocomplete/components/FileSelectAutoComplete';
@@ -13,10 +13,10 @@ function FileIOConfig() {
   const filename = useSelector((state: RootState) => state.config.filename);
   const dispatch = useDispatch();
   return (
-    <FormItem columns={12} label="FileIOConfig" disableLabel>
+    <FormItem columns={6} label="FileIOConfig" disableLabel>
       <Card withBorder style={{ padding: 10, overflow: 'visible' }}>
         <div className="row">
-          <FormItem columns={6} label="FileIO">
+          <FormItem columns={12} label="FileIO">
             <TextInput
               rightSection={<Text size="sm">.in/.out</Text>}
               rightSectionWidth={100}
@@ -28,6 +28,42 @@ function FileIOConfig() {
               style={{ width: '100%' }}
             />
           </FormItem>
+        </div>
+      </Card>
+    </FormItem>
+  );
+}
+
+function MultiPassConfig() {
+  const multiPass = useSelector((state: RootState) => state.config.multi_pass);
+  const dispatch = useDispatch();
+  const [enabled, setEnabled] = useState(multiPass > 1);
+  return (
+    <FormItem columns={6} label="Multi-pass" disableLabel>
+      <Card withBorder style={{ padding: 10, overflow: 'visible' }}>
+        <div className="row">
+          <FormItem columns={6} label="Multi Pass">
+            <Switch
+              styles={{ body: { display: 'flex', height: '36px', alignItems: 'center' } }}
+              checked={enabled}
+              label={i18n('Enabled')}
+              onChange={() => {
+                setEnabled(!enabled);
+                dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'multi_pass', value: enabled ? 0 : 2 });
+              }}
+            />
+          </FormItem>
+          {enabled && (
+            <FormItem columns={6} label={i18n('Max Passes')}>
+              <TextInput
+                type="number"
+                min={2}
+                max={10}
+                value={multiPass}
+                onChange={(ev) => dispatch({ type: 'CONFIG_FORM_UPDATE', key: 'multi_pass', value: +ev.currentTarget.value })}
+              />
+            </FormItem>
+          )}
         </div>
       </Card>
     </FormItem>
@@ -92,6 +128,7 @@ export default function ProblemConfigForm() {
     <div className="row problem-config-form">
       <ProblemType />
       {Type === 'default' && <FileIOConfig />}
+      {['default', 'interactive'].includes(Type) && <MultiPassConfig />}
       {!['submit_answer', 'objective'].includes(Type) && (
         <>
           <ExtraFilesConfig />

@@ -3,16 +3,19 @@ import checkers from '../checkers';
 import { runFlow } from '../flow';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
-import { Context, ContextSubTask } from './interface';
+import { Context, ContextSubTask, MultiPassContext } from './interface';
 
 function judgeCase(c: NormalizedCase) {
+    const mp: MultiPassContext = { i: 0 };
     return async (ctx: Context, ctxSubtask: ContextSubTask, runner?: Function) => {
         const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
+        if (ctx.config.multi_pass && !mp.i) mp.i = 1;
+
         await using res = await runQueued(
             ctx.execute.execute,
             {
-                stdin: { src: c.input },
-                copyIn: ctx.execute.copyIn,
+                stdin: mp.input ?? { src: c.input },
+                copyIn: { ...ctx.execute.copyIn, ...mp.state },
                 filename: ctx.config.filename,
                 time: c.time,
                 memory: c.memory,
@@ -20,25 +23,29 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
-            `judgeCase[${c.id}]<${ctx.rid}>`,
+            `judgeCase[${c.id}]${mp.i ? `[pass=${mp.i}]` : ''}<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,
         } = res;
         let { status } = res;
-        let message: any = '';
+        let message: any = mp.i ? `[Pass ${mp.i}] ` : '';
         let score = 0;
+        let nextPass: any;
         if (status === STATUS.STATUS_ACCEPTED) {
             if (time > c.time) {
                 status = STATUS.STATUS_TIME_LIMIT_EXCEEDED;
             } else if (memory > c.memory * 1024) {
                 status = STATUS.STATUS_MEMORY_LIMIT_EXCEEDED;
             } else {
-                ({ status, score, message } = await checkers[ctx.config.checker_type]({
+                const resChecker = await checkers[ctx.config.checker_type]({
                     execute: ctx.checker.execute,
-                    copyIn: ctx.checker.copyIn || {},
+                    copyIn: {
+                        ...ctx.checker.copyIn,
+                        ...mp.state ?? {},
+                    },
                     code: ctx.code,
-                    input: { src: c.input },
+                    input: mp.input ?? { src: c.input },
                     output: { src: c.output },
                     user_stdout: fileIds.stdout ? { fileId: fileIds.stdout } : { content: '' },
                     user_stderr: fileIds.stderr ? { fileId: fileIds.stderr } : { content: '' },
@@ -49,16 +56,30 @@ function judgeCase(c: NormalizedCase) {
                         HYDRO_TESTCASE: c.id.toString(),
                         HYDRO_TIME_USAGE: time.toString(),
                         HYDRO_MEMORY_USAGE: Math.floor(memory / 1024).toString(),
+                        ...(mp.i ? { HYDRO_MULTI_PASS: mp.i.toString() } : {}),
                     },
-                }));
+                });
+                ({ status, score, nextPass } = resChecker);
+                message += resChecker.message;
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && ctx.config.detail === 'full') {
             if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [code] };
+            else message = { message: `${message}Your program returned {0}.`, params: [code] };
+        }
+        if (nextPass) {
+            if (mp.i < ctx.config.multi_pass) {
+                mp.input = nextPass.input;
+                mp.state = nextPass.state ?? undefined;
+                mp.i++;
+                return await runner(ctx, ctxSubtask, runner);
+            }
+            status = STATUS.STATUS_SYSTEM_ERROR;
+            score = 0;
+            message = { message: 'Exceeded maximum number of passes ({0}).', params: [ctx.config.multi_pass] };
         }
         if (runner && ctx.rerun && c.time <= 5000 && status === STATUS.STATUS_TIME_LIMIT_EXCEEDED) {
             ctx.rerun--;
-            return await runner(ctx, ctxSubtask);
+            return await runner(ctx, ctxSubtask, runner);
         }
         if (!ctx.request.rejudged && !ctx.analysis && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
             ctx.analysis = true;
