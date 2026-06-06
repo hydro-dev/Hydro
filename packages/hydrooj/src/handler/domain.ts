@@ -446,16 +446,7 @@ export const DomainApi = {
         }),
         async (ctx, args) => {
             if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
-            if (args.uid) {
-                return user.listGroup(args.domainId, args.uid, args.names);
-            }
-            if (args.names?.length) {
-                return user.listGroup(args.domainId, undefined, args.names);
-            }
-            if (args.search) {
-                return user.searchGroups(args.domainId, args.search, args.limit ?? 10);
-            }
-            return user.listGroup(args.domainId);
+            return user.listGroup(args.domainId, args.uid, args.names, args.search, args.search ? (args.limit ?? 10) : undefined);
         },
     ),
     'domain.group': Mutation(

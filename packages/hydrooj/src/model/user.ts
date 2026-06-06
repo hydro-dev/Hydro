@@ -479,25 +479,20 @@ class UserModel {
         ]);
     }
 
-    static async listGroup(domainId: string, uid?: number, names?: string[]) {
+    static async listGroup(domainId: string, uid?: number, names?: string[], search?: string, limit?: number) {
         const filter: Filter<GDoc> = { domainId };
         if (typeof uid === 'number') filter.uids = uid;
         if (names?.length) filter.name = { $in: names };
-        const groups = await collGroup.find(filter).toArray();
+        if (search) filter.name = { $regex: escapeRegExp(search), $options: 'i' };
+        let cursor = collGroup.find(filter);
+        if (limit) cursor = cursor.limit(limit);
+        const groups = await cursor.toArray();
         if (uid) {
             groups.push({
                 _id: new ObjectId(), domainId, uids: [uid], name: uid.toString(),
             });
         }
         return groups;
-    }
-
-    static searchGroups(domainId: string, search: string, limit = 10) {
-        const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return collGroup.find({
-            domainId,
-            name: { $regex: escaped, $options: 'i' },
-        }).limit(limit).toArray();
     }
 
     static delGroup(domainId: string, name: string) {
