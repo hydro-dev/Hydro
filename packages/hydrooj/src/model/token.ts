@@ -102,8 +102,8 @@ class TokenModel {
     }
 
     @ArgMethod
-    static delByUid(uid: number) {
-        return TokenModel.coll.deleteMany({ uid });
+    static delByUid(uid: number, tokenType?: number) {
+        return TokenModel.coll.deleteMany({ uid, tokenType });
     }
 }
 
