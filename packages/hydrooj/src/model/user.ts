@@ -482,8 +482,16 @@ class UserModel {
     static async listGroup(domainId: string, uid?: number, names?: string[], search?: string, limit?: number) {
         const filter: Filter<GDoc> = { domainId };
         if (typeof uid === 'number') filter.uids = uid;
-        if (names?.length) filter.name = { $in: names };
-        if (search) filter.name = { $regex: escapeRegExp(search), $options: 'i' };
+        if (names?.length && search) {
+            filter.$and = [
+                { name: { $in: names } },
+                { name: { $regex: escapeRegExp(search), $options: 'i' } },
+            ];
+        } else if (names?.length) {
+            filter.name = { $in: names };
+        } else if (search) {
+            filter.name = { $regex: escapeRegExp(search), $options: 'i' };
+        }
         let cursor = collGroup.find(filter);
         if (limit) cursor = cursor.limit(limit);
         const groups = await cursor.toArray();
