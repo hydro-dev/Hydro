@@ -1,6 +1,7 @@
 import { Filter } from 'mongodb';
 import { Context } from '../context';
 import { TokenDoc } from '../interface';
+import bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod, randomstring } from '../utils';
 
@@ -37,7 +38,9 @@ class TokenModel {
             updateAt: now,
             expireAt: new Date(now.getTime() + expireSeconds * 1000),
         };
+        await bus.serial('token/before-add', payload);
         await TokenModel.coll.insertOne(payload);
+        await bus.parallel('token/add', payload);
         return [id, payload];
     }
 
@@ -55,6 +58,7 @@ class TokenModel {
         data: object,
     ) {
         const now = new Date();
+        await bus.serial('token/before-update', tokenId, data);
         const res = await TokenModel.coll.findOneAndUpdate(
             { _id: tokenId, tokenType },
             {
@@ -67,13 +71,18 @@ class TokenModel {
             },
             { returnDocument: 'after' },
         );
+        await bus.parallel('token/update', tokenId, res);
         return res;
     }
 
     @ArgMethod
     static async del(tokenId: string, tokenType: number) {
-        const result = await TokenModel.coll.deleteOne({ _id: tokenId, tokenType });
-        return !!result.deletedCount;
+        const tdoc = await TokenModel.coll.findOne({ _id: tokenId, tokenType });
+        if (!tdoc) return false;
+        await bus.parallel('token/before-del', tokenId, tdoc);
+        await TokenModel.coll.deleteOne({ _id: tokenId, tokenType });
+        await bus.parallel('token/del', tokenId, tdoc);
+        return true;
     }
 
     static async createOrUpdate(
@@ -102,8 +111,14 @@ class TokenModel {
     }
 
     @ArgMethod
-    static delByUid(uid: number) {
-        return TokenModel.coll.deleteMany({ uid });
+    static async delByUid(uid: number) {
+        const tdocs = await TokenModel.coll.find({ uid }).toArray();
+        return await Promise.all(tdocs.map(async (tdoc) => {
+            await bus.parallel('token/before-del', tdoc._id, tdoc);
+            const r = await this.coll.deleteOne({ _id: tdoc._id });
+            await bus.parallel('token/del', tdoc._id, tdoc);
+            return !!r.deletedCount;
+        })).then((r) => r.reduce((prev, cur) => prev + (cur ? 1 : 0), 0));
     }
 }
 

@@ -7,7 +7,7 @@ import { Context } from '../context';
 import type {
     BaseUserDict, ContestBalloonDoc, DiscussionDoc, DomainDoc, FileInfo,
     MessageDoc, ProblemDict, ProblemDoc, RecordDoc,
-    ScoreboardRow, Tdoc, TrainingDoc, User,
+    ScoreboardRow, Tdoc, TokenDoc, TrainingDoc, User,
 } from '../interface';
 import type { DocType } from '../model/document';
 
@@ -98,6 +98,13 @@ export interface EventMap {
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void;
     'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc, updater?: any) => VoidReturn;
+
+    'token/before-add': (payload: any) => VoidReturn;
+    'token/add': (tdoc: TokenDoc) => VoidReturn;
+    'token/before-update': (tokenId: string, payload: any) => VoidReturn;
+    'token/update': (tokenId: string, tdoc: TokenDoc) => VoidReturn;
+    'token/before-del': (tokenId: string, tdoc: TokenDoc) => VoidReturn;
+    'token/del': (tokenId: string, tdoc: TokenDoc) => VoidReturn;
 }
 
 export function apply(ctx: Context) {
