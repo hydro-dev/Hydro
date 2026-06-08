@@ -281,7 +281,7 @@ class HomeSecurityHandler extends Handler {
     }
 
     async postDeleteAllTokens() {
-        await token.delByUid(this.user._id);
+        await token.delByUid(this.user._id, token.TYPE_SESSION);
         this.response.redirect = this.url('user_login');
     }
 
