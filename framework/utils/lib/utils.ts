@@ -38,6 +38,7 @@ export const Logger = createLogger as any as Logger;
 
 const encrypt = (algorithm, content) => crypto.createHash(algorithm).update(content).digest('hex');
 export const sha1 = (content: string) => encrypt('sha1', content);
+export const sha256 = (content: string) => encrypt('sha256', content);
 export const md5 = (content: string) => encrypt('md5', content);
 
 export function folderSize(folderPath: string) {

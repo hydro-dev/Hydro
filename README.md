@@ -109,7 +109,12 @@ Hydro 用户群：1085853538
 同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
-<summary><h2>更新日志（点击展开）</h2></summary>
+<summary><h2>更新日志（点击展开）</h2></summary
+
+## Hydro 5.0.2 / UI 4.58.2
+
+- judge: 支持 multi-pass 题型
+- core&ui: bug 与漏洞修复
 
 ## Hydro 5.0.0 / UI 4.58.0
 
