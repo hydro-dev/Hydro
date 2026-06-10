@@ -1,6 +1,6 @@
 {
   "name": "@hydrooj/ui-default",
-  "version": "4.58.2",
+  "version": "4.58.3",
   "author": "undefined <i@undefined.moe>",
   "license": "AGPL-3.0",
   "main": "index.ts",
@@ -25,7 +25,7 @@
     "@mantine/notifications": "^9.2.1",
     "@sentry/browser": "^10.53.1",
     "@sentry/webpack-plugin": "^5.3.0",
-    "@simplewebauthn/browser": "13.3.0",
+    "@simplewebauthn/browser": "13.2.2",
     "@svgr/webpack": "^8.1.0",
     "@types/html-to-text": "^9.0.4",
     "@types/jquery": "^3.5.34",

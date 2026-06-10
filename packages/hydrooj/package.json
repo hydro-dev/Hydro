@@ -1,6 +1,6 @@
 {
     "name": "hydrooj",
-    "version": "5.0.2",
+    "version": "5.0.3",
     "bin": "bin/hydrooj.js",
     "main": "src/plugin-api",
     "module": "src/plugin-api",
@@ -23,7 +23,7 @@
         "@hydrooj/framework": "workspace:^",
         "@hydrooj/utils": "workspace:^",
         "@mongodb-js/saslprep": "^1.4.11",
-        "@simplewebauthn/server": "13.3.0",
+        "@simplewebauthn/server": "13.2.2",
         "@undefined-moe/require-resolve-hook": "^1.1.0",
         "@zip.js/zip.js": "^2.8.26",
         "adm-zip": "0.5.16",
