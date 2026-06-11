@@ -177,7 +177,7 @@ export class TemplateService extends Service {
       h.ctx = h.ctx.extend({ domain: h.domain });
       h.renderHTML = ((orig) => function (name: string, args: Record<string, any>) {
         const s = name.split('.');
-        let templateName = `${s[0]}.${args.domainId}.${s[1]}`;
+        let templateName = `${s[0]}.${h.domain._id}.${s[1]}`;
         if (!that.registry[templateName]) templateName = name;
         return orig(templateName, args);
       })(h.renderHTML).bind(h);
