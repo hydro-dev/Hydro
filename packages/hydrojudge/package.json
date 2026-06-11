@@ -15,10 +15,10 @@
         "cac": "^7.0.0",
         "p-queue": "^9.3.0",
         "schemastery": "^3.18.0",
-        "semver": "^7.8.0",
-        "shell-quote": "^1.8.3",
+        "semver": "^7.8.4",
+        "shell-quote": "^1.8.4",
         "superagent": "^10.3.0",
-        "ws": "^8.20.1"
+        "ws": "^8.21.0"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",

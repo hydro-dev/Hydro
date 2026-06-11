@@ -7,8 +7,8 @@
     "dependencies": {
         "@antfu/eslint-config": "^8.3.0",
         "@eslint-react/eslint-plugin": "^4.2.3",
-        "@typescript-eslint/eslint-plugin": "^8.59.4",
-        "@typescript-eslint/parser": "^8.59.4",
+        "@typescript-eslint/eslint-plugin": "^8.61.0",
+        "@typescript-eslint/parser": "^8.61.0",
         "eslint-plugin-de-morgan": "^2.1.2",
         "eslint-plugin-github": "^6.0.0",
         "eslint-plugin-react-hooks": "^7.1.1",
