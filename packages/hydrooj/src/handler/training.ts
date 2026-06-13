@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { escapeRegExp, pick } from 'lodash';
+import { escapeRegExp, isNumber, pick } from 'lodash';
 import { Filter, ObjectId } from 'mongodb';
 import { sortFiles } from '@hydrooj/utils/lib/utils';
 import {
@@ -26,7 +26,7 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
         assert(dag.length, 'must have at least one node');
         assert(dag.length === ids.size, '_id must be unique');
         for (const node of dag) {
-            assert(node._id, 'each node should have a _id');
+            assert(isNumber(node._id), '_id should be a number');
             assert(node.title, 'each node shoule have a title');
             assert(node.requireNids instanceof Array);
             assert(node.pids instanceof Array);
