@@ -446,7 +446,7 @@ export const DomainApi = {
         }),
         async (ctx, args) => {
             if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
-            return user.listGroup(args.domainId, args.uid, args.names, args.search, args.limit ?? 20);
+            return user.listGroup(args.domainId, args.uid, args.names, args.search, args.limit || (args.search ? 20 : undefined));
         },
     ),
     'domain.group': Mutation(
