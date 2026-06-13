@@ -33,7 +33,7 @@ import {
 async function successfulAuth(this: Handler, udoc: User) {
     if (udoc._id !== 0) await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
     this.context.HydroContext.user = udoc;
-    this.session.viewLang = '';
+    this.session.viewLang = udoc.viewLang || '';
     this.session.uid = udoc._id;
     this.session.sudo = null;
     this.session.sudoUid = null;
