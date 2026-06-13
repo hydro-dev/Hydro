@@ -438,21 +438,15 @@ export const DomainApi = {
     ),
     groups: Query(
         Schema.object({
-            search: Schema.string(),
-            names: Schema.array(Schema.string()),
             domainId: Schema.string().required(),
+            uid: Schema.number().step(1),
+            names: Schema.array(Schema.string()),
+            search: Schema.string(),
+            limit: Schema.number().step(1).max(100),
         }),
         async (ctx, args) => {
             if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
-            const groups = await user.listGroup(args.domainId);
-            if (args.names?.length) {
-                return groups.filter((g) => args.names.includes(g.name));
-            }
-            if (args.search) {
-                const searchLower = args.search.toLowerCase();
-                return groups.filter((g) => g.name.toLowerCase().includes(searchLower));
-            }
-            return groups;
+            return user.listGroup(args.domainId, args.uid, args.names, args.search, args.limit ?? 20);
         },
     ),
     'domain.group': Mutation(
