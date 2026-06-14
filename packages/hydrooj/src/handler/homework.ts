@@ -127,7 +127,7 @@ class HomeworkDetailHandler extends Handler {
             const valid = (tsdoc.journal || []).filter((p) => this.tdoc.pids.includes(p.pid));
             for (const pdetail of valid) {
                 psdict[pdetail.pid] = pdetail;
-                rdict[pdetail.rid] = { _id: pdetail.rid };
+                rdict[pdetail.rid.toHexString()] = { _id: pdetail.rid };
             }
             if (contest.canShowSelfRecord.call(this, this.tdoc) && valid.length) {
                 rdict = await record.getList(domainId, valid.map((pdetail) => pdetail.rid));

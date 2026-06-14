@@ -1,7 +1,7 @@
 import path from 'path';
 import { LRUCache } from 'lru-cache';
 import {
-    avatar, ContestModel, Context, fs, getAlphabeticId, Logger, ObjectId,
+    avatar, ContestJournalEntry, ContestModel, Context, fs, getAlphabeticId, Logger, ObjectId,
     PERM, RecordDoc, Schema, STATUS, superagent, Tdoc, Types, UserModel,
 } from 'hydrooj';
 
@@ -43,15 +43,17 @@ const statusPrivate = {
     [STATUS.STATUS_CANCELED]: 'CANCELED',
 };
 
-function submissionBase(tdoc: Tdoc, rdoc: RecordDoc, uid?: number) {
+function submissionBase(tdoc: Tdoc, rdoc: RecordDoc | ContestJournalEntry, uid?: number) {
     // NOTE: rdoc can be either record, or a tsdoc detail entry
-    const submit = new ObjectId(rdoc._id || (rdoc as any).rid).getTimestamp().getTime();
+    const id: ObjectId = '_id' in rdoc ? rdoc._id : rdoc.rid;
+    const submit = new ObjectId(id).getTimestamp().getTime();
+    const teamId = (uid || (rdoc as RecordDoc).uid).toString();
     return {
         problem_id: tdoc.pids.indexOf(rdoc.pid),
-        team_id: `${uid || rdoc.uid}`,
+        team_id: teamId,
         timestamp: Math.floor(submit - tdoc.beginAt.getTime()),
-        language: rdoc.lang || '',
-        submission_id: rdoc._id,
+        language: ('lang' in rdoc && rdoc.lang) || '',
+        submission_id: id.toHexString(),
     };
 }
 
@@ -76,7 +78,7 @@ async function loadContestState(tdoc: Tdoc, realtime: boolean) {
     });
     return {
         submissions: tsdocs.flatMap((i) => (i.journal || []).map((j) => {
-            const submit = new ObjectId(j.rid as string).getTimestamp().getTime();
+            const submit = new ObjectId(j.rid).getTimestamp().getTime();
             const curStatus = (ended ? status : statusPrivate)[j.status] || 'SYSTEM_ERROR';
             return {
                 ...submissionBase(tdoc, j, i.uid),

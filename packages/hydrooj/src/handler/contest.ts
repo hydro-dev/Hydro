@@ -14,7 +14,7 @@ import {
     ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, MethodNotAllowedError, NotAssignedError, NotFoundError, PermissionError, ValidationError,
 } from '../error';
-import { FileInfo, ScoreboardConfig, Tdoc } from '../interface';
+import { ContestStatusDoc, FileInfo, ScoreboardConfig, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
 import * as contest from '../model/contest';
 import * as discussion from '../model/discussion';
@@ -77,7 +77,7 @@ export class ContestListHandler extends Handler {
 
 export class ContestDetailBaseHandler extends Handler {
     tdoc?: Tdoc;
-    tsdoc?: any;
+    tsdoc?: ContestStatusDoc;
 
     @param('tid', Types.ObjectId, true)
     async __prepare(domainId: string, tid: ObjectId) {

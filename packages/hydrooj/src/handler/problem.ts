@@ -368,7 +368,7 @@ export class ProblemDetailHandler extends ContestDetailBaseHandler {
         if (this.tdoc && this.tsdoc) {
             const fields = ['attend', 'startAt', 'endAt'];
             if (contest.canShowSelfRecord.call(this, this.tdoc, true)) fields.push('detail');
-            this.tsdoc = pick(this.tsdoc, fields);
+            this.tsdoc = pick(this.tsdoc, fields) as typeof this.tsdoc;
             this.response.body.tsdoc = this.tsdoc;
         }
         this.response.template = 'problem_detail.html';
