@@ -32,7 +32,7 @@ import {
 
 async function successfulAuth(this: Handler, udoc: User) {
     if (udoc._id !== 0) {
-        await this.ctx.serial('auth/before-login', udoc);
+        await this.ctx.serial('auth/before-login', this, udoc);
         await user.setById(udoc._id, { loginat: new Date(), loginip: this.request.ip });
     }
     this.context.HydroContext.user = udoc;
@@ -45,7 +45,7 @@ async function successfulAuth(this: Handler, udoc: User) {
     this.session.recreate = true;
     if (udoc._id !== 0) {
         await oplog.log(this, 'user.loginSuccess', { uid: udoc._id });
-        await this.ctx.serial('auth/login', udoc);
+        await this.ctx.serial('auth/login', this, udoc);
     }
 }
 

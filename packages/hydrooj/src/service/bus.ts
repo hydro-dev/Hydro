@@ -99,8 +99,8 @@ export interface EventMap {
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void;
     'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc, updater?: any) => VoidReturn;
 
-    'auth/before-login': (udoc: User) => VoidReturn;
-    'auth/login': (udoc: User) => VoidReturn;
+    'auth/before-login': (ctx: Handler, udoc: User) => VoidReturn;
+    'auth/login': (ctx: Handler, udoc: User) => VoidReturn;
 }
 
 export function apply(ctx: Context) {
