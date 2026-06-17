@@ -2,7 +2,7 @@
 import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
-    _, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    _, avatar, ContestModel, ContestNotEndedError, Context, db, DomainModel, findFileSync,
     ForbiddenError, fs, Handler, InvalidTokenError, ObjectId, param, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
     SystemModel, TokenModel, Types, UserModel, Zip,
@@ -86,6 +86,9 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     ctx.on('handler/before/HomeSettings', (that) => {
         if (!that.user.contestMode) return;
         if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
+    });
+    ctx.on('handler/before', (that) => {
+        if (typeof that.user.contestMode === 'string' && !['system', that.user.contestMode].includes(that.domain._id)) throw new ForbiddenError('Not available');
     });
 
     async function generateCdpZip(tdoc) {
@@ -278,10 +281,10 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
 
     /* eslint-disable no-await-in-loop */
     // @ts-ignore
-    Hydro.model.system.onsiteImport = async function (filepath: string, tidsInput: string, format = 'webp') {
+    Hydro.model.system.onsiteImport = async function (filepath: string, tidsInput: string | ObjectId, format = 'webp', domainId = 'system') {
         const data = QuickImportSchema(JSON.parse(fs.readFileSync(filepath, 'utf-8')));
-        const tids = tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
-        const tdocs = await Promise.all(tids.map((i) => ContestModel.get('system', i)));
+        const tids = tidsInput instanceof ObjectId ? [tidsInput] : tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
+        const tdocs = await Promise.all(tids.map((i) => ContestModel.get(domainId, i)));
         const convertUname = Types.Username[0];
         let cnt = 0;
         for (const line of data) {
@@ -289,10 +292,11 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             const id = line.id || cnt;
             const uname = convertUname(line.name);
             const email = `${id}@onsite.local`;
-            let team = await UserModel.getByEmail('system', email);
+            let team = await UserModel.getByEmail(domainId, email);
             if (!team) {
                 const uid = await UserModel.create(email, uname, line.password || randomstring());
-                team = await UserModel.getById('system', uid);
+                if (domainId !== 'system') await DomainModel.setJoin(domainId, uid, true);
+                team = await UserModel.getById(domainId, uid);
             } else {
                 await UserModel.setUname(team._id, uname);
                 if (line.password) await UserModel.setPassword(team._id, line.password);
@@ -306,9 +310,9 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             set.contestMode = true;
             await UserModel.setById(team._id, set);
             for (const tdoc of tdocs) {
-                const tsdoc = await ContestModel.getStatus('system', tdoc.docId, team._id);
-                if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
-                else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus('system', tdoc.docId, team._id, { unrank: !line.rank });
+                const tsdoc = await ContestModel.getStatus(domainId, tdoc.docId, team._id);
+                if (!tsdoc?.attend) await ContestModel.attend(domainId, tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
+                else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus(domainId, tdoc.docId, team._id, { unrank: !line.rank });
             }
             if (line.ip) await coll.updateOne({ _id: normalizeIp(line.ip) }, { $set: { uid: team._id } }, { upsert: true });
         }
