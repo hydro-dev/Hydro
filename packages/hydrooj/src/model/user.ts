@@ -155,7 +155,8 @@ export class User {
         user.avatarUrl = avatar(user.avatar, 128);
         if (user.pinnedDomains instanceof Array) {
             const result = await Promise.allSettled(user.pinnedDomains.slice(0, 10).map((i) => domain.get(i)));
-            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i);
+            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i)
+                .map((i) => pick(i, ['_id', 'name', 'avatar']));
         }
         user._isPrivate = true;
         return user;
