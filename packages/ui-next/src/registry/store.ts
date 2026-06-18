@@ -1,10 +1,10 @@
-import type { InterceptorEntry, InterceptorOptions, SlotName } from './types';
+import type { InterceptorEntry, InterceptorOptions, SlotName, SlotValue } from './types';
 
 type Listener = () => void;
 
 interface RegistryState {
   interceptors: Record<string, InterceptorEntry[]>;
-  defaults: Record<string, React.FC<any>>;
+  defaults: Record<string, unknown>;
 }
 
 function createRegistryStore() {
@@ -72,13 +72,13 @@ function createRegistryStore() {
     return state.interceptors[name] ?? [];
   }
 
-  function setDefault(name: SlotName, comp: React.FC<any>) {
-    state.defaults[name] = comp;
+  function setDefault<N extends SlotName>(name: N, value: SlotValue<N>) {
+    state.defaults[name] = value;
     bumpVersion(name);
   }
 
-  function getDefault(name: SlotName): React.FC<any> | undefined {
-    return state.defaults[name];
+  function getDefault<N extends SlotName>(name: N): SlotValue<N> | undefined {
+    return state.defaults[name] as SlotValue<N> | undefined;
   }
 
   return {

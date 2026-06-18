@@ -4,6 +4,7 @@ import { createContext, type ReactNode, useContext, useMemo, useState } from 're
 
 export interface PageData {
   name: string;
+  template: string;
   args: {
     UserContext: Record<string, any>;
     UiContext: Record<string, any>;
