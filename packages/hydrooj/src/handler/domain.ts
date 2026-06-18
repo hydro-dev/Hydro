@@ -436,6 +436,10 @@ export const DomainApi = {
             return ddoc;
         },
     ),
+    'domain.current': Query(
+        Schema.object({}),
+        async (handler) => ({ domain: handler.domain as DomainDoc }),
+    ),
     groups: Query(
         Schema.object({
             domainId: Schema.string().required(),

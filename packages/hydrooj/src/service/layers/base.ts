@@ -3,6 +3,7 @@ import { cloneDeep, omit } from 'lodash';
 import type { KoaContext } from '@hydrooj/framework';
 import { randomPick, Time } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
+import domain from '../../model/domain';
 import system from '../../model/system';
 import token from '../../model/token';
 
@@ -34,7 +35,7 @@ export default async (ctx: KoaContext, next: Next) => {
         UiContext.cdn_dynamic = system.get('server.cdn_dynamic');
     }
     UiContext.domainId = domainId;
-    UiContext.domain = domainInfo;
+    UiContext.domainVersion = domain.getVersion(domainInfo);
     ctx.HydroContext.UiContext = UiContext;
     ctx.HydroContext.domain = domainInfo;
     ctx.HydroContext.args = args;
