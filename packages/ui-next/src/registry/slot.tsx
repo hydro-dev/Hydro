@@ -30,7 +30,7 @@ function buildChain<P extends Record<string, any>>(
   return pipeline;
 }
 
-export function defineSlot<P extends Record<string, any>>(
+export function defineSlot<P extends React.ComponentProps<any>>(
   name: SlotName,
   DefaultComp: React.FC<P>,
 ): React.FC<P> {

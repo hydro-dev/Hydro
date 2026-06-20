@@ -84,6 +84,7 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
           if (!res.ok) throw new Error(`Navigation failed: ${res.status} ${res.statusText}`);
           const body = await res.json();
           const pageName = res.headers.get('x-hydro-page') || '';
+          const template = res.headers.get('x-hydro-template') || '';
           console.log('[Hydro] data from', reqUrl, 'received:', body, 'pageName:', pageName);
 
           if (gen !== genRef.current) return false;
@@ -95,6 +96,7 @@ export const RouterProvider: React.FC<React.PropsWithChildren> = ({ children }) 
             ...prev,
             args: body,
             name: pageName,
+            template,
             url,
           }));
           dispatch({ type: 'FETCH_SUCCESS' });

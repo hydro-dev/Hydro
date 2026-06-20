@@ -1,28 +1,13 @@
-import React, { lazy } from 'react';
-import Layout from '../components/layout';
+import { lazy } from 'react';
 import { store } from './store';
+import type { PageEntry, PageLoader, PageSlotName, RegisterPageOptions } from './types';
 
-interface PageModule<P = any> {
-  default: React.ComponentType<P>;
-  Layout?: React.ComponentType<React.PropsWithChildren>;
-}
-
-type PageLoader<P = any> = () => Promise<PageModule<P>>;
-
-export function registerPage<P = any>(name: string, loader: PageLoader<P>) {
-  store.setDefault(`page:${name}`, lazy(() =>
-    loader().then((mod) => {
-      const PageComp = mod.default;
-      const LayoutComp = mod.Layout || Layout;
-      return {
-        default(props: React.PropsWithChildren<P>) {
-          return (
-            <LayoutComp>
-              <PageComp {...props} />
-            </LayoutComp>
-          );
-        },
-      };
-    }),
-  ));
+export function registerPage<P = any>(
+  name: string,
+  loader: PageLoader<P>,
+  options: RegisterPageOptions = {},
+) {
+  const Page = lazy(loader);
+  const entry: PageEntry<P> = { Page, layout: options.layout ?? 'default' };
+  store.setDefault(`page:${name}` as PageSlotName, entry);
 }

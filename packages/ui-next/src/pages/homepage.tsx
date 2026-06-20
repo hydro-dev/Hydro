@@ -8,12 +8,3 @@ export default function Homepage() {
     </div>
   );
 }
-
-export function Layout({ children }: React.PropsWithChildren) {
-  return (
-    <div>
-      {children}
-      <div>layout test</div>
-    </div>
-  );
-}
