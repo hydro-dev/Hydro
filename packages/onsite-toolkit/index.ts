@@ -90,6 +90,12 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     ctx.on('handler/before', (that) => {
         if (typeof that.user.contestMode === 'string' && !['system', that.user.contestMode].includes(that.domain._id)) throw new ForbiddenError('Not available');
     });
+    ctx.on('handler/before/HomeHandler#get', (that) => { // eslint-disable-line
+        if (typeof that.user.contestMode === 'string' && that.domain._id !== that.user.contestMode) {
+            that.response.redirect = `/d/${that.user.contestMode}/`;
+            return 'cleanup';
+        }
+    });
 
     async function generateCdpZip(tdoc) {
         let token = 0;
@@ -307,7 +313,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (line.member4) line.members.push(line.member4);
             const set: any = _.pick(line, 'school', 'members', 'coach', 'seat');
             if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
-            set.contestMode = true;
+            set.contestMode = domainId;
             await UserModel.setById(team._id, set);
             for (const tdoc of tdocs) {
                 const tsdoc = await ContestModel.getStatus(domainId, tdoc.docId, team._id);
@@ -346,7 +352,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     if (config.contestMode) {
         ctx.inject(['setting'], (c) => {
             c.setting.AccountSetting(
-                SettingModel.Setting('setting_info', 'contestMode', null, 'boolean', 'contestMode', 'Contest Mode', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+                SettingModel.Setting('setting_info', 'contestMode', null, 'text', 'contestMode', 'Contest Mode', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
             );
         });
     }
