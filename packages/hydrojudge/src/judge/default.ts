@@ -23,7 +23,7 @@ function judgeCase(c: NormalizedCase) {
                 addressSpaceLimit: address_space_limit,
                 processLimit: process_limit,
             },
-            `judgeCase[${c.id}]${mp.i ? `[pass=${mp.i}]` : ''}<${ctx.rid}>`,
+            `judgeCase[${c.id}]${mp.i ? `{pass=${mp.i}}` : ''}<${ctx.rid}>`,
         );
         const {
             code, signalled, time, memory, fileIds,
@@ -61,12 +61,12 @@ function judgeCase(c: NormalizedCase) {
                         ...(mp.i ? { HYDRO_MULTI_PASS: mp.i.toString() } : {}),
                     },
                 }));
-                if (mp.i && typeof message === 'string') message = `[Pass ${mp.i}] ${message}`;
+                if (mp.i && typeof message === 'string') message = `${message} [Pass ${mp.i}]`;
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && ctx.config.detail === 'full') {
             if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [code] };
-            if (mp.i && typeof message === 'string') message = `[Pass ${mp.i}] ${message}`;
+            else message = { message: 'Your program returned {0}.', params: [`${code}${ mp.i ? ` [Pass ${mp.i}]` : ''}`] };
+            if (mp.i && typeof message === 'string') message = `${message} [Pass ${mp.i}]`;
         }
         if (nextPass) {
             if (mp.i < ctx.config.multi_pass) {
