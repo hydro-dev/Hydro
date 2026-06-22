@@ -65,7 +65,7 @@ function judgeCase(c: NormalizedCase) {
             }
         } else if (status === STATUS.STATUS_RUNTIME_ERROR && code && ctx.config.detail === 'full') {
             if (code < 32 && signalled) message = signals[code];
-            else message = { message: 'Your program returned {0}.', params: [`${code}${ mp.i ? ` [Pass ${mp.i}]` : ''}`] };
+            else message = { message: 'Your program returned {0}.', params: [`${code}${mp.i ? ` [Pass ${mp.i}]` : ''}`] };
             if (mp.i && typeof message === 'string') message = `${message} [Pass ${mp.i}]`;
         }
         if (nextPass) {
