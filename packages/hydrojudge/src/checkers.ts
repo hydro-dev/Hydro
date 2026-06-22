@@ -261,6 +261,11 @@ const checkers: Record<string, Checker> = new Proxy({
             };
         }
         if (status === STATUS.STATUS_RUNTIME_ERROR && !stderr?.trim()) {
+            if (code === 9) return { // wall time limit exceeded
+                status: STATUS.STATUS_TIME_LIMIT_EXCEEDED,
+                score: 0,
+                message: 'Checker Time Limit Exceeded',
+            };
             return {
                 status: STATUS.STATUS_SYSTEM_ERROR,
                 score: 0,
