@@ -1,8 +1,10 @@
 import os from 'os';
 import path from 'path';
+import readline from 'readline/promises';
 import cac from 'cac';
 import fs from 'fs-extra';
 import { ObjectId } from 'mongodb';
+import { parse, type ParseEntry } from 'shell-quote';
 import { Context } from '../context';
 import SystemModel from '../model/system';
 import { load as loadOptions } from '../options';
@@ -32,8 +34,20 @@ async function runScript(name: string, arg: any) {
     return await s.run(arg, console.info);
 }
 
-async function cli() {
-    const [, modelName, func, ...args] = argv.args as [string, string, string, ...any[]];
+function checkStringArray(args: ParseEntry[]): args is string[] {
+    return args.every((arg) => typeof arg === 'string');
+}
+
+function parseInteractiveArgv(line: string) {
+    const args = parse(line);
+    if (!checkStringArray(args)) throw new Error('Shell operators are not supported in interactive mode.');
+    if (args[0] === 'hydrooj') args.shift();
+    if (args[0] === 'cli') args.shift();
+    return cac().parse(['node', 'hydrooj', 'cli', ...args], { run: false });
+}
+
+async function cli(commandArgv = argv) {
+    const [, modelName, func, ...args] = commandArgv.args as [string, string, string, ...any[]];
     if (modelName === 'execute') {
         try {
             // eslint-disable-next-line no-eval
@@ -84,7 +98,7 @@ async function cli() {
         } else if ((+args[i]).toString() === args[i]) {
             args[i] = +args[i];
         } else if (args[i].startsWith('~')) {
-            args[i] = argv.options[args[i].substr(1)];
+            args[i] = commandArgv.options[args[i].substr(1)];
         } else if ((args[i].startsWith('[') && args[i].endsWith(']')) || (args[i].startsWith('{') && args[i].endsWith('}'))) {
             try {
                 args[i] = JSON.parse(args[i]);
@@ -137,5 +151,26 @@ export async function load(ctx: Context) {
     const scriptDir = path.resolve(__dirname, '..', 'script');
     await Promise.all((await fs.readdir(scriptDir))
         .map((h) => ctx.loader.reloadPlugin(path.resolve(scriptDir, h), '')));
-    await cli();
+    if (argv.args.length > 1) {
+        await cli();
+        return;
+    }
+    const rl = readline.createInterface(process.stdin, process.stdout);
+    console.log('Hydro CLI interactive mode. Type `exit` or press Ctrl+D to exit.');
+    try {
+        while (true) {
+            const line = await rl.question('hydrooj> ');
+            if (!line.trim()) continue;
+            if (['exit', 'quit'].includes(line.trim())) break;
+            try {
+                await cli(parseInteractiveArgv(line));
+            } catch (e) {
+                console.error(e.message);
+            }
+        }
+    } catch (e) {
+        if (e?.code !== 'ERR_USE_AFTER_CLOSE') console.error(e);
+    } finally {
+        rl.close();
+    }
 }
