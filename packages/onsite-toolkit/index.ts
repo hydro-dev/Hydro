@@ -29,6 +29,7 @@ function normalizeIp(ip: string) {
 const QuickImportSchema = Schema.array(Schema.object({
     id: Schema.union([Schema.string().required(), Schema.number().required()]),
     name: Schema.string().required(),
+    displayName: Schema.string(),
     password: Schema.string(),
     school: Schema.string(),
     members: Schema.array(Schema.string()).default([]),
@@ -315,6 +316,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
             set.contestMode = domainId;
             await UserModel.setById(team._id, set);
+            if (line.displayName) await DomainModel.setUserInDomain(domainId, team._id, { displayName: line.displayName });
             for (const tdoc of tdocs) {
                 const tsdoc = await ContestModel.getStatus(domainId, tdoc.docId, team._id);
                 if (!tsdoc?.attend) await ContestModel.attend(domainId, tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
