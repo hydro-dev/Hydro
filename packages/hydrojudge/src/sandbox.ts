@@ -136,13 +136,15 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     const outname = params.filename ? `${params.filename}.out` : 'stdout';
     ret.files = result.files || {};
     ret.fileIds = result.fileIds || {};
-    if (ret.fileIds[outname]) ret.fileIds.stdout = ret.fileIds[outname];
-    if (params.filename && !ret.fileIds[outname] && !ret.files[outname]) {
+    const hasOutputFileId = Object.prototype.hasOwnProperty.call(ret.fileIds, outname);
+    const hasOutputFile = Object.prototype.hasOwnProperty.call(ret.files, outname);
+    if (hasOutputFileId) ret.fileIds.stdout = ret.fileIds[outname];
+    if (params.filename && !hasOutputFileId && !hasOutputFile) {
         result.error = 'Output file not found';
         ret.status = STATUS.STATUS_RUNTIME_ERROR;
     }
-    ret.stdout = ret.files[outname] || '';
-    ret.stderr = ret.files.stderr || result.error || '';
+    ret.stdout = ret.files[outname] ?? '';
+    ret.stderr = ret.files.stderr ?? result.error ?? '';
     if (result.error) ret.error = result.error;
     return ret;
 }
