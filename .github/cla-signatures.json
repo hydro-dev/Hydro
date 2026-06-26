@@ -87,6 +87,14 @@
       "created_at": "2026-05-29T12:02:36Z",
       "repoId": 252140224,
       "pullRequestNo": 1170
+    },
+    {
+      "name": "Ujimatsu-Chiya",
+      "id": 56377920,
+      "comment_id": 4807384501,
+      "created_at": "2026-06-26T07:41:25Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1186
     }
   ]
 }
