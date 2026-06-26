@@ -159,11 +159,11 @@ export async function load(ctx: Context) {
     console.log('Hydro CLI interactive mode. Type `exit` or press Ctrl+D to exit.');
     try {
         while (true) {
-            const line = await rl.question('hydrooj> ');
+            const line = await rl.question('hydrooj> '); // eslint-disable-line no-await-in-loop
             if (!line.trim()) continue;
             if (['exit', 'quit'].includes(line.trim())) break;
             try {
-                await cli(parseInteractiveArgv(line));
+                await cli(parseInteractiveArgv(line)); // eslint-disable-line no-await-in-loop
             } catch (e) {
                 console.error(e.message);
             }
