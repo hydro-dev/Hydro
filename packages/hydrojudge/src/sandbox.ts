@@ -137,7 +137,7 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     ret.files = result.files || {};
     ret.fileIds = result.fileIds || {};
     if (ret.fileIds[outname]) ret.fileIds.stdout = ret.fileIds[outname];
-    if (params.filename && !ret.fileIds[outname] && !ret.files[outname]) {
+    if (params.filename && !ret.fileIds[outname] && typeof ret.files[outname] !== 'string') {
         result.error = 'Output file not found';
         ret.status = STATUS.STATUS_RUNTIME_ERROR;
     }
