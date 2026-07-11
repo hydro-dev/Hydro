@@ -287,7 +287,7 @@ export default class VJ4 implements Session {
                 ver = fs.readFileSync(path.join(filePath, 'version')).toString();
             } catch (e) { /* ignore */ }
             if (version === ver) {
-                fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
+                fs.writeFileSync(path.join(filePath, 'lastUsage'), Date.now().toString());
                 return filePath;
             }
             fs.removeSync(filePath);
@@ -295,7 +295,7 @@ export default class VJ4 implements Session {
         fs.ensureDirSync(domainDir);
         await this.problemData(domainId, pid, filePath, 3, next);
         fs.writeFileSync(path.join(filePath, 'version'), version);
-        fs.writeFileSync(path.join(filePath, 'lastUsage'), new Date().getTime().toString());
+        fs.writeFileSync(path.join(filePath, 'lastUsage'), Date.now().toString());
         return filePath;
     }
 

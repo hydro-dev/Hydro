@@ -1,12 +1,12 @@
 {
     "name": "@hydrooj/geoip",
-    "version": "1.4.0-beta.1",
+    "version": "1.4.0",
     "main": "index.ts",
-    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "maxmind": "^5.0.0"
+        "maxmind": "^5.0.6"
     },
     "preferUnplugged": true
 }

@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable ts/naming-convention */
 import path from 'node:path';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import react from '@hydrooj/eslint-config';
 
@@ -67,6 +68,7 @@ const config = react({
         '**/{public,frontend}/**/*.{ts,tsx,page.js}',
         '**/plugins/**/*.page.{ts,js,tsx,jsx}',
         'packages/ui-default/**/*.{ts,tsx,js,jsx}',
+        'packages/ui-next/src/**/*.{ts,tsx,js,jsx}',
     ],
 
     languageOptions: {
@@ -120,6 +122,8 @@ const config = react({
 
         // FIXME A bug with eslint-parser
         // 'template-curly-spacing': 'off',
+
+        'e18e/prefer-array-at': 'off',
 
         'style/indent': ['warn', 2, {
             ArrayExpression: 1,
@@ -191,12 +195,16 @@ const config = react({
     },
 }, {
     files: ['packages/ui-next/src/**/*.{ts,tsx}'],
+    plugins: {
+        'react-hooks': reactHooks,
+    },
     languageOptions: {
         globals: {
             ...globals.browser,
         },
     },
     rules: {
+        ...reactHooks.configs.recommended.rules,
         'style/indent': ['warn', 2],
         'style/indent-binary-ops': ['warn', 2],
     },

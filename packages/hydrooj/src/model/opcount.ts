@@ -4,7 +4,7 @@ import db from '../service/db';
 const coll = db.collection('opcount');
 
 export async function inc(op: string, ident: string, periodSecs: number, maxOperations: number) {
-    const now = new Date().getTime();
+    const now = Date.now();
     const expireAt = new Date(now - (now % (periodSecs * 1000)) + periodSecs * 1000);
     try {
         const res = await coll.findOneAndUpdate({

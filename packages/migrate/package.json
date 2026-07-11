@@ -1,18 +1,19 @@
 {
     "name": "@hydrooj/migrate",
-    "version": "0.5.0-beta.5",
+    "version": "0.5.0",
     "main": "index.ts",
-    "repository": "git@github.com:hydro-dev/Hydro.git",
+    "repository": "https://github.com/hydro-dev/Hydro",
     "author": "undefined <i@undefined.moe>",
     "license": "AGPL-3.0-or-later",
     "dependencies": {
-        "mariadb": "^3.4.5",
-        "mongodb": "^6.19.0",
-        "turndown": "^7.2.1",
+        "bcryptjs": "^3.0.3",
+        "mariadb": "3.4.5",
+        "mongodb": "^7.4.0",
+        "turndown": "^7.2.4",
         "xml2js": "^0.6.2"
     },
     "devDependencies": {
-        "@types/turndown": "^5.0.5",
+        "@types/turndown": "^5.0.6",
         "@types/xml2js": "^0.4.14"
     }
 }

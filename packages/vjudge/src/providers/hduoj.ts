@@ -130,8 +130,7 @@ export default class HDUOJProvider extends BasicFetcher implements IBasicProvide
         };
     }
 
-    async listProblem(page: number, resync = false) {
-        if (resync && page > 1) return [];
+    async listProblem(page: number) {
         const { text } = await this.get(`/listproblem.php?vol=${page}`);
         const $dom = new JSDOM(text);
         const ProblemTable = $dom.window.document.querySelector('.table_text');

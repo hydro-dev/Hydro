@@ -2,7 +2,7 @@ import { Context, Service } from '../context';
 
 const translations: Record<string, Record<string, string>[]> = {};
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         i18n: I18nService;
     }
@@ -18,6 +18,15 @@ export class I18nService extends Service {
         super(ctx, 'i18n');
         this.translate = this.translate.bind(this);
         this.load('ja', { __flag: '🇯🇵', __id: 'ja', __langname: '日本語' });
+    }
+
+    langs(interfaceOnly = false) {
+        const langs: Record<string, string> = {};
+        for (const lang in translations) {
+            if (interfaceOnly && !translations[lang].find((i) => i.__interface)) continue;
+            langs[lang] = this.get('__langname', lang);
+        }
+        return langs;
     }
 
     load(lang: string, content: Record<string, string>) {
@@ -45,9 +54,8 @@ export class I18nService extends Service {
             // So if it doesn't exist, we should use the original text instead of fallback.
             return this.get(str, languages[0]) || this.get(str, 'en') || str.toString();
         }
-        for (const language of languages.filter(Boolean)) {
-            const curr = this.get(str, language) || this.get(str, language.split('_')[0])
-                || this.get(str, language.split('-')[0]);
+        for (const language of languages.filter(Boolean).map((i) => i.replace(/-/g, '_'))) {
+            const curr = this.get(str, language) || this.get(str, language.split('_')[0]);
             if (curr) return curr;
         }
         return str.toString();

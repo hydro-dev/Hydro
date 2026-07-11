@@ -20,7 +20,7 @@
             <div class="media__body profile-header__main">
               <h1>
                 {{ udoc['uname'] }}
-                {% if handler.user.hasPerm(perm.PERM_VIEW_DISPLAYNAME) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
+                {% if handler.user.hasPerm(perm.PERM_VIEW_USER_PRIVATE_INFO) and udoc.displayName %}<small>({{ udoc['displayName'] }})</small>{% endif %}
               </h1>
               <p>
                 {{ _('UID') }}: {{ udoc['_id'] }},
@@ -153,7 +153,7 @@
           </div>
           <div class="balancer__body">
             <div class="numbox">
-              <div class="numbox__num medium">{{ udoc.nLike or 0 }}</div>
+              <div class="numbox__num medium">{{ udoc.nLiked or 0 }}</div>
               <div class="numbox__text">{{ _('Solutions Liked') }}</div>
             </div>
           </div>

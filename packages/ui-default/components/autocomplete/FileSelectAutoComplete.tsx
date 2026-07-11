@@ -24,5 +24,3 @@ export default class FileSelectAutoComplete<Multi extends boolean> extends AutoC
     });
   }
 }
-
-window.Hydro.components.FileSelectAutoComplete = FileSelectAutoComplete;

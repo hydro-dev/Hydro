@@ -77,7 +77,7 @@ monaco.languages.registerCompletionItemProvider('markdown', {
       endColumn: word.endColumn,
     };
     if (prefix === '@') {
-      const users = await api('users', { search: word.word }, ['_id', 'uname']);
+      const users = await api('users', { search: word.word }, ['_id', 'uname', 'avatarUrl', 'priv']);
       return {
         suggestions: users.map((i) => ({
           label: { label: `@${i.uname}`, description: `UID=${i._id}` },

@@ -138,17 +138,21 @@ export default function reducer(state = {
     case 'problemconfig/moveTestcases': {
       const testcases = action.payload.cases;
       const subtasks = cloneDeep(state.subtasks);
+      const targetCases = action.payload.target === -1
+        ? state.__cases
+        : (subtasks.find((s) => s.id === action.payload.target)?.cases || []);
+      const toAdd = testcases.filter((tc) => !targetCases.find((j) => j.input === tc.input && j.output === tc.output));
       const __cases = action.payload.source === -1
         ? state.__cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output))
         : action.payload.target === -1
-          ? sortFiles([...state.__cases, ...testcases], 'input')
+          ? sortFiles([...state.__cases, ...toAdd], 'input')
           : state.__cases;
       for (const key in subtasks) {
         const subtask = subtasks[key];
         if (subtask.id === action.payload.source) {
           subtask.cases = subtask.cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output));
         } else if (subtask.id === action.payload.target) {
-          subtask.cases = sortFiles([...subtask.cases, ...testcases], 'input');
+          subtask.cases = sortFiles([...subtask.cases, ...toAdd], 'input');
         }
       }
       return { ...state, subtasks, __cases };
@@ -158,8 +162,10 @@ export default function reducer(state = {
       return { ...state, __cases: state.__cases.filter((i) => !testcases.find((j) => i.input === j.input && i.output === j.output)) };
     }
     case 'problemconfig/deleteSubtask': {
+      const currentCases = state.subtasks.find((i) => i.id === action.id)?.cases || [];
       const subtasks = state.subtasks.filter((i) => i.id !== action.id);
-      return { ...state, subtasks };
+      const add = currentCases.filter((i) => !subtasks.find((j) => j.cases.find((k) => k.input === i.input && k.output === i.output)));
+      return { ...state, subtasks, __cases: sortFiles([...state.__cases, ...add], 'input') };
     }
     default:
       return state;

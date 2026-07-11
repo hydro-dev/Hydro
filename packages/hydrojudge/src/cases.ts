@@ -15,17 +15,34 @@ function isValidConfig(config) {
     if (config.type !== 'objective' && config.count > (getConfig('testcases_max') || 100)) {
         throw new FormatError('Too many testcases. Cancelled.');
     }
+    if (config.type === 'communication') {
+        if (!Number.isInteger(config.num_processes) || config.num_processes <= 0) {
+            throw new FormatError('Number of processes must be a positive integer for communication type.');
+        }
+        if (config.num_processes > getConfig('processLimit')) {
+            throw new FormatError('Number of processes larger than processLimit');
+        }
+    }
     const time = (config.num_processes || 1) * Math.sum(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.time)));
     if (time > (getConfig('total_time_limit') || 60) * 1000) {
         throw new FormatError('Total time limit longer than {0}s. Cancelled.', [+getConfig('total_time_limit') || 60]);
     }
     const memMax = Math.max(...config.subtasks.flatMap((subtask) => subtask.cases.map((c) => c.memory)));
-    if (config.type === 'communication' && (config.num_processes || 2) > getConfig('processLimit')) {
-        throw new FormatError('Number of processes larger than processLimit');
-    }
     if (memMax > parseMemoryMB(getConfig('memoryMax'))) throw new FormatError('Memory limit larger than memory_max');
     if (!['default', 'strict'].includes(config.checker_type || 'default') && !config.checker) {
         throw new FormatError('You did not specify a checker.');
+    }
+    if (config.type === 'interactive' && !config.interactor) {
+        throw new FormatError('Interactive problems require an interactor.');
+    }
+    if (config.multi_pass && (!Number.isInteger(config.multi_pass) || config.multi_pass < 2 || config.multi_pass > 20)) {
+        throw new FormatError('Multi Pass must be between 2 and 20.');
+    }
+    if (config.multi_pass > 1 && !['default', 'interactive'].includes(config.type)) {
+        throw new FormatError('Multi Pass only supported on default and interactive problems.');
+    }
+    if (config.multi_pass > 1 && config.type === 'default' && !['testlib', 'kattis'].includes(config.checker_type)) {
+        throw new FormatError('Multi Pass on default problems requires a testlib or kattis checker.');
     }
 }
 

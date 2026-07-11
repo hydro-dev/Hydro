@@ -2,6 +2,8 @@
 export * from './components/dialog';
 export { default as loadMonaco } from './components/monaco/loader';
 export { default as Notification } from './components/notification';
+export { default as Rotator } from './components/rotator';
+export { default as selectUser } from './components/selectUser';
 export { default as Socket } from './components/socket/index';
 export { default as uploadFiles } from './components/upload';
 export * from './components/zipDownloader';
@@ -16,21 +18,27 @@ export { AnsiUp } from 'ansi_up';
 export { default as $ } from 'jquery';
 export { default as _ } from 'lodash';
 export { default as React } from 'react';
-export { default as ReactDOM } from 'react-dom/client';
 export * as redux from 'react-redux';
+export { default as jsxRuntime } from 'react/jsx-runtime';
+import ReactDOMMain from 'react-dom';
+import ReactDOMClient from 'react-dom/client';
 import { load } from './lazyload';
 
+Object.assign(ReactDOMMain, ReactDOMClient);
+
+export const ReactDOM = ReactDOMMain as typeof ReactDOMMain & typeof ReactDOMClient;
 export default load;
 export interface EventMap { }
 
 import AutoComplete from './components/autocomplete';
+import AssignSelectAutoComplete from './components/autocomplete/AssignSelectAutoComplete';
 import CustomSelectAutoComplete from './components/autocomplete/CustomSelectAutoComplete';
 import DomainSelectAutoComplete from './components/autocomplete/DomainSelectAutoComplete';
 import ProblemSelectAutoComplete from './components/autocomplete/ProblemSelectAutoComplete';
 import UserSelectAutoComplete from './components/autocomplete/UserSelectAutoComplete';
 
 export {
-  AutoComplete, CustomSelectAutoComplete, DomainSelectAutoComplete, ProblemSelectAutoComplete, UserSelectAutoComplete,
+  AssignSelectAutoComplete, AutoComplete, CustomSelectAutoComplete, DomainSelectAutoComplete, ProblemSelectAutoComplete, UserSelectAutoComplete,
 };
 export function addPage(page: import('./misc/Page').Page | (() => Promise<void> | void)) {
   window.Hydro.extraPages.push(page);
@@ -49,19 +57,5 @@ declare global {
 
 // Below are old version api compat
 import $ from 'jquery';
-import _ from 'lodash';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import * as redux from 'react-redux';
 
-const modules = {
-  _, $, React, redux, ReactDOM,
-};
-
-declare global {
-  interface Window {
-    node_modules: typeof modules;
-  }
-}
-
-Object.assign(window, { node_modules: modules, $, jQuery: $ });
+Object.assign(window, { $, jQuery: $ });

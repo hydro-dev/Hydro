@@ -1,0 +1,100 @@
+{
+  "signedContributors": [
+    {
+      "name": "DrSmoothl",
+      "id": 101514345,
+      "comment_id": 3729743418,
+      "created_at": "2026-01-09T16:42:05Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1115
+    },
+    {
+      "name": "DrSmoothl",
+      "id": 101514345,
+      "comment_id": 3778256885,
+      "created_at": "2026-01-21T13:54:31Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1115
+    },
+    {
+      "name": "035966-L3",
+      "id": 139025318,
+      "comment_id": 3794718800,
+      "created_at": "2026-01-24T14:10:52Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1121
+    },
+    {
+      "name": "035966-L3",
+      "id": 139025318,
+      "comment_id": 3794721491,
+      "created_at": "2026-01-24T14:11:55Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1121
+    },
+    {
+      "name": "jiangmuran",
+      "id": 72869031,
+      "comment_id": 3846313950,
+      "created_at": "2026-02-04T09:28:08Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1125
+    },
+    {
+      "name": "renbaoshuo",
+      "id": 47095648,
+      "comment_id": 4278220668,
+      "created_at": "2026-04-20T05:57:57Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1147
+    },
+    {
+      "name": "Lyricus233",
+      "id": 126674875,
+      "comment_id": 4364267397,
+      "created_at": "2026-05-02T16:40:59Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1154
+    },
+    {
+      "name": "HeRaNO",
+      "id": 18643142,
+      "comment_id": 4458149707,
+      "created_at": "2026-05-15T08:13:38Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1163
+    },
+    {
+      "name": "pandadtdyy",
+      "id": 15662967,
+      "comment_id": 4534877267,
+      "created_at": "2026-05-25T14:06:04Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1167
+    },
+    {
+      "name": "Bryan0324",
+      "id": 34998621,
+      "comment_id": 4565254057,
+      "created_at": "2026-05-28T14:46:30Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1169
+    },
+    {
+      "name": "lichmiko",
+      "id": 57525522,
+      "comment_id": 4574726234,
+      "created_at": "2026-05-29T12:02:36Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1170
+    },
+    {
+      "name": "Ujimatsu-Chiya",
+      "id": 56377920,
+      "comment_id": 4807384501,
+      "created_at": "2026-06-26T07:41:25Z",
+      "repoId": 252140224,
+      "pullRequestNo": 1186
+    }
+  ]
+}

@@ -276,15 +276,16 @@ export function flushNodes(domainId: string) {
 export async function getVnode(domainId: string, type: number, id: string, uid?: number) {
     if (type === document.TYPE_PROBLEM) {
         const pdoc = await problem.get(domainId, Number.isSafeInteger(+id) ? +id : id, problem.PROJECTION_LIST);
-        if (!pdoc) throw new DiscussionNodeNotFoundError(`problem/${id}`);
+        if (!pdoc) throw new DiscussionNodeNotFoundError(domainId, `problem/${id}`);
         return { ...pdoc, type, id: pdoc.docId };
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
         const model = type === document.TYPE_TRAINING ? training : contest;
-        if (!ObjectId.isValid(id)) throw new DiscussionNodeNotFoundError(`contest/${id}`);
+        const typeName = type === document.TYPE_TRAINING ? 'training' : 'contest';
+        if (!ObjectId.isValid(id)) throw new DiscussionNodeNotFoundError(domainId, `${typeName}/${id}`);
         const _id = new ObjectId(id);
         const tdoc = await model.get(domainId, _id);
-        if (!tdoc) throw new DiscussionNodeNotFoundError(`contest/${id}`);
+        if (!tdoc) throw new DiscussionNodeNotFoundError(domainId, `${typeName}/${id}`);
         if (uid) {
             const tsdoc = await model.getStatus(domainId, _id, uid);
             tdoc.attend = tsdoc?.attend || tsdoc?.enroll;
@@ -312,7 +313,7 @@ export async function getListVnodes(domainId: string, ddocs: any, getHidden = fa
         const vnode = await getVnode(domainId, ddoc.parentType, ddoc.parentId.toString());
         res[ddoc.parentType] ||= {};
         if (!getHidden && vnode.hidden) return;
-        if (vnode.assign?.length && Set.intersection(vnode.assign, assign).size) return;
+        if (vnode.assign?.length && new Set(vnode.assign).intersection(new Set(assign)).size) return;
         res[ddoc.parentType][ddoc.parentId] = vnode;
     }
     await Promise.all(ddocs.map((ddoc) => task(ddoc)));
@@ -324,7 +325,7 @@ export function checkVNodeVisibility(type: number, vnode: any, user: User) {
         if (vnode.hidden && !user.own(vnode) && !user.hasPerm(PERM.PERM_VIEW_PROBLEM_HIDDEN)) return false;
     }
     if ([document.TYPE_CONTEST, document.TYPE_TRAINING].includes(type as any)) {
-        if (!user.own(vnode) && vnode.assign?.length && !Set.intersection(vnode.assign, user.group).size) return false;
+        if (!user.own(vnode) && vnode.assign?.length && !new Set(vnode.assign).intersection(new Set(user.group)).size) return false;
     }
     return true;
 }

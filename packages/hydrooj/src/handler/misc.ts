@@ -1,3 +1,4 @@
+import { writeHeapSnapshot } from 'v8';
 import { pick } from 'lodash';
 import { lookup } from 'mime-types';
 import { Context } from '../context';
@@ -8,7 +9,7 @@ import {
 import { PRIV } from '../model/builtin';
 import * as oplog from '../model/oplog';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import user, { User } from '../model/user';
 import {
     Handler, param, post, requireSudo, Types,
@@ -139,10 +140,28 @@ export class SwitchAccountHandler extends Handler {
     }
 }
 
+class HeapSnapshotHandler extends Handler {
+    @param('worker', Types.Int)
+    async post({ }, worker: number) {
+        this.checkPriv(PRIV.PRIV_EDIT_SYSTEM);
+        if (worker && process.env.NODE_APP_INSTANCE !== worker.toString()) {
+            this.response.body = { error: 'Not current worker' };
+            return;
+        }
+        this.response.body = {
+            worker: process.env.NODE_APP_INSTANCE,
+            filename: writeHeapSnapshot(),
+        };
+    }
+}
+
 export async function apply(ctx: Context) {
     ctx.Route('switch_language', '/language/:lang', SwitchLanguageHandler);
     ctx.Route('home_files', '/file', FilesHandler);
     ctx.Route('fs_download', '/file/:uid/:filename', FSDownloadHandler);
     ctx.Route('storage', '/storage', StorageHandler);
     ctx.Route('switch_account', '/account/:uid', SwitchAccountHandler, PRIV.PRIV_EDIT_SYSTEM);
+    if (process.argv.includes('--enable-heap-snapshot')) {
+        ctx.Route('heap_snapshot', '/heap-snapshot', HeapSnapshotHandler, PRIV.PRIV_EDIT_SYSTEM);
+    }
 }

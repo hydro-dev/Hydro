@@ -31,9 +31,9 @@
       </div></div>
     </form>
     <div class="row"><div class="columns">
-      <div class="text-center supplementary inverse">
-        <p><strong>Tip:</strong> You are entering <a href="https://docs.github.com/articles/sudo-mode">sudo mode</a>.</p>
-        <p>After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.</p>
+      <div class="text-center supplementary inverse typo">
+        <p>{{ _('Tip: You are entering sudo mode.')|safe }}</p>
+        <p>{{ _("After you've performed a sudo-protected action, you'll only be asked to re-authenticate again after a few hours of inactivity.") }}</p>
       </div>
     </div></div>
     {% if UserContext.authn or UserContext.tfa %}

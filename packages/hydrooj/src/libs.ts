@@ -4,7 +4,11 @@ import _ from 'lodash';
 import { ObjectId as ObjectID } from 'mongodb';
 import Schema from 'schemastery';
 import superagent from 'superagent';
+import proxy from 'superagent-proxy';
 import { Context } from './context';
+
+proxy(superagent);
+
 export * from './interface';
 export * from './typeutils';
 export * from './utils';

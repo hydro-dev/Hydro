@@ -34,7 +34,13 @@ function downloadAndExtractTgz(url: string, dest: string) {
     });
 }
 async function downloadAndExtractZip(url: string, dest: string) {
-    const res = await superagent.get(url).set('User-Agent', userAgent).responseType('arraybuffer');
+    let res;
+    try {
+        res = await superagent.get(url).set('User-Agent', userAgent).responseType('arraybuffer');
+    } catch (e) {
+        logger.error('Failed to download', url, e.message);
+        return;
+    }
     await extractZip(new ZipReader(new BlobReader(new Blob([res.body]))), dest, { strip: true, overwrite: true });
 }
 const types = {
@@ -57,27 +63,22 @@ export function register(cli: CAC) {
             try {
                 src = child.execSync(`yarn info ${src} dist.tarball`, { cwd: os.tmpdir() })
                     .toString().trim().split('\n')[1];
+                if (!src.startsWith('http')) throw new Error();
             } catch (e) {
                 throw new Error('Cannot fetch package info.');
             }
         }
-        if (src.startsWith('@hydrooj/')) {
-            src = child.execSync(`npm info ${src} dist.tarball`, { cwd: os.tmpdir() }).toString().trim();
-            if (!src.startsWith('http')) throw new Error('Cannot fetch package info.');
-        }
-        if (src.startsWith('http')) {
-            const url = new URL(src);
-            const filename = url.pathname.split('/').pop()!;
-            if (Object.keys(types).find((i) => filename.endsWith(i))) {
-                const name = filename.replace(/(-?(\d+\.\d+\.\d+|latest))?(\.tar\.gz|\.zip|\.tgz)$/g, '');
-                newAddonPath = path.join(addonDir, name);
-                logger.info(`Downloading ${src} to ${newAddonPath}`);
-                fs.ensureDirSync(newAddonPath);
-                fs.emptyDirSync(newAddonPath);
-                const func = types[Object.keys(types).find((i) => filename.endsWith(i))]!;
-                await func(src, newAddonPath);
-            } else throw new Error('Unsupported file type');
-        } else throw new Error(`Unsupported install source: ${src}`);
+        const url = new URL(src);
+        const filename = url.pathname.split('/').pop()!;
+        if (Object.keys(types).find((i) => filename.endsWith(i))) {
+            const name = filename.replace(/(-?(\d+\.\d+\.\d+|latest))?(\.tar\.gz|\.zip|\.tgz)$/g, '');
+            newAddonPath = path.join(addonDir, name);
+            logger.info(`Downloading ${src} to ${newAddonPath}`);
+            fs.ensureDirSync(newAddonPath);
+            fs.emptyDirSync(newAddonPath);
+            const func = types[Object.keys(types).find((i) => filename.endsWith(i))]!;
+            await func(src, newAddonPath);
+        } else throw new Error('Unsupported file type');
         if (!newAddonPath) throw new Error('Addon download failed');
         logger.info('Installing depedencies');
         if (!fs.existsSync(path.join(newAddonPath, 'package.json'))) throw new Error('Invalid plugin file');

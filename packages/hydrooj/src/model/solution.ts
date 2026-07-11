@@ -74,7 +74,7 @@ class SolutionModel {
         if (!doc) throw new SolutionNotFoundError(domainId, psid);
         const before = await document.setStatus(
             domainId, document.TYPE_PROBLEM_SOLUTION, psid, uid,
-            { vote: value }, 'before',
+            { vote: value }, null, 'before',
         );
         let inc = value;
         if (before?.vote) inc -= before.vote;

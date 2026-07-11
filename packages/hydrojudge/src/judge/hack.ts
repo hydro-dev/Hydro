@@ -12,7 +12,7 @@ export async function judge(ctx: Context) {
         ctx.compileLocalFile('checker', ctx.config.checker, ctx.config.checker_type),
         ctx.compileLocalFile('validator', ctx.config.validator),
         (async () => {
-            const f = await ctx.session.fetchFile(null, { [ctx.files.hack]: '' });
+            const f = await ctx.session.fetchFile(null, { [ctx.files.hack]: '' }, ctx);
             ctx.pushClean(() => fs.unlink(f));
             return f;
         })(),

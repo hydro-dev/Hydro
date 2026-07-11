@@ -24,7 +24,7 @@ import message from '../model/message';
 import ProblemModel from '../model/problem';
 import * as setting from '../model/setting';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import token from '../model/token';
 import * as training from '../model/training';
 import user from '../model/user';
@@ -188,7 +188,7 @@ class HomeSecurityHandler extends Handler {
             session._id = md5(session._id);
             const ua = session.updateUa || session.createUa;
             if (ua) session.updateUaInfo = UAParser(ua);
-            session.updateGeoip = this.ctx.geoip?.lookup?.(
+            session.updateGeoip = this.ctx.get('geoip')?.lookup?.(
                 session.updateIp || session.createIp,
                 this.translate('geoip_locale'),
             );
@@ -202,8 +202,9 @@ class HomeSecurityHandler extends Handler {
                 'credentialID', 'name', 'credentialType', 'credentialDeviceType',
                 'authenticatorAttachment', 'regat', 'fmt',
             ])),
-            geoipProvider: this.ctx.geoip?.provider,
+            geoipProvider: this.ctx.get('geoip')?.provider,
             relations,
+            loginMethods: this.loginMethods,
         };
     }
 
@@ -280,7 +281,7 @@ class HomeSecurityHandler extends Handler {
     }
 
     async postDeleteAllTokens() {
-        await token.delByUid(this.user._id);
+        await token.delByUid(this.user._id, token.TYPE_SESSION);
         this.response.redirect = this.url('user_login');
     }
 
@@ -310,7 +311,7 @@ class HomeSecurityHandler extends Handler {
             userName: `${this.user.uname}(${this.user.mail})`,
             attestationType: 'direct',
             excludeCredentials: this.user._authenticators.map((c) => ({
-                id: isoBase64URL.fromBuffer(c.credentialID.buffer),
+                id: isoBase64URL.fromBuffer(new Uint8Array(c.credentialID.buffer)),
                 type: 'public-key',
             })),
             authenticatorSelection: {
@@ -449,6 +450,8 @@ class HomeSettingsHandler extends Handler {
 }
 
 class HomeAvatarHandler extends Handler {
+    noCheckPermView = true;
+
     @param('avatar', Types.String, true)
     async post({ }, input: string) {
         if (input) {
@@ -515,15 +518,18 @@ class HomeDomainHandler extends Handler {
         this.response.body = { ddocs, canManage, role };
     }
 
-    @param('id', Types.String)
+    @param('id', Types.DomainId)
     @param('star', Types.Boolean)
     async postStar({ }, id: string, star = false) {
-        if (star) await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
-        else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
+        if (star) {
+            const ddoc = await domain.get(id);
+            if (!ddoc) throw new NotFoundError(id);
+            await user.setById(this.user._id, { pinnedDomains: [...this.user.pinnedDomains, id] });
+        } else user.setById(this.user._id, { pinnedDomains: this.user.pinnedDomains.filter((i) => i !== id) });
         this.back({ star });
     }
 
-    @param('id', Types.String)
+    @param('id', Types.DomainId)
     async postLeave({ }, id: string) {
         if (id === 'system') throw new BadRequestError();
         const ddoc = await domain.get(id);
@@ -568,19 +574,22 @@ class HomeMessagesHandler extends Handler {
         const messages = await message.getByUser(this.user._id);
         const uids = new Set<number>([
             ...messages.map((mdoc) => mdoc.from),
-            ...messages.map((mdoc) => mdoc.to),
+            ...messages.flatMap((mdoc) => mdoc.to),
         ]);
         const udict = await user.getList('system', Array.from(uids));
         // TODO(twd2): improve here:
         const parsed = {};
         for (const m of messages) {
-            const target = m.from === this.user._id ? m.to : m.from;
-            parsed[target] ||= {
-                _id: target,
-                udoc: { ...udict[target], avatarUrl: avatar(udict[target].avatar) },
-                messages: [],
-            };
-            parsed[target].messages.push(m);
+            const raw = m.from === this.user._id ? m.to : m.from;
+            const targetArr = Array.isArray(raw) ? raw : [raw];
+            for (const target of targetArr) {
+                parsed[target] ||= {
+                    _id: target,
+                    udoc: { ...udict[target], avatarUrl: avatar(udict[target].avatar) },
+                    messages: [],
+                };
+                parsed[target].messages.push(m);
+            }
         }
         await user.setById(this.user._id, { unreadMsg: 0 });
         this.response.body = { messages: parsed };
@@ -601,22 +610,13 @@ class HomeMessagesHandler extends Handler {
     @param('messageId', Types.ObjectId)
     async postDeleteMessage({ }, messageId: ObjectId) {
         const msg = await message.get(messageId);
-        if ([msg.from, msg.to].includes(this.user._id)) await message.del(messageId);
+        if (msg.from === this.user._id) await message.del(messageId);
         else throw new PermissionError();
-        this.back();
-    }
-
-    @param('messageId', Types.ObjectId)
-    async postRead({ }, messageId: ObjectId) {
-        const msg = await message.get(messageId);
-        if ([msg.from, msg.to].includes(this.user._id)) {
-            await message.setFlag(messageId, message.FLAG_UNREAD);
-        } else throw new PermissionError();
         this.back();
     }
 }
 
-export const inject = { geoip: { required: false }, oauth: {} };
+export const inject = ['oauth'];
 export function apply(ctx: Context) {
     ctx.Route('homepage', '/', HomeHandler);
     ctx.Route('home_security', '/home/security', HomeSecurityHandler, PRIV.PRIV_USER_PROFILE);

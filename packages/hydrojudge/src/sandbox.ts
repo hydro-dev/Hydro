@@ -137,7 +137,7 @@ function adaptResult(result: SandboxResult, params: Parameter): SandboxAdaptedRe
     ret.files = result.files || {};
     ret.fileIds = result.fileIds || {};
     if (ret.fileIds[outname]) ret.fileIds.stdout = ret.fileIds[outname];
-    if (params.filename && !ret.fileIds[outname] && !ret.files[outname]) {
+    if (params.filename && !ret.fileIds[outname] && typeof ret.files[outname] !== 'string') {
         result.error = 'Output file not found';
         ret.status = STATUS.STATUS_RUNTIME_ERROR;
     }
@@ -161,7 +161,7 @@ export async function runPiped(
         const body = {
             cmd: execute.map((exe) => proc({ ...exe, ...params })),
             pipeMapping: pipeMapping.map((pipe) => ({
-                proxy: true,
+                proxy: getConfig('pipe_proxy'),
                 max: 1024 * 1024 * size,
                 ...pipe,
             })),
@@ -196,7 +196,8 @@ export function runQueued(
     execute: Parameter[], pipeMapping: Pick<PipeMap, 'in' | 'out' | 'name'>[],
     params: Parameter, trace?: string, priority?: number,
 ): Promise<SandboxAdaptedResult[] & AsyncDisposable>;
-export function runQueued(execute: string, params: Parameter, trace?: string, priority?: number
+export function runQueued(
+    execute: string, params: Parameter, trace?: string, priority?: number,
 ): Promise<SandboxAdaptedResult & AsyncDisposable>;
 export function runQueued(
     arg0: string | Parameter[], arg1: Pick<PipeMap, 'in' | 'out' | 'name'>[] | Parameter,
@@ -218,12 +219,14 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
     let sandboxVersion: string;
     let sandboxCgroup: number;
     let sandboxCgroupControllers: string[] | null;
+    let fixSymlinkEscape: boolean;
     try {
         const version = await client.version();
         sandboxVersion = version.buildVersion.split('v')[1];
         const config = await client.config();
         sandboxCgroup = config.runnerConfig?.cgroupType || 0;
         sandboxCgroupControllers = config.runnerConfig?.cgroupControllers || null;
+        fixSymlinkEscape = config.fixSymlinkEscape ?? false;
     } catch (e) {
         if (e?.code === 'ECONNREFUSED') reportError('Failed to connect to sandbox, please check sandbox_host config and if your sandbox is running.');
         else reportError('Your sandbox version is tooooooo low! Please upgrade!');
@@ -240,6 +243,9 @@ export async function versionCheck(reportWarn: (str: string) => void, reportErro
         if (!sandboxCgroupControllers.includes('memory') && gte(sandboxVersion, '1.8.6')) {
             reportWarn('The memory cgroup controller is not enabled. This could result in inaccurate memory usage measurements.');
         }
+    }
+    if (!fixSymlinkEscape) {
+        reportError('Your sandbox version is vulnerable to symlink escape issue, please upgrade!');
     }
     return true;
 }

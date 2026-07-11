@@ -1,7 +1,7 @@
 {% extends "domain_base.html" %}
 {% block domain_content %}
 {{ set(UiContext, 'roles', roles.map(eval('(i) => i._id'))) }}
-{{ set(UiContext, 'canForceJoin', handler.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) }}
+{{ set(UiContext, 'canForceJoin', model.system.get('server.allowInvite') or handler.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)) }}
 {% set _rolesSelect = roles.filter(eval("(i) => i._id !== 'guest'")).map(eval('(role) => [role._id, role._id]')) %}
 <div class="section">
   <div class="section__header">

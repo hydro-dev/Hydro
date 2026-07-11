@@ -11,7 +11,7 @@ import { PRIV, STATUS } from '../model/builtin';
 import domain from '../model/domain';
 import record from '../model/record';
 import * as setting from '../model/setting';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     ConnectionHandler, Handler, param, requireSudo, Types,
@@ -90,11 +90,13 @@ class SystemDashboardHandler extends SystemHandler {
 }
 
 class SystemScriptHandler extends SystemHandler {
+    @requireSudo
     async get() {
         this.response.template = 'manage_script.html';
         this.response.body.scripts = global.Hydro.script;
     }
 
+    @requireSudo
     @param('id', Types.Name)
     @param('args', Types.Content, true)
     async post(domainId: string, id: string, raw = '{}') {
@@ -103,7 +105,7 @@ class SystemScriptHandler extends SystemHandler {
         if (typeof global.Hydro.script[id].validate === 'function') {
             args = global.Hydro.script[id].validate(args);
         }
-        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: raw, type: 'pretest' });
+        const rid = await record.add(domainId, -1, this.user._id, '-', id, false, { input: [raw], type: 'pretest' });
         const c = new JudgeResultCallbackContext(this.ctx, { type: 'judge', domainId, rid });
         c.next({ message: `Running script: ${id} `, status: STATUS.STATUS_JUDGING });
         const start = Date.now();
@@ -177,6 +179,7 @@ class SystemConfigHandler extends SystemHandler {
         let value = this.ctx.setting.configSource;
 
         const processNode = (node: any, schema: Schema<any, any>, parent?: any, accessKey?: string) => {
+            if (!node) return;
             if (['union', 'intersect'].includes(schema.type)) {
                 for (const item of schema.list) processNode(node, item, parent, accessKey);
             }
@@ -193,7 +196,9 @@ class SystemConfigHandler extends SystemHandler {
             const temp = yaml.load(this.ctx.setting.configSource);
             for (const schema of this.ctx.setting.settings) processNode(temp, schema);
             value = yaml.dump(temp);
-        } catch (e) { }
+        } catch (e) {
+            logger.error('Failed to process config', e.message);
+        }
         this.response.body = {
             schema: Schema.intersect(this.ctx.setting.settings).toJSON(),
             value,
@@ -273,7 +278,7 @@ class SystemUserImportHandler extends SystemHandler {
                     Object.assign(payload, {
                         email, username, password, displayName,
                     });
-                    await this.ctx.serial('user/import/parse', payload);
+                    await this.ctx.serial('user/import/parse', payload, messages);
                     udocs.push(payload);
                 }
             } else messages.push(`Line ${+i + 1}: Input invalid.`);

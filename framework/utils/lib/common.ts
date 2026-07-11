@@ -7,11 +7,6 @@ declare global {
     interface Math {
         sum: (...args: Array<number[] | number>) => number;
     }
-    interface SetConstructor {
-        isSuperset: (set: Set<any>, subset: Set<any> | Array<any>) => boolean;
-        intersection: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
-        union: <T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) => Set<T>;
-    }
 }
 
 const defaultDict = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
@@ -21,10 +16,6 @@ export function randomstring(digit = 32, dict = defaultDict) {
     for (let i = 1; i <= digit; i++) str += dict[Math.floor(Math.random() * dict.length)];
     return str;
 }
-try {
-    // @ts-ignore
-    String.random = randomstring;
-} catch (e) { } // Cannot add property random, object is not extensible
 
 String.prototype.format ||= function formatStr(...args) {
     let result = this;
@@ -39,7 +30,7 @@ String.prototype.format ||= function formatStr(...args) {
             }
         } else return this.formatFromArray(args);
     }
-    return result;
+    return result as string;
 };
 
 String.prototype.formatFromArray = function formatStr(args) {
@@ -50,7 +41,7 @@ String.prototype.formatFromArray = function formatStr(args) {
             result = result.replace(reg, args[i]);
         }
     }
-    return result;
+    return result as string;
 };
 
 String.prototype.rawformat = function rawFormat(object) {
@@ -68,31 +59,25 @@ export function diffArray(a, b) {
     return false;
 }
 
-try {
-    // @ts-ignore
-    Array.isDiff = diffArray;
-} catch (e) { } // Cannot add property isDiff, object is not extensible
-
-// @ts-ignore
-Date.prototype.format = function formatDate(fmt = '%Y-%m-%d %H:%M:%S') {
-    let m = this.getMonth() + 1;
-    if (m < 10) m = `0${m}`;
-    let d = this.getDate();
-    if (d < 10) d = `0${d}`;
-    let H = this.getHours();
-    if (H < 10) H = `0${H}`;
-    let M = this.getMinutes();
-    if (M < 10) M = `0${M}`;
-    let S = this.getSeconds();
-    if (S < 10) S = `0${S}`;
+export function formatDate(date: Date, fmt = '%Y-%m-%d %H:%M:%S') {
+    let m = (date.getMonth() + 1).toString();
+    if (m.length < 2) m = `0${m}`;
+    let d = date.getDate().toString();
+    if (d.length < 2) d = `0${d}`;
+    let H = date.getHours().toString();
+    if (H.length < 2) H = `0${H}`;
+    let M = date.getMinutes().toString();
+    if (M.length < 2) M = `0${M}`;
+    let S = date.getSeconds().toString();
+    if (S.length < 2) S = `0${S}`;
     return fmt
-        .replace('%Y', this.getFullYear())
+        .replace('%Y', date.getFullYear().toString())
         .replace('%m', m)
         .replace('%d', d)
         .replace('%H', H)
         .replace('%M', M)
         .replace('%S', S);
-};
+}
 
 Math.sum = function sum(...args) {
     let s = 0;
@@ -106,6 +91,9 @@ Math.sum = function sum(...args) {
     return s;
 };
 
+// TODO: remove these
+
+// @ts-ignore
 Set.isSuperset = function isSuperset(set, subset) {
     for (const elem of subset) {
         if (!set.has(elem)) return false;
@@ -113,12 +101,14 @@ Set.isSuperset = function isSuperset(set, subset) {
     return true;
 };
 
+// @ts-ignore
 Set.union = function Union<T>(setA: Set<T> | Array<T>, setB: Set<T> | Array<T>) {
     const union = new Set(setA);
     for (const elem of setB) union.add(elem);
     return union;
 };
 
+// @ts-ignore
 Set.intersection = function Intersection<T>(A: Set<T> | Array<T> = [], B: Set<T> | Array<T> = []) {
     const intersection = new Set<T>();
     if (A instanceof Array) A = new Set(A);
@@ -129,7 +119,7 @@ Set.intersection = function Intersection<T>(A: Set<T> | Array<T> = [], B: Set<T>
 
 export function sleep(timeout: number) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(true), timeout);
+        setTimeout(resolve, timeout, true);
     });
 }
 
@@ -137,11 +127,11 @@ function deepen(modifyString: (source: string) => string) {
     function modifyObject<T>(source: T): T {
         if (typeof source !== 'object' || !source) return source;
         if (Array.isArray(source)) return source.map(modifyObject) as any;
-        const result = {} as T;
+        const result = {} as any;
         for (const key in source) {
             result[modifyString(key)] = modifyObject(source[key]);
         }
-        return result;
+        return result as T;
     }
 
     return function t<T>(source: T): T {
@@ -157,9 +147,9 @@ export const paramCase = deepen((source) => source.replace(/_/g, '-').replace(/(
 export const snakeCase = deepen((source) => source.replace(/-/g, '_').replace(/(?<!^)[A-Z]/g, (str) => `_${str.toLowerCase()}`));
 
 const TIME_RE = /^([0-9]+(?:\.[0-9]*)?)([mu]?)s?$/i;
-const TIME_UNITS = { '': 1000, m: 1, u: 0.001 };
+const TIME_UNITS = { '': 1000, m: 1, u: 0.001 } as Record<string, number>;
 const MEMORY_RE = /^([0-9]+(?:\.[0-9]*)?)([kmg])b?$/i;
-const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 };
+const MEMORY_UNITS = { k: 1 / 1024, m: 1, g: 1024 } as Record<string, number>;
 
 export function parseTimeMS(str: string | number, throwOnError = true) {
     if (typeof str === 'number' || Number.isSafeInteger(+str)) return +str;
@@ -199,7 +189,7 @@ export function size(s: number, base = 1) {
         if (s < unit) return '{0} {1}'.format(Math.round(s * 10) / 10, unitName);
         s /= unit;
     }
-    return `${Math.round(s * unit)} ${unitNames[unitNames.length - 1]}`;
+    return `${Math.round(s * unit)} ${unitNames.at(-1)}`;
 }
 
 export function randomPick<T>(arr: T[]): T {
@@ -217,7 +207,7 @@ export function sortFiles(files: Record<string, any>[] | string[], key = '_id') 
     if (!files?.length) return [];
     const isString = typeof files[0] === 'string';
     const result = files
-        .map((i) => (isString ? { name: i, _weights: i.match(fSortR) } : { ...i, _weights: (i[key] || i.name).match(fSortR) }))
+        .map((i: any) => (isString ? { name: i, _weights: i.match(fSortR) } : { ...i, _weights: (i[key] || i.name).match(fSortR) }))
         .sort((a, b) => {
             let pos = 0;
             const weightsA = a._weights;
@@ -239,7 +229,7 @@ export function sortFiles(files: Record<string, any>[] | string[], key = '_id') 
 
 export const getAlphabeticId = (() => {
     // A...Z, AA...AZ, BA...BZ, ...
-    const f = (a: number) => (a < 0 ? '' : f(a / 26 - 1) + String.fromCharCode((a % 26) + 65)) as string;
+    const f: (a: number) => string = (a: number) => (a < 0 ? '' : f(a / 26 - 1) + String.fromCharCode((a % 26) + 65));
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const cache = alphabet.split('');
     for (const ch of alphabet) cache.push(...alphabet.split('').map((c) => ch + c));

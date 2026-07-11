@@ -1,4 +1,3 @@
-import 'jquery-scroll-lock';
 import 'jquery.easing';
 
 import $ from 'jquery';
@@ -16,22 +15,19 @@ const mapStateToProps = (state) => ({
     : null,
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps)(class MessagePadDialogueContentContainer extends React.PureComponent {
-  componentDidMount() {
-    $(this.refs.list).scrollLock({ strict: true });
-  }
-
   componentDidUpdate(prevProps) {
-    const node = this.refs.list;
+    const node = this.state.ref;
+
     if (this.props.activeId !== prevProps.activeId) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = false;
-    } else if (node.scrollTop + node.offsetHeight === node.scrollHeight) {
+    } else if (Math.abs(node.scrollTop + node.offsetHeight - node.scrollHeight) < 200) {
       this.scrollToBottom = true;
       this.scrollWithAnimation = true;
     } else this.scrollToBottom = false;
 
+    if (!node) return;
     if (this.scrollToBottom) {
       const targetScrollTop = node.scrollHeight - node.offsetHeight;
       if (this.scrollWithAnimation) {
@@ -93,14 +89,13 @@ export default connect(mapStateToProps)(class MessagePadDialogueContentContainer
     return (
       <>
         <div className="messagepad__header">
-          { this.props.item
-            && (
-              <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
-                {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
-              </a>
-            )}
+          {this.props.item && (
+            <a className="messagepad__content__header__title" href={`/user/${this.props.item.udoc._id}`}>
+              {`${this.props.item.udoc.uname}(UID: ${this.props.item.udoc._id})`}
+            </a>
+          )}
         </div>
-        <ol className="messagepad__content" ref="list">
+        <ol className="messagepad__content" style={{ overscrollBehavior: 'contain' }} ref={(ref) => { this.setState({ ...this.state, ref }); }}>
           {this.renderInner()}
         </ol>
       </>

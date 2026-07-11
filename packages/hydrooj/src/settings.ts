@@ -44,7 +44,7 @@ export class SettingService extends Service {
         super(ctx, 'setting');
     }
 
-    async [Context.init]() {
+    async [Service.init]() {
         const payload = await this.ctx.db.collection('system').find({}).toArray();
         this.initialValues = Object.fromEntries(payload.map((v) => [v._id, v.value]));
         return await this.loadConfig();
@@ -103,7 +103,7 @@ export class SettingService extends Service {
     async _actualMigrate(schema: Schema<any>) {
         const processNode = async (path: string[], node: Schema<any, any>) => {
             for (const item of node.list || []) await processNode(path, item); // eslint-disable-line no-await-in-loop
-            for (const key in node.dict || {}) await processNode(path.concat(key), node.dict[key]); // eslint-disable-line no-await-in-loop
+            for (const key in node.dict || {}) await processNode([...path, ...key], node.dict[key]); // eslint-disable-line no-await-in-loop
             if (['string', 'number', 'boolean'].includes(node.type)) {
                 const value = this.initialValues[path.join('.')];
                 const migrated = this.initialValues[`${path.join('.')}__migrated`];
@@ -141,7 +141,7 @@ export class SettingService extends Service {
 
     get(key: string) {
         return (this.ctx ? this.ctx.domain?.config?.[key.replace(/\./g, '$')] : null)
-            ?? (this._get(key) || global.Hydro?.model?.system?.get?.(key));
+            ?? (this._get(key) ?? global.Hydro?.model?.system?.get?.(key));
     }
 
     async setConfig(key: string, value: any) {
@@ -150,11 +150,13 @@ export class SettingService extends Service {
     }
 
     requestConfig<T, S>(s: Schema<T, S>, dynamic = true): S {
-        if (dynamic) {
+        if (!this.settings.includes(s)) {
             this.ctx.effect(() => {
+                logger.debug('Loading config', s);
                 this.settings.push(s);
                 this._applySchema();
                 return () => {
+                    logger.debug('Unloading config', s);
                     this.settings = this.settings.filter((v) => v !== s);
                     this._applySchema();
                 };
@@ -172,18 +174,17 @@ export class SettingService extends Service {
         });
         const that = this;
         const getAccess = (path: (string | symbol)[]) => {
-            if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error('Invalid path');
+            if (path.some((p) => SettingService.blacklist.includes(p.toString()))) throw new Error(`Invalid path: ${path.join('.')}`);
             let currentValue = curValue;
-            for (const p of path) {
-                currentValue = currentValue[p];
-            }
-            if (typeof currentValue !== 'object' || !currentValue) return currentValue;
+            for (const p of path) currentValue = currentValue[p];
+            if ((typeof currentValue !== 'object') || !currentValue || Array.isArray(currentValue)) return currentValue;
+            if (path.some((p) => typeof p === 'symbol')) return currentValue;
             return new Proxy(currentValue, {
                 get(self, key: string) {
-                    return getAccess(path.concat(key));
+                    return getAccess([...path, key]);
                 },
                 set(self, p: string | symbol, newValue: any) {
-                    that.setConfig(path.concat(p).join(','), newValue);
+                    that.setConfig([...path, p].join(','), newValue);
                     return true;
                 },
             });

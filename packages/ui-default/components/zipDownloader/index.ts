@@ -155,6 +155,3 @@ export async function downloadProblemSet(pids, name = 'Export') {
     Notification.error(`${e.message} ${e.params?.[0]}`);
   }
 }
-
-window.Hydro.components.downloadProblemSet = downloadProblemSet;
-window.Hydro.components.download = download;

@@ -5,7 +5,7 @@ import Schema from 'schemastery';
 import type { Context } from '../context';
 import {
     CannotDeleteSystemDomainError, DomainJoinAlreadyMemberError, DomainJoinForbiddenError, ForbiddenError,
-    InvalidJoinInvitationCodeError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
+    InvalidJoinInvitationCodeError, NotFoundError, OnlyOwnerCanDeleteDomainError, PermissionError, RoleAlreadyExistError, ValidationError,
 } from '../error';
 import type { DomainDoc } from '../interface';
 import avatar from '../lib/avatar';
@@ -15,7 +15,7 @@ import domain from '../model/domain';
 import MessageModel from '../model/message';
 import * as oplog from '../model/oplog';
 import { DOMAIN_SETTINGS, DOMAIN_SETTINGS_BY_KEY } from '../model/setting';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     Handler, Mutation, param, post, Query, query, requireSudo, Types,
@@ -26,7 +26,7 @@ class DomainRankHandler extends Handler {
     @query('page', Types.PositiveInt, true)
     async get(domainId: string, page = 1) {
         const [dudocs, upcount, ucount] = await this.paginate(
-            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 } }).sort({ rp: -1 }),
+            domain.getMultiUserInDomain(domainId, { uid: { $gt: 1 }, rp: { $gt: 0 }, join: true }).sort({ rp: -1 }),
             page,
             'ranking',
         );
@@ -103,12 +103,12 @@ class DomainUserHandler extends ManageHandler {
     @requireSudo
     @param('format', Types.Range(['default', 'raw']), true)
     async get({ domainId }, format = 'default') {
+        const showDefault = system.get('server.showDefaultRole') || domainId !== 'system';
         const [dudocs, roles] = await Promise.all([
             domain.collUser.aggregate([
                 {
                     $match: {
-                        // TODO: add a page to display users who joined but with default role
-                        role: {
+                        role: showDefault ? { $ne: 'guest' } : {
                             $nin: ['default', 'guest'],
                             $ne: null,
                         },
@@ -143,7 +143,7 @@ class DomainUserHandler extends ManageHandler {
                         user: 1,
                         role: 1,
                         join: 1,
-                        ...(this.user.hasPerm(PERM.PERM_VIEW_DISPLAYNAME) ? { displayName: 1 } : {}),
+                        ...(this.user.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? { displayName: 1 } : {}),
                     },
                 },
             ]).toArray(),
@@ -158,7 +158,7 @@ class DomainUserHandler extends ManageHandler {
             return u;
         });
         const rudocs = {};
-        for (const role of roles) rudocs[role._id] = users.filter((udoc) => udoc.role === role._id);
+        for (const role of roles) rudocs[role._id] = users.filter((udoc) => (udoc.role || 'default') === role._id);
         this.response.template = format === 'raw' ? 'domain_user_raw.html' : 'domain_user.html';
         this.response.body = {
             roles, rudocs, domain: this.domain,
@@ -175,7 +175,7 @@ class DomainUserHandler extends ManageHandler {
     @param('role', Types.Role)
     @param('join', Types.Boolean)
     async postSetUsers(domainId: string, uid: number[], role: string, join = false) {
-        if (join) this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
+        if (join && !system.get('server.allowInvite')) this.checkPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN);
         await Promise.all([
             domain.setUserRole(domainId, uid, role),
             oplog.log(this, 'domain.setRole', { uid, role, join }),
@@ -218,13 +218,16 @@ class DomainPermissionHandler extends ManageHandler {
     @requireSudo
     async post({ domainId }) {
         const roles = {};
-        for (const role in this.request.body) {
+        for (const [role, list] of Object.entries(this.request.body)) {
             if (role === 'root') continue; // root role is not editable
-            const perms = this.request.body[role] instanceof Array
-                ? this.request.body[role]
-                : [this.request.body[role]];
+            const perms = Array.isArray(list) ? list
+                : (typeof list === 'object' && list)
+                    ? Object.values(list) : [list];
             roles[role] = 0n;
-            for (const r of perms) roles[role] |= 1n << BigInt(r);
+            for (const r of perms) {
+                if (+r === 1000) continue; // skip placeholder value
+                roles[role] |= 1n << BigInt(r);
+            }
         }
         await Promise.all([
             domain.setRoles(domainId, roles),
@@ -258,7 +261,7 @@ class DomainRoleHandler extends ManageHandler {
     @requireSudo
     @param('roles', Types.ArrayOf(Types.Role))
     async postDelete(domainId: string, roles: string[]) {
-        if (Set.intersection(roles, ['root', 'default', 'guest']).size > 0) {
+        if (new Set(roles).intersection(new Set(['root', 'default', 'guest'])).size > 0) {
             throw new ValidationError('role', null, 'You cannot delete root, default or guest roles');
         }
         await Promise.all([
@@ -344,6 +347,7 @@ class DomainJoinHandler extends Handler {
             domain.get(target),
             domain.collUser.findOne({ domainId: target, uid: this.user._id }),
         ]);
+        if (!ddoc) throw new NotFoundError(target);
         const assignedRole = this.user.hasPriv(PRIV.PRIV_MANAGE_ALL_DOMAIN)
             ? 'root'
             : dudoc?.role || 'default';
@@ -390,7 +394,7 @@ class DomainJoinHandler extends Handler {
             const groups = await user.listGroup(target);
             const entry = groups.find((i) => i.name === this.joinSettings.group);
             if (!entry) throw new ValidationError('group');
-            await user.updateGroup(target, entry.name, entry.uids.concat(this.user._id));
+            await user.updateGroup(target, entry.name, [...entry.uids, this.user._id]);
         }
         await Promise.all([
             domain.setUserInDomain(target, this.user._id, {
@@ -430,6 +434,23 @@ export const DomainApi = {
             const udoc = await user.getById(ddoc._id, ctx.user._id);
             if (!udoc.hasPerm(PERM.PERM_VIEW) && !udoc.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) return null;
             return ddoc;
+        },
+    ),
+    'domain.current': Query(
+        Schema.object({}),
+        async (handler) => ({ domain: handler.domain as DomainDoc }),
+    ),
+    groups: Query(
+        Schema.object({
+            domainId: Schema.string().required(),
+            uid: Schema.number().step(1),
+            names: Schema.array(Schema.string()),
+            search: Schema.string(),
+            limit: Schema.number().step(1).max(100),
+        }),
+        async (ctx, args) => {
+            if (!ctx.user.hasPerm(PERM.PERM_VIEW) && !ctx.user.hasPriv(PRIV.PRIV_VIEW_ALL_DOMAIN)) throw new PermissionError(PERM.PERM_VIEW);
+            return user.listGroup(args.domainId, args.uid, args.names, args.search, args.limit || (args.search ? 20 : undefined));
         },
     ),
     'domain.group': Mutation(

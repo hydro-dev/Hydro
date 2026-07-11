@@ -1,9 +1,24 @@
-.page--home_files, .page--training_files, .page--contest_detail, .page--contest_manage, .page--homework_files
+.page--home_files, .page--training_files, .page--contest_detail, .page--contest_manage, .page--homework_files, .page--contest_edit, .page--problem_edit, .page--problem_config, .page--problem_files
   .col--checkbox
     width: 60px
 
   .col--size
-    width: 100px
+    width: 80px
 
   .col--operation
     width: 40px
+
+.page--problem_edit, .page--problem_config, .page--problem_files
+  .col--operation
+    width: 60px
+
+  .problem-sidebar-additional_file, .problem-sidebar-testdata
+    height: 300px
+    overflow-y: auto
+
+  .rename-confirm-table
+    overflow-x: auto
+
+    .col--origin, .col--new
+      width: 50%
+      text-align: center

@@ -33,6 +33,7 @@ const base = (option, ...args) => antfu(
         lessOpinionated: true,
         plugins: {
             '@eslint-react': eslintReact,
+            github,
             'react-refresh': reactRefresh,
             'simple-import-sort': simpleImportSort,
             ...(option.plugins || {}),
@@ -57,11 +58,17 @@ const base = (option, ...args) => antfu(
             curly: ['error', 'multi-line'],
             'default-param-last': 'off',
             'dot-notation': 0,
+
+            'e18e/prefer-array-fill': 'off',
+            'e18e/prefer-array-from-map': 'off',
+            'e18e/prefer-array-some': 'off',
+            'e18e/prefer-array-to-sorted': 'off',
+            'e18e/prefer-static-regex': 'off',
+            'e18e/prefer-timer-args': 'off',
             'eslint-comments/no-unlimited-disable': 'off',
             'func-names': 0,
             'function-call-argument-newline': 0,
             'function-paren-newline': 0,
-            'github/a11y-svg-has-accessible-name': 0,
             'github/array-foreach': 1,
             'global-require': 0,
             'guard-for-in': 0,
@@ -204,6 +211,7 @@ const base = (option, ...args) => antfu(
             }],
             'style/jsx-closing-bracket-location': 'off',
             'style/jsx-closing-tag-location': 'off',
+            'style/jsx-curly-spacing': ['warn', { children: true, when: 'never' }],
             'style/jsx-function-call-newline': 'off',
             'style/jsx-indent-props': 'off',
             'style/jsx-one-expression-per-line': 'off',
@@ -330,15 +338,14 @@ const base = (option, ...args) => antfu(
             ...(typeof option.stylistic === 'object' ? option.stylistic : {}),
         },
     },
-    github.getFlatConfigs().react,
     deMorgan.configs.recommended,
-    {
+    ...((option.vue ?? true) ? [{
         files: ['**/*.vue'],
         rules: {
             'vue/block-order': ['warn', { order: ['template', 'script[setup]', 'script:not([setup])', 'style[scoped]', 'style:not([scoped])'] }],
             'vue/singleline-html-element-content-newline': 'off',
         },
-    },
+    }] : []),
     {
         files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.cjs', '**/*.cts', '**/*.mjs', '**/*.mts'],
 

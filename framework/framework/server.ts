@@ -3,6 +3,7 @@ import http from 'http';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { PassThrough } from 'stream';
+import type { } from '@cordisjs/plugin-timer';
 import { Context as CordisContext, Service } from 'cordis';
 import type { Files } from 'formidable';
 import fs from 'fs-extra';
@@ -43,7 +44,7 @@ export function encodeRFC5987ValueChars(str: string) {
     );
 }
 
-async function forkContextWithScope<C extends CordisContext>(ctx: C) {
+async function forkContextWithScope(ctx: CordisContext) {
     const scope = ctx.plugin(() => { });
     await scope;
     const dispose = () => scope.dispose();
@@ -82,7 +83,7 @@ export interface HydroResponse {
      * If set, and pjax content was request from client,
      *  The template will be used for rendering.
      */
-    pjax?: string;
+    pjax?: string | (readonly [string, Record<string, any>])[];
     redirect?: string;
     disposition?: string;
     etag?: string;
@@ -105,13 +106,19 @@ export type KoaContext = Koa.Context & {
     holdFiles: (string | File)[];
 };
 
+interface RendererContext {
+    handler: HandlerCommon;
+    UserContext: UserModel;
+    url: HandlerCommon['url'];
+    _: HandlerCommon['translate'];
+}
 export interface TextRenderer {
     output: 'html' | 'json' | 'text';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => string | Promise<string>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => string | Promise<string>;
 }
 export interface BinaryRenderer {
     output: 'binary';
-    render: (name: string, args: Record<string, any>, context: Record<string, any>) => Buffer | Promise<Buffer>;
+    render: (name: string, args: Record<string, any>, context: RendererContext) => Buffer | Promise<Buffer>;
 }
 export type Renderer = (BinaryRenderer | TextRenderer) & {
     name: string;
@@ -141,8 +148,8 @@ export interface UserModel {
     _id: number;
 }
 
-export interface HandlerCommon<C> { } // eslint-disable-line ts/no-unused-vars
-export class HandlerCommon<C> {
+export interface HandlerCommon { }
+export class HandlerCommon {
     static [kHandler]: string | boolean = 'HandlerCommon';
     session: Record<string, any>;
     args: Record<string, any>;
@@ -151,7 +158,7 @@ export class HandlerCommon<C> {
     UiContext: Record<string, any>;
     user: UserModel;
 
-    constructor(public context: KoaContext, public ctx: C) {
+    constructor(public context: KoaContext, public ctx: CordisContext) {
         this.renderHTML = this.renderHTML.bind(this);
         this.url = this.url.bind(this);
         this.session = context.session;
@@ -212,7 +219,7 @@ export class HandlerCommon<C> {
     }
 }
 
-export class Handler<C = CordisContext> extends HandlerCommon<C> {
+export class Handler extends HandlerCommon {
     static [kHandler] = 'Handler';
 
     loginMethods: any;
@@ -260,7 +267,7 @@ export class Handler<C = CordisContext> extends HandlerCommon<C> {
     }
 }
 
-export class ConnectionHandler<C> extends HandlerCommon<C> {
+export class ConnectionHandler extends HandlerCommon {
     static [kHandler] = 'ConnectionHandler';
 
     conn: WebSocket;
@@ -274,7 +281,7 @@ export class ConnectionHandler<C> extends HandlerCommon<C> {
     }
 
     send(data: any) {
-        let payload = JSON.stringify(data, serializer(false, this));
+        let payload = typeof data === 'string' ? data : JSON.stringify(data, serializer(false, this));
         if (this.compression) {
             if (this.counter > 1000) this.resetCompression();
             payload = this.compression.deflate(payload);
@@ -300,12 +307,17 @@ export class ConnectionHandler<C> extends HandlerCommon<C> {
     }
 }
 
-export class NotFoundHandler extends Handler<CordisContext> {
+export class NotFoundHandler extends Handler {
     prepare() { throw new NotFoundError(this.request.path); }
     all() { }
 }
 
-function executeMiddlewareStack(context: any, middlewares: { name: string, func: Function }[]) {
+export interface LayerEntry {
+    name: string;
+    func: (ctx: any, next: () => Promise<void>) => any;
+}
+
+function executeMiddlewareStack(context: any, middlewares: LayerEntry[]): Promise<void> {
     let index = -1;
     context.__timers ||= {};
     function dispatch(i) {
@@ -328,7 +340,7 @@ function executeMiddlewareStack(context: any, middlewares: { name: string, func:
     return dispatch(0);
 }
 
-export class WebService<C extends CordisContext = CordisContext> extends Service<never, C> {
+export class WebService extends Service<never> {
     static Config = Schema.object({
         keys: Schema.array(Schema.string()),
         proxy: Schema.boolean(),
@@ -343,21 +355,37 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
 
     private registry: Record<string, any> = Object.create(null);
     private registrationCount = Counter();
-    private serverLayers = [];
-    private handlerLayers = [];
-    private wsLayers = [];
+    private serverLayers: LayerEntry[] = [];
+    private handlerLayers: LayerEntry[] = [];
+    private wsLayers: LayerEntry[] = [];
     private captureAllRoutes = Object.create(null);
-    private customDefaultContext: C;
-    private activeHandlers: Map<Handler<C>, { start: number, name: string }> = new Map();
+    private customDefaultContext: CordisContext;
+    private activeHandlers: Map<Handler, { start: number, name: string }> = new Map();
 
     renderers: Record<string, Renderer> = Object.create(null);
     server = koa;
     router = router;
     HandlerCommon = HandlerCommon;
+    private _routeMap: Record<string, string> = Object.create(null);
+
+    get routeMap(): Record<string, string> {
+        return this._routeMap;
+    }
+
+    private rebuildRouteMap() {
+        const map: Record<string, string> = Object.create(null);
+        for (const layer of this.router.stack) {
+            if (layer.name && typeof layer.path === 'string') {
+                map[layer.name] = layer.path;
+            }
+        }
+        this._routeMap = map;
+    }
+
     Handler = Handler;
     ConnectionHandler = ConnectionHandler;
 
-    constructor(ctx: C, public config: ReturnType<typeof WebService.Config>) {
+    constructor(ctx: CordisContext, public config: ReturnType<typeof WebService.Config>) {
         super(ctx, 'server');
         ctx.mixin('server', ['Route', 'Connection', 'withHandlerClass']);
         this.server.keys = this.config.keys;
@@ -365,14 +393,18 @@ export class WebService<C extends CordisContext = CordisContext> extends Service
         const corsAllowHeaders = 'x-requested-with, accept, origin, content-type, upgrade-insecure-requests';
         this.server.use(Compress());
         this.server.use(async (c, next) => {
-            if (c.request.headers.origin && this.config.cors) {
+            if ((c.request.headers.origin || c.request.headers.referer) && this.config.cors) {
                 try {
-                    const host = new URL(c.request.headers.origin).host;
+                    const host = new URL(c.request.headers.origin || c.request.headers.referer).host;
                     if (host !== c.request.headers.host && `,${this.config.cors},`.includes(`,${host},`)) {
                         c.set('Access-Control-Allow-Credentials', 'true');
-                        c.set('Access-Control-Allow-Origin', c.request.headers.origin);
                         c.set('Access-Control-Allow-Headers', corsAllowHeaders);
-                        c.set('Vary', 'Origin');
+                        if (c.request.headers.origin) {
+                            c.set('Access-Control-Allow-Origin', c.request.headers.origin);
+                            c.set('Vary', 'Origin');
+                        } else {
+                            c.set('Vary', 'Referer');
+                        }
                         c.cors = true;
                     }
                 } catch (e) {
@@ -412,6 +444,8 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                 formLimit: '8mb',
                 formidable: {
                     uploadDir,
+                    allowEmptyFiles: true,
+                    minFileSize: 0,
                     maxFileSize: parseMemoryMB(this.config.upload) * 1024 * 1024,
                     keepExtensions: true,
                 },
@@ -497,7 +531,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: C) {
+    private async handleHttp(ctx: KoaContext, HandlerClass, checker, savedContext: CordisContext) {
         const { args } = ctx.HydroContext;
         Object.assign(args, ctx.params);
         await using sub = await forkContextWithScope(savedContext);
@@ -583,7 +617,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         }
     }
 
-    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?) {
+    private async handleWS(ctx: KoaContext, HandlerClass, checker, conn?, layer?, savedContext?: CordisContext) {
         const { args } = ctx.HydroContext;
         const sub = await forkContextWithScope(savedContext);
         const h = new HandlerClass(ctx, sub.ctx);
@@ -725,7 +759,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
                     perm = item;
                 }
             }
-            return function check(this: Handler<C>) {
+            return function check(this: Handler) {
                 checker();
                 if (perm) this.checkPerm(perm);
                 if (priv) this.checkPriv(priv);
@@ -737,26 +771,33 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         const savedContext = Object.hasOwn(this.ctx, Symbol.for('cordis.shadow'))
             ? Object.getPrototypeOf(this.ctx)
             : this.ctx;
+        const checker = Checker(permPrivChecker);
         if (type === 'route') {
-            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, Checker(permPrivChecker), savedContext));
+            router.all(routeName, path, (ctx) => this.handleHttp(ctx as any, HandlerClass, checker, savedContext));
         } else {
-            const checker = Checker(permPrivChecker);
             const layer = router.ws(path, async (conn, _req, ctx) => {
                 await this.handleWS(ctx as any, HandlerClass, checker, conn, layer, savedContext);
             });
-            if (this.config.enableSSE) router.get(path, (ctx) => this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext));
+            if (this.config.enableSSE) {
+                router.get(routeName, path, async (ctx) => {
+                    Object.assign(ctx.HydroContext.args, ctx.params);
+                    await this.handleWS(ctx as any, HandlerClass, checker, null, null, savedContext);
+                });
+            }
         }
         const dispose = router.disposeLastOp;
+        this.rebuildRouteMap();
         // @ts-ignore
         this.ctx.parallel(`handler/register/${name}`, HandlerClass);
         this.ctx.effect(() => () => {
             this.registrationCount[name]--;
             if (!this.registrationCount[name]) delete this.registry[name];
             dispose();
+            this.rebuildRouteMap();
         });
     }
 
-    public setDefaultContext(ctx: C) {
+    public setDefaultContext(ctx: CordisContext) {
         try {
             if (!ctx.server) throw new Error();
         } catch (e) {
@@ -772,7 +813,7 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     public withHandlerClass<T extends string>(
-        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler<C> : typeof Handler<C>) => any,
+        name: T, callback: (HandlerClass: T extends `${string}ConnectionHandler` ? typeof ConnectionHandler : typeof Handler) => any,
     ) {
         name = name.replace(/Handler$/, '') as any;
         if (this.registry[name]) callback(this.registry[name]);
@@ -781,20 +822,16 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
     }
 
     // eslint-disable-next-line ts/naming-convention
-    public Route(name: string, path: string, RouteHandler: typeof Handler<C>, ...permPrivChecker) {
-        // if (name === 'contest_scoreboard') {
-        //     console.log('+++', this.ctx);
-        //     console.log(this.ctx.scoreboard);
-        // }
+    public Route(name: string, path: string, RouteHandler: typeof Handler, ...permPrivChecker) {
         return this.register('route', name, path, RouteHandler, ...permPrivChecker);
     }
 
     // eslint-disable-next-line ts/naming-convention
-    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler<C>, ...permPrivChecker) {
+    public Connection(name: string, path: string, RouteHandler: typeof ConnectionHandler, ...permPrivChecker) {
         return this.register('conn', name, path, RouteHandler, ...permPrivChecker);
     }
 
-    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: any) {
+    private registerLayer(name: 'serverLayers' | 'handlerLayers' | 'wsLayers', layer: LayerEntry) {
         this.ctx.effect(() => {
             this[name].push(layer);
             return () => {
@@ -803,19 +840,19 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public addServerLayer(name: string, func: any) {
+    public addServerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('serverLayers', { name, func });
     }
 
-    public addHandlerLayer(name: string, func: any) {
+    public addHandlerLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('handlerLayers', { name, func });
     }
 
-    public addWSLayer(name: string, func: any) {
+    public addWSLayer(name: LayerEntry['name'], func: LayerEntry['func']) {
         return this.registerLayer('wsLayers', { name, func });
     }
 
-    public addLayer(name: string, layer: any) {
+    public addLayer(name: LayerEntry['name'], layer: LayerEntry['func']) {
         this.addHandlerLayer(name, layer);
         this.addWSLayer(name, layer);
     }
@@ -855,15 +892,15 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
         });
     }
 
-    public handlerMixin(MixinClass: Partial<HandlerCommon<C>> | ((s: HandlerCommon<C>) => Partial<HandlerCommon<C>>)) {
+    public handlerMixin(MixinClass: Partial<HandlerCommon> | ((s: HandlerCommon) => Partial<HandlerCommon>)) {
         return this._applyMixin(HandlerCommon, MixinClass);
     }
 
-    public httpHandlerMixin(MixinClass: Partial<Handler<C>> | ((s: Handler<C>) => Partial<Handler<C>>)) {
+    public httpHandlerMixin(MixinClass: Partial<Handler> | ((s: Handler) => Partial<Handler>)) {
         return this._applyMixin(Handler, MixinClass);
     }
 
-    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler<C>> | ((s: ConnectionHandler<C>) => Partial<ConnectionHandler<C>>)) {
+    public wsHandlerMixin(MixinClass: Partial<ConnectionHandler> | ((s: ConnectionHandler) => Partial<ConnectionHandler>)) {
         return this._applyMixin(ConnectionHandler, MixinClass);
     }
 
@@ -880,9 +917,9 @@ ${c.response.status} ${endTime - startTime}ms ${c.response.length}`);
 
 declare module 'cordis' {
     interface Context {
-        server: WebService<this>;
-        Route: WebService<this>['Route'];
-        Connection: WebService<this>['Connection'];
-        withHandlerClass: WebService<this>['withHandlerClass'];
+        server: WebService;
+        Route: WebService['Route'];
+        Connection: WebService['Connection'];
+        withHandlerClass: WebService['withHandlerClass'];
     }
 }

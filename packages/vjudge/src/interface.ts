@@ -17,7 +17,7 @@ export interface RemoteAccount {
 export interface VjudgeMount {
     _id: string; //  domainId, or `${domainId}.${namespace}`
     mount: string;
-    syncDone: Record<string, boolean>;
+    syncDone: Record<string, number>;
 }
 declare module 'hydrooj' {
     interface Collections {
@@ -38,7 +38,7 @@ export interface IBasicProvider {
         solution?: string;
     }>;
     entryProblemLists?: string[];
-    listProblem: (page: number, resync: boolean, listId: string) => Promise<string[]>;
+    listProblem: (page: number, resyncFrom: number, listId: string) => Promise<string[]>;
     submitProblem: (id: string, lang: string, code: string, info: any, next: NextFunction, end: NextFunction) => Promise<string | void>;
     waitForSubmission: (id: string, next: NextFunction, end: NextFunction) => Promise<void>;
     checkStatus?: (onCheckFunc: boolean) => Promise<void>;

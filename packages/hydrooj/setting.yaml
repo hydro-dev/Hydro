@@ -67,6 +67,7 @@ langs:
       address_space_limit: true
       process_limit: 1
       version: /usr/bin/g++ --version
+      compile_time_limit: 10000
     cc.cc98:
       compile: /usr/bin/g++ -Wall -std=c++98 -o foo foo.cc -lm -I/include
       display: C++98
@@ -111,6 +112,7 @@ langs:
       monaco: java
       display: Java
       compile_time_limit: 30000
+      compile_memory_limit: 1024
       version: /usr/bin/javac -version
     kt:
       compile: echo "Invalid language selection"
@@ -126,6 +128,7 @@ langs:
       execute: /usr/bin/java -jar foo.jar
       display: Kotlin/JVM
       compile_time_limit: 30000
+      compile_memory_limit: 1024
       version: /usr/bin/kotlinc -version
     py:
       compile: /usr/bin/python -c "import py_compile; py_compile.compile('/w/foo.py', '/w/foo', doraise=True)"

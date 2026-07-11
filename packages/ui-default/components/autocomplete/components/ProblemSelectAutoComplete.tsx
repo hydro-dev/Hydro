@@ -9,7 +9,7 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
     ref={ref as any}
     cacheKey={`problem-${UiContext.domainId}`}
     queryItems={async (query) => {
-      const { pdocs } = await request.get(`/d/${UiContext.domainId}/p`, { q: query, quick: true });
+      const { pdocs } = await request.get(`/d/${UiContext.domainId}/p`, { q: query, quick: true, sort: query ? 'default' : 'recent' });
       return pdocs;
     }}
     fetchItems={(ids) => api('problems', { ids: ids.map((i) => +i) }, ['docId', 'pid', 'title'])}
@@ -29,7 +29,7 @@ const ProblemSelectAutoComplete = forwardRef<AutoCompleteHandle<ProblemDoc>, Aut
       listStyle: {},
       multi: false,
       selectedKeys: [],
-      allowEmptyQuery: false,
+      allowEmptyQuery: true,
       freeSolo: false,
       freeSoloConverter: (input) => input,
       ...props,

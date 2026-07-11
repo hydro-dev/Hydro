@@ -5,7 +5,8 @@
 {% import "components/noscript_note.html" as noscript_note with context %}
 {% import "components/user.html" as user with context %}
 <!DOCTYPE html>
-<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} theme--{{ (handler.user|default({})).theme|default('default') }} nojs" lang="{{ UserContext.viewLang }}" data-app="Hydro">
+{% set theme = (handler.user|default({})).theme|default('default') %}
+<html data-page="{{ page_name }}" data-layout="{{ layout_name }}" class="layout--{{ layout_name }} page--{{ page_name }} theme--{{ theme }} nojs" data-mantine-color-scheme="{{ 'dark' if theme.includes('dark') else 'light' }}" lang="{{ UserContext.viewLang }}" data-app="Hydro">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -40,7 +41,7 @@
   </style>
   {% if process.env.DEV %}
     <script src="/default.theme.js?version={{ global.Hydro.version['ui-default'] }}"></script>
-    <link rel="stylesheet" media="all" href="/theme.css?version={{ global.Hydro.version['ui-default'] }}">
+    <link rel="stylesheet" media="all" href="/theme-{{ global.Hydro.version['ui-default'] }}.css">
   {% else %}
     <link rel="stylesheet" media="all" href="{{ UiContext.cdn_prefix }}theme-{{ global.Hydro.version['ui-default'] }}.css">
   {% endif %}
@@ -57,7 +58,7 @@
 </head>
 <body>
   {% if not isIE(handler.request.headers['user-agent']) and not handler.session.legacy %}
-    <script type="text/javascript" src="/resource/{{ UiContext.constantVersion }}/entry.js"></script>
+    <script type="text/javascript" src="{{ UiContext.cdn_prefix if UiContext.cdn_dynamic else '/' }}resource/{{ UiContext.constantVersion }}/entry.js"></script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}resource/{{ global.Hydro.version['ui-default'] }}/lang-{{ _('__id') }}.js"></script>
     <script type="text/javascript" src="{{ UiContext.cdn_prefix }}hydro-{{ global.Hydro.version['ui-default'] }}.js{% if process.env.DEV %}?version=dev{% endif %}"></script>
   {% endif %}

@@ -52,11 +52,9 @@
           <div class="section__tab-header-wrapper">
             <ul class="section__tab-header">
               <li class="section__tab-header-item tab--active" data-lang="{{ _('__id') }}">{{ _('__langname') }}</li>
-              {% for k, v in model.setting.SETTINGS_BY_KEY['viewLang'].range %}
-                {% if k != handler.user.viewLang %}
-                  <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
-                {% endif %}
-              {% endfor %}
+              {% for k, v in statementLangs %}{% if k != handler.user.viewLang %}
+                <li class="section__tab-header-item" data-lang="{{ k }}">{{ v }}</li>
+              {% endif %}{% endfor %}
             </ul>
           </div>
           </div>
@@ -92,20 +90,13 @@
       </div>
     </div>
     {% if page_name == 'problem_edit' %}
-      <div class="section side">
+      <div class="section side" data-type="additional_file" data-sidebar>
         <div class="section__header">
-          <h1 class="section__title">{{ additional_file.length|default(0) }} {{_('Additional File')}}</h1>
+          <h1 class="section__title">{{_('Additional Files')}}</h1>
+          <div class="section__tools">
+            <button class="primary rounded button" name="upload_file">{{ _('Upload') }}</button>
+          </div>
         </div>
-        <ol class="menu">
-          <li class="menu__item flex-row">
-            <a class="menu__link half" href="javascript:;" name="additional_file__upload">
-              <span class="icon icon-upload"></span> {{ _('Upload') }}
-            </a>
-            <a class="menu__link half" href="javascript:;" name="additional_file__download">
-              <span class="icon icon-download"></span> {{ _('Download All') }}
-            </a>
-          </li>
-        </ol>
         {% set sidebar = true %}
         {% set can_edit = true %}
         {% set filetype = "additional_file" %}

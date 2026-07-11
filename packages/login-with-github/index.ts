@@ -10,17 +10,17 @@ const icon = '<svg viewBox="0 0 98 96" xmlns="http://www.w3.org/2000/svg"><path 
 export default class LoginWithGithubService extends Service {
     static inject = ['oauth'];
     static Config = Schema.object({
-        id: Schema.string().description('Github OAuth AppID').required(),
-        secret: Schema.string().description('Github OAuth Secret').role('secret').required(),
-        endpoint: Schema.string().description('Github Endpoint'),
+        id: Schema.string().description('GitHub OAuth AppID').required(),
+        secret: Schema.string().description('GitHub OAuth Secret').role('secret').required(),
+        endpoint: Schema.string().description('GitHub Endpoint'),
         canRegister: Schema.boolean().default(true),
     });
 
     constructor(ctx: Context, config: ReturnType<typeof LoginWithGithubService.Config>) {
         super(ctx, 'oauth.github');
         ctx.oauth.provide('github', {
-            text: 'Login with Github',
-            name: 'Github',
+            text: 'Login with GitHub',
+            name: 'GitHub',
             icon,
             canRegister: config.canRegister,
             callback: async function callback({ state, code }) {
@@ -72,7 +72,7 @@ export default class LoginWithGithubService extends Service {
             },
         });
         ctx.i18n.load('zh', {
-            'Login With Github': '使用 Github 登录',
+            'Login With GitHub': '使用 GitHub 登录',
         });
     }
 }

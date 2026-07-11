@@ -16,5 +16,3 @@ export default class ProblemSelectAutoComplete extends AutoComplete {
     });
   }
 }
-
-window.Hydro.components.ProblemSelectAutoComplete = ProblemSelectAutoComplete;

@@ -13,9 +13,9 @@
               <span class="icon icon-{{ items[0].args.icon }}"></span> {{ _(family) }}
             </div>
             <ol class="menu collapsed">
-              {%- for item in items -%}
+              {%- for item in items -%}{% if item.checker(handler) %}
                 {{ sidemenu.render_item(null, item.name) }}
-              {%- endfor -%}
+              {% endif %}{%- endfor -%}
             </ol>
           </li>
         {% endfor %}

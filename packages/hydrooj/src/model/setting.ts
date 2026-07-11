@@ -1,13 +1,13 @@
 /* eslint-disable max-len */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
+import saslPrep from '@mongodb-js/saslprep';
 import yaml from 'js-yaml';
 import { Dictionary } from 'lodash';
 import moment from 'moment-timezone';
-import saslPrep from 'saslprep';
 import Schema from 'schemastery';
 import { LangConfig, parseLang } from '@hydrooj/common';
-import { findFileSync, randomstring, retry } from '@hydrooj/utils';
+import { findFileSync, randomstring } from '@hydrooj/utils';
 import { Context } from '../context';
 import { Setting as _Setting } from '../interface';
 import { Logger } from '../logger';
@@ -24,13 +24,15 @@ for (const country of countries) {
     const tz = moment.tz.zonesForCountry(country);
     for (const t of tz) tzs.add(t);
 }
-const timezones = Array.from(tzs).sort().map((tz) => [tz, tz]) as [string, string][];
+const timezones = [...tzs].sort().map((tz) => [tz, tz]) as [string, string][];
 const langRange: Dictionary<string> = {};
 
 export const FLAG_HIDDEN = 1;
 export const FLAG_DISABLED = 2;
 export const FLAG_SECRET = 4;
 export const FLAG_PRO = 8;
+export const FLAG_PUBLIC = 16;
+export const FLAG_PRIVATE = 32;
 
 export const PREFERENCE_SETTINGS: _Setting[] = [];
 export const ACCOUNT_SETTINGS: _Setting[] = [];
@@ -75,6 +77,7 @@ declare global {
         interface Meta<T> { // eslint-disable-line ts/no-unused-vars
             family?: string;
             secret?: boolean;
+            flag?: number;
         }
     }
 }
@@ -93,6 +96,7 @@ function schemaToSettings(schema: Schema<any>) {
                     : s.meta?.role === 'markdown' ? 'markdown'
                         : s.meta?.role === 'textarea' ? 'textarea' : 'text';
         if (s.meta?.role === 'password') flag |= FLAG_SECRET;
+        if (s.meta?.flag) flag |= s.meta?.flag;
         const options = {};
         for (const item of actualList || []) {
             if (item.type !== 'const') throw new Error(`List item must be a constant, got ${item.type}`);
@@ -256,14 +260,14 @@ AccountSetting(
     Setting('setting_info', 'qq', null, 'text', 'QQ'),
     Setting('setting_info', 'gender', builtin.USER_GENDER_OTHER, builtin.USER_GENDER_RANGE, 'Gender'),
     Setting('setting_info', 'bio', null, 'markdown', 'Bio'),
-    Setting('setting_info', 'school', '', 'text', 'School'),
-    Setting('setting_info', 'studentId', '', 'text', 'Student ID'),
-    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_DISABLED),
+    Setting('setting_info', 'school', '', 'text', 'School', '', FLAG_PRIVATE),
+    Setting('setting_info', 'studentId', '', 'text', 'Student ID', '', FLAG_PRIVATE),
+    Setting('setting_info', 'phone', null, 'text', 'Phone', null, FLAG_DISABLED | FLAG_PRIVATE),
     Setting('setting_customize', 'backgroundImage',
         '/components/profile/backgrounds/1.jpg', 'text', 'Profile Background Image',
         'Choose the background image in your profile page.'),
     Setting('setting_storage', 'unreadMsg', 0, 'number', 'Unread Message Count', null, FLAG_DISABLED | FLAG_HIDDEN),
-    Setting('setting_storage', 'badge', '', 'text', 'badge info', null, FLAG_DISABLED | FLAG_HIDDEN),
+    Setting('setting_storage', 'badge', '', 'text', 'badge info', null, FLAG_DISABLED | FLAG_HIDDEN | FLAG_PUBLIC),
     Setting('setting_storage', 'banReason', '', 'text', 'ban reason', null, FLAG_DISABLED | FLAG_HIDDEN),
     Setting('setting_storage', 'pinnedDomains', [], 'json', 'pinned domains', null, FLAG_DISABLED | FLAG_HIDDEN),
 );
@@ -278,11 +282,12 @@ DomainSetting(
 );
 
 DomainUserSetting(Schema.object({
-    displayName: Schema.transform(String, (input) => saslPrep(input)).default('').description('Display Name').extra('family', 'setting_info'),
+    displayName: Schema.transform(String, (input) => saslPrep(input)).default('').description('Display Name')
+        .extra('family', 'setting_info').extra('flag', FLAG_PRIVATE),
 
     rpInfo: Schema.any().extra('family', 'setting_storage').disabled().hidden(),
 
-    ...Object.fromEntries(['nAccept', 'nSubmit', 'nLike', 'rp', 'rpdelta', 'rank', 'level', 'join'].map((i) => ([
+    ...Object.fromEntries(['nAccept', 'nSubmit', 'nLiked', 'rp', 'rpdelta', 'rank', 'level', 'join'].map((i) => ([
         i, Schema.number().default(0).extra('family', 'setting_storage').disabled().hidden(),
     ]))),
 
@@ -309,11 +314,14 @@ SystemSetting(Schema.object({
         verify: Schema.boolean().default(true).description('Verify register email'),
     }).extra('family', 'setting_smtp'),
     server: Schema.object({
+        allowInvite: Schema.boolean().default(true).description('Allow invite users'),
+        showDefaultRole: Schema.boolean().default(false).description('Show default role users in domain user management'),
         center: Schema.string().default('https://hydro.ac/center').description('Server Center').role('url').hidden(),
         name: Schema.string().default('Hydro').description('Server Name'),
         url: Schema.string().default('/').description('Server BaseURL'),
         upload: Schema.string().default('256m').description('Max upload file size'),
         cdn: Schema.string().default('/').description('CDN Prefix'),
+        cdn_dynamic: Schema.boolean().default(false).description('Dynamic CDN'),
         ws: Schema.string().default('/').description('WebSocket Prefix'),
         host: Schema.string().default('127.0.0.1').description('Listen host'),
         port: Schema.number().step(1).min(1).max(65535).default(8888).description('Server Port'),
@@ -381,7 +389,7 @@ export async function apply(ctx: Context) {
         if (!setting.value) continue;
         const current = await ctx.db.collection('system').findOne({ _id: setting.key });
         if (!current || current.value == null || current.value === '') {
-            await retry(system.set, setting.key, setting.value);
+            await system.set(setting.key, setting.value);
         }
     }
     try {
@@ -399,6 +407,7 @@ export async function apply(ctx: Context) {
         LangSettingNode.range = range;
         ServerLangSettingNode.range = range;
     });
+    ctx.emit('system/setting-loaded');
 }
 
 global.Hydro.model.setting = {
@@ -415,6 +424,8 @@ global.Hydro.model.setting = {
     FLAG_DISABLED,
     FLAG_SECRET,
     FLAG_PRO,
+    FLAG_PUBLIC,
+    FLAG_PRIVATE,
     PREFERENCE_SETTINGS,
     ACCOUNT_SETTINGS,
     SETTINGS,

@@ -11,7 +11,6 @@ import { JudgeTask } from '../task';
 import { parseMemoryMB, parseTimeMS } from '../utils';
 
 export const judge = async (ctx: JudgeTask) => {
-    ctx.stat.judge = new Date();
     ctx.next({ status: STATUS.STATUS_COMPILING });
     if (!('content' in ctx.code)) throw new SystemError('Unsupported input');
     const [generator, std] = ctx.code.content.toString().split('\n').map((i) => i.trim());
@@ -30,7 +29,7 @@ export const judge = async (ctx: JudgeTask) => {
         await using res = await runQueued(
             `${executeGenerator.execute} ${i}`,
             {
-                stdin: { content: ctx.input || '' },
+                stdin: { content: (ctx.input || [])[i - 1] || '' },
                 copyIn: executeGenerator.copyIn,
                 copyOut: ['stderr'],
                 copyOutCached: ['stdout'],
@@ -135,8 +134,6 @@ export const judge = async (ctx: JudgeTask) => {
         const result = await runGenerator(i);
         if (result) await runStd(i, { src: result });
     }
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
     ctx.end({
         status: totalStatus,
         score: totalStatus === STATUS.STATUS_ACCEPTED ? 100 : 0,

@@ -11,7 +11,6 @@ const mapStateToProps = (state) => ({
   isLoading: state.ui.records.isLoading,
 });
 
-// eslint-disable-next-line react-refresh/only-export-components
 export default connect(mapStateToProps)(class ScratchpadRecordsContainer extends React.PureComponent {
   render() {
     const cn = classNames('data-table is--full-row scratchpad__records__table', {

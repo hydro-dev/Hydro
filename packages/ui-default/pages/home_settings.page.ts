@@ -10,7 +10,7 @@ export default new NamedPage('home_account', () => {
   const $type = $(tpl`
     <select id="type" class="select">
       <option value="gravatar">${i18n('Gravatar')}</option>
-      <option value="github">${i18n('Github')}</option>
+      <option value="github">${i18n('GitHub')}</option>
       <option value="qq">${i18n('QQ')}</option>
       <option value="upload">${i18n('Upload')}</option>
     </select>
@@ -46,24 +46,28 @@ export default new NamedPage('home_account', () => {
       const placeholder = $type.val() === 'gravatar'
         ? 'Email address'
         : $type.val() === 'github'
-          ? 'Github username'
+          ? 'GitHub username'
           : 'QQ ID';
       $text.attr('placeholder', i18n(placeholder));
     }
   });
   $confirm.on('click', async () => {
-    if ($type.val() === 'upload') {
-      const formData = new FormData();
-      formData.append('file', $file[0].files[0]);
-      await request.postFile('/home/avatar', formData);
-      Notification.success(i18n('Upload success.'));
-    } else {
-      await request.post('/home/avatar', {
-        avatar: `${$type.val()}:${$text.val()}`,
-      });
-      Notification.success(i18n('Updated.'));
+    try {
+      if ($type.val() === 'upload') {
+        const formData = new FormData();
+        formData.append('file', $file[0].files[0]);
+        await request.postFile('/home/avatar', formData);
+        Notification.success(i18n('Upload success.'));
+      } else {
+        await request.post('/home/avatar', {
+          avatar: `${$type.val()}:${$text.val()}`,
+        });
+        Notification.success(i18n('Updated.'));
+      }
+      await delay(800);
+      window.location.reload();
+    } catch (e) {
+      Notification.error(e.message);
     }
-    await delay(800);
-    window.location.reload();
   });
 });

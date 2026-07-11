@@ -176,6 +176,8 @@ export async function apply(ctx: Context) {
                 );
             } catch (e) {
                 logger.error(e);
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(50); // This allows exiting when shutting down
                 continue;
             }
             if (argv.options.showEvent) logger.info('Event: %o', res);

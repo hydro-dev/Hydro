@@ -1,0 +1,14 @@
+diff --git a/index.d.ts b/index.d.ts
+index aee3041de0bc2a46df7bcfca387152bf2cc01e30..61ef705e926961f89e67f1bf79ba0325c7e4f12b 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -648,7 +648,8 @@ export interface Request<
+     readonly xhr: boolean;
+ 
+     // body: { username: string; password: string; remember: boolean; title: string; };
+-    body: ReqBody;
++    // This conflicts with koa-body dts
++    // body: ReqBody;
+ 
+     // cookies: { string; remember: boolean; };
+     cookies: any;

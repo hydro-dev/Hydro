@@ -61,7 +61,8 @@ export function register(cli: CAC) {
                 '--excludeCollection=opcount', '--excludeCollection=event',
                 ...(argv.options.withLogs ? [] : ['--excludeCollection=oplog']),
             ], { stdio: 'inherit' });
-            const target = `${process.cwd()}/backup-${new Date().toISOString().replace(':', '-').split(':')[0]}.zip`;
+            const timestamp = new Date().toISOString().replace(':', '-').split(':')[0];
+            const target = `${process.cwd()}/backup-${timestamp}${argv.options.dbOnly ? '-db-only' : ''}.zip`;
             const filesToAdd = [];
             const filesToRemove = [];
             const addFile = argv.options.r
@@ -70,10 +71,10 @@ export function register(cli: CAC) {
                     if (cwd === '/data') return;
                     if (keepSource) fs.copySync(path.join(cwd, item), path.join('/data', item), { overwrite: true });
                     else fs.moveSync(path.join(cwd, item), path.join('/data', item), { overwrite: true });
-                    filesToRemove.push(path.join(cwd, item));
+                    filesToRemove.push(path.join('/data', item));
                 }
                 : (cwd: string, item: string, keepSource = true) => {
-                    exec('zip', ['-r', target, item], { cwd, stdio: 'inherit' });
+                    exec('zip', ['-gr', target, item], { cwd, stdio: 'inherit' });
                     if (!keepSource) fs.removeSync(path.join(cwd, item));
                 };
             addFile(dir, 'dump', false);

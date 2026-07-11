@@ -174,6 +174,17 @@
               value:tdoc.allowPrint|default(false),
               row:false
             }) }}
+            <div style="display: none" class="contest-rule-settings contest-rule--oi contest-rule--strictioi">
+            {{ form.form_checkbox({
+              columns:4,
+              label:'Keep Scoreboard Hidden',
+              name:'keepScoreboardHidden',
+              placeholder:_('Keep scoreboard hidden even after contest ends'),
+              value:tdoc.keepScoreboardHidden|default(false),
+              disabled:true,
+              row:false
+            }) }}
+            </div>
             <div style="display: none" class="contest-rule-settings contest-rule--acm contest-rule--ioi">
             {{ form.form_text({
               columns:4,
@@ -228,6 +239,20 @@
     </div>
   </div>
   <div class="medium-3 columns">
+    {% if tdoc %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Files') }}</h1>
+        <div class="section__tools">
+          <button class="primary rounded button" name="upload_file" data-type="public" data-sidebar="true">{{ _('Upload') }}</button>
+        </div>
+      </div>
+      {% set sidebar = true %}
+      {% set files = tdoc.files %}
+      {% set filetype = "public" %}
+      {% include "partials/files.html" %}
+    </div>
+    {% endif %}
     {% include 'components/md_hint.html' %}
   </div>
 </div>

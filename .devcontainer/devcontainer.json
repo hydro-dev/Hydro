@@ -16,6 +16,7 @@
 	"remoteUser": "root",
 	"forwardPorts": [
 		2333,
+		3010,
 		8000
 	],
 	"features": {

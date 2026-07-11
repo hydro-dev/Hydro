@@ -44,7 +44,22 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], async 
       uids.forEach((uid) => $(`.user--${uid}`).closest('tr').show());
     }
   }
-  $('.select.filter').on('change', update);
+
+  function getFilterFromHash() {
+    const hash = location.hash.slice(1);
+    if (hash.startsWith('filter=')) return hash.slice(7);
+    return null;
+  }
+
+  const initialFilter = getFilterFromHash() || 'all';
+  $('.select.filter').val(initialFilter);
+  await update();
+
+  $('.select.filter').on('change', async () => {
+    await update();
+    const val = $('.select.filter').val();
+    history.replaceState(null, '', `#filter=${val}`);
+  });
 
   const beginAt = new Date(UiContext.tdoc.beginAt).getTime();
   const endAt = new Date(UiContext.tdoc.endAt).getTime();
@@ -57,6 +72,13 @@ const page = new NamedPage(['contest_scoreboard', 'homework_scoreboard'], async 
   }
 
   setInterval(updateScoreboard, 180000);
+  window.addEventListener('hashchange', async () => {
+    const filter = getFilterFromHash();
+    if (filter) {
+      $('.select.filter').val(filter);
+      await update();
+    }
+  });
 });
 
 export default page;

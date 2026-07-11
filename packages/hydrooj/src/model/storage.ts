@@ -9,7 +9,7 @@ import mime from '../lib/mime';
 import db from '../service/db';
 import storage from '../service/storage';
 import ScheduleModel from './schedule';
-import * as system from './system';
+import system from './system';
 
 export class StorageModel {
     static coll = db.collection('storage');
@@ -43,10 +43,10 @@ export class StorageModel {
         return await storage.get(value?.link || value?._id || path, savePath);
     }
 
-    static async rename(path: string, newPath: string, operator = 1) {
+    static async rename(path: string, newPath: string, operator: null | number = 1) {
         return await StorageModel.coll.updateOne(
             { path, autoDelete: null },
-            { $set: { path: newPath }, $push: { operator } },
+            { $set: { path: newPath }, ...(operator !== null ? { $push: { operator } } : {}) },
         );
     }
 
@@ -179,9 +179,6 @@ async function cleanFiles() {
 }
 
 export async function apply(ctx: Context) {
-    ctx.inject(['worker'], (c) => {
-        c.worker.addHandler('storage.prune', cleanFiles);
-    });
     ctx.on('domain/delete', async (domainId) => {
         const [problemFiles, contestFiles, trainingFiles] = await Promise.all([
             StorageModel.list(`problem/${domainId}`),
@@ -189,6 +186,9 @@ export async function apply(ctx: Context) {
             StorageModel.list(`training/${domainId}`),
         ]);
         await StorageModel.del(problemFiles.concat(contestFiles).concat(trainingFiles).map((i) => i.path));
+    });
+    await ctx.inject(['worker'], (c) => {
+        c.worker.addHandler('storage.prune', cleanFiles);
     });
     if (process.env.NODE_APP_INSTANCE !== '0') return;
     await db.ensureIndexes(

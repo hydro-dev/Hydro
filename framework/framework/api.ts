@@ -75,19 +75,22 @@ type Projection<T, S> = S extends ProjectionSchemaId
         [K in keyof T & keyof S]: K extends keyof AsKeys<S> ? Projection<T[K], AsKeys<S>[K]> : never
     };
 
-export const projection = <T, S extends ProjectionSchema<T>>(input: T, schema: S): Projection<T, S> => {
+export const projection = <T, S extends ProjectionSchema<T>>(input: T, schema: S, serializeCtx?: any): Projection<T, S> => {
     if (typeof input !== 'object' || input === null) throw new Error('Input must be an object.');
     type R = Projection<T, S>;
+    if ('serialize' in input && typeof (input as any).serialize === 'function') {
+        input = (input as any).serialize(serializeCtx);
+    }
     if (Array.isArray(schema)) schema = Object.fromEntries(schema.map((s) => [s, 1])) as S;
     if (Array.isArray(input)) {
-        return input.map((item) => projection(item, schema)) as R;
+        return input.map((item) => projection(item, schema, serializeCtx)) as R;
     }
     const result = {} as R;
-    for (const key of Reflect.ownKeys(input)) {
+    for (const key of Reflect.ownKeys(input as any)) {
         const schemaIt = schema[key];
         if (!schemaIt) continue;
         if (schemaIt === 1 || !input[key]) result[key] = input[key];
-        else result[key] = projection(input[key], schemaIt);
+        else result[key] = projection(input[key], schemaIt, serializeCtx);
     }
     return result;
 };
@@ -130,6 +133,17 @@ export class ApiService extends Service {
         });
     }
 
+    serialize() {
+        const result = {};
+        for (const key in APIS) {
+            result[key] = {
+                type: APIS[key].type,
+                input: APIS[key].input.toJSON(),
+            };
+        }
+        return result;
+    }
+
     async execute(
         context: ApiExecutionContext, callOrName: ApiCall<ApiType, any, any> | string,
         rawArgs: any, emitHook?: any, project?: any, sendPayload?: (payload: any) => void,
@@ -163,7 +177,7 @@ export class ApiService extends Service {
                 }
             }
         }
-        return (project && typeof result === 'object' && result !== null) ? projection(result, project) : result;
+        return (project && typeof result === 'object' && result !== null) ? projection(result, project, context) : result;
     }
 }
 
@@ -173,13 +187,13 @@ declare module 'cordis' {
     }
 }
 
-export class ApiHandler<C extends Context> extends Handler<C> {
+export class ApiHandler extends Handler {
     @param('op', Types.String)
     async all({ }, op: string) {
         if (!['get', 'post'].includes(this.request.method.toLowerCase())) {
             throw new MethodNotAllowedError(this.request.method);
         }
-        if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[op]) throw new BadRequestError(`Invalid API operation: ${op}`);
         if (APIS[op].type === 'Subscription') {
             throw new BadRequestError('Subscription operation cannot be called in HTTP handler');
         }
@@ -205,7 +219,7 @@ export class ApiHandler<C extends Context> extends Handler<C> {
     }
 }
 
-export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C> {
+export class ApiConnectionHandler extends ConnectionHandler {
     dispose: () => Promise<void> | void;
     isRpc: boolean;
 
@@ -215,7 +229,7 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
             this.isRpc = true;
             return;
         }
-        if (!APIS[op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[op]) throw new BadRequestError(`Invalid API operation: ${op}`);
         if (APIS[op].type !== 'Subscription') {
             throw new BadRequestError('Only subscription operations are supported');
         }
@@ -239,7 +253,7 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
                 throw new BadRequestError('Invalid message');
             }
         }
-        if (!APIS[message.op]) throw new BadRequestError('Invalid operation');
+        if (!APIS[message.op]) throw new BadRequestError(`Invalid API operation: ${message.op}`);
         if (APIS[message.op].type !== 'Subscription') {
             throw new BadRequestError('Only subscription operations are supported');
         }
@@ -255,9 +269,9 @@ export class ApiConnectionHandler<C extends Context> extends ConnectionHandler<C
     }
 }
 
-export function applyApiHandler(ctx: Context, name: string, path: string) {
+export async function applyApiHandler(ctx: Context, name: string, path: string) {
     ctx.plugin(ApiService);
-    ctx.inject(['server', 'api'], ({ Route, Connection }) => {
+    await ctx.inject(['server', 'api'], ({ Route, Connection }) => {
         Route(name, path, ApiHandler);
         Connection(`${name}_conn`, `${path}/conn`, ApiConnectionHandler);
     });

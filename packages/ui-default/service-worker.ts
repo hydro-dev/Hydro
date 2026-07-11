@@ -87,7 +87,7 @@ self.addEventListener('notificationclick', (event) => {
   }));
 });
 
-const PRECACHE = `precache-${process.env.VERSION}`;
+const PRECACHE = 'ui-resources-cache';
 const DO_NOT_PRECACHE = ['.worker.js', 'fonts'];
 
 function shouldCachePath(path: string) {

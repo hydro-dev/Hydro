@@ -54,7 +54,7 @@ class ScratchpadService extends Service {
     rerenderCallback?.();
   }
 }
-declare module '../../context' {
+declare module 'cordis' {
   interface Context {
     scratchpad: ScratchpadService;
   }

@@ -1,7 +1,6 @@
-import { escapeRegExp, pick, uniq } from 'lodash';
+import { escapeRegExp, omit, pick, uniq } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { Collection, Filter, ObjectId } from 'mongodb';
-import { serializer } from '@hydrooj/framework';
 import { LoginError, UserAlreadyExistError, UserNotFoundError } from '../error';
 import {
     Authenticator, BaseUserDict, FileInfo, GDoc,
@@ -16,7 +15,7 @@ import { ArgMethod, buildProjection, randomstring, sleep } from '../utils';
 import { PERM, PRIV } from './builtin';
 import domain from './domain';
 import * as setting from './setting';
-import * as system from './system';
+import system from './system';
 import token from './token';
 
 export const coll: Collection<Udoc> = db.collection('user');
@@ -59,6 +58,8 @@ export class User {
     _loginip: string;
     _tfa: string;
     _authenticators: Authenticator[];
+    _privateFields: string[] = [];
+    _publicFields: string[] = [];
 
     mail: string;
     uname: string;
@@ -99,16 +100,17 @@ export class User {
         this.role = dudoc.role || 'default';
         this.domains = udoc.domains || [];
         this.tfa = !!udoc.tfa;
-        this.authn = (udoc.authenticators || []).length > 0;
+        this.authn = !!udoc.authenticators?.length;
         if (dudoc.group) this.group = dudoc.group;
-
-        for (const key in setting.SETTINGS_BY_KEY) {
-            this[key] = udoc[key] ?? (setting.SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
-        }
-
-        for (const key in setting.DOMAIN_USER_SETTINGS_BY_KEY) {
-            this[key] = dudoc[key] ?? (setting.DOMAIN_USER_SETTINGS_BY_KEY[key].value || system.get(`preference.${key}`));
-        }
+        const load = (settings: Record<string, ReturnType<typeof setting.Setting>>, source: any) => {
+            for (const key in settings) {
+                this[key] = source[key] ?? (settings[key].value || system.get(`preference.${key}`));
+                if (settings[key].flag & setting.FLAG_PUBLIC) this._publicFields.push(key);
+                if (settings[key].flag & setting.FLAG_PRIVATE) this._privateFields.push(key);
+            }
+        };
+        load(setting.SETTINGS_BY_KEY, udoc);
+        load(setting.DOMAIN_USER_SETTINGS_BY_KEY, dudoc);
     }
 
     async init() {
@@ -153,21 +155,28 @@ export class User {
         user.avatarUrl = avatar(user.avatar, 128);
         if (user.pinnedDomains instanceof Array) {
             const result = await Promise.allSettled(user.pinnedDomains.slice(0, 10).map((i) => domain.get(i)));
-            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i);
+            user.domains = result.map((i) => (i.status === 'fulfilled' ? i.value : null)).filter((i) => i)
+                .map((i) => pick(i, ['_id', 'name', 'avatar']));
         }
         user._isPrivate = true;
         return user;
     }
 
-    serialize(h) {
-        if (!this._isPrivate) {
-            const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'tfa', 'authn'];
-            if (h?.user?.hasPerm(PERM.PERM_VIEW_DISPLAYNAME)) {
-                fields.push('displayName', 'school', 'studentId');
+    getFields(type: 'public' | 'private' = 'public') {
+        const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'avatar', 'avatarUrl'].concat(this._publicFields);
+        return type === 'public' ? fields : fields.concat(this._privateFields);
+    }
+
+    serialize(h?) {
+        if (this._isPrivate) {
+            const result: any = {};
+            for (const key of Object.keys(this)) {
+                if (key.startsWith('_') && key !== '_id') continue;
+                result[key] = this[key];
             }
-            return pick(this, fields);
+            return result;
         }
-        return JSON.stringify(this, serializer(true, h));
+        return pick(this, this.getFields(h?.user?.hasPerm(PERM.PERM_VIEW_USER_PRIVATE_INFO) ? 'private' : 'public'));
     }
 }
 
@@ -398,19 +407,26 @@ class UserModel {
         return projection ? coll.find(params).project<Udoc>(buildProjection(projection)) : coll.find(params);
     }
 
+    static async getListForRender(domainId: string, uids: number[], showPrivateInfo: boolean, extraFields?: string[]): Promise<BaseUserDict>;
     static async getListForRender(domainId: string, uids: number[], extraFields?: string[]): Promise<BaseUserDict>;
-    static async getListForRender(domainId: string, uids: number[], arg: string[] | boolean) {
-        const fields = ['_id', 'uname', 'mail', 'avatar', 'school', 'studentId'].concat(arg instanceof Array ? arg : []);
-        const showDisplayName = arg instanceof Array ? fields.includes('displayName') : arg;
+    static async getListForRender(domainId: string, uids: number[], arg: string[] | boolean, extraFields?: string[]) {
+        const _extraFields = Array.isArray(arg) ? arg : Array.isArray(extraFields) ? extraFields : [];
+        const showPrivateInfo = arg === true || _extraFields.includes('displayName');
+        const fields = Array.from(new Set([
+            ...(await UserModel.getById('system', 0)).getFields(showPrivateInfo ? 'private' : 'public'),
+            ..._extraFields,
+        ]));
         const [udocs, vudocs, dudocs] = await Promise.all([
             UserModel.getMulti({ _id: { $in: uids } }, fields).toArray(),
             collV.find({ _id: { $in: uids } }).toArray(),
-            domain.getDomainUserMulti(domainId, uids).project({ uid: 1, ...(showDisplayName ? { displayName: 1 } : {}) }).toArray(),
+            domain.getDomainUserMulti(domainId, uids).project(buildProjection(fields.concat('uid'))).toArray(),
         ]);
         const udict = {};
         for (const udoc of udocs) udict[udoc._id] = udoc;
         for (const udoc of vudocs) udict[udoc._id] = udoc;
-        if (showDisplayName) for (const dudoc of dudocs) udict[dudoc.uid].displayName = dudoc.displayName;
+        if (showPrivateInfo) {
+            for (const dudoc of dudocs) Object.assign(udict[dudoc.uid], omit(dudoc, ['_id', 'uid']));
+        }
         for (const uid of uids) udict[uid] ||= { ...UserModel.defaultUser };
         for (const key in udict) {
             udict[key].school ||= '';
@@ -464,8 +480,16 @@ class UserModel {
         ]);
     }
 
-    static async listGroup(domainId: string, uid?: number) {
-        const groups = await collGroup.find(typeof uid === 'number' ? { domainId, uids: uid } : { domainId }).toArray();
+    static async listGroup(domainId: string, uid?: number, names?: string[], search?: string, limit?: number) {
+        const filter: Filter<GDoc> = { domainId };
+        if (typeof uid === 'number') filter.uids = uid;
+        const $and: Filter<GDoc>[] = [];
+        if (names?.length) $and.push({ name: { $in: names } });
+        if (search) $and.push({ name: { $regex: escapeRegExp(search), $options: 'i' } });
+        if ($and.length) filter.$and = $and;
+        let cursor = collGroup.find(filter);
+        if (limit) cursor = cursor.limit(limit);
+        const groups = await cursor.toArray();
         if (uid) {
             groups.push({
                 _id: new ObjectId(), domainId, uids: [uid], name: uid.toString(),

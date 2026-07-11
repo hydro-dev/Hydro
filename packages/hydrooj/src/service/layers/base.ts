@@ -3,16 +3,19 @@ import { cloneDeep, omit } from 'lodash';
 import type { KoaContext } from '@hydrooj/framework';
 import { randomPick, Time } from '@hydrooj/utils';
 import { PERM } from '../../model/builtin';
-import * as system from '../../model/system';
+import domain from '../../model/domain';
+import system from '../../model/system';
 import token from '../../model/token';
 
 export interface UiContextBase {
     cdn_prefix: string;
+    cdn_dynamic: boolean;
     url_prefix: string;
     ws_prefix: string;
 }
 export const UiContextBase: UiContextBase = {
     cdn_prefix: '/',
+    cdn_dynamic: false,
     url_prefix: '/',
     ws_prefix: '/',
 };
@@ -29,9 +32,10 @@ export default async (ctx: KoaContext, next: Next) => {
         if (UiContext.cdn_prefix.includes(',')) UiContext.cdn_prefix = randomPick(UiContext.cdn_prefix.split(','));
         UiContext.ws_prefix = system.get('server.ws');
         if (UiContext.ws_prefix.includes(',')) UiContext.ws_prefix = randomPick(UiContext.ws_prefix.split(','));
+        UiContext.cdn_dynamic = system.get('server.cdn_dynamic');
     }
     UiContext.domainId = domainId;
-    UiContext.domain = domainInfo;
+    UiContext.domainVersion = domain.getVersion(domainInfo);
     ctx.HydroContext.UiContext = UiContext;
     ctx.HydroContext.domain = domainInfo;
     ctx.HydroContext.args = args;
@@ -54,6 +58,7 @@ export default async (ctx: KoaContext, next: Next) => {
     if (ctx.session._id && !ctx.session.recreate) {
         await token.update(ctx.session._id, token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     } else {
+        if (ctx.session._id) await token.del(ctx.session._id, token.TYPE_SESSION);
         Object.assign(ctx.session, { createIp: request.ip, createUa: ua, createHost: request.host });
         [ctx.session._id] = await token.add(token.TYPE_SESSION, expireSeconds, omit(ctx.session, ['_id', 'recreate']));
     }

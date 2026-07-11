@@ -1,12 +1,13 @@
 import { STATUS } from '@hydrooj/common';
 
 export function normalize(key: string) {
-    return key.toUpperCase().replace(/ _-/g, '');
+    return key.toUpperCase().replace(/[ _-]/g, '');
 }
 
 function removeSlash(src: Record<string, STATUS>) {
-    for (const key in Object.keys(src)) src[key.replace(/_/g, '')] = src[key];
-    return src;
+    const dst = {};
+    for (const key of Object.keys(src)) dst[key.replace(/_/g, '')] = src[key];
+    return dst;
 }
 
 export const VERDICT = new Proxy<Record<string, STATUS>>(removeSlash({

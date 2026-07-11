@@ -13,7 +13,7 @@ import * as discussion from '../model/discussion';
 import problem from '../model/problem';
 import record from '../model/record';
 import storage from '../model/storage';
-import * as system from '../model/system';
+import system from '../model/system';
 import user from '../model/user';
 import {
     Handler, param, post, Types,
@@ -84,7 +84,7 @@ class HomeworkDetailHandler extends Handler {
         this.tdoc = await contest.get(domainId, tid);
         if (this.tdoc.rule !== 'homework') throw new ContestNotFoundError(domainId, tid);
         if (this.tdoc.assign?.length && !this.user.own(this.tdoc) && !this.user.hasPerm(PERM.PERM_VIEW_HIDDEN_HOMEWORK)) {
-            if (!Set.intersection(this.tdoc.assign, this.user.group).size) {
+            if (!new Set(this.tdoc.assign).intersection(new Set(this.user.group)).size) {
                 throw new NotAssignedError('homework', this.tdoc.docId);
             }
         }
@@ -109,8 +109,8 @@ class HomeworkDetailHandler extends Handler {
             tdoc: this.tdoc, tsdoc, udict, ddocs, page, dpcount, dcount,
         };
         this.response.body.tdoc.content = this.response.body.tdoc.content
-            .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/`)
-            .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/`);
+            .replace(/\(file:\/\//g, `(./${this.tdoc.docId}/file/public/`)
+            .replace(/="file:\/\//g, `="./${this.tdoc.docId}/file/public/`);
         if (
             (contest.isNotStarted(this.tdoc) || (!tsdoc?.attend && !contest.isDone(this.tdoc)))
             && !this.user.own(this.tdoc)
@@ -124,15 +124,13 @@ class HomeworkDetailHandler extends Handler {
                 await contest.setStatus(domainId, tid, this.user._id, { startAt: new Date() });
                 tsdoc.startAt = new Date();
             }
-            for (const pdetail of tsdoc.journal || []) {
+            const valid = (tsdoc.journal || []).filter((p) => this.tdoc.pids.includes(p.pid));
+            for (const pdetail of valid) {
                 psdict[pdetail.pid] = pdetail;
-                rdict[pdetail.rid] = { _id: pdetail.rid };
+                rdict[pdetail.rid.toHexString()] = { _id: pdetail.rid };
             }
-            if (contest.canShowSelfRecord.call(this, this.tdoc) && tsdoc.journal) {
-                rdict = await record.getList(
-                    domainId,
-                    tsdoc.journal.map((pdetail) => pdetail.rid),
-                );
+            if (contest.canShowSelfRecord.call(this, this.tdoc) && valid.length) {
+                rdict = await record.getList(domainId, valid.map((pdetail) => pdetail.rid));
             }
         }
         Object.assign(this.response.body, { pdict, psdict, rdict });
@@ -247,7 +245,7 @@ class HomeworkEditHandler extends Handler {
         await Promise.all([
             record.updateMulti(domainId, { domainId, contest: tid }, undefined, undefined, { contest: '' }),
             contest.del(domainId, tid),
-            storage.del(tdoc.files?.map((i) => `contest/${domainId}/${tid}/${i.name}`) || [], this.user._id),
+            storage.del(tdoc.files?.map((i) => `contest/${domainId}/${tid}/public/${i.name}`) || [], this.user._id),
         ]);
         this.response.redirect = this.url('homework_main');
     }
@@ -271,7 +269,7 @@ export class HomeworkFilesHandler extends Handler {
             tsdoc: await contest.getStatus(domainId, this.tdoc.docId, this.user._id),
             udoc: await user.getById(domainId, this.tdoc.owner),
             files: sortFiles(this.tdoc.files || []),
-            urlForFile: (filename: string) => this.url('homework_file_download', { tid, filename }),
+            urlForFile: (filename: string) => this.url('homework_file_download', { tid, filename, type: 'public' }),
         };
         this.response.pjax = 'partials/files.html';
         this.response.template = 'homework_files.html';
@@ -289,8 +287,8 @@ export class HomeworkFilesHandler extends Handler {
         if (size >= system.get('limit.contest_files_size')) {
             throw new FileLimitExceededError('size');
         }
-        await storage.put(`contest/${domainId}/${tid}/${filename}`, file.filepath, this.user._id);
-        const meta = await storage.getMeta(`contest/${domainId}/${tid}/${filename}`);
+        await storage.put(`contest/${domainId}/${tid}/public/${filename}`, file.filepath, this.user._id);
+        const meta = await storage.getMeta(`contest/${domainId}/${tid}/public/${filename}`);
         const payload = { _id: filename, name: filename, ...pick(meta, ['size', 'lastModified', 'etag']) };
         if (!meta) throw new FileUploadError();
         await contest.edit(domainId, tid, { files: [...(this.tdoc.files || []), payload] });
@@ -301,7 +299,7 @@ export class HomeworkFilesHandler extends Handler {
     @post('files', Types.ArrayOf(Types.Filename))
     async postDeleteFiles(domainId: string, tid: ObjectId, files: string[]) {
         await Promise.all([
-            storage.del(files.map((t) => `contest/${domainId}/${tid}/${t}`), this.user._id),
+            storage.del(files.map((t) => `contest/${domainId}/${tid}/public/${t}`), this.user._id),
             contest.edit(domainId, tid, { files: this.tdoc.files.filter((i) => !files.includes(i.name)) }),
         ]);
         this.back();
@@ -315,7 +313,7 @@ export async function apply(ctx) {
     ctx.Route('homework_code', '/homework/:tid/code', ContestCodeHandler, PERM.PERM_VIEW_HOMEWORK);
     ctx.Route('homework_edit', '/homework/:tid/edit', HomeworkEditHandler);
     ctx.Route('homework_files', '/homework/:tid/file', HomeworkFilesHandler, PERM.PERM_VIEW_HOMEWORK);
-    ctx.Route('homework_file_download', '/homework/:tid/file/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
+    ctx.Route('homework_file_download', '/homework/:tid/file/:type/:filename', ContestFileDownloadHandler, PERM.PERM_VIEW_HOMEWORK);
     await ctx.inject(['scoreboard'], ({ Route }) => {
         Route('homework_scoreboard', '/homework/:tid/scoreboard', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);
         Route('homework_scoreboard_view', '/homework/:tid/scoreboard/:view', ContestScoreboardHandler, PERM.PERM_VIEW_HOMEWORK_SCOREBOARD);

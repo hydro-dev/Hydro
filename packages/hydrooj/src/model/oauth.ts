@@ -10,14 +10,14 @@ export interface OauthMap {
     uid: number;
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         oauth: OauthModel;
     }
 }
 
 export interface OAuthUserResponse {
-    _id: string;
+    _id: string | string[];
     email: string;
     avatar?: string;
     bio?: string;
@@ -48,7 +48,7 @@ export default class OauthModel extends Service {
         this.coll = ctx.db.collection('oauth');
     }
 
-    async [Context.init]() {
+    async [Service.init]() {
         await this.ctx.db.ensureIndexes(this.coll,
             { key: { platform: 1, id: 1 }, name: 'platform_id', unique: true },
             { key: { uid: 1, platform: 1 }, name: 'uid_platform' },

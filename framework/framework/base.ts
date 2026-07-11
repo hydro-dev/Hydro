@@ -18,12 +18,15 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         method: ctx.request.method.toLowerCase(),
         host: ctx.request.headers[xhost?.toLowerCase() || ''] as string || ctx.request.host,
         ip: (ctx.request.headers[xff?.toLowerCase() || ''] as string || ctx.request.ip).split(',')[0].trim(),
-        ...pick(ctx, ['cookies', 'query', 'path', 'params', 'originalPath', 'querystring']),
+        ...pick(ctx, ['cookies', 'query', 'path', 'originalPath', 'querystring']),
         ...pick(ctx.request, ['headers', 'body', 'hostname']),
         files: ctx.request.files as any,
         referer: ctx.request.headers.referer || '',
         json: (ctx.request.headers.accept || '').includes('application/json'),
         websocket: ctx.request.headers.upgrade === 'websocket',
+        get params() {
+            return ctx.params;
+        },
     };
     const response: HydroResponse = {
         body: {},
@@ -64,18 +67,30 @@ export default (logger, xff, xhost) => async (ctx: KoaContext, next: Next) => {
         }
         if (!response.type) {
             if (response.pjax && args.pjax) {
-                const html = await handler.renderHTML(response.pjax, response.body);
-                response.body = { fragments: [{ html }] };
+                const pjax = typeof response.pjax === 'string' ? [[response.pjax, {}]] : response.pjax;
+                response.body = {
+                    fragments: (await Promise.all(
+                        pjax.map(async ([template, extra]) => handler.renderHTML(template, { ...response.body, ...extra })),
+                    )).map((i) => ({ html: i })),
+                };
                 response.type = 'application/json';
             } else if (
                 request.json || response.redirect
-                || request.query.noTemplate || !response.template) {
+                || request.query.noTemplate || !response.template // no template, send raw data
+            ) {
                 // Send raw data
                 try {
-                    if (typeof response.body === 'object' && request.headers['x-hydro-inject']) {
+                    if (request.headers['x-hydro-inject']) {
                         const inject = request.headers['x-hydro-inject'].toString().toLowerCase().split(',').map((i) => i.trim());
-                        if (inject.includes('uicontext')) response.body.UiContext = UiContext;
-                        if (inject.includes('usercontext')) response.body.UserContext = user;
+                        if (inject.includes('pagename')) {
+                            ctx.set('x-hydro-page', ctx._matchedRouteName || '');
+                            ctx.set('x-hydro-template', response.template || '');
+                        }
+                        if (response.body !== null && typeof response.body === 'object') {
+                            if (inject.includes('uicontext')) response.body.UiContext = UiContext;
+                            if (inject.includes('usercontext')) response.body.UserContext = user;
+                            if (inject.includes('routemap')) response.body.routeMap = handler.ctx.server.routeMap;
+                        }
                     }
                     response.body = JSON.stringify(response.body, serializer(false, handler));
                 } catch (e) {

@@ -1,15 +1,15 @@
 import { load } from 'js-yaml';
-import { normalizeSubtasks, ProblemConfigFile } from '@hydrooj/common';
+import { normalizeSubtasks, ProblemConfigFile, readSubtasksFromFiles } from '@hydrooj/common';
 import { readYamlCases } from '@hydrooj/common/cases';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
 import type { ProblemConfig } from '../interface';
 
-export async function parseConfig(config: string | ProblemConfigFile = {}) {
+export async function parseConfig(config: string | ProblemConfigFile = {}, files: string[]) {
     const cfg: ProblemConfigFile = typeof config === 'string'
         ? await readYamlCases(load(config) as Record<string, any>)
         : await readYamlCases(config);
     const result: ProblemConfig = {
-        count: 0,
+        count: Object.keys(cfg.answers || {}).length || Math.sum((cfg.subtasks || []).map((s) => s.cases.length)),
         memoryMin: Number.MAX_SAFE_INTEGER,
         memoryMax: 0,
         timeMin: Number.MAX_SAFE_INTEGER,
@@ -19,6 +19,7 @@ export async function parseConfig(config: string | ProblemConfigFile = {}) {
     };
     if (cfg.subType) result.subType = cfg.subType;
     if (cfg.target) result.target = cfg.target;
+    result.count ||= Math.sum(readSubtasksFromFiles(files, cfg).map((i) => i.cases.length));
     if (cfg.subtasks?.length) {
         for (const subtask of normalizeSubtasks(cfg.subtasks as any || [], (i) => i, cfg.time, cfg.memory)) {
             result.memoryMax = Math.max(result.memoryMax, ...subtask.cases.map((i) => parseMemoryMB(i.memory)));

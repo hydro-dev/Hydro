@@ -7,7 +7,7 @@ import {
     Logger, ProblemModel, Schema, Service, SystemModel,
 } from 'hydrooj';
 
-declare module 'hydrooj' {
+declare module 'cordis' {
     interface Context {
         sonic?: SonicService;
     }
@@ -51,7 +51,7 @@ export class SonicService extends Service {
         super(ctx, 'sonic');
     }
 
-    *[Context.init]() {
+    *[Service.init]() {
         this.search = new Search(this.config);
         this.ingest = new Ingest(this.config);
         this.search.connect(getHandler('search', this));
@@ -73,7 +73,7 @@ export class SonicService extends Service {
                     .then(() => this.push('problem', `${pdoc.domainId}@content`, id, pdoc.content.toString())),
             ]).catch((e) => logger.error(e));
         });
-        yield this.ctx.on('problem/del', async (domainId, docId) => {
+        yield this.ctx.on('problem/delete', async (domainId, docId) => {
             const id = `${domainId}/${docId}`;
             await Promise.all([
                 this.flusho('problem', `${domainId}@title`, id),

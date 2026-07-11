@@ -5,7 +5,7 @@ import type fs from 'fs';
 import type { Dictionary, NumericDictionary } from 'lodash';
 import type { Binary, FindCursor, ObjectId } from 'mongodb';
 import type {
-    FileInfo, RecordJudgeInfo, RecordPayload,
+    FileInfo, RecordJudgeInfo, RecordPayload, SubtaskResult,
 } from '@hydrooj/common/types';
 import type { Context } from './context';
 import type { PrintTaskStatus } from './model/contest';
@@ -213,6 +213,7 @@ export type RecordDoc = {
     [K in keyof RecordPayload]: K extends 'hackTarget' | 'contest' ? ObjectId : RecordPayload[K];
 } & {
     _id: ObjectId;
+    notify?: boolean;
 };
 
 export interface RecordHistoryDoc extends RecordJudgeInfo {
@@ -264,8 +265,10 @@ export interface Tdoc extends Document {
     _code?: string;
     assign?: string[];
     files?: FileInfo[];
+    privateFiles?: FileInfo[];
     allowViewCode?: boolean;
     allowPrint?: boolean;
+    keepScoreboardHidden?: boolean;
 
     // For contest
     lockAt?: Date;
@@ -310,7 +313,7 @@ export interface DomainDoc extends Record<string, any> {
 // Message
 export interface MessageDoc {
     from: number;
-    to: number;
+    to: number | number[];
     content: string;
     flag: number;
 }
@@ -409,9 +412,68 @@ export interface OplogDoc extends Record<string, any> {
     type: string;
 }
 
+export interface ContestJournalEntry extends Record<string, any> {
+    rid: ObjectId;
+    pid: number;
+    score: number;
+    status: number;
+    time?: number;
+    lang?: string;
+    subtasks?: Record<number, SubtaskResult>;
+}
+
+export interface ContestDetailEntry extends Record<string, any> {
+    rid?: ObjectId;
+    pid?: number;
+    score?: number;
+    status?: number;
+    /** ACM: penalty + elapsed time (in seconds). */
+    time?: number;
+    /** ACM: elapsed time since contest begin (in seconds). */
+    real?: number;
+    /** ACM: accumulated penalty (in seconds). */
+    penalty?: number;
+    /** ACM: number of non-accepted submissions on this problem. */
+    naccept?: number;
+    /** Number of submissions hidden after the scoreboard is locked. */
+    npending?: number;
+    /** Ledo: number of effective attempts. */
+    ntry?: number;
+    /** Ledo / homework: score after rule-specific bonus or penalty. */
+    penaltyScore?: number;
+    subtasks?: Record<number, SubtaskResult>;
+}
+
 export interface ContestStat extends Record<string, any> {
-    detail: Record<number, Record<string, any>>;
+    detail: Record<number, ContestDetailEntry>;
+    display?: Record<number, ContestDetailEntry>;
+    score?: number;
+    originalScore?: number;
+    accept?: number;
+    time?: number;
+    penaltyScore?: number;
     unrank?: boolean;
+}
+
+export interface ContestStatusDoc extends StatusDocBase, ContestStat {
+    docId: ObjectId;
+    docType: document['TYPE_CONTEST'];
+    attend?: number;
+    subscribe?: number;
+    journal?: ContestJournalEntry[];
+    startAt?: Date;
+    endAt?: Date; // 灵活时间模式的结束时间，或者是提前结束比赛的时间
+    rev?: number;
+}
+
+export interface TrainingStatusDoc extends StatusDocBase, Record<string, any> {
+    docId: ObjectId;
+    docType: document['TYPE_TRAINING'];
+    enroll?: number;
+    attend?: number;
+    doneNids?: number[];
+    donePids?: number[];
+    done?: boolean;
 }
 
 export interface ScoreboardConfig {
@@ -420,31 +482,34 @@ export interface ScoreboardConfig {
     lockAt?: Date;
 }
 
+export type Feature = 'scoreboard' | 'download';
+
 export interface ContestRule<T = any> {
     _originalRule?: Partial<ContestRule<T>>;
     TEXT: string;
     hidden?: boolean;
+    features?: Feature[];
     check: (args: any) => any;
     statusSort: Record<string, 1 | -1>;
     submitAfterAccept: boolean;
     showScoreboard: (tdoc: Tdoc, now: Date) => boolean;
     showSelfRecord: (tdoc: Tdoc, now: Date) => boolean;
     showRecord: (tdoc: Tdoc, now: Date) => boolean;
-    stat: (this: ContestRule<T>, tdoc: Tdoc, journal: any[]) => ContestStat & T;
+    stat: (this: ContestRule<T>, tdoc: Tdoc, journal: ContestJournalEntry[]) => ContestStat & T;
     scoreboardHeader: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
         tdoc: Tdoc, pdict: ProblemDict,
     ) => Promise<ScoreboardRow>;
     scoreboardRow: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStat & T,
+        tdoc: Tdoc, pdict: ProblemDict, udoc: BaseUser, rank: number, tsdoc: ContestStatusDoc & T,
         meta?: any,
     ) => Promise<ScoreboardRow>;
     scoreboard: (
         this: ContestRule<T>, config: ScoreboardConfig, _: (s: string) => string,
-        tdoc: Tdoc, pdict: ProblemDict, cursor: FindCursor<ContestStat & T>,
+        tdoc: Tdoc, pdict: ProblemDict, cursor: FindCursor<ContestStatusDoc & T>,
     ) => Promise<[board: ScoreboardRow[], udict: BaseUserDict]>;
-    ranked: (tdoc: Tdoc, cursor: FindCursor<ContestStat & T>) => Promise<[number, ContestStat & T][]>;
+    ranked: (tdoc: Tdoc, cursor: FindCursor<ContestStatusDoc & T>) => Promise<[number, ContestStatusDoc & T][]>;
     applyProjection: (tdoc: Tdoc, rdoc: RecordDoc, user: User) => RecordDoc;
 }
 
@@ -587,7 +652,7 @@ export interface Model {
     record: typeof import('./model/record').default;
     setting: typeof import('./model/setting');
     solution: typeof import('./model/solution').default;
-    system: typeof import('./model/system');
+    system: typeof import('./model/system').default;
     task: typeof import('./model/task').default;
     schedule: typeof import('./model/schedule').default;
     oplog: typeof import('./model/oplog');

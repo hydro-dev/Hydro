@@ -1,16 +1,33 @@
 /* eslint-disable node/no-deprecated-api */
-const map = {};
+const zlib = require('zlib');
+const sourceMapArg = process.env.LOADER_SOURCEMAP_ONLY
+    || process.argv.find((i) => i.startsWith('--sourcemap-only='))
+    || '';
+const sourceMapOnly = sourceMapArg ? sourceMapArg.split('=')[1].split(',').filter((i) => i) : false;
+const map = new Proxy(Object.create(null), {
+    get(target, key) {
+        if (!target[key]) return null;
+        return zlib.inflateSync(target[key]).toString();
+    },
+    set(target, key, value) {
+        if (typeof value !== 'string') return false;
+        if (sourceMapOnly && key.includes('node_modules') && !sourceMapOnly.some((entry) => key.includes(entry))) {
+            return true;
+        }
+        target[key] = zlib.deflateSync(value, { level: 9 });
+        return true;
+    },
+});
 require('source-map-support').install({
     handleUncaughtExceptions: false,
     environment: 'node',
     retrieveSourceMap(file) {
-        if (map[file]) {
-            return {
-                url: file,
-                map: map[file],
-            };
-        }
-        return null;
+        const data = map[file];
+        if (!data) return null;
+        return {
+            url: file,
+            map: data,
+        };
     },
 });
 const path = require('path');
@@ -18,9 +35,13 @@ const vm = require('vm');
 const fs = require('fs');
 const esbuild = require('esbuild');
 
-process.env.NODE_APP_INSTANCE ||= '0';
 const major = +process.version.split('.')[0].split('v')[1];
 const minor = +process.version.split('.')[1];
+if (major < 18) {
+    console.error('NodeJS <18 is no longer supported');
+    process.exit(1);
+}
+process.env.NODE_APP_INSTANCE ||= '0';
 
 const remove = [
     // by esbuild
@@ -70,12 +91,13 @@ require.extensions['.js'] = function loader(module, filename) {
         return module._compile(transform(filename), filename);
     }
     try {
-        const content = fs.readFileSync(filename, 'utf-8');
+        let content = fs.readFileSync(filename, 'utf-8');
         const lastLine = content.trim().split('\n').pop();
         if (lastLine.startsWith('//# sourceMappingURL=data:application/json;base64,')) {
             const info = lastLine.split('//# sourceMappingURL=data:application/json;base64,')[1];
-            const payload = JSON.parse(Buffer.from(info, 'base64').toString());
+            const payload = Buffer.from(info, 'base64').toString();
             map[filename] = payload;
+            content = content.split('//# sourceMappingURL')[0];
         }
         return module._compile(content, filename);
     } catch (e) { // ESM

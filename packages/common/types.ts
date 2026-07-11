@@ -56,6 +56,7 @@ export interface ProblemConfigFile {
     cases?: TestCaseConfig[];
     subtasks?: SubtaskConfig[];
     langs?: string[];
+    multi_pass?: number;
     checker?: CompilableSource;
     interactor?: CompilableSource;
     manager?: CompilableSource;
@@ -107,7 +108,7 @@ export interface RecordPayload extends RecordJudgeInfo {
     source?: string;
     progress?: number;
     /** pretest */
-    input?: string;
+    input?: string | string[];
     /** hack target rid */
     hackTarget?: string;
     /** 0 if pretest&script */

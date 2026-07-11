@@ -8,6 +8,8 @@
 <div class="row"><div class="medium-12 columns scoreboard--{{ tdoc.rule }}">
   <div class="section visible">
     <div class="section__header">
+      <h1 class="section__title">
+      {{ tdoc.title }}&nbsp;&nbsp;
       {%- for ext in ['HTML', 'CSV', 'Ghost'] -%}
         <a class="button" target="_blank" href="{{ url(type + '_scoreboard_view', tid=tdoc.docId, view=ext.toLowerCase()) }}">
           <span class="icon icon-download"></span> {{ _('Export as {0}').format(ext) }}
@@ -26,6 +28,7 @@
           </button>
         </form>
       {% endif %}
+      </h1>
       <div class="section__tools">
         <select class="select filter" name="list">
           <option value="all">{{ _('All Users') }}</option>

@@ -114,7 +114,7 @@ export class ConfirmDialog extends Dialog {
 }
 
 export interface Field {
-  type: 'text' | 'checkbox' | 'user' | 'userId' | 'username' | 'domain';
+  type: 'text' | 'textarea' | 'checkbox' | 'user' | 'userId' | 'username' | 'domain';
   options?: string[] | Record<string, string>;
   placeholder?: string;
   label?: string;
@@ -122,17 +122,24 @@ export interface Field {
   required?: boolean;
   default?: string;
   columns?: number;
+  rows?: number;
+  multi?: boolean;
 }
 
 type Result<T extends string, R extends Record<T, Field>> = {
-  [K in keyof R]: ('text' | 'password' | 'username' | 'domain') extends R[K]['type'] ? string
+  [K in keyof R]: R[K]['type'] extends ('text' | 'password' | 'username' | 'domain' | 'textarea') ? string
     : R[K]['type'] extends 'checkbox' ? boolean
       : R[K]['type'] extends 'userId' ? number
         : R[K]['type'] extends 'user' ? any
           : never;
 };
 
-export async function prompt<T extends string, R extends Record<T, Field>>(title: string, fields: R): Promise<Result<T, R>> {
+interface PromptOptions {
+  cancelByClickingBack: boolean;
+  cancelByEsc: boolean;
+}
+
+export async function prompt<T extends string, R extends Record<T, Field>>(title: string, fields: R, options?: PromptOptions): Promise<Result<T, R>> {
   let valueCache: Result<T, R> = {} as any;
   const defaultValues = Object.fromEntries(Object.entries(fields)
     .map(([name, field]: [T, Field]) => {
@@ -169,7 +176,19 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
         <h1>{title}</h1>
       </div></div>
       {layout.map((i) => <div className="row" key={i[0][0]}>
-        {i.map(([name, field]: [string, Field]) => <div className={`columns medium-${Math.abs(field.columns || 12)}`}>
+        {i.map(([name, field]: [string, Field]) => <div key={name} className={`columns medium-${Math.abs(field.columns || 12)}`}>
+          {field.type === 'textarea' && <label>
+            {field.label}
+            <textarea
+              className="textbox"
+              rows={field.rows || 6}
+              placeholder={field.placeholder}
+              defaultValue={field.default}
+              data-autofocus={field.autofocus}
+              style={{ fontFamily: 'monospace' }}
+              onChange={(e) => setValues({ ...values, [name]: e.target.value })}
+            />
+          </label>}
           {['text', 'user', 'userId', 'username', 'domain'].includes(field.type) && <label>
             {field.label}
             <div className="textbox-container">
@@ -193,11 +212,18 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
                 />)}
               {['userId', 'username', 'user'].includes(field.type) && <UserSelectAutoComplete
                 data-autofocus={field.autofocus}
+                multi={field.multi}
                 ref={(el) => { refs.current[name] = el; }}
-                selectedKeys={selected[name] ? [selected[name].toString()] : []}
+                selectedKeys={selected[name]
+                  ? (field.multi
+                    ? String(selected[name]).split(',').filter(Boolean)
+                    : [selected[name].toString()])
+                  : []}
                 onChange={(e) => {
-                  const val = refs.current[name].getSelectedItems()[0];
-                  setValues({ ...values, [name]: field.type === 'username' ? val?.uname : field.type === 'userId' ? val?._id : val });
+                  if (field.multi && e === selected[name]) return;
+                  const items = refs.current[name].getSelectedItems();
+                  const extract = (v) => (field.type === 'username' ? v?.uname : field.type === 'userId' ? v?._id : v);
+                  setValues({ ...values, [name]: field.multi ? items.map(extract) : extract(items[0]) });
                   setSelected({ ...selected, [name]: e });
                 }}
               />}
@@ -225,6 +251,8 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
   const res = await new Dialog({
     $body: $(div),
     $action: [buttonCancel, buttonOk].join('\n'),
+    cancelByClickingBack: options?.cancelByClickingBack ?? false,
+    cancelByEsc: options?.cancelByEsc ?? false,
     onDispatch(action) {
       if (action === 'ok') {
         for (const [name, field] of Object.entries(fields) as [string, Field][]) {
@@ -255,11 +283,3 @@ export async function alert(text: string) {
     $body: tpl.typoMsg(text),
   }).open();
 }
-
-window.Hydro.components.Dialog = Dialog;
-window.Hydro.components.InfoDialog = InfoDialog;
-window.Hydro.components.ActionDialog = ActionDialog;
-window.Hydro.components.ConfirmDialog = ConfirmDialog;
-window.Hydro.components.prompt = prompt;
-window.Hydro.components.confirm = confirm;
-window.Hydro.components.alert = alert;

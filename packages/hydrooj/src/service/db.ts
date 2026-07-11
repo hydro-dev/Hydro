@@ -26,7 +26,7 @@ interface MongoConfig {
     collectionMap?: Record<string, string>;
 }
 
-declare module '../context' {
+declare module 'cordis' {
     interface Context {
         db: MongoService;
     }
@@ -55,7 +55,7 @@ export class MongoService extends Service {
         return mongourl;
     }
 
-    async *[Context.init]() {
+    async *[Service.init]() {
         const mongourl = await MongoService.getUrl();
         const url = mongoUri.parse(mongourl);
         this.client = await MongoClient.connect(mongourl);
@@ -120,7 +120,11 @@ export class MongoService extends Service {
             index.background = true;
             if (!i) {
                 logger.info('Indexing %s.%s with key %o', coll.collectionName, index.name, index.key);
-                await coll.createIndexes([index]);
+                try {
+                    await coll.createIndexes([index]);
+                } catch (e) {
+                    logger.error('Failed to index %s.%s with key %o: %s', coll.collectionName, index.name, index.key, e);
+                }
                 continue;
             }
             const isDifferent = () => {
@@ -137,7 +141,11 @@ export class MongoService extends Service {
                 }
                 logger.info('Re-Index %s.%s with key %o', coll.collectionName, index.name, index.key);
                 await coll.dropIndex(i.name);
-                await coll.createIndexes([index]);
+                try {
+                    await coll.createIndexes([index]);
+                } catch (e) {
+                    logger.error('Failed to re-index %s.%s with key %o: %s', coll.collectionName, index.name, index.key, e);
+                }
             }
         }
     }

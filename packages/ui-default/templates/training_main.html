@@ -5,6 +5,14 @@
     <div class="section">
       <div class="section__header">
         <h1 class="section__title">{{ _('All Training Plans') }}</h1>
+        <div class="section__tools">
+          <form method="get" class="filter-form" name="filter-form">
+            <input type="text" class="inline compact textbox" name="q" value="{{ q }}" placeholder="{{ _('Search training...') }}">
+            <button type="submit" class="compact button">
+              {{ _('Search') }}
+            </button>
+          </form>
+        </div>
       </div>
       {% if not tdocs.length %}
         {{ nothing.render('Sorry, there are no training plans.') }}

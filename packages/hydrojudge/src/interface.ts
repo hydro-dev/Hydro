@@ -27,7 +27,7 @@ export { JudgeRequest } from '@hydrooj/common';
 export interface Session {
     getLang: (name: string, doThrow?: boolean) => LangConfig;
     getReporter: (task: JudgeTask) => { next: NextFunction, end: NextFunction };
-    fetchFile: <T extends null | string>(namespace: T, files: Record<string, string>) => Promise<T extends null ? string : null>;
+    fetchFile: <T extends null | string>(namespace: T, files: Record<string, string>, ctx: JudgeTask) => Promise<T extends null ? string : null>;
     postFile: (target: string, filename: string, file: string) => Promise<void>;
     config: { detail: DetailType, host?: string, trusted?: boolean };
 }

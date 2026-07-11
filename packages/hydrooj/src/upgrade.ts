@@ -17,7 +17,7 @@ import problem from './model/problem';
 import RecordModel from './model/record';
 import ScheduleModel from './model/schedule';
 import StorageModel from './model/storage';
-import * as system from './model/system';
+import system from './model/system';
 import TaskModel from './model/task';
 import * as training from './model/training';
 import user, { handleMailLower } from './model/user';
@@ -102,10 +102,10 @@ export const coreScripts: MigrationScript[] = [
                     doc.domainId, document.TYPE_CONTEST, { docId: doc.docId },
                 ).toArray();
                 for (const ctdoc of ctdocs) {
-                    if (!ctdoc.journal?.filter((i) => isStringPid(i.pid)).length) continue;
+                    if (!ctdoc.journal?.filter((i) => isStringPid(i.pid as any)).length) continue;
                     const journal = [];
                     for (const i of ctdoc.journal) {
-                        const pdoc = await getProblem(doc.domainId, i.pid);
+                        const pdoc = await getProblem(doc.domainId, i.pid as any);
                         if (pdoc) i.pid = pdoc.docId;
                         journal.push(i);
                     }
@@ -431,7 +431,7 @@ export const coreScripts: MigrationScript[] = [
             let pinnedDomains = new Set<string>();
             for (const d of udoc.pinnedDomains) {
                 if (typeof d === 'string') pinnedDomains.add(d);
-                else pinnedDomains = Set.union(pinnedDomains, d);
+                else pinnedDomains = pinnedDomains.union(new Set(d));
             }
             await user.setById(udoc._id, { pinnedDomains: Array.from(pinnedDomains) });
         });
@@ -458,7 +458,7 @@ export const coreScripts: MigrationScript[] = [
         return await iterateAllDomain(async ({ _id }) => {
             const cursor = discussion.getMulti(_id, { parentType: document.TYPE_CONTEST });
             for await (const ddoc of cursor) {
-                const parentId = new ObjectId(ddoc.parentId);
+                const parentId = new ObjectId(ddoc.parentId as string);
                 await discussion.edit(_id, ddoc.docId, { parentId });
                 try {
                     await contest.get(_id, parentId);
@@ -615,6 +615,29 @@ export const coreScripts: MigrationScript[] = [
     },
     async function _94_95() {
         await discussion.coll.deleteMany({ content: { $not: { $type: 'string' } } });
+        return true;
+    },
+    null,
+    async function _96_97() {
+        const files = await StorageModel.list('contest/', true);
+        const rename = async (path: string, newPath: string) => {
+            if (path === newPath) return;
+            console.log('Rename', path, '->', newPath);
+            await StorageModel.rename(path, newPath);
+        };
+        for (const file of files) {
+            const [, domainId, tid, type, name] = file.path.split('/');
+            let tdoc;
+            try {
+                tdoc = await contest.get(domainId, new ObjectId(tid));
+            } catch (e) {
+                continue;
+            }
+            if (!tdoc) console.error('Contest not found', file.path);
+            if (tdoc.rule === 'homework' || !name) {
+                await rename(file.path, `contest/${domainId}/${tid}/public/${name || type}`);
+            }
+        }
         return true;
     },
 ];

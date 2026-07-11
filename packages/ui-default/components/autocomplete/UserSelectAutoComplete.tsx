@@ -21,5 +21,3 @@ export default class UserSelectAutoComplete<Multi extends boolean> extends AutoC
     return this.ref?.getSelectedItems()[0] ?? null;
   }
 }
-
-window.Hydro.components.UserSelectAutoComplete = UserSelectAutoComplete;

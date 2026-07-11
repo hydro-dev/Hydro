@@ -66,12 +66,12 @@ const invisibles = {
 function addInvisibles(grammar) {
   if (!grammar || grammar.tab) return;
   for (const name in invisibles) {
-    if (Object.prototype.hasOwnProperty.call(invisibles, name)) {
+    if (Object.hasOwn(invisibles, name)) {
       grammar[name] = invisibles[name];
     }
   }
   for (const name in grammar) {
-    if (Object.prototype.hasOwnProperty.call(grammar, name) && !invisibles[name]) {
+    if (Object.hasOwn(grammar, name) && !invisibles[name]) {
       if (name === 'rest') addInvisibles(grammar.rest);
       else handlerInvisiblesToken(grammar, name); // eslint-disable-line ts/no-use-before-define
     }

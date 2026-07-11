@@ -1,7 +1,7 @@
 import { openDB as _open } from 'idb';
 import { alert } from 'vj/components/dialog';
 
-export const openDB = _open('hydro', 1, {
+export const openDB = _open('hydro', 2, {
   upgrade(db, oldVersion) {
     if (oldVersion < 1) {
       const solutionStore = db.createObjectStore('solutions', { keyPath: 'id' });
@@ -17,6 +17,7 @@ export const openDB = _open('hydro', 1, {
         if (/^0\.\d+$/.test(key)) localStorage.removeItem(key);
       }
     }
+    if (oldVersion < 2) db.createObjectStore('domain-info', { keyPath: 'id' });
   },
   blocked(currentVersion, blockedVersion) {
     console.error('IDB Blocked by version', blockedVersion, 'want', currentVersion);

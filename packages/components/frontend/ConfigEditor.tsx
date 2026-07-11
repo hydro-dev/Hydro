@@ -109,7 +109,7 @@ function MonacoContainer({
     }
     model.pushEditOperations([], ops, undefined);
   }, [editor, config]);
-  return <div ref={initializeEditor} style={{ width: '100%', height: '500px' }} />;
+  return <div ref={initializeEditor} style={{ width: '100%', height: '80vh' }} />;
 }
 
 export default function ConfigEditor({
@@ -150,7 +150,7 @@ export default function ConfigEditor({
     setTimeout(() => {
       updateFromMonaco(stringConfig === '{}' ? 'dummy: 1' : `${stringConfig}\n\ndummy: 1`);
       setTimeout(() => {
-        setStringConfig(stringConfig);
+        setStringConfig(stringConfig || '\n');
         setValue(yaml.load(stringConfig));
       }, 300);
     }, 300);

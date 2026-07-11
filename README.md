@@ -109,7 +109,129 @@ Hydro 用户群：1085853538
 同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
-<summary><h2>更新日志（点击展开）</h2></summary>
+<summary><h2>更新日志（点击展开）</h2></summary
+
+## Hydro 5.0.4 / UI 4.58.4
+
+- onsite-toolkit: 允许导入用户到指定域
+- core: cli: 添加交互模式
+- ui: 添加 domain 缓存
+- judge: 修复文件IO空输出检查
+- core: 默认关闭查看他人提交记录权限
+
+## Hydro 5.0.2 / UI 4.58.2
+
+- judge: 支持 multi-pass 题型
+- core&ui: bug 与漏洞修复
+
+## Hydro 5.0.0 / UI 4.58.0
+
+- oauth: 添加 oidc 模块
+- onsite-toolkit: 对接外置滚榜组件
+- core&ui: 支持在管理用户中显示 default 权限用户
+- ui: 客观题：支持下拉菜单
+- core: 支持提前退出比赛
+- ui: 用户权限：支持多选
+- ui: 用户小组：支持批量导入导出
+- ui: 用户小组：支持统计小组人数
+- core&ui: 支持设置比赛结束后不公开榜单
+- judge: 支持配置叠加层
+- judge: 添加 pipe_proxy 选项
+- judge: 优化 \r 处理
+- 其他漏洞修复和交互优化
+
+## Hydro 5.0.0-beta.18 / UI 4.58.0-beta.19
+
+- ui: problemconfig: 修复子任务测试点拖拽
+- ui: problemconfig: 修复子任务依赖设置
+- ui: 调整默认编译空间设置
+- core: 修复重载设置导致设置项复制的问题
+- core: 修复题解被赞数量显示
+- ui: 修复题解区长数学公式显示
+
+## Hydro 5.0.0-beta.17 / UI 4.58.0-beta.18
+
+- ui: 自动折叠过长的题解内容
+- core: 添加比赛功能白名单
+- core: 支持多文件 patch
+- core: buildContent: 支持 background 字段
+- core: 排名：排除不在本域内的用户
+- core: 其他 bug 修复
+
+## Hydro 5.0.0-beta.16 / UI 4.58.0-beta.17
+
+- core: 修复繁体中文 i18n 自动检测
+- scoreboard-xcpcio: 修复子域中自动重定向
+- core: 比赛导航优化
+- core&ui: 繁体中文翻译完善
+- core&ui: 支持搜索训练计划
+- core: 修复 judge 特定情况下的竞态
+- onsite-toolkit: 添加比赛模式
+- ui: 支持自动填写测试数据输入到在线 IDE
+- ui: 默认禁用提交列表页面统计数据
+- judge: 支持同时运行多组自测数据
+- ui: 细节优化
+
+## Hydro 5.0.0-beta.15 / UI 4.58.0-beta.16
+
+- core: 修复题目创建页面多语言切换
+- ui: 修复比赛题目列表显示
+- scoreboard-xcpcio: 内置外榜推送功能
+- onsite-toolkit: 优先使用座位号作为 cdp id
+- scoreboard-xcpcio: 支持定时刷新
+- onsite-toolkit: 支持从 URL 加载头像
+- onsite-toolkit: 支持展平的队伍照片目录
+- core: 复制题目时同时复制难度
+- core&ui: 训练页面题目缺失不影响正常显示
+- migrate: add jnoj support
+
+## Hydro 5.0.0-beta.13 / UI 4.58.0-beta.14
+
+- ui: 比赛页面添加打印快捷入口
+- ui: 比赛题目列表显示时空限制和提交按钮
+- core: 检查题解投票权限
+- ui: 修复题目配置页文件操作
+- ui: 移除旧的 window.Hydro.util 和 window.Hydro.component 对象
+- onsite-toolkit: 添加导入工具
+- onsite-toolkit: 添加 submit 和 printfile 支持
+- onsite-toolkit: 支持限制通信功能
+- core: backup: 速度优化
+- ui: 优化超长公式显示
+- core&ui: 添加允许所有人邀请的选项 
+- ui: 优化题目配置页暗色模式
+- scoreboard-xcpcio: 支持注册为默认榜单
+
+## Hydro 5.0.0-beta.12 / UI 4.58.0-beta.12
+
+- framework: 修复 SSE 模式参数识别
+- ui: 记忆比赛计分板筛选状态
+- ui: 修复封榜后提交记录动态更新
+- scoreboard-xcpcio: 实验性榜单缓存支持
+- ui: 添加比赛一血提示
+- core: 添加 hydrooj diag 快速诊断工具
+- ui: 禁用链接自动折叠，复制链接自动转义括号
+- ui: 优化资源缓存
+- core&ui: 支持题目排序
+
+*Breaking API Changes*
+- 升级到 React 19
+- 升级到 MongoDB Driver 7
+- 移除 blueprint.js, react-query 内置，优化资源大小
+- 使用 @mongodb-js/saslprep 替代 saslprep
+
+## Hydro 5.0.0-beta.11 / UI 4.58.0-beta.10
+
+- core&ui: 优化新设置页面
+- core: 修复乐多榜单尝试数为负
+- ui: 修复内置 qface 表情包链接
+- core: 修复编辑题号冲突提示
+- ui: 修复题目配置页语言选择
+- vjudge: 功能优化
+- judge: 稳定性修复
+- ui: 修复 css 动态加载
+- core: 支持比赛材料上传
+- core: 性能和内存占用优化
+- core: 重命名 PERM_VIEW_DISPLAYNAME 为 PERM_VIEW_USER_PRIVATE_INFO
 
 ## Hydro 5.0.0-beta.9 / UI 4.58.0-beta.9
 
@@ -941,7 +1063,7 @@ Hydro 用户群：1085853538
 
 排名不分先后，按照链接字典序  
 
-- [Github](https://github.com/) 为 Hydro 提供了代码托管与自动构建。  
+- [GitHub](https://github.com/) 为 Hydro 提供了代码托管与自动构建。  
 - [criyle](https://github.com/criyle) 提供评测沙箱实现。  
 - [Vijos](https://github.com/vijos/vj4) 为 Hydro 提供了 UI 框架。  
 

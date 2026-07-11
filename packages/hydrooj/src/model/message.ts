@@ -4,7 +4,7 @@ import bus from '../service/bus';
 import db from '../service/db';
 import { ArgMethod } from '../utils';
 import { PRIV } from './builtin';
-import * as system from './system';
+import system from './system';
 import user from './user';
 
 class MessageModel {
@@ -22,9 +22,9 @@ class MessageModel {
         content: string, flag: number = MessageModel.FLAG_UNREAD,
     ) {
         if (!Array.isArray(to)) to = [to];
-        const base = { from, content, flag };
+        const base = { from, content, flag, to };
         if (!to.length) return base;
-        await MessageModel.coll.insertMany(to.map((t) => ({ ...base, to: t })));
+        await MessageModel.coll.insertOne(base);
         bus.broadcast('user/message', to, base);
         if (flag & MessageModel.FLAG_UNREAD) await user.inc(to, 'unreadMsg', 1);
         return base;
@@ -50,14 +50,6 @@ class MessageModel {
         return await MessageModel.coll.find(query).sort(sort)
             .skip((page - 1) * limit).limit(limit)
             .toArray();
-    }
-
-    static async setFlag(messageId: ObjectId, flag: number) {
-        return await MessageModel.coll.findOneAndUpdate(
-            { _id: messageId },
-            { $bit: { flag: { xor: flag } } },
-            { returnDocument: 'after' },
-        );
     }
 
     static async del(_id: ObjectId) {

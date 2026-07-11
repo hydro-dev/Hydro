@@ -15,11 +15,12 @@ import {
   addSpeculationRules, delay, i18n, pjax, request,
 } from 'vj/utils';
 
+const keywords = ['category', 'difficulty', 'namespace'];
 const list = [];
 const filterTags = {};
-const pinned: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
-const selections = { category: {}, difficulty: {}, namespace: {} };
-const selectedTags: Record<string, string[]> = { category: [], difficulty: [], namespace: [] };
+const pinned: Record<string, string[]> = Object.fromEntries(keywords.map((keyword) => [keyword, []]));
+const selections = Object.fromEntries(keywords.map((keyword) => [keyword, {}]));
+const selectedTags: Record<string, string[]> = Object.fromEntries(keywords.map((keyword) => [keyword, []]));
 
 let selectedPids: string[] = [];
 let clearSelectionHandler: (() => void) | null = null;
@@ -35,7 +36,7 @@ function setDomSelected($dom, selected, icon?) {
 }
 
 const parserOptions = {
-  keywords: ['category', 'difficulty', 'namespace'],
+  keywords,
   offsets: true,
   alwaysArray: true,
   tokenize: true,
@@ -46,8 +47,7 @@ function writeSelectionToInput() {
   const parsedCurrentValue = parser.parse(currentValue, parserOptions) as SearchParserResult;
   const q = parser.stringify({
     ...parsedCurrentValue,
-    category: selectedTags.category,
-    difficulty: selectedTags.difficulty,
+    ...keywords.reduce((acc, keyword) => ({ ...acc, [keyword]: selectedTags[keyword] }), {}),
     text: parsedCurrentValue.text,
   }, parserOptions);
   $('[name="q"]').val(q);
@@ -85,9 +85,12 @@ function updateSelection() {
 
 function loadQuery() {
   const q = $('[name="q"]').val().toString();
+  const sort = $('[name="sort"]').val().toString();
   const url = new URL(window.location.href);
   if (!q) url.searchParams.delete('q');
   else url.searchParams.set('q', q);
+  if (sort && sort !== 'default') url.searchParams.set('sort', sort);
+  else url.searchParams.delete('sort');
   url.searchParams.delete('page');
   pjax.request({ url: url.toString() });
 }
@@ -370,7 +373,7 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
   }, [pids]);
 
   return (<>
-    <a href="javascript:;" className="menu__link display-mode-hide" onClick={() => setDialogOpen(true)}>
+    <a className="menu__link display-mode-hide" onClick={() => setDialogOpen(true)}>
       <span className="icon icon-stack"></span>
       {' '}{i18n('{0} problem(s) selected', pids.length)}
     </a>
@@ -379,7 +382,7 @@ function ProblemSelectionDisplay(props) { // eslint-disable-line
         <div className="dialog__body" style={{ height: 'calc(100% - 45px)' }}>
           <div className="row">
             <div className="columns">
-              <h1>Select Problems</h1>
+              <h1>{i18n('Select Problems')}</h1>
             </div>
           </div>
           <div className="row">
@@ -443,6 +446,7 @@ const page = new NamedPage(['problem_main'], () => {
   });
   $('#searchForm').on('submit', inputChanged);
   $('#searchForm').find('input').on('input', _.debounce(inputChanged, 500));
+  $('#searchForm').find('select[name="sort"]').on('change', inputChanged);
   $('.dialog-button').on('click', (ev) => {
     categoryDialog.clear().open();
     ev.preventDefault();

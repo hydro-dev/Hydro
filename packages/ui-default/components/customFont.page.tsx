@@ -45,7 +45,7 @@ export default new AutoloadPage('customFont', (pageName) => {
     }
     dialog.open().then((action) => {
       console.log(action, saveKey, selection);
-      if (action === 'ok') {
+      if (action === 'ok' && selection) {
         localStorage.setItem(saveKey, selection);
         window.location.reload();
       } else {

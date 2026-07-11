@@ -1,20 +1,17 @@
-import { STATUS } from '@hydrooj/common';
+import { NormalizedCase, STATUS } from '@hydrooj/common';
 import { parseMemoryMB, parseTimeMS } from '@hydrooj/utils';
+import { runFlow } from '../flow';
 import { runQueued } from '../sandbox';
 import signals from '../signals';
-import { JudgeTask } from '../task';
+import { Context } from './interface';
 
-export const judge = async (ctx: JudgeTask) => {
-    ctx.stat.judge = new Date();
-    ctx.next({ status: STATUS.STATUS_COMPILING });
-    const execute = await ctx.compile(ctx.lang, ctx.code);
-    ctx.next({ status: STATUS.STATUS_JUDGING, progress: 0 });
+const judgeCase = (c: NormalizedCase) => async (ctx: Context) => {
     const { address_space_limit, process_limit } = ctx.session.getLang(ctx.lang);
     const res = await runQueued(
-        execute.execute,
+        ctx.execute.execute,
         {
-            stdin: { content: ctx.input },
-            copyIn: execute.copyIn,
+            stdin: { content: c.input },
+            copyIn: ctx.execute.copyIn,
             // Allow 2x limits for better debugging
             time: parseTimeMS(ctx.config.time || '1s') * 2,
             memory: parseMemoryMB(ctx.config.memory || '256m'),
@@ -22,7 +19,7 @@ export const judge = async (ctx: JudgeTask) => {
             addressSpaceLimit: address_space_limit,
             processLimit: process_limit,
         },
-        `judge[${ctx.rid}]`,
+        `pretest[${c.id}]<${ctx.rid}>`,
         1,
     );
     const {
@@ -40,29 +37,42 @@ export const judge = async (ctx: JudgeTask) => {
         else message.push(`ExitCode: ${code}`);
     }
     message.push(res.stdout, res.stderr);
-    ctx.next({
-        status,
-        time: Math.floor(time * 1000000) / 1000000,
-        memory,
-        score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
-        case: {
-            subtaskId: 0,
-            status,
-            score: 100,
-            time,
-            memory,
-            message: message.join('\n').substring(0, 102400),
-        },
-    });
-    if ([STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
-        await ctx.runAnalysis(execute, { content: ctx.input });
+    if (!ctx.analysis && [STATUS.STATUS_WRONG_ANSWER, STATUS.STATUS_RUNTIME_ERROR].includes(status)) {
+        ctx.analysis = true;
+        await ctx.runAnalysis(ctx.execute, { content: c.input });
     }
-    ctx.stat.done = new Date();
-    if (process.env.DEV) ctx.next({ message: JSON.stringify(ctx.stat) });
-    ctx.end({
+    return {
+        id: c.id,
+        subtaskId: 1,
         status,
-        time: Math.floor(time * 1000000) / 1000000,
+        score: 1,
+        time,
         memory,
-        score: status === STATUS.STATUS_ACCEPTED ? 100 : 0,
+        message: message.join('\n').substring(0, 102400),
+    };
+};
+
+export const judge = async (ctx: Context) => {
+    ctx.config.subtasks = [{
+        id: 1,
+        type: 'sum',
+        score: 100,
+        time: ctx.config.time,
+        memory: ctx.config.memory,
+        if: [],
+        cases: ctx.input.map((i, idx) => ({
+            id: idx + 1,
+            time: ctx.config.time,
+            memory: ctx.config.memory,
+            input: i,
+            output: '',
+            score: 1,
+        })),
+    }];
+    await runFlow(ctx, {
+        compile: async () => {
+            ctx.execute = await ctx.compile(ctx.lang, ctx.code);
+        },
+        judgeCase,
     });
 };

@@ -4,9 +4,9 @@ import {
 } from 'mongodb';
 import { Context } from '../context';
 import {
-    Content, ContestClarificationDoc, ContestPrintDoc, DiscussionDoc,
-    DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
-    Tdoc, TrainingDoc,
+    Content, ContestClarificationDoc, ContestPrintDoc, ContestStatusDoc,
+    DiscussionDoc, DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
+    Tdoc, TrainingDoc, TrainingStatusDoc,
 } from '../interface';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -45,6 +45,8 @@ export interface DocType {
 
 export interface DocStatusType {
     [TYPE_PROBLEM]: ProblemStatusDoc;
+    [TYPE_CONTEST]: ContestStatusDoc;
+    [TYPE_TRAINING]: TrainingStatusDoc;
     // FIXME: this need to be typed
     [key: number]: any;
 }
@@ -295,11 +297,16 @@ export function getMultiStatusWithoutDomain<K extends keyof DocStatusType>(
 
 export async function setStatus<K extends keyof DocStatusType>(
     domainId: string, docType: K, docId: DocStatusType[K]['docId'], uid: number,
-    args: UpdateFilter<DocStatusType[K]>['$set'], returnDocument: 'before' | 'after' = 'after',
+    $set: UpdateFilter<DocStatusType[K]>['$set'] | null,
+    $unset?: UpdateFilter<DocStatusType[K]>['$unset'] | null,
+    returnDocument: 'before' | 'after' = 'after',
 ): Promise<DocStatusType[K]> {
+    const op: UpdateFilter<DocStatusType[K]> = {};
+    if ($set && Object.keys($set).length) op.$set = $set;
+    if ($unset && Object.keys($unset).length) op.$unset = $unset;
     return await collStatus.findOneAndUpdate(
         { domainId, docType, docId, uid },
-        { $set: args },
+        op,
         {
             upsert: true,
             returnDocument,
@@ -414,9 +421,9 @@ export async function apply(ctx: Context) {
         coll.deleteMany({ domainId }),
         collStatus.deleteMany({ domainId }),
     ]));
-    await db.clearIndexes(coll, ['tag', 'hidden']);
+    await ctx.db.clearIndexes(coll, ['tag', 'hidden']);
     const onlyFor = (docType: number) => ({ partialFilterExpression: { docType } });
-    await db.ensureIndexes(
+    await ctx.db.ensureIndexes(
         coll,
         { key: { domainId: 1, docType: 1, docId: 1 }, name: 'basic', unique: true },
         { key: { domainId: 1, docType: 1, owner: 1, docId: -1 }, name: 'owner' },

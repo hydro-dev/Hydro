@@ -1,5 +1,6 @@
 import 'md-editor-rt/lib/style.css';
 
+import zh_TW from '@vavt/cm-extension/dist/locale/zh-TW';
 import Anchor from 'markdown-it-anchor';
 import Footnote from 'markdown-it-footnote';
 import Mark from 'markdown-it-mark';
@@ -12,7 +13,13 @@ import { Media } from '../../backendlib/markdown-it-media';
 import { xssProtector } from '../../backendlib/markdown-it-xss';
 
 const pagename = document.documentElement.getAttribute('data-page');
-const isProblemPage = ['problem_create', 'problem_edit'].includes(pagename);
+const previewConfig: Record<string, string> = {
+  problem_edit: './file/',
+  homework_edit: './file/public/',
+  contest_edit: './file/public/',
+};
+const isCreatePage = ['problem_create', 'homework_create', 'contest_create'].includes(pagename);
+const filePreviewPrefix = previewConfig[pagename] || (isCreatePage ? `/file/${UserContext._id}/` : null);
 
 config({
   markdownItConfig(mdit) {
@@ -30,15 +37,23 @@ config({
     mdit.use(MergeCells);
     mdit.use(xssProtector);
     mdit.use(katex);
-    if (isProblemPage) {
+    if (filePreviewPrefix) {
       mdit.core.ruler.before('normalize', 'xss', (state) => {
-        state.src = state.src.replace(/file:\/\//g, pagename === 'problem_create' ? `/file/${UserContext._id}/` : './file/');
+        state.src = state.src.replace(/file:\/\//g, filePreviewPrefix);
       });
     }
   },
   markdownItPlugins() {
     // disable all default plugins
     return [];
+  },
+  codeMirrorExtensions(extensions) {
+    return extensions.filter((i) => i.type !== 'linkShortener');
+  },
+  editorConfig: {
+    languageUserDefined: {
+      'zh-TW': zh_TW,
+    },
   },
 });
 

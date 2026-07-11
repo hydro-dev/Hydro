@@ -91,7 +91,7 @@ export default class ElasticSearchService extends Service {
         return true;
     }
 
-    async [Context.init]() {
+    async [Service.init]() {
         await this.client.nodes.stats();
         this.ctx.on('problem/add', async (doc, docId) => {
             await this.client.index({
@@ -107,7 +107,7 @@ export default class ElasticSearchService extends Service {
                 document: processDocument(pdoc),
             });
         });
-        this.ctx.on('problem/del', async (domainId, docId) => {
+        this.ctx.on('problem/delete', async (domainId, docId) => {
             await this.client.delete({
                 index: 'problem',
                 id: `${domainId}/${docId}`,

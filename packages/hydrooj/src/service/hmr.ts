@@ -9,9 +9,9 @@ import { Context, Plugin, Service } from '../context';
 import { Logger } from '../logger';
 import { unwrapExports } from '../utils';
 
-declare module '../context' {
+declare module 'cordis' {
     interface Events {
-        'hmr/reload': (reloads: Map<Plugin, { filename: string, runtime: Plugin.Runtime<Context> }>) => void;
+        'hmr/reload': (reloads: Map<Plugin, { filename: string, runtime: Plugin.Runtime }>) => void;
     }
     interface Context {
         hmr: HMR;
@@ -150,7 +150,7 @@ export default class HMR extends Service {
         const pending = new Map<string, Plugin>();
 
         /** plugins that should be reloaded */
-        const reloads = new Map<Plugin, { filename: string, runtime: Plugin.Runtime<Context> }>();
+        const reloads = new Map<Plugin, { filename: string, runtime: Plugin.Runtime }>();
 
         // we assume that plugin entry files are "atomic"
         // that is, reloading them will not cause any other reloads

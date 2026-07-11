@@ -2,10 +2,8 @@ node_modules/
 .cache/
 /build/
 /common/
-/components/
-/constant/
-/misc/
+/misc/icons
+/misc/.iconfont
 /pages/
 /static/
-/utils/
 __*

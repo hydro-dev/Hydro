@@ -166,13 +166,13 @@ export async function run({ domainId }, report: Report) {
         const domains = await domain.getMulti().toArray();
         await report({ message: `Found ${domains.length} domains` });
         for (const i in domains) {
-            const start = new Date().getTime();
+            const start = Date.now();
             await runInDomain(domains[i]._id, report);
             await report({
                 case: {
                     status: STATUS.STATUS_ACCEPTED,
                     message: `Domain ${domains[i]._id} finished`,
-                    time: new Date().getTime() - start,
+                    time: Date.now() - start,
                     memory: 0,
                     score: 0,
                 },
