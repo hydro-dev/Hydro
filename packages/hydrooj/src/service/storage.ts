@@ -85,6 +85,7 @@ const FileSetting = Schema.intersect([
             bucket: Schema.string().default('hydro'),
             region: Schema.string().default('us-east-1'),
             pathStyle: Schema.boolean().default(true),
+            bucketEndpoint: Schema.boolean().default(false),
         }),
     ] as const),
 ] as const);
@@ -114,6 +115,7 @@ class RemoteStorageService {
                 bucket,
                 region,
                 pathStyle,
+                bucketEndpoint,
                 endPointForUser,
                 endPointForJudge,
             } = this.config;
@@ -121,6 +123,7 @@ class RemoteStorageService {
             const base = {
                 region,
                 forcePathStyle: pathStyle,
+                bucketEndpoint,
                 credentials: {
                     accessKeyId: accessKey,
                     secretAccessKey: secretKey,
