@@ -96,7 +96,7 @@ export function Media(md: MarkdownIt, { pdfToolbar = false }: { pdfToolbar?: boo
   const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku', 'msoffice'];
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
     let src = md.utils.escapeHtml(tokens[idx].attrGet('src'));
-    const service = md.utils.escapeHtml(tokens[idx].attrGet('service')).toLowerCase();
+    const service = tokens[idx].attrGet('service').replace(/[^A-Z0-9]/gi, '').toLowerCase();
     if (Hydro?.module?.richmedia?.[service]) {
       const result = Hydro?.module?.richmedia[service].get(service, src, md);
       if (result) return result;
