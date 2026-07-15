@@ -13,6 +13,7 @@
   "files": [
     "index.ts",
     "api.ts",
+    "css.d.ts",
     "src/",
     "index.html",
     "public/",

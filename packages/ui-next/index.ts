@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import esbuild from 'esbuild';
@@ -7,7 +6,7 @@ import { createServer, type Plugin } from 'vite';
 import { serializer } from '@hydrooj/framework';
 import {
     Context, Handler, Logger,
-    NotFoundError, param, size, Types,
+    NotFoundError, param, sha1, size, Types,
 } from 'hydrooj';
 
 const logger = new Logger('ui-next');
@@ -100,12 +99,25 @@ const federationPlugin: esbuild.Plugin = {
 const vfs: Record<string, string> = {};
 const hashes: Record<string, string> = {};
 
+const applyCss = (css: string) => `
+(() => {
+  const style = document.createElement('style');
+  style.textContent = ${JSON.stringify(css)};
+  document.head.appendChild(style);
+})();
+`;
+
+function addFile(name: string, content: string) {
+    vfs[name] = content;
+    hashes[name] = sha1(content).substring(0, 8);
+}
+
 class UiNextConstantHandler extends Handler {
     noCheckPermView = true;
 
     @param('name', Types.Filename)
     async all(domainId: string, name: string) {
-        if (!vfs[name]) throw new NotFoundError(name);
+        if (!(name in vfs)) throw new NotFoundError(name);
         this.response.type = 'application/javascript';
         this.response.body = vfs[name];
         this.response.addHeader('ETag', hashes[name]);
@@ -118,9 +130,23 @@ export async function buildPlugins() {
     let totalSize = 0;
     const entries = getAddonEntries();
 
+    const newPluginFiles = new Set<string>();
+    const emit = (name: string, content: string) => {
+        addFile(name, content);
+        newPluginFiles.add(name);
+    };
+    const purge = () => {
+        for (const key of Object.keys(vfs)) {
+            if (!newPluginFiles.has(key)) {
+                delete vfs[key];
+                delete hashes[key];
+            }
+        }
+    };
+
     if (!Object.keys(entries).length) {
-        vfs['plugins.js'] = 'window.__hydroPlugins = [];';
-        hashes['plugins.js'] = '00000000';
+        emit('plugins.js', 'window.__hydroPlugins = [];');
+        purge();
         logger.info('No plugins to build');
         return;
     }
@@ -132,11 +158,18 @@ export async function buildPlugins() {
                     ...Object.entries(entries).map(([_, e], i) => `import * as plugin${i} from '${e}';`),
                     `window.__hydroPlugins = [${Object.entries(entries).map(([n], i) => `{ name: '${n}', ...plugin${i} }`).join(', ')}];`,
                 ].join('\n'),
+                sourcefile: 'plugins.ts',
                 resolveDir: process.cwd(),
                 loader: 'ts',
             },
             bundle: true,
-            format: 'iife',
+            format: 'esm',
+            splitting: true,
+            outdir: 'plugins-dist',
+            entryNames: 'plugins',
+            chunkNames: 'chunk-[hash]',
+            assetNames: 'asset-[hash]',
+            metafile: true,
             write: false,
             target: ['chrome90'],
             plugins: [federationPlugin],
@@ -145,11 +178,42 @@ export async function buildPlugins() {
             jsxImportSource: 'react',
         });
         if (result.errors.length) logger.error('Plugin build errors: %o', result.errors);
-        const content = result.outputFiles?.[0]?.text || 'window.__hydroPlugins = [];';
-        vfs['plugins.js'] = content;
-        hashes['plugins.js'] = crypto.createHash('sha1').update(content).digest('hex').substring(0, 8);
-        totalSize += content.length;
-        logger.success('Plugins built in %dms (%d entries, %s)', Date.now() - start, entries.length, size(totalSize));
+
+        const cssText = new Map<string, string>();
+        for (const f of result.outputFiles) {
+            if (f.path.endsWith('.css')) cssText.set(f.path, f.text);
+        }
+
+        const cssForJs = new Map<string, string>();
+        const claimed = new Set<string>();
+        for (const [rel, meta] of Object.entries(result.metafile.outputs)) {
+            if (!meta.cssBundle) continue;
+            const css = path.resolve(meta.cssBundle);
+            cssForJs.set(path.resolve(rel), css);
+            claimed.add(css);
+        }
+
+        let unclaimedCss = '';
+        for (const [abs, text] of cssText) {
+            if (!claimed.has(abs)) unclaimedCss += text;
+        }
+
+        for (const f of result.outputFiles) {
+            if (f.path.endsWith('.css')) continue;
+
+            const name = path.basename(f.path);
+            let content = f.text;
+
+            const css = cssText.get(cssForJs.get(f.path) ?? '');
+            if (css) content = applyCss(css) + content;
+            if (name === 'plugins.js' && unclaimedCss) content = applyCss(unclaimedCss) + content;
+
+            totalSize += content.length;
+            emit(name, content);
+        }
+
+        purge();
+        logger.success('Plugins built in %dms (%d entries, %s)', Date.now() - start, Object.keys(entries).length, size(totalSize));
     } catch (e) {
         logger.error('Plugin build failed: %o', e);
     }
