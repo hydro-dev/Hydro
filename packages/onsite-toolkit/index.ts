@@ -144,6 +144,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 ...lockDuration && {
                     scoreboard_freeze_duration: moment().startOf('day').seconds(lockDuration).format('HH:mm:ss.SSS'),
                 },
+                scoreboard_type: tdoc.rule === 'acm' ? 'pass-fail' : 'score',
                 penalty_time: 20,
             }),
             ...Object.keys(STATUS_SHORT_TEXTS).map((i) => getFeed('judgement-types', {
@@ -265,7 +266,12 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
                 this.binary(await generateCdpZip(tdoc), `contest-${tdoc._id}-cdp.zip`);
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
 
         scoreboard.addView('resolver', 'Resolver', { tdoc: 'tdoc' }, {
@@ -279,10 +285,15 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 const source = new URL(`/d/${tdoc.domainId}/contest/${tdoc._id}/resolver-cdp/${tokenId}`, SystemModel.get('server.url')).toString();
                 const target = new URL('https://resolver.hydrooj.com');
                 target.searchParams.set('source', source);
-                target.searchParams.set('mode', tdoc.rule === 'oi' ? 'oi' : 'acm');
+                target.searchParams.set('mode', tdoc.rule === 'acm' ? 'acm' : 'oi');
                 this.response.redirect = target.toString();
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
     });
 
