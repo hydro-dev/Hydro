@@ -490,7 +490,7 @@ Max members per contest team: 每個參賽隊伍最大成員數
 Accept: 接受
 Reject: 拒絕
 Allow Team: 允許團隊
-Allow team participation (users register as a team at /contest/team): 允許團隊參賽（使用者可在 /contest/team 以隊伍身分報名）
+Allow team participation: 允許團隊參賽
 Choose how you want to participate in this contest.: 選擇你參加本次比賽的方式。
 Create a Team: 建立隊伍
 'Create a team, invite teammates by their username, then choose "Team Participation" when attending an allow-team contest.': 建立隊伍，以使用者名稱邀請隊友，之後在報名允許團隊的比賽時選擇「團隊參賽」。

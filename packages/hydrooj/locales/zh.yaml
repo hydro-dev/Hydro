@@ -492,7 +492,7 @@ Max members per contest team: 每个参赛队伍最大成员数
 Accept: 接受
 Reject: 拒绝
 Allow Team: 允许团队
-Allow team participation (users register as a team at /contest/team): 允许团队参赛（用户在 /contest/team 以队伍身份报名）
+Allow team participation: 允许团队参赛
 Choose how you want to participate in this contest.: 选择你参加本次比赛的方式。
 Create a Team: 创建队伍
 'Create a team, invite teammates by their username, then choose "Team Participation" when attending an allow-team contest.': 创建队伍，按用户名邀请队友，之后在报名允许团队的比赛时选择“团队参赛”。
