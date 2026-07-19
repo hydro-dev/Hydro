@@ -44,12 +44,59 @@
     {% if not (tsdoc.attend) and not model.contest.isDone(tdoc) %}
       <li class="menu__item">
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
-      <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST">
+      {% set team_vdocs = team_vdocs|default([]) %}
+      {% set teamDisabled = not tdoc.allowTeam or not team_vdocs.length %}
+      <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST" data-contest-attend-form{% if not teamDisabled or tdoc._code %} data-contest-needs-dialog{% endif %}>
         <input type="hidden" name="operation" value="attend">
-        <button class="menu__link" {% if tdoc._code %}data-contest-code{% endif %} type="submit">
+        <button class="menu__link" data-contest-attend type="submit">
           <span class="icon icon-add"></span> {{ _('Attend Contest') }}
         </button>
       </form>
+      <div style="display:none" class="dialog__body--contest-attend">
+        <div>
+          <div class="row"><div class="columns">
+            <h1>{{ _('Attend Contest') }}</h1>
+            <p class="supplementary contest-attend-dialog__desc">{{ _('Choose how you want to participate in this contest.') }}</p>
+          </div></div>
+          <input type="hidden" name="contest_attend_mode" value="personal">
+          <div class="contest-attend-dialog__modes">
+            <button type="button" class="primary rounded button" data-contest-attend-mode="personal" aria-pressed="true">
+              <span class="icon icon-user"></span> {{ _('Personal Participation') }}
+            </button>
+            <button type="button" class="rounded button{% if teamDisabled %} disabled{% endif %}" data-contest-attend-mode="team" aria-pressed="false"{% if teamDisabled %} disabled{% endif %}>
+              <span class="icon icon-user--multiple"></span> {{ _('Team Participation') }}
+            </button>
+          </div>
+          {% if not tdoc.allowTeam %}
+          <p class="supplementary contest-attend-dialog__hint">{{ _('Team participation is not allowed for this contest.') }}</p>
+          {% elif not team_vdocs.length %}
+          <p class="supplementary contest-attend-dialog__hint">
+            {{ _('You are not in any team.') }}
+            <a class="typo-a" href="{{ url('contest_team') }}">{{ _('Manage Teams') }}</a>
+          </p>
+          {% endif %}
+          {% if team_vdocs.length %}
+          <div class="row contest-attend-dialog__team-select"><div class="columns">
+            <label>
+              {{ _('Team') }}
+              <select class="select" name="contest_attend_vuid" disabled>
+                {% for v in team_vdocs %}
+                <option value="{{ v._id }}">{{ v.displayName }} (ID {{ v._id }})</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div></div>
+          {% endif %}
+          {% if tdoc._code %}
+          <div class="row"><div class="columns">
+            <label class="material textbox">
+              {{ _('Invitation code') }}
+              <input name="contest_attend_code" type="text" data-autofocus>
+            </label>
+          </div></div>
+          {% endif %}
+        </div>
+      </div>
     {% elif not handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
         <a class="menu__link" href="javascript:showSignInDialog()">
           <span class="icon icon-add"></span> {{ _('Login to Attend Contest') }}

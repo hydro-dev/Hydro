@@ -34,6 +34,7 @@ export const PrivilegeError = Err('PrivilegeError', ForbiddenError, function (th
 export const ContestNotAttendedError = Err('ContestNotAttendedError', ForbiddenError, "You haven't attended this contest yet.");
 export const RequireProError = Err('RequireProError', ForbiddenError, 'RequireProError');
 export const ContestAlreadyAttendedError = Err('ContestAlreadyAttendedError', ForbiddenError, "You've already attended this contest.");
+export const TeamMemberLimitError = Err('TeamMemberLimitError', ForbiddenError, 'Team is full (maximum {0} members).');
 export const ContestNotLiveError = Err('ContestNotLiveError', ForbiddenError, 'This contest is not live.');
 export const ContestNotEndedError = Err('ContestNotEndedError', ForbiddenError, 'This contest is not ended.');
 export const ContestScoreboardHiddenError = Err('ContestScoreboardHiddenError', ForbiddenError, 'Contest scoreboard is not visible.');
@@ -47,7 +48,12 @@ export const DomainJoinAlreadyMemberError = Err('DomainJoinAlreadyMemberError', 
 export const InvalidJoinInvitationCodeError = Err('InvalidJoinInvitationCodeError', ForbiddenError, 'The invitation code you provided is invalid.');
 export const CurrentPasswordError = Err('CurrentPasswordError', ForbiddenError, "Current password doesn't match.");
 export const DiscussionLockedError = Err('DiscussionLockedError', ForbiddenError, 'The discussion is locked, you can not reply anymore.');
-export const NotAssignedError = Err('NotAssignedError', ForbiddenError, 'You are not assigned to this {0}.');
+export const NotAssignedError = Err('NotAssignedError', ForbiddenError, function (this: HydroError) {
+    if (this.params.length >= 3) {
+        return 'Team member {2} is not assigned to this {0}.';
+    }
+    return 'You are not assigned to this {0}.';
+});
 export const FileLimitExceededError = Err('FileLimitExceededError', ForbiddenError, 'File {0} limit exceeded.');
 export const FileUploadError = Err('FileUploadError', ForbiddenError, 'File upload failed.');
 export const FileExistsError = Err('FileExistsError', ForbiddenError, 'File {0} already exists.');

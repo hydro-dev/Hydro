@@ -141,6 +141,18 @@
       </div>
     </div>
   {% endif %}
+  {% if handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">
+          {{ _('My Teams') }}
+        </h1>
+      </div>
+      <div class="section__body">
+        <p><a href="{{ url('contest_team') }}" class="expanded button"><span class="icon icon-user--multiple"></span> {{ _('Manage Teams') }}</a></p>
+      </div>
+    </div>
+  {% endif %}
   </div>
 </div>
 {% endblock %}

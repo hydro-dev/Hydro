@@ -488,6 +488,40 @@ Materials: 材料
 Max files for user: 单用户最大文件数量
 Max files per problem: 单题最大文件数量
 Max files size per problem: 单题最大总文件大小
+Max members per contest team: 每个参赛队伍最大成员数
+Accept: 接受
+Reject: 拒绝
+Allow Team: 允许团队
+Allow team participation (users register as a team at /contest/team): 允许团队参赛（用户在 /contest/team 以队伍身份报名）
+Choose how you want to participate in this contest.: 选择你参加本次比赛的方式。
+Create a Team: 创建队伍
+'Create a team, invite teammates by their username, then choose "Team Participation" when attending an allow-team contest.': 创建队伍，按用户名邀请队友，之后在报名允许团队的比赛时选择“团队参赛”。
+How It Works: 使用说明
+Invitation code: 邀请码
+Invitation code is required.: 必须填写邀请码。
+Invitation sent: 邀请已发送
+Invite Member: 邀请成员
+Leave Team: 退出队伍
+Leave this team? You may lose access to team contests.: 确定退出该队伍吗？退出后你可能无法访问该队伍参加的比赛。
+Manage Teams: 管理队伍
+Members: 成员
+My Teams: 我的队伍
+Once enabled, team participation cannot be disabled for this contest.: 一旦启用，该比赛将无法关闭团队参赛。
+Pending Invites: 待处理邀请
+Personal Participation: 个人参赛
+Please select a team.: 请选择一个队伍。
+Rename: 重命名
+Revoke: 撤销
+Save: 保存
+Successfully attended: 报名成功
+Team: 队伍
+Team Participation: 团队参赛
+Team name: 队伍名称
+Team participation is not allowed for this contest.: 该比赛不允许团队参赛。
+Teams let multiple users participate in a contest together, sharing one set of submissions.: 队伍允许多名用户共同参加比赛，共享同一份提交记录。
+You are not in any team.: 你还没有加入任何队伍。
+You are not in any team yet. Create one from the panel on the right, or ask a teammate to invite you by your username.: 你还没有加入任何队伍。在右侧面板创建一个，或请队友按你的用户名邀请你。
+'You have {0} pending team invite(s)': '你有 {0} 个待处理的队伍邀请'
 Max pretest count per minute: 每分钟自测数量限制
 Max submission count per minute: 每分钟提交数量限制
 Max total file size for user: 单用户最大总文件大小
