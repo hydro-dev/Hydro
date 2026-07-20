@@ -26,7 +26,7 @@ async function _parseDagJson(domainId: string, _dag: string): Promise<Tdoc['dag'
         assert(dag.length, 'must have at least one node');
         assert(dag.length === ids.size, '_id must be unique');
         for (const node of dag) {
-            assert(isNumber(node._id), '_id should be a number');
+            assert(isNumber(node._id) && !Number.isNaN(node._id), '_id should be a number');
             assert(node.title, 'each node shoule have a title');
             assert(node.requireNids instanceof Array);
             assert(node.pids instanceof Array);
