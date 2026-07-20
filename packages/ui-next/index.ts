@@ -191,6 +191,7 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
+                    template: context.handler.response.template || '',
                     args: {
                         UserContext: context.UserContext,
                         UiContext: context.handler.UiContext,
@@ -224,6 +225,7 @@ export async function apply(ctx: Context) {
                 const serialized = JSON.stringify({
                     HYDRO_INJECTED: true,
                     name: context.handler.context._matchedRouteName,
+                    template: context.handler.response.template || '',
                     args: {
                         UserContext: context.UserContext,
                         UiContext: context.handler.UiContext,

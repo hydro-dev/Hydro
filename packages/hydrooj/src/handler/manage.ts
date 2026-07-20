@@ -90,11 +90,13 @@ class SystemDashboardHandler extends SystemHandler {
 }
 
 class SystemScriptHandler extends SystemHandler {
+    @requireSudo
     async get() {
         this.response.template = 'manage_script.html';
         this.response.body.scripts = global.Hydro.script;
     }
 
+    @requireSudo
     @param('id', Types.Name)
     @param('args', Types.Content, true)
     async post(domainId: string, id: string, raw = '{}') {
@@ -276,7 +278,7 @@ class SystemUserImportHandler extends SystemHandler {
                     Object.assign(payload, {
                         email, username, password, displayName,
                     });
-                    await this.ctx.serial('user/import/parse', payload);
+                    await this.ctx.serial('user/import/parse', payload, messages);
                     udocs.push(payload);
                 }
             } else messages.push(`Line ${+i + 1}: Input invalid.`);

@@ -220,7 +220,7 @@ export async function prompt<T extends string, R extends Record<T, Field>>(title
                     : [selected[name].toString()])
                   : []}
                 onChange={(e) => {
-                  if (e === selected[name]) return;
+                  if (field.multi && e === selected[name]) return;
                   const items = refs.current[name].getSelectedItems();
                   const extract = (v) => (field.type === 'username' ? v?.uname : field.type === 'userId' ? v?._id : v);
                   setValues({ ...values, [name]: field.multi ? items.map(extract) : extract(items[0]) });

@@ -102,8 +102,10 @@ class TokenModel {
     }
 
     @ArgMethod
-    static delByUid(uid: number) {
-        return TokenModel.coll.deleteMany({ uid });
+    static delByUid(uid: number, tokenType?: number) {
+        const filter: Filter<TokenDoc> = { uid };
+        if (tokenType !== undefined) filter.tokenType = tokenType;
+        return TokenModel.coll.deleteMany(filter);
     }
 }
 

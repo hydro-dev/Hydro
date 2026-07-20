@@ -1,4 +1,5 @@
 import { after, before, intercept, patch, replace, wrap } from './interceptors';
+import { registerLayout } from './layout';
 import { registerPage } from './page';
 
 export interface PluginAPI {
@@ -9,10 +10,14 @@ export interface PluginAPI {
   replace: typeof replace;
   wrap: typeof wrap;
   registerPage: typeof registerPage;
+  registerLayout: typeof registerLayout;
 }
 
 export function createPluginAPI(): PluginAPI {
-  return { intercept, before, after, patch, replace, wrap, registerPage };
+  return {
+    intercept, before, after, patch, replace, wrap,
+    registerPage, registerLayout,
+  };
 }
 
 export interface PluginDefinition {

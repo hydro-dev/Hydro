@@ -4,9 +4,9 @@ import {
 } from 'mongodb';
 import { Context } from '../context';
 import {
-    Content, ContestClarificationDoc, ContestPrintDoc, DiscussionDoc,
-    DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
-    Tdoc, TrainingDoc,
+    Content, ContestClarificationDoc, ContestPrintDoc, ContestStatusDoc,
+    DiscussionDoc, DiscussionReplyDoc, ProblemDoc, ProblemStatusDoc,
+    Tdoc, TrainingDoc, TrainingStatusDoc,
 } from '../interface';
 import bus from '../service/bus';
 import db from '../service/db';
@@ -45,6 +45,8 @@ export interface DocType {
 
 export interface DocStatusType {
     [TYPE_PROBLEM]: ProblemStatusDoc;
+    [TYPE_CONTEST]: ContestStatusDoc;
+    [TYPE_TRAINING]: TrainingStatusDoc;
     // FIXME: this need to be typed
     [key: number]: any;
 }

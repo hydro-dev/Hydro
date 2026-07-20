@@ -2,7 +2,7 @@
 import { LRUCache } from 'lru-cache';
 import moment from 'moment';
 import {
-    _, avatar, ContestModel, ContestNotEndedError, Context, db, findFileSync,
+    _, avatar, ContestModel, ContestNotEndedError, Context, db, DomainModel, findFileSync,
     ForbiddenError, fs, Handler, InvalidTokenError, ObjectId, param, parseTimeMS, PERM, ProblemConfig, ProblemModel,
     randomstring, Schema, SettingModel, STATUS, STATUS_SHORT_TEXTS, STATUS_TEXTS,
     SystemModel, TokenModel, Types, UserModel, Zip,
@@ -29,6 +29,7 @@ function normalizeIp(ip: string) {
 const QuickImportSchema = Schema.array(Schema.object({
     id: Schema.union([Schema.string().required(), Schema.number().required()]),
     name: Schema.string().required(),
+    displayName: Schema.string(),
     password: Schema.string(),
     school: Schema.string(),
     members: Schema.array(Schema.string()).default([]),
@@ -87,6 +88,15 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
         if (!that.user.contestMode) return;
         if (['domain', 'account'].includes(that.args.category)) throw new ForbiddenError('Not available');
     });
+    ctx.on('handler/before', (that) => {
+        if (typeof that.user.contestMode === 'string' && !['system', that.user.contestMode].includes(that.domain._id)) throw new ForbiddenError('Not available');
+    });
+    ctx.on('handler/before/HomeHandler#get', (that) => { // eslint-disable-line
+        if (typeof that.user.contestMode === 'string' && that.domain._id !== that.user.contestMode) {
+            that.response.redirect = `/d/${that.user.contestMode}/`;
+            return 'cleanup';
+        }
+    });
 
     async function generateCdpZip(tdoc) {
         let token = 0;
@@ -134,6 +144,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 ...lockDuration && {
                     scoreboard_freeze_duration: moment().startOf('day').seconds(lockDuration).format('HH:mm:ss.SSS'),
                 },
+                scoreboard_type: tdoc.rule === 'acm' ? 'pass-fail' : 'score',
                 penalty_time: 20,
             }),
             ...Object.keys(STATUS_SHORT_TEXTS).map((i) => getFeed('judgement-types', {
@@ -255,7 +266,12 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
                 this.binary(await generateCdpZip(tdoc), `contest-${tdoc._id}-cdp.zip`);
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
 
         scoreboard.addView('resolver', 'Resolver', { tdoc: 'tdoc' }, {
@@ -269,19 +285,24 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 const source = new URL(`/d/${tdoc.domainId}/contest/${tdoc._id}/resolver-cdp/${tokenId}`, SystemModel.get('server.url')).toString();
                 const target = new URL('https://resolver.hydrooj.com');
                 target.searchParams.set('source', source);
-                target.searchParams.set('mode', tdoc.rule === 'oi' ? 'oi' : 'acm');
+                target.searchParams.set('mode', tdoc.rule === 'acm' ? 'acm' : 'oi');
                 this.response.redirect = target.toString();
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
     });
 
     /* eslint-disable no-await-in-loop */
     // @ts-ignore
-    Hydro.model.system.onsiteImport = async function (filepath: string, tidsInput: string, format = 'webp') {
+    Hydro.model.system.onsiteImport = async function (filepath: string, tidsInput: string | ObjectId, format = 'webp', domainId = 'system') {
         const data = QuickImportSchema(JSON.parse(fs.readFileSync(filepath, 'utf-8')));
-        const tids = tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
-        const tdocs = await Promise.all(tids.map((i) => ContestModel.get('system', i)));
+        const tids = tidsInput instanceof ObjectId ? [tidsInput] : tidsInput.split(',').map((i) => i.trim()).filter((i) => i).map((i) => new ObjectId(i));
+        const tdocs = await Promise.all(tids.map((i) => ContestModel.get(domainId, i)));
         const convertUname = Types.Username[0];
         let cnt = 0;
         for (const line of data) {
@@ -289,10 +310,11 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             const id = line.id || cnt;
             const uname = convertUname(line.name);
             const email = `${id}@onsite.local`;
-            let team = await UserModel.getByEmail('system', email);
+            let team = await UserModel.getByEmail(domainId, email);
             if (!team) {
                 const uid = await UserModel.create(email, uname, line.password || randomstring());
-                team = await UserModel.getById('system', uid);
+                if (domainId !== 'system') await DomainModel.setJoin(domainId, uid, true);
+                team = await UserModel.getById(domainId, uid);
             } else {
                 await UserModel.setUname(team._id, uname);
                 if (line.password) await UserModel.setPassword(team._id, line.password);
@@ -303,12 +325,13 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (line.member4) line.members.push(line.member4);
             const set: any = _.pick(line, 'school', 'members', 'coach', 'seat');
             if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
-            set.contestMode = true;
+            set.contestMode = domainId;
             await UserModel.setById(team._id, set);
+            if (line.displayName) await DomainModel.setUserInDomain(domainId, team._id, { displayName: line.displayName });
             for (const tdoc of tdocs) {
-                const tsdoc = await ContestModel.getStatus('system', tdoc.docId, team._id);
-                if (!tsdoc?.attend) await ContestModel.attend('system', tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
-                else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus('system', tdoc.docId, team._id, { unrank: !line.rank });
+                const tsdoc = await ContestModel.getStatus(domainId, tdoc.docId, team._id);
+                if (!tsdoc?.attend) await ContestModel.attend(domainId, tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });
+                else if ('rank' in line && tsdoc.unrank === line.rank) await ContestModel.setStatus(domainId, tdoc.docId, team._id, { unrank: !line.rank });
             }
             if (line.ip) await coll.updateOne({ _id: normalizeIp(line.ip) }, { $set: { uid: team._id } }, { upsert: true });
         }
@@ -342,7 +365,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
     if (config.contestMode) {
         ctx.inject(['setting'], (c) => {
             c.setting.AccountSetting(
-                SettingModel.Setting('setting_info', 'contestMode', null, 'boolean', 'contestMode', 'Contest Mode', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
+                SettingModel.Setting('setting_info', 'contestMode', null, 'text', 'contestMode', 'Contest Mode', SettingModel.FLAG_DISABLED | SettingModel.FLAG_PUBLIC),
             );
         });
     }

@@ -13,6 +13,18 @@ import UserModel, { deleteUserCache } from './user';
 const coll = db.collection('domain');
 const collUser = db.collection('domain.user');
 const cache = new LRUCache<string, DomainDoc>({ max: 1000, ttl: 300 * 1000 });
+const cacheVersion = Symbol('domainCacheVersion');
+
+function setCache(key: string, ddoc: DomainDoc | null) {
+    if (ddoc) {
+        Object.defineProperty(ddoc, cacheVersion, {
+            value: Date.now(),
+            enumerable: false,
+            configurable: true,
+        });
+    }
+    cache.set(key, ddoc);
+}
 
 interface DomainUserArg {
     _id: number;
@@ -22,6 +34,7 @@ interface DomainUserArg {
 class DomainModel {
     static coll = coll;
     static collUser = collUser;
+    static getVersion = (ddoc) => ddoc ? ddoc[cacheVersion] : null;
 
     static JOIN_METHOD_NONE = 0;
     static JOIN_METHOD_ALL = 1;
@@ -73,7 +86,7 @@ class DomainModel {
         const result = await coll.findOne(query);
         if (result) {
             await bus.parallel('domain/get', result);
-            cache.set(key, result);
+            setCache(key, result);
         }
         return result;
     }
@@ -88,7 +101,7 @@ class DomainModel {
         const result = await coll.findOne(query);
         if (result) {
             await bus.parallel('domain/get', result);
-            cache.set(key, result);
+            setCache(key, result);
         } else {
             cache.set(key, null);
         }

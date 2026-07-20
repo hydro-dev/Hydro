@@ -47,7 +47,7 @@ export interface EventMap {
     'user/get': (udoc: User) => void;
     'user/delcache': (content: string | true) => void;
 
-    'user/import/parse': (payload: any) => VoidReturn;
+    'user/import/parse': (payload: any, messages: string[]) => VoidReturn;
     'user/import/create': (uid: number, udoc: any) => VoidReturn;
 
     'domain/create': (ddoc: DomainDoc) => VoidReturn;
@@ -98,6 +98,9 @@ export interface EventMap {
 
     'record/change': (rdoc: RecordDoc, $set?: any, $push?: any, body?: any) => void;
     'record/judge': (rdoc: RecordDoc, updated: boolean, pdoc?: ProblemDoc, updater?: any) => VoidReturn;
+
+    'auth/before-login': (ctx: Handler, udoc: User) => VoidReturn;
+    'auth/login': (ctx: Handler, udoc: User) => VoidReturn;
 }
 
 export function apply(ctx: Context) {

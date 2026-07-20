@@ -1,6 +1,6 @@
 {
     "name": "@hydrooj/utils",
-    "version": "1.5.5",
+    "version": "1.5.6",
     "description": "hydrooj utils",
     "type": "module",
     "main": "lib/utils.ts",
@@ -16,10 +16,10 @@
         "@hydrooj/register": "workspace:^",
         "cac": "^7.0.0",
         "fs-extra": "^11.3.5",
-        "js-yaml": "^4.1.1",
+        "js-yaml": "^4.3.0",
         "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
-        "systeminformation": "^5.31.6"
+        "systeminformation": "^5.31.11"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4"

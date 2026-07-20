@@ -1,11 +1,50 @@
 import 'streamsaver/examples/zip-stream';
 
 import { request } from './base';
+import { openDB } from './db';
 
-export async function api(method: string, args: Record<string, any>, projection: any) {
+export async function api(method: string, args: Record<string, any>, projection?: any) {
   const res = await request.post(`/d/${UiContext.domainId}/api/${encodeURIComponent(method)}`, { args, projection });
   if (res.error) throw new Error(res.error);
   return res;
+}
+
+interface DomainInfoCache {
+  id: string;
+  version: number;
+  domain: Record<string, any>;
+}
+
+const domainInfoCacheStore = 'domain-info';
+let domainInfoPromise: Promise<Record<string, any>> | null = null;
+
+async function readDomainInfoCache(domainId: string) {
+  return await (await openDB).get(domainInfoCacheStore, domainId) as DomainInfoCache | null;
+}
+
+async function writeDomainInfoCache(cache: DomainInfoCache) {
+  await (await openDB).put(domainInfoCacheStore, cache);
+}
+
+async function loadDomainInfo() {
+  let cached: DomainInfoCache | null = null;
+  try {
+    cached = await readDomainInfoCache(UiContext.domainId);
+  } catch (e) { }
+  if (cached && cached.version >= UiContext.domainVersion) return cached.domain;
+  const res = await api('domain.current', {});
+  const { domain } = res;
+  if (!domain) throw new Error('Failed to load domain info');
+  writeDomainInfoCache({ id: UiContext.domainId, version: UiContext.domainVersion, domain }).catch(() => { });
+  return domain;
+}
+
+export function getDomainInfo() {
+  domainInfoPromise ||= loadDomainInfo().catch((e) => {
+    domainInfoPromise = null;
+    throw e;
+  });
+  return domainInfoPromise;
 }
 
 export function getAvailableLangs(langsList?: string[]) {

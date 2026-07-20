@@ -7,7 +7,6 @@ import child from 'child_process';
 // eslint-disable-next-line import/no-duplicates
 import './utils';
 import cac from 'cac';
-import './ui';
 import { I18nService } from './lib/i18n';
 
 import { Logger } from './logger';
@@ -205,6 +204,7 @@ async function preload() {
 }
 
 export async function load() {
+    require('./ui');
     await preload();
     Error.stackTraceLimit = 50;
     try {

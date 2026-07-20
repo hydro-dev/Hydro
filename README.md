@@ -109,7 +109,20 @@ Hydro 用户群：1085853538
 同时群内可能存在部分令您感到不适或感到冒犯的内容。若对此有顾虑**请勿加群**。
 
 <details>
-<summary><h2>更新日志（点击展开）</h2></summary>
+<summary><h2>更新日志（点击展开）</h2></summary
+
+## Hydro 5.0.4 / UI 4.58.4
+
+- onsite-toolkit: 允许导入用户到指定域
+- core: cli: 添加交互模式
+- ui: 添加 domain 缓存
+- judge: 修复文件IO空输出检查
+- core: 默认关闭查看他人提交记录权限
+
+## Hydro 5.0.2 / UI 4.58.2
+
+- judge: 支持 multi-pass 题型
+- core&ui: bug 与漏洞修复
 
 ## Hydro 5.0.0 / UI 4.58.0
 

@@ -80,7 +80,7 @@ class TrainingMainHandler extends Handler {
                 $or: [{ docId: { $in: Array.from(tids) } }, { enroll: 1 }],
             }).toArray();
             for (const tsdoc of tsdocs) {
-                tsdict[tsdoc.docId] = tsdoc;
+                tsdict[tsdoc.docId.toHexString()] = tsdoc;
                 enrolledTids.add(tsdoc.docId);
             }
             for (const tid of tids) enrolledTids.delete(tid);

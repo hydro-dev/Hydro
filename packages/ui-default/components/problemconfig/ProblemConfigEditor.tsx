@@ -29,9 +29,9 @@ interface Props {
 const configKey = [
   'type', 'subType', 'target', 'score', 'time',
   'memory', 'filename', 'checker_type', 'checker', 'interactor',
-  'manager', 'num_processes', 'validator', 'user_extra_files', 'judge_extra_files',
-  'detail', 'outputs', 'redirect', 'cases', 'subtasks',
-  'langs', 'key', 'time_limit_rate', 'memory_limit_rate',
+  'manager', 'num_processes', 'multi_pass', 'validator', 'user_extra_files',
+  'judge_extra_files', 'detail', 'outputs', 'redirect', 'cases',
+  'subtasks', 'langs', 'key', 'time_limit_rate', 'memory_limit_rate',
 ];
 
 const subtasksKey = [
@@ -50,6 +50,7 @@ export function configYamlFormat(config: ProblemConfigFile) {
       if (key === 'checker'
         && (['default', 'strict'].includes(formatConfig.checker_type) || !formatConfig.checker_type)) return;
       if (key === 'interactor' && config.type !== 'interactive') return;
+      if (key === 'multi_pass' && (!Number.isInteger(config.multi_pass) || config.multi_pass <= 1 || config.multi_pass > 20)) return;
       if (key === 'subtasks') {
         formatConfig[key] = [];
         config[key].forEach((subtask) => {
