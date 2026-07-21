@@ -1,9 +1,8 @@
 import type { PluginAPI } from '@hydrooj/ui-next';
 
 export function setup(api: PluginAPI) {
-    api.before('page:app', () => {
-        console.log('before app');
-        // throw new Error('test error boundary in before interceptor');
-        return <div>before app via @hydrooj/ui-next-plugin-sample</div>;
-    });
+    // (2) Page registration — slot names match the server route names / template stems
+    // registered in ../index.ts. Pages are lazy-loaded on demand.
+    api.registerPage('example_home', () => import('./pages/example_home'));
+    api.registerPage('example_css', () => import('./pages/example_css'));
 }

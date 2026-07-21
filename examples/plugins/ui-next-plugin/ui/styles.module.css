@@ -1,0 +1,22 @@
+/* Imported via `import styles from './styles.module.css'`; class names are hashed/scoped,
+   accessed as styles.card / styles.badge / styles.title. */
+.card {
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    max-width: 720px;
+    margin: 24px auto;
+}
+.badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #4f46e5;
+    color: #fff;
+    font-size: 12px;
+}
+.title {
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 700;
+}
