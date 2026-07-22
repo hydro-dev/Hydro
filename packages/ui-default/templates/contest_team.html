@@ -1,0 +1,152 @@
+{% import "components/user.html" as user with context %}
+{% extends "layout/basic.html" %}
+{% block content %}
+<div class="row">
+  <div class="medium-9 columns">
+    <div class="section">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Team Participation') }}</h1>
+      </div>
+      <div class="section__body">
+
+        {% if invites.length %}
+        <div class="team-invites-banner">
+          <div class="team-invites-banner__head">
+            <span class="icon icon-mail"></span>
+            <span>{{ _('You have {0} pending team invite(s)').format(invites.length) }}</span>
+          </div>
+          <ul class="team-invites-banner__list">
+            {% for v in invites %}
+            <li class="team-invites-banner__row">
+              <span class="team-invites-banner__name">{{ v.displayName }} <small class="supplementary">(ID {{ v._id }})</small></span>
+              <span class="team-invites-banner__actions">
+                <form method="post" action="{{ url('contest_team') }}">
+                  <input type="hidden" name="operation" value="accept">
+                  <input type="hidden" name="vuid" value="{{ v._id }}">
+                  <button type="submit" class="primary button small">{{ _('Accept') }}</button>
+                </form>
+                <form method="post" action="{{ url('contest_team') }}">
+                  <input type="hidden" name="operation" value="reject">
+                  <input type="hidden" name="vuid" value="{{ v._id }}">
+                  <button type="submit" class="button small">{{ _('Reject') }}</button>
+                </form>
+              </span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        {% if not mine.length and not invites.length %}
+          {{ nothing.render('You are not in any team yet. Create one from the panel on the right, or ask a teammate to invite you by your username.') }}
+        {% endif %}
+
+        {% for v in mine %}
+        <div class="team-card" data-contest-team>
+          <div class="team-card__header">
+            <div class="team-card__title">
+              <h3>{{ v.displayName }}</h3>
+              <small class="supplementary">(ID {{ v._id }})</small>
+            </div>
+            <div class="team-card__meta">
+              <span class="team-card__count" data-tooltip="{{ _('Members') }}">
+                <span class="icon icon-user--multiple"></span> {{ v.members.length }}
+              </span>
+              <button type="button" class="button small compact" data-contest-team-rename data-tooltip="{{ _('Rename') }}">
+                <span class="icon icon-edit"></span>
+              </button>
+            </div>
+          </div>
+
+          <form class="team-card__rename is-hidden" method="post" action="{{ url('contest_team') }}" data-contest-team-rename-form>
+            <input type="hidden" name="operation" value="rename">
+            <input type="hidden" name="vuid" value="{{ v._id }}">
+            <input type="text" class="textbox" name="name" value="{{ v.displayName }}">
+            <button type="submit" class="primary button small">{{ _('Save') }}</button>
+            <button type="button" class="button small" data-contest-team-rename-cancel>{{ _('Cancel') }}</button>
+          </form>
+
+          <div class="team-card__section">
+            <p class="team-card__label">{{ _('Members') }}</p>
+            <ul class="team-card__list">
+              {% for m in v.members %}
+              <li class="team-card__row">
+                <span class="team-card__user">{{ user.render_inline(udict[m], badge=false) }}</span>
+                <form class="team-card__row-action" method="post" action="{{ url('contest_team') }}" onsubmit='return confirm({{ _("Remove this member from the team?")|json|safe }});'>
+                  <input type="hidden" name="operation" value="leave">
+                  <input type="hidden" name="vuid" value="{{ v._id }}">
+                  <input type="hidden" name="uid" value="{{ m }}">
+                  <button type="submit" class="button small compact" data-tooltip="{{ _('Remove') }}">
+                    <span class="icon icon-delete"></span>
+                  </button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          {% if v.invite and v.invite.length %}
+          <div class="team-card__section">
+            <p class="team-card__label">{{ _('Pending Invites') }}</p>
+            <ul class="team-card__list">
+              {% for uid in v.invite %}
+              <li class="team-card__row">
+                <span class="team-card__user">{{ user.render_inline(udict[uid], badge=false) }}</span>
+                <form class="team-card__row-action" method="post" action="{{ url('contest_team') }}">
+                  <input type="hidden" name="operation" value="leave">
+                  <input type="hidden" name="vuid" value="{{ v._id }}">
+                  <input type="hidden" name="uid" value="{{ uid }}">
+                  <button type="submit" class="button small compact" data-tooltip="{{ _('Revoke') }}">
+                    <span class="icon icon-close"></span>
+                  </button>
+                </form>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <div class="team-card__actions">
+            <button type="button" class="button small" data-contest-team-invite data-vuid="{{ v._id }}">
+              <span class="icon icon-send"></span> {{ _('Invite Member') }}
+            </button>
+            <form method="post" action="{{ url('contest_team') }}" onsubmit='return confirm({{ _("Leave this team? You may lose access to team contests.")|json|safe }});'>
+              <input type="hidden" name="operation" value="leave">
+              <input type="hidden" name="vuid" value="{{ v._id }}">
+              <button type="submit" class="button small">
+                <span class="icon icon-logout"></span> {{ _('Leave Team') }}
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+
+  <div class="medium-3 columns">
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('Create a Team') }}</h1>
+      </div>
+      <div class="section__body">
+        <form method="post" action="{{ url('contest_team') }}" class="team-create-form">
+          <input type="hidden" name="operation" value="create">
+          <input type="text" class="textbox" name="name" placeholder="{{ _('Team name') }}" required>
+          <button type="submit" class="primary button expanded">{{ _('Create') }}</button>
+        </form>
+      </div>
+    </div>
+    <div class="section side">
+      <div class="section__header">
+        <h1 class="section__title">{{ _('How It Works') }}</h1>
+      </div>
+      <div class="section__body typo supplementary">
+        <p>{{ _('Teams let multiple users participate in a contest together, sharing one set of submissions.') }}</p>
+        <p>{{ _('Create a team, invite teammates by their username, then choose "Team Participation" when attending an allow-team contest.') }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
