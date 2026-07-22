@@ -181,7 +181,7 @@ export default class Editor extends DOMAttachedObject {
         ref={renderCallback}
         value={val}
         theme={getTheme()}
-        language={UserContext.viewLang === 'zh' ? 'zh-CN' : UserContext.viewLang?.replace('_', '-')}
+        language={UiContext.viewLang === 'zh' ? 'zh-CN' : UiContext.viewLang?.replace('_', '-')}
         noMermaid
         noPrettier
         noKatex
