@@ -29,14 +29,14 @@
     "esbuild": "0.25.2",
     "is-relative-url": "^4.1.0",
     "path-to-regexp": "^8.4.2",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "^6.0.4",
     "koa2-connect": "^1.0.2",
-    "vite": "^8.1.0"
+    "vite": "^8.1.5"
   }
 }

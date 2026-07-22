@@ -10,7 +10,7 @@
     "dependencies": {
         "allotment": "^1.20.5",
         "diff": "^9.0.0",
-        "js-yaml": "^4.3.0",
+        "js-yaml": "^5.2.1",
         "lodash": "^4.18.1",
         "react-dnd": "^16.0.1",
         "react-dnd-html5-backend": "^16.0.1",
@@ -21,7 +21,7 @@
         "@types/diff": "^8.0.0",
         "@types/js-yaml": "^4.0.9",
         "@types/lodash": "^4.17.24",
-        "sass": "^1.101.0"
+        "sass": "^1.101.4"
     },
     "peerDependencies": {
         "react": "*",

@@ -3,6 +3,6 @@
     "version": "0.1.1",
     "repository": "https://github.com/hydro-dev/Hydro",
     "dependencies": {
-        "lru-cache": "^11.5.1"
+        "lru-cache": "^11.5.2"
     }
 }

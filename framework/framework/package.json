@@ -9,10 +9,10 @@
     },
     "dependencies": {
         "@hydrooj/utils": "workspace:^",
-        "@koa/router": "^15.6.0",
-        "@mongodb-js/saslprep": "^1.4.11",
+        "@koa/router": "^15.7.0",
+        "@mongodb-js/saslprep": "^1.4.12",
         "emoji-regex": "^10.6.0",
-        "fs-extra": "^11.3.5",
+        "fs-extra": "^11.3.6",
         "koa": "^3.2.1",
         "koa-body": "^8.0.0",
         "koa-compress": "5.2.1",
@@ -20,7 +20,7 @@
         "sanitize-filename": "^1.6.4",
         "schemastery": "^3.18.0",
         "shorty.js": "^1.0.1",
-        "ws": "^8.21.0"
+        "ws": "^8.21.1"
     },
     "devDependencies": {
         "@types/fs-extra": "^11.0.4",
