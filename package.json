@@ -48,7 +48,7 @@
         "eslint": "^9.39.5",
         "eslint-import-resolver-typescript": "^4.4.5",
         "eslint-import-resolver-webpack": "^0.13.11",
-        "fs-extra": "^11.3.6",
+        "fs-extra": "^11.4.0",
         "globals": "^17.7.0",
         "globby": "~14.0.2",
         "inspectpack": "^4.7.1",
