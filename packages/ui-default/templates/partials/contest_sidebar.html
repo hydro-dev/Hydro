@@ -45,8 +45,7 @@
       <li class="menu__item">
     {% if handler.user.hasPerm(perm.PERM_ATTEND_CONTEST) and handler.user.hasPriv(PRIV.PRIV_USER_PROFILE) %}
       {% set team_vdocs = team_vdocs|default([]) %}
-      {% set teamDisabled = not tdoc.allowTeam or not team_vdocs.length %}
-      <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST" data-contest-attend-form{% if not teamDisabled or tdoc._code %} data-contest-needs-dialog{% endif %}>
+      <form action="{{ url('contest_detail', tid=tdoc.docId) }}" method="POST" data-contest-attend-form{% if tdoc.allowTeam or tdoc._code %} data-contest-needs-dialog{% endif %}>
         <input type="hidden" name="operation" value="attend">
         <button class="menu__link" data-contest-attend type="submit">
           <span class="icon icon-add"></span> {{ _('Attend Contest') }}
@@ -63,7 +62,7 @@
             <button type="button" class="primary rounded button" data-contest-attend-mode="personal" aria-pressed="true">
               <span class="icon icon-user"></span> {{ _('Personal Participation') }}
             </button>
-            <button type="button" class="rounded button{% if teamDisabled %} disabled{% endif %}" data-contest-attend-mode="team" aria-pressed="false"{% if teamDisabled %} disabled{% endif %}>
+            <button type="button" class="rounded button{% if not tdoc.allowTeam %} disabled{% endif %}" data-contest-attend-mode="team" aria-pressed="false"{% if teamDisabled %} disabled{% endif %}>
               <span class="icon icon-user--multiple"></span> {{ _('Team Participation') }}
             </button>
           </div>
@@ -86,6 +85,9 @@
               </select>
             </label>
           </div></div>
+          <p class="supplementary contest-attend-dialog__hint">
+            <a class="typo-a" href="{{ url('contest_team') }}">{{ _('Manage Teams') }}</a>
+          </p>
           {% endif %}
           {% if tdoc._code %}
           <div class="row"><div class="columns">
