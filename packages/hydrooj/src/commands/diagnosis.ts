@@ -113,10 +113,10 @@ ${padEnd(formatSeconds(Math.floor((Date.now() - i.pm2_env.pm_uptime) / 1000), fa
         infoDetails['now'] = new Date().toISOString();
         infos['now'] = new Date().toISOString();
         logger.info('System info:');
-        console.log(yaml.dump(infos, { noCompatMode: true, noArrayIndent: true, lineWidth: process.stdout.columns || 80 }));
+        console.log(yaml.dump(infos, { schema: yaml.CORE_SCHEMA, seqNoIndent: true, lineWidth: process.stdout.columns || 80 }));
         logger.info('Uploading detail to pastebin...');
         const tmpFile = path.join(tmpdir(), 'report.yaml');
-        fs.writeFileSync(tmpFile, yaml.dump(infoDetails, { noArrayIndent: true, lineWidth: 300 }));
+        fs.writeFileSync(tmpFile, yaml.dump(infoDetails, { seqNoIndent: true, lineWidth: 300 }));
         if (process.env.VSCODE_INJECTION) {
             try {
                 child.exec(`code ${tmpFile}`);
