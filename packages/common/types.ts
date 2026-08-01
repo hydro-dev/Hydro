@@ -135,7 +135,7 @@ export interface TestCase {
     time: number;
     memory: number;
     status: number;
-    message: string;
+    message: string | JudgeMessage;
 }
 
 export interface JudgeMessage {

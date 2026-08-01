@@ -94,7 +94,7 @@ export class JudgeTask {
                     status: STATUS.STATUS_COMPILE_ERROR, score: 0, time: 0, memory: 0,
                 });
             } else if (e instanceof FormatError) {
-                this.next({ message: 'Testdata configuration incorrect.' });
+                this.next({ message: { message: 'Testdata configuration incorrect.', params: [] } });
                 this.next({ message: { message: e.message, params: e.params } });
                 this.end({
                     status: STATUS.STATUS_FORMAT_ERROR, score: 0, time: 0, memory: 0,
@@ -144,7 +144,7 @@ export class JudgeTask {
             if (filenames.length) {
                 span.setAttribute('files', filenames);
                 logger.info(`Getting problem data: ${this.session?.config.host || 'local'}/${source}`);
-                this.next({ message: 'Syncing testdata, please wait...' });
+                this.next({ message: { message: 'Syncing testdata, please wait...', params: [] } });
                 this.mainContext = trace.setSpan(context.active(), span);
                 await this.session.fetchFile(source, Object.fromEntries(
                     files.filter((i) => filenames.includes(i.name))
