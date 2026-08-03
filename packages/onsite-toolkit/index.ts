@@ -29,6 +29,7 @@ function normalizeIp(ip: string) {
 const QuickImportSchema = Schema.array(Schema.object({
     id: Schema.union([Schema.string().required(), Schema.number().required()]),
     name: Schema.string().required(),
+    displayName: Schema.string(),
     password: Schema.string(),
     school: Schema.string(),
     members: Schema.array(Schema.string()).default([]),
@@ -143,6 +144,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 ...lockDuration && {
                     scoreboard_freeze_duration: moment().startOf('day').seconds(lockDuration).format('HH:mm:ss.SSS'),
                 },
+                scoreboard_type: tdoc.rule === 'acm' ? 'pass-fail' : 'score',
                 penalty_time: 20,
             }),
             ...Object.keys(STATUS_SHORT_TEXTS).map((i) => getFeed('judgement-types', {
@@ -264,7 +266,12 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 if (!ContestModel.isDone(tdoc)) throw new ContestNotEndedError();
                 this.binary(await generateCdpZip(tdoc), `contest-${tdoc._id}-cdp.zip`);
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
 
         scoreboard.addView('resolver', 'Resolver', { tdoc: 'tdoc' }, {
@@ -278,10 +285,15 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
                 const source = new URL(`/d/${tdoc.domainId}/contest/${tdoc._id}/resolver-cdp/${tokenId}`, SystemModel.get('server.url')).toString();
                 const target = new URL('https://resolver.hydrooj.com');
                 target.searchParams.set('source', source);
-                target.searchParams.set('mode', tdoc.rule === 'oi' ? 'oi' : 'acm');
+                target.searchParams.set('mode', tdoc.rule === 'acm' ? 'acm' : 'oi');
                 this.response.redirect = target.toString();
             },
-            supportedRules: ['acm', 'oi'],
+            checker() {
+                return ContestModel.isDone(this.tdoc)
+                    && !!this.tdoc.lockAt
+                    && (this.user.own(this.tdoc) || this.user.hasPerm(PERM.PERM_EDIT_CONTEST));
+            },
+            supportedRules: ['acm', 'oi', 'ioi'],
         });
     });
 
@@ -315,6 +327,7 @@ export function apply(ctx: Context, config: ReturnType<typeof Config>) {
             if (line.school) set.avatar = `url:/avatars/${line.school.replace(/[ （）]/g, '')}.${format}`;
             set.contestMode = domainId;
             await UserModel.setById(team._id, set);
+            if (line.displayName) await DomainModel.setUserInDomain(domainId, team._id, { displayName: line.displayName });
             for (const tdoc of tdocs) {
                 const tsdoc = await ContestModel.getStatus(domainId, tdoc.docId, team._id);
                 if (!tsdoc?.attend) await ContestModel.attend(domainId, tdoc.docId, team._id, 'rank' in line ? { unrank: !line.rank, subscribe: 1 } : { subscribe: 1 });

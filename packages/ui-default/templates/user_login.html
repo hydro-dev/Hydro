@@ -30,7 +30,7 @@
         </div>
       </div></div>
       {% endif %}
-      {%- for v in loginMethods -%}
+      {%- for v in loginMethods|default(handler.loginMethods) -%}
         <div class="row"><div class="columns">
           <a href="{{ url('user_oauth', type=v.id, query={redirect: redirect}) }}" class="expanded rounded button inverse">{{ _(v.text) }}</a>
         </div></div>

@@ -12,9 +12,19 @@ const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {
     if (!ANCHOR_REGEX.test(href)) return false;
     const match = document.getElementById(href.slice(1));
     if (!match) return false;
-    const rect = match.getBoundingClientRect();
-    const anchorOffset = window.pageYOffset + rect.top - OFFSET_HEIGHT;
-    $('html,body').animate({ scrollTop: anchorOffset }, 200, 'easeOutCubic');
+    const $content = $(match).closest('.collapsible-content');
+    if ($content.length && !$content.hasClass('expanded')) {
+      const $inner = $content.find('.collapsible-content__inner');
+      $inner.scrollTop(0);
+      $content.find('.collapsible-toggle__link').trigger('click');
+      $content.addClass('expanded');
+      $inner.css('max-height', 'none');
+    }
+    requestAnimationFrame(() => {
+      const rect = match.getBoundingClientRect();
+      const anchorOffset = window.pageYOffset + rect.top - OFFSET_HEIGHT;
+      $('html,body').animate({ scrollTop: anchorOffset }, 200, 'easeOutCubic');
+    });
     if (HISTORY_SUPPORT && pushToHistory) {
       window.history.pushState({}, document.title, window.location.pathname + href);
     }
@@ -26,10 +36,10 @@ const smoothScrollPage = new AutoloadPage('smoothScrollPage', null, () => {
   }
 
   function delegateAnchors(e) {
-    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-    const elem = e.target;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const elem = e.target.closest('a');
     if (
-      elem.nodeName === 'A'
+      elem
       && scrollIfAnchor(elem.getAttribute('href'), true)
     ) e.preventDefault();
   }

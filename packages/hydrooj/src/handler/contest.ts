@@ -10,9 +10,10 @@ import {
 } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
-    BadRequestError, ContestAlreadyAttendedError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError,
-    ContestNotLiveError, ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError, InvalidTokenError,
-    MethodNotAllowedError, NotAssignedError, NotFoundError, PermissionError, TeamMemberLimitError, ValidationError,
+    BadRequestError, ContestAlreadyAttendedError, ContestAlreadyStartedError, ContestNotAttendedError, ContestNotEndedError,
+    ContestNotFoundError, ContestNotLiveError, ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
+    InvalidTokenError, MethodNotAllowedError, NotAssignedError, NotFoundError, PermissionError, TeamMemberLimitError,
+    ValidationError,
 } from '../error';
 import { ContestStatusDoc, FileInfo, ScoreboardConfig, Tdoc } from '../interface';
 import { PERM, PRIV, STATUS } from '../model/builtin';
@@ -809,6 +810,16 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
         await contest.setStatus(domainId, tid, uid, null, { endAt: '' });
         this.back();
     }
+
+    @param('tid', Types.ObjectId)
+    @param('uid', Types.Int)
+    async postRemoveUser(domainId: string, tid: ObjectId, uid: number) {
+        if (!contest.isNotStarted(this.tdoc)) throw new ContestAlreadyStartedError();
+        const tsdoc = await contest.getStatus(domainId, tid, uid);
+        if (!tsdoc?.attend) throw new ContestNotAttendedError(uid);
+        await contest.cancelAttend(domainId, tid, uid);
+        this.back();
+    }
 }
 
 export class ContestBalloonHandler extends ContestManagementBaseHandler {
@@ -873,6 +884,7 @@ export interface ScoreboardView<T extends { [key: string]: keyof BuiltinInput | 
     cacheTime?: number; // in seconds
     args: T;
     display: (this: ContestScoreboardHandler, args: ParseArgs<T>) => Promise<void>;
+    checker?: (this: ContestScoreboardHandler) => boolean;
 }
 
 export class ContestScoreboardHandler extends ContestDetailBaseHandler {
@@ -932,16 +944,17 @@ class ScoreboardService extends Service {
 
     addView<T extends { [key: string]: keyof BuiltinInput | AnyFunction | Type<any> }>(
         id: string, name: string, args: T,
-        { display, supportedRules, cacheTime }: {
+        { display, supportedRules, cacheTime, checker }: {
             display: (this: ContestScoreboardHandler, args: ParseArgs<T>) => Promise<void>;
             supportedRules: string[];
             cacheTime?: number;
+            checker?: (this: ContestScoreboardHandler) => boolean;
         },
     ) {
         if (this.views[id]) throw new Error(`View ${id} already exists`);
         this.ctx.effect(() => {
             this.views[id] = {
-                id, name, args, display, supportedRules, cacheTime,
+                id, name, args, display, supportedRules, cacheTime, checker,
             };
             return () => {
                 delete this.views[id];
@@ -949,9 +962,11 @@ class ScoreboardService extends Service {
         });
     }
 
-    getAvailableViews(rule: string) {
-        return Object.fromEntries(Object.values(this.views).filter((i) => i.supportedRules.includes(rule) || i.supportedRules.includes('*'))
-            .map((i) => [i.id, i.name]));
+    getAvailableViews(rule: string, handler: ContestScoreboardHandler) {
+        return Object.fromEntries(Object.values(this.views).filter((i) => (
+            (i.supportedRules.includes(rule) || i.supportedRules.includes('*'))
+            && (!i.checker || i.checker.call(handler))
+        )).map((i) => [i.id, i.name]));
     }
 
     getView(id: string) {
@@ -1107,7 +1122,7 @@ export async function apply(ctx: Context) {
                 const page_name = tdoc.rule === 'homework'
                     ? 'homework_scoreboard'
                     : 'contest_scoreboard';
-                const availableViews = scoreboard.getAvailableViews(tdoc.rule);
+                const availableViews = scoreboard.getAvailableViews(tdoc.rule, this);
                 this.response.body = {
                     tdoc: this.tdoc, tsdoc: this.tsdocAsPublic(), rows, udict, pdict, page_name, groups, availableViews,
                 };

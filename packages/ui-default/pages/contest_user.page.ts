@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import UserSelectAutoComplete from 'vj/components/autocomplete/UserSelectAutoComplete';
-import { ActionDialog } from 'vj/components/dialog';
+import { ActionDialog, confirm } from 'vj/components/dialog';
 import Notification from 'vj/components/notification';
 import { NamedPage } from 'vj/misc/Page';
 import {
@@ -93,9 +93,20 @@ const page = new NamedPage('contest_user', () => {
     }, i18n('Contest resumed.'));
   }
 
+  async function handleCancelRegistration(ev) {
+    const uid = $(ev.target).data('uid');
+    const yes = await confirm(i18n('Are you sure to cancel the registration of this user?'));
+    if (!yes) return;
+    await handlePostRequest({
+      operation: 'remove_user',
+      uid,
+    }, i18n('Registration cancelled.'));
+  }
+
   $('[name="add_user"]').on('click', () => handleClickAddUser());
   $(document).on('click', '[name="edit_rank"]', handleEditRank);
   $(document).on('click', '[name="resume_contest"]', handleResume);
+  $(document).on('click', '[name="cancel_registration"]', handleCancelRegistration);
 });
 
 export default page;

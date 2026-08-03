@@ -163,7 +163,7 @@ export class User {
     }
 
     getFields(type: 'public' | 'private' = 'public') {
-        const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'avatar'].concat(this._publicFields);
+        const fields = ['_id', 'uname', 'mail', 'perm', 'role', 'priv', 'regat', 'loginat', 'avatar', 'avatarUrl'].concat(this._publicFields);
         return type === 'public' ? fields : fields.concat(this._privateFields);
     }
 

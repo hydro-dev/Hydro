@@ -59,6 +59,9 @@ Active Sessions: 활성 세션
 Add module: 앱 모듈
 Add new data: 데이터 추가
 Add User: 사용자 추가
+Cancel Registration: 참가 취소
+Registration cancelled.: 참가가 취소되었습니다.
+Are you sure to cancel the registration of this user?: 이 사용자의 참가를 취소하시겠습니까?
 Add: 추가
 All {0} Contests: 전체 {0} 대회
 All Contests: 전체 대회
@@ -690,6 +693,7 @@ Their account will not be deleted and they will be with the guest role until the
 There are no contests...: 대회 없음
 There is no homework so far ╰(*°▽°*)╯: 과제 없음 ╰(*°▽°*)╯
 This contest is not live.: 대회가 실시간이 아닙니다.
+This contest has already started.: 대회가 이미 시작되었습니다.
 This email was sent by {0} automatically, and please do not reply directly.: '{0}으로 이메일을 보냈습니다.'
 This homework is not open and you cannot view problems.: 과제를 열지 않았기에 문제를 볼 수 없습니다.
 This homework is not open.: 과제가 아직 닫혀 있습니다.

@@ -975,6 +975,12 @@ export async function attend(domainId: string, tid: ObjectId, uid: number, paylo
     return {};
 }
 
+export async function cancelAttend(domainId: string, tid: ObjectId, uid: number) {
+    await document.deleteMultiStatus(domainId, document.TYPE_CONTEST, { docId: tid, uid });
+    await document.inc(domainId, document.TYPE_CONTEST, tid, 'attend', -1);
+    return {};
+}
+
 export function setStatus(domainId: string, tid: ObjectId, uid: number, $set?: any, $unset?: any) {
     return document.setStatus(domainId, document.TYPE_CONTEST, tid, uid, $set, $unset);
 }
@@ -1199,6 +1205,7 @@ global.Hydro.model.contest = {
     isSameTeam,
     isOwnOrTeammateRecord,
     attend,
+    cancelAttend,
     edit,
     del,
     get,

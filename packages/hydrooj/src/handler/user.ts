@@ -486,7 +486,7 @@ class OauthCallbackHandler extends Handler {
         if (this.session.oauthBind === args.type) {
             delete this.session.oauthBind;
             if (existing.some((id) => id && id !== this.user._id)) {
-                throw new BadRequestError('Already binded to another account');
+                throw new BadRequestError('Already bound to another account');
             }
             this.response.redirect = this.session.oauthRedirect || this.url('home_security');
             delete this.session.oauthRedirect;
@@ -508,7 +508,7 @@ class OauthCallbackHandler extends Handler {
             delete this.session.oauthRedirect;
             return;
         }
-        if (!provider.canRegister) throw new ForbiddenError('No binded account found');
+        if (!provider.canRegister) throw new ForbiddenError('No bound account found');
         this.checkPriv(PRIV.PRIV_REGISTER_USER);
         let username = '';
         r.uname ||= [];

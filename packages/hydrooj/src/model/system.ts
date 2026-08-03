@@ -56,6 +56,13 @@ class SystemModelService extends Service {
         return res.value;
     }
 
+    async del(_id: string, broadcast = true): Promise<boolean> {
+        if (broadcast) this.ctx.broadcast('system/setting', { [_id]: undefined });
+        const result = await this.coll.deleteOne({ _id });
+        delete this.cache[_id];
+        return !!result.deletedCount;
+    }
+
     async [Service.init]() {
         for (const setting of SYSTEM_SETTINGS) {
             if (setting.value) this.cache[setting.key] = setting.value;
