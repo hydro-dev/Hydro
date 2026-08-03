@@ -87,6 +87,9 @@ Add prefix/suffix: 新增字首/字尾
 Add suffix: 新增字尾
 Add testcase: 新增測試點
 Add User: 新增使用者
+Cancel Registration: 取消報名
+Registration cancelled.: 報名已取消。
+Are you sure to cancel the registration of this user?: 確定要取消該使用者的報名嗎？
 Add: 新增
 Additional Files: 附加檔案
 additional_file: 附加檔案
@@ -962,6 +965,7 @@ There are no contests...: 沒有比賽…
 There are no files currently.: 目前還沒有檔案。
 There is no homework so far ╰(*°▽°*)╯: 目前沒有功課 ╰(*°▽°*)╯
 This contest is not live.: 比賽沒有開始。
+This contest has already started.: 比賽已開始。
 This email was sent by {0} automatically, and please do not reply directly.: 這封郵件由 {0} 自動傳送，請勿直接回復。
 This homework is not open and you cannot view problems.: 功課尚未開放，不能檢視題目。
 This homework is not open.: 功課尚未開放遞交。

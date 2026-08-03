@@ -10,8 +10,8 @@ import {
 } from '@hydrooj/utils/lib/utils';
 import { Context, Service } from '../context';
 import {
-    BadRequestError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError, ContestNotLiveError,
-    ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
+    BadRequestError, ContestAlreadyStartedError, ContestNotAttendedError, ContestNotEndedError, ContestNotFoundError,
+    ContestNotLiveError, ContestScoreboardHiddenError, FileLimitExceededError, FileUploadError,
     InvalidTokenError, MethodNotAllowedError, NotAssignedError, NotFoundError, PermissionError, ValidationError,
 } from '../error';
 import { ContestStatusDoc, FileInfo, ScoreboardConfig, Tdoc } from '../interface';
@@ -759,6 +759,16 @@ export class ContestUserHandler extends ContestManagementBaseHandler {
             if (durationEnd <= new Date()) throw new ContestNotLiveError(domainId, tid);
         }
         await contest.setStatus(domainId, tid, uid, null, { endAt: '' });
+        this.back();
+    }
+
+    @param('tid', Types.ObjectId)
+    @param('uid', Types.Int)
+    async postRemoveUser(domainId: string, tid: ObjectId, uid: number) {
+        if (!contest.isNotStarted(this.tdoc)) throw new ContestAlreadyStartedError();
+        const tsdoc = await contest.getStatus(domainId, tid, uid);
+        if (!tsdoc?.attend) throw new ContestNotAttendedError(uid);
+        await contest.cancelAttend(domainId, tid, uid);
         this.back();
     }
 }
