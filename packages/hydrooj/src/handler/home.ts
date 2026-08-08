@@ -1,7 +1,7 @@
 import path from 'path';
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import { isoBase64URL, isoUint8Array } from '@simplewebauthn/server/helpers';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { pick } from 'lodash';
 import { Binary, ObjectId } from 'mongodb';
 import { UAParser } from 'ua-parser-js';

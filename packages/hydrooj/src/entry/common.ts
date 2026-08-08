@@ -3,7 +3,7 @@ import '../lib/index';
 
 import path from 'path';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { Context } from '../context';
 import { Logger } from '../logger';
 import { PRIV } from '../model/builtin';

@@ -1,7 +1,7 @@
 import { parseMemoryMB, parseTimeMS, sortFiles } from '@hydrooj/utils/lib/common';
 import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
 import Ajv from 'ajv';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { cloneDeep } from 'lodash';
 import schema from '../../monaco/schema/problemconfig';
 

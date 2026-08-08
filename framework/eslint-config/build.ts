@@ -1,5 +1,5 @@
 import fs from 'fs';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 const base = yaml.load(fs.readFileSync('base.yaml', 'utf8')) as any;
 const react = yaml.load(fs.readFileSync('react.yaml', 'utf8')) as any;

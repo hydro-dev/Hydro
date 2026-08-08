@@ -1,7 +1,7 @@
 import type { ProblemConfigFile, TestCaseConfig } from 'hydrooj/src/interface';
 import { diffLines } from 'diff';
 import $ from 'jquery';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { isEqual } from 'lodash';
 import type { editor } from 'monaco-editor';
 import React from 'react';

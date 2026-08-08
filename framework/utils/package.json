@@ -16,7 +16,7 @@
         "@hydrooj/register": "workspace:^",
         "cac": "^7.0.0",
         "fs-extra": "^11.4.0",
-        "js-yaml": "^5.2.2",
+        "js-yaml": "^5.2.3",
         "reggol": "^2.1.0",
         "search-query-parser": "^1.6.0",
         "systeminformation": "^5.33.1"

@@ -4,7 +4,7 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { CAC, cac } from 'cac';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import superagent from 'superagent';
 import { formatSeconds, Logger } from '@hydrooj/utils';
 import * as sysinfo from '@hydrooj/utils/lib/sysinfo';

@@ -1,7 +1,7 @@
 import { normalizeSubtasks, readSubtasksFromFiles, SubtaskType } from '@hydrooj/common';
 import { MantineProvider } from '@mantine/core';
 import $ from 'jquery';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { confirm, prompt } from 'vj/components/dialog/index';

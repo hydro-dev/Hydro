@@ -2,7 +2,7 @@
 /* eslint-disable ts/no-unused-vars */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable ts/naming-convention */
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { ObjectId } from 'mongodb';
 import { randomstring, sleep } from '@hydrooj/utils';
 import { buildContent } from './lib/content';

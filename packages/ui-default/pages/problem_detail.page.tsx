@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { confirm } from 'vj/components/dialog';

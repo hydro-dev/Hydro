@@ -1,6 +1,6 @@
 import assert from 'assert';
 import fs from 'fs-extra';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 import { omit } from 'lodash';
 import { ObjectId } from 'mongodb';
 import sanitize from 'sanitize-filename';

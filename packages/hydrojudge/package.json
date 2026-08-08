@@ -11,14 +11,14 @@
         "@opentelemetry/api": "^1.9.1",
         "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
         "@opentelemetry/sdk-node": "^0.221.0",
-        "@zip.js/zip.js": "^2.8.34",
+        "@zip.js/zip.js": "^2.8.36",
         "cac": "^7.0.0",
         "p-queue": "^9.3.3",
         "schemastery": "^3.18.0",
         "semver": "^7.8.5",
         "shell-quote": "^1.10.0",
         "superagent": "^10.3.0",
-        "ws": "^8.21.1"
+        "ws": "^8.21.3"
     },
     "preferUnplugged": true,
     "license": "AGPL-3.0-or-later",
