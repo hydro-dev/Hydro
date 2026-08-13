@@ -119,7 +119,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       // @ts-ignore
       .transition(
         { opacity: 1 },
-        { duration: 200, easing: 'easeOutCubic' },
+        200,
+        'easeOutCubic',
       )
       .promise();
   }
@@ -129,7 +130,8 @@ const page = new NamedPage(['problem_detail', 'contest_detail_problem', 'homewor
       // @ts-ignore
       .transition(
         { opacity: 0 },
-        { duration: 200, easing: 'easeOutCubic' },
+        200,
+        'easeOutCubic',
       )
       .promise();
   }

@@ -13,10 +13,11 @@ const withoutTypes = (data) => ({
     compilerOptions: Object.fromEntries(Object.entries(data.compilerOptions).filter(([k]) => k !== 'types')),
 });
 
-/** @type {import('typescript/lib/typescript').CompilerOptions} */
+/** @type {import('typescript').CompilerOptions} */
 const compilerOptionsBase = {
     target: 'es2022',
-    lib: ['esnext'],
+    lib: ['esnext', 'DOM'],
+    types: ['node'],
     module: 'preserve',
     esModuleInterop: true,
     moduleResolution: 'bundler',
@@ -103,9 +104,9 @@ const UIConfig = {
         module: 'ESNext',
         skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        baseUrl: '.',
         jsx: 'react-jsx',
         outDir: path.join(baseOutDir, 'ui'),
+        types: ['node', 'webpack-env'],
 
         useDefineForClassFields: true,
         lib: ['esnext', 'DOM', 'DOM.Iterable'],
@@ -187,7 +188,6 @@ const pluginsConfig = {
     compilerOptions: {
         ...compilerOptionsBase,
         rootDir: '.',
-        baseUrl: '.',
         outDir: path.join(baseOutDir, 'plugins'),
         skipLibCheck: true,
         paths: {

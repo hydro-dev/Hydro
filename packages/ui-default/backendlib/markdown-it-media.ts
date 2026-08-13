@@ -3,7 +3,7 @@
 /* eslint-disable regexp/no-useless-non-capturing-group */
 /* eslint-disable regexp/optimal-quantifier-concatenation */
 
-import type MarkdownIt from 'markdown-it';
+import type { MarkdownIt } from 'markdown-it';
 import { v4 as uuid } from 'uuid';
 
 const allowFullScreen = ' webkitallowfullscreen mozallowfullscreen allowfullscreen';
@@ -103,8 +103,8 @@ declare module 'hydrooj' {
 export function Media(md: MarkdownIt, { pdfToolbar = false }: { pdfToolbar?: boolean } = {}) {
   const supported = ['youtube', 'vimeo', 'vine', 'prezi', 'bilibili', 'youku', 'msoffice'];
   md.renderer.rules.video = function tokenizeReturn(tokens, idx) {
-    const src = tokens[idx].attrGet('src');
-    const service = tokens[idx].attrGet('service').replace(/[^A-Z0-9]/gi, '').toLowerCase();
+    const src = (tokens[idx].attrGet('src') ?? '').toString();
+    const service = (tokens[idx].attrGet('service') ?? '').toString().replace(/[^A-Z0-9]/gi, '').toLowerCase();
     if (Hydro?.module?.richmedia?.[service]) {
       const result = Hydro?.module?.richmedia[service].get(service, src, md);
       if (result) return result;
@@ -138,7 +138,7 @@ export function Media(md: MarkdownIt, { pdfToolbar = false }: { pdfToolbar?: boo
       return `\
       <iframe class="embed-responsive-item ${service}-player" type="text/html" \
         width="100%" style="min-height: 500px" ${allowFullScreen} \
-        src="${md.utils.escapeHtml(resourceUrl(service, src, tokens[idx].attrGet('url')))}"
+        src="${md.utils.escapeHtml(resourceUrl(service, src, (tokens[idx].attrGet('url') ?? '').toString()))}"
         scrolling="no" border="0" frameborder="no" framespacing="0"></iframe>`;
     }
     return `<div data-${service}>${md.utils.escapeHtml(src)}</div>`;
