@@ -19,3 +19,5 @@ Disallow: /p/*/edit
 Disallow: /d/*/p/*/edit
 Disallow: /p/*/file/
 Disallow: /d/*/p/*/file/
+Disallow: /oauth/
+Disallow: /d/*/oauth/
